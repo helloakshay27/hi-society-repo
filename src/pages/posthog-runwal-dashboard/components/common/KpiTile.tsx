@@ -93,7 +93,7 @@ export const KpiTile: React.FC<KpiTileProps> = ({
 
       {sub && <div className="sub2">{sub}</div>}
 
-      {!noTarget && id && (
+      {/* {!noTarget && id && (
         <div className="bm">
           <span className="bl">Target</span>
           <input
@@ -108,7 +108,7 @@ export const KpiTile: React.FC<KpiTileProps> = ({
           {unit && <span className="bu">{unit}</span>}
           {targetBadge}
         </div>
-      )}
+      )} */}
     </div>
   );
 };

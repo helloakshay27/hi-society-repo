@@ -5,6 +5,7 @@ import { KpiTile } from '../common/KpiTile';
 import { Card } from '../common/Card';
 import { LineChart } from '../charts/LineChart';
 import { ErrorState, EmptyState } from '../common/DashboardStates';
+import { ChartSkeleton, BarsSkeleton } from '../common/Skeleton';
 import {
   useTrafficSession,
   useUsageAndDistribution,
@@ -17,6 +18,7 @@ interface TrafficSessionPageProps {
   benchmarks: Record<string, number | null>;
   onBenchmarkChange: (id: string, value: number | null) => void;
   sitesSettled?: boolean;
+  isRefreshing?: boolean;
 }
 
 function formatSeconds(sec: number | null | undefined): string {
@@ -81,6 +83,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
   benchmarks,
   onBenchmarkChange,
   sitesSettled = true,
+  isRefreshing = false,
 }) => {
   const [usageTab, setUsageTab] = useState<'visitors' | 'views' | 'sessions'>('visitors');
 
@@ -99,6 +102,9 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
     error: usageError,
     refetch: refetchUsage,
   } = useUsageAndDistribution(filters, sitesSettled);
+
+  const isTrafficActiveLoading = isTrafficLoading || isRefreshing;
+  const isUsageActiveLoading = isUsageLoading || isRefreshing;
 
   const tiles = trafficData?.tiles;
   const deltas = trafficData?.delta_pct;
@@ -235,7 +241,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           id="activeUsers"
           infoKey="U1"
           label="Active Users"
-          val={tiles ? tiles.active_users.toLocaleString() : isTrafficLoading ? '...' : '0'}
+          val={tiles ? tiles.active_users.toLocaleString() : isTrafficActiveLoading ? '...' : '0'}
           dir={activeUsersDelta.dir}
           delta={activeUsersDelta.text}
           sub="unique active users"
@@ -244,49 +250,49 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           goodUp={true}
           benchmark={benchmarks.activeUsers}
           onBenchmarkChange={onBenchmarkChange}
-          isLoading={isTrafficLoading}
+          isLoading={isTrafficActiveLoading}
         />
         <KpiTile
           id="screenViews"
           infoKey="U2"
           label="Screen Views"
-          val={tiles ? tiles.screen_views.toLocaleString() : isTrafficLoading ? '...' : '0'}
+          val={tiles ? tiles.screen_views.toLocaleString() : isTrafficActiveLoading ? '...' : '0'}
           dir={screenViewsDelta.dir}
           delta={screenViewsDelta.text}
           sub="total screen events"
           raw={tiles?.screen_views}
           noTarget={true}
-          isLoading={isTrafficLoading}
+          isLoading={isTrafficActiveLoading}
         />
         <KpiTile
           id="totalSessions"
           infoKey="U3"
           label="Sessions"
-          val={tiles ? tiles.sessions.toLocaleString() : isTrafficLoading ? '...' : '0'}
+          val={tiles ? tiles.sessions.toLocaleString() : isTrafficActiveLoading ? '...' : '0'}
           dir={sessionsDelta.dir}
           delta={sessionsDelta.text}
           sub="total sessions started"
           raw={tiles?.sessions}
           noTarget={true}
-          isLoading={isTrafficLoading}
+          isLoading={isTrafficActiveLoading}
         />
         <KpiTile
           id="avgSessionDur"
           infoKey="U4"
           label="Session Duration"
-          val={tiles ? formatSeconds(tiles.avg_session_seconds) : isTrafficLoading ? '...' : '—'}
+          val={tiles ? formatSeconds(tiles.avg_session_seconds) : isTrafficActiveLoading ? '...' : '—'}
           dir={avgSessionDelta.dir}
           delta={avgSessionDelta.text}
           sub="average per session"
           raw={tiles?.avg_session_seconds}
           noTarget={true}
-          isLoading={isTrafficLoading}
+          isLoading={isTrafficActiveLoading}
         />
         <KpiTile
           id="bounceRate"
           infoKey="U5"
           label="Bounce Rate"
-          val={tiles ? `${Math.round(tiles.bounce_rate)}%` : isTrafficLoading ? '...' : '0%'}
+          val={tiles ? `${Math.round(tiles.bounce_rate)}%` : isTrafficActiveLoading ? '...' : '0%'}
           dir={bounceDelta.dir}
           delta={bounceDelta.text}
           sub="lower is better"
@@ -295,18 +301,18 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           goodUp={false}
           benchmark={benchmarks.bounceRate}
           onBenchmarkChange={onBenchmarkChange}
-          isLoading={isTrafficLoading}
+          isLoading={isTrafficActiveLoading}
         />
         <KpiTile
           id="recentlyOnline"
           infoKey="U6"
           label="Recently Online"
-          val={tiles ? tiles.recently_online.toLocaleString() : isTrafficLoading ? '...' : '0'}
+          val={tiles ? tiles.recently_online.toLocaleString() : isTrafficActiveLoading ? '...' : '0'}
           dir="flat"
           delta={null}
           sub="active in last 30 min"
           noTarget={true}
-          isLoading={isTrafficLoading}
+          isLoading={isTrafficActiveLoading}
         />
       </div>
 
@@ -324,10 +330,8 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
               error={usageError}
               onRetry={() => refetchUsage()}
             />
-          ) : isUsageLoading ? (
-            <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-              Loading usage trend...
-            </div>
+          ) : isUsageActiveLoading ? (
+            <ChartSkeleton height={220} />
           ) : currentUsageDays.length === 0 ? (
             <EmptyState message="No usage data recorded for this period" />
           ) : (
@@ -449,10 +453,8 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
               error={usageError}
               onRetry={() => refetchUsage()}
             />
-          ) : isUsageLoading ? (
-            <div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-              Loading device distribution...
-            </div>
+          ) : isUsageActiveLoading ? (
+            <BarsSkeleton count={3} />
           ) : deviceList.length === 0 ? (
             <EmptyState message="No device distribution data found" />
           ) : (

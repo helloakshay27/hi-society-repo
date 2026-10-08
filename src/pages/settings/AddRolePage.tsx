@@ -291,34 +291,10 @@ export const AddRolePage = () => {
           // Process sub-functions
           func.subFunctions.forEach((subFunc) => {
             if (subFunc.enabled) {
-              // Map sub-function names to standard CRUD operations
-              let actionKey = subFunc.subFunctionName.toLowerCase();
-
-              // Normalize common action names
-              if (actionKey.includes("all") || actionKey.includes("index")) {
-                actionKey = "all";
-              } else if (
-                actionKey.includes("create") ||
-                actionKey.includes("new")
-              ) {
-                actionKey = "create";
-              } else if (
-                actionKey.includes("show") ||
-                actionKey.includes("view") ||
-                actionKey.includes("read")
-              ) {
-                actionKey = "show";
-              } else if (
-                actionKey.includes("update") ||
-                actionKey.includes("edit")
-              ) {
-                actionKey = "update";
-              } else if (
-                actionKey.includes("destroy") ||
-                actionKey.includes("delete")
-              ) {
-                actionKey = "destroy";
-              }
+              // Send the sub-function name as-is; names are arbitrary and
+              // must not be normalized (e.g. "index" is not "all").
+              const actionKey = (subFunc.subFunctionName || "").trim();
+              if (!actionKey) return;
 
               // Only include enabled permissions as "true"
               tempPermissions[actionKey] = "true";

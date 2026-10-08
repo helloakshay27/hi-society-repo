@@ -130,6 +130,10 @@ const TicketsDashboardPage: React.FC = () => {
               <TicketsAgeingMatrixCard dateRange={dateRange} />
             </div>
 
+            <div key="customer-sentiments">
+              <TicketsPieCard metric="customer-sentiments" dateRange={dateRange} />
+            </div>
+
             <div key="response-tat">
               <TicketsBarCard metric="response-tat" dateRange={dateRange} />
             </div>

@@ -1,19 +1,23 @@
 import React from 'react';
 import { PageId } from '../../../posthog-runwal-dashboard/types';
+import { DashboardFilters } from '../../../posthog-runwal-dashboard/api/types';
+import { RecentActivitySidebar } from '../../../posthog-runwal-dashboard/components/common/RecentActivitySidebar';
 
 interface SideBarProps {
   activePage: PageId;
   onSelectPage: (page: PageId) => void;
+  filters: DashboardFilters;
+  sitesSettled?: boolean;
 }
 
-export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage }) => {
+export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage, filters, sitesSettled }) => {
   return (
     <aside className="sidebar">
       <h1 className="brandmark">
         <span className="bm-full">My Piramal</span>
         <span className="bm-mini">MP</span>
       </h1>
-      <p className="brandmark-sub">FM Analytics · Phygital.work</p>
+      <p className="brandmark-sub">My Piramal Analytics</p>
 
       <nav aria-label="Sections">
         <div className="nav-group">
@@ -90,6 +94,8 @@ export const SideBar: React.FC<SideBarProps> = ({ activePage, onSelectPage }) =>
           </button>
         </div>
       </nav>
+
+      <RecentActivitySidebar filters={filters} sitesSettled={sitesSettled} />
     </aside>
   );
 };

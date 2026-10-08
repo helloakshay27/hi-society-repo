@@ -12,6 +12,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Edit, Plus, Trash2 } from 'lucide-react';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { fieldStyles, menuProps } from './fieldStyles';
 
@@ -97,6 +98,7 @@ const defaultForm: FormState = {
 };
 
 export const AgingRuleTab: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [agingRules, setAgingRules] = useState<AgingRule[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -403,12 +405,16 @@ export const AgingRuleTab: React.FC = () => {
 
   const renderActions = (item: AgingRule) => (
     <div className="flex gap-2">
-      <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-        <Edit className="h-4 w-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
-      </Button>
+      {shouldShow("Ticket Setup", "update") && (
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+      )}
+      {shouldShow("Ticket Setup", "destroy") && (
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
+          <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
+        </Button>
+      )}
     </div>
   );
 
@@ -619,14 +625,16 @@ export const AgingRuleTab: React.FC = () => {
           onGlobalSearch={handleSearch}
           searchPlaceholder="Search aging rules..."
           leftActions={
-            <Button
-              onClick={() => setAddDialogOpen(true)}
-            variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium" 
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add
-            </Button>
+            shouldShow("Ticket Setup", "create") && (
+              <Button
+                onClick={() => setAddDialogOpen(true)}
+                variant="ghost"
+                className="btn-primary h-9 px-4 text-sm font-medium"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            )
           }
         />
         {totalCount > 0 && (

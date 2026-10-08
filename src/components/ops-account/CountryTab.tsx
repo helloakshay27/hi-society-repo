@@ -216,7 +216,13 @@ export const CountryTab: React.FC<CountryTabProps> = ({
       setLoading(true);
       try {
         // Build API URL with parameters
-        const apiUrl = getFullUrl("/headquarters.json");
+        const params = new URLSearchParams();
+        if (search.trim()) {
+          params.append("q[search_all_fields_cont]", search.trim());
+        }
+        const apiUrl = getFullUrl(
+          `/headquarters.json${params.toString() ? `?${params.toString()}` : ""}`
+        );
 
         const response = await fetch(apiUrl, {
           method: "GET",
@@ -247,19 +253,8 @@ export const CountryTab: React.FC<CountryTabProps> = ({
           countryData = result.data;
         }
 
-        // Apply client-side filtering and searching
+        // Apply client-side filtering (search is now handled server-side)
         let filteredData = countryData;
-
-        if (search.trim()) {
-          const searchLower = search.toLowerCase();
-          filteredData = filteredData.filter(
-            (country) =>
-              country.name?.toLowerCase().includes(searchLower) ||
-              country.country_name?.toLowerCase().includes(searchLower) ||
-              country.company_name?.toLowerCase().includes(searchLower) ||
-              country.organization_name?.toLowerCase().includes(searchLower)
-          );
-        }
 
         if (filters.countryId) {
           filteredData = filteredData.filter(

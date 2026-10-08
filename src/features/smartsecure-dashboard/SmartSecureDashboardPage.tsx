@@ -10,7 +10,14 @@ import { Footer } from "./components/Footer";
 import { TrafficSection } from "./sections/TrafficSection";
 import { AdoptionSection } from "./sections/AdoptionSection";
 import { WorkflowSection } from "./sections/WorkflowSection";
+import { useEnsureProjectCode } from "../../pages/posthog-runwal-dashboard/hooks/useEnsureProjectCode";
+// import { useEnsureAppId } from "../../pages/posthog-runwal-dashboard/hooks/useEnsureAppId";
+import { RecentActivitySidebar } from "../../pages/posthog-runwal-dashboard/components/common/RecentActivitySidebar";
+import type { DashboardFilters } from "../../pages/posthog-runwal-dashboard/api/types";
 import type { ActivePage } from "./data/types";
+
+const SMARTSECURE_PROJECT_CODE = "SMSE-01";
+// const SMARTSECURE_APP_ID = "39";
 
 const PAGES: { key: ActivePage; title: string; icon: JSX.Element }[] = [
   {
@@ -72,8 +79,21 @@ const PAGES: { key: ActivePage; title: string; icon: JSX.Element }[] = [
 ];
 
 function DashboardLayout() {
-  const { state, setPage } = useSmartSecureDashboard();
+  const { state, setPage, sites, appId, projectCode } = useSmartSecureDashboard();
   const page = PAGES.find((p) => p.key === state.page) ?? PAGES[0];
+  const recentActivityFilters: DashboardFilters = {
+    siteIds: state.society === 'All Societies' ? sites.map((site) => site.id) : [state.society],
+    from: state.rangeFrom,
+    to: state.rangeTo,
+    token: '',
+    deviceType: 'Mobile',
+    devPlatform: state.dev || 'all',
+    licensedSeats: null,
+    module: null,
+    subModule: null,
+    appId: appId || undefined,
+    projectCode: projectCode || SMARTSECURE_PROJECT_CODE,
+  };
 
   return (
     <div className={`ss-app${state.navCollapsed ? " nav-collapsed" : ""}`}>
@@ -103,6 +123,7 @@ function DashboardLayout() {
               ))}
             </div>
           </nav>
+          <RecentActivitySidebar filters={recentActivityFilters} sitesSettled={sites.length > 0} />
         </aside>
 
         <main className="main">
@@ -128,12 +149,25 @@ function DashboardLayout() {
   );
 }
 
-export function SmartSecureDashboardPage() {
+function SmartSecureDashboardGate() {
+  // const appIdReady = useEnsureAppId(SMARTSECURE_APP_ID);
+  // if (!appIdReady) return null;
+  const projectCodeReady = useEnsureProjectCode(SMARTSECURE_PROJECT_CODE);
+  if (!projectCodeReady) return null;
+
   return (
-    <DashboardProvider appId="39" appName="SmartSecure">
+    <DashboardProvider
+      // appId={SMARTSECURE_APP_ID}
+      projectCode={SMARTSECURE_PROJECT_CODE}
+      appName="SmartSecure"
+    >
       <DashboardLayout />
     </DashboardProvider>
   );
+}
+
+export function SmartSecureDashboardPage() {
+  return <SmartSecureDashboardGate />;
 }
 
 export default SmartSecureDashboardPage;

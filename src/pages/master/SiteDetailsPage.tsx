@@ -22,6 +22,8 @@ interface SiteDetails {
   created_at: string;
   updated_at: string;
   company_id: number;
+  organization_id: number | null;
+  organization_name: string | null;
   region_id: string;
   headquarter_id: number;
   latitude: number;
@@ -331,6 +333,22 @@ export const SiteDetailsPage: React.FC = () => {
                     </label>
                     <p className="text-gray-900 font-mono">
                       {companyName || `Company #${site.company_id}`}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Organization ID
+                    </label>
+                    <p className="text-gray-900 font-mono">
+                      {site.organization_id ? `#${site.organization_id}` : "Not specified"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Organization Name
+                    </label>
+                    <p className="text-gray-900">
+                      {site.organization_name || "Not specified"}
                     </p>
                   </div>
                 </div>

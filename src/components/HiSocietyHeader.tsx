@@ -36,6 +36,7 @@ import { Dashboard } from "@mui/icons-material";
 import { AnalyticsGrid } from "./dashboard/AnalyticsGrid";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import { useLayout } from "@/contexts/LayoutContext";
+import { usePermissions } from "@/contexts/PermissionsContext";
 import { UIHiSocietyNavigation } from "@asset";
 import RunwalLogo from "@/assets/Runwal Logo - A Subodh Runwal Group-01 1.png";
 
@@ -146,7 +147,9 @@ export const HiSocietyHeader = () => {
     "53815",
   ];
 
-  // Load user display name and role name from localStorage
+  const { userRole } = usePermissions();
+
+  // Load user display name and role name from localStorage for immediate paint
   useEffect(() => {
     const loadUserInfo = () => {
       const displayName = permissionService.getDisplayName();
@@ -157,6 +160,13 @@ export const HiSocietyHeader = () => {
 
     loadUserInfo();
   }, []);
+
+  // Keep the role name in sync with the freshly-fetched get_role API response
+  useEffect(() => {
+    if (userRole?.role_name) {
+      setUserRoleName(userRole.role_name);
+    }
+  }, [userRole]);
 
   // Fetch VI account from baseUrl for vi-web (and localhost for dev)
 
@@ -226,7 +236,7 @@ export const HiSocietyHeader = () => {
       }
 
       // Fetch user approved societies
-      const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
+      const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}&organization_id=${org_id}`);
       if (societiesResponse.ok) {
         const societiesData = await societiesResponse.json();
         const societies = societiesData.user_societies || [];
@@ -413,6 +423,7 @@ export const HiSocietyHeader = () => {
   const userType = localStorage.getItem("userType");
 
   const tempType = localStorage.getItem("tempType");
+  const orgLogoUrl = localStorage.getItem("org_logo_url");
 
   const canSwitchToEmployee = userType === "pms_organization_admin";
 
@@ -431,7 +442,13 @@ export const HiSocietyHeader = () => {
             <Menu className="w-5 h-5" />
           </button>
           <div className="hidden sm:block">
-            {isOmanSite ? (
+            {orgLogoUrl ? (
+              <img
+                src={orgLogoUrl}
+                alt="Organization Logo"
+                className="h-10 w-auto max-w-[200px] object-contain"
+              />
+            ) : isOmanSite ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 xmlnsXlink="http://www.w3.org/1999/xlink"
@@ -547,13 +564,13 @@ export const HiSocietyHeader = () => {
           {/* Dashboard Button */}
           <div className="flex items-center gap-2">
             {/* {!isViSite && ( */}
-              <button
-                onClick={() => (window.location.href = "/hi-society-dashboard")}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors"
-              >
-                <ChartArea className="w-4 h-4" />
-                Dashboard
-              </button>
+            <button
+              onClick={() => (window.location.href = "/hi-society-dashboard")}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors"
+            >
+              <ChartArea className="w-4 h-4" />
+              Dashboard
+            </button>
             {/* )} */}
             {/* {!isViSite && (
               <button

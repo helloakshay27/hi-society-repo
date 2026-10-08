@@ -31,6 +31,7 @@ interface RelatedToType {
   id: number;
   name: string;
   society_id: number;
+  feedback_enabled?: boolean | null;
 }
 
 interface EditRelatedToModalProps {
@@ -72,6 +73,8 @@ export const EditRelatedToModal: React.FC<EditRelatedToModalProps> = ({
         id: relatedTo.id,
         name: data.issueType,
         active: 1,
+        // Feedback is toggled from the table; preserve its current value (null = enabled).
+        feedback_enabled: relatedTo.feedback_enabled !== false,
       };
 
       const response = await fetch(getFullUrl('/crm/admin/modify_issue_type.json'), {

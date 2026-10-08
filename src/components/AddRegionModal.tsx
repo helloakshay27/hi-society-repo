@@ -10,6 +10,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { MapPin, Building, Globe, Flag, X } from "lucide-react";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
 import {
   Dialog,
@@ -206,8 +207,8 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create region");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errorData, "Failed to create region"));
       }
 
       toast.success("Region created successfully!", {
@@ -218,7 +219,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
       resetForm();
     } catch (error: any) {
       console.error("Error creating region:", error);
-      toast.error(`Failed to create region: ${error.message}`, {
+      toast.error(error.message || "Failed to create region", {
         duration: 5000,
       });
     } finally {

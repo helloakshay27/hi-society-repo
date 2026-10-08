@@ -6,6 +6,8 @@ interface LineChartProps {
   prev?: number[];
   showPrev?: boolean;
   labels?: string[]; // date labels per point, e.g. ['Jul 28', 'Jul 29', ...]
+  height?: number;
+  maxHeight?: number | string;
 }
 
 interface Tooltip {
@@ -23,11 +25,11 @@ interface Tooltip {
  * three plain grey y-numbers at the left, one saturated data colour and one
  * pale area fill. The hover tooltip is the only addition over the wireframe.
  */
-export function LineChart({ cur, prev, showPrev = true, labels }: LineChartProps) {
+export function LineChart({ cur, prev, showPrev = true, labels, height = 250, maxHeight }: LineChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [tip, setTip] = useState<Tooltip | null>(null);
 
-  const W = 680, H = 250, pl = 44, pr = 14, pt = 16, pb = 30;
+  const W = 680, H = height, pl = 44, pr = 14, pt = 16, pb = 30;
   if (!cur || cur.length < 2) {
     return (
       <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--ss-text-sub, #6b7280)', fontSize: 13 }}>
@@ -98,7 +100,11 @@ export function LineChart({ cur, prev, showPrev = true, labels }: LineChartProps
       preserveAspectRatio="xMidYMid meet"
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setTip(null)}
-      style={{ cursor: 'crosshair', overflow: 'hidden' }}
+      style={{
+        cursor: 'crosshair',
+        overflow: 'hidden',
+        ...(maxHeight ? { maxHeight } : {}),
+      }}
     >
       {/* vertical dashed gridlines + x labels */}
       {ticks.map((i) => (

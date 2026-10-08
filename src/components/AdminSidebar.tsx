@@ -109,23 +109,23 @@ const adminNavigationStructure = {
       {
         name: "Wallet Top-up",
         icon: CreditCard,
-        href: "/settings/wallet-topup",
+        href: "/ops-console/settings/wallet-topup",
       },
-      {
-        name: "Feedback Dashboard",
-        icon: LineChart,
-        href: "/ops-console/admin/feedback-dashboard",
-      },
-      {
-        name: "Systems & SOPs",
-        icon: FileText,
-        href: "/ops-console/admin/systems-sops",
-      },
-      {
-        name: "DISC Report",
-        icon: Brain,
-        href: "/ops-console/admin/disc-report",
-      },
+      // {
+      //   name: "Feedback Dashboard",
+      //   icon: LineChart,
+      //   href: "/ops-console/admin/feedback-dashboard",
+      // },
+      // {
+      //   name: "Systems & SOPs",
+      //   icon: FileText,
+      //   href: "/ops-console/admin/systems-sops",
+      // },
+      // {
+      //   name: "DISC Report",
+      //   icon: Brain,
+      //   href: "/ops-console/admin/disc-report",
+      // },
       {
         name: "Lock Fees",
         icon: DollarSign,
@@ -153,6 +153,11 @@ const adminNavigationStructure = {
         name: "Smartsecure Integration",
         icon: DollarSign,
         href: "/ops-console/admin/smartsecure-integration",
+      },
+      {
+        name: "User Devices",
+        icon: Activity,
+        href: "/ops-console/admin/user-devices",
       },
     ],
   },

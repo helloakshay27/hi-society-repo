@@ -19,6 +19,7 @@ import {
   RolesResponse,
   ModulesResponse,
   WorkflowUsageResponse,
+  RecentActiveUsersResponse,
   SiteLookupItem,
   LeaseOverviewData,
   EventsOverviewData,
@@ -41,6 +42,12 @@ import {
 // ==========================================
 
 function getPosthogApiBase(): string {
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ) {
+    return '/posthog-api';
+  }
   return (
     (import.meta as any).env?.VITE_FM_ADOPTION_API_URL ||
     (import.meta as any).env?.VITE_POSTHOG_API_URL ||
@@ -79,8 +86,8 @@ export function getDynamicTenantUrl(): string {
 }
 
 function getDeviceParams(dev: DashboardFilters['devPlatform']): Record<string, string> {
-  if (dev === 'ios') return { os: 'ios' };
-  if (dev === 'android') return { os: 'Android' };
+  if (dev === 'ios') return { device_type: 'Mobile', os: 'ios' };
+  if (dev === 'android') return { device_type: 'Mobile', os: 'Android' };
   return { device_type: 'Mobile' };
 }
 
@@ -93,24 +100,26 @@ function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any>
   if (filters.from) parts.push(`from=${encodeURIComponent(filters.from)}`);
   if (filters.to) parts.push(`to=${encodeURIComponent(filters.to)}`);
 
-  for (const [k, v] of Object.entries(getDeviceParams(filters.devPlatform))) {
+  const deviceParams = getDeviceParams(filters.devPlatform);
+  if (filters.deviceType) {
+    deviceParams.device_type = filters.deviceType;
+  }
+  for (const [k, v] of Object.entries(deviceParams)) {
     parts.push(`${k}=${encodeURIComponent(v)}`);
   }
 
-  // Runwal CP has no app_id at all — it identifies itself by project_code
-  // instead, so (absent an explicit filters.appId) the two stay mutually
-  // exclusive on the wire. A dashboard that explicitly sets both (e.g. My
-  // Piramal, which sends project_code=PIR-01 and app_id=30 together) gets
-  // both regardless.
+  // Support project_code and app_id dynamically
   const projectCode = filters.projectCode || getProjectCodeFromUrl();
   if (projectCode) {
     parts.push(`project_code=${encodeURIComponent(projectCode)}`);
   }
-  if (filters.appId) {
-    parts.push(`app_id=${encodeURIComponent(filters.appId)}`);
-  } else if (!projectCode) {
-    const appId = getAppIdFromUrl();
-    if (appId) parts.push(`app_id=${encodeURIComponent(appId)}`);
+  const appId = filters.appId || getAppIdFromUrl();
+  if (appId) {
+    parts.push(`app_id=${encodeURIComponent(appId)}`);
+  }
+
+  if (filters.includeAnonymous) {
+    parts.push('include_anonymous=1');
   }
 
   // Sent unescaped (matches the site_id convention below) — the value is
@@ -186,6 +195,44 @@ export const fetchWorkflowUsage = (
       sub_module: subModule || undefined,
     })
   );
+
+/** Latest identified active users + the path/screen each is on. No `from`/`to` = today ("currently active"). */
+export const fetchRecentActiveUsers = (filters: DashboardFilters, limit = 10) =>
+  getPosthog<RecentActiveUsersResponse>('recent_active_users', buildPosthogQuery(filters, { limit }));
+
+/**
+ * Downloads the `.xlsx` workbook of every active user in the filtered scope
+ * (uncapped — `limit` is ignored server-side unless passed deliberately) and
+ * saves it via a throwaway anchor, mirroring the blob-download pattern used
+ * elsewhere in the app (see WalletTopup.tsx's handleExport).
+ */
+export async function downloadActiveUsersExport(filters: DashboardFilters): Promise<void> {
+  const base = getPosthogApiBase();
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const queryStr = buildPosthogQuery(filters);
+  const url = `${cleanBase}/fm/adoption/active_users_export?${queryStr}`;
+
+  const response = await fetch(url, { method: 'GET', headers: { Accept: '*/*' } });
+  if (!response.ok) {
+    throw new Error(`Active users export failed (${response.status}): ${response.statusText || 'Failed to fetch'}`);
+  }
+
+  const blob = await response.blob();
+  const disposition = response.headers.get('content-disposition') || '';
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
+  const filename = match
+    ? decodeURIComponent(match[1])
+    : `active_users_${filters.from || 'today'}_to_${filters.to || 'today'}.xlsx`;
+
+  const blobUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(blobUrl);
+}
 
 // ==========================================
 // 2. FM Matrix Backend API Client

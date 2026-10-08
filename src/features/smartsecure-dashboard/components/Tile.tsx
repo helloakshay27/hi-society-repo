@@ -4,11 +4,24 @@ import { InfoButton } from './InfoButton';
 import type { TileSpec } from '../data/types';
 
 const ARROW = { up: '▲', dn: '▼', flat: '—' } as const;
+const TILE_INFO_KEYS: Record<string, string> = {
+  activeUsers: 'U1',
+  screenViews: 'U2',
+  totalSessions: 'U3',
+  avgSessionDur: 'U4',
+  bounceRate: 'U5',
+  recentlyOnline: 'U6',
+  stickiness: 'A2',
+  adoptionTrend: 'A3',
+  activation14: 'A4',
+  moduleBreadth: 'A5',
+};
 
 /** Ported from the wireframe's own `tile()` function, including the user-editable
  *  benchmark row (bm) with a live on-target / off-target badge. */
 export function Tile({ id, label, val, dir, delta, sub, raw, unit, goodUp, noTarget }: TileSpec) {
   const { getBenchmark, setBenchmark } = useSmartSecureDashboard();
+  const infoKey = id ? TILE_INFO_KEYS[id] ?? id : undefined;
   const showTarget = !noTarget && !!id;
   const target = showTarget ? getBenchmark(id!) : null;
   const [draft, setDraft] = useState<string>(target == null ? '' : String(target));
@@ -26,7 +39,7 @@ export function Tile({ id, label, val, dir, delta, sub, raw, unit, goodUp, noTar
     <div className="tile">
       <div className="tophead">
         <div className="lbl">{label}</div>
-        {id && <InfoButton infoKey={id} />}
+        {infoKey && <InfoButton infoKey={infoKey} />}
       </div>
       <div className="val">{val}</div>
       {delta != null && dir && (

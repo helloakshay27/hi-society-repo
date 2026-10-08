@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 
 interface TopBarProps {
+  title?: string;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
   isNavCollapsed: boolean;
@@ -15,6 +16,7 @@ interface TopBarProps {
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
+  title,
   theme,
   onToggleTheme,
   isNavCollapsed,
@@ -87,7 +89,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       </button>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span className="topbar-title">{orgName} · Post Sales Analytics</span>
+        <span className="topbar-title">{title || `${orgName} · Post Sales Analytics`}</span>
         {siteName && siteName !== 'All Live Sites / Projects' && (
           <span
             style={{

@@ -13,6 +13,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Edit, Trash2, Plus } from 'lucide-react';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { fieldStyles, menuProps } from './fieldStyles';
 
@@ -37,6 +38,7 @@ interface CategoryOption {
 }
 
 export const SubCategoryTab: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [subCategories, setSubCategories] = useState<SubCategoryItem[]>([]);
   const [issueTypes, setIssueTypes] = useState<IssueType[]>([]);
   // Category options are dependent on the selected issue type — kept separate
@@ -424,12 +426,16 @@ export const SubCategoryTab: React.FC = () => {
 
   const renderActions = (item: SubCategoryItem) => (
     <div className="flex gap-2">
-      <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-        <Edit className="h-4 w-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      {shouldShow("Ticket Setup", "update") && (
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+      )}
+      {shouldShow("Ticket Setup", "destroy") && (
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 
@@ -550,13 +556,16 @@ export const SubCategoryTab: React.FC = () => {
           enableSearch={true}
           searchPlaceholder="Search sub-categories..."
           leftActions={
-            <Button
-              onClick={() => setAddDialogOpen(true)}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add
-            </Button>
+            shouldShow("Ticket Setup", "create") && (
+              <Button
+                onClick={() => setAddDialogOpen(true)}
+                variant="ghost"
+                className="btn-primary h-9 px-4 text-sm font-medium"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            )
           }
         />
         {/* Pagination */}

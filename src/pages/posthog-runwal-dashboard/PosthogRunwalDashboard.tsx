@@ -215,11 +215,11 @@ function PosthogRunwalDashboardContent() {
 
   const handleSelectPage = (page: PageId) => {
     setActivePage(page);
-    const mainEl = document.querySelector('.posthog-dashboard-root .main');
-    if (mainEl) {
-      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    // The root itself scrolls now (edge-to-edge with the window), not .main.
+    const rootEl = document.querySelector('.posthog-dashboard-root');
+    if (rootEl) {
+      rootEl.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSetRange = (days: number, label: string) => {
@@ -237,11 +237,23 @@ function PosthogRunwalDashboardContent() {
     setRangeTo(to);
   };
 
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
   // Refetch every active query on this dashboard (PostHog adoption + FM
   // Matrix) with the current filters, instead of waiting for cache staleness.
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['fm-adoption'] });
-    queryClient.invalidateQueries({ queryKey: ['fm-dashboard'] });
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.resetQueries({ queryKey: ['fm-adoption'] }),
+        queryClient.resetQueries({ queryKey: ['fm-dashboard'] }),
+      ]);
+    } catch (err) {
+      console.error('Refresh failed:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   // Dynamic User and Organization Info
@@ -332,6 +344,7 @@ function PosthogRunwalDashboardContent() {
       data-theme={theme}
     >
       <TopBar
+        title={orgName}
         theme={theme}
         onToggleTheme={handleToggleTheme}
         isNavCollapsed={isNavCollapsed}
@@ -348,6 +361,9 @@ function PosthogRunwalDashboardContent() {
         <SideBar
           activePage={activePage}
           onSelectPage={handleSelectPage}
+          filters={filters}
+          sitesSettled={sitesSettled}
+          brandSub="Runwal Realty"
         />
 
         <main className="main">
@@ -378,6 +394,7 @@ function PosthogRunwalDashboardContent() {
             prev={showPrev}
             onTogglePrev={() => setShowPrev((p) => !p)}
             onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
             recentlyOnlineCount={recentlyOnlineCount}
             isFetching={isTrafficFetching}
             isError={isTrafficError}
@@ -391,6 +408,7 @@ function PosthogRunwalDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              isRefreshing={isRefreshing}
             />
           )}
 
@@ -400,6 +418,7 @@ function PosthogRunwalDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              isRefreshing={isRefreshing}
             />
           )}
 
@@ -409,6 +428,7 @@ function PosthogRunwalDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              isRefreshing={isRefreshing}
             />
           )}
 

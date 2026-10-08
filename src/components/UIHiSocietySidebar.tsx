@@ -716,6 +716,25 @@ export const UIHiSocietySidebar: React.FC = () => {
           ],
         },
         {
+          id: "custom-settings",
+          label: "Custom Settings",
+          icon: FileText,
+          subItems: [
+            {
+              id: "custom-settings-invoices",
+              label: "Invoices",
+              icon: FileText,
+              path: "/accounting/custom-settings/invoices",
+            },
+            {
+              id: "custom-settings-receipts",
+              label: "Receipts",
+              icon: FileText,
+              path: "/accounting/custom-settings/receipts",
+            },
+          ],
+        },
+        {
           id: "reports",
           label: "Reports",
           icon: BarChart3,

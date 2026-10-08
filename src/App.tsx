@@ -21,6 +21,7 @@ import { AdminSidebar } from "./components/AdminSidebar";
 import { AdminLayout } from "./components/AdminLayout";
 import { PWALayoutWrapper } from "./components/PWALayoutWrapper";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { OpsConsoleGuard } from "./components/OpsConsoleGuard";
 import { Dashboard } from "./pages/Dashboard";
 const TicketsDashboardPage = lazy(() => import("./pages/TicketsDashboardPage"));
 const DashboardConfiguration = lazy(() => import("./pages/DashboardConfiguration"));
@@ -717,6 +718,7 @@ const AddApprovalMatrixPage = lazy(() => import("./pages/settings/AddApprovalMat
 
 const MobileAdminOrderDetailsPage = lazy(() => import("./pages/MobileAdminOrderDetailsPage"));
 const MobileSurveyPage = lazy(() => import("./pages/mobile/MobileSurveyPage").then(m => ({ default: m.MobileSurveyPage })));
+const InvitedVisitorPage = lazy(() => import("./pages/mobile/InvitedVisitorPage").then(m => ({ default: m.InvitedVisitorPage })));
 
 import { MobileOrderPlaced } from "./components/mobile/MobileOrderPlaced";
 import { ExternalFlowTester } from "./components/mobile/ExternalFlowTester";
@@ -789,6 +791,10 @@ const LockSubFunctionList = lazy(() => import("./pages/settings/LockSubFunctionL
 const LockSubFunctionView = lazy(() => import("./pages/settings/LockSubFunctionView").then(m => ({ default: m.LockSubFunctionView })));
 const LockSubFunctionEdit = lazy(() => import("./pages/settings/LockSubFunctionEdit").then(m => ({ default: m.LockSubFunctionEdit })));
 const LockSubFunctionCreate = lazy(() => import("./pages/settings/LockSubFunctionCreate").then(m => ({ default: m.CreateLockSubFunctionDialog })));
+const WalletTopup = lazy(() => import("./pages/WalletTopup"));
+const FeedbackDashboard = lazy(() => import("./pages/admin/FeedbackDashboard"));
+const SystemAndSOP = lazy(() => import("./pages/admin/SystemAndSOP"));
+const DiscReport = lazy(() => import("./pages/admin/DiscReport"));
 const CrmCustomerDetails = lazy(() => import("./pages/CrmCustomerDetails").then(m => ({ default: m.CrmCustomerDetails })));
 const EditCrmCustomer = lazy(() => import("./pages/EditCrmCustomer").then(m => ({ default: m.EditCrmCustomer })));
 const MultipleUserDeletePage = lazy(() => import("./pages/MultipleUserDeletePage"));
@@ -940,6 +946,7 @@ const PosthogRunwalDashboard = lazy(() => import("./pages/posthog-runwal-dashboa
 const PosthogRunwalCpDashboard = lazy(() => import("./pages/posthog-runwal-dashboard/PosthogRunwalCpDashboard"));
 const PosthogGodrejDashboard = lazy(() => import("./pages/posthog-godrej-dashboard/PosthogGodrejDashboard"));
 const PosthogKRahejaDashboard = lazy(() => import("./pages/posthog-kraheja-dashboard/PosthogKRahejaDashboard"));
+const PosthogLacircleDashboard = lazy(() => import("./pages/posthog-lacircle-dashboard/PosthogLacircleDashboard"));
 const ViewUserPage = lazy(() => import("./pages/ViewUserPage").then(m => ({ default: m.ViewUserPage })));
 const FioutMobileView = lazy(() => import("./pages/FioutMobileView"));
 const FitoutRequestDetailsPageMobile = lazy(() => import("./pages/FitoutRequestDetailsPageMobile"));
@@ -1147,6 +1154,7 @@ const ModulesManagement = lazy(() => import("./pages/settings/ModulesManagement"
 const LoyaltyTDS = lazy(() => import("./pages/ops-console/admin/LoyaltyTDS").then(m => ({ default: m.LoyaltyTDS })));
 const AdminNewDashboard = lazy(() => import("./pages/ops-console/admin/AdminNewDashboard"));
 const SmartsecureIntegration = lazy(() => import("./pages/ops-console/admin/SmartsecureIntegration"));
+const UserDevices = lazy(() => import("./features/user-devices/pages/UserDevices"));
 const AddSmartsecureGatePage = lazy(() => import("./pages/ops-console/admin/AddSmartsecureGatePage"));
 const EditSmartsecureGatePage = lazy(() => import("./pages/ops-console/admin/EditSmartsecureGatePage"));
 const HiSocietyUsersDashboard = lazy(() => import("./pages/master/HiSocietyUsersDashboard").then(m => ({ default: m.HiSocietyUsersDashboard })));
@@ -1364,7 +1372,9 @@ function App() {
                         path="/ops-console"
                         element={
                           <ProtectedRoute>
-                            <AdminLayout />
+                            <OpsConsoleGuard>
+                              <AdminLayout />
+                            </OpsConsoleGuard>
                           </ProtectedRoute>
                         }
                       >
@@ -1432,6 +1442,10 @@ function App() {
                         <Route
                           path="settings/roles/role/add"
                           element={<AddRolePage />}
+                        />
+                        <Route
+                          path="settings/vi-roles/role"
+                          element={<RoleDashboard />}
                         />
                         <Route
                           path="master/location/account/societies/details/:id"
@@ -1507,6 +1521,22 @@ function App() {
                           element={<LoyaltyTDS />}
                         />
                         <Route
+                          path="settings/wallet-topup"
+                          element={<WalletTopup />}
+                        />
+                        <Route
+                          path="admin/feedback-dashboard"
+                          element={<FeedbackDashboard />}
+                        />
+                        <Route
+                          path="admin/systems-sops"
+                          element={<SystemAndSOP />}
+                        />
+                        <Route
+                          path="admin/disc-report"
+                          element={<DiscReport />}
+                        />
+                        <Route
                           path="admin/new-dashboard"
                           element={<Navigate to="/admin/new-dashboard" replace />}
                         />
@@ -1521,6 +1551,10 @@ function App() {
                         <Route
                           path="admin/smartsecure-integration/edit/:id"
                           element={<EditSmartsecureGatePage />}
+                        />
+                        <Route
+                          path="admin/user-devices"
+                          element={<UserDevices />}
                         />
                         {/* <Route
                       path="settings/account/lock-module/view/:id"
@@ -1623,6 +1657,10 @@ function App() {
                       <Route
                         path="/posthog-kraheja-dashboard"
                         element={<PosthogKRahejaDashboard />}
+                      />
+                      <Route
+                        path="/posthog-lacircle-dashboard"
+                        element={<PosthogLacircleDashboard />}
                       />
                       <Route
                         path="/smartsecure-dashboard"
@@ -6718,7 +6756,7 @@ function App() {
                         />
                         <Route
                           path="/ops-console/master/user/hi-society-users/view/:id"
-                          element={<ViewHiSocietyUserPage />}
+                          element={<OpsConsoleGuard><ViewHiSocietyUserPage /></OpsConsoleGuard>}
                         />
 
                         {/* Material Master Route */}
@@ -7266,6 +7304,15 @@ function App() {
                       <Route
                         path="/survey_mappings/:mappingId/survey"
                         element={<MobileSurveyPage />}
+                      />
+                      {/* Invited Visitor Routes */}
+                      <Route
+                        path="/invite-visitor"
+                        element={<InvitedVisitorPage />}
+                      />
+                      <Route
+                        path="/invite-visitor/:id"
+                        element={<InvitedVisitorPage />}
                       />
                       {/* Mobile Asset Routes */}
                       <Route path="/mobile/assets" element={<MobileAssetPage />} />

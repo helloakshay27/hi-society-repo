@@ -134,14 +134,16 @@ const CampaignsReferrals: React.FC = () => {
       case "actions":
         return (
           <div className="flex items-center justify-center">
-            <button
-              className="p-1 hover:bg-gray-100 rounded"
-              onClick={() =>
-                navigate(`/campaigns/referrals/detail/${item.id}`)
-              }
-            >
-              <Eye className="w-4 h-4 text-gray-600" />
-            </button>
+            {shouldShow("Referrals", "show") && (
+              <button
+                className="p-1 hover:bg-gray-100 rounded"
+                onClick={() =>
+                  navigate(`/campaigns/referrals/detail/${item.id}`)
+                }
+              >
+                <Eye className="w-4 h-4 text-gray-600" />
+              </button>
+            )}
           </div>
         );
       case "id":

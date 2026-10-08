@@ -376,6 +376,9 @@ const AccountingChartOfAccounts = lazy(
 const AccountingLedgerDetails = lazy(
   () => import("@/pages/AccountingLedgerDetails")
 );
+const AccountingProfitLossLedgerDetails = lazy(
+  () => import("@/pages/AccountingProfitLossLedgerDetails")
+);
 const AccountingSubgroupSetup = lazy(
   () => import("@/pages/AccountingSubgroupSetup")
 );
@@ -1671,12 +1674,24 @@ export const setupMemberRoutes = (
       Component={withSuspense(AccountingCustomSettings)}
     />
     <Route
+      path="/accounting/custom-settings/invoices"
+      Component={withSuspense(AccountingCustomSettings)}
+    />
+    <Route
+      path="/accounting/custom-settings/receipts"
+      Component={withSuspense(AccountingCustomSettings)}
+    />
+    <Route
       path="/accounting/balance-sheet"
       Component={withSuspense(AccountingBalanceSheet)}
     />
     <Route
       path="/accounting/profit-loss"
       Component={withSuspense(AccountingProfitLoss)}
+    />
+    <Route
+      path="/accounting/profit-loss/ledger/:ledgerId"
+      Component={withSuspense(AccountingProfitLossLedgerDetails)}
     />
     <Route
       path="/accounting/gst-payable"

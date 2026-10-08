@@ -1,76 +1,85 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import TextField from "@mui/material/TextField";
 import { Button } from "@/components/ui/button";
 import { NotepadText } from "lucide-react";
 import { API_CONFIG } from "@/config/apiConfig";
-import {
-  StatementNode,
-  StatementRow,
-  SectionTemplate,
-  formatAmount,
-  buildSideRows,
-} from "@/utils/financialStatement";
+import { StatementRow, formatAmount } from "@/utils/financialStatement";
 
-// Real response shape returned by GET /lock_account_transactions/pnl
-interface PnlSection {
-  node_name: string; // "expenditure" | "income"
-  accounts: StatementNode[];
+// Real response shape returned by GET /lock_account_transactions/pnl —
+// mirrors the Balance Sheet API (AccountingBalanceSheet.tsx): each side
+// (expense/income) has its own groups (nested, with child groups/ledgers)
+// and a flat ledgers list for anything with no group.
+interface ApiLedger {
+  id: number;
+  name: string;
+  total: number;
+  display_total: number;
+  fixed_type: string | null;
+}
+
+interface ApiGroup {
+  id: number;
+  group_name: string;
+  group_total: number;
+  children: ApiGroup[];
+  ledgers: ApiLedger[];
+}
+
+interface ApiSide {
+  groups: ApiGroup[];
+  ledgers: ApiLedger[];
 }
 
 interface PnlApiResponse {
-  pnl?: {
-    accounts?: PnlSection[];
+  code?: number;
+  report?: string;
+  lock_account?: { id: number; name: string };
+  summary?: {
+    income_total: number;
+    expense_total: number;
+    bt: number;
+    net_profit: number;
+    net_loss: number;
   };
+  expense?: ApiSide;
+  income?: ApiSide;
+  totals?: { expense: number; income: number };
 }
 
-// Fixed statutory line items (Maharashtra Co-operative Societies "Form N" style
-// Profit and Loss / Income & Expenditure account). Amounts are populated from
-// the API by matching ledger/group names below; anything the society has
-// added beyond this standard template (custom groups/ledgers) is appended
-// automatically so no data is dropped.
-const EXPENDITURE_TEMPLATE: SectionTemplate[] = [
-  {
-    label: "Indirect Expense",
-    children: [
-      "Interest Paid",
-      "Interest Payable",
-      "Bank Charges",
-      "Salaries and Allowances of Staff",
-      "Contribution to Staff Provident Fund",
-      "Salary and Allowances of Managing Director",
-      "Attendance fees and travelling expenses of Directors and Committee Members",
-      "Travelling expenses of staff",
-      "Rent, rates and taxes",
-      "Postage, Telegram and Telephone charges",
-      "Printing and Stationery",
-      "Audit fees",
-      "General expenses",
-      "Bad Debts written off or provision made for bad debts",
-      "Depreciation on fixed assets",
-      "Land Income and Expenditure account",
-      "Other Items",
-      { label: "Net Profit carried to Balance Sheet", summary: true },
-    ],
-  },
-];
+const ledgerAmount = (ledger: ApiLedger): number => ledger.display_total ?? ledger.total ?? 0;
 
-const INCOME_TEMPLATE: SectionTemplate[] = [
-  {
-    label: "Indirect Income",
-    children: [
-      "Interest Received",
-      "Interest on Investments",
-      "Dividend",
-      "Rent Received",
-      "Profit on Sale of Assets",
-      "Excess Provision Written Back",
-      "Bad Debts Recovered",
-      "Other Income",
-      { label: "Net Loss carried to Balance Sheet", summary: true },
-    ],
-  },
-];
+const buildSideRows = (side: ApiSide | undefined, total: number): StatementRow[] => {
+  if (!side) return [];
+  const rows: StatementRow[] = [];
+
+  const walkGroup = (group: ApiGroup, level: number) => {
+    rows.push({ level, label: group.group_name, amount: group.group_total, isHeader: level === 0 });
+    (group.children || []).forEach((child) => walkGroup(child, level + 1));
+    (group.ledgers || []).forEach((ledger) => {
+      rows.push({
+        level: level + 1,
+        label: ledger.name,
+        amount: ledgerAmount(ledger),
+        ledgerId: ledger.id,
+      });
+    });
+  };
+
+  (side.groups || []).forEach((group) => {
+    walkGroup(group, 0);
+    rows.push({ level: 0, label: "", amount: null, isSpacer: true });
+  });
+
+  (side.ledgers || []).forEach((ledger) => {
+    rows.push({ level: 0, label: ledger.name, amount: ledgerAmount(ledger), ledgerId: ledger.id });
+  });
+
+  rows.push({ level: 0, label: "Total", amount: total, isTotal: true });
+
+  return rows;
+};
 
 const AccountingProfitLoss: React.FC = () => {
   const lock_account_id = localStorage.getItem("lock_account_id") || "3";
@@ -86,7 +95,7 @@ const AccountingProfitLoss: React.FC = () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const response = await axios.get(`${baseUrl}/lock_account_transactions/pnl`, {
+      const response = await axios.get<PnlApiResponse>(`${baseUrl}/lock_account_transactions/pnl`, {
         headers: {
           Accept: "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -116,13 +125,8 @@ const AccountingProfitLoss: React.FC = () => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const expenditureNodes =
-    pnlData?.pnl?.accounts?.find((s) => s.node_name === "expenditure")?.accounts || [];
-  const incomeNodes =
-    pnlData?.pnl?.accounts?.find((s) => s.node_name === "income")?.accounts || [];
-
-  const { rows: expenditureRows } = buildSideRows(EXPENDITURE_TEMPLATE, expenditureNodes);
-  const { rows: incomeRows } = buildSideRows(INCOME_TEMPLATE, incomeNodes);
+  const expenditureRows = buildSideRows(pnlData?.expense, pnlData?.totals?.expense ?? 0);
+  const incomeRows = buildSideRows(pnlData?.income, pnlData?.totals?.income ?? 0);
 
   const rowCount = Math.max(expenditureRows.length, incomeRows.length);
 
@@ -149,10 +153,19 @@ const AccountingProfitLoss: React.FC = () => {
           className={`border border-gray-300 px-3 py-1.5 ${labelClass} ${rowBg}`}
           style={{ paddingLeft: `${12 + row.level * 20}px` }}
         >
-          {row.label}
+          {row.ledgerId ? (
+            <Link
+              to={`/accounting/profit-loss/ledger/${row.ledgerId}`}
+              className="text-[#da7756] hover:underline"
+            >
+              {row.label}
+            </Link>
+          ) : (
+            row.label
+          )}
         </td>
         <td className={`border border-gray-300 px-3 py-1.5 text-right ${rowBg}`}>
-          {showInCurrentYear ? "" : formatAmount(row.amount)}
+          {row.isSpacer || showInCurrentYear ? "" : formatAmount(row.amount)}
         </td>
         <td className={`border border-gray-300 px-3 py-1.5 text-right ${labelClass} ${rowBg}`}>
           {showInCurrentYear ? formatAmount(row.amount) : ""}
@@ -213,6 +226,10 @@ const AccountingProfitLoss: React.FC = () => {
         ) : error ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-red-500">{error}</div>
+          </div>
+        ) : rowCount === 0 ? (
+          <div className="flex items-center justify-center h-32 text-gray-500">
+            No matching records found
           </div>
         ) : (
           <div className="overflow-x-auto">

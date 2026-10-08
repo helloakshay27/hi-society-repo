@@ -93,7 +93,7 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
 }) => {
     const baseUrl = localStorage.getItem("baseUrl");
     const token = localStorage.getItem("token");
-    const societyId = localStorage.getItem("selectedUserSociety");
+    const societyId = localStorage.getItem("selectedSocietyId");
 
     const [towers, setTowers] = useState([]);
     const [flats, setFlats] = useState([]);
@@ -269,8 +269,9 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
                                         notched
                                     >
                                         <MenuItem value="">Select Status</MenuItem>
-                                        <MenuItem value="active">Active</MenuItem>
-                                        <MenuItem value="inactive">Inactive</MenuItem>
+                                        <MenuItem value="approved">Approved</MenuItem>
+                                        <MenuItem value="expired">Expired</MenuItem>
+                                        <MenuItem value="pending">Pending</MenuItem>
                                     </Select>
                                 </FormControl>
                             </div>

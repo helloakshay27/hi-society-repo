@@ -7,6 +7,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { ArrowLeft, Edit, Eye, Plus } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface ChargeSetup {
   id: number;
@@ -43,6 +44,7 @@ const formatDateTime = (value?: string) => {
 };
 
 const AccountingCharges: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [charges, setCharges] = useState<ChargeSetup[]>([]);
   const [loading, setLoading] = useState(false);
@@ -107,22 +109,26 @@ const AccountingCharges: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="p-1"
-              onClick={() => navigate(`/accounting/charges/${item.id}`)}
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="p-1"
-              onClick={() => navigate(`/accounting/charges/${item.id}/edit`)}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
+            {shouldShow("Charges", "show") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="p-1"
+                onClick={() => navigate(`/accounting/charges/${item.id}`)}
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+            )}
+            {shouldShow("Charges", "update") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="p-1"
+                onClick={() => navigate(`/accounting/charges/${item.id}/edit`)}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
       case "value":
@@ -166,13 +172,15 @@ const AccountingCharges: React.FC = () => {
         exportFileName="accounting-charges"
         storageKey="accounting-charges-table"
         leftActions={
-          <Button
-            onClick={() => navigate("/accounting/charges/add")}
-            variant="ghost"
-            className="btn-primary h-9 px-4 text-sm font-medium"
-          >
-            <Plus className="w-4 h-4 mr-2" /> Add
-          </Button>
+          shouldShow("Charges", "create") && (
+            <Button
+              onClick={() => navigate("/accounting/charges/add")}
+              variant="ghost"
+              className="btn-primary h-9 px-4 text-sm font-medium"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add
+            </Button>
+          )
         }
         loading={loading}
         loadingMessage="Loading charges..."

@@ -48,6 +48,7 @@ export interface QueryFilters {
   /** Auth token for FM API calls */
   token: string;
   appId?: string;
+  projectCode?: string;
   os?: string;
 }
 
@@ -71,6 +72,7 @@ const range = (f: QueryFilters): RangeFilters => ({
   siteIds: f.siteIds,
   devices: f.devices,
   appId: f.appId,
+  projectCode: f.projectCode,
   os: f.os,
 });
 
@@ -90,6 +92,7 @@ const keyBase = (f: QueryFilters) => [
   f.devices.join(','),
   f.os,
   f.appId,
+  f.projectCode,
   f.requestId ?? 0,
 ];
 
@@ -287,9 +290,9 @@ export function useSiteLeague(f: QueryFilters, siteIds: string[], enabled: boole
   // separately so the league table contains actual per-site values.
   const queries = useQueries({
     queries: siteIds.map((siteId) => ({
-      queryKey: ['fm-adoption', 'traffic_session', f.from, f.to, siteId, f.devices.join(','), f.os, f.appId, f.requestId ?? 0],
+      queryKey: ['fm-adoption', 'traffic_session', f.from, f.to, siteId, f.devices.join(','), f.os, f.appId, f.projectCode, f.requestId ?? 0],
       queryFn: () =>
-        fetchTrafficSession({ from: f.from, to: f.to, siteIds: [siteId], devices: f.devices, appId: f.appId, os: f.os }),
+        fetchTrafficSession({ from: f.from, to: f.to, siteIds: [siteId], devices: f.devices, appId: f.appId, projectCode: f.projectCode, os: f.os }),
       enabled: enabled && f.enabled,
       ...CACHE,
     })),

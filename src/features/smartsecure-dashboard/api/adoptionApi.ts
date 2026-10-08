@@ -4,6 +4,12 @@ import axios from 'axios';
  * Dynamically resolves the PostHog Adoption Analytics API host.
  */
 export function getApiBaseUrl(): string {
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ) {
+    return '/posthog-api';
+  }
   return (
     (import.meta.env.VITE_SMARTSECURE_API_URL as string | undefined) ??
     (import.meta.env.VITE_POSTHOG_API_URL as string | undefined) ??
@@ -41,6 +47,7 @@ export interface RangeFilters {
   devices?: DeviceType[];
   url?: string;
   appId?: string;
+  projectCode?: string;
   os?: string;
 }
 
@@ -52,10 +59,18 @@ export interface WeeklyFilters {
   devices?: DeviceType[];
   url?: string;
   appId?: string;
+  projectCode?: string;
   os?: string;
 }
 
-function baseParams(siteIds?: string[], devices?: DeviceType[], customUrl?: string, appId?: string, os?: string) {
+function baseParams(
+  siteIds?: string[],
+  devices?: DeviceType[],
+  customUrl?: string,
+  appId?: string,
+  os?: string,
+  projectCode?: string
+) {
   const p: Record<string, string> = {};
   if (devices?.length) p.device_type = devices.join(',');
   if (os) p.os = os;
@@ -63,15 +78,18 @@ function baseParams(siteIds?: string[], devices?: DeviceType[], customUrl?: stri
   if (appId) {
     p.app_id = appId;
   }
+  if (projectCode) {
+    p.project_code = projectCode;
+  }
   return p;
 }
 
 function rangeParams(f: RangeFilters) {
-  return { ...baseParams(f.siteIds, f.devices, f.url, f.appId, f.os), from: f.from, to: f.to };
+  return { ...baseParams(f.siteIds, f.devices, f.url, f.appId, f.os, f.projectCode), from: f.from, to: f.to };
 }
 
 function weeklyParams(f: WeeklyFilters) {
-  return { ...baseParams(f.siteIds, f.devices, f.url, f.appId, f.os), to: f.to, weeks: String(f.weeks) };
+  return { ...baseParams(f.siteIds, f.devices, f.url, f.appId, f.os, f.projectCode), to: f.to, weeks: String(f.weeks) };
 }
 
 async function get<T>(path: string, params: Record<string, string>): Promise<T> {

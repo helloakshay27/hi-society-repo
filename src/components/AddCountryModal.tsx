@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatApiErrorMessage } from '@/utils/apiErrorMessage';
 import { useApiConfig } from '@/hooks/useApiConfig';
 
 interface AddCountryModalProps {
@@ -142,9 +143,9 @@ export const AddCountryModal: React.FC<AddCountryModalProps> = ({
         resetForm();
         onSuccess();
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => null);
         console.error('Failed to create headquarter:', errorData);
-        toast.error('Failed to create headquarter');
+        toast.error(formatApiErrorMessage(errorData, 'Failed to create headquarter'));
       }
     } catch (error) {
       console.error('Error creating headquarter:', error);

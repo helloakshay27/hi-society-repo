@@ -12,11 +12,12 @@ import {
 } from "@/components/ui/dialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Plus, KeyRound, Loader2, Eye, Pencil } from "lucide-react";
+import { Plus, KeyRound, Loader2, Eye, Pencil, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { BulkUploadModal } from "@/components/BulkUploadModal";
 import {
   Pagination,
   PaginationContent,
@@ -91,6 +92,21 @@ interface ApiResponse {
   gatekeepers: ApiGatekeeper[];
 }
 
+// ─── Visitor Import Types ──────────────────────────────────────────────────────
+
+interface VisitorImportRowResult {
+  success: boolean;
+  gatekeeper_id?: number;
+  host?: string;
+  error?: string;
+}
+
+interface VisitorImportStatusResponse {
+  status: "processing" | "completed" | "failed" | string;
+  results?: VisitorImportRowResult[];
+  error?: string;
+}
+
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 const formatDateTime = (iso: string | null | undefined): string => {
@@ -135,6 +151,68 @@ const checkVisitorAction = async (
   if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 };
 
+const IMPORT_POLL_INTERVAL_MS = 5000;
+const IMPORT_POLL_MAX_ATTEMPTS = 120; // ~10 minutes
+
+const fetchVisitorImportStatus = async (importId: string | number): Promise<VisitorImportStatusResponse> => {
+  const res = await fetch(
+    getFullUrl(`/crm/admin/visitors/import_status.json?import_id=${importId}`),
+    { headers: { Authorization: getAuthHeader() } }
+  );
+  if (!res.ok) throw new Error(`Failed to check import status: ${res.status}`);
+  return res.json();
+};
+
+/**
+ * Queues an XLSX expected-visitor import (POST .../visitors/import.json),
+ * then polls import_status.json every 5s until it reports "completed".
+ */
+const importVisitorsFile = async (file: File): Promise<VisitorImportStatusResponse> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  // society_id is optional server-side — it defaults to the admin's
+  // currently selected society when omitted.
+
+  const res = await fetch(getFullUrl("/crm/admin/visitors/import.json"), {
+    method: "POST",
+    headers: { Authorization: getAuthHeader() },
+    body: formData,
+  });
+  if (!res.ok) {
+    const message = await res.text().catch(() => "");
+    throw new Error(message || `Import failed: ${res.status}`);
+  }
+  const data = await res.json();
+  const importId = data.import_id;
+  if (!importId) throw new Error("Import did not return an import_id");
+
+  for (let attempt = 0; attempt < IMPORT_POLL_MAX_ATTEMPTS; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, IMPORT_POLL_INTERVAL_MS));
+    const status = await fetchVisitorImportStatus(importId);
+    if (status.status === "completed") return status;
+    if (status.status === "failed") throw new Error(status.error || "Import failed");
+    // "processing" (or anything else) → keep polling.
+  }
+
+  throw new Error("Import is taking longer than expected. Please check back shortly.");
+};
+
+const downloadVisitorImportSample = async (): Promise<void> => {
+  const res = await fetch(getFullUrl("/expected_visitors_import_sample.xlsx"), {
+    headers: { Authorization: getAuthHeader() },
+  });
+  if (!res.ok) throw new Error(`Failed to download sample: ${res.status}`);
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "expected_visitors_import_sample.xlsx";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
+
 // ─── Column Config ─────────────────────────────────────────────────────────────
 
 const visitorInColumns: ColumnConfig[] = [
@@ -173,6 +251,45 @@ const SmartSecureVisitorIn: React.FC = () => {
   const [otpDialogOpen, setOtpDialogOpen] = useState(false);
   const [otpValue, setOtpValue] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
+
+  // ── Import State ───────────────────────────────────────────────────────────
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+
+  const handleFileImport = async (file: File) => {
+    // BulkUploadModal only console.errors a thrown onImport rejection (no
+    // toast of its own), so failures are surfaced here before re-throwing —
+    // the throw still matters so the modal keeps it open on failure instead
+    // of closing as if the import succeeded.
+    try {
+      const status = await importVisitorsFile(file);
+      const results = status.results || [];
+      const failed = results.filter((r) => !r.success);
+      if (failed.length > 0) {
+        toast.warning(
+          `Imported with ${failed.length} of ${results.length} row(s) failed`,
+          { description: failed[0]?.error }
+        );
+      } else {
+        toast.success(
+          results.length > 0
+            ? `Imported ${results.length} visitor(s) successfully`
+            : "Import completed successfully"
+        );
+      }
+      queryClient.invalidateQueries({ queryKey: ["visitor-in-list"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Import failed");
+      throw error;
+    }
+  };
+
+  const handleDownloadSample = async () => {
+    try {
+      await downloadVisitorImportSample();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to download sample format");
+    }
+  };
 
   const handleVerifyOtp = async () => {
     if (!otpValue.trim()) {
@@ -560,6 +677,21 @@ const SmartSecureVisitorIn: React.FC = () => {
     </div>
   );
 
+  // Matches ColumnVisibilityMenu / Filter / Export's own icon-button
+  // styling exactly (h-8, rounded-lg, outline variant) so it reads as part
+  // of the same toolbar row next to search, not a separate action.
+  const rightActions = shouldShow("Visitor In", "create") ? (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-8 flex items-center gap-2 rounded-lg border-[#da7756] text-[#da7756] [&_svg]:text-[#da7756]"
+      onClick={() => setIsBulkUploadOpen(true)}
+      title="Import"
+    >
+      <Upload className="w-4 h-4" />
+    </Button>
+  ) : undefined;
+
   // ── Loading / Error ────────────────────────────────────────────────────────
 
   if (isError) {
@@ -590,6 +722,7 @@ const SmartSecureVisitorIn: React.FC = () => {
         hideColumnsButton={false}
         loading={isLoading}
         leftActions={leftActions}
+        rightActions={rightActions}
       />
 
       {/* Pagination */}
@@ -686,6 +819,16 @@ const SmartSecureVisitorIn: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Import Visitors Modal */}
+      <BulkUploadModal
+        isOpen={isBulkUploadOpen}
+        onClose={() => setIsBulkUploadOpen(false)}
+        title="Import Expected Visitors"
+        description="Upload an XLSX file to import expected visitors."
+        onImport={handleFileImport}
+        onDownloadSample={handleDownloadSample}
+      />
     </div>
   );
 };

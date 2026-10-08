@@ -20,6 +20,7 @@ import {
   Clock,
   CheckCircle2,
 } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   AccountingInvoiceFilterDialog,
   AccountingInvoiceFilters,
@@ -36,6 +37,14 @@ import {
 } from "@/components/ui/pagination";
 
 const PAGE_SIZE = 20;
+
+// "2026-09-30" -> "30/09/2026"; leaves already-formatted or unparseable values as-is.
+const formatDateDMY = (value?: string | null): string => {
+  if (!value) return "-";
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  return value;
+};
 
 interface LockAccountBill {
   id: number;
@@ -59,6 +68,7 @@ interface LockAccountBill {
   status: string;
   publish: boolean;
   mail_sent: boolean;
+  bill_actions?: { can_publish?: boolean };
 }
 
 interface InvoiceRow {
@@ -109,11 +119,25 @@ const toRow = (bill: LockAccountBill): InvoiceRow => ({
   dueDate: bill.due_date || "",
   totalAmount: Number(bill.total_amount) || 0,
   note: bill.note || "",
-  billCycle: bill.bill_cycle || bill.bill_cycle_name || "",
+  billCycle: bill.bill_cycle || bill.society_bill_cycle_name || "",
   status: bill.status || "Pending",
-  publish: Boolean(bill.publish),
+  // can_publish is true while the invoice is still unpublished; the list's
+  // Publish column shows the current published state, so invert the action flag.
+  publish: !Boolean(bill.bill_actions?.can_publish),
   mailSent: Boolean(bill.mail_sent),
 });
+
+// Shared between fetchBills (one page) and handleSelectAll (every matching
+// page) so both hit the server with identical q[...] filters.
+const buildBillFilterParams = (filters: AccountingInvoiceFilters): Record<string, string> => {
+  const params: Record<string, string> = {};
+  if (filters.tower) params["q[society_block_id_in][]"] = filters.tower;
+  if (filters.billNumber) params["q[bill_number_in][]"] = filters.billNumber.trim();
+  if (filters.unit) params["q[society_flat_id_in][]"] = filters.unit;
+  if (filters.paymentStatus) params["q[status_eq]"] = filters.paymentStatus;
+  if (filters.publishStatus) params["q[publish_eq]"] = filters.publishStatus === "Yes" ? "1" : "0";
+  return params;
+};
 
 // Shown only when the API call fails, so the list + row actions (eye button →
 // details page) can still be exercised while the backend is unreachable.
@@ -166,11 +190,14 @@ const downloadInvoicesXlsx = async (ids: number[], fileName: string) => {
 };
 
 const AccountingInvoices: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [bills, setBills] = useState<LockAccountBill[]>([]);
   const [summary, setSummary] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [allSelected, setAllSelected] = useState(false);
+  const [selectAllLoading, setSelectAllLoading] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<AccountingInvoiceFilters>({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -188,16 +215,8 @@ const AccountingInvoices: React.FC = () => {
       const params: Record<string, string | number> = {
         page: currentPage,
         per_page: PAGE_SIZE,
+        ...buildBillFilterParams(appliedFilters),
       };
-      if (appliedFilters.tower) params["q[society_block_id_in][]"] = appliedFilters.tower;
-      if (appliedFilters.billNumber) {
-        params["q[bill_number_in][]"] = appliedFilters.billNumber.trim();
-      }
-      if (appliedFilters.unit) params["q[society_flat_id_in][]"] = appliedFilters.unit;
-      if (appliedFilters.paymentStatus) params["q[status_eq]"] = appliedFilters.paymentStatus;
-      if (appliedFilters.publishStatus) {
-        params["q[publish_eq]"] = appliedFilters.publishStatus === "Yes" ? "1" : "0";
-      }
       const response = await axios.get(url, {
         params,
         headers: {
@@ -318,18 +337,53 @@ const AccountingInvoices: React.FC = () => {
   const handleApplyFilters = (filters: AccountingInvoiceFilters) => {
     setAppliedFilters(filters);
     setCurrentPage(1);
+    setSelectedIds([]);
+    setAllSelected(false);
   };
 
   const handleResetFilters = () => {
     setAppliedFilters({});
     setCurrentPage(1);
+    setSelectedIds([]);
+    setAllSelected(false);
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    setSelectedIds(checked ? filteredRows.map((r) => String(r.id)) : []);
+  // Select All must cover every invoice matching the current filters, not just
+  // the rows on the current page — server-side pagination means `filteredRows`
+  // only ever holds one page's worth of bills.
+  const handleSelectAll = async (checked: boolean) => {
+    if (!checked) {
+      setSelectedIds([]);
+      setAllSelected(false);
+      return;
+    }
+    setSelectAllLoading(true);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const url = `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_bills.json`;
+      const response = await axios.get(url, {
+        params: { page: 1, per_page: 100000, ...buildBillFilterParams(appliedFilters) },
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const data = response.data;
+      const allBills: LockAccountBill[] = data?.lock_account_bills || data?.data || data || [];
+      setSelectedIds(allBills.map((b) => String(b.id)));
+      setAllSelected(true);
+    } catch (error) {
+      console.error("Error selecting all invoices:", error);
+      toast.error("Failed to select all invoices");
+    } finally {
+      setSelectAllLoading(false);
+    }
   };
 
   const handleSelectItem = (id: string, checked: boolean) => {
+    if (!checked) setAllSelected(false);
     setSelectedIds((prev) => (checked ? [...prev, id] : prev.filter((item) => item !== id)));
   };
 
@@ -406,22 +460,26 @@ const AccountingInvoices: React.FC = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="p-1"
-              onClick={() => navigate(`/accounting/invoices/${item.id}`)}
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="p-1"
-              onClick={() => navigate(`/accounting/invoices/${item.id}/edit`)}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
+            {shouldShow("Invoices", "show") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="p-1"
+                onClick={() => navigate(`/accounting/invoices/${item.id}`)}
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+            )}
+            {shouldShow("Invoices", "update") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="p-1"
+                onClick={() => navigate(`/accounting/invoices/${item.id}/edit`)}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
       case "id":
@@ -439,7 +497,7 @@ const AccountingInvoices: React.FC = () => {
       case "nameOnBill":
         return item.nameOnBill || "-";
       case "dueDate":
-        return item.dueDate || "-";
+        return formatDateDMY(item.dueDate);
       case "totalAmount":
         return item.totalAmount ? item.totalAmount.toFixed(1) : "-";
       case "note":
@@ -557,9 +615,10 @@ const AccountingInvoices: React.FC = () => {
 
         <Button
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-          onClick={() => handleSelectAll(selectedIds.length !== filteredRows.length)}
+          onClick={() => handleSelectAll(!allSelected)}
+          disabled={selectAllLoading}
         >
-          <CheckSquare className="mr-2 h-4 w-4" /> Select All
+          <CheckSquare className="mr-2 h-4 w-4" /> {selectAllLoading ? "Selecting..." : "Select All"}
         </Button>
         <Button
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -604,12 +663,14 @@ const AccountingInvoices: React.FC = () => {
         loadingMessage="Loading invoices..."
         emptyMessage="No matching records found"
         leftActions={
-          <Button
-            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-            onClick={() => navigate("/accounting/invoice-creation")}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add
-          </Button>
+          shouldShow("Invoices", "create") && (
+            <Button
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+              onClick={() => navigate("/accounting/invoice-creation")}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add
+            </Button>
+          )
         }
       />
 

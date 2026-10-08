@@ -17,6 +17,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Eye, Plus, Trash2 } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface FlatChargeMapping {
   id: number;
@@ -45,6 +46,7 @@ const formatDateTime = (value?: string) => {
 };
 
 const AccountingUnitsBillCycleMapping: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [mappings, setMappings] = useState<FlatChargeMapping[]>([]);
   const [loading, setLoading] = useState(false);
@@ -122,15 +124,17 @@ const AccountingUnitsBillCycleMapping: React.FC = () => {
             >
               <Eye className="w-4 h-4" />
             </Button> */}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="p-1"
-              disabled={deletingId === item.id}
-              onClick={() => handleDelete(item.id)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            {shouldShow("Unit & Bill Cycle Mapping", "destroy") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="p-1"
+                disabled={deletingId === item.id}
+                onClick={() => handleDelete(item.id)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
       case "flat_names":
@@ -156,13 +160,15 @@ const AccountingUnitsBillCycleMapping: React.FC = () => {
         pageSize={20}
         storageKey="units-bill-cycle-mapping-table"
         leftActions={
-          <Button
-            variant="ghost"
-            className="btn-primary h-9 px-4 text-sm font-medium"
-            onClick={() => navigate("/accounting/units-bill-cycle-mapping/add")}
-          >
-            <Plus className="w-4 h-4 mr-2" /> Add
-          </Button>
+          shouldShow("Unit & Bill Cycle Mapping", "create") && (
+            <Button
+              variant="ghost"
+              className="btn-primary h-9 px-4 text-sm font-medium"
+              onClick={() => navigate("/accounting/units-bill-cycle-mapping/add")}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add
+            </Button>
+          )
         }
         loading={loading}
         loadingMessage="Loading mappings..."

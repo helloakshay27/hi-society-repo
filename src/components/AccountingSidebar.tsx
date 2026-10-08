@@ -33,10 +33,17 @@ export const AccountingSidebar: React.FC = () => {
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
   const [accountantOpen, setAccountantOpen] = React.useState(true);
   const [configurationOpen, setConfigurationOpen] = React.useState(true);
+  const [customSettingsOpen, setCustomSettingsOpen] = React.useState(true);
   const [reportsOpen, setReportsOpen] = React.useState(true);
 
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");
+
+  // Invoices/Receipts are two views of the same /accounting/custom-settings
+  // page, switched via a ?tab= query param rather than separate routes.
+  const isCustomSettingsTabActive = (tab: string) =>
+    location.pathname === "/accounting/custom-settings" &&
+    (new URLSearchParams(location.search).get("tab") || "invoices") === tab;
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -264,18 +271,49 @@ export const AccountingSidebar: React.FC = () => {
             )}
           </div>
 
-          {/* Custom Settings */}
-          <button
-            onClick={() => handleNavigation("/accounting/custom-settings")}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-            title="Custom Settings"
-          >
-            {isActive("/accounting/custom-settings") && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+          {/* Custom Settings parent with sub-items */}
+          <div>
+            <button
+              onClick={() => setCustomSettingsOpen((v) => !v)}
+              className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+              title="Custom Settings"
+            >
+              <Wrench className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+              {!isSidebarCollapsed && <span className="truncate">Custom Settings</span>}
+              {!isSidebarCollapsed && (
+                <span className="ml-auto">
+                  {customSettingsOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </span>
+              )}
+            </button>
+            {/* Sub-menu for Custom Settings */}
+            {customSettingsOpen && !isSidebarCollapsed && (
+              <div className="space-y-1">
+                <button
+                  onClick={() => handleNavigation("/accounting/custom-settings?tab=invoices")}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
+                  title="Invoices"
+                >
+                  {isCustomSettingsTabActive("invoices") && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                  )}
+                  <FileText className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+                  <span className="truncate">Invoices</span>
+                </button>
+                <button
+                  onClick={() => handleNavigation("/accounting/custom-settings?tab=receipts")}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
+                  title="Receipts"
+                >
+                  {isCustomSettingsTabActive("receipts") && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                  )}
+                  <Receipt className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+                  <span className="truncate">Receipts</span>
+                </button>
+              </div>
             )}
-            <Wrench className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
-            {!isSidebarCollapsed && <span className="truncate">Custom Settings</span>}
-          </button>
+          </div>
 
           {/* Reports parent with sub-items */}
           <div>

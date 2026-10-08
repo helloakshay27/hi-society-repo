@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import { Button as MuiButton } from "@mui/material";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
@@ -50,8 +51,8 @@ export const DeleteSocietyModal: React.FC<DeleteSocietyModalProps> = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete society");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errorData, "Failed to delete society"));
       }
 
       toast.success("Society deleted successfully");

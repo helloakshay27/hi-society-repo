@@ -100,6 +100,56 @@ interface SelectOption {
   label: string;
 }
 
+interface UnitOption extends SelectOption {
+  outstanding: number;
+}
+
+interface LedgerChargeOption extends SelectOption {
+  description: string;
+  chargeCategory: string;
+  igstRate: string;
+  cgstRate: string;
+  sgstRate: string;
+}
+
+// Charge ledgers carry their own description/category/tax rates (set on the
+// underlying ChargeSetup) which the plain {id,label} normalizeOptions() shape
+// would drop, so they get their own normalizer — selecting one in the
+// charges table preselects these instead of leaving them blank/editable.
+const normalizeLedgerOptions = (list: unknown): LedgerChargeOption[] => {
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => {
+    const obj = (item ?? {}) as Record<string, unknown>;
+    const rawId = obj.id ?? obj.value ?? obj.name;
+    const rawLabel = obj.name ?? obj.label ?? rawId ?? "";
+    return {
+      id: String(rawId ?? ""),
+      label: String(rawLabel),
+      description: String(obj.description ?? ""),
+      chargeCategory: String(obj.charge_category ?? obj.chargeCategory ?? ""),
+      igstRate: String(obj.igst_rate ?? obj.igstRate ?? "0"),
+      cgstRate: String(obj.cgst_rate ?? obj.cgstRate ?? "0"),
+      sgstRate: String(obj.sgst_rate ?? obj.sgstRate ?? "0"),
+    };
+  });
+};
+
+// Units carry an extra `outstanding` balance the plain {id,label}
+// normalizeOptions() shape would drop, so they get their own normalizer.
+const normalizeUnitOptions = (list: unknown): UnitOption[] => {
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => {
+    const obj = (item ?? {}) as Record<string, unknown>;
+    const rawId = obj.id ?? obj.society_flat_id ?? obj.value ?? obj.name;
+    const rawLabel = obj.name ?? obj.label ?? rawId ?? "";
+    return {
+      id: String(rawId ?? ""),
+      label: String(rawLabel),
+      outstanding: Number(obj.outstanding ?? 0),
+    };
+  });
+};
+
 // The invoice_form_options / bill_frequencies APIs are expected to return
 // arrays of either plain strings or objects — normalize both shapes into
 // {id, label} so FormSelect never has to care which one it got.
@@ -224,6 +274,7 @@ const AccountingInvoiceCreation: React.FC = () => {
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
   const [billNumber, setBillNumber] = useState("");
+  const [autoGenerateBillNumber, setAutoGenerateBillNumber] = useState(false);
   const [dueDate, setDueDate] = useState("");
   const [billCycleId, setBillCycleId] = useState("");
   const [billFrequency, setBillFrequency] = useState("");
@@ -240,11 +291,10 @@ const AccountingInvoiceCreation: React.FC = () => {
 
   const [billCycleOptions, setBillCycleOptions] = useState<SelectOption[]>([]);
   const [billFrequencyOptions, setBillFrequencyOptions] = useState<SelectOption[]>([]);
-  const [unitOptions, setUnitOptions] = useState<SelectOption[]>([]);
+  const [unitOptions, setUnitOptions] = useState<UnitOption[]>([]);
   const [residentTypeOptions, setResidentTypeOptions] = useState<SelectOption[]>([]);
   const [invoiceFormatOptions, setInvoiceFormatOptions] = useState<SelectOption[]>([]);
-  const [ledgerOptions, setLedgerOptions] = useState<SelectOption[]>([]);
-  const [chargeTypeOptions, setChargeTypeOptions] = useState<SelectOption[]>([]);
+  const [ledgerOptions, setLedgerOptions] = useState<LedgerChargeOption[]>([]);
   const [frequencyLoading, setFrequencyLoading] = useState(false);
 
   // GET /lock_account_bills/invoice_form_options?lock_account_id=... — bundles
@@ -264,9 +314,10 @@ const AccountingInvoiceCreation: React.FC = () => {
         });
         const data = res.data || {};
         setBillCycleOptions(normalizeOptions(data.bill_cycles));
-        setUnitOptions(normalizeOptions(data.units ?? data.ledgers ?? data.unit_ledgers));
+        setUnitOptions(normalizeUnitOptions(data.units ?? data.ledgers ?? data.unit_ledgers));
         setResidentTypeOptions(normalizeOptions(data.resident_types));
         setInvoiceFormatOptions(normalizeOptions(data.invoice_formats));
+        setAutoGenerateBillNumber(Boolean(data.bill_number_setting.auto_generate));
       } catch (error) {
         console.error("Error fetching invoice form options:", error);
         toast.error("Failed to load invoice form options");
@@ -275,46 +326,16 @@ const AccountingInvoiceCreation: React.FC = () => {
     fetchFormOptions();
   }, [lockAccountId]);
 
-  // GET /account/charge_setups/charge_type_options.json?lock_account_id=... —
-  // dedicated charge-type list used by the "Charge Type" column in the charges table.
-  useEffect(() => {
-    const fetchChargeTypes = async () => {
-      try {
-        const baseUrl = API_CONFIG.BASE_URL;
-        const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/account/charge_setups/charge_type_options.json`, {
-          params: { lock_account_id: lockAccountId },
-          headers: {
-            Accept: "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-        const data = res.data;
-        const list = Array.isArray(data)
-          ? data
-          : data?.charge_categories ??
-            data?.charge_type_options ??
-            data?.categories ??
-            data?.data ??
-            [];
-        setChargeTypeOptions(normalizeOptions(list));
-      } catch (error) {
-        console.error("Error fetching charge types:", error);
-        setChargeTypeOptions([]);
-      }
-    };
-    fetchChargeTypes();
-  }, [lockAccountId]);
 
-  // GET /lock_account_ledgers?lock_account_id=... — list of ledgers selectable
-  // as charges on the invoice.
+  // GET /lock_account_ledgers/dropdown.json?lock_account_id=... — list of
+  // ledgers selectable as charges on the invoice.
   useEffect(() => {
     const fetchLedgers = async () => {
       try {
         const baseUrl = API_CONFIG.BASE_URL;
         const token = API_CONFIG.TOKEN;
-        const res = await axios.get(`${baseUrl}/lock_account_ledgers`, {
-          params: { lock_account_id: lockAccountId },
+        const res = await axios.get(`${baseUrl}/lock_account_ledgers/dropdown.json`, {
+          params: { lock_account_id: lockAccountId,ledger_of: "ChargeSetup", },
           headers: {
             Accept: "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -322,7 +343,7 @@ const AccountingInvoiceCreation: React.FC = () => {
         });
         const data = res.data;
         const list = Array.isArray(data) ? data : data?.lock_account_ledgers ?? data?.data ?? [];
-        setLedgerOptions(normalizeOptions(list));
+        setLedgerOptions(normalizeLedgerOptions(list));
       } catch (error) {
         console.error("Error fetching ledgers:", error);
         setLedgerOptions([]);
@@ -370,8 +391,34 @@ const AccountingInvoiceCreation: React.FC = () => {
     [charges]
   );
 
+  const balanceAmount = useMemo(
+    () => unitOptions.find((option) => option.id === unitId)?.outstanding ?? 0,
+    [unitOptions, unitId]
+  );
+
   const updateCharge = (key: string, field: keyof ChargeRow, value: string) => {
     setCharges((prev) => prev.map((row) => (row.key === key ? { ...row, [field]: value } : row)));
+  };
+
+  // Selecting a ledger preselects its description/tax rates from the
+  // underlying ChargeSetup; only the description stays editable afterwards.
+  const handleLedgerSelect = (key: string, ledgerId: string) => {
+    const ledger = ledgerOptions.find((option) => option.id === ledgerId);
+    setCharges((prev) =>
+      prev.map((row) =>
+        row.key === key
+          ? {
+              ...row,
+              ledgerId,
+              description: ledger?.description || "",
+              chargeType: ledger?.chargeCategory || "",
+              igstRate: ledger?.igstRate || "0",
+              cgstRate: ledger?.cgstRate || "0",
+              sgstRate: ledger?.sgstRate || "0",
+            }
+          : row
+      )
+    );
   };
 
   const addCharge = () => setCharges((prev) => [...prev, emptyCharge()]);
@@ -387,7 +434,7 @@ const AccountingInvoiceCreation: React.FC = () => {
         return (
           <FormSelect
             value={row.ledgerId}
-            onChange={(value) => updateCharge(row.key, "ledgerId", value)}
+            onChange={(value) => handleLedgerSelect(row.key, value)}
             placeholder="Select Ledger"
             options={ledgerOptions}
             bordered
@@ -405,15 +452,7 @@ const AccountingInvoiceCreation: React.FC = () => {
           </div>
         );
       case "chargeType":
-        return (
-          <FormSelect
-            value={row.chargeType}
-            onChange={(value) => updateCharge(row.key, "chargeType", value)}
-            placeholder="Select Type"
-            options={chargeTypeOptions}
-            bordered
-          />
-        );
+        return <Input readOnly value={row.chargeType} className="bg-brand-bg" />;
       case "quantity":
         return (
           <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
@@ -443,48 +482,15 @@ const AccountingInvoiceCreation: React.FC = () => {
       case "amount":
         return <Input readOnly value={amount.toFixed(2)} className="bg-brand-bg" />;
       case "igstRate":
-        return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={row.igstRate}
-              onChange={(e) => updateCharge(row.key, "igstRate", e.target.value)}
-              className="border-0 focus-visible:border-0"
-            />
-          </div>
-        );
+        return <Input readOnly value={row.igstRate} className="bg-brand-bg" />;
       case "igstAmount":
         return <Input readOnly value={igstAmount.toFixed(2)} className="bg-brand-bg" />;
       case "cgstRate":
-        return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={row.cgstRate}
-              onChange={(e) => updateCharge(row.key, "cgstRate", e.target.value)}
-              className="border-0 focus-visible:border-0"
-            />
-          </div>
-        );
+        return <Input readOnly value={row.cgstRate} className="bg-brand-bg" />;
       case "cgstAmount":
         return <Input readOnly value={cgstAmount.toFixed(2)} className="bg-brand-bg" />;
       case "sgstRate":
-        return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={row.sgstRate}
-              onChange={(e) => updateCharge(row.key, "sgstRate", e.target.value)}
-              className="border-0 focus-visible:border-0"
-            />
-          </div>
-        );
+        return <Input readOnly value={row.sgstRate} className="bg-brand-bg" />;
       case "sgstAmount":
         return <Input readOnly value={sgstAmount.toFixed(2)} className="bg-brand-bg" />;
       case "totalAmount":
@@ -496,7 +502,7 @@ const AccountingInvoiceCreation: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!billNumber.trim()) {
+    if (!autoGenerateBillNumber && !billNumber.trim()) {
       toast.error("Bill Number is required.");
       return;
     }
@@ -513,6 +519,13 @@ const AccountingInvoiceCreation: React.FC = () => {
       toast.error("Please add at least one charge with a ledger selected.");
       return;
     }
+    const incompleteCharge = validCharges.find(
+      (row) => !(Number(row.quantity) > 0) || !(Number(row.rate) > 0)
+    );
+    if (incompleteCharge) {
+      toast.error("Quantity and Rate are required for every charge with a ledger selected.");
+      return;
+    }
 
     const societyId =
       localStorage.getItem("society_id") || localStorage.getItem("selectedSocietyId") || "";
@@ -520,12 +533,12 @@ const AccountingInvoiceCreation: React.FC = () => {
     const payload = {
       lock_account_id: Number(lockAccountId),
       lock_account_bill: {
-        bill_number: billNumber,
+        ...(autoGenerateBillNumber ? {} : { bill_number: billNumber }),
         ledger_id: Number(unitId),
         society_id: Number(societyId) || undefined,
         due_date: dueDate,
         bill_cycle_id: billCycleId ? Number(billCycleId) : undefined,
-        frequency: billFrequency || undefined,
+        bill_frequency_id: billFrequency ? Number(billFrequency) : undefined,
         resident_type: residentTypeId,
         other_preferences: otherPreferences || undefined,
         invoice_format: invoiceFormatId || undefined,
@@ -589,18 +602,20 @@ const AccountingInvoiceCreation: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         <SectionCard title="Invoice Details">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-            <TextField
-              label="Bill Number"
-              required
-              placeholder="Enter bill number"
-              value={billNumber}
-              onChange={(e) => setBillNumber(e.target.value)}
-              variant="outlined"
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ notched: true }}
-              sx={{ "& .MuiInputBase-root": fieldStyles }}
-            />
+            {!autoGenerateBillNumber && (
+              <TextField
+                label="Bill Number"
+                required
+                placeholder="Enter bill number"
+                value={billNumber}
+                onChange={(e) => setBillNumber(e.target.value)}
+                variant="outlined"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ notched: true }}
+                sx={{ "& .MuiInputBase-root": fieldStyles }}
+              />
+            )}
             <TextField
               label="Due Date"
               required
@@ -632,7 +647,7 @@ const AccountingInvoiceCreation: React.FC = () => {
             </FormControl>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
             <FormControl fullWidth disabled={!billCycleId || frequencyLoading} sx={{ "& .MuiInputBase-root": fieldStyles }}>
               <InputLabel shrink>Bill Frequency</InputLabel>
               <Select
@@ -673,6 +688,14 @@ const AccountingInvoiceCreation: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
+            {unitId && (
+              <div className="flex h-[45px] items-center text-sm text-brand-text">
+                Balance Amount: {Math.round(balanceAmount * 100) / 100}
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <FormControl fullWidth sx={{ "& .MuiInputBase-root": fieldStyles }}>
               <InputLabel shrink>Resident Type</InputLabel>
               <Select
@@ -690,9 +713,6 @@ const AccountingInvoiceCreation: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <FormTextArea
               label="Other Preferences"
               placeholder="Enter Other Preferences"
@@ -717,6 +737,9 @@ const AccountingInvoiceCreation: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <TextField
               label="IRN No"
               placeholder="Enter IRN Number"
@@ -728,9 +751,6 @@ const AccountingInvoiceCreation: React.FC = () => {
               InputProps={{ notched: true }}
               sx={{ "& .MuiInputBase-root": fieldStyles }}
             />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <TextField
               label="Acknowledgement No"
               placeholder="Enter Acknowledgement Number"

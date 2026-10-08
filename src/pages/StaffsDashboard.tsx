@@ -797,14 +797,16 @@ export const StaffsDashboard = () => {
             hideColumnsButton={false}
             handleExport={handleExport}
             leftActions={
-              <Button
-                onClick={() => setShowActionMenu(!showActionMenu)}
-              variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium" 
-              >
-                <Plus className="w-5 h-5" />
-                Action
-              </Button>
+              shouldShow("Staff All", "create") && (
+                <Button
+                  onClick={() => setShowActionMenu(!showActionMenu)}
+                  variant="ghost"
+                  className="btn-primary h-9 px-4 text-sm font-medium"
+                >
+                  <Plus className="w-5 h-5" />
+                  Action
+                </Button>
+              )
             }
           />
         </TabsContent>

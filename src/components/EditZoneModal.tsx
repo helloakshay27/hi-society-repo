@@ -10,6 +10,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
 import {
   Dialog,
@@ -206,14 +207,14 @@ export const EditZoneModal: React.FC<EditZoneModalProps> = ({
       });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.message || "Failed to update zone");
+        const errData = await response.json().catch(() => null);
+        throw new Error(formatApiErrorMessage(errData, "Failed to update zone"));
       }
 
       toast.success("Zone updated successfully!");
       onSuccess();
     } catch (error: unknown) {
-      toast.error(`Failed to update zone: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(error instanceof Error ? error.message : "Failed to update zone");
     } finally {
       setIsSubmitting(false);
     }

@@ -107,6 +107,7 @@ const BannerList = () => {
             title: true,
             image: true,
             banners_list: true,
+            web: true,
           },
         });
 

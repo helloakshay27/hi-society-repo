@@ -210,10 +210,21 @@ const AccountingBillCycleEdit: React.FC = () => {
           expense: !!data.expense_bill,
         });
 
-        const names: string[] = Array.isArray(data.charge_names) ? data.charge_names : [];
-        setChargeIds(
-          options.charges.filter((cs) => names.includes(cs.name)).map((cs) => cs.id)
-        );
+        // The API returns the selected charges as charge_setup_ids (real ids) —
+        // prefer that directly; only fall back to matching by charge_names
+        // (fuzzier, since formatting differences could miss a match) if the
+        // response doesn't include ids for some reason.
+        const chargeSetupIds: number[] = Array.isArray(data.charge_setup_ids)
+          ? data.charge_setup_ids.map(Number)
+          : [];
+        if (chargeSetupIds.length > 0) {
+          setChargeIds(chargeSetupIds);
+        } else {
+          const names: string[] = Array.isArray(data.charge_names) ? data.charge_names : [];
+          setChargeIds(
+            options.charges.filter((cs) => names.includes(cs.name)).map((cs) => cs.id)
+          );
+        }
       } catch (error) {
         console.error("Error fetching bill cycle for edit:", error);
         toast.error("Failed to load bill cycle for editing");
@@ -241,6 +252,10 @@ const AccountingBillCycleEdit: React.FC = () => {
     }
     if (!form.startDate || !form.endDate) {
       toast.error("Start Date and End Date are required");
+      return;
+    }
+    if (form.endDate < form.startDate) {
+      toast.error("End Date cannot be before Start Date");
       return;
     }
     if (!form.frequency) {
@@ -318,7 +333,13 @@ const AccountingBillCycleEdit: React.FC = () => {
                 type="date"
                 placeholder="Select Start Date"
                 value={form.startDate}
-                onChange={(e) => updateField("startDate", e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  updateField("startDate", value);
+                  if (form.endDate && value > form.endDate) {
+                    updateField("endDate", value);
+                  }
+                }}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
@@ -336,6 +357,7 @@ const AccountingBillCycleEdit: React.FC = () => {
                 fullWidth
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ notched: true }}
+                inputProps={{ min: form.startDate || undefined }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
               <TextField
@@ -344,11 +366,15 @@ const AccountingBillCycleEdit: React.FC = () => {
                 type="number"
                 placeholder="Enter Days"
                 value={form.paymentDueDays}
-                onChange={(e) => updateField("paymentDueDays", e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.startsWith("-")) return;
+                  updateField("paymentDueDays", e.target.value);
+                }}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ notched: true }}
+                inputProps={{ min: 0, onKeyDown: (e) => { if (e.key === "-") e.preventDefault(); } }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
               <FormControl fullWidth required sx={{ "& .MuiInputBase-root": fieldStyles }}>
@@ -393,11 +419,15 @@ const AccountingBillCycleEdit: React.FC = () => {
                 type="number"
                 placeholder={isPercentageType(form.fineType) ? "Enter Fine Percentage" : "Enter Fine Amount"}
                 value={form.fineRate}
-                onChange={(e) => updateField("fineRate", e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.startsWith("-")) return;
+                  updateField("fineRate", e.target.value);
+                }}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ notched: true }}
+                inputProps={{ min: 0, step: "0.01", onKeyDown: (e) => { if (e.key === "-") e.preventDefault(); } }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
               <FormControl fullWidth sx={{ "& .MuiInputBase-root": fieldStyles }}>
@@ -422,11 +452,15 @@ const AccountingBillCycleEdit: React.FC = () => {
                 type="number"
                 placeholder={isPercentageType(form.interestType) ? "Enter Interest Percentage" : "Enter Interest Amount"}
                 value={form.interestRate}
-                onChange={(e) => updateField("interestRate", e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.startsWith("-")) return;
+                  updateField("interestRate", e.target.value);
+                }}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ notched: true }}
+                inputProps={{ min: 0, step: "0.01", onKeyDown: (e) => { if (e.key === "-") e.preventDefault(); } }}
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               />
             </div>

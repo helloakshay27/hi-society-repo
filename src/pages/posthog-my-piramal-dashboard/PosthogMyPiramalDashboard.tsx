@@ -78,12 +78,16 @@ function PosthogMyPiramalDashboardContent() {
     // Site scope comes from the logged-in user's own account (site_id),
     // not a manual picker — falls back to [] (tenant-wide) until it loads.
     const siteIds = accountSiteId ? [accountSiteId] : [];
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const dynamicAppId = urlParams?.get('app_id') || urlParams?.get('appId') || '30';
+    const dynamicProjectCode = urlParams?.get('project_code') || urlParams?.get('projectCode') || 'PIR-01';
 
     return {
       siteIds,
       from: rangeFrom,
       to: rangeTo,
       token: getToken() || localStorage.getItem('token') || '',
+      deviceType: 'Mobile',
       devPlatform,
       licensedSeats: null,
       module: null,
@@ -91,8 +95,9 @@ function PosthogMyPiramalDashboardContent() {
       // My Piramal sends both identifiers on every PostHog Adoption API
       // call — project_code and app_id together (unlike Runwal CP, which
       // sends project_code only).
-      appId: '30',
-      projectCode: 'PIR-01',
+      appId: dynamicAppId,
+      projectCode: dynamicProjectCode,
+      includeAnonymous: true,
     };
   }, [accountSiteId, devPlatform, rangeFrom, rangeTo]);
 
@@ -158,11 +163,11 @@ function PosthogMyPiramalDashboardContent() {
 
   const handleSelectPage = (page: PageId) => {
     setActivePage(page);
-    const mainEl = document.querySelector('.posthog-dashboard-root .main');
-    if (mainEl) {
-      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    // The root itself scrolls now (edge-to-edge with the window), not .main.
+    const rootEl = document.querySelector('.posthog-dashboard-root');
+    if (rootEl) {
+      rootEl.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSetRange = (days: number, label: string) => {
@@ -237,20 +242,8 @@ function PosthogMyPiramalDashboardContent() {
     return user?.email || '';
   }, [user]);
 
-  const orgName = useMemo(() => {
-    try {
-      const acc = localStorage.getItem('hiSocietyAccount');
-      if (acc) {
-        const parsed = JSON.parse(acc);
-        if (parsed?.organization?.name) return parsed.organization.name;
-        if (parsed?.selected_user_society_name) return parsed.selected_user_society_name;
-        if (parsed?.society?.building_name) return parsed.society.building_name;
-      }
-      const savedOrg = localStorage.getItem('org_name') || localStorage.getItem('organization_name');
-      if (savedOrg) return savedOrg;
-    } catch {}
-    return 'My Piramal';
-  }, []);
+  // Fixed org name for dedicated My Piramal dashboard route
+  const orgName = 'My Piramal';
 
   const PAGE_TITLES: Record<PageId, string> = {
     pgTraffic: 'Traffic & Session',
@@ -284,14 +277,19 @@ function PosthogMyPiramalDashboardContent() {
         <SideBar
           activePage={activePage}
           onSelectPage={handleSelectPage}
+          filters={filters}
+          sitesSettled={sitesSettled}
         />
 
         <main className="main">
           <div className="page-head">
             <h2 id="pageTitle">{PAGE_TITLES[activePage]}</h2>
             <p className="page-sub">
-              <span id="custName">{orgName} Analytics</span> ·{' '}
-              <span id="scopeLabel">{currentSiteName}</span>
+              <span>My Piramal — Post Possession</span> &middot;{' '}
+              <span>Residents &amp; society admins &middot; all societies</span>
+            </p>
+            <p className="page-sub" style={{ fontSize: '12.5px', marginTop: '4px' }}>
+              Resident community app, after handover &middot; 350 real events / 327 Post-Possession-scoped, 27 categories
             </p>
           </div>
 
@@ -332,6 +330,13 @@ function PosthogMyPiramalDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              subtitle="Measure how effectively residents adopt and engage with the app’s major modules, and whether they keep coming back day over day."
+              questions={[
+                'Which modules and community services receive the highest engagement and adoption?',
+                'Which modules need UX improvements, and where do residents spend the most time?',
+                'Are residents returning to the application, and is retention improving over time?',
+                'How does usage differ between Tower Admins (one tower/wing) and Super Admins (whole society)?',
+              ]}
             />
           )}
 

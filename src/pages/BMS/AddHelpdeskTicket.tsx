@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Upload, Paperclip, X, User, Ticket, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatApiErrorMessage } from '@/utils/apiErrorMessage';
 import { ticketManagementAPI, CategoryResponse, SubCategoryResponse, UserAccountResponse, OccupantUserResponse } from '@/services/ticketManagementAPI';
 import { FMUser } from '@/store/slices/fmUserSlice';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
@@ -1370,6 +1371,10 @@ export const AddTicketDashboard = () => {
         formDataToSubmit.append('complaint[assigned_to]', formData.assignedTo);
       }
 
+      if (formData.adminPriority) {
+        formDataToSubmit.append('complaint[priority]', formData.adminPriority);
+      }
+
       // Add user ID for behalf of user
       if (onBehalfOf === 'occupant-user' && selectedUserId) {
         formDataToSubmit.append('user_soc', selectedUserId.toString());
@@ -1405,7 +1410,7 @@ export const AddTicketDashboard = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         console.error('API Error Response:', errorData);
-        throw new Error(errorData?.message || `API request failed with status ${response.status}`);
+        throw new Error(formatApiErrorMessage(errorData, "Failed to create ticket"));
       }
 
       const responseData = await response.json();
@@ -1817,6 +1822,28 @@ export const AddTicketDashboard = () => {
                         <MenuItem value="Reactive">Reactive</MenuItem>
                       </MuiSelect>
                     </FormControl>
+
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      sx={{ '& .MuiInputBase-root': fieldStyles }}
+                    >
+                      <InputLabel shrink>Priority</InputLabel>
+                      <MuiSelect
+                        value={formData.adminPriority}
+                        onChange={(e) => setFormData({ ...formData, adminPriority: e.target.value })}
+                        label="Priority"
+                        notched
+                        displayEmpty
+                      >
+                        <MenuItem value="">Select Priority</MenuItem>
+                        {PRIORITY_OPTIONS.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </FormControl>
                   </div>
                 </>
               )}
@@ -2048,6 +2075,28 @@ export const AddTicketDashboard = () => {
                         <MenuItem value="">Select Type*</MenuItem>
                         <MenuItem value="Proactive">Proactive</MenuItem>
                         <MenuItem value="Reactive">Reactive</MenuItem>
+                      </MuiSelect>
+                    </FormControl>
+
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      sx={{ '& .MuiInputBase-root': fieldStyles }}
+                    >
+                      <InputLabel shrink>Priority</InputLabel>
+                      <MuiSelect
+                        value={formData.adminPriority}
+                        onChange={(e) => setFormData({ ...formData, adminPriority: e.target.value })}
+                        label="Priority"
+                        notched
+                        displayEmpty
+                      >
+                        <MenuItem value="">Select Priority</MenuItem>
+                        {PRIORITY_OPTIONS.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
                       </MuiSelect>
                     </FormControl>
 

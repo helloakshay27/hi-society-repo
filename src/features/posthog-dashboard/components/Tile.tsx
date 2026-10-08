@@ -27,7 +27,7 @@ export function Tile({ id, label, disp, delta, goodUp, sub, raw, unit }: TileSpe
       </div>
       <div className="lbl">{label}</div>
       {sub && <div className="sub2">{sub}</div>}
-      <div className="bm">
+      {/* <div className="bm">
         <span className="bl">Target</span>
         <input
           className="bmin"
@@ -44,7 +44,7 @@ export function Tile({ id, label, disp, delta, goodUp, sub, raw, unit }: TileSpe
         <span className={`bb ${!hasTarget ? 'unset' : met ? 'met' : 'miss'}`}>
           {!hasTarget ? 'set a target' : met ? '✓ on target' : '✕ off target'}
         </span>
-      </div>
+      </div> */}
     </div>
   );
 }

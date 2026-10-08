@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -173,6 +174,8 @@ const SmartsecureIntegration: React.FC = () => {
   const [enquiryTotalPages, setEnquiryTotalPages] = useState(1);
   const [enquiryTotalEntries, setEnquiryTotalEntries] = useState(0);
   const [enquirySearchTerm, setEnquirySearchTerm] = useState("");
+  const [enquirySearchInput, setEnquirySearchInput] = useState("");
+  const debouncedEnquirySearch = useDebounce(enquirySearchInput, 800);
 
   const fetchGates = useCallback(async (page: number = 1, search: string = "") => {
     try {
@@ -253,10 +256,11 @@ const SmartsecureIntegration: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, enquiryPage, enquirySearchTerm]);
 
-  const handleEnquirySearch = (term: string) => {
-    setEnquirySearchTerm(term);
+  // Debounce the raw input, then send it as q[search_all_fields_cont].
+  useEffect(() => {
+    setEnquirySearchTerm(debouncedEnquirySearch.trim());
     setEnquiryPage(1);
-  };
+  }, [debouncedEnquirySearch]);
 
   const handleToggleActive = async (row: SmartsecureGateRow) => {
     const nextActive = !row.active;
@@ -433,8 +437,8 @@ const SmartsecureIntegration: React.FC = () => {
             loading={loadingEnquiries}
             loadingMessage="Loading enquiries..."
             emptyMessage="No enquiries found"
-            enableGlobalSearch
-            onGlobalSearch={handleEnquirySearch}
+            searchTerm={enquirySearchInput}
+            onSearchChange={setEnquirySearchInput}
             disableClientSearch
             searchPlaceholder="Search enquiries"
             pagination={false}

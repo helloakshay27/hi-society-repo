@@ -673,7 +673,7 @@ const FitoutRequests: React.FC = () => {
           );
       }
     },
-    [navigate, toast, currentPage, perPage]
+    [navigate, toast, currentPage, perPage, shouldShow]
   );
 
   const filteredRequests = useMemo(() => {

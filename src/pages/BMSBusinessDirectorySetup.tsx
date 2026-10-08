@@ -492,6 +492,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
     if (columnKey === "actions") {
       return (
         <div className="flex gap-1">
+          {shouldShow("Business Directory", "update") && (
           <Button
             size="sm"
             variant="ghost"
@@ -499,7 +500,8 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             className="h-8 w-8 p-0"
           >
             <Edit className="h-4 w-4" />
-          </Button>
+          </Button>)}
+          {shouldShow("Business Directory", "destroy") && (
           <Button
             size="sm"
             variant="ghost"
@@ -507,7 +509,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             className="h-8 w-8 p-0 text-red-600"
           >
             <Trash2 className="h-4 w-4" />
-          </Button>
+          </Button>)}
         </div>
       );
     }
@@ -518,7 +520,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
     if (columnKey === "actions") {
       return (
         <div className="flex gap-1">
-          {shouldShow("Setup","update")&&(
+          {shouldShow("Business Directory", "update") && (
           <Button
             size="sm"
             variant="ghost"
@@ -527,7 +529,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
           >
             <Edit className="h-4 w-4" />
           </Button>)}
-          {shouldShow("Setup","destroy")&&(
+          {shouldShow("Business Directory", "destroy") && (
           <Button
             size="sm"
             variant="ghost"
@@ -552,7 +554,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
 
         <TabsContent value="category" className="space-y-6">
           <div className="flex justify-start">
-            {shouldShow("Setup","create")&&(
+            {shouldShow("Business Directory", "create") && (
             <Button
               onClick={handleOpenAddCategory}
               variant="ghost"
@@ -580,6 +582,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
 
         <TabsContent value="subcategory" className="space-y-6">
           <div className="flex justify-start">
+            {shouldShow("Business Directory", "create") && (
             <Button
               onClick={handleOpenAddSubCategory}
               variant="ghost"
@@ -587,7 +590,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             >
               <Plus className="w-4 h-4 mr-2" />
               Add
-            </Button>
+            </Button>)}
           </div>
 
           <EnhancedTable

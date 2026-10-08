@@ -470,7 +470,10 @@ export const SocietyDetailsPage: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Description
                         </label>
-                        <p className="text-gray-900">{society.description || "N/A"}</p>
+                        <div
+                          className="text-gray-900 break-words [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                          dangerouslySetInnerHTML={{ __html: society.description || "N/A" }}
+                        />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -735,12 +738,28 @@ export const SocietyDetailsPage: React.FC = () => {
                         <p className="text-gray-900 font-mono">#{society.organization_id}</p>
                       </div>
                     )}
+                    {society.organization_name && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Organization Name
+                        </label>
+                        <p className="text-gray-900">{society.organization_name}</p>
+                      </div>
+                    )}
                     {society.company_id && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Company ID
                         </label>
                         <p className="text-gray-900 font-mono">#{society.company_id}</p>
+                      </div>
+                    )}
+                    {society.company_name && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Company Name
+                        </label>
+                        <p className="text-gray-900">{society.company_name}</p>
                       </div>
                     )}
                     {society.builder_id && (

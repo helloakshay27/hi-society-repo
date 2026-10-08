@@ -31,7 +31,24 @@ export interface TicketOverviewResponse {
       response: { achieved: number; breached: number };
       resolution: { achieved: number; breached: number };
     };
-    sentiment: { average_rating: number; total_ratings: number };
+    sentiment: {
+      average_rating: number;
+      total_ratings: number;
+      /**
+       * Donut counts — ratings 1-5 only; `total` can be slightly lower than
+       * `total_ratings`. Optional: older/un-migrated environments still
+       * return `sentiment` without it — the card falls back to its empty
+       * state rather than guessing a breakdown from the average alone.
+       */
+      distribution?: {
+        great: number;
+        good: number;
+        okay: number;
+        bad: number;
+        unacceptable: number;
+        total: number;
+      };
+    };
   };
   info: string;
 }
@@ -135,7 +152,9 @@ export type TicketExportType =
   | 'common_area_category'
   | 'common_area_category_proactive'
   | 'fm_vs_project'
-  | 'complaint_mode';
+  | 'complaint_mode'
+  // Added per "frontend-tickets-dashboard-changes.md" (Issue-4792).
+  | 'customer_sentiment';
 
 /**
  * `path` is the chart endpoint each export's card already reads, per the doc's
@@ -168,6 +187,7 @@ const TICKET_EXPORTS: Record<TicketExportType, { path: string; filename: string 
   },
   fm_vs_project: { path: 'overview', filename: 'FM_FmVsProjectTicket_<stamp>.xlsx' },
   complaint_mode: { path: 'distribution', filename: 'FM_ComplaintModeTicket_<stamp>.xlsx' },
+  customer_sentiment: { path: 'overview', filename: 'FM_Sentiments.xlsx' },
 };
 
 const buildParams = (

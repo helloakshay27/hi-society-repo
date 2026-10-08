@@ -1,48 +1,110 @@
 // ticket dahboard
 
-
-import React, { useState, useEffect, useCallback, useRef, useMemo, startTransition } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Eye, Filter, Ticket, Clock, AlertCircle, CheckCircle, BarChart3, TrendingUp, Download, Edit, Trash2, Settings, Upload, Flag, Star, Calendar } from 'lucide-react';
-import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
-import { TicketsFilterDialog } from '@/components/TicketsFilterDialog';
-import { TicketAnalyticsFilterDialog } from '@/components/TicketAnalyticsFilterDialog';
-import { EditStatusDialog } from '@/components/EditStatusDialog';
-import { HelpdeskExportDialog } from '@/components/HelpdeskExportDialog';
-import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TicketSelector } from '@/components/TicketSelector';
-import { RecentTicketsSidebar } from '@/components/RecentTicketsSidebar';
-import { TicketSelectionPanel } from '@/components/TicketSelectionPanel';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { ticketManagementAPI, TicketResponse, TicketFilters, EscalationInfo } from '@/services/ticketManagementAPI';
-import { ticketAnalyticsAPI, TicketCategoryData, TicketStatusData, TicketAgingMatrix, UnitCategorywiseData, ResponseTATData, ResolutionTATReportData, RecentTicketsResponse } from '@/services/ticketAnalyticsAPI';
-import { ticketAnalyticsDownloadAPI } from '@/services/ticketAnalyticsDownloadAPI';
-import { TicketAnalyticsCard } from '@/components/TicketAnalyticsCard';
-import { ResponseTATCard } from '@/components/ResponseTATCard';
-import { ResolutionTATCard } from '@/components/ResolutionTATCard';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  startTransition,
+} from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Plus,
+  Eye,
+  Filter,
+  Ticket,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  BarChart3,
+  TrendingUp,
+  Download,
+  Edit,
+  Trash2,
+  Settings,
+  Upload,
+  Flag,
+  Star,
+  Calendar,
+} from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { TicketsFilterDialog } from "@/components/TicketsFilterDialog";
+import { TicketAnalyticsFilterDialog } from "@/components/TicketAnalyticsFilterDialog";
+import { EditStatusDialog } from "@/components/EditStatusDialog";
+import { HelpdeskExportDialog } from "@/components/HelpdeskExportDialog";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { TicketSelector } from "@/components/TicketSelector";
+import { RecentTicketsSidebar } from "@/components/RecentTicketsSidebar";
+import { TicketSelectionPanel } from "@/components/TicketSelectionPanel";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  ticketManagementAPI,
+  TicketResponse,
+  TicketFilters,
+  EscalationInfo,
+} from "@/services/ticketManagementAPI";
+import {
+  ticketAnalyticsAPI,
+  TicketCategoryData,
+  TicketStatusData,
+  TicketAgingMatrix,
+  UnitCategorywiseData,
+  ResponseTATData,
+  ResolutionTATReportData,
+  RecentTicketsResponse,
+} from "@/services/ticketAnalyticsAPI";
+import { ticketAnalyticsDownloadAPI } from "@/services/ticketAnalyticsDownloadAPI";
+import { TicketAnalyticsCard } from "@/components/TicketAnalyticsCard";
+import { ResponseTATCard } from "@/components/ResponseTATCard";
+import { ResolutionTATCard } from "@/components/ResolutionTATCard";
 import {
   TicketStatusOverviewCard,
   ProactiveReactiveCard,
   CategoryWiseProactiveReactiveCard,
   UnitCategoryWiseCard,
-  TicketAgingMatrixCard
-} from '@/components/ticket-analytics';
-import { useDebounce } from '@/hooks/useDebounce';
-import { toast as sonnerToast } from 'sonner';
-import { AIAssistantWidget } from '@/components/AIAssistantWidget';
-import { DashboardAIAssistant } from '@/components/DashboardAIAssistant';
-import { SpeechProvider } from '@/contexts/SpeechContext';
+  TicketAgingMatrixCard,
+} from "@/components/ticket-analytics";
+import { useDebounce } from "@/hooks/useDebounce";
+import { toast as sonnerToast } from "sonner";
+import { AIAssistantWidget } from "@/components/AIAssistantWidget";
+import { DashboardAIAssistant } from "@/components/DashboardAIAssistant";
+import { SpeechProvider } from "@/contexts/SpeechContext";
 
 // Sortable Chart Item Component
 const SortableChartItem = ({
   id,
-  children
+  children,
 }: {
   id: string;
   children: React.ReactNode;
@@ -53,15 +115,15 @@ const SortableChartItem = ({
     setNodeRef,
     transform,
     transition,
-    isDragging
+    isDragging,
   } = useSortable({
-    id
+    id,
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1
+    opacity: isDragging ? 0.5 : 1,
   };
 
   // Handle pointer down to prevent drag on button/icon clicks
@@ -69,13 +131,13 @@ const SortableChartItem = ({
     const target = e.target as HTMLElement;
     // Check if the click is on a button, icon, or download element
     if (
-      target.closest('button') ||
-      target.closest('[data-download]') ||
-      target.closest('svg') ||
-      target.tagName === 'BUTTON' ||
-      target.tagName === 'SVG' ||
-      target.closest('.download-btn') ||
-      target.closest('[data-download-button]')
+      target.closest("button") ||
+      target.closest("[data-download]") ||
+      target.closest("svg") ||
+      target.tagName === "BUTTON" ||
+      target.tagName === "SVG" ||
+      target.closest(".download-btn") ||
+      target.closest("[data-download-button]")
     ) {
       e.stopPropagation();
       return;
@@ -123,8 +185,24 @@ export const TicketDashboard = () => {
   const { shouldShow } = useDynamicPermissions();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isAnalyticsFilterOpen, setIsAnalyticsFilterOpen] = useState(false);
-  const [visibleSections, setVisibleSections] = useState<string[]>(['statusChart', 'reactiveChart', 'responseTat', 'categoryWiseProactiveReactive', 'categoryChart', 'agingMatrix', 'resolutionTat']);
-  const [chartOrder, setChartOrder] = useState<string[]>(['statusChart', 'reactiveChart', 'responseTat', 'categoryWiseProactiveReactive', 'categoryChart', 'agingMatrix', 'resolutionTat']);
+  const [visibleSections, setVisibleSections] = useState<string[]>([
+    "statusChart",
+    "reactiveChart",
+    "responseTat",
+    "categoryWiseProactiveReactive",
+    "categoryChart",
+    "agingMatrix",
+    "resolutionTat",
+  ]);
+  const [chartOrder, setChartOrder] = useState<string[]>([
+    "statusChart",
+    "reactiveChart",
+    "responseTat",
+    "categoryWiseProactiveReactive",
+    "categoryChart",
+    "agingMatrix",
+    "resolutionTat",
+  ]);
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -141,27 +219,40 @@ export const TicketDashboard = () => {
     lastYear.setFullYear(today.getFullYear() - 1);
 
     const formatDate = (date: Date) => {
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
       const year = date.getFullYear();
       return `${day}/${month}/${year}`;
     };
 
     return {
       startDate: formatDate(lastYear),
-      endDate: formatDate(today)
+      endDate: formatDate(today),
     };
   };
 
-  const [analyticsDateRange, setAnalyticsDateRange] = useState<{ startDate: string; endDate: string }>(getDefaultDateRange());
-  const [categoryAnalyticsData, setCategoryAnalyticsData] = useState<TicketCategoryData[]>([]);
-  const [categorywiseTicketsData, setCategorywiseTicketsData] = useState<TicketCategoryData[]>([]);
-  const [statusAnalyticsData, setStatusAnalyticsData] = useState<TicketStatusData | null>(null);
-  const [agingMatrixAnalyticsData, setAgingMatrixAnalyticsData] = useState<TicketAgingMatrix | null>(null);
-  const [unitCategorywiseData, setUnitCategorywiseData] = useState<UnitCategorywiseData | null>(null);
-  const [responseTATData, setResponseTATData] = useState<ResponseTATData | null>(null);
-  const [resolutionTATReportData, setResolutionTATReportData] = useState<ResolutionTATReportData | null>(null);
-  const [recentTicketsData, setRecentTicketsData] = useState<RecentTicketsResponse | null>(null);
+  const [analyticsDateRange, setAnalyticsDateRange] = useState<{
+    startDate: string;
+    endDate: string;
+  }>(getDefaultDateRange());
+  const [categoryAnalyticsData, setCategoryAnalyticsData] = useState<
+    TicketCategoryData[]
+  >([]);
+  const [categorywiseTicketsData, setCategorywiseTicketsData] = useState<
+    TicketCategoryData[]
+  >([]);
+  const [statusAnalyticsData, setStatusAnalyticsData] =
+    useState<TicketStatusData | null>(null);
+  const [agingMatrixAnalyticsData, setAgingMatrixAnalyticsData] =
+    useState<TicketAgingMatrix | null>(null);
+  const [unitCategorywiseData, setUnitCategorywiseData] =
+    useState<UnitCategorywiseData | null>(null);
+  const [responseTATData, setResponseTATData] =
+    useState<ResponseTATData | null>(null);
+  const [resolutionTATReportData, setResolutionTATReportData] =
+    useState<ResolutionTATReportData | null>(null);
+  const [recentTicketsData, setRecentTicketsData] =
+    useState<RecentTicketsResponse | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsLoaded, setAnalyticsLoaded] = useState(false); // Track if analytics data has been loaded
 
@@ -173,19 +264,31 @@ export const TicketDashboard = () => {
     categoryWiseProactiveReactive: false,
     categoryChart: false,
     agingMatrix: false,
-    resolutionTat: false
+    resolutionTat: false,
   });
 
   // Utility function to convert DD/MM/YYYY to Date object
   const convertDateStringToDate = (dateString: string): Date => {
     try {
-      const [day, month, year] = dateString.split('/');
+      const [day, month, year] = dateString.split("/");
       // Create date at noon UTC to avoid timezone issues
-      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0, 0);
-      console.log('convertDateStringToDate:', { input: dateString, output: date, formatted: date.toISOString() });
+      const date = new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+        12,
+        0,
+        0,
+        0
+      );
+      console.log("convertDateStringToDate:", {
+        input: dateString,
+        output: date,
+        formatted: date.toISOString(),
+      });
       return date;
     } catch (error) {
-      console.error('Error converting date string:', dateString, error);
+      console.error("Error converting date string:", dateString, error);
       return new Date(); // Fallback to current date
     }
   };
@@ -193,26 +296,26 @@ export const TicketDashboard = () => {
   // Test case for date conversion
   React.useEffect(() => {
     // Test the date conversion with your example
-    const testStartDate = '28/07/2025';
-    const testEndDate = '29/07/2025';
+    const testStartDate = "28/07/2025";
+    const testEndDate = "29/07/2025";
     const convertedStart = convertDateStringToDate(testStartDate);
     const convertedEnd = convertDateStringToDate(testEndDate);
 
     const formatDateForAPI = (date: Date): string => {
       // Use UTC methods to avoid timezone issues
       const year = date.getUTCFullYear();
-      const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-      const day = date.getUTCDate().toString().padStart(2, '0');
+      const month = (date.getUTCMonth() + 1).toString().padStart(2, "0");
+      const day = date.getUTCDate().toString().padStart(2, "0");
       return `${year}-${month}-${day}`;
     };
 
-    console.log('Date Conversion Test:', {
+    console.log("Date Conversion Test:", {
       input: { start: testStartDate, end: testEndDate },
       converted: { start: convertedStart, end: convertedEnd },
       apiFormat: {
         start: formatDateForAPI(convertedStart),
-        end: formatDateForAPI(convertedEnd)
-      }
+        end: formatDateForAPI(convertedEnd),
+      },
     });
   }, []);
 
@@ -238,103 +341,133 @@ export const TicketDashboard = () => {
     completed_tickets: 0,
   });
   const [filters, setFilters] = useState<TicketFilters>({});
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300); // Optimized debounce timing
   const isSearchingRef = useRef(false);
   const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
-  const [selectedTicketForEdit, setSelectedTicketForEdit] = useState<TicketResponse | null>(null);
+  const [selectedTicketForEdit, setSelectedTicketForEdit] =
+    useState<TicketResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const perPage = 20;
 
   // Drag and drop sensors
-  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
-    coordinateGetter: sortableKeyboardCoordinates
-  }));
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Fetch analytics data from API
-  const fetchAnalyticsData = useCallback(async (startDate: Date, endDate: Date) => {
-    setAnalyticsLoading(true);
+  const fetchAnalyticsData = useCallback(
+    async (startDate: Date, endDate: Date) => {
+      setAnalyticsLoading(true);
 
-    // Set all individual cards to loading
-    setLoadingStates({
-      statusChart: true,
-      reactiveChart: true,
-      responseTat: true,
-      categoryWiseProactiveReactive: true,
-      categoryChart: true,
-      agingMatrix: true,
-      resolutionTat: true
-    });
-
-    try {
-      // Fetch all data in parallel but update states individually as they complete
-      const promises = [
-        ticketAnalyticsAPI.getTicketsCategorywiseData(startDate, endDate).then(data => {
-          setCategoryAnalyticsData(data);
-          setCategorywiseTicketsData(data);
-          setLoadingStates(prev => ({ ...prev, categoryWiseProactiveReactive: false, categoryChart: false }));
-          return data;
-        }),
-        ticketAnalyticsAPI.getTicketStatusData(startDate, endDate).then(data => {
-          setStatusAnalyticsData(data);
-          setLoadingStates(prev => ({ ...prev, statusChart: false, reactiveChart: false }));
-          return data;
-        }),
-        ticketAnalyticsAPI.getTicketAgingMatrix(startDate, endDate).then(data => {
-          setAgingMatrixAnalyticsData(data);
-          setLoadingStates(prev => ({ ...prev, agingMatrix: false }));
-          return data;
-        }),
-        ticketAnalyticsAPI.getUnitCategorywiseData(startDate, endDate).then(data => {
-          setUnitCategorywiseData(data);
-          return data;
-        }),
-        ticketAnalyticsAPI.getResponseTATData(startDate, endDate).then(data => {
-          setResponseTATData(data);
-          setLoadingStates(prev => ({ ...prev, responseTat: false }));
-          return data;
-        }),
-        ticketAnalyticsAPI.getResolutionTATReportData(startDate, endDate).then(data => {
-          setResolutionTATReportData(data);
-          setLoadingStates(prev => ({ ...prev, resolutionTat: false }));
-          return data;
-        }),
-        ticketAnalyticsAPI.getRecentTickets().then(data => {
-          setRecentTicketsData(data);
-          return data;
-        })
-      ];
-
-      await Promise.all(promises);
-      setAnalyticsLoaded(true); // Mark analytics as loaded
-
-      // toast({
-      //   title: "Success",
-      //   description: "Analytics data updated successfully"
-      // });
-    } catch (error) {
-      console.error('Error fetching analytics data:', error);
-
-      // Reset all loading states on error
+      // Set all individual cards to loading
       setLoadingStates({
-        statusChart: false,
-        reactiveChart: false,
-        responseTat: false,
-        categoryWiseProactiveReactive: false,
-        categoryChart: false,
-        agingMatrix: false,
-        resolutionTat: false
+        statusChart: true,
+        reactiveChart: true,
+        responseTat: true,
+        categoryWiseProactiveReactive: true,
+        categoryChart: true,
+        agingMatrix: true,
+        resolutionTat: true,
       });
 
-      sonnerToast.error("Failed to fetch analytics data. Please try again.");
-    } finally {
-      setAnalyticsLoading(false);
-    }
-  }, []);
+      try {
+        // Fetch all data in parallel but update states individually as they complete
+        const promises = [
+          ticketAnalyticsAPI
+            .getTicketsCategorywiseData(startDate, endDate)
+            .then((data) => {
+              setCategoryAnalyticsData(data);
+              setCategorywiseTicketsData(data);
+              setLoadingStates((prev) => ({
+                ...prev,
+                categoryWiseProactiveReactive: false,
+                categoryChart: false,
+              }));
+              return data;
+            }),
+          ticketAnalyticsAPI
+            .getTicketStatusData(startDate, endDate)
+            .then((data) => {
+              setStatusAnalyticsData(data);
+              setLoadingStates((prev) => ({
+                ...prev,
+                statusChart: false,
+                reactiveChart: false,
+              }));
+              return data;
+            }),
+          ticketAnalyticsAPI
+            .getTicketAgingMatrix(startDate, endDate)
+            .then((data) => {
+              setAgingMatrixAnalyticsData(data);
+              setLoadingStates((prev) => ({ ...prev, agingMatrix: false }));
+              return data;
+            }),
+          ticketAnalyticsAPI
+            .getUnitCategorywiseData(startDate, endDate)
+            .then((data) => {
+              setUnitCategorywiseData(data);
+              return data;
+            }),
+          ticketAnalyticsAPI
+            .getResponseTATData(startDate, endDate)
+            .then((data) => {
+              setResponseTATData(data);
+              setLoadingStates((prev) => ({ ...prev, responseTat: false }));
+              return data;
+            }),
+          ticketAnalyticsAPI
+            .getResolutionTATReportData(startDate, endDate)
+            .then((data) => {
+              setResolutionTATReportData(data);
+              setLoadingStates((prev) => ({ ...prev, resolutionTat: false }));
+              return data;
+            }),
+          ticketAnalyticsAPI.getRecentTickets().then((data) => {
+            setRecentTicketsData(data);
+            return data;
+          }),
+        ];
+
+        await Promise.all(promises);
+        setAnalyticsLoaded(true); // Mark analytics as loaded
+
+        // toast({
+        //   title: "Success",
+        //   description: "Analytics data updated successfully"
+        // });
+      } catch (error) {
+        console.error("Error fetching analytics data:", error);
+
+        // Reset all loading states on error
+        setLoadingStates({
+          statusChart: false,
+          reactiveChart: false,
+          responseTat: false,
+          categoryWiseProactiveReactive: false,
+          categoryChart: false,
+          agingMatrix: false,
+          resolutionTat: false,
+        });
+
+        sonnerToast.error("Failed to fetch analytics data. Please try again.");
+      } finally {
+        setAnalyticsLoading(false);
+      }
+    },
+    []
+  );
 
   // Handle analytics filter apply
-  const handleAnalyticsFilterApply = (filters: { startDate: string; endDate: string }) => {
+  const handleAnalyticsFilterApply = (filters: {
+    startDate: string;
+    endDate: string;
+  }) => {
     setAnalyticsDateRange(filters);
 
     // Convert date strings to Date objects using utility function
@@ -347,85 +480,101 @@ export const TicketDashboard = () => {
     const dateRangeParam = `${filters.startDate} - ${filters.endDate}`;
     // The API will automatically wrap date_range with q[] so just pass date_range
     const summaryFilters: TicketFilters = {
-      date_range: dateRangeParam
+      date_range: dateRangeParam,
     };
     fetchTicketSummary(summaryFilters);
   };
 
   // Fetch ticket summary from API - accepts optional filter object
-  const fetchTicketSummary = useCallback(async (filters?: TicketFilters) => {
-    try {
-      // Summary cards should show overall counts by default
-      // Only pass filters when explicitly provided
-      // Status filters should NEVER be passed to ticket_summary API
-      const summaryFilters: TicketFilters = filters || {};
+  const fetchTicketSummary = useCallback(
+    async (filters?: TicketFilters) => {
+      try {
+        // Summary cards should show overall counts by default
+        // Only pass filters when explicitly provided
+        // Status filters should NEVER be passed to ticket_summary API
+        const summaryFilters: TicketFilters = filters || {};
 
-      const summary = await ticketManagementAPI.getTicketSummary(summaryFilters);
-      setTicketSummary(prev => ({ ...prev, ...summary }));
+        const summary =
+          await ticketManagementAPI.getTicketSummary(summaryFilters);
+        setTicketSummary((prev) => ({ ...prev, ...summary }));
 
-      // Store initial total count only on first load without filters
-      if (!filters && initialTotalTickets === 0) {
-        setInitialTotalTickets(summary.total_tickets);
+        // Store initial total count only on first load without filters
+        if (!filters && initialTotalTickets === 0) {
+          setInitialTotalTickets(summary.total_tickets);
+        }
+      } catch (error) {
+        console.error("Error fetching ticket summary:", error);
+        sonnerToast.error("Failed to fetch ticket summary. Please try again.");
       }
-    } catch (error) {
-      console.error('Error fetching ticket summary:', error);
-      sonnerToast.error("Failed to fetch ticket summary. Please try again.");
-    }
-  }, [initialTotalTickets]);
+    },
+    [initialTotalTickets]
+  );
 
   // Fetch tickets from API - Optimized for faster loading
-  const fetchTickets = useCallback(async (page: number = 1) => {
-    // Use different loading states based on whether it's a search operation
-    const isSearch = filters.search_all_fields_cont;
-    if (isSearch) {
-      setSearchLoading(true);
-    } else {
-      setLoading(true);
-    }
-
-    try {
-      // Start API call immediately without delays
-      const response = await ticketManagementAPI.getTickets(page, perPage, filters);
-
-      // Optimize sorting with early return for performance
-      const sortedTickets = response.complaints.length > 0
-        ? [...response.complaints].sort((a, b) => {
-          // Flagged tickets always come first
-          if (a.is_flagged !== b.is_flagged) {
-            return a.is_flagged ? -1 : 1;
-          }
-
-          // Among non-flagged tickets, golden tickets come first
-          if (!a.is_flagged && !b.is_flagged && a.is_golden_ticket !== b.is_golden_ticket) {
-            return a.is_golden_ticket ? -1 : 1;
-          }
-
-          return 0; // Maintain original order for same priority
-        })
-        : [];
-
-      // Batch state updates for better performance - Use React.startTransition for non-urgent updates
-      startTransition(() => {
-        setTickets(sortedTickets);
-        if (response.pagination) {
-          setTotalPages(response.pagination.total_pages);
-          setTotalTickets(response.pagination.total_count);
-        } else {
-          setTotalTickets(response.complaints.length);
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching tickets:', error);
-      sonnerToast.error("Failed to fetch tickets. Please try again.");
-    } finally {
-      // Clear loading states immediately
+  const fetchTickets = useCallback(
+    async (page: number = 1) => {
+      // Use different loading states based on whether it's a search operation
+      const isSearch = filters.search_all_fields_cont;
       if (isSearch) {
-        setSearchLoading(false);
+        setSearchLoading(true);
       } else {
-        setLoading(false);
+        setLoading(true);
       }
-    }
-  }, [filters, perPage]);
+
+      try {
+        // Start API call immediately without delays
+        const response = await ticketManagementAPI.getTickets(
+          page,
+          perPage,
+          filters
+        );
+
+        // Optimize sorting with early return for performance
+        const sortedTickets =
+          response.complaints.length > 0
+            ? [...response.complaints].sort((a, b) => {
+                // Flagged tickets always come first
+                if (a.is_flagged !== b.is_flagged) {
+                  return a.is_flagged ? -1 : 1;
+                }
+
+                // Among non-flagged tickets, golden tickets come first
+                if (
+                  !a.is_flagged &&
+                  !b.is_flagged &&
+                  a.is_golden_ticket !== b.is_golden_ticket
+                ) {
+                  return a.is_golden_ticket ? -1 : 1;
+                }
+
+                return 0; // Maintain original order for same priority
+              })
+            : [];
+
+        // Batch state updates for better performance - Use React.startTransition for non-urgent updates
+        startTransition(() => {
+          setTickets(sortedTickets);
+          if (response.pagination) {
+            setTotalPages(response.pagination.total_pages);
+            setTotalTickets(response.pagination.total_count);
+          } else {
+            setTotalTickets(response.complaints.length);
+          }
+        });
+      } catch (error) {
+        console.error("Error fetching tickets:", error);
+        sonnerToast.error("Failed to fetch tickets. Please try again.");
+      } finally {
+        // Clear loading states immediately
+        if (isSearch) {
+          setSearchLoading(false);
+        } else {
+          setLoading(false);
+        }
+      }
+    },
+    [filters, perPage]
+  );
 
   // Handle search input change
   const handleSearch = useCallback((query: string) => {
@@ -436,7 +585,7 @@ export const TicketDashboard = () => {
   // Effect to handle debounced search - Optimized
   useEffect(() => {
     // Skip if search query is the same as current filter
-    const currentSearch = filters.search_all_fields_cont || '';
+    const currentSearch = filters.search_all_fields_cont || "";
     const newSearch = debouncedSearchQuery.trim();
 
     if (currentSearch === newSearch) {
@@ -444,7 +593,7 @@ export const TicketDashboard = () => {
     }
 
     // Update filters when debounced search query changes
-    setFilters(prevFilters => {
+    setFilters((prevFilters) => {
       const newFilters = { ...prevFilters };
       if (newSearch) {
         newFilters.search_all_fields_cont = newSearch;
@@ -481,10 +630,10 @@ export const TicketDashboard = () => {
     const loadInitialData = async () => {
       try {
         const summary = await ticketManagementAPI.getTicketSummary();
-        setTicketSummary(prev => ({ ...prev, ...summary }));
+        setTicketSummary((prev) => ({ ...prev, ...summary }));
         setInitialTotalTickets(summary.total_tickets);
       } catch (error) {
-        console.error('Error fetching initial ticket summary:', error);
+        console.error("Error fetching initial ticket summary:", error);
         sonnerToast.error("Failed to fetch ticket summary. Please try again.");
       }
     };
@@ -498,157 +647,197 @@ export const TicketDashboard = () => {
   const closedTickets = ticketSummary.closed_tickets || 0;
   const totalSummaryTickets = ticketSummary.total_tickets || 0;
   const pendingTickets = ticketSummary.pending_tickets || 0;
-  const completedTickets = ticketSummary.completed_tickets || ticketSummary.completed_tickets || 0;
-  const totalComplaints = ticketSummary.total_complaints || ticketSummary.complaints || 0;
-  const totalSuggestions = ticketSummary.total_suggestions || ticketSummary.suggestions || 0;
-  const totalRequests = ticketSummary.total_requests || ticketSummary.requests || 0;
+  const completedTickets =
+    ticketSummary.completed_tickets || ticketSummary.completed_tickets || 0;
+  const totalComplaints =
+    ticketSummary.total_complaints || ticketSummary.complaints || 0;
+  const totalSuggestions =
+    ticketSummary.total_suggestions || ticketSummary.suggestions || 0;
+  const totalRequests =
+    ticketSummary.total_requests || ticketSummary.requests || 0;
   const openComplaints = ticketSummary.open_complaints || 0;
   const openRequests = ticketSummary.open_requests || 0;
   const openSuggestions = ticketSummary.open_suggestions || 0;
   // Always use the current totalSummaryTickets from API to ensure the count is up-to-date
   const displayTotalTickets = totalSummaryTickets.toLocaleString();
 
-
   // Memoized calculations for better performance
-  const statusData = useMemo(() => [{
-    name: 'Open',
-    value: openTickets,
-    color: '#c6b692'
-  }, {
-    name: 'In Progress',
-    value: inProgressTickets,
-    color: '#f59e0b'
-  }, {
-    name: 'Closed',
-    value: closedTickets,
-    color: '#d8dcdd'
-  }, {
-    name: 'Pending',
-    value: pendingTickets,
-    color: '#d8dcdd'
-  }], [openTickets, inProgressTickets, closedTickets, pendingTickets]);
+  const statusData = useMemo(
+    () => [
+      {
+        name: "Open",
+        value: openTickets,
+        color: "#c6b692",
+      },
+      {
+        name: "In Progress",
+        value: inProgressTickets,
+        color: "#f59e0b",
+      },
+      {
+        name: "Closed",
+        value: closedTickets,
+        color: "#d8dcdd",
+      },
+      {
+        name: "Pending",
+        value: pendingTickets,
+        color: "#d8dcdd",
+      },
+    ],
+    [openTickets, inProgressTickets, closedTickets, pendingTickets]
+  );
 
   // Ticket type breakdown cards
-  const ticketTypeCards = [{
-    title: 'Total Tickets',
-    value: totalSummaryTickets,
-    icon: Ticket,
-    color: 'bg-blue-500'
-  }, {
-    title: 'Open Tickets',
-    value: openTickets,
-    icon: AlertCircle,
-    color: 'bg-yellow-500'
-  }, {
-    title: 'In Progress',
-    value: inProgressTickets,
-    icon: Clock,
-    color: 'bg-orange-500'
-  }, {
-    title: 'Closed Tickets',
-    value: closedTickets,
-    icon: CheckCircle,
-    color: 'bg-green-500'
-  }, {
-    title: 'Complaints',
-    value: ticketSummary.complaints,
-    icon: AlertCircle,
-    color: 'bg-red-500'
-  }, {
-    title: 'Suggestions',
-    value: ticketSummary.suggestions,
-    icon: TrendingUp,
-    color: 'bg-purple-500'
-  }, {
-    title: 'Requests',
-    value: ticketSummary.requests,
-    icon: Ticket,
-    color: 'bg-indigo-500'
-  }, {
-    title: 'Pending Tickets',
-    value: ticketSummary.pending_tickets,
-    icon: Ticket,
-    color: 'bg-indigo-500'
-  }
+  const ticketTypeCards = [
+    {
+      title: "Total Tickets",
+      value: totalSummaryTickets,
+      icon: Ticket,
+      color: "bg-blue-500",
+    },
+    {
+      title: "Open Tickets",
+      value: openTickets,
+      icon: AlertCircle,
+      color: "bg-yellow-500",
+    },
+    {
+      title: "In Progress",
+      value: inProgressTickets,
+      icon: Clock,
+      color: "bg-orange-500",
+    },
+    {
+      title: "Closed Tickets",
+      value: closedTickets,
+      icon: CheckCircle,
+      color: "bg-green-500",
+    },
+    {
+      title: "Complaints",
+      value: ticketSummary.complaints,
+      icon: AlertCircle,
+      color: "bg-red-500",
+    },
+    {
+      title: "Suggestions",
+      value: ticketSummary.suggestions,
+      icon: TrendingUp,
+      color: "bg-purple-500",
+    },
+    {
+      title: "Requests",
+      value: ticketSummary.requests,
+      icon: Ticket,
+      color: "bg-indigo-500",
+    },
+    {
+      title: "Pending Tickets",
+      value: ticketSummary.pending_tickets,
+      icon: Ticket,
+      color: "bg-indigo-500",
+    },
   ];
 
   // Calculate category data from API analytics data only - Memoized for performance
   const categoryChartData = useMemo(() => {
     return categoryAnalyticsData.length > 0
-      ? categoryAnalyticsData.map(item => ({
-        name: item.category,
-        proactive: item.proactive.Open + item.proactive.Closed,
-        reactive: item.reactive.Open + item.reactive.Closed,
-        value: item.proactive.Open + item.proactive.Closed + item.reactive.Open + item.reactive.Closed
-      }))
+      ? categoryAnalyticsData.map((item) => ({
+          name: item.category,
+          proactive: item.proactive.Open + item.proactive.Closed,
+          reactive: item.reactive.Open + item.reactive.Closed,
+          value:
+            item.proactive.Open +
+            item.proactive.Closed +
+            item.reactive.Open +
+            item.reactive.Closed,
+        }))
       : []; // No fallback to tickets data
   }, [categoryAnalyticsData]);
 
   // Aging matrix data from API or fallback
   const agingMatrixData = agingMatrixAnalyticsData?.response.matrix
-    ? Object.entries(agingMatrixAnalyticsData.response.matrix).map(([priority, data]) => ({
-      priority,
-      'T1': data.T1 || 0,
-      'T2': data.T2 || 0,
-      'T3': data.T3 || 0,
-      'T4': data.T4 || 0,
-      'T5': data.T5 || 0
-    }))
-    : [{
-      priority: 'P1',
-      'T1': 20,
-      'T2': 3,
-      'T3': 4,
-      'T4': 0,
-      'T5': Math.max(203, openTickets)
-    }, {
-      priority: 'P2',
-      'T1': 2,
-      'T2': 0,
-      'T3': 0,
-      'T4': 0,
-      'T5': 4
-    }, {
-      priority: 'P3',
-      'T1': 1,
-      'T2': 0,
-      'T3': 1,
-      'T4': 0,
-      'T5': 7
-    }, {
-      priority: 'P4',
-      'T1': 1,
-      'T2': 0,
-      'T3': 0,
-      'T4': 0,
-      'T5': 5
-    }];
+    ? Object.entries(agingMatrixAnalyticsData.response.matrix).map(
+        ([priority, data]) => ({
+          priority,
+          T1: data.T1 || 0,
+          T2: data.T2 || 0,
+          T3: data.T3 || 0,
+          T4: data.T4 || 0,
+          T5: data.T5 || 0,
+        })
+      )
+    : [
+        {
+          priority: "P1",
+          T1: 20,
+          T2: 3,
+          T3: 4,
+          T4: 0,
+          T5: Math.max(203, openTickets),
+        },
+        {
+          priority: "P2",
+          T1: 2,
+          T2: 0,
+          T3: 0,
+          T4: 0,
+          T5: 4,
+        },
+        {
+          priority: "P3",
+          T1: 1,
+          T2: 0,
+          T3: 1,
+          T4: 0,
+          T5: 7,
+        },
+        {
+          priority: "P4",
+          T1: 1,
+          T2: 0,
+          T3: 0,
+          T4: 0,
+          T5: 5,
+        },
+      ];
 
   // Proactive vs Reactive data from API analytics
-  const proactiveOpenTickets = statusAnalyticsData?.proactive_reactive.proactive.open || 0;
-  const proactiveClosedTickets = statusAnalyticsData?.proactive_reactive.proactive.closed || 0;
-  const reactiveOpenTickets = statusAnalyticsData?.proactive_reactive.reactive.open || 0;
-  const reactiveClosedTickets = statusAnalyticsData?.proactive_reactive.reactive.closed || 0;
+  const proactiveOpenTickets =
+    statusAnalyticsData?.proactive_reactive.proactive.open || 0;
+  const proactiveClosedTickets =
+    statusAnalyticsData?.proactive_reactive.proactive.closed || 0;
+  const reactiveOpenTickets =
+    statusAnalyticsData?.proactive_reactive.reactive.open || 0;
+  const reactiveClosedTickets =
+    statusAnalyticsData?.proactive_reactive.reactive.closed || 0;
   const openticketanalyticsData = statusAnalyticsData?.overall.total_open || 0;
-  const closedticketanalyticsData = statusAnalyticsData?.overall.total_closed || 0;
+  const closedticketanalyticsData =
+    statusAnalyticsData?.overall.total_closed || 0;
 
-  const typeData = [{
-    name: 'Proactive Open',
-    value: proactiveOpenTickets,
-    color: '#c6b692'
-  }, {
-    name: 'Proactive Closed',
-    value: proactiveClosedTickets,
-    color: '#d8dcdd'
-  }, {
-    name: 'Reactive Open',
-    value: reactiveOpenTickets,
-    color: '#f59e0b'
-  }, {
-    name: 'Reactive Closed',
-    value: reactiveClosedTickets,
-    color: '#10b981'
-  }];
+  const typeData = [
+    {
+      name: "Proactive Open",
+      value: proactiveOpenTickets,
+      color: "#c6b692",
+    },
+    {
+      name: "Proactive Closed",
+      value: proactiveClosedTickets,
+      color: "#d8dcdd",
+    },
+    {
+      name: "Reactive Open",
+      value: reactiveOpenTickets,
+      color: "#f59e0b",
+    },
+    {
+      name: "Reactive Closed",
+      value: reactiveClosedTickets,
+      color: "#10b981",
+    },
+  ];
   const handleSelectionChange = (selectedSections: string[]) => {
     setVisibleSections(selectedSections);
   };
@@ -667,34 +856,37 @@ export const TicketDashboard = () => {
   };
 
   const handleDeleteTicket = async (ticketId: number) => {
-    if (window.confirm('Are you sure you want to delete this ticket?')) {
+    if (window.confirm("Are you sure you want to delete this ticket?")) {
       try {
         // Add delete API call here when available
         sonnerToast.success("Ticket deleted successfully!");
         await fetchTickets(currentPage);
       } catch (error) {
-        console.error('Delete ticket failed:', error);
+        console.error("Delete ticket failed:", error);
         sonnerToast.error("Failed to delete ticket");
       }
     }
   };
 
   // Selection handlers
-  const handleTicketSelection = (ticketIdString: string, isSelected: boolean) => {
+  const handleTicketSelection = (
+    ticketIdString: string,
+    isSelected: boolean
+  ) => {
     const ticketId = parseInt(ticketIdString);
     // console.log('TicketDashboard - Ticket selection changed:', ticketId, isSelected);
-    setSelectedTickets(prev => {
+    setSelectedTickets((prev) => {
       if (isSelected) {
         return [...prev, ticketId];
       } else {
-        return prev.filter(id => id !== ticketId);
+        return prev.filter((id) => id !== ticketId);
       }
     });
   };
   const handleSelectAll = (isSelected: boolean) => {
     // console.log('TicketDashboard - Select all changed:', isSelected);
     if (isSelected) {
-      const allTicketIds = tickets.map(ticket => ticket.id);
+      const allTicketIds = tickets.map((ticket) => ticket.id);
       setSelectedTickets(allTicketIds);
     } else {
       setSelectedTickets([]);
@@ -710,8 +902,8 @@ export const TicketDashboard = () => {
       await ticketManagementAPI.markAsGoldenTicket(selectedTickets);
 
       // Update tickets locally and sort
-      setTickets(prevTickets => {
-        const updatedTickets = prevTickets.map(ticket =>
+      setTickets((prevTickets) => {
+        const updatedTickets = prevTickets.map((ticket) =>
           selectedTickets.includes(ticket.id)
             ? { ...ticket, is_golden_ticket: true }
             : ticket
@@ -740,7 +932,7 @@ export const TicketDashboard = () => {
       setSelectedTickets([]);
       fetchTicketSummary();
     } catch (error) {
-      console.error('Golden Ticket action failed:', error);
+      console.error("Golden Ticket action failed:", error);
       sonnerToast.error("Failed to mark tickets as Golden Ticket");
     }
   };
@@ -757,12 +949,14 @@ export const TicketDashboard = () => {
       // Refresh from API to get proper positioning after flag toggle
       await fetchTickets(currentPage);
 
-      sonnerToast.success(`${selectedTickets.length} ticket(s) flag status updated successfully!`);
+      sonnerToast.success(
+        `${selectedTickets.length} ticket(s) flag status updated successfully!`
+      );
 
       setSelectedTickets([]);
       fetchTicketSummary();
     } catch (error) {
-      console.error('Flag action failed:', error);
+      console.error("Flag action failed:", error);
       sonnerToast.error("Failed to update flag status");
     }
   };
@@ -771,32 +965,34 @@ export const TicketDashboard = () => {
   const refreshTicketsAndSummary = useCallback(async () => {
     try {
       // Refresh both ticket list and summary simultaneously
-      await Promise.all([
-        fetchTickets(currentPage),
-        fetchTicketSummary()
-      ]);
+      await Promise.all([fetchTickets(currentPage), fetchTicketSummary()]);
     } catch (error) {
-      console.error('Error refreshing tickets and summary:', error);
+      console.error("Error refreshing tickets and summary:", error);
     }
   }, [fetchTickets, fetchTicketSummary, currentPage]);
 
-  const handleSingleTicketFlag = async (ticketId: number, currentFlagStatus: boolean) => {
+  const handleSingleTicketFlag = async (
+    ticketId: number,
+    currentFlagStatus: boolean
+  ) => {
     // console.log('TicketDashboard - Single flag action for ticket:', ticketId);
     try {
       const response = await ticketManagementAPI.markAsFlagged([ticketId]);
 
       // If flagging a ticket, update immediately for responsive UI
       if (!currentFlagStatus) {
-        setTickets(prevTickets => {
-          const updatedTickets = prevTickets.map(ticket =>
-            ticket.id === ticketId
-              ? { ...ticket, is_flagged: true }
-              : ticket
+        setTickets((prevTickets) => {
+          const updatedTickets = prevTickets.map((ticket) =>
+            ticket.id === ticketId ? { ...ticket, is_flagged: true } : ticket
           );
 
           // Find the newly flagged ticket and move it to the very top
-          const newlyFlaggedTicket = updatedTickets.find(ticket => ticket.id === ticketId);
-          const otherTickets = updatedTickets.filter(ticket => ticket.id !== ticketId);
+          const newlyFlaggedTicket = updatedTickets.find(
+            (ticket) => ticket.id === ticketId
+          );
+          const otherTickets = updatedTickets.filter(
+            (ticket) => ticket.id !== ticketId
+          );
 
           return [newlyFlaggedTicket, ...otherTickets];
         });
@@ -805,24 +1001,30 @@ export const TicketDashboard = () => {
         await fetchTickets(currentPage);
       }
 
-      sonnerToast.success(response.message || `Ticket ${!currentFlagStatus ? 'flagged' : 'unflagged'} successfully!`);
+      sonnerToast.success(
+        response.message ||
+          `Ticket ${!currentFlagStatus ? "flagged" : "unflagged"} successfully!`
+      );
 
       // Refresh ticket summary to keep counts in sync
       fetchTicketSummary();
     } catch (error) {
-      console.error('Single flag action failed:', error);
+      console.error("Single flag action failed:", error);
       sonnerToast.error("Failed to flag ticket");
     }
   };
 
-  const handleSingleTicketGoldenTicket = async (ticketId: number, currentGoldenStatus: boolean) => {
+  const handleSingleTicketGoldenTicket = async (
+    ticketId: number,
+    currentGoldenStatus: boolean
+  ) => {
     // console.log('TicketDashboard - Single golden ticket action for ticket:', ticketId);
     try {
       const response = await ticketManagementAPI.markAsGoldenTicket([ticketId]);
 
       // Update the ticket locally and move newly golden tickets appropriately
-      setTickets(prevTickets => {
-        const updatedTickets = prevTickets.map(ticket =>
+      setTickets((prevTickets) => {
+        const updatedTickets = prevTickets.map((ticket) =>
           ticket.id === ticketId
             ? { ...ticket, is_golden_ticket: !currentGoldenStatus }
             : ticket
@@ -830,12 +1032,20 @@ export const TicketDashboard = () => {
 
         // If marking as golden ticket, position it correctly
         if (!currentGoldenStatus) {
-          const newlyGoldenTicket = updatedTickets.find(ticket => ticket.id === ticketId);
-          const otherTickets = updatedTickets.filter(ticket => ticket.id !== ticketId);
+          const newlyGoldenTicket = updatedTickets.find(
+            (ticket) => ticket.id === ticketId
+          );
+          const otherTickets = updatedTickets.filter(
+            (ticket) => ticket.id !== ticketId
+          );
 
           // Find the position after all flagged tickets but before regular tickets
-          const flaggedTickets = otherTickets.filter(ticket => ticket.is_flagged);
-          const nonFlaggedTickets = otherTickets.filter(ticket => !ticket.is_flagged);
+          const flaggedTickets = otherTickets.filter(
+            (ticket) => ticket.is_flagged
+          );
+          const nonFlaggedTickets = otherTickets.filter(
+            (ticket) => !ticket.is_flagged
+          );
 
           // Put golden ticket at the top of non-flagged tickets
           return [...flaggedTickets, newlyGoldenTicket, ...nonFlaggedTickets];
@@ -857,12 +1067,15 @@ export const TicketDashboard = () => {
         }
       });
 
-      sonnerToast.success(response.message || `Golden Ticket ${!currentGoldenStatus ? 'marked' : 'unmarked'} successfully!`);
+      sonnerToast.success(
+        response.message ||
+          `Golden Ticket ${!currentGoldenStatus ? "marked" : "unmarked"} successfully!`
+      );
 
       // Optionally refresh ticket summary to keep counts in sync
       fetchTicketSummary();
     } catch (error) {
-      console.error('Single golden ticket action failed:', error);
+      console.error("Single golden ticket action failed:", error);
       sonnerToast.error("Failed to mark as golden ticket");
     }
   };
@@ -882,7 +1095,7 @@ export const TicketDashboard = () => {
       // Pass only date filter to ticket summary API
       // The API will automatically wrap it with q[] so just pass date_range
       const summaryFilters: TicketFilters = {
-        date_range: dateRange
+        date_range: dateRange,
       };
       fetchTicketSummary(summaryFilters);
     } else {
@@ -893,10 +1106,11 @@ export const TicketDashboard = () => {
 
   // Handle status card click for filtering
   const handleStatusCardClick = (cardType: string) => {
-    if (cardType === 'total') {
-      setFilters(prevFilters => {
+    if (cardType === "total") {
+      setFilters((prevFilters) => {
         const {
           complaint_status_fixed_state_eq,
+          complaint_status_fixed_state_or_complaint_status_name_in,
           complaint_status_fixed_state_not_eq,
           complaint_status_fixed_state_null,
           complaint_type_eq,
@@ -910,9 +1124,10 @@ export const TicketDashboard = () => {
       return;
     }
 
-    setFilters(prevFilters => {
+    setFilters((prevFilters) => {
       const {
         complaint_status_fixed_state_eq,
+        complaint_status_fixed_state_or_complaint_status_name_in,
         complaint_status_fixed_state_not_eq,
         complaint_status_fixed_state_null,
         complaint_type_eq,
@@ -923,36 +1138,52 @@ export const TicketDashboard = () => {
 
       const newFilters: TicketFilters = { ...otherFilters };
 
-      if (cardType === 'open') {
-        newFilters.m = 'and';
-        newFilters.g = [{
-          m: 'or',
-          complaint_status_fixed_state_not_eq: 'closed',
-          complaint_status_fixed_state_null: '1'
-        }];
-      } else if (cardType === 'pending') {
-        newFilters.complaint_status_fixed_state_eq = 'Pending';
-      } else if (cardType === 'in_progress') {
-        newFilters.complaint_status_fixed_state_eq = 'In Progress';
-      } else if (cardType === 'closed') {
-        newFilters.complaint_status_fixed_state_eq = 'Closed';
-      } else if (cardType === 'completed') {
-        newFilters.complaint_status_fixed_state_eq = 'complete';
-      } else if (cardType === 'complaints') {
-        newFilters.complaint_type_eq = 'Complaint';
-      } else if (cardType === 'suggestions') {
-        newFilters.complaint_type_eq = 'Suggestion';
-      } else if (cardType === 'requests') {
-        newFilters.complaint_type_eq = 'Request';
-      } else if (cardType === 'open_complaints') {
-        newFilters.complaint_status_fixed_state_eq = 'Open';
-        newFilters.complaint_type_eq = 'Complaint';
-      } else if (cardType === 'open_suggestions') {
-        newFilters.complaint_status_fixed_state_eq = 'Open';
-        newFilters.complaint_type_eq = 'Suggestion';
-      } else if (cardType === 'open_requests') {
-        newFilters.complaint_status_fixed_state_eq = 'Open';
-        newFilters.complaint_type_eq = 'Request';
+      if (cardType === "open") {
+        newFilters.m = "and";
+        newFilters.g = [
+          {
+            m: "or",
+            complaint_status_fixed_state_not_eq: "closed",
+            complaint_status_fixed_state_null: "1",
+          },
+        ];
+      } else if (cardType === "pending") {
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = [
+          "Pending",
+        ];
+      } else if (cardType === "in_progress") {
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = [
+          "Work In Progress",
+        ];
+      } else if (cardType === "closed") {
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = [
+          "Closed",
+        ];
+      } else if (cardType === "completed") {
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = [
+          "complete",
+        ];
+      } else if (cardType === "complaints") {
+        newFilters.complaint_type_eq = "Complaint";
+      } else if (cardType === "suggestions") {
+        newFilters.complaint_type_eq = "Suggestion";
+      } else if (cardType === "requests") {
+        newFilters.complaint_type_eq = "Request";
+      } else if (cardType === "open_complaints") {
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = [
+          "Open",
+        ];
+        newFilters.complaint_type_eq = "Complaint";
+      } else if (cardType === "open_suggestions") {
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = [
+          "Open",
+        ];
+        newFilters.complaint_type_eq = "Suggestion";
+      } else if (cardType === "open_requests") {
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = [
+          "Open",
+        ];
+        newFilters.complaint_type_eq = "Request";
       }
 
       return newFilters;
@@ -963,33 +1194,81 @@ export const TicketDashboard = () => {
 
   // Helper function to check if a status card is currently active
   const isStatusCardActive = (cardType: string) => {
-    if (cardType === 'total') return false;
+    if (cardType === "total") return false;
 
-    if (cardType === 'open') {
-      return filters.m === 'and' &&
-        filters.g?.[0]?.m === 'or' &&
-        filters.g?.[0]?.complaint_status_fixed_state_not_eq === 'closed' &&
-        filters.g?.[0]?.complaint_status_fixed_state_null === '1';
-    } else if (cardType === 'pending') {
-      return filters.complaint_status_fixed_state_eq === 'Pending';
-    } else if (cardType === 'in_progress') {
-      return filters.complaint_status_fixed_state_eq === 'In Progress';
-    } else if (cardType === 'closed') {
-      return filters.complaint_status_fixed_state_eq === 'Closed';
-    } else if (cardType === 'completed') {
-      return filters.complaint_status_fixed_state_eq === 'complete';
-    } else if (cardType === 'complaints') {
-      return filters.complaint_type_eq === 'Complaint' && !filters.complaint_status_fixed_state_eq;
-    } else if (cardType === 'suggestions') {
-      return filters.complaint_type_eq === 'Suggestion' && !filters.complaint_status_fixed_state_eq;
-    } else if (cardType === 'requests') {
-      return filters.complaint_type_eq === 'Request' && !filters.complaint_status_fixed_state_eq;
-    } else if (cardType === 'open_complaints') {
-      return filters.complaint_status_fixed_state_eq === 'Open' && filters.complaint_type_eq === 'Complaint';
-    } else if (cardType === 'open_suggestions') {
-      return filters.complaint_status_fixed_state_eq === 'Open' && filters.complaint_type_eq === 'Suggestion';
-    } else if (cardType === 'open_requests') {
-      return filters.complaint_status_fixed_state_eq === 'Open' && filters.complaint_type_eq === 'Request';
+    if (cardType === "open") {
+      return (
+        filters.m === "and" &&
+        filters.g?.[0]?.m === "or" &&
+        filters.g?.[0]?.complaint_status_fixed_state_not_eq === "closed" &&
+        filters.g?.[0]?.complaint_status_fixed_state_null === "1"
+      );
+    } else if (cardType === "pending") {
+      return (
+        filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes(
+          "Pending"
+        ) ?? false
+      );
+    } else if (cardType === "in_progress") {
+      return (
+        filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes(
+          "Work In Progress"
+        ) ?? false
+      );
+    } else if (cardType === "closed") {
+      return (
+        filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes(
+          "Closed"
+        ) ?? false
+      );
+    } else if (cardType === "completed") {
+      return (
+        filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes(
+          "complete"
+        ) ?? false
+      );
+    } else if (cardType === "complaints") {
+      return (
+        filters.complaint_type_eq === "Complaint" &&
+        !filters.complaint_status_fixed_state_or_complaint_status_name_in
+          ?.length
+      );
+    } else if (cardType === "suggestions") {
+      return (
+        filters.complaint_type_eq === "Suggestion" &&
+        !filters.complaint_status_fixed_state_or_complaint_status_name_in
+          ?.length
+      );
+    } else if (cardType === "requests") {
+      return (
+        filters.complaint_type_eq === "Request" &&
+        !filters.complaint_status_fixed_state_or_complaint_status_name_in
+          ?.length
+      );
+    } else if (cardType === "open_complaints") {
+      return (
+        (filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes(
+          "Open"
+        ) ??
+          false) &&
+        filters.complaint_type_eq === "Complaint"
+      );
+    } else if (cardType === "open_suggestions") {
+      return (
+        (filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes(
+          "Open"
+        ) ??
+          false) &&
+        filters.complaint_type_eq === "Suggestion"
+      );
+    } else if (cardType === "open_requests") {
+      return (
+        (filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes(
+          "Open"
+        ) ??
+          false) &&
+        filters.complaint_type_eq === "Request"
+      );
     }
 
     return false;
@@ -997,126 +1276,155 @@ export const TicketDashboard = () => {
 
   // Handle drag end for chart reordering
   const handleDragEnd = (event: DragEndEvent) => {
-    const {
-      active,
-      over
-    } = event;
+    const { active, over } = event;
     if (active.id !== over?.id) {
-      setChartOrder(items => {
+      setChartOrder((items) => {
         const oldIndex = items.indexOf(active.id.toString());
-        const newIndex = items.indexOf(over?.id.toString() || '');
+        const newIndex = items.indexOf(over?.id.toString() || "");
         return arrayMove(items, oldIndex, newIndex);
       });
     }
   };
-  const columns = [{
-    key: 'actions',
-    label: 'Actions',
-    sortable: false
-  },
-  {
-    key: 'ticket_number',
-    label: 'Ticket ID',
-    sortable: true
-  },
-  {
-    key: 'heading',
-    label: 'Description',
-    sortable: true
-  }, {
-    key: 'category_type',
-    label: 'Category',
-    sortable: true
-  }, {
-    key: 'sub_category_type',
-    label: 'Sub Category',
-    sortable: true
-  }, {
-    key: 'posted_by',
-    label: 'Created By',
-    sortable: true
-  }, {
-    key: 'assigned_to',
-    label: 'Assigned To',
-    sortable: true
-  }, {
-    key: 'issue_status',
-    label: 'Status',
-    sortable: true
-  }, {
-    key: 'priority',
-    label: 'Priority',
-    sortable: true
-  }, 
-  // {
-  //   key: 'site_name',
-  //   label: 'Site',
-  //   sortable: true
-  // }, 
-  {
-    key: 'created_at',
-    label: 'Created On',
-    sortable: true
-  }, {
-    key: 'issue_type',
-    label: 'Ticket Type',
-    sortable: true
-  }, {
-    key: 'complaint_mode',
-    label: 'Complaint Mode',
-    sortable: true
-  }, {
-    key: 'asset_or_service_name',
-    label: 'Asset / Service Name',
-    sortable: true
-  }, {
-    key: 'asset_task_occurrence_id',
-    label: 'Task ID',
-    sortable: true
-  }, {
-    key: 'proactive_reactive',
-    label: 'Proactive / Reactive',
-    sortable: true
-  }, {
-    key: 'review_tracking_date',
-    label: 'Review Date',
-    sortable: true
-  }, {
-    key: 'response_escalation',
-    label: 'Response Escalation',
-    sortable: true
-  }, {
-    key: 'response_tat',
-    label: 'Response TAT (Min)',
-    sortable: true
-  }, {
-    key: 'response_time',
-    label: 'Response Time (D:H:M)',
-    sortable: true
-  }, {
-    key: 'escalation_response_name',
-    label: 'Response Escalation Level',
-    sortable: true
-  }, {
-    key: 'resolution_escalation',
-    label: 'Resolution Escalation',
-    sortable: true
-  }, {
-    key: 'resolution_tat',
-    label: 'Resolution TAT (Min)',
-    sortable: true
-  }, {
-    key: 'resolution_time',
-    label: 'Resolution Time (D:H:M)',
-    sortable: true
-  }, {
-    key: 'escalation_resolution_name',
-    label: 'Resolution Escalation Level',
-    sortable: true
-  }];
+  const columns = [
+    {
+      key: "actions",
+      label: "Actions",
+      sortable: false,
+    },
+    {
+      key: "ticket_number",
+      label: "Ticket ID",
+      sortable: true,
+    },
+    {
+      key: "heading",
+      label: "Description",
+      sortable: true,
+    },
+    {
+      key: "category_type",
+      label: "Category",
+      sortable: true,
+    },
+    {
+      key: "sub_category_type",
+      label: "Sub Category",
+      sortable: true,
+    },
+    {
+      key: "flat_number",
+      label: "Flat",
+      sortable: true,
+    },
+    {
+      key: "tower",
+      label: "Tower",
+      sortable: true,
+    },
+    {
+      key: "posted_by",
+      label: "Created By",
+      sortable: true,
+    },
+    {
+      key: "assigned_to",
+      label: "Assigned To",
+      sortable: true,
+    },
+    {
+      key: "issue_status",
+      label: "Status",
+      sortable: true,
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      sortable: true,
+    },
+    // {
+    //   key: 'site_name',
+    //   label: 'Site',
+    //   sortable: true
+    // },
+    {
+      key: "created_at",
+      label: "Created On",
+      sortable: true,
+    },
+    {
+      key: "issue_type",
+      label: "Related To",
+      sortable: true,
+    },
+    {
+      key: "complaint_mode",
+      label: "Complaint Mode",
+      sortable: true,
+    },
+    // {
+    //   key: "asset_or_service_name",
+    //   label: "Asset / Service Name",
+    //   sortable: true,
+    // },
+    // {
+    //   key: "asset_task_occurrence_id",
+    //   label: "Task ID",
+    //   sortable: true,
+    // },
+    {
+      key: "proactive_reactive",
+      label: "Proactive / Reactive",
+      sortable: true,
+    },
+    {
+      key: "review_tracking_date",
+      label: "Review Date",
+      sortable: true,
+    },
+    {
+      key: "response_escalation",
+      label: "Response Escalation",
+      sortable: true,
+    },
+    // {
+    //   key: "response_tat",
+    //   label: "Response TAT (Min)",
+    //   sortable: true,
+    // },
+    // {
+    //   key: "response_time",
+    //   label: "Response Time (D:H:M)",
+    //   sortable: true,
+    // },
+    // {
+    //   key: "escalation_response_name",
+    //   label: "Response Escalation Level",
+    //   sortable: true,
+    // },
+    // {
+    //   key: "resolution_escalation",
+    //   label: "Resolution Escalation",
+    //   sortable: true,
+    // },
+    // {
+    //   key: "resolution_tat",
+    //   label: "Resolution TAT (Min)",
+    //   sortable: true,
+    // },
+    // {
+    //   key: "resolution_time",
+    //   label: "Resolution Time (D:H:M)",
+    //   sortable: true,
+    // },
+    // {
+    //   key: "escalation_resolution_name",
+    //   label: "Resolution Escalation Level",
+    //   sortable: true,
+    // },
+  ];
   const renderCustomActions = () => (
     <div className="flex gap-3">
-      {shouldShow("tickets", "add") && (
+      {shouldShow("Helpdesk", "create") && (
         <Button
           onClick={handleAddButton}
           variant="ghost"
@@ -1137,8 +1445,7 @@ export const TicketDashboard = () => {
     } else {
       navigate("/bms/helpdesk/add");
     }
-  }
-
+  };
 
   const renderRightActions = () => (
     <div className="flex gap-2">
@@ -1158,23 +1465,25 @@ export const TicketDashboard = () => {
     </div>
   );
   const formatDate = (dateString: string) => {
-    if (!dateString) return '--';
+    if (!dateString) return "--";
     try {
       // Parse the ISO string to extract date and time parts directly
       // Format: "2025-11-19T12:01:19.000+04:00"
-      const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+      const match = dateString.match(
+        /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/
+      );
       if (match) {
         const [, year, month, day, hours, minutes, seconds] = match;
         return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
       }
       // Fallback to Date object if regex doesn't match
       const date = new Date(dateString);
-      const d = String(date.getDate()).padStart(2, '0');
-      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, "0");
+      const m = String(date.getMonth() + 1).padStart(2, "0");
       const y = date.getFullYear();
-      const h = String(date.getHours()).padStart(2, '0');
-      const min = String(date.getMinutes()).padStart(2, '0');
-      const sec = String(date.getSeconds()).padStart(2, '0');
+      const h = String(date.getHours()).padStart(2, "0");
+      const min = String(date.getMinutes()).padStart(2, "0");
+      const sec = String(date.getSeconds()).padStart(2, "0");
       return `${d}/${m}/${y}, ${h}:${min}:${sec}`;
     } catch (error) {
       return dateString;
@@ -1182,7 +1491,7 @@ export const TicketDashboard = () => {
   };
 
   const formatDateOnly = (dateString: string) => {
-    if (!dateString) return '--';
+    if (!dateString) return "--";
     try {
       // Parse the ISO string to extract only the date part
       // Format: "2025-11-19T12:01:19.000+04:00"
@@ -1193,8 +1502,8 @@ export const TicketDashboard = () => {
       }
       // Fallback to Date object if regex doesn't match
       const date = new Date(dateString);
-      const d = String(date.getDate()).padStart(2, '0');
-      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, "0");
+      const m = String(date.getMonth() + 1).padStart(2, "0");
       const y = date.getFullYear();
       return `${d}/${m}/${y}`;
     } catch (error) {
@@ -1203,56 +1512,68 @@ export const TicketDashboard = () => {
   };
 
   // Helper function to format escalation data
-  const formatEscalationData = (escalation: EscalationInfo | null | undefined) => {
+  const formatEscalationData = (
+    escalation: EscalationInfo | null | undefined
+  ) => {
     if (!escalation) return null;
 
-    const { minutes, is_overdue, users, escalation_name, escalation_time } = escalation;
+    const { minutes, is_overdue, users, escalation_name, escalation_time } =
+      escalation;
 
     return {
       minutes: minutes || 0,
       isOverdue: is_overdue || false,
       users: users || [],
-      escalationName: escalation_name || '--',
-      escalationTime: escalation_time || '--'
+      escalationName: escalation_name || "--",
+      escalationTime: escalation_time || "--",
     };
   };
 
   // Helper function to format escalation display
-  const formatEscalationDisplay = (escalation: EscalationInfo | null | undefined, type: 'response' | 'resolution') => {
-    if (!escalation) return '--';
+  const formatEscalationDisplay = (
+    escalation: EscalationInfo | null | undefined,
+    type: "response" | "resolution"
+  ) => {
+    if (!escalation) return "--";
 
     const formatted = formatEscalationData(escalation);
-    return formatted?.escalationName || '--';
+    return formatted?.escalationName || "--";
   };
 
   // Helper function to format escalation minutes
-  const formatEscalationMinutes = (escalation: EscalationInfo | null | undefined) => {
-    if (!escalation) return '--';
+  const formatEscalationMinutes = (
+    escalation: EscalationInfo | null | undefined
+  ) => {
+    if (!escalation) return "--";
     const formatted = formatEscalationData(escalation);
-    return formatted?.minutes.toString() || '--';
+    return formatted?.minutes.toString() || "--";
   };
 
   // Helper function to format escalation time in D:H:M format
-  const formatEscalationTime = (escalation: EscalationInfo | null | undefined) => {
-    if (!escalation || !escalation.minutes) return '--';
+  const formatEscalationTime = (
+    escalation: EscalationInfo | null | undefined
+  ) => {
+    if (!escalation || !escalation.minutes) return "--";
 
     const totalMinutes = escalation.minutes;
     const days = Math.floor(totalMinutes / (24 * 60));
     const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
     const minutes = totalMinutes % 60;
 
-    return `${days}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    return `${days}:${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
   };
 
   // Helper function to format escalation level
-  const formatEscalationLevel = (escalation: EscalationInfo | null | undefined) => {
-    if (!escalation) return '--';
+  const formatEscalationLevel = (
+    escalation: EscalationInfo | null | undefined
+  ) => {
+    if (!escalation) return "--";
     const formatted = formatEscalationData(escalation);
-    return formatted?.escalationName || '--';
+    return formatted?.escalationName || "--";
   };
   const TruncatedDescription = ({
     text,
-    maxCharacters = 15
+    maxCharacters = 15,
   }: {
     text: string;
     maxCharacters?: number;
@@ -1266,18 +1587,19 @@ export const TicketDashboard = () => {
     const truncated = text.substring(0, maxCharacters);
     return (
       <div className="w-32 max-w-[150px]" title={text}>
-        <span className="block truncate">
-          {`${truncated}...`}
-        </span>
+        <span className="block truncate">{`${truncated}...`}</span>
       </div>
     );
   };
   const renderCell = (item, columnKey) => {
-    if (columnKey === 'actions') {
+    if (columnKey === "actions") {
       return (
         <div className="flex items-center justify-center gap-1 w-full h-full min-h-[40px]">
-          <div title="View ticket" className="p-1 hover:bg-gray-100 rounded transition-colors">
-            {shouldShow("tickets", "view") && (
+          <div
+            title="View ticket"
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+          >
+            {shouldShow("Helpdesk", "show") && (
               <Eye
                 className="w-4 h-4 text-gray-600 cursor-pointer"
                 onClick={(e) => {
@@ -1296,24 +1618,30 @@ export const TicketDashboard = () => {
               }}
             />
           </div> */}
-          <div title={`${item.is_flagged ? 'Unflag' : 'Flag'} ticket`} className="p-1 hover:bg-gray-100 rounded transition-colors">
+          <div
+            title={`${item.is_flagged ? "Unflag" : "Flag"} ticket`}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+          >
             <Flag
-              className={`w-4 h-4 cursor-pointer transition-all duration-200 hover:text-[#C72030] hover:scale-110 ${item.is_flagged
-                ? 'text-red-500 fill-red-500'
-                : 'text-gray-600'
-                }`}
+              className={`w-4 h-4 cursor-pointer transition-all duration-200 hover:text-[#C72030] hover:scale-110 ${
+                item.is_flagged ? "text-red-500 fill-red-500" : "text-gray-600"
+              }`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleSingleTicketFlag(item.id, item.is_flagged);
               }}
             />
           </div>
-          <div title={`${item.is_golden_ticket ? 'Remove' : 'Mark as'} Golden Ticket`} className="p-1 hover:bg-gray-100 rounded transition-colors">
+          <div
+            title={`${item.is_golden_ticket ? "Remove" : "Mark as"} Golden Ticket`}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+          >
             <Star
-              className={`w-4 h-4 cursor-pointer transition-all duration-200 hover:text-[#C72030] hover:scale-110 ${item.is_golden_ticket
-                ? 'text-yellow-500 fill-yellow-500'
-                : 'text-gray-600'
-                }`}
+              className={`w-4 h-4 cursor-pointer transition-all duration-200 hover:text-[#C72030] hover:scale-110 ${
+                item.is_golden_ticket
+                  ? "text-yellow-500 fill-yellow-500"
+                  : "text-gray-600"
+              }`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleSingleTicketGoldenTicket(item.id, item.is_golden_ticket);
@@ -1323,21 +1651,27 @@ export const TicketDashboard = () => {
         </div>
       );
     }
-    if (columnKey === 'heading') {
+    if (columnKey === "heading") {
       return <TruncatedDescription text={item.heading} />;
     }
-    if (columnKey === 'issue_status') {
-      const statusName = item.status?.name || item.issue_status || '--';
+    if (columnKey === "issue_status") {
+      const statusName = item.status?.name || item.issue_status || "--";
       const colorCode = item.status?.color_code;
+      const canUpdate = shouldShow("Helpdesk", "update");
       return (
         <span
-          className="px-2 py-1 rounded text-xs animate-scale-in cursor-pointer hover:opacity-80 transition-opacity font-medium"
-          style={colorCode ? {
-            backgroundColor: `${colorCode}22`,
-            color: colorCode,
-            border: `1px solid ${colorCode}44`,
-          } : {}}
+          className={`px-2 py-1 rounded text-xs animate-scale-in transition-opacity font-medium ${canUpdate ? "cursor-pointer hover:opacity-80" : ""}`}
+          style={
+            colorCode
+              ? {
+                  backgroundColor: `${colorCode}22`,
+                  color: colorCode,
+                  border: `1px solid ${colorCode}44`,
+                }
+              : {}
+          }
           onClick={(e) => {
+            if (!canUpdate) return;
             e.stopPropagation();
             setSelectedTicketForEdit(item);
             setIsEditStatusOpen(true);
@@ -1347,45 +1681,61 @@ export const TicketDashboard = () => {
         </span>
       );
     }
-    if (columnKey === 'priority') {
-      return <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700 animate-scale-in">
-        {item.priority}
-      </span>;
+    if (columnKey === "priority") {
+      return (
+        <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700 animate-scale-in">
+          {item.priority}
+        </span>
+      );
     }
-    if (columnKey === 'created_at') {
+    if (columnKey === "flat_number") {
+      // The API sends flat_number pre-combined as "Tower-FlatNo" (e.g. "T1-101").
+      if (!item.flat_number) return "--";
+      const parts = String(item.flat_number).split("-");
+      return parts.length > 1 ? parts.join(" - ") : item.flat_number;
+    }
+    if (columnKey === "tower") {
+      if (!item.flat_number) return "--";
+      const parts = String(item.flat_number).split("-");
+      return parts.length > 1 ? parts[0] : "--";
+    }
+    if (columnKey === "created_at") {
       return formatDate(item.created_at);
     }
-    if (columnKey === 'review_tracking_date') {
+    if (columnKey === "review_tracking_date") {
       return formatDateOnly(item.review_tracking_date);
     }
-    if (columnKey === 'response_tat') {
+    if (columnKey === "response_tat") {
       return formatEscalationMinutes(item.next_response_escalation);
     }
-    if (columnKey === 'response_time') {
+    if (columnKey === "response_time") {
       return formatEscalationTime(item.next_response_escalation);
     }
-    if (columnKey === 'escalation_response_name') {
+    if (columnKey === "escalation_response_name") {
       return formatEscalationLevel(item.next_response_escalation);
     }
-    if (columnKey === 'resolution_tat') {
+    if (columnKey === "resolution_tat") {
       return formatEscalationMinutes(item.next_resolution_escalation);
     }
-    if (columnKey === 'resolution_time') {
+    if (columnKey === "resolution_time") {
       return formatEscalationTime(item.next_resolution_escalation);
     }
-    if (columnKey === 'escalation_resolution_name') {
+    if (columnKey === "escalation_resolution_name") {
       return formatEscalationLevel(item.next_resolution_escalation);
     }
-    if (!item[columnKey] || item[columnKey] === null || item[columnKey] === '') {
-      return '--';
+    if (
+      !item[columnKey] ||
+      item[columnKey] === null ||
+      item[columnKey] === ""
+    ) {
+      return "--";
     }
     return item[columnKey];
   };
 
-
   // Handle tab change and load analytics data only when needed
   const handleTabChange = (value: string) => {
-    if (value === 'analytics' && !analyticsLoaded) {
+    if (value === "analytics" && !analyticsLoaded) {
       const defaultRange = getDefaultDateRange();
       const startDate = convertDateStringToDate(defaultRange.startDate);
       const endDate = convertDateStringToDate(defaultRange.endDate);
@@ -1395,10 +1745,10 @@ export const TicketDashboard = () => {
       const dateRangeParam = `${defaultRange.startDate} - ${defaultRange.endDate}`;
       // The API will automatically wrap date_range with q[] so just pass date_range
       const summaryFilters: TicketFilters = {
-        date_range: dateRangeParam
+        date_range: dateRangeParam,
       };
       fetchTicketSummary(summaryFilters);
-    } else if (value === 'tickets') {
+    } else if (value === "tickets") {
       // Reset to show all tickets without date filter when switching to tickets tab
       fetchTicketSummary();
     }
@@ -1407,7 +1757,11 @@ export const TicketDashboard = () => {
   return (
     <>
       <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
-        <Tabs defaultValue="tickets" className="w-full" onValueChange={handleTabChange}>
+        <Tabs
+          defaultValue="tickets"
+          className="w-full"
+          onValueChange={handleTabChange}
+        >
           <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
             <TabsTrigger
               value="tickets"
@@ -1452,11 +1806,12 @@ export const TicketDashboard = () => {
             </TabsTrigger>
           </TabsList>
 
-
-          <TabsContent value="analytics" className="space-y-4 sm:space-y-4 mt-4">
+          <TabsContent
+            value="analytics"
+            className="space-y-4 sm:space-y-4 mt-4"
+          >
             {/* Header with Filter and Ticket Selector */}
             <div className="flex justify-end items-center gap-2">
-
               <Button
                 variant="outline"
                 onClick={() => setIsAnalyticsFilterOpen(true)}
@@ -1477,53 +1832,84 @@ export const TicketDashboard = () => {
               {/* Left Section - Charts */}
               <div className="xl:col-span-8 space-y-4 sm:space-y-6">
                 {/* All Charts with Drag and Drop */}
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={chartOrder} strategy={rectSortingStrategy}>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={chartOrder}
+                    strategy={rectSortingStrategy}
+                  >
                     <div className="space-y-4 sm:space-y-2">
                       {/* First Row - Ticket Status and ProActive/Reactive */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                        {chartOrder.filter(id => ['statusChart', 'reactiveChart'].includes(id)).map(chartId => {
-                          if (chartId === 'statusChart' && visibleSections.includes('statusChart')) {
-                            return (
-                              <SortableChartItem key={chartId} id={chartId}>
-                                <SectionLoader loading={loadingStates.statusChart}>
-                                  <TicketStatusOverviewCard
-                                    openTickets={openticketanalyticsData}
-                                    closedTickets={closedticketanalyticsData}
-                                  />
-                                </SectionLoader>
-                              </SortableChartItem>
-                            );
-                          }
-                          if (chartId === 'reactiveChart' && visibleSections.includes('reactiveChart')) {
-                            return (
-                              <SortableChartItem key={chartId} id={chartId}>
-                                <SectionLoader loading={loadingStates.reactiveChart}>
-                                  <ProactiveReactiveCard
-                                    proactiveOpenTickets={proactiveOpenTickets}
-                                    proactiveClosedTickets={proactiveClosedTickets}
-                                    reactiveOpenTickets={reactiveOpenTickets}
-                                    reactiveClosedTickets={reactiveClosedTickets}
-                                  />
-                                </SectionLoader>
-                              </SortableChartItem>
-                            );
-                          }
-                          return null;
-                        })}
+                        {chartOrder
+                          .filter((id) =>
+                            ["statusChart", "reactiveChart"].includes(id)
+                          )
+                          .map((chartId) => {
+                            if (
+                              chartId === "statusChart" &&
+                              visibleSections.includes("statusChart")
+                            ) {
+                              return (
+                                <SortableChartItem key={chartId} id={chartId}>
+                                  <SectionLoader
+                                    loading={loadingStates.statusChart}
+                                  >
+                                    <TicketStatusOverviewCard
+                                      openTickets={openticketanalyticsData}
+                                      closedTickets={closedticketanalyticsData}
+                                    />
+                                  </SectionLoader>
+                                </SortableChartItem>
+                              );
+                            }
+                            if (
+                              chartId === "reactiveChart" &&
+                              visibleSections.includes("reactiveChart")
+                            ) {
+                              return (
+                                <SortableChartItem key={chartId} id={chartId}>
+                                  <SectionLoader
+                                    loading={loadingStates.reactiveChart}
+                                  >
+                                    <ProactiveReactiveCard
+                                      proactiveOpenTickets={
+                                        proactiveOpenTickets
+                                      }
+                                      proactiveClosedTickets={
+                                        proactiveClosedTickets
+                                      }
+                                      reactiveOpenTickets={reactiveOpenTickets}
+                                      reactiveClosedTickets={
+                                        reactiveClosedTickets
+                                      }
+                                    />
+                                  </SectionLoader>
+                                </SortableChartItem>
+                              );
+                            }
+                            return null;
+                          })}
                       </div>
 
                       {/* Second Row - Response TAT */}
                       <div className="grid grid-cols-1 gap-4 sm:gap-6">
-                        {visibleSections.includes('responseTat') && (
+                        {visibleSections.includes("responseTat") && (
                           <SortableChartItem key="responseTat" id="responseTat">
                             <SectionLoader loading={loadingStates.responseTat}>
                               <ResponseTATCard
                                 data={responseTATData}
                                 className="h-full"
                                 dateRange={{
-                                  startDate: convertDateStringToDate(analyticsDateRange.startDate),
-                                  endDate: convertDateStringToDate(analyticsDateRange.endDate)
+                                  startDate: convertDateStringToDate(
+                                    analyticsDateRange.startDate
+                                  ),
+                                  endDate: convertDateStringToDate(
+                                    analyticsDateRange.endDate
+                                  ),
                                 }}
                               />
                             </SectionLoader>
@@ -1533,14 +1919,27 @@ export const TicketDashboard = () => {
 
                       {/* Third Row - Category Wise ProActive/Reactive (Dual-bar chart) */}
                       <div className="grid grid-cols-1 gap-4 sm:gap-6">
-                        {visibleSections.includes('categoryWiseProactiveReactive') && (
-                          <SortableChartItem key="categoryWiseProactiveReactive" id="categoryWiseProactiveReactive">
-                            <SectionLoader loading={loadingStates.categoryWiseProactiveReactive}>
+                        {visibleSections.includes(
+                          "categoryWiseProactiveReactive"
+                        ) && (
+                          <SortableChartItem
+                            key="categoryWiseProactiveReactive"
+                            id="categoryWiseProactiveReactive"
+                          >
+                            <SectionLoader
+                              loading={
+                                loadingStates.categoryWiseProactiveReactive
+                              }
+                            >
                               <CategoryWiseProactiveReactiveCard
                                 data={categorywiseTicketsData}
                                 dateRange={{
-                                  startDate: convertDateStringToDate(analyticsDateRange.startDate),
-                                  endDate: convertDateStringToDate(analyticsDateRange.endDate)
+                                  startDate: convertDateStringToDate(
+                                    analyticsDateRange.startDate
+                                  ),
+                                  endDate: convertDateStringToDate(
+                                    analyticsDateRange.endDate
+                                  ),
                                 }}
                               />
                             </SectionLoader>
@@ -1565,15 +1964,19 @@ export const TicketDashboard = () => {
 
                       {/* Fifth Row - Tickets Aging Matrix */}
                       <div className="grid grid-cols-1 gap-4 sm:gap-6">
-                        {visibleSections.includes('agingMatrix') && (
+                        {visibleSections.includes("agingMatrix") && (
                           <SortableChartItem key="agingMatrix" id="agingMatrix">
                             <SectionLoader loading={loadingStates.agingMatrix}>
                               <TicketAgingMatrixCard
                                 data={agingMatrixAnalyticsData}
                                 agingMatrixData={agingMatrixData}
                                 dateRange={{
-                                  startDate: convertDateStringToDate(analyticsDateRange.startDate),
-                                  endDate: convertDateStringToDate(analyticsDateRange.endDate)
+                                  startDate: convertDateStringToDate(
+                                    analyticsDateRange.startDate
+                                  ),
+                                  endDate: convertDateStringToDate(
+                                    analyticsDateRange.endDate
+                                  ),
                                 }}
                               />
                             </SectionLoader>
@@ -1583,15 +1986,24 @@ export const TicketDashboard = () => {
 
                       {/* Sixth Row - Resolution TAT Report */}
                       <div className="grid grid-cols-1 gap-4 sm:gap-6">
-                        {visibleSections.includes('resolutionTat') && (
-                          <SortableChartItem key="resolutionTat" id="resolutionTat">
-                            <SectionLoader loading={loadingStates.resolutionTat}>
+                        {visibleSections.includes("resolutionTat") && (
+                          <SortableChartItem
+                            key="resolutionTat"
+                            id="resolutionTat"
+                          >
+                            <SectionLoader
+                              loading={loadingStates.resolutionTat}
+                            >
                               <ResolutionTATCard
                                 data={resolutionTATReportData}
                                 className="bg-white border border-gray-200 rounded-lg"
                                 dateRange={{
-                                  startDate: convertDateStringToDate(analyticsDateRange.startDate),
-                                  endDate: convertDateStringToDate(analyticsDateRange.endDate)
+                                  startDate: convertDateStringToDate(
+                                    analyticsDateRange.startDate
+                                  ),
+                                  endDate: convertDateStringToDate(
+                                    analyticsDateRange.endDate
+                                  ),
                                 }}
                               />
                             </SectionLoader>
@@ -1605,48 +2017,125 @@ export const TicketDashboard = () => {
 
               {/* Right Sidebar - Recent Tickets */}
               <div className="xl:col-span-4 order-first xl:order-last">
-                <RecentTicketsSidebar onTicketUpdate={refreshTicketsAndSummary} />
+                <RecentTicketsSidebar
+                  onTicketUpdate={refreshTicketsAndSummary}
+                />
               </div>
             </div>
             <SpeechProvider>
               <DashboardAIAssistant moduleId="2" />
             </SpeechProvider>
-
           </TabsContent>
 
-          <TabsContent value="tickets" className="space-y-4 sm:space-y-4 mt-4 sm:mt-6">
+          <TabsContent
+            value="tickets"
+            className="space-y-4 sm:space-y-4 mt-4 sm:mt-6"
+          >
             {/* Ticket Statistics Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 mb-6">
-              {([
-                { label: 'Total Tickets',       value: displayTotalTickets,       type: 'total',       icon: Ticket },
-                { label: 'Open Tickets',        value: openTickets,               type: 'open',        icon: AlertCircle },
-                { label: 'Closed Tickets',      value: closedTickets,             type: 'closed',      icon: CheckCircle },
-                { label: 'Completed Tickets',   value: completedTickets,          type: 'completed',   icon: CheckCircle },
-                { label: 'Work In Progress',    value: inProgressTickets,         type: 'in_progress', icon: Clock },
-                { label: 'Complaints',          value: totalComplaints,           type: 'complaints',       icon: AlertCircle },
-                { label: 'Suggestions',         value: totalSuggestions,          type: 'suggestions',      icon: TrendingUp },
-                { label: 'Requests',            value: totalRequests,             type: 'requests',         icon: Ticket },
-                { label: 'Open (Complaints)',   value: openComplaints,            type: 'open_complaints',  icon: AlertCircle },
-                { label: 'Open (Requests)',     value: openRequests,              type: 'open_requests',    icon: Ticket },
-                { label: 'Open (Suggestions)', value: openSuggestions,           type: 'open_suggestions', icon: TrendingUp },
-              ] as { label: string; value: string | number; type: string | null; icon: React.ElementType }[]).map((item, i) => {
+              {(
+                [
+                  {
+                    label: "Total Tickets",
+                    value: displayTotalTickets,
+                    type: "total",
+                    icon: Ticket,
+                  },
+                  {
+                    label: "Open Tickets",
+                    value: openTickets,
+                    type: "open",
+                    icon: AlertCircle,
+                  },
+                  {
+                    label: "Closed Tickets",
+                    value: closedTickets,
+                    type: "closed",
+                    icon: CheckCircle,
+                  },
+                  {
+                    label: "Completed Tickets",
+                    value: completedTickets,
+                    type: "completed",
+                    icon: CheckCircle,
+                  },
+                  {
+                    label: "Work In Progress",
+                    value: inProgressTickets,
+                    type: "in_progress",
+                    icon: Clock,
+                  },
+                  {
+                    label: "Complaints",
+                    value: totalComplaints,
+                    type: "complaints",
+                    icon: AlertCircle,
+                  },
+                  {
+                    label: "Suggestions",
+                    value: totalSuggestions,
+                    type: "suggestions",
+                    icon: TrendingUp,
+                  },
+                  {
+                    label: "Requests",
+                    value: totalRequests,
+                    type: "requests",
+                    icon: Ticket,
+                  },
+                  {
+                    label: "Open (Complaints)",
+                    value: openComplaints,
+                    type: "open_complaints",
+                    icon: AlertCircle,
+                  },
+                  {
+                    label: "Open (Requests)",
+                    value: openRequests,
+                    type: "open_requests",
+                    icon: Ticket,
+                  },
+                  {
+                    label: "Open (Suggestions)",
+                    value: openSuggestions,
+                    type: "open_suggestions",
+                    icon: TrendingUp,
+                  },
+                ] as {
+                  label: string;
+                  value: string | number;
+                  type: string | null;
+                  icon: React.ElementType;
+                }[]
+              ).map((item, i) => {
                 const IconComponent = item.icon;
-                const isActive = item.type ? isStatusCardActive(item.type) : false;
+                const isActive = item.type
+                  ? isStatusCardActive(item.type)
+                  : false;
                 return (
                   <div
                     key={i}
-                    className={`bg-[#F6F4EE] p-4 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-3 cursor-pointer hover:shadow-lg transition-shadow ${isActive ? 'ring-2 ring-[#C72030]' : ''}`}
-                    onClick={() => item.type && handleStatusCardClick(item.type)}
+                    className={`bg-[#F6F4EE] p-4 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-3 cursor-pointer hover:shadow-lg transition-shadow ${isActive ? "ring-2 ring-[#C72030]" : ""}`}
+                    onClick={() =>
+                      item.type && handleStatusCardClick(item.type)
+                    }
                   >
-                    <div 
+                    <div
                       className="w-10 h-10 flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: 'rgba(196, 184, 157, 0.33)' }}
+                      style={{ backgroundColor: "rgba(196, 184, 157, 0.33)" }}
                     >
-                      <IconComponent className="w-5 h-5" style={{ color: '#C72030' }} />
+                      <IconComponent
+                        className="w-5 h-5"
+                        style={{ color: "#C72030" }}
+                      />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xl font-semibold text-[#1A1A1A]">{item.value}</div>
-                      <div className="text-xs font-medium text-[#1A1A1A] leading-tight">{item.label}</div>
+                      <div className="text-xl font-semibold text-[#1A1A1A]">
+                        {item.value}
+                      </div>
+                      <div className="text-xs font-medium text-[#1A1A1A] leading-tight">
+                        {item.label}
+                      </div>
                     </div>
                   </div>
                 );
@@ -1674,14 +2163,12 @@ export const TicketDashboard = () => {
                 handleExport={handleExport}
                 storageKey="tickets-table"
                 enableSelection={true}
-                selectedItems={selectedTickets.map(id => id.toString())}
+                selectedItems={selectedTickets.map((id) => id.toString())}
                 onSelectItem={handleTicketSelection}
                 onSelectAll={handleSelectAll}
-                getItemId={ticket => ticket.id.toString()}
+                getItemId={(ticket) => ticket.id.toString()}
                 leftActions={
-                  <div className="flex gap-3">
-                    {renderCustomActions()}
-                  </div>
+                  <div className="flex gap-3">{renderCustomActions()}</div>
                 }
                 onFilterClick={() => setIsFilterOpen(true)}
                 rightActions={null}
@@ -1728,12 +2215,24 @@ export const TicketDashboard = () => {
                 <div className="flex items-center space-x-1">
                   {/* Previous Button */}
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
                     disabled={currentPage === 1 || loading || searchLoading}
                     className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
                     </svg>
                   </button>
 
@@ -1773,10 +2272,11 @@ export const TicketDashboard = () => {
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
                           disabled={loading || searchLoading}
-                          className={`w-8 h-8 flex items-center justify-center text-sm rounded disabled:opacity-50 ${currentPage === pageNum
-                            ? 'bg-[#C72030] text-white'
-                            : 'text-gray-700 hover:bg-gray-100'
-                            }`}
+                          className={`w-8 h-8 flex items-center justify-center text-sm rounded disabled:opacity-50 ${
+                            currentPage === pageNum
+                              ? "bg-[#C72030] text-white"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
                         >
                           {pageNum}
                         </button>
@@ -1802,12 +2302,26 @@ export const TicketDashboard = () => {
 
                   {/* Next Button */}
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages || loading || searchLoading}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={
+                      currentPage === totalPages || loading || searchLoading
+                    }
                     className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -1845,7 +2359,11 @@ export const TicketDashboard = () => {
           </TabsContent>
         </Tabs>
 
-        <TicketsFilterDialog isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} onApplyFilters={handleFilterApply} />
+        <TicketsFilterDialog
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          onApplyFilters={handleFilterApply}
+        />
 
         {/* Edit Status Dialog */}
         <EditStatusDialog
@@ -1877,10 +2395,12 @@ export const TicketDashboard = () => {
         />
 
         {/* Ticket Selection Panel */}
-        {selectedTickets.length > 0 && shouldShow("tickets", "manage") && (
+        {selectedTickets.length > 0 && shouldShow("Helpdesk", "update") && (
           <TicketSelectionPanel
             selectedTickets={selectedTickets}
-            selectedTicketObjects={tickets.filter(ticket => selectedTickets.includes(ticket.id))}
+            selectedTicketObjects={tickets.filter((ticket) =>
+              selectedTickets.includes(ticket.id)
+            )}
             onGoldenTicket={handleGoldenTicket}
             onFlag={handleFlag}
             onExport={handleExport}

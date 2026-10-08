@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { findFirstAccessibleRoute } from "@/utils/dynamicNavigation";
@@ -11,6 +11,9 @@ const Index = () => {
   const { userRole, loading } = usePermissions();
   const { selectedCompany } = useSelector((state: RootState) => state.project);
   const org_id = localStorage.getItem("org_id");
+  // Set once a role fetch has started — lets us tell "role not loaded yet"
+  // apart from "role fetch finished with no role".
+  const roleRequestedRef = useRef(false);
 
   // Helper function to get first available employee link
   const getFirstEmployeeLink = useCallback((): string => {
@@ -81,11 +84,15 @@ const Index = () => {
   // First check if view selection is needed
   useEffect(() => {
     // Wait for permissions to load
-    if (loading) return;
+    if (loading) {
+      roleRequestedRef.current = true;
+      return;
+    }
 
     const hostname = window.location.hostname;
     const isViSite = hostname.includes("vi-web.gophygital.work");
-    const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
+    const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com")
+    // || org_id === "9";
     const isHiSocietySite = hostname === "web.hisociety.lockated.com";
     const userType = localStorage.getItem("userType");
     const currentUser = getUser();
@@ -106,14 +113,26 @@ const Index = () => {
     const isClubSite = hostname.includes("club.lockated.com");
     const isWebSite = hostname.includes("web.lockated.com");
 
-    // PRIORITY 0: Hi-Society site routing (highest priority for specific domains)
     if (isUIHiSocietySite) {
       navigate("/loyalty/dashboard", { replace: true });
       return;
     }
 
     if (isHiSocietySite) {
-      navigate("/maintenance/project-details-list", { replace: true });
+      navigate("/bms/hisoc-notice-list", { replace: true });
+      return;
+    }
+
+    // Org 109 / 324 / 10 (runwal.lockated.com) - land on the first route the role grants
+    if (
+      hostname === "runwal.lockated.com" ||
+      org_id === "109" ||
+      org_id === "324" ||
+      org_id === "10"
+    ) {
+      // Role not loaded yet — this effect re-runs once it arrives
+      if (!userRole && !roleRequestedRef.current) return;
+      navigate("/bms/hisoc-notice-list", { replace: true });
       return;
     }
 
@@ -122,16 +141,6 @@ const Index = () => {
     if (layoutMode === "hi-society") {
       navigate("/bms/helpdesk", { replace: true });
       return;
-    }
-
-    // PRIORITY 1: Dynamic route from userRole permissions (highest priority)
-    if (userRole) {
-      const firstRoute = findFirstAccessibleRoute(userRole);
-
-      if (firstRoute) {
-        navigate(firstRoute, { replace: true });
-        return;
-      }
     }
 
     // PRIORITY 3: Company ID-based routing for specific companies and domains

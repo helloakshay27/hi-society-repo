@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -55,6 +55,13 @@ interface UsersApiResponse {
 // Column configuration
 const columns: ColumnConfig[] = [
   {
+    key: "srno",
+    label: "S.No.",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
+  {
     key: "fullname",
     label: "Name",
     sortable: true,
@@ -103,13 +110,13 @@ const columns: ColumnConfig[] = [
   //   hideable: true,
   //   draggable: true,
   // },
-  {
-    key: "status",
-    label: "Status",
-    sortable: true,
-    hideable: true,
-    draggable: true,
-  },
+  // {
+  //   key: "status",
+  //   label: "Status",
+  //   sortable: true,
+  //   hideable: true,
+  //   draggable: true,
+  // },
   // {
   //   key: "created_at",
   //   label: "Created At",
@@ -295,6 +302,8 @@ export const UsersManagementDashboard = () => {
 
   const renderCell = (user: AdminUser, columnKey: string) => {
     switch (columnKey) {
+      case "srno":
+        return user.srno;
       case "fullname":
         return user.firstname && user.lastname
           ? `${user.firstname} ${user.lastname}`
@@ -350,6 +359,15 @@ export const UsersManagementDashboard = () => {
         return user[columnKey] || "-";
     }
   };
+
+  const displayedUsers = useMemo(
+    () =>
+      users.map((user, i) => ({
+        ...user,
+        srno: (currentPage - 1) * perPage + i + 1,
+      })),
+    [users, currentPage, perPage]
+  );
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -407,7 +425,7 @@ export const UsersManagementDashboard = () => {
 
       <EnhancedTable
         key={`users-table-${users.length}-${currentPage}`}
-        data={users}
+        data={displayedUsers}
         columns={columns}
         renderCell={renderCell}
         renderActions={renderActions}

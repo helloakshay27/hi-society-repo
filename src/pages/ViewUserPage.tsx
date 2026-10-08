@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Paper, Box, Avatar, Typography, Grid, Divider, Tabs, Tab } from "@mui/material";
-import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileText, Edit, Download, File, FileJson, Image, FileCode, Users, Files, X, Plus } from "lucide-react";
+import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileText, Edit, Download, File, FileJson, Image, FileCode, Users, Files, X, Plus, Copy, Link as LinkIcon, Share2 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddToAnotherFlatModal } from "@/components/AddToAnotherFlatModal";
@@ -72,6 +72,34 @@ const getFilenameFromUrl = (url: string): string => {
   return filename?.split("?")[0] || "Attachment";
 };
 
+const getInviteVisitorLink = (encryptedId: string): string =>
+  `${window.location.origin}/invite-visitor/${encryptedId}`;
+
+const shareInviteVisitorLink = async (link: string): Promise<void> => {
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "Invite Visitor Link",
+        text: "Please fill your visitor details before you arrive.",
+        url: link,
+      });
+    } catch (error) {
+      if ((error as Error)?.name !== "AbortError") {
+        console.error("Failed to share invite link:", error);
+        toast.error("Failed to share link");
+      }
+    }
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(link);
+    toast.success("Sharing isn't supported on this browser — link copied instead");
+  } catch {
+    toast.error("Failed to copy link");
+  }
+};
+
 export const ViewUserPage = () => {
   const { id: userId } = useParams();
   const navigate = useNavigate();
@@ -85,6 +113,7 @@ export const ViewUserPage = () => {
   const [isAddToAnotherFlatModalOpen, setIsAddToAnotherFlatModalOpen] = useState(false);
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
   const [isConfigureDetailsModalOpen, setIsConfigureDetailsModalOpen] = useState(false);
+  const [inviteVisitorLinkOpen, setInviteVisitorLinkOpen] = useState(false);
   const [clubFormData, setClubFormData] = useState({
     clubMembershipChecked: false,
     membershipNumber: "",
@@ -473,6 +502,14 @@ export const ViewUserPage = () => {
               <Mail className="w-4 h-4 mr-1" />
               Send Email
             </Button>
+            <Button
+              className="px-8 border-0 bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2"
+              onClick={() => setInviteVisitorLinkOpen(true)}
+              disabled={!user?.encrypted_id}
+            >
+              <Mail className="w-4 h-4 mr-1" />
+              Invite Visitor Link
+            </Button>
           </Box>
         </Box>
 
@@ -812,6 +849,57 @@ export const ViewUserPage = () => {
           },
         ]}
       />
+
+      {/* Invite Visitor Link Modal */}
+      <Dialog modal={false} open={inviteVisitorLinkOpen} onOpenChange={setInviteVisitorLinkOpen}>
+        <DialogContent className="max-w-[480px] p-0 overflow-visible bg-white border-none shadow-2xl">
+          <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between">
+            <DialogTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
+              <LinkIcon className="w-4 h-4 text-[#da7756]" />
+              Invite Visitor Link
+            </DialogTitle>
+            <button onClick={() => setInviteVisitorLinkOpen(false)} className="text-gray-500 hover:text-gray-700">
+              <X className="w-5 h-5" />
+            </button>
+          </DialogHeader>
+          <Box sx={{ px: 3, pb: 3 }}>
+            <Typography variant="body2" sx={{ color: "#666", fontSize: "13px", mb: 2 }}>
+              Share this link with your guest to let them fill their visitor details before arriving.
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <input
+                readOnly
+                value={user?.encrypted_id ? getInviteVisitorLink(user.encrypted_id) : ""}
+                onFocus={(e) => e.currentTarget.select()}
+                className="flex-1 min-w-0 border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 bg-gray-50 focus:outline-none"
+              />
+              <Button
+                className="px-4 border border-[#da7756] bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2 shrink-0"
+                onClick={() => {
+                  if (!user?.encrypted_id) return;
+                  navigator.clipboard
+                    .writeText(getInviteVisitorLink(user.encrypted_id))
+                    .then(() => toast.success("Link copied to clipboard"))
+                    .catch(() => toast.error("Failed to copy link"));
+                }}
+              >
+                <Copy className="w-4 h-4" />
+                Copy
+              </Button>
+              <Button
+                className="px-4 border border-[#da7756] bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2 shrink-0"
+                onClick={() => {
+                  if (!user?.encrypted_id) return;
+                  shareInviteVisitorLink(getInviteVisitorLink(user.encrypted_id));
+                }}
+              >
+                <Share2 className="w-4 h-4" />
+                Share
+              </Button>
+            </Box>
+          </Box>
+        </DialogContent>
+      </Dialog>
 
       {/* Configure Club Details Modal */}
       <Dialog modal={false} open={isConfigureDetailsModalOpen} onOpenChange={setIsConfigureDetailsModalOpen}>

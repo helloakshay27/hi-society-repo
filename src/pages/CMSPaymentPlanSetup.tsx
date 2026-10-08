@@ -176,7 +176,7 @@ const CMSPaymentPlanSetup = () => {
 
     const renderActions = (row: any) => {
         return (
-            shouldShow("Payment Plan Setup", "update") && (
+            shouldShow("Payment Plan Setup", "show") && (
                 <Button variant='ghost' size='sm' onClick={() => navigate(`/cms/payment-plan-setup/${row.id}`)}>
                     <Eye className='w-4 h-4' />
                 </Button>

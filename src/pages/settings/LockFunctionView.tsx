@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Lock, Edit, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,8 @@ import { lockFunctionService, LockFunction } from '@/services/lockFunctionServic
 export const LockFunctionView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOpsConsole = location.pathname.includes('/ops-console/');
   const [lockFunction, setLockFunction] = useState<LockFunction | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +35,7 @@ export const LockFunctionView = () => {
   }, [id]);
 
   const handleEdit = () => {
-    navigate(`/settings/account/lock-function/edit/${id}`);
+    navigate(isOpsConsole ? `/ops-console/settings/account/lock-function/edit/${id}` : `/settings/account/lock-function/edit/${id}`);
   };
 
   const handleDelete = async () => {
@@ -44,7 +46,7 @@ export const LockFunctionView = () => {
     try {
       await lockFunctionService.deleteLockFunction(lockFunction.id);
       toast.success('Lock function deleted successfully!');
-      navigate('/settings/account/lock-function');
+      navigate(isOpsConsole ? '/ops-console/settings/account/lock-function' : '/settings/account/lock-function');
     } catch (error: any) {
       console.error('Error deleting lock function:', error);
       toast.error(`Failed to delete lock function: ${error.message}`);
@@ -52,7 +54,7 @@ export const LockFunctionView = () => {
   };
 
   const handleBack = () => {
-    navigate('/settings/account/lock-function');
+    navigate(isOpsConsole ? '/ops-console/settings/account/lock-function' : '/settings/account/lock-function');
   };
 
   if (loading) {

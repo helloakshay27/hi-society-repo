@@ -14,6 +14,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   fetchVisitorSetupData,
   fetchApprovedSocieties,
@@ -103,6 +104,7 @@ const SearchableDropdown: React.FC<{
 };
 
 const SmartSecureSetupGeneral: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [activeTab, setActiveTab] = useState("visit-purpose");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -351,14 +353,16 @@ const SmartSecureSetupGeneral: React.FC = () => {
     switch (columnKey) {
       case "action":
         return (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-500 hover:text-blue-600"
-            onClick={() => handleEdit(item)}
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
+          shouldShow("General", "update") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-500 hover:text-blue-600"
+              onClick={() => handleEdit(item)}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+          )
         );
       case "status":
         return (
@@ -573,13 +577,15 @@ const SmartSecureSetupGeneral: React.FC = () => {
             enableGlobalSearch={true}
             searchPlaceholder="Search"
             leftActions={
-              <Button
-                onClick={() => setIsAddModalOpen(true)}
-                className="bg-[#C72030] hover:bg-[#C72030] text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Purpose
-              </Button>
+              shouldShow("General", "create") && (
+                <Button
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="bg-[#C72030] hover:bg-[#C72030] text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Purpose
+                </Button>
+              )
             }
             loading={loading}
             emptyMessage="No Matching Records Found"
@@ -598,13 +604,15 @@ const SmartSecureSetupGeneral: React.FC = () => {
             enableGlobalSearch={true}
             searchPlaceholder="Search"
             leftActions={
-              <Button
-                onClick={() => setIsAddModalOpen(true)}
-                className="bg-[#C72030] hover:bg-[#C72030] text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Move In/Out
-              </Button>
+              shouldShow("General", "create") && (
+                <Button
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="bg-[#C72030] hover:bg-[#C72030] text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Move In/Out
+                </Button>
+              )
             }
             loading={loading}
             emptyMessage="No Matching Records Found"
@@ -623,13 +631,15 @@ const SmartSecureSetupGeneral: React.FC = () => {
             enableGlobalSearch={true}
             searchPlaceholder="Search"
             leftActions={
-              <Button
-                onClick={() => setIsAddModalOpen(true)}
-                className="bg-[#C72030] hover:bg-[#C72030] text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Staff Type
-              </Button>
+              shouldShow("General", "create") && (
+                <Button
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="bg-[#C72030] hover:bg-[#C72030] text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Staff Type
+                </Button>
+              )
             }
             loading={loading}
             emptyMessage="No Matching Records Found"

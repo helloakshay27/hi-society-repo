@@ -444,7 +444,7 @@ export const AdminUsersDetails = () => {
                       <p className="text-gray-900 font-medium">{user.user_type || "-"}</p>
                     </div>
 
-                    <div className="pb-5 border-b border-gray-200 last:border-0">
+                    {/* <div className="pb-5 border-b border-gray-200 last:border-0">
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                         Account Status
                       </label>
@@ -461,7 +461,7 @@ export const AdminUsersDetails = () => {
                             ? "Inactive"
                             : "Pending"}
                       </span>
-                    </div>
+                    </div> */}
 
                     <div className="pb-5 border-b border-gray-200 last:border-0">
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">

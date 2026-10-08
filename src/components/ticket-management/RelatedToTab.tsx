@@ -6,6 +6,7 @@ import { EditRelatedToModal } from './modals/EditRelatedToModal';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Edit, Trash2, Plus } from 'lucide-react';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { TextField } from '@mui/material';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { fieldStyles } from './fieldStyles';
 
 interface RelatedToType {
@@ -21,11 +24,13 @@ interface RelatedToType {
   name: string;
   society_id: number;
   active: number | null;
+  feedback_enabled?: boolean | null;
   created_at?: string;
   updated_at?: string;
 }
 
 export const RelatedToTab: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [relatedToItems, setRelatedToItems] = useState<RelatedToType[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,6 +38,7 @@ export const RelatedToTab: React.FC = () => {
   // Add dialog state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [issueTypeInput, setIssueTypeInput] = useState('');
+  const [feedbackEnabled, setFeedbackEnabled] = useState(false);
 
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -83,6 +89,7 @@ export const RelatedToTab: React.FC = () => {
       const payload = {
         name: issueTypeInput.trim(),
         active: 1,
+        feedback_enabled: feedbackEnabled,
       };
 
       const response = await fetch(
@@ -100,6 +107,7 @@ export const RelatedToTab: React.FC = () => {
       if (response.ok) {
         toast.success('Issue type created successfully!');
         setIssueTypeInput('');
+        setFeedbackEnabled(false);
         setAddDialogOpen(false);
         fetchRelatedToItems();
       } else {
@@ -154,9 +162,49 @@ export const RelatedToTab: React.FC = () => {
   const columns = [
     { key: 'id', label: 'S.No.', sortable: true },
     { key: 'name', label: 'Issue Type', sortable: true },
+    { key: 'feedback_enabled', label: 'Feedback Enabled', sortable: true },
   ];
 
+  // null defaults to enabled; only an explicit false reads as disabled.
+  const isFeedbackEnabled = (item: RelatedToType) => item.feedback_enabled !== false;
+
+  const handleFeedbackToggle = async (item: RelatedToType, checked: boolean) => {
+    const previous = item.feedback_enabled;
+    setRelatedToItems(prev => prev.map(i => (i.id === item.id ? { ...i, feedback_enabled: checked } : i)));
+    try {
+      const response = await fetch(getFullUrl('/crm/admin/modify_issue_type.json'), {
+        method: 'POST',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: item.id,
+          name: item.name,
+          active: 1,
+          feedback_enabled: checked,
+        }),
+      });
+      if (!response.ok) throw new Error('Request failed');
+      toast.success('Feedback status updated successfully!');
+    } catch (error) {
+      console.error('Error updating feedback status:', error);
+      setRelatedToItems(prev => prev.map(i => (i.id === item.id ? { ...i, feedback_enabled: previous } : i)));
+      toast.error('Failed to update feedback status');
+    }
+  };
+
   const renderCell = (item: RelatedToType, columnKey: string) => {
+    if (columnKey === 'feedback_enabled') {
+      return (
+        <Switch
+          checked={isFeedbackEnabled(item)}
+          onCheckedChange={(checked) => handleFeedbackToggle(item, checked)}
+          disabled={!shouldShow("Ticket Setup", "update")}
+          className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-red-500"
+        />
+      );
+    }
     return item[columnKey as keyof RelatedToType];
   };
 
@@ -173,12 +221,16 @@ export const RelatedToTab: React.FC = () => {
 
   const renderActions = (item: RelatedToType) => (
     <div className="flex items-center gap-2">
-      <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-        <Edit className="h-4 w-4" style={{ color: '#000000' }} />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
-      </Button>
+      {shouldShow("Ticket Setup", "update") && (
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
+          <Edit className="h-4 w-4" style={{ color: '#000000' }} />
+        </Button>
+      )}
+      {shouldShow("Ticket Setup", "destroy") && (
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
+          <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
+        </Button>
+      )}
     </div>
   );
 
@@ -271,13 +323,16 @@ export const RelatedToTab: React.FC = () => {
       {/* Add Issue Type Dialog */}
       <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
         setAddDialogOpen(open);
-        if (!open) setIssueTypeInput('');
+        if (!open) {
+          setIssueTypeInput('');
+          setFeedbackEnabled(false);
+        }
       }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add Related To</DialogTitle>
           </DialogHeader>
-          <div className="py-2">
+          <div className="py-2 space-y-4">
             <TextField
               label="Issue Type"
               placeholder="Enter issue type"
@@ -291,6 +346,14 @@ export const RelatedToTab: React.FC = () => {
               InputLabelProps={{ shrink: true }}
               InputProps={{ sx: fieldStyles }}
             />
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="feedback-enabled"
+                checked={feedbackEnabled}
+                onCheckedChange={(checked) => setFeedbackEnabled(!!checked)}
+              />
+              <label htmlFor="feedback-enabled" className="text-sm font-medium">Feedback Enabled</label>
+            </div>
           </div>
           <DialogFooter className="gap-2">
             <Button
@@ -298,6 +361,7 @@ export const RelatedToTab: React.FC = () => {
               onClick={() => {
                 setAddDialogOpen(false);
                 setIssueTypeInput('');
+                setFeedbackEnabled(false);
               }}
               disabled={isSubmitting}
             >
@@ -327,13 +391,16 @@ export const RelatedToTab: React.FC = () => {
           onGlobalSearch={handleSearch}
           searchPlaceholder="Search issue types..."
           leftActions={
-            <Button
-              onClick={() => setAddDialogOpen(true)}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add
-            </Button>
+            shouldShow("Ticket Setup", "create") && (
+              <Button
+                onClick={() => setAddDialogOpen(true)}
+                variant="ghost"
+                className="btn-primary h-9 px-4 text-sm font-medium"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            )
           }
         />
         {totalCount > 0 && (

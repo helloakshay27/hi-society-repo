@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchCrmUserGroups, updateCrmUserGroup } from "@/store/slices/userGroupSlice";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Group {
   id: number;
@@ -63,6 +64,7 @@ const columns: ColumnConfig[] = [
 export const HiSocGroupsPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { shouldShow } = useDynamicPermissions();
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
 
@@ -245,31 +247,37 @@ export const HiSocGroupsPage = () => {
 
   const renderActions = (group: Group) => (
     <div className="flex items-center">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-blue-600 hover:text-blue-700"
-        onClick={() => handleViewGroup(group.id)}
-      >
-        <Eye className="w-4 h-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-blue-600 hover:text-blue-700"
-        onClick={() => handleEditGroup(group)}
-      >
-        <Edit className="w-4 h-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-red-600 hover:text-red-700"
-        onClick={() => handleDeleteGroup(group)}
-        disabled={deletingGroups[group.id]}
-      >
-        <Trash2 className="w-4 h-4" />
-      </Button>
+      {shouldShow("Groups", "show") && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-blue-600 hover:text-blue-700"
+          onClick={() => handleViewGroup(group.id)}
+        >
+          <Eye className="w-4 h-4" />
+        </Button>
+      )}
+      {shouldShow("Groups", "update") && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-blue-600 hover:text-blue-700"
+          onClick={() => handleEditGroup(group)}
+        >
+          <Edit className="w-4 h-4" />
+        </Button>
+      )}
+      {shouldShow("Groups", "destroy") && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-red-600 hover:text-red-700"
+          onClick={() => handleDeleteGroup(group)}
+          disabled={deletingGroups[group.id]}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      )}
     </div>
   );
 
@@ -311,13 +319,15 @@ export const HiSocGroupsPage = () => {
         searchPlaceholder="Search groups..."
         pagination={false}
         leftActions={
-          <Button
-            className="bg-[#C72030] hover:bg-[#B01E2A] text-white"
-            onClick={() => setShowAddModal(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add
-          </Button>
+          shouldShow("Groups", "create") && (
+            <Button
+              className="bg-[#C72030] hover:bg-[#B01E2A] text-white"
+              onClick={() => setShowAddModal(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add
+            </Button>
+          )
         }
       />
 

@@ -100,7 +100,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     };
   }, []);
 
-  const isUnauthorizedSociety = layoutMode === "hi-society" && !isSocietyAdmin;
+  const isUnauthorizedSociety =
+    layoutMode === "hi-society" && !isSocietyAdmin && hostname !== "runwal-cp.lockated.com";
   console.log(isUnauthorizedSociety)
 
   // Detect Club Management routes
@@ -196,7 +197,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       userEmail === "dineshshinde6666@gmail.com" ||
       org_id === "109" ||
       org_id === "324" ||
-      org_id === "10"
+      org_id === "10" ||
+      org_id === "5" ||
+      org_id === "9"
     ) {
       console.log("✅ Rendering ActionSidebar (company-specific)");
       return <ActionSidebar />;
@@ -290,7 +293,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       userEmail === "dineshshinde6666@gmail.com" ||
       org_id === "109" ||
       org_id === "324" ||
-      org_id === "10"
+      org_id === "10" ||
+      org_id === "5" ||
+      org_id === "9"
     ) {
       return <ActionHeader />;
     }

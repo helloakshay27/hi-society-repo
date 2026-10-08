@@ -1,15 +1,67 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useActionLayout } from "../contexts/ActionLayoutContext";
 import { useLayout } from "../contexts/LayoutContext";
 
+// Finds the first page the ActionSidebar would show for a module: walks the
+// function tree (built from parent_function) in response order and returns the
+// first active leaf with a react_link. Parents with children are category
+// headers in the sidebar, so they're skipped in favour of their children.
+const getFirstFunctionLink = (functions: any[]): any | null => {
+  const hasActiveDescendant = (func: any): boolean =>
+    func.function_active === 1 ||
+    functions.some(
+      (f) => f.parent_function === func.action_name && hasActiveDescendant(f)
+    );
+
+  const findFirst = (parentAction: string): any | null => {
+    const nodes = functions.filter((f) =>
+      parentAction
+        ? f.parent_function === parentAction
+        : !f.parent_function || f.parent_function === ""
+    );
+
+    for (const node of nodes) {
+      if (!hasActiveDescendant(node)) continue;
+
+      const hasActiveChildren = functions.some(
+        (f) => f.parent_function === node.action_name && hasActiveDescendant(f)
+      );
+
+      if (hasActiveChildren) {
+        const child = findFirst(node.action_name);
+        if (child) return child;
+      } else if (node.function_active === 1 && node.react_link) {
+        return node;
+      }
+    }
+    return null;
+  };
+
+  return findFirst("");
+};
+
 export const ActionHeader = () => {
+  const navigate = useNavigate();
   const {
     currentModule,
     availableModules,
     setCurrentModule,
+    setCurrentFunction,
+    getModuleFunctions,
     isActionSidebarVisible,
   } = useActionLayout();
   const { isSidebarCollapsed } = useLayout();
+
+  const handleModuleChange = (moduleName: string) => {
+    setCurrentModule(moduleName);
+
+    const firstFunction = getFirstFunctionLink(getModuleFunctions(moduleName));
+    if (firstFunction) {
+      setCurrentFunction(firstFunction.function_name);
+      navigate(firstFunction.react_link);
+    }
+  };
 
   // Filter out employee-specific modules
   const filteredModules = availableModules.filter(
@@ -80,7 +132,7 @@ export const ActionHeader = () => {
             {sortedModules.map((module) => (
               <button
                 key={module.module_id}
-                onClick={() => setCurrentModule(module.module_name)}
+                onClick={() => handleModuleChange(module.module_name)}
                 className={`pb-3 text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
                   currentModule === module.module_name
                     ? "text-[#C72030] border-b-2 border-[#C72030] font-medium"

@@ -92,7 +92,20 @@ export const LineChart: React.FC<LineChartProps> = ({
   const gridLines: React.ReactNode[] = [];
   const xLabels: React.ReactNode[] = [];
 
-  for (let i = 0; i < n; i += step) {
+  // Stepping from 0 almost never lands exactly on the last index, so the
+  // most recent date (the one right at the end of the range) would silently
+  // go unlabeled. Always include it, dropping the previous regular tick
+  // first if it would otherwise sit right on top of it.
+  const tickIdxs: number[] = [];
+  for (let i = 0; i < n; i += step) tickIdxs.push(i);
+  if (n > 0 && tickIdxs[tickIdxs.length - 1] !== n - 1) {
+    if (tickIdxs.length > 1 && n - 1 - tickIdxs[tickIdxs.length - 1] < step / 2) {
+      tickIdxs.pop();
+    }
+    tickIdxs.push(n - 1);
+  }
+
+  for (const i of tickIdxs) {
     const x = X(i).toFixed(1);
     gridLines.push(
       <line
@@ -105,12 +118,16 @@ export const LineChart: React.FC<LineChartProps> = ({
         strokeDasharray="2 4"
       />
     );
+    // Center-anchored text on the last tick would extend past the right
+    // edge of the viewBox (which clips by default) since that point sits
+    // right at x = W - pr; end-anchor it instead so it grows leftward.
+    const isLast = i === n - 1;
     xLabels.push(
       <text
         key={`xlab-${i}`}
         x={x}
         y={H - 9}
-        textAnchor="middle"
+        textAnchor={isLast ? 'end' : 'middle'}
         fontSize="11"
         fill={faintColor}
         fontFamily="Inter, -apple-system, Segoe UI, sans-serif"

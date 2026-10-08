@@ -5,6 +5,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Trash2, Edit, Plus } from 'lucide-react';
+import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,7 @@ interface ProjectEmail {
 }
 
 export const ProjectEmailsTab: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const [emails, setEmails] = useState<ProjectEmail[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -317,12 +319,16 @@ export const ProjectEmailsTab: React.FC = () => {
 
   const renderActions = (item: ProjectEmail) => (
     <div className="flex gap-2">
-      <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-        <Edit className="h-4 w-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
-        <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
-      </Button>
+      {shouldShow("Ticket Setup", "update") && (
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+      )}
+      {shouldShow("Ticket Setup", "destroy") && (
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
+          <Trash2 className="h-4 w-4" style={{ color: '#000000' }} />
+        </Button>
+      )}
     </div>
   );
 
@@ -433,13 +439,16 @@ export const ProjectEmailsTab: React.FC = () => {
           onGlobalSearch={handleSearch}
           searchPlaceholder="Search emails..."
           leftActions={
-            <Button
-              onClick={() => setAddDialogOpen(true)}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add
-            </Button>
+            shouldShow("Ticket Setup", "create") && (
+              <Button
+                onClick={() => setAddDialogOpen(true)}
+                variant="ghost"
+                className="btn-primary h-9 px-4 text-sm font-medium"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            )
           }
         />
         {totalCount > 0 && (

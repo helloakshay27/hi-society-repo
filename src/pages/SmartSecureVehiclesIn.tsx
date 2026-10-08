@@ -1,25 +1,31 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Vehicle {
   id: number;
   vehicleNumber: string;
   name: string;
-  status: string;
-  badgeColor?: string;
+  status: "H" | "G";
   phone?: string;
 }
 
 const dummyVehicles: Vehicle[] = [
-  { id: 1, vehicleNumber: "626373hhehhe", name: "A-104", status: "H", badgeColor: "bg-yellow-500" },
-  { id: 2, vehicleNumber: "sa1212", name: "FM-Office", status: "H", badgeColor: "bg-yellow-500" },
-  { id: 3, vehicleNumber: "mh12aa1111", name: "FM-Office", status: "H", badgeColor: "bg-yellow-500" },
-  { id: 4, vehicleNumber: "mh1212", name: "FM-Office", status: "H", badgeColor: "bg-yellow-500" },
-  { id: 5, vehicleNumber: "MH05R0908", name: "FM-Office", status: "H", badgeColor: "bg-yellow-500" },
-  { id: 6, vehicleNumber: "MH44Y5678", name: "FM-Office", status: "H", badgeColor: "bg-yellow-500" },
-  { id: 7, vehicleNumber: "MH23T2353", name: "Varun / FM-Office", status: "G", badgeColor: "bg-green-600", phone: "8530312827" },
+  { id: 1, vehicleNumber: "626373hhehhe", name: "A-104", status: "H" },
+  { id: 2, vehicleNumber: "sa1212", name: "FM-Office", status: "H" },
+  { id: 3, vehicleNumber: "mh12aa1111", name: "FM-Office", status: "H" },
+  { id: 4, vehicleNumber: "mh1212", name: "FM-Office", status: "H" },
+  { id: 5, vehicleNumber: "MH05R0908", name: "FM-Office", status: "H" },
+  { id: 6, vehicleNumber: "MH44Y5678", name: "FM-Office", status: "H" },
+  { id: 7, vehicleNumber: "MH23T2353", name: "Varun / FM-Office", status: "G", phone: "8530312827" },
 ];
 
 interface HistoryRecord {
@@ -39,119 +45,124 @@ const dummyHistory: HistoryRecord[] = [
 
 const entryGateOptions = ["Gate 1", "Gate 2", "Gate 3", "Gate 4", "Main Gate"];
 
-const vehicleColumns = [
-  { key: "vehicleNumber", label: "Vehicle Number", sortable: true },
-  { key: "name", label: "Name / Location", sortable: true },
-  { key: "status", label: "Status", sortable: false },
-  { key: "actions", label: "Action", sortable: false },
+const vehicleColumns: ColumnConfig[] = [
+  { key: "sr_no",         label: "Sr. No.",         sortable: false, hideable: true,  draggable: true },
+  { key: "vehicleNumber", label: "Vehicle Number",  sortable: true,  hideable: true,  draggable: true },
+  { key: "name",          label: "Name / Location", sortable: true,  hideable: true,  draggable: true },
+  { key: "status",        label: "Type",            sortable: false, hideable: true,  draggable: true },
+  { key: "action",        label: "Action",          sortable: false, hideable: false, draggable: false },
 ];
 
-const historyColumns = [
-  { key: "vehicleNumber", label: "Vehicle Number", sortable: true },
-  { key: "visitorName", label: "Visitor Name", sortable: true },
-  { key: "entryGate", label: "Entry Gate", sortable: true },
-  { key: "dateTime", label: "Date & Time", sortable: true },
+const historyColumns: ColumnConfig[] = [
+  { key: "vehicleNumber", label: "Vehicle Number", sortable: true, hideable: true, draggable: true },
+  { key: "visitorName",   label: "Visitor Name",   sortable: true, hideable: true, draggable: true },
+  { key: "entryGate",     label: "Entry Gate",     sortable: true, hideable: true, draggable: true },
+  { key: "dateTime",      label: "Date & Time",    sortable: true, hideable: true, draggable: true },
 ];
 
 const SmartSecureVehiclesIn: React.FC = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showInModal, setShowInModal] = useState(false);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [selectedGate, setSelectedGate] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleIn = (id: number) => {
-    setSelectedVehicleId(id);
+  const handleIn = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
     setSelectedGate("");
     setShowInModal(true);
   };
 
-  const handleSubmit = () => {
-    if (!selectedGate) {
-      alert("Please select an entry gate.");
-      return;
-    }
-    setShowInModal(false);
-    setSelectedVehicleId(null);
-    setSelectedGate("");
-  };
-
   const handleCloseInModal = () => {
+    if (submitting) return;
     setShowInModal(false);
-    setSelectedVehicleId(null);
+    setSelectedVehicle(null);
     setSelectedGate("");
   };
 
-  const renderVehicleCell = (item: Vehicle, columnKey: string) => {
+  const handleSubmit = () => {
+    if (!selectedGate) return;
+    setSubmitting(true);
+    // Simulate submit; wire up to a real API when available.
+    setTimeout(() => {
+      setSubmitting(false);
+      setShowInModal(false);
+      setSelectedVehicle(null);
+      setSelectedGate("");
+    }, 400);
+  };
+
+  const renderVehicleCell = (item: Vehicle, columnKey: string, index: number) => {
     switch (columnKey) {
+      case "sr_no":
+        return <span className="text-sm text-gray-500 font-medium">{index + 1}</span>;
+
       case "vehicleNumber":
-        return (
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-9 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#C72030" }}>
-              <svg className="w-6 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
-              </svg>
-            </div>
-            <span className="text-blue-600 font-semibold">{item.vehicleNumber}</span>
-          </div>
-        );
+        return <span className="font-semibold text-black-600">{item.vehicleNumber}</span>;
+
       case "name":
         return (
           <div>
-            <div className="text-gray-800">{item.name}</div>
+            <div className="text-sm text-gray-800">{item.name}</div>
             {item.phone && <div className="text-gray-500 text-sm">{item.phone}</div>}
           </div>
         );
+
       case "status":
         return (
-          <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-white text-xs font-bold ${item.badgeColor || "bg-yellow-500"}`}>
-            {item.status}
+          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+            item.status === "H"
+              ? "bg-blue-100 text-blue-700"
+              : "bg-yellow-100 text-yellow-700"
+          }`}>
+            {item.status === "H" ? "Host" : "Guest"}
           </span>
         );
+
+      case "action":
+        return (
+          <Button
+            size="sm"
+            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white text-xs px-3 py-1 h-7"
+            onClick={() => handleIn(item)}
+          >
+            In
+          </Button>
+        );
+
       default:
         return null;
     }
   };
 
-  const renderVehicleActions = (item: Vehicle) => (
-    <button
-      onClick={() => handleIn(item.id)}
-      className="border border-[#C72030] text-[#C72030] px-5 py-1 rounded text-sm font-semibold hover:bg-[#C72030]/5 transition-colors"
-    >
-      IN
-    </button>
-  );
-
   const renderHistoryCell = (item: HistoryRecord, columnKey: string) => {
     switch (columnKey) {
       case "vehicleNumber":
-        return <span className="text-blue-600 font-medium">{item.vehicleNumber}</span>;
+        return <span className="font-semibold text-black-600">{item.vehicleNumber}</span>;
       case "visitorName":
-        return item.visitorName;
+        return <span className="text-sm text-gray-800">{item.visitorName}</span>;
       case "entryGate":
-        return item.entryGate;
+        return <span className="text-sm text-gray-600">{item.entryGate}</span>;
       case "dateTime":
-        return item.dateTime;
+        return <span className="text-sm text-gray-600">{item.dateTime}</span>;
       default:
         return null;
     }
   };
 
   return (
-    <div className="p-6 bg-[#f6f4ee] min-h-screen">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Visitor Vehicle In</h1>
-
+    <div className="p-6">
       <EnhancedTable
         data={dummyVehicles}
         columns={vehicleColumns}
         renderCell={renderVehicleCell}
-        renderActions={renderVehicleActions}
         storageKey="vehicles-in-table"
         enableSearch={true}
-        searchPlaceholder="Search using Vehicle number"
+        searchPlaceholder="Search by vehicle number, name..."
+        emptyMessage="No vehicles waiting to enter"
         leftActions={
           <Button
-            style={{ backgroundColor: "#C72030" }}
-            className="hover:bg-[#C72030]/90 text-white px-6 py-2 rounded"
+            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white h-9 px-4 text-sm font-medium"
             onClick={() => setShowHistoryModal(true)}
           >
             History
@@ -160,73 +171,74 @@ const SmartSecureVehiclesIn: React.FC = () => {
       />
 
       {/* Vehicle In Modal */}
-      {showInModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-xl w-80 overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 bg-gray-100 border-b border-gray-300">
-              <h2 className="text-base font-semibold text-gray-800">Visitor Vehicle In</h2>
-              <button onClick={handleCloseInModal} className="text-red-500 hover:text-red-700 transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-5">
-              <label className="block text-sm font-medium text-blue-600 mb-2">Entry Gate</label>
-              <div className="relative">
-                <select
-                  value={selectedGate}
-                  onChange={(e) => setSelectedGate(e.target.value)}
-                  className="w-full appearance-none border border-gray-300 rounded px-3 py-2 pr-8 text-gray-500 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-                >
-                  <option value="" disabled>Select Entry Gate</option>
-                  {entryGateOptions.map((gate) => (
-                    <option key={gate} value={gate}>{gate}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">&#8964;</div>
+      <Dialog open={showInModal} onOpenChange={handleCloseInModal}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold">Visitor Vehicle In</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            {selectedVehicle && (
+              <div className="bg-gray-50 rounded px-3 py-2 text-sm">
+                <span className="text-gray-500">Vehicle: </span>
+                <span className="font-semibold text-gray-800">{selectedVehicle.vehicleNumber}</span>
+                <span className="text-gray-400 mx-2">·</span>
+                <span className="text-gray-600">{selectedVehicle.name}</span>
               </div>
-            </div>
-            <div className="flex justify-center pb-5">
-              <button onClick={handleSubmit} className="bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-2 rounded transition-colors">
-                Submit
-              </button>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Entry Gate</label>
+              <select
+                title="Entry Gate"
+                value={selectedGate}
+                onChange={(e) => setSelectedGate(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030]"
+              >
+                <option value="" disabled>Select Entry Gate</option>
+                {entryGateOptions.map((gate) => (
+                  <option key={gate} value={gate}>{gate}</option>
+                ))}
+              </select>
             </div>
           </div>
-        </div>
-      )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={handleCloseInModal} disabled={submitting}>Cancel</Button>
+            <Button
+              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white min-w-[90px]"
+              onClick={handleSubmit}
+              disabled={submitting || !selectedGate}
+            >
+              {submitting ? "Submitting..." : "Submit"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* History Modal */}
-      {showHistoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-xl w-[750px] max-h-[85vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 bg-gray-100 border-b border-gray-300">
-              <h2 className="text-base font-semibold text-gray-800">Vehicle In History</h2>
-              <button onClick={() => setShowHistoryModal(false)} className="text-red-500 hover:text-red-700 transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-auto p-4">
-              <EnhancedTable
-                data={dummyHistory}
-                columns={historyColumns}
-                renderCell={renderHistoryCell}
-                storageKey="vehicles-in-history-table"
-                enableSearch={true}
-                searchPlaceholder="Search by vehicle, visitor or gate..."
-              />
-            </div>
-
-            <div className="px-5 py-3 border-t border-gray-200 bg-gray-50 flex justify-end">
-              <button
-                onClick={() => setShowHistoryModal(false)}
-                className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-5 py-1.5 rounded text-sm font-medium transition-colors"
-              >
-                Close
-              </button>
-            </div>
+      <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold">Vehicle In History</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[65vh] overflow-auto">
+            <EnhancedTable
+              data={dummyHistory}
+              columns={historyColumns}
+              renderCell={renderHistoryCell}
+              storageKey="vehicles-in-history-table"
+              enableSearch={true}
+              searchPlaceholder="Search by vehicle, visitor or gate..."
+            />
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button
+              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+              onClick={() => setShowHistoryModal(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

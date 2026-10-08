@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Plus, X, CalendarDays, Wallet } from "lucide-react";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface LedgerOption {
   id: number;
@@ -28,6 +29,7 @@ const formatAmount = (value: number) =>
   value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const AccountingOpeningBalances: React.FC = () => {
+  const { shouldShow } = useDynamicPermissions();
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
   const [date, setDate] = useState("");
@@ -101,6 +103,7 @@ const AccountingOpeningBalances: React.FC = () => {
   );
 
   const handleValueChange = (ledgerId: number, field: "debit" | "credit", value: string) => {
+    if (value.startsWith("-")) return;
     if (value !== "" && Number.isNaN(Number(value))) return;
     setValues((prev) => ({
       ...prev,
@@ -251,6 +254,7 @@ const AccountingOpeningBalances: React.FC = () => {
                     min={0}
                     value={values[ledger.id]?.debit || ""}
                     onChange={(e) => handleValueChange(ledger.id, "debit", e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "-") e.preventDefault(); }}
                     className="h-9 text-right"
                   />
                 </div>
@@ -260,6 +264,7 @@ const AccountingOpeningBalances: React.FC = () => {
                     min={0}
                     value={values[ledger.id]?.credit || ""}
                     onChange={(e) => handleValueChange(ledger.id, "credit", e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "-") e.preventDefault(); }}
                     className="h-9 text-right"
                   />
                 </div>
@@ -267,15 +272,17 @@ const AccountingOpeningBalances: React.FC = () => {
             ))
           )}
 
-          <div className="py-2 px-3 border-b border-gray-200">
-            <button
-              type="button"
-              onClick={() => setIsAddingAccount(true)}
-              className="flex items-center gap-1 text-sm text-[#C72030] hover:text-[#A01020] font-medium"
-            >
-              <Plus className="h-3.5 w-3.5" /> New Account
-            </button>
-          </div>
+          {shouldShow("Opening Balances", "create") && (
+            <div className="py-2 px-3 border-b border-gray-200">
+              <button
+                type="button"
+                onClick={() => setIsAddingAccount(true)}
+                className="flex items-center gap-1 text-sm text-[#C72030] hover:text-[#A01020] font-medium"
+              >
+                <Plus className="h-3.5 w-3.5" /> New Account
+              </button>
+            </div>
+          )}
 
           <div className="flex items-center py-2 px-3 border-b border-gray-300 bg-gray-50 text-sm font-semibold text-gray-800">
             <div className="flex-1 text-right pr-4">Total</div>

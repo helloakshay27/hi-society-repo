@@ -139,10 +139,10 @@ const AddSmartsecureGatePage: React.FC = () => {
       toast.error("Please select a society");
       return;
     }
-    if (!formData.societyBlockId) {
-      toast.error("Please select a society block");
-      return;
-    }
+    // if (!formData.societyBlockId) {
+    //   toast.error("Please select a society block");
+    //   return;
+    // }
     if (!formData.gateName.trim()) {
       toast.error("Please enter gate name");
       return;
@@ -219,7 +219,7 @@ const AddSmartsecureGatePage: React.FC = () => {
                 </FormControl>
 
                 <FormControl fullWidth variant="outlined" sx={fieldStyles}>
-                  <InputLabel shrink required>Society Block</InputLabel>
+                  <InputLabel>Society Block</InputLabel>
                   <MuiSelect
                     value={formData.societyBlockId}
                     onChange={(e) => handleInputChange("societyBlockId", e.target.value)}
