@@ -240,7 +240,7 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
             <span className="text-xs text-gray-600">Update</span>
           </Button>
 
-          <Button
+          {/* <Button
             onClick={() => setIsCostApprovalOpen(true)}
             variant="ghost"
             size="sm"
@@ -248,9 +248,9 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
           >
             <HandCoins className="w-6 h-6 text-black" />
             <span className="text-xs text-gray-600">Cost Approval</span>
-          </Button>
+          </Button> */}
 
-          <Button
+          {/* <Button
             onClick={handleExport}
             disabled={isExportLoading}
             variant="ghost"
@@ -263,7 +263,7 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
               <Download className="w-6 h-6 text-black" />
             )}
             <span className="text-xs text-gray-600">Export</span>
-          </Button>
+          </Button> */}
         </div>
       </div>
 
