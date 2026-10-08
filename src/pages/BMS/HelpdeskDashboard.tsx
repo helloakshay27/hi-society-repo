@@ -29,6 +29,7 @@ import {
   Flag,
   Star,
   Calendar,
+  RotateCcw,
 } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { TicketsFilterDialog } from "@/components/TicketsFilterDialog";
@@ -339,6 +340,7 @@ export const TicketDashboard = () => {
     open_requests: 0,
     open_suggestions: 0,
     completed_tickets: 0,
+    reopen_tickets: 0,
   });
   const [filters, setFilters] = useState<TicketFilters>({});
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -649,6 +651,7 @@ export const TicketDashboard = () => {
   const pendingTickets = ticketSummary.pending_tickets || 0;
   const completedTickets =
     ticketSummary.completed_tickets || ticketSummary.completed_tickets || 0;
+  const reopenTickets = ticketSummary.reopen_tickets || 0;
   const totalComplaints =
     ticketSummary.total_complaints || ticketSummary.complaints || 0;
   const totalSuggestions =
@@ -1163,6 +1166,10 @@ export const TicketDashboard = () => {
         newFilters.complaint_status_fixed_state_or_complaint_status_name_in = [
           "complete",
         ];
+      } else if (cardType === "reopen") {
+        newFilters.complaint_status_fixed_state_or_complaint_status_name_in = [
+          "reopen",
+        ];
       } else if (cardType === "complaints") {
         newFilters.complaint_type_eq = "Complaint";
       } else if (cardType === "suggestions") {
@@ -1225,6 +1232,12 @@ export const TicketDashboard = () => {
       return (
         filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes(
           "complete"
+        ) ?? false
+      );
+    } else if (cardType === "reopen") {
+      return (
+        filters.complaint_status_fixed_state_or_complaint_status_name_in?.includes(
+          "reopen"
         ) ?? false
       );
     } else if (cardType === "complaints") {
@@ -2058,6 +2071,12 @@ export const TicketDashboard = () => {
                     value: completedTickets,
                     type: "completed",
                     icon: CheckCircle,
+                  },
+                  {
+                    label: "Reopen Tickets",
+                    value: reopenTickets,
+                    type: "reopen",
+                    icon: RotateCcw,
                   },
                   {
                     label: "Work In Progress",
