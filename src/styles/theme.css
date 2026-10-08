@@ -2287,6 +2287,18 @@ circle[fill="#c4b99d"] {
   fill: var(--color-secondary-teal) !important;
 }
 
+/* Add MIS section and item actions. */
+html body #root .MuiPaper-root:has(svg.lucide-file-text) .MuiButton-root {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiPaper-root:has(svg.lucide-file-text) .MuiButton-root:hover {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+}
+
 /* #B8AFA0 (Medium shade - reactiveOpen) → Brand Purple */
 [fill="#B8AFA0"],
 [fill="#b8afa0"],
@@ -5278,6 +5290,72 @@ html body #root [role="dialog"]:has(input[title="Upload logo"])
   color: #000000 !important;
 }
 
+/* Incident attachment picker button. */
+html body #root label[for="file-upload"] > button {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Add User form: replace orange accents with black. */
+html body #root .MuiBox-root:has(#profile-upload)
+  .MuiPaper-root > .MuiBox-root:has(> h2) > .MuiBox-root:first-child {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiPaper-root:has(#profile-upload) .MuiAvatar-root {
+  border-color: #000000 !important;
+  color: #000000 !important;
+}
+
+html body #root .MuiPaper-root:has(#profile-upload) .MuiAvatar-root svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) button[title="Capture from camera"],
+html body #root .MuiBox-root:has(#profile-upload) button[title="Upload image"] {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) button[title="Capture from camera"] svg,
+html body #root .MuiBox-root:has(#profile-upload) button[title="Upload image"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiFormLabel-asterisk,
+html body #root .MuiBox-root:has(#profile-upload) .MuiInputLabel-root.Mui-focused,
+html body #root .MuiBox-root:has(#profile-upload) .MuiFormLabel-root.Mui-focused,
+html body #root .MuiBox-root:has(#profile-upload) .MuiOutlinedInput-root.Mui-focused fieldset {
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiRadio-root,
+html body #root .MuiBox-root:has(#profile-upload) .MuiRadio-root.Mui-checked {
+  color: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root:has(+ .MuiButton-root),
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root:has(+ .MuiButton-root):hover,
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root:has(+ .MuiButton-root).Mui-disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root[class*="border-[#da7756]"] {
+  border-color: #000000 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
 /* Add/Edit Template submit action. */
 html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root)
   > .MuiBox-root:last-child > .MuiButton-root:first-child,
@@ -5316,5 +5394,28 @@ html body #root [role="dialog"]:has(.MuiDialogTitle-root)
 html body #root .MuiFormControl-root:has(#organization_select) .MuiInputLabel-root,
 html body #root .MuiFormControl-root:has(#organization_select) .MuiInputLabel-root.Mui-focused,
 html body #root .MuiFormControl-root:has(#organization_select) .MuiFormLabel-asterisk {
+  color: #000000 !important;
+}
+
+/* Polls search filter icon. */
+html body #root .MuiPaper-root:has(input[placeholder="Search polls..."])
+  .MuiIconButton-root:has(svg.lucide-filter),
+html body #root .MuiPaper-root:has(input[placeholder="Search polls..."])
+  .MuiIconButton-root:has(svg.lucide-filter):hover {
+  border-color: #000000 !important;
+  color: #000000 !important;
+}
+
+html body #root .MuiPaper-root:has(input[placeholder="Search polls..."])
+  .MuiIconButton-root:has(svg.lucide-filter) svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Parking Slot dialog field labels stay black on hover and focus. */
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root,
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root:hover,
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root.Mui-focused,
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiFormLabel-asterisk {
   color: #000000 !important;
 }
