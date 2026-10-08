@@ -302,6 +302,11 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     // Save org details
     localStorage.setItem("selectedOrg", org.name);
     localStorage.setItem("org_id", org.id.toString());
+    if (org.logo_url) {
+      localStorage.setItem("org_logo_url", org.logo_url);
+    } else {
+      localStorage.removeItem("org_logo_url");
+    }
 
     // Use saveBaseUrl for normalized URL storage
     saveBaseUrl(baseUrl);
