@@ -5187,3 +5187,134 @@ html body #root div.p-0.space-y-0 div.border-b[class*="last:border-b-0"] > div.f
 html body #root div.p-0.space-y-0 div.space-y-0 > div.flex.border-b.border-gray-200.bg-white + div.space-y-0 {
   margin-top: 8px !important;
 }
+
+/* Keep form icons, radio controls, and submit actions neutral black. */
+html body #root form svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+html body #root form input[type="radio"],
+html body #root form .MuiRadio-root,
+html body #root form [role="radio"] {
+  accent-color: #000000 !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+html body #root form [role="radio"] > span {
+  background-color: #000000 !important;
+}
+
+html body #root form button[type="submit"],
+html body #root form input[type="submit"] {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root form button[type="submit"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Stat-card icons use a 10x10 tinted tile; keep the glyph itself black. */
+html body #root div[class*="w-10"][class*="h-10"][style*="196, 184, 157"] svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Offers add-page back arrow and image upload hover styling. */
+html body #root .MuiBox-root:has(> input[type="file"][accept="image/*"])
+  > .MuiBox-root:hover {
+  border-color: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(input[type="file"][accept="image/*"])
+  > .MuiPaper-root:has(.MuiIconButton-root svg.lucide-arrow-left)
+  .MuiIconButton-root {
+  color: #000000 !important;
+}
+
+/* BMS invoice report filter controls. */
+html body #root div.p-2.sm\:p-4.lg\:p-6 button:has(svg.lucide-calendar) svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+html body #root div.p-2.sm\:p-4.lg\:p-6 > div.bg-white.rounded-lg.border.border-gray-200.p-6
+  > div.flex.gap-2.mt-6 > button,
+html body #root div.p-2.sm\:p-4.lg\:p-6 > div.bg-white.rounded-lg.border.border-gray-200.p-6
+  > div.flex.gap-2.mt-6 > button:hover,
+html body #root div.p-2.sm\:p-4.lg\:p-6 > div.bg-white.rounded-lg.border.border-gray-200.p-6
+  > div.flex.gap-2.mt-6 > button:disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Template list status toggle thumb. */
+html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
+  .MuiSwitch-root .MuiSwitch-switchBase,
+html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+}
+
+/* Ways to Earn dialog toggle thumb. */
+html body #root [role="dialog"].max-w-lg .MuiSwitch-root .MuiSwitch-switchBase,
+html body #root [role="dialog"].max-w-lg .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+}
+
+/* Brand Partners Config dialog toggle thumb. */
+html body #root [role="dialog"]:has(input[title="Upload logo"])
+  .MuiSwitch-root .MuiSwitch-switchBase,
+html body #root [role="dialog"]:has(input[title="Upload logo"])
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+}
+
+/* Add/Edit Template submit action. */
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root)
+  > .MuiBox-root:last-child > .MuiButton-root:first-child,
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root)
+  > .MuiBox-root:last-child > .MuiButton-root:first-child:hover,
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root)
+  > .MuiBox-root:last-child > .MuiButton-root:first-child.Mui-disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Pricing Rule Create page Cancel button outline. */
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root):has(svg path[d="M12 6v6l4 2"])
+  > .MuiBox-root:last-child > .MuiButton-root:last-child,
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root):has(svg path[d="M12 6v6l4 2"])
+  > .MuiBox-root:last-child > .MuiButton-root:last-child:hover,
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root):has(svg path[d="M12 6v6l4 2"])
+  > .MuiBox-root:last-child > .MuiButton-root:last-child:focus-visible {
+  border-color: #000000 !important;
+}
+
+/* Customer Pricing Rule dialog Organization field label. */
+html body #root [role="dialog"]:has(.MuiDialogTitle-root)
+  .space-y-4.mt-4.pb-4 > .MuiFormControl-root:first-child .MuiInputLabel-root,
+html body #root [role="dialog"]:has(.MuiDialogTitle-root)
+  .space-y-4.mt-4.pb-4 > .MuiFormControl-root:first-child .MuiInputLabel-root.Mui-focused,
+html body #root [role="dialog"]:has(.MuiDialogTitle-root)
+  .space-y-4.mt-4.pb-4 > .MuiFormControl-root:first-child .MuiFormLabel-asterisk {
+  color: #000000 !important;
+}
+
+/* Wallet Top-up Organization field label. */
+html body #root .MuiFormControl-root:has(#organization_select) .MuiInputLabel-root,
+html body #root .MuiFormControl-root:has(#organization_select) .MuiInputLabel-root.Mui-focused,
+html body #root .MuiFormControl-root:has(#organization_select) .MuiFormLabel-asterisk {
+  color: #000000 !important;
+}
