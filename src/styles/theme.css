@@ -329,6 +329,19 @@ header [class*="DropdownMenuItem"].text-\[\#C72030\],
   background-color: var(--color-primary-hover) !important;
 }
 
+/* Cancel-style buttons (gray bg + gray text) — white bg, black text & border */
+button.bg-gray-200.text-gray-700,
+button[class*="bg-gray-200"][class*="text-gray-700"] {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+
+button.bg-gray-200.text-gray-700:hover,
+button[class*="bg-gray-200"][class*="text-gray-700"]:hover {
+  background-color: #f3f4f6 !important;
+}
+
 /* ===========================================
    CARD OVERRIDES - Only brand-specific classes
    =========================================== */
@@ -877,6 +890,12 @@ svg.text-red-500.fill-red-500 {
 }
 .bg-brand-info {
   background-color: rgba(107, 155, 204, 0.15) !important;
+}
+
+/* White text for solid status pills (e.g. Active/Inactive badges on red/green bg) */
+.bg-red-500 span,
+.bg-red-500 > span {
+  color: #ffffff !important;
 }
 
 /* ===========================================
@@ -1465,6 +1484,12 @@ path[stroke="#c72030"] {
   background-color: rgba(196, 184, 157, 0.33) !important;
 }
 
+/* Survey stat card icon circles (HelpCircle/Smile etc.) — white bg instead of pink tint */
+.bg-\[\#C7203014\],
+[class*="bg-[#C7203014]"] {
+  background-color: #ffffff !important;
+}
+
 /* ===========================================
    TAB COLOR OVERRIDES
    Only override colors for tabs with #C72030
@@ -1546,6 +1571,47 @@ tbody tr.hover-brand:hover {
    GLOBAL COLOR OVERRIDES FOR #C72030
    Only override color values, not layout/sizing
    =========================================== */
+
+/* Table checkboxes are rounded squares, never circles. */
+html body table button[role="checkbox"],
+html body [role="table"] button[role="checkbox"],
+html body table input[type="checkbox"],
+html body table .MuiCheckbox-root,
+html body table .MuiCheckbox-root svg {
+  border-radius: 4px !important;
+}
+
+/* Survey mapping "+N" count chips: black text. */
+html body #root span.rounded-full[style*="background-color: rgb(230, 224, 211)"] {
+  color: #000 !important;
+}
+
+/* Ticket detail section header icons: black instead of orange. */
+html body #root div.rounded-full.w-10.h-10[class*="bg-[#E5E0D3]"] svg,
+html body #root div.rounded-full.w-10.h-10[class*="bg-[#E5E0D3]"] svg * {
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
+/* Ticket detail header icons and outline Edit button icons: black. */
+html body #root div.rounded-full[class*="bg-[#E5E0D3]"] svg,
+html body #root div.rounded-full[class*="bg-[#E5E0D3]"] svg *,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-square-pen,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-square-pen *,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-edit,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-edit * {
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
+/* User details section heading icons: black instead of orange. */
+html body #root .MuiBox-root:has(> svg + .MuiTypography-h6) > svg,
+html body #root .MuiBox-root:has(> svg + .MuiTypography-h6) > svg *,
+html body #root .MuiBox-root > .MuiBox-root > svg.lucide[style*="rgb(199, 32, 48)"],
+html body #root .MuiBox-root > .MuiBox-root > svg.lucide[style*="rgb(199, 32, 48)"] * {
+  color: #000 !important;
+  stroke: #000 !important;
+}
 
 /* ===== CHECKBOX COLOR OVERRIDES ===== */
 /* Unchecked checkbox - white background with gray border */
@@ -2285,6 +2351,18 @@ circle[fill="#c4b99d"] {
 .recharts-pie-sector[fill="#C4B99D"],
 .recharts-cell[fill="#C4B99D"] {
   fill: var(--color-secondary-teal) !important;
+}
+
+/* Add MIS section and item actions. */
+html body #root .MuiPaper-root:has(svg.lucide-file-text) .MuiButton-root {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiPaper-root:has(svg.lucide-file-text) .MuiButton-root:hover {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
 }
 
 /* #B8AFA0 (Medium shade - reactiveOpen) → Brand Purple */
@@ -5186,4 +5264,445 @@ html body #root div.p-0.space-y-0 div.border-b[class*="last:border-b-0"] > div.f
 
 html body #root div.p-0.space-y-0 div.space-y-0 > div.flex.border-b.border-gray-200.bg-white + div.space-y-0 {
   margin-top: 8px !important;
+}
+
+/* Keep form icons, radio controls, and submit actions neutral black. */
+html body #root form svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+html body #root form input[type="radio"],
+html body #root form .MuiRadio-root,
+html body #root form [role="radio"] {
+  accent-color: #000000 !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+html body #root form [role="radio"] > span {
+  background-color: #000000 !important;
+}
+
+html body #root form button[type="submit"],
+html body #root form input[type="submit"] {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root form button[type="submit"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Stat-card icons use a 10x10 tinted tile; keep the glyph itself black. */
+html body #root div[class*="w-10"][class*="h-10"][style*="196, 184, 157"] svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Offers add-page back arrow and image upload hover styling. */
+html body #root .MuiBox-root:has(> input[type="file"][accept="image/*"])
+  > .MuiBox-root:hover {
+  border-color: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(input[type="file"][accept="image/*"])
+  > .MuiPaper-root:has(.MuiIconButton-root svg.lucide-arrow-left)
+  .MuiIconButton-root {
+  color: #000000 !important;
+}
+
+/* BMS invoice report filter controls. */
+html body #root div.p-2.sm\:p-4.lg\:p-6 button:has(svg.lucide-calendar) svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+html body #root div.p-2.sm\:p-4.lg\:p-6 > div.bg-white.rounded-lg.border.border-gray-200.p-6
+  > div.flex.gap-2.mt-6 > button,
+html body #root div.p-2.sm\:p-4.lg\:p-6 > div.bg-white.rounded-lg.border.border-gray-200.p-6
+  > div.flex.gap-2.mt-6 > button:hover,
+html body #root div.p-2.sm\:p-4.lg\:p-6 > div.bg-white.rounded-lg.border.border-gray-200.p-6
+  > div.flex.gap-2.mt-6 > button:disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Template list status toggle thumb. */
+html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
+  .MuiSwitch-root .MuiSwitch-switchBase,
+html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+}
+
+html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
+  .MuiSwitch-root .MuiSwitch-thumb {
+  background-color: #000000 !important;
+}
+
+/* Template details page gear and back-navigation icons. */
+html body #root .MuiBox-root:has(> .MuiTypography-root):has(.bg-white.rounded-lg.shadow-sm.border h3)
+  .bg-white.rounded-lg.shadow-sm.border > div.bg-\[\#F6F4EE\] svg.MuiSvgIcon-root,
+html body #root .MuiBox-root:has(> .MuiTypography-root):has(.bg-white.rounded-lg.shadow-sm.border h3)
+  button:has(> svg.lucide-arrow-left) > svg.lucide-arrow-left {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Ways to Earn dialog toggle thumb. */
+html body [role="dialog"]:has(input[title="Upload image"])
+  .MuiSwitch-root .MuiSwitch-switchBase,
+html body [role="dialog"]:has(input[title="Upload image"])
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+  background-color: transparent !important;
+}
+
+html body [role="dialog"]:has(input[title="Upload image"])
+  .MuiSwitch-root .MuiSwitch-thumb {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  box-sizing: border-box !important;
+  background-color: #000000 !important;
+}
+
+/* Brand Partners Config dialog toggle thumb. */
+html body [role="dialog"]:has(input[title="Upload logo"])
+  .MuiSwitch-root .MuiSwitch-switchBase,
+html body [role="dialog"]:has(input[title="Upload logo"])
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+  background-color: transparent !important;
+}
+
+html body [role="dialog"]:has(input[title="Upload logo"])
+  .MuiSwitch-root .MuiSwitch-thumb {
+  background-color: #000000 !important;
+}
+
+/* Incident attachment picker button. */
+html body #root label[for="file-upload"] > button {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Generate Bills action icon on Accounting Charge Calculations. */
+html body #root button:has(> svg.lucide-send) > svg.lucide-send {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Loyalty Inventory Add New Item status toggle thumb. */
+html body [role="dialog"]:has(.space-y-4.mt-4.pb-4) .MuiSwitch-root .MuiSwitch-switchBase,
+html body [role="dialog"]:has(.space-y-4.mt-4.pb-4) .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+}
+
+html body [role="dialog"]:has(.space-y-4.mt-4.pb-4) .MuiSwitch-root .MuiSwitch-thumb {
+  background-color: #000000 !important;
+}
+
+/* Add User form: replace orange accents with black. */
+html body #root .MuiBox-root:has(#profile-upload)
+  .MuiPaper-root > .MuiBox-root:has(> h2) > .MuiBox-root:first-child {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiPaper-root:has(#profile-upload) .MuiAvatar-root {
+  border-color: #000000 !important;
+  color: #000000 !important;
+}
+
+html body #root .MuiPaper-root:has(#profile-upload) .MuiAvatar-root svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) button[title="Capture from camera"],
+html body #root .MuiBox-root:has(#profile-upload) button[title="Upload image"] {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) button[title="Capture from camera"] svg,
+html body #root .MuiBox-root:has(#profile-upload) button[title="Upload image"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiFormLabel-asterisk,
+html body #root .MuiBox-root:has(#profile-upload) .MuiInputLabel-root.Mui-focused,
+html body #root .MuiBox-root:has(#profile-upload) .MuiFormLabel-root.Mui-focused,
+html body #root .MuiBox-root:has(#profile-upload) .MuiOutlinedInput-root.Mui-focused fieldset {
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiRadio-root,
+html body #root .MuiBox-root:has(#profile-upload) .MuiRadio-root.Mui-checked {
+  color: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root:has(+ .MuiButton-root),
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root:has(+ .MuiButton-root):hover,
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root:has(+ .MuiButton-root).Mui-disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root[class*="border-[#da7756]"] {
+  border-color: #000000 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* Add/Edit Template submit action. */
+html body #root .MuiBox-root:has(> .MuiPaper-root svg[stroke="#C72030"])
+  > .MuiBox-root:last-child > .MuiButton-root:first-child,
+html body #root .MuiBox-root:has(> .MuiPaper-root svg[stroke="#C72030"])
+  > .MuiBox-root:last-child > .MuiButton-root:first-child:hover,
+html body #root .MuiBox-root:has(> .MuiPaper-root svg[stroke="#C72030"])
+  > .MuiBox-root:last-child > .MuiButton-root:first-child.Mui-disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Template form actions follow the form card as a sibling action row. */
+html body #root .MuiPaper-root + .MuiBox-root:has(> .MuiButton-root:first-child)
+  > .MuiButton-root:first-child,
+html body #root .MuiPaper-root + .MuiBox-root:has(> .MuiButton-root:first-child)
+  > .MuiButton-root:first-child:hover,
+html body #root .MuiPaper-root + .MuiBox-root:has(> .MuiButton-root:first-child)
+  > .MuiButton-root:first-child.Mui-disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Pricing Rule Create page Cancel button outline. */
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root):has(svg path[d="M12 6v6l4 2"])
+  > .MuiBox-root:last-child > .MuiButton-root:last-child,
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root):has(svg path[d="M12 6v6l4 2"])
+  > .MuiBox-root:last-child > .MuiButton-root:last-child:hover,
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root):has(svg path[d="M12 6v6l4 2"])
+  > .MuiBox-root:last-child > .MuiButton-root:last-child:focus-visible {
+  border-color: #000000 !important;
+}
+
+/* Customer Pricing Rule dialog Organization field label. */
+html body #root [role="dialog"]:has(.MuiDialogTitle-root)
+  .space-y-4.mt-4.pb-4 > .MuiFormControl-root:first-child .MuiInputLabel-root,
+html body #root [role="dialog"]:has(.MuiDialogTitle-root)
+  .space-y-4.mt-4.pb-4 > .MuiFormControl-root:first-child .MuiInputLabel-root.Mui-focused,
+html body #root [role="dialog"]:has(.MuiDialogTitle-root)
+  .space-y-4.mt-4.pb-4 > .MuiFormControl-root:first-child .MuiFormLabel-asterisk {
+  color: #000000 !important;
+}
+
+/* Wallet Top-up Organization field label. */
+html body #root .MuiFormControl-root:has(#organization_select) .MuiInputLabel-root,
+html body #root .MuiFormControl-root:has(#organization_select) .MuiInputLabel-root.Mui-focused,
+html body #root .MuiFormControl-root:has(#organization_select) .MuiFormLabel-asterisk {
+  color: #000000 !important;
+}
+
+/* Loyalty customer Credit Wallet button. */
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus),
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus):hover,
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus):focus-visible,
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus):disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus) svg.lucide-plus {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Polls search filter icon. */
+html body #root .MuiPaper-root:has(input[placeholder="Search polls..."])
+  .MuiIconButton-root:has(svg.lucide-filter),
+html body #root .MuiPaper-root:has(input[placeholder="Search polls..."])
+  .MuiIconButton-root:has(svg.lucide-filter):hover {
+  border-color: #000000 !important;
+  color: #000000 !important;
+}
+
+html body #root .MuiPaper-root:has(input[placeholder="Search polls..."])
+  .MuiIconButton-root:has(svg.lucide-filter) svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Parking Slot dialog field labels stay black on hover and focus. */
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root,
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root:hover,
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root.Mui-focused,
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiFormLabel-asterisk {
+  color: #000000 !important;
+}
+
+/* Active step in the Create Contest wizard. */
+html body #root .create-contest-page nav[aria-label="Contest creation steps"]
+  button[aria-current="step"] {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .create-contest-page nav[aria-label="Contest creation steps"]
+  button[aria-current="step"]:focus-visible {
+  outline-color: #000000 !important;
+}
+
+/* Loyalty Offer details: active step and section gear icons. */
+html body #root .MuiBox-root:has(.MuiStepper-root):has(button[aria-label="Go back"])
+  .MuiStepper-root .MuiStepLabel-label.Mui-active > .MuiBox-root > .MuiBox-root,
+html body #root .MuiBox-root:has(.MuiStepper-root):has(button[aria-label="Go back"])
+  .MuiStepper-root .MuiStepLabel-label.Mui-completed > .MuiBox-root > .MuiBox-root {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(.MuiStepper-root):has(button[aria-label="Go back"])
+  .MuiSvgIcon-root {
+  color: #000000 !important;
+}
+
+/* Incident details header actions use dark fills with white labels. */
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"],
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"]:hover,
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"] *,
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"]:hover * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Accounting custom-settings address Edit/Delete buttons. */
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil),
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil):hover,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2),
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2):hover {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil) *,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil):hover *,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2) *,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2):hover * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil) svg,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2) svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-trash-2) {
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: 100px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  font-size: 12px !important;
+}
+
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-trash-2)::after {
+  content: "Delete";
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+/* Address Edit button: hide the text label and keep only the pencil icon. */
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-pencil) {
+  font-size: 0 !important;
+  min-width: 40px !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-pencil) svg {
+  margin-right: 0 !important;
+}
+
+/* Accounting Transactions tabs use the Ticket List / Analytics segmented layout. */
+html body #root
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has(
+    [role="tablist"] > [role="tab"][aria-controls$="-content-all"]
+  )
+  [role="tablist"] {
+  width: fit-content !important;
+  max-width: 100% !important;
+  height: auto !important;
+  justify-content: flex-start !important;
+  gap: 4px !important;
+  overflow-x: auto !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background-color: #f1f0ec !important;
+  padding: 4px !important;
+}
+
+html body #root
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has(
+    [role="tablist"] > [role="tab"][aria-controls$="-content-all"]
+  )
+  [role="tablist"]
+  > [role="tab"] {
+  min-height: 40px !important;
+  flex-shrink: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  padding: 8px 16px !important;
+  color: var(--color-text-light) !important;
+  box-shadow: none !important;
+}
+
+html body #root
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has(
+    [role="tablist"] > [role="tab"][aria-controls$="-content-all"]
+  )
+  [role="tablist"]
+  > [role="tab"][data-state="active"] {
+  border-color: #e5e5e5 !important;
+  background-color: #ffffff !important;
+  color: var(--color-text) !important;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%) !important;
 }

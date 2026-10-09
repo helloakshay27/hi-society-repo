@@ -672,6 +672,23 @@ export const TicketDetailsPage = () => {
   });
   const [submittingTicketMgmt, setSubmittingTicketMgmt] = useState(false);
 
+  // Ticket Details Edit State (Ticket Type / Related To / Issue Related To / Category / Sub Category)
+  const [isEditingTicketDetails, setIsEditingTicketDetails] = useState(false);
+  const [ticketDetailsFormData, setTicketDetailsFormData] = useState({
+    complaint_type: '',
+    issue_type_id: '',
+    issue_related_to: '',
+    category_type_id: '',
+    sub_category_id: '',
+  });
+  const [detailsIssueTypes, setDetailsIssueTypes] = useState<{ id: number; name: string; active: number | null }[]>([]);
+  const [detailsCategories, setDetailsCategories] = useState<{ id: number; name: string }[]>([]);
+  const [detailsSubCategories, setDetailsSubCategories] = useState<{ id: number; name: string }[]>([]);
+  const [loadingDetailsIssueTypes, setLoadingDetailsIssueTypes] = useState(false);
+  const [loadingDetailsCategories, setLoadingDetailsCategories] = useState(false);
+  const [loadingDetailsSubCategories, setLoadingDetailsSubCategories] = useState(false);
+  const [submittingTicketDetails, setSubmittingTicketDetails] = useState(false);
+
   // Asset and Service state for association functionality
   const [assetOptions, setAssetOptions] = useState<AssetOption[]>([]);
   const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
@@ -2940,6 +2957,334 @@ export const TicketDetailsPage = () => {
     }
   };
 
+  // ---- Ticket Details edit (same dropdowns/params as AddHelpdeskTicket) ----
+  const getDetailsSocietyId = (): string | number | undefined => {
+    if (ticketData?.id_society) return ticketData.id_society;
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.society?.id) return parsedUser.society.id;
+        if (parsedUser.selected_user_society) return parsedUser.selected_user_society;
+      } catch (e) {
+        console.error('Error parsing user from localStorage:', e);
+      }
+    }
+    return undefined;
+  };
+
+  const loadDetailsIssueTypes = async () => {
+    setLoadingDetailsIssueTypes(true);
+    try {
+      const societyId = getDetailsSocietyId();
+      const url = societyId
+        ? getFullUrl(`/user/issue_type.json?society_id=${societyId}`)
+        : getFullUrl('/user/issue_type.json');
+      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      if (!response.ok) throw new Error('Failed to fetch issue types');
+      const responseData = await response.json();
+      const issueTypesData = responseData.data || responseData;
+      const list = Array.isArray(issueTypesData) ? issueTypesData : [];
+      setDetailsIssueTypes(list);
+      return list;
+    } catch (error) {
+      console.error('Error loading issue types:', error);
+      toast.error('Failed to load issue types');
+      return [];
+    } finally {
+      setLoadingDetailsIssueTypes(false);
+    }
+  };
+
+  const loadDetailsCategories = async (issueTypeId: string) => {
+    setLoadingDetailsCategories(true);
+    try {
+      const url = getFullUrl(`/crm/admin/helpdesk_categories.json?q[issue_type_id_eq]=${issueTypeId}`);
+      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      const data = await response.json();
+      const list = data.helpdesk_categories || [];
+      setDetailsCategories(list);
+      return list;
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      toast.error('Failed to load categories');
+      return [];
+    } finally {
+      setLoadingDetailsCategories(false);
+    }
+  };
+
+  const loadDetailsSubCategories = async (categoryId: string) => {
+    setLoadingDetailsSubCategories(true);
+    try {
+      const url = getFullUrl(`/crm/admin/complaints_sub_categories.json?category_type_id=${categoryId}`);
+      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      if (!response.ok) throw new Error('Failed to fetch subcategories');
+      const data = await response.json();
+      const list = data.sub_categories || [];
+      setDetailsSubCategories(list);
+      return list;
+    } catch (error) {
+      console.error('Error loading subcategories:', error);
+      toast.error('Failed to load subcategories');
+      return [];
+    } finally {
+      setLoadingDetailsSubCategories(false);
+    }
+  };
+
+  const handleTicketDetailsEdit = async () => {
+    setIsEditingTicketDetails(true);
+    setDetailsCategories([]);
+    setDetailsSubCategories([]);
+    const currentTicketType = (ticketData?.complaint_type || ticketData?.ticket_type || '').toLowerCase();
+    setTicketDetailsFormData({
+      complaint_type: ['request', 'complaint', 'suggestion'].includes(currentTicketType) ? currentTicketType : '',
+      issue_type_id: '',
+      issue_related_to: ticketData?.issue_related_to || '',
+      category_type_id: '',
+      sub_category_id: '',
+    });
+
+    // Resolve current values to IDs (fall back to matching by name)
+    const issueTypes = await loadDetailsIssueTypes();
+    const issueTypeId = ticketData?.issue_type_id
+      ? ticketData.issue_type_id.toString()
+      : issueTypes.find((t) => t.name && t.name.toLowerCase() === (ticketData?.issue_type || '').toLowerCase())?.id?.toString() || '';
+
+    let categoryId = '';
+    let subCategoryId = '';
+    if (issueTypeId) {
+      const categories = await loadDetailsCategories(issueTypeId);
+      categoryId = ticketData?.category_type_id
+        ? ticketData.category_type_id.toString()
+        : categories.find((c) => c.name === ticketData?.category_type)?.id?.toString() || '';
+    }
+    if (categoryId) {
+      const subCategories = await loadDetailsSubCategories(categoryId);
+      subCategoryId = ticketData?.sub_category_id
+        ? ticketData.sub_category_id.toString()
+        : subCategories.find((sc) => sc.name === ticketData?.sub_category_type)?.id?.toString() || '';
+    }
+
+    setTicketDetailsFormData((prev) => ({
+      ...prev,
+      issue_type_id: issueTypeId,
+      category_type_id: categoryId,
+      sub_category_id: subCategoryId,
+    }));
+  };
+
+  const handleDetailsIssueTypeChange = (issueTypeId: string) => {
+    setTicketDetailsFormData((prev) => ({ ...prev, issue_type_id: issueTypeId, category_type_id: '', sub_category_id: '' }));
+    setDetailsCategories([]);
+    setDetailsSubCategories([]);
+    if (issueTypeId) loadDetailsCategories(issueTypeId);
+  };
+
+  const handleDetailsCategoryChange = (categoryId: string) => {
+    setTicketDetailsFormData((prev) => ({ ...prev, category_type_id: categoryId, sub_category_id: '' }));
+    setDetailsSubCategories([]);
+    if (categoryId) loadDetailsSubCategories(categoryId);
+  };
+
+  const handleTicketDetailsSubmit = async () => {
+    if (!id) return;
+    if (!ticketDetailsFormData.complaint_type) {
+      toast.error('Please select Ticket Type');
+      return;
+    }
+    if (!ticketDetailsFormData.issue_type_id) {
+      toast.error('Please select Related To');
+      return;
+    }
+    if (!ticketDetailsFormData.category_type_id) {
+      toast.error('Please select Category');
+      return;
+    }
+
+    try {
+      setSubmittingTicketDetails(true);
+
+      const formDataToSend = new FormData();
+      formDataToSend.append('complaint_log[complaint_id]', id);
+      formDataToSend.append('complaint[complaint_type]', ticketDetailsFormData.complaint_type);
+      formDataToSend.append('complaint[issue_type_id]', ticketDetailsFormData.issue_type_id);
+      formDataToSend.append('complaint[category_type_id]', ticketDetailsFormData.category_type_id);
+      formDataToSend.append('complaint[sub_category_id]', ticketDetailsFormData.sub_category_id || '');
+      if (ticketDetailsFormData.issue_related_to) {
+        formDataToSend.append('complaint[issue_related_to]', ticketDetailsFormData.issue_related_to);
+      }
+
+      const response = await fetch(getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET), {
+        method: 'POST',
+        headers: { Authorization: getAuthHeader() },
+        body: formDataToSend,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
+      setTicketData(ticketDetails);
+      refreshFeeds();
+
+      toast.success('Ticket details updated successfully');
+      setIsEditingTicketDetails(false);
+    } catch (error) {
+      console.error('Error updating ticket details:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update ticket details');
+    } finally {
+      setSubmittingTicketDetails(false);
+    }
+  };
+
+  const renderTicketDetailsEditButton = () => (
+    <Button
+      variant="outline"
+      size="sm"
+      className="ml-auto h-8 px-3 text-[12px] border-[#D9D9D9] hover:bg-[#F6F4EE]"
+      onClick={handleTicketDetailsEdit}
+      disabled={isEditingTicketDetails}
+    >
+      <Edit className="w-4 h-4 mr-1" />
+      Edit
+    </Button>
+  );
+
+  const renderTicketDetailsEditForm = () => {
+    const issueRelatedToOptions = ['FM', 'Project'];
+    const currentIssueRelatedTo = ticketDetailsFormData.issue_related_to;
+
+    return (
+      <div className="mb-6 border border-[#D9D9D9] bg-[#F6F7F7] p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormControl fullWidth size="small" required>
+            <InputLabel>Ticket Type</InputLabel>
+            <MuiSelect
+              value={ticketDetailsFormData.complaint_type}
+              onChange={(e) => setTicketDetailsFormData((prev) => ({ ...prev, complaint_type: e.target.value as string }))}
+              label="Ticket Type"
+            >
+              <MenuItem value="">
+                <span className="text-gray-500">Select Ticket Type</span>
+              </MenuItem>
+              <MenuItem value="request">Request</MenuItem>
+              <MenuItem value="complaint">Complaint</MenuItem>
+              <MenuItem value="suggestion">Suggestion</MenuItem>
+            </MuiSelect>
+          </FormControl>
+
+          <FormControl fullWidth size="small" required>
+            <InputLabel>Related To</InputLabel>
+            <MuiSelect
+              value={ticketDetailsFormData.issue_type_id}
+              onChange={(e) => handleDetailsIssueTypeChange(e.target.value as string)}
+              label="Related To"
+              disabled={loadingDetailsIssueTypes}
+            >
+              <MenuItem value="">
+                <span className="text-gray-500">{loadingDetailsIssueTypes ? 'Loading...' : 'Select Related To'}</span>
+              </MenuItem>
+              {detailsIssueTypes
+                .filter((type) => type.active === 1 || type.id.toString() === ticketDetailsFormData.issue_type_id)
+                .map((type) => (
+                  <MenuItem key={type.id} value={type.id.toString()}>
+                    {type.name}
+                  </MenuItem>
+                ))}
+            </MuiSelect>
+          </FormControl>
+
+          <FormControl fullWidth size="small">
+            <InputLabel>Issue Related To</InputLabel>
+            <MuiSelect
+              value={currentIssueRelatedTo}
+              onChange={(e) => setTicketDetailsFormData((prev) => ({ ...prev, issue_related_to: e.target.value as string }))}
+              label="Issue Related To"
+            >
+              <MenuItem value="">
+                <span className="text-gray-500">Select Issue Related To</span>
+              </MenuItem>
+              {issueRelatedToOptions.map((option) => (
+                <MenuItem key={option} value={option}>{option}</MenuItem>
+              ))}
+              {currentIssueRelatedTo && !issueRelatedToOptions.includes(currentIssueRelatedTo) && (
+                <MenuItem value={currentIssueRelatedTo}>{currentIssueRelatedTo}</MenuItem>
+              )}
+            </MuiSelect>
+          </FormControl>
+
+          <FormControl fullWidth size="small" required>
+            <InputLabel>Category</InputLabel>
+            <MuiSelect
+              value={ticketDetailsFormData.category_type_id}
+              onChange={(e) => handleDetailsCategoryChange(e.target.value as string)}
+              label="Category"
+              disabled={loadingDetailsCategories || !ticketDetailsFormData.issue_type_id}
+            >
+              <MenuItem value="">
+                <span className="text-gray-500">
+                  {loadingDetailsCategories
+                    ? 'Loading...'
+                    : !ticketDetailsFormData.issue_type_id
+                      ? 'Select Issue Type First'
+                      : 'Select Category'}
+                </span>
+              </MenuItem>
+              {detailsCategories.map((category) => (
+                <MenuItem key={category.id} value={category.id.toString()}>
+                  {category.name}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
+
+          <FormControl fullWidth size="small">
+            <InputLabel>Sub Category</InputLabel>
+            <MuiSelect
+              value={ticketDetailsFormData.sub_category_id}
+              onChange={(e) => setTicketDetailsFormData((prev) => ({ ...prev, sub_category_id: e.target.value as string }))}
+              label="Sub Category"
+              disabled={loadingDetailsSubCategories || !ticketDetailsFormData.category_type_id}
+            >
+              <MenuItem value="">
+                <span className="text-gray-500">{loadingDetailsSubCategories ? 'Loading...' : 'Select Sub Category'}</span>
+              </MenuItem>
+              {detailsSubCategories.map((subCategory) => (
+                <MenuItem key={subCategory.id} value={subCategory.id.toString()}>
+                  {subCategory.name}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
+        </div>
+
+        <div className="flex justify-end gap-2 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-4 text-[12px] border-[#D9D9D9]"
+            onClick={() => setIsEditingTicketDetails(false)}
+            disabled={submittingTicketDetails}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            className="h-8 px-4 text-[12px] bg-[#C72030] text-white hover:bg-[#C72030]/90"
+            onClick={handleTicketDetailsSubmit}
+            disabled={submittingTicketDetails}
+          >
+            {submittingTicketDetails ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   // Handle Ticket Closure Edit
   const handleTicketClosureEdit = () => {
     console.log('=== Ticket Closure Form Initialization ===');
@@ -5085,6 +5430,7 @@ export const TicketDetailsPage = () => {
                         <h3 className="text-lg font-semibold uppercase text-black">
                           Ticket Details
                         </h3>
+                        {renderTicketDetailsEditButton()}
                       </div>
                       <div className="px-6 bg-[#dfd9cb]">
                         <div className="flex justify-between py-4 border-b border-[#dfd9cb]">
@@ -5253,9 +5599,12 @@ export const TicketDetailsPage = () => {
                         </div>
                       </div>
                       <CardContent className="pt-6">
+                        {isEditingTicketDetails && renderTicketDetailsEditForm()}
                         {[
                           [
-                            { label: 'Issue Type', value: capitalizeWords(ticketData.issue_type) },
+                            { label: 'Ticket Type', value: capitalizeWords(ticketData.complaint_type || ticketData.ticket_type) },
+                            { label: 'Related To', value: ticketData.issue_type || '-' },
+                            { label: 'Issue Related To', value: ticketData.issue_related_to || '-' },
                             { label: 'Assigned To', value: ticketData.assigned_to || '-' },
                             { label: 'Behalf Of', value: ticketData.on_behalf_of || '-' },
                             { label: 'Identification', value: ticketData.proactive_reactive || '-' },
@@ -8213,6 +8562,7 @@ export const TicketDetailsPage = () => {
                     <h3 className="text-lg font-semibold uppercase text-black">
                       Ticket Details
                     </h3>
+                    {renderTicketDetailsEditButton()}
                   </div>
                   <div className="px-6 bg-[#dfd9cb]">
                     <div className="flex justify-between py-4 border-b border-[#dfd9cb]">
@@ -8381,9 +8731,12 @@ export const TicketDetailsPage = () => {
                     </div>
                   </div>
                   <CardContent className="pt-6">
+                    {isEditingTicketDetails && renderTicketDetailsEditForm()}
                     {[
                       [
-                        { label: 'Issue Type', value: capitalizeWords(ticketData.issue_type) },
+                        { label: 'Ticket Type', value: capitalizeWords(ticketData.complaint_type || ticketData.ticket_type) },
+                        { label: 'Related To', value: ticketData.issue_type || '-' },
+                        { label: 'Issue Related To', value: ticketData.issue_related_to || '-' },
                         { label: 'Assigned To', value: ticketData.assigned_to || '-' },
                         { label: 'Behalf Of', value: ticketData.on_behalf_of || '-' },
                         { label: 'Source', value: ticketData.service_or_asset || '-' },
