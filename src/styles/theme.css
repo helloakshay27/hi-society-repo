@@ -5419,6 +5419,19 @@ html body #root .MuiBox-root:has(> .MuiPaper-root svg[stroke="#C72030"])
   opacity: 1 !important;
 }
 
+/* Template form actions follow the form card as a sibling action row. */
+html body #root .MuiPaper-root + .MuiBox-root:has(> .MuiButton-root:first-child)
+  > .MuiButton-root:first-child,
+html body #root .MuiPaper-root + .MuiBox-root:has(> .MuiButton-root:first-child)
+  > .MuiButton-root:first-child:hover,
+html body #root .MuiPaper-root + .MuiBox-root:has(> .MuiButton-root:first-child)
+  > .MuiButton-root:first-child.Mui-disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 /* Pricing Rule Create page Cancel button outline. */
 html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root):has(svg path[d="M12 6v6l4 2"])
   > .MuiBox-root:last-child > .MuiButton-root:last-child,
@@ -5444,6 +5457,22 @@ html body #root .MuiFormControl-root:has(#organization_select) .MuiInputLabel-ro
 html body #root .MuiFormControl-root:has(#organization_select) .MuiInputLabel-root.Mui-focused,
 html body #root .MuiFormControl-root:has(#organization_select) .MuiFormLabel-asterisk {
   color: #000000 !important;
+}
+
+/* Loyalty customer Credit Wallet button. */
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus),
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus):hover,
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus):focus-visible,
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus):disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus) svg.lucide-plus {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 /* Polls search filter icon. */
@@ -5497,9 +5526,81 @@ html body #root .MuiBox-root:has(.MuiStepper-root):has(button[aria-label="Go bac
   color: #000000 !important;
 }
 
+/* Incident details header actions use dark fills with white labels. */
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"],
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"]:hover,
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"] *,
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"]:hover * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Accounting custom-settings address Edit/Delete buttons. */
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil),
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil):hover,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2),
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2):hover {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil) *,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil):hover *,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2) *,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2):hover * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil) svg,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2) svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-trash-2) {
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: 100px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  font-size: 12px !important;
+}
+
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-trash-2)::after {
+  content: "Delete";
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+/* Address Edit button: hide the text label and keep only the pencil icon. */
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-pencil) {
+  font-size: 0 !important;
+  min-width: 40px !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-pencil) svg {
+  margin-right: 0 !important;
+}
+
 /* Accounting Transactions tabs use the Ticket List / Analytics segmented layout. */
 html body #root
-  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has([role="tab"][value="journal"]):has([role="tab"][value="contra"])
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has(
+    [role="tablist"] > [role="tab"][aria-controls$="-content-all"]
+  )
   [role="tablist"] {
   width: fit-content !important;
   max-width: 100% !important;
@@ -5514,8 +5615,11 @@ html body #root
 }
 
 html body #root
-  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has([role="tab"][value="journal"]):has([role="tab"][value="contra"])
-  [role="tablist"] > [role="tab"] {
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has(
+    [role="tablist"] > [role="tab"][aria-controls$="-content-all"]
+  )
+  [role="tablist"]
+  > [role="tab"] {
   min-height: 40px !important;
   flex-shrink: 0 !important;
   border: 1px solid transparent !important;
@@ -5526,8 +5630,11 @@ html body #root
 }
 
 html body #root
-  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has([role="tab"][value="journal"]):has([role="tab"][value="contra"])
-  [role="tablist"] > [role="tab"][data-state="active"] {
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has(
+    [role="tablist"] > [role="tab"][aria-controls$="-content-all"]
+  )
+  [role="tablist"]
+  > [role="tab"][data-state="active"] {
   border-color: #e5e5e5 !important;
   background-color: #ffffff !important;
   color: var(--color-text) !important;
