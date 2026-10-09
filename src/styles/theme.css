@@ -1547,6 +1547,15 @@ tbody tr.hover-brand:hover {
    Only override color values, not layout/sizing
    =========================================== */
 
+/* Table checkboxes are rounded squares, never circles. */
+html body table button[role="checkbox"],
+html body [role="table"] button[role="checkbox"],
+html body table input[type="checkbox"],
+html body table .MuiCheckbox-root,
+html body table .MuiCheckbox-root svg {
+  border-radius: 4px !important;
+}
+
 /* ===== CHECKBOX COLOR OVERRIDES ===== */
 /* Unchecked checkbox - white background with gray border */
 button[role="checkbox"][data-state="unchecked"] {
