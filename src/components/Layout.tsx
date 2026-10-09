@@ -216,7 +216,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         return <HiSocietySidebar />;
       }
       if (isUIHiSocietySite) {
-        return <UIHiSocietySidebar />;
+        return <HiSocietySidebar />;
       }
       return <HiSocietySidebar />;
     }
@@ -314,7 +314,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
 
     if (layoutMode === "hi-society" && isUIHiSocietySite) {
-      return <UIHiSocietyNavigation />;
+      return <HiSocietyNavigation />;
     }
     if (layoutMode === "hi-society") {
       return <HiSocietyNavigation />;
