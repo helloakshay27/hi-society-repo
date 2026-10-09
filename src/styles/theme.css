@@ -329,6 +329,19 @@ header [class*="DropdownMenuItem"].text-\[\#C72030\],
   background-color: var(--color-primary-hover) !important;
 }
 
+/* Cancel-style buttons (gray bg + gray text) — white bg, black text & border */
+button.bg-gray-200.text-gray-700,
+button[class*="bg-gray-200"][class*="text-gray-700"] {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+
+button.bg-gray-200.text-gray-700:hover,
+button[class*="bg-gray-200"][class*="text-gray-700"]:hover {
+  background-color: #f3f4f6 !important;
+}
+
 /* ===========================================
    CARD OVERRIDES - Only brand-specific classes
    =========================================== */
@@ -877,6 +890,12 @@ svg.text-red-500.fill-red-500 {
 }
 .bg-brand-info {
   background-color: rgba(107, 155, 204, 0.15) !important;
+}
+
+/* White text for solid status pills (e.g. Active/Inactive badges on red/green bg) */
+.bg-red-500 span,
+.bg-red-500 > span {
+  color: #ffffff !important;
 }
 
 /* ===========================================
@@ -1465,6 +1484,12 @@ path[stroke="#c72030"] {
   background-color: rgba(196, 184, 157, 0.33) !important;
 }
 
+/* Survey stat card icon circles (HelpCircle/Smile etc.) — white bg instead of pink tint */
+.bg-\[\#C7203014\],
+[class*="bg-[#C7203014]"] {
+  background-color: #ffffff !important;
+}
+
 /* ===========================================
    TAB COLOR OVERRIDES
    Only override colors for tabs with #C72030
@@ -1575,6 +1600,15 @@ html body #root button[class*="border-[#D9D9D9]"] svg.lucide-square-pen,
 html body #root button[class*="border-[#D9D9D9]"] svg.lucide-square-pen *,
 html body #root button[class*="border-[#D9D9D9]"] svg.lucide-edit,
 html body #root button[class*="border-[#D9D9D9]"] svg.lucide-edit * {
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
+/* User details section heading icons: black instead of orange. */
+html body #root .MuiBox-root:has(> svg + .MuiTypography-h6) > svg,
+html body #root .MuiBox-root:has(> svg + .MuiTypography-h6) > svg *,
+html body #root .MuiBox-root > .MuiBox-root > svg.lucide[style*="rgb(199, 32, 48)"],
+html body #root .MuiBox-root > .MuiBox-root > svg.lucide[style*="rgb(199, 32, 48)"] * {
   color: #000 !important;
   stroke: #000 !important;
 }
