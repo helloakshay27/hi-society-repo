@@ -1561,6 +1561,24 @@ html body #root span.rounded-full[style*="background-color: rgb(230, 224, 211)"]
   color: #000 !important;
 }
 
+/* Ticket detail section header icons: black instead of orange. */
+html body #root div.rounded-full.w-10.h-10[class*="bg-[#E5E0D3]"] svg,
+html body #root div.rounded-full.w-10.h-10[class*="bg-[#E5E0D3]"] svg * {
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
+/* Ticket detail header icons and outline Edit button icons: black. */
+html body #root div.rounded-full[class*="bg-[#E5E0D3]"] svg,
+html body #root div.rounded-full[class*="bg-[#E5E0D3]"] svg *,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-square-pen,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-square-pen *,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-edit,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-edit * {
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
 /* ===== CHECKBOX COLOR OVERRIDES ===== */
 /* Unchecked checkbox - white background with gray border */
 button[role="checkbox"][data-state="unchecked"] {
