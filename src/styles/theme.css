@@ -1556,6 +1556,11 @@ html body table .MuiCheckbox-root svg {
   border-radius: 4px !important;
 }
 
+/* Survey mapping "+N" count chips: black text. */
+html body #root span.rounded-full[style*="background-color: rgb(230, 224, 211)"] {
+  color: #000 !important;
+}
+
 /* ===== CHECKBOX COLOR OVERRIDES ===== */
 /* Unchecked checkbox - white background with gray border */
 button[role="checkbox"][data-state="unchecked"] {
