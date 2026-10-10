@@ -281,8 +281,14 @@ export interface OccupantUserResponse {
 export interface TicketFilters {
   date_range?: string;
   'q[date_range]'?: string; // Add support for q[date_range] parameter format
+  ticket_number_cont?: string;
+  issue_type_id_eq?: number;
   category_type_id_eq?: number;
   sub_category_id_eq?: number;
+  user_society_user_flat_society_flat_society_block_id_eq?: number;
+  user_society_user_flat_society_flat_id_eq?: number;
+  complaint_mode_id_eq?: number;
+  issue_related_to_eq?: string;
   dept_id_eq?: number;
   site_id_eq?: number;
   unit_id_eq?: number;
@@ -292,6 +298,8 @@ export interface TicketFilters {
   user_firstname_or_user_lastname_cont?: string;
   search_all_fields_cont?: string;
   assigned_to_in?: number[];
+  response_escalation_cont?: string;
+  rating_eq?: string;
   complaint_status_fixed_state_eq?: string;
   // Ransack _in predicates must be sent as an array (q[key][]=v) — see
   // getTickets()'s query builder, which only produces that shape for

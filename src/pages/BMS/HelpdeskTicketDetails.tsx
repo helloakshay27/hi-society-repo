@@ -676,6 +676,7 @@ export const TicketDetailsPage = () => {
   const [isEditingTicketDetails, setIsEditingTicketDetails] = useState(false);
   const [ticketDetailsFormData, setTicketDetailsFormData] = useState({
     complaint_type: '',
+    priority: '',
     issue_type_id: '',
     issue_related_to: '',
     category_type_id: '',
@@ -3041,6 +3042,7 @@ export const TicketDetailsPage = () => {
     const currentTicketType = (ticketData?.complaint_type || ticketData?.ticket_type || '').toLowerCase();
     setTicketDetailsFormData({
       complaint_type: ['request', 'complaint', 'suggestion'].includes(currentTicketType) ? currentTicketType : '',
+      priority: (ticketData?.priority || '').toString().toUpperCase().match(/^P[1-5]/)?.[0] || '',
       issue_type_id: '',
       issue_related_to: ticketData?.issue_related_to || '',
       category_type_id: '',
@@ -3111,6 +3113,9 @@ export const TicketDetailsPage = () => {
       formDataToSend.append('complaint_log[complaint_id]', id);
       formDataToSend.append('complaint[complaint_type]', ticketDetailsFormData.complaint_type);
       formDataToSend.append('complaint[issue_type_id]', ticketDetailsFormData.issue_type_id);
+      if (ticketDetailsFormData.priority) {
+        formDataToSend.append('complaint[priority]', ticketDetailsFormData.priority);
+      }
       formDataToSend.append('complaint[category_type_id]', ticketDetailsFormData.category_type_id);
       formDataToSend.append('complaint[sub_category_id]', ticketDetailsFormData.sub_category_id || '');
       if (ticketDetailsFormData.issue_related_to) {
@@ -3256,6 +3261,24 @@ export const TicketDetailsPage = () => {
               {detailsSubCategories.map((subCategory) => (
                 <MenuItem key={subCategory.id} value={subCategory.id.toString()}>
                   {subCategory.name}
+                </MenuItem>
+              ))}
+            </MuiSelect>
+          </FormControl>
+
+          <FormControl fullWidth size="small">
+            <InputLabel>Priority</InputLabel>
+            <MuiSelect
+              value={ticketDetailsFormData.priority}
+              onChange={(e) => setTicketDetailsFormData((prev) => ({ ...prev, priority: e.target.value as string }))}
+              label="Priority"
+            >
+              <MenuItem value="">
+                <span className="text-gray-500">Select Priority</span>
+              </MenuItem>
+              {['P1', 'P2', 'P3', 'P4', 'P5'].map((p) => (
+                <MenuItem key={p} value={p}>
+                  {getPriorityLabel(p)}
                 </MenuItem>
               ))}
             </MuiSelect>

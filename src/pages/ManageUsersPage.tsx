@@ -207,7 +207,11 @@ const buildFilterParams = (filters: UserFilters, search: string) => {
   if (filters.startDate && filters.endDate) {
     filterParams["q[date_range]"] = `${filters.startDate} - ${filters.endDate}`;
   }
-  if (search) filterParams["q[user_firstname_or_user_lastname_or_user_email_or_user_mobile_cont]"] = search;
+  if (search) {
+    filterParams[
+      "q[user_firstname_or_user_lastname_or_user_email_or_user_mobile_or_user_flat_society_flat_society_block_name_or_user_flat_society_flat_flat_no_cont]"
+    ] = search;
+  }
   return filterParams;
 };
 
