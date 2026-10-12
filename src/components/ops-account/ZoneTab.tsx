@@ -31,13 +31,55 @@ interface ZoneTabProps {
 }
 
 const columns: ColumnConfig[] = [
-  { key: "actions", label: "Action", sortable: false, hideable: false, draggable: false },
-  { key: "srno", label: "S.No.", sortable: false, hideable: false, draggable: false },
-  { key: "name", label: "Zone Name", sortable: true, hideable: true, draggable: true },
-  { key: "headquarter", label: "Headquarter", sortable: true, hideable: true, draggable: true },
-  { key: "region", label: "Region", sortable: true, hideable: true, draggable: true },
-  { key: "status", label: "Status", sortable: true, hideable: true, draggable: true },
-  { key: "created_at", label: "Created At", sortable: true, hideable: true, draggable: true },
+  {
+    key: "actions",
+    label: "Action",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
+  {
+    key: "srno",
+    label: "S.No.",
+    sortable: false,
+    hideable: false,
+    draggable: false,
+  },
+  {
+    key: "name",
+    label: "Zone Name",
+    sortable: true,
+    hideable: true,
+    draggable: true,
+  },
+  {
+    key: "headquarter",
+    label: "Headquarter",
+    sortable: true,
+    hideable: true,
+    draggable: true,
+  },
+  {
+    key: "region",
+    label: "Region",
+    sortable: true,
+    hideable: true,
+    draggable: true,
+  },
+  {
+    key: "status",
+    label: "Status",
+    sortable: true,
+    hideable: true,
+    draggable: true,
+  },
+  {
+    key: "created_at",
+    label: "Created At",
+    sortable: true,
+    hideable: true,
+    draggable: true,
+  },
 ];
 
 export const ZoneTab: React.FC<ZoneTabProps> = ({
@@ -80,62 +122,75 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
       "komalshinde0101@lockated.com",
       "demo@lockated.com",
       "akshay.shinde@lockated.com",
-      "dineshshinde6666@gmail.com"
+      "dineshshinde6666@gmail.com",
+      "dinesh.shinde@lockated.com",
+      "tejas.chaudhari@lockated.com",
     ];
     setCanEdit(allowedEmails.includes(userEmail));
   }, [userEmail]);
 
-  const fetchZones = useCallback(async (page = 1, per_page = 10, search = "") => {
-    setLoading(true);
-    try {
-      let url = getFullUrl(`/pms/zones.json?show_all=true&page=${page}&per_page=${per_page}`);
-      if (search.trim()) {
-        url += `&q[search_all_fields_cont]=${encodeURIComponent(search.trim())}`;
-      }
-
-      const response = await fetch(url, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-      const result = await response.json();
-
-      if (result && Array.isArray(result.zones)) {
-        setZones(result.zones);
-        if (result.pagination) {
-          setPagination(result.pagination);
-        } else {
-          setPagination({
-            current_page: page,
-            per_page,
-            total_pages: Math.ceil(result.zones.length / per_page),
-            total_count: result.zones.length,
-            has_next_page: false,
-            has_prev_page: false,
-          });
+  const fetchZones = useCallback(
+    async (page = 1, per_page = 10, search = "") => {
+      setLoading(true);
+      try {
+        let url = getFullUrl(
+          `/pms/zones.json?show_all=true&page=${page}&per_page=${per_page}`
+        );
+        if (search.trim()) {
+          url += `&q[search_all_fields_cont]=${encodeURIComponent(search.trim())}`;
         }
-      } else {
+
+        const response = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: getAuthHeader(),
+          },
+        });
+
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+
+        const result = await response.json();
+
+        if (result && Array.isArray(result.zones)) {
+          setZones(result.zones);
+          if (result.pagination) {
+            setPagination(result.pagination);
+          } else {
+            setPagination({
+              current_page: page,
+              per_page,
+              total_pages: Math.ceil(result.zones.length / per_page),
+              total_count: result.zones.length,
+              has_next_page: false,
+              has_prev_page: false,
+            });
+          }
+        } else {
+          setZones([]);
+        }
+      } catch (error: unknown) {
+        toast.error(
+          `Failed to load zones: ${error instanceof Error ? error.message : "Unknown error"}`
+        );
         setZones([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (error: unknown) {
-      toast.error(`Failed to load zones: ${error instanceof Error ? error.message : "Unknown error"}`);
-      setZones([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [getFullUrl, getAuthHeader]);
+    },
+    [getFullUrl, getAuthHeader]
+  );
 
   useEffect(() => {
     fetchZones(currentPage, perPage, debouncedSearch);
   }, [currentPage, perPage, debouncedSearch, fetchZones]);
 
   const handleToggleStatus = async (zoneId: number, currentStatus: boolean) => {
-    if (!canEdit) { toast.error("You do not have permission to update zone status"); return; }
+    if (!canEdit) {
+      toast.error("You do not have permission to update zone status");
+      return;
+    }
     try {
       const response = await fetch(getFullUrl(`/pms/zones/${zoneId}.json`), {
         method: "PUT",
@@ -148,7 +203,9 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
       });
 
       if (response.ok) {
-        toast.success(`Zone ${!currentStatus ? "activated" : "deactivated"} successfully`);
+        toast.success(
+          `Zone ${!currentStatus ? "activated" : "deactivated"} successfully`
+        );
         fetchZones(currentPage, perPage, debouncedSearch);
       } else {
         toast.error("Failed to update zone status");
@@ -173,14 +230,22 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
     if (!dateString) return "N/A";
     try {
       return new Date(dateString).toLocaleDateString("en-US", {
-        year: "numeric", month: "short", day: "numeric",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
-    } catch { return "Invalid date"; }
+    } catch {
+      return "Invalid date";
+    }
   };
 
   const displayedData = useMemo(
-    () => zones.map((z, i) => ({ ...z, srno: (currentPage - 1) * perPage + i + 1 })),
-    [zones, currentPage, perPage],
+    () =>
+      zones.map((z, i) => ({
+        ...z,
+        srno: (currentPage - 1) * perPage + i + 1,
+      })),
+    [zones, currentPage, perPage]
   );
 
   const renderRow = (zone: ZoneItem & { srno?: number }) => ({
@@ -200,10 +265,14 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
     ),
     name: <div className="font-medium">{zone.name || "N/A"}</div>,
     headquarter: (
-      <span className="text-sm text-gray-600">{zone.headquarter?.name || "—"}</span>
+      <span className="text-sm text-gray-600">
+        {zone.headquarter?.name || "—"}
+      </span>
     ),
     region: (
-      <span className="text-sm text-gray-600">{zone.pms_region?.name || "—"}</span>
+      <span className="text-sm text-gray-600">
+        {zone.pms_region?.name || "—"}
+      </span>
     ),
     status: (
       <div className="flex items-center gap-2">
@@ -216,7 +285,9 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
       </div>
     ),
     created_at: (
-      <span className="text-sm text-gray-600">{formatDate(zone.created_at)}</span>
+      <span className="text-sm text-gray-600">
+        {formatDate(zone.created_at)}
+      </span>
     ),
   });
 
@@ -227,30 +298,30 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
       </header>
 
       <>
-          <EnhancedTaskTable
-            data={displayedData}
-            columns={columns}
-            renderRow={renderRow}
-            storageKey="zone-dashboard-v1"
-            hideTableExport={true}
-            hideTableSearch={false}
-            enableSearch={true}
-            searchTerm={searchTerm}
-            onSearchChange={handleSearch}
-            pagination={true}
-            loading={loading}
-            leftActions={
-              <Button
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => setIsAddModalOpen(true)}
-                disabled={!canEdit}
-              >
-                <Plus className="w-4 h-4 mr-2" /> Add Zone
-              </Button>
-            }
-          />
+        <EnhancedTaskTable
+          data={displayedData}
+          columns={columns}
+          renderRow={renderRow}
+          storageKey="zone-dashboard-v1"
+          hideTableExport={true}
+          hideTableSearch={false}
+          enableSearch={true}
+          searchTerm={searchTerm}
+          onSearchChange={handleSearch}
+          pagination={true}
+          loading={loading}
+          leftActions={
+            <Button
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setIsAddModalOpen(true)}
+              disabled={!canEdit}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add Zone
+            </Button>
+          }
+        />
 
-          {/* <TicketPagination
+        {/* <TicketPagination
             currentPage={currentPage}
             totalPages={pagination.total_pages}
             totalRecords={pagination.total_count}
@@ -259,7 +330,7 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
             onPageChange={(page) => setCurrentPage(page)}
             onPerPageChange={(newPerPage) => { setPerPage(newPerPage); setCurrentPage(1); }}
           /> */}
-        </>
+      </>
 
       <AddZoneModal
         isOpen={isAddModalOpen}
@@ -274,7 +345,10 @@ export const ZoneTab: React.FC<ZoneTabProps> = ({
       {selectedZoneId !== null && (
         <EditZoneModal
           isOpen={isEditModalOpen}
-          onClose={() => { setIsEditModalOpen(false); setSelectedZoneId(null); }}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedZoneId(null);
+          }}
           onSuccess={() => {
             fetchZones(currentPage, perPage, debouncedSearch);
             setIsEditModalOpen(false);
