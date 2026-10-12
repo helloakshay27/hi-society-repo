@@ -6278,3 +6278,42 @@ html body button[type="submit"]:disabled,
 html body button.btn-primary:disabled {
   opacity: 0.6;
 }
+
+/* ============================================================
+   RADIO BUTTONS — neutral ink everywhere (global)
+   Overrides the older brand-colored radio rules above so MUI,
+   Radix and native radios all match the form radio style.
+   ============================================================ */
+html body .MuiRadio-root,
+html body .MuiRadio-root.Mui-checked,
+html body [class*="MuiRadio-root"],
+html body [class*="MuiRadio-root"].Mui-checked {
+  color: #1a1a18 !important;
+}
+html body .MuiRadio-root svg {
+  color: inherit !important;
+}
+html body .MuiFormControlLabel-root:has(.MuiRadio-root) .MuiFormControlLabel-label {
+  color: #1a1a18 !important;
+}
+html body .MuiFormLabel-root.Mui-focused:has(+ .MuiRadioGroup-root),
+html body .MuiFormControl-root:has(.MuiRadioGroup-root) > .MuiFormLabel-root.Mui-focused {
+  color: rgba(26, 26, 24, 0.6) !important;
+}
+html body input[type="radio"] {
+  accent-color: #1a1a18 !important;
+}
+html body [role="radio"],
+html body [role="radio"][data-state="checked"] {
+  border-color: #1a1a18 !important;
+  color: #1a1a18 !important;
+}
+html body [role="radio"] span,
+html body [role="radio"] > span,
+html body [role="radio"] div {
+  background-color: #1a1a18 !important;
+}
+html body [role="radio"] svg {
+  fill: #1a1a18 !important;
+  color: #1a1a18 !important;
+}
