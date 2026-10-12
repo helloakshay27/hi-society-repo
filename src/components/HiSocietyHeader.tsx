@@ -707,7 +707,7 @@ export const HiSocietyHeader = () => {
           </DropdownMenu>
 
           <div className="relative">
-            <button className="p-2 hover:bg-[#f6f4ee] rounded-lg transition-colors">
+            <button aria-label="Notifications" className="p-2 hover:bg-[#f6f4ee] rounded-lg transition-colors">
               <Bell className="w-5 h-5 text-[#1a1a1a]" />
             </button>
             {notificationCount > 0 && (

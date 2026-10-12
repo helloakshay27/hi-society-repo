@@ -909,7 +909,7 @@ export function EnhancedTable<T extends Record<string, any>>({
               variant="outline"
               size="sm"
               className={cn(
-                "flex items-center gap-2 rounded-lg",
+                "flex items-center gap-2 rounded-lg w-9",
                 filterButtonClassName
               )}
               onClick={onFilterClick}
@@ -933,7 +933,7 @@ export function EnhancedTable<T extends Record<string, any>>({
               variant="outline"
               size="sm"
               onClick={handleExportClick}
-              className="flex items-center gap-2 rounded-lg"
+              className="flex items-center gap-2 rounded-lg w-9"
               title="Export"
             >
               <Download className="w-4 h-4" />

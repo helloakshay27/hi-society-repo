@@ -38,6 +38,12 @@
   --color-text: #1a1a18;
   --color-text-rgb: 26, 26, 24;
   --color-text-light: rgba(26, 26, 24, 0.68);
+  --color-surface: #f5f4f0;
+  --color-hover: #f7f6f2;
+  --color-line: rgba(26, 26, 24, 0.08);
+  --color-ink-68: rgba(26, 26, 24, 0.68);
+  --color-ink-48: rgba(26, 26, 24, 0.48);
+  --color-ink-30: rgba(26, 26, 24, 0.3);
 
   /* =====================
      SECONDARY COLORS
@@ -3579,38 +3585,18 @@ button[title*="view"]:hover svg {
 button.border-\[\#C72030\],
 button[class*="border-[#C72030]"],
 button.text-\[\#C72030\],
-button[class*="text-[#C72030]"],
-button[title="Filter"] {
+button[class*="text-[#C72030]"] {
   border-color: var(--color-primary) !important;
   color: var(--color-bg) !important;
 }
 
 /* Filter hover */
-button[class*="hover:bg-[#C72030]/10"]:hover,
-button[title="Filter"]:hover {
+button[class*="hover:bg-[#C72030]/10"]:hover {
   background-color: rgba(var(--color-accent-rgb), 0.1) !important;
 }
 
-/* Columns visibility & Export / Download buttons — uniform brand styling */
-button[title="Columns"],
-button[title="Export"],
-button[title="Exporting..."] {
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
-button[title="Columns"]:hover,
-button[title="Export"]:hover {
-  background-color: rgba(var(--color-accent-rgb), 0.1) !important;
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
-/* Icons inside these toolbar buttons inherit the brand color */
-button[title="Filter"] svg,
-button[title="Columns"] svg,
-button[title="Export"] svg {
-  color: var(--color-primary) !important;
-  stroke: var(--color-primary) !important;
-}
+/* Filter / Columns / Export toolbar buttons: see "TABLE TOOLBAR ICON BUTTONS"
+   at the end of this file (hairline border matching the search box). */
 
 /* Add-row cancel X button: text-red-600 hover:text-red-700
    (non-destructive context — override to neutral/primary) */
@@ -3959,38 +3945,15 @@ svg .recharts-symbols [fill="#C72030"] {
   border-color: var(--color-primary) !important;
 }
 
-/* Force toolbar buttons to white background + brand border/text
-   Match search input radius (8px / --radius-md) — override Button's rounded-none
-   and any fm-button-fix border-radius: 0 so shape stays consistent. */
+/* Toolbar buttons keep the search input radius (8px / --radius-md) — override
+   Button's rounded-none and any fm-button-fix border-radius: 0. Border, fill and
+   size live in "TABLE TOOLBAR ICON BUTTONS" at the end of this file. */
 button[title="Filter"],
 button[title="Columns"],
+button[title="Refresh"],
 button[title="Export"],
 button[title="Exporting..."] {
-  background-color: #ffffff !important;
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
-  border-width: 1px !important;
-  border-style: solid !important;
   border-radius: var(--radius-md) !important;
-}
-button[title="Filter"]:hover,
-button[title="Columns"]:hover,
-button[title="Export"]:hover,
-button[title="Exporting..."]:hover {
-  background-color: rgba(var(--color-accent-rgb), 0.08) !important;
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
-button[title="Filter"] svg,
-button[title="Filter"] .lucide,
-button[title="Columns"] svg,
-button[title="Columns"] .lucide,
-button[title="Export"] svg,
-button[title="Export"] .lucide,
-button[title="Exporting..."] svg,
-button[title="Exporting..."] .lucide {
-  color: var(--color-primary) !important;
-  stroke: var(--color-primary) !important;
 }
 
 /* ===========================================
@@ -4324,17 +4287,41 @@ html body header.fixed.top-0 button[class*="hover:bg-[#f6f4ee]"]:hover {
   }
 }
 
-/* Notification bell → bordered square button, grey icon */
+/* Notification bell → borderless icon button, thin grey line bell */
 html body header.fixed.top-0 button[aria-label="Notifications"] {
   border: 1px solid rgba(26, 26, 24, 0.08) !important;
-  background-color: #ffffff !important;
+  background-color: transparent !important;
   border-radius: 8px !important;
+  overflow: visible !important;
 }
 html body header.fixed.top-0 button[aria-label="Notifications"]:hover {
-  border-color: rgba(26, 26, 24, 0.28) !important;
+  background-color: var(--color-surface) !important;
 }
-html body header.fixed.top-0 button[aria-label="Notifications"] svg {
-  color: rgba(26, 26, 24, 0.68) !important;
+html body header.fixed.top-0 button[aria-label="Notifications"] > svg {
+  width: 20px !important;
+  height: 20px !important;
+  color: rgba(26, 26, 24, 0.55) !important;
+  stroke-width: 1.8 !important;
+}
+/* Unread count → coral pill (accentOrange #E8916F), white bold count,
+   2px page-coloured ring so it reads cleanly over the bell.
+   The count is a shadcn Badge rendered as the bell button's next sibling. */
+html body header.fixed.top-0 button[aria-label="Notifications"] + [class*="bg-red-500"] {
+  top: -6px !important;
+  right: -8px !important;
+  min-width: 20px !important;
+  height: 18px !important;
+  padding: 0 5px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background-color: #e8916f !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px var(--color-bg) !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  line-height: 18px !important;
+  letter-spacing: 0 !important;
+  font-variant-numeric: tabular-nums;
 }
 html body header.fixed.top-0 [class*="bg-[#DA7756]"] {
   background-color: var(--color-accent) !important;
@@ -4359,14 +4346,26 @@ html body div.fixed.top-16.h-12 button.flex-shrink-0 {
   font-weight: 500 !important;
   opacity: 1 !important;
   color: rgba(26, 26, 24, 0.55) !important;
-  transition: all 0.16s;
+  /* Animate fill/colour only — animating borders made the previously
+     active tab flash an outline while switching modules. */
+  transition: background-color 0.16s, color 0.16s !important;
 }
 html body div.fixed.top-16.h-12 button.flex-shrink-0:hover {
   background-color: #f7f6f2 !important;
   color: #1a1a18 !important;
 }
-html body div.fixed.top-16.h-12 button.flex-shrink-0.border-b-2 {
+/* Active module: soft grey filled pill, bold ink label — no outline or shadow.
+   (The generic "red text + red border button" rules also match this tab's
+   legacy classes, so border/shadow/outline are cleared here.) */
+html body div.fixed.top-16.h-12 button.flex-shrink-0.border-b-2,
+html body div.fixed.top-16.h-12 button.flex-shrink-0.border-b-2:hover,
+html body div.fixed.top-16.h-12 button.flex-shrink-0.border-b-2:focus-visible {
   background-color: rgba(26, 26, 24, 0.07) !important;
+  /* zero-width (not `none`, which resets width to `medium`) so switching
+     tabs never animates a border in or out */
+  border: 0 solid transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
   color: #1a1a18 !important;
   font-weight: 600 !important;
 }
@@ -4644,7 +4643,9 @@ html body [class*="bg-[#D5DbDB]"][class*="border-[#D5DbDB]"] {
   width: auto !important;
   min-width: 0 !important;
   height: auto !important;
-  padding: 4px 8px 4px 11px !important;
+  padding: 4px 10px !important;
+  justify-content: center !important;
+  text-align: center !important;
   border: none !important;
   border-radius: 999px !important;
   font-size: 11px !important;
@@ -5010,10 +5011,6 @@ html body select,
 html body button[role="combobox"] {
   border-radius: var(--radius-input) !important;
 }
-/* Floating-label notch must follow the larger radius cleanly */
-html body .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend {
-  max-width: 100%;
-}
 
 
 /* ============================================================
@@ -5118,10 +5115,12 @@ html body [role="dialog"]:has(img[alt$="QR Code"]) button:has(svg.lucide-downloa
   stroke: #ffffff !important;
 }
 
-/* Outlined (Cancel/Reset) buttons: white bg, black border + black text */
+/* Outlined (Cancel/Reset) buttons: white bg, black border + black text.
+   Table toolbar icon buttons (Filter / Columns / Export …) are excluded — they
+   use the outline variant too but take the hairline border at the end of this file. */
 html body button[class*="bg-white" i][class*="text-[#C72030]" i],
 html body button[class*="bg-white" i][class*="text-[#DA7756]" i],
-html body button[class*="bg-white" i][class*="text-[#BF213E]" i],
+html body button[class*="bg-white" i][class*="text-[#BF213E]" i]:not(:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."])),
 html body button[class*="bg-white" i][class*="text-[#d97757]" i],
 html body button[class*="border-[#da7756]" i],
 html body button[class*="border-[#d97757]" i],
@@ -5136,7 +5135,7 @@ html body .btn-cancel {
 }
 html body button[class*="bg-white" i][class*="text-[#C72030]" i]:hover,
 html body button[class*="bg-white" i][class*="text-[#DA7756]" i]:hover,
-html body button[class*="bg-white" i][class*="text-[#BF213E]" i]:hover,
+html body button[class*="bg-white" i][class*="text-[#BF213E]" i]:not(:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."])):hover,
 html body button[class*="border-[#da7756]" i]:hover,
 html body .btn-cancel:hover {
   background-color: #ffffff !important;
@@ -5901,4 +5900,323 @@ html body #root
   background-color: #ffffff !important;
   color: var(--color-text) !important;
   box-shadow: 0 1px 2px rgb(0 0 0 / 8%) !important;
+}
+
+/* ============================================================
+   MUI OUTLINED FIELDS — LABEL ABOVE THE CONTROL
+   Every MUI outlined TextField / Select / Autocomplete / date or
+   time picker shows its label above the box instead of inside the
+   border notch:
+     label   12px / 600 Poppins, ink-soft, 6px gap to the control
+     control 44px min height, 12px radius, 1px hairline, 13.5px / 500
+     textarea 88px min height, 12px 14px padding
+   Pure CSS — value, validation, focus and disabled behaviour are
+   untouched. Opt a single field out with className="mui-floating-label"
+   on the TextField / FormControl.
+   ============================================================ */
+
+/* Label: out of the border, into the flow above the control */
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiInputLabel-outlined {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  -webkit-transform: none !important;
+  max-width: 100% !important;
+  width: auto !important;
+  margin: 0 0 6px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
+  color: var(--color-ink-68) !important;
+  z-index: auto !important;
+  transition: none !important;
+}
+/* Label keeps its colour on focus (no brand flash); error / disabled stay readable */
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiInputLabel-outlined.Mui-focused {
+  color: var(--color-ink-68) !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiInputLabel-outlined.Mui-error {
+  color: var(--color-danger) !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiInputLabel-outlined.Mui-disabled {
+  color: var(--color-ink-48) !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiInputLabel-outlined .MuiFormLabel-asterisk {
+  color: var(--color-danger) !important;
+}
+
+/* The field wrapper must grow to hold label + control. Many forms pin the
+   whole TextField/FormControl to the old box height (sx height: 28/36/45),
+   which made the control spill out below — overlapping the next row and the
+   card border. The control's own height rules (below) are unaffected. */
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) {
+  height: auto !important;
+  min-height: 0 !important;
+}
+/* Inside grid layouts the grid gap spaces the rows; the old `mt` that made
+   room for the notched label only mis-aligned fields that had it vs. not. */
+html body .grid > .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) {
+  margin-top: 0 !important;
+}
+
+/* Notch: always closed, the border is drawn as one continuous line */
+html body .MuiFormControl-root:not(.mui-floating-label) .MuiOutlinedInput-notchedOutline > legend,
+html body .MuiFormControl-root:not(.mui-floating-label) .MuiPickersOutlinedInput-notchedOutline > legend {
+  max-width: 0.01px !important;
+  padding: 0 !important;
+  transition: none !important;
+}
+
+/* MUI hides the placeholder while an un-shrunk label sits inside the box;
+   the label is outside now, so the placeholder stays visible */
+html body .MuiFormControl-root:not(.mui-floating-label) > label[data-shrink="false"] + .MuiInputBase-formControl .MuiInputBase-input::placeholder {
+  opacity: 1 !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) .MuiInputBase-input::placeholder {
+  color: var(--color-ink-30);
+  opacity: 1;
+  font-style: normal;
+}
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiPickersInputBase-root .MuiPickersInputBase-sectionsContainer,
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiPickersOutlinedInput-root .MuiPickersSectionList-root {
+  opacity: 1 !important;
+}
+/* Select placeholders written as <em>Select …</em> render upright and muted */
+html body .MuiSelect-select em {
+  font-style: normal;
+  color: var(--color-ink-30);
+}
+
+/* Control shell (labelled fields only — label-less toolbar/search fields keep their size) */
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root:not(.MuiInputBase-multiline),
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiPickersOutlinedInput-root {
+  min-height: 44px !important;
+  height: auto !important;
+  border-radius: var(--radius-input) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root > .MuiOutlinedInput-input:not(.MuiAutocomplete-input):not(textarea),
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root > .MuiSelect-select {
+  padding-top: 10.5px !important;
+  padding-bottom: 10.5px !important;
+  height: auto !important;
+  min-height: 1.4375em !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  color: var(--color-text);
+  box-sizing: content-box;
+}
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) .MuiAutocomplete-input,
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) .MuiPickersSectionList-root {
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root:not(.Mui-focused):not(.Mui-error):not(.Mui-disabled) > .MuiOutlinedInput-notchedOutline,
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiPickersOutlinedInput-root:not(.Mui-focused):not(.Mui-error):not(.Mui-disabled) > .MuiPickersOutlinedInput-notchedOutline {
+  border-width: 1px;
+  border-color: rgba(26, 26, 24, 0.12);
+}
+
+/* Textareas (multiline TextField) */
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root.MuiInputBase-multiline {
+  min-height: 88px !important;
+  height: auto !important;
+  padding: 12px 14px !important;
+  align-items: flex-start !important;
+  border-radius: var(--radius-input) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root.MuiInputBase-multiline > textarea {
+  padding: 0 !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+
+
+/* ============================================================
+   STAT / KPI CARDS — summary tile
+   Label on top, large ink value below, white 36px icon tile in the
+   top-right corner; grey #F5F4F0 surface, 16px radius, 18px 20px
+   padding, no border and no shadow (hover included).
+   Applies to <StatsCard> and every inline tile built the same way:
+   beige tile > icon well (bg-[#C4B89D54]) + value/title block.
+   <StatsCard> wraps well + text in one extra flex div, so each rule
+   also accepts that wrapper as the well's parent.
+   CSS only — values, click/filter handlers and selection untouched.
+   ============================================================ */
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])),
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) {
+  position: relative;
+  display: flex !important;
+  flex-direction: row-reverse !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 18px 20px !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  background-color: #f5f4f0 !important;
+  transition: background-color 0.16s !important;
+}
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover,
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover {
+  box-shadow: none !important;
+}
+html body div[class*="cursor-pointer"]:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover,
+html body div[class*="cursor-pointer"]:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover {
+  background-color: #efede7 !important;
+}
+/* Selected filter card (StatsCard selected) */
+html body div[class*="bg-[rgb(230_226_218"]:has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])),
+html body div[class*="bg-[rgb(230_226_218"]:has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover,
+html body div[class*="bg-[rgb(230_226_218"]:has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])),
+html body div[class*="bg-[rgb(230_226_218"]:has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover {
+  background-color: #e9e7e0 !important;
+}
+/* StatsCard's inner wrapper takes over the tile's row-reverse layout */
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div:has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) {
+  display: flex !important;
+  flex-direction: row-reverse !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Icon tile: white 36×36, 10px corners, neutral 18px line icon */
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i]:has(+ div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  flex: 0 0 36px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  background-color: #ffffff !important;
+}
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i]:has(+ div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) svg {
+  width: 18px !important;
+  height: 18px !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+  stroke: currentColor !important;
+  stroke-width: 1.8 !important;
+}
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i]:has(+ div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) span {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+}
+
+/* Text block: label above the value */
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i] + div:has(> :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  gap: 0 !important;
+}
+/* most tiles write value first, title second → show title first */
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i] + div:has(> :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"]):first-child) {
+  flex-direction: column-reverse !important;
+  justify-content: flex-end !important;
+}
+/* value: large full-ink number */
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"]) {
+  margin: 0 !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.01em !important;
+  color: #1a1a18 !important;
+  font-variant-numeric: tabular-nums;
+}
+/* label (and any sub-line): soft ink */
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i] + div:has(> :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) > :not([class*="text-xl"]):not([class*="text-2xl"]):not([class*="text-3xl"]) {
+  margin: 0 0 6px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+}
+
+/* Corner control (Asset stats "swap", StatsCard download): move out of the
+   icon's corner to bottom-right */
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) > button.absolute,
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) > button.absolute {
+  top: auto !important;
+  bottom: 12px !important;
+  right: 14px !important;
+}
+
+
+/* ============================================================
+   PAGINATION — selected page has 8px corners everywhere
+   (shadcn PaginationLink already uses rounded-[8px]; this covers
+   custom pagers and MUI <Pagination>)
+   ============================================================ */
+html body nav[aria-label="pagination"] [aria-current="page"],
+html body [class*="pagination"] button[class*="bg-[#C72030]"],
+html body [class*="pagination"] [aria-current="page"],
+html body .MuiPaginationItem-root.Mui-selected {
+  border-radius: 8px !important;
+}
+
+
+/* ============================================================
+   TABLE TOOLBAR ICON BUTTONS
+   Filter / Columns / Refresh / Export sit next to the table search box:
+   same border as the search input (shadcn Input: border-gray-300 #d1d5db), ink icon,
+   soft grey hover, same 36px height (shadcn Input is fixed at h-[36px]).
+   ============================================================ */
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."]) {
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: var(--color-primary) !important;
+}
+/* Icon-only toolbar buttons: same 36px height as the table search input, square.
+   (Labelled "Refresh"/"Filters" buttons elsewhere keep their own width.) */
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."]):is([class*="w-8"], [class*="w-9"], [class*="w-[28px]"], [class*="w-[36px]"]) {
+  height: 36px !important;
+  min-height: 36px !important;
+  width: 36px !important;
+  min-width: 36px !important;
+  padding: 0 !important;
+}
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."]):hover {
+  background-color: var(--color-hover) !important;
+  border-color: rgba(26, 26, 24, 0.28) !important;
+  color: var(--color-primary) !important;
+}
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."]) :is(svg, .lucide) {
+  color: var(--color-primary) !important;
+  stroke: currentColor !important;
+}
+
+
+/* ============================================================
+   MODALS & CARDS — 16px corners everywhere
+   Centred shadcn dialogs / alert dialogs (side sheets & popovers are
+   excluded by the centring classes), MUI dialog papers and MUI cards.
+   Buttons inside keep their own 8px radius.
+   ============================================================ */
+html body [role="dialog"][class*="translate-x-[-50%]"],
+html body [role="alertdialog"][class*="translate-x-[-50%]"],
+html body .MuiDialog-paper,
+html body .MuiCard-root {
+  border-radius: 16px !important;
 }
