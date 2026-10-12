@@ -90,6 +90,7 @@ const PreventiveActionListPage = () => {
         />
       )}
       <EnhancedTable
+        storageKey="preventive-action-list-page-table"
         loading={loading}
         columns={[
           { key: 'srno', label: 'Sr. No.' },

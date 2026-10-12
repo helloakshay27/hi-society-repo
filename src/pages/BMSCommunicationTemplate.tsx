@@ -534,6 +534,7 @@ variant="ghost"
       ) : (
         <>
           <EnhancedTable
+            storageKey="bms-communication-template-table"
             data={paginatedTemplates}
             columns={columns}
             renderCell={renderCell}

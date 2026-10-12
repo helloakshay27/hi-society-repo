@@ -222,6 +222,7 @@ export const LoyaltyCustomers = () => {
             {/* Customers Table */}
             <div className="space-y-4">
                 <EnhancedTable
+                    storageKey="loyalty-customers-table"
                     data={customersData}
                     columns={columns}
                     renderCell={renderCell}

@@ -251,6 +251,7 @@ const CuratedServiceCategoryDashboard = () => {
   return (
     <div className="p-6">
       <EnhancedTable
+        storageKey="curated-service-category-dashboard-table"
         data={[...serviceCategories].reverse()}
         columns={columns}
         renderCell={renderCell}

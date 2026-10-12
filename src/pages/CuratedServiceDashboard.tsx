@@ -464,6 +464,7 @@ const CuratedServiceDashboard = () => {
       </div>
 
       <EnhancedTable
+        storageKey="curated-service-dashboard-table"
         data={[...plusServices].reverse()}
         columns={columns}
         renderCell={renderCell}

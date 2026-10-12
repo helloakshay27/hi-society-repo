@@ -145,6 +145,7 @@ const CommunityReportsTab = ({ communityId }: CommunityReportsTabProps) => {
     return (
         <div className="">
             <EnhancedTable
+                storageKey="community-reports-tab-table"
                 data={reports}
                 columns={columns}
                 renderCell={renderCell}

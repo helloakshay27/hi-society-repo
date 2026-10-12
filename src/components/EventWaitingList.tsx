@@ -160,6 +160,7 @@ const EventWaitingList = () => {
                 </div>
             ) : (
                 <EnhancedTable
+                    storageKey="event-waiting-list-table"
                     data={data}
                     columns={columns}
                     renderCell={renderCell}

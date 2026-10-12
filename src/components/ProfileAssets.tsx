@@ -184,6 +184,7 @@ const ProfileAssets = () => {
     return (
         <div>
             <EnhancedTable
+                storageKey="profile-assets-table"
                 data={assets}
                 columns={columns}
                 renderCell={renderCell}

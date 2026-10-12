@@ -259,6 +259,7 @@ const ReferralProgramList = () => {
   const renderListTab = () => (
     <div className="space-y-6">
           <EnhancedTable
+            storageKey="referral-program-list-table"
             data={referrals}
             columns={columns}
             renderCell={renderCell}

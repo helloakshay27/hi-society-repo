@@ -239,6 +239,7 @@ const LockFunctionList = () => {
   const renderListTab = () => (
     <div className="space-y-6">
           <EnhancedTable
+            storageKey="lock-function-list-table"
             data={lockFunctions}
             columns={columns}
             renderCell={renderCell}

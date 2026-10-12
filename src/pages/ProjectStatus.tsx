@@ -213,6 +213,7 @@ const ProjectStatus = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="project-status-table"
                 data={projectStatuses}
                 columns={columns}
                 renderActions={renderActions}

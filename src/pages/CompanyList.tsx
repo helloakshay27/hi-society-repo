@@ -248,6 +248,7 @@ const CompanyList = () => {
         </div>
 
           <EnhancedTable
+            storageKey="company-list-table"
             data={items}
             columns={columns}
             renderCell={renderCell}

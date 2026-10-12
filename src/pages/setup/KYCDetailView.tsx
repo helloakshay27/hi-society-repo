@@ -197,6 +197,7 @@ export const KYCDetailView = () => {
       {/* KYC Documents Table */}
       <div className="">
         <EnhancedTable
+          storageKey="kyc-detail-view-table"
           data={data.documents}
           columns={documentColumns}
           getItemId={(doc) => String(doc.id)}

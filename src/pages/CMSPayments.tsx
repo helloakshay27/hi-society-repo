@@ -564,6 +564,7 @@ const CMSPayments = () => {
   return (
     <div className="p-6">
       <EnhancedTable
+        storageKey="cms-payments-table"
         data={payments || []}
         columns={columns}
         renderActions={renderActions}

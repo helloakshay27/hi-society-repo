@@ -91,6 +91,7 @@ const CommunicationTemplateListPage = () => {
         />
       )}
       <EnhancedTable
+        storageKey="communication-template-list-page-table"
         loading={loading}
         columns={[
           { key: 'srno', label: 'Sr. No.' },

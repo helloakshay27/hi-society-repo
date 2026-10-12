@@ -219,6 +219,7 @@ const DepartmentList = () => {
   const renderListTab = () => (
     <div className="space-y-4">
       <EnhancedTable
+        storageKey="department-list-table"
         data={departmentList}
         columns={columns}
         renderCell={renderCell}

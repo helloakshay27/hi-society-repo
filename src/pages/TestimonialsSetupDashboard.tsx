@@ -212,6 +212,7 @@ export const TestimonialsSetupDashboard = () => {
   return (
     <div className="p-6">
       <EnhancedTable
+        storageKey="testimonials-setup-dashboard-table"
         data={testimonials}
         columns={columns}
         renderActions={renderActions}

@@ -349,6 +349,7 @@ variant="ghost"
   const renderListTab = () => (
     <div className="space-y-6">
       <EnhancedTable
+        storageKey="amenities-list-table"
         data={amenities}
         columns={columns}
         renderCell={renderCell}

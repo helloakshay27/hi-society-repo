@@ -1568,6 +1568,7 @@ export const ChartOfAccountsDashboard = () => {
             </h3>
 
             <EnhancedTable
+              storageKey="chart-of-accounts-dashboard-table"
               data={lockLedgers}
               columns={lockLedgerColumns}
               renderCell={renderLockLedgerCell}

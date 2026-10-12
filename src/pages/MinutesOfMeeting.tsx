@@ -231,6 +231,7 @@ const MinutesOfMeeting = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="minutes-of-meeting-table"
                 data={meetings}
                 columns={columns}
                 renderActions={renderActions}

@@ -335,6 +335,7 @@ variant="ghost"
   const renderListTab = () => (
     <div className="space-y-6">
       <EnhancedTable
+        storageKey="image-config-list-table"
         data={imageConfigs}
         columns={columns}
         renderCell={renderCell}

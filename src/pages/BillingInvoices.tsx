@@ -274,6 +274,7 @@ export default function BillingInvoices() {
       {/* Invoices Table */}
       <div className="">
         <EnhancedTable
+          storageKey="billing-invoices-table"
           data={paginatedInvoices}
           columns={columns}
           renderCell={renderCell}

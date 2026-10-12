@@ -447,6 +447,7 @@ export const CreateFolderPage = () => {
                 </div>
                 <div className="overflow-x-auto">
                   <EnhancedTable
+                    storageKey="create-folder-page-table"
                     data={newDocuments}
                     columns={columns}
                     renderCell={(doc, columnKey) => {
@@ -491,6 +492,7 @@ export const CreateFolderPage = () => {
                 </div>
                 <div className="overflow-x-auto">
                   <EnhancedTable
+                    storageKey="create-folder-page-table-2"
                     data={moveDocuments}
                     columns={columns}
                     renderCell={(doc, columnKey) => {
@@ -531,6 +533,7 @@ export const CreateFolderPage = () => {
                 </div>
                 <div className="overflow-x-auto">
                   <EnhancedTable
+                    storageKey="create-folder-page-table-3"
                     data={copyDocuments}
                     columns={columns}
                     renderCell={(doc, columnKey) => {

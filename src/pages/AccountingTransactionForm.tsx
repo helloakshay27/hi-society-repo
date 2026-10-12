@@ -357,6 +357,7 @@ const AccountingTransactionForm: React.FC = () => {
 
       <div className="p-4">
         <EnhancedTable
+          storageKey="accounting-transaction-form-table"
           data={rows}
           columns={LINE_COLUMNS}
           getItemId={(item) => item.key}

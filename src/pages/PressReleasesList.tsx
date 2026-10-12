@@ -336,6 +336,7 @@ const PressReleasesList = () => {
   const renderListTab = () => (
     <div className="space-y-6">
           <EnhancedTable
+            storageKey="press-releases-list-table"
             data={pressReleases}
             columns={columns}
             renderCell={renderCell}

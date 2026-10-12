@@ -327,6 +327,7 @@ const FaqList = () => {
   const renderListTab = () => (
     <div className="space-y-6">
           <EnhancedTable
+            storageKey="faq-list-table"
             data={faqs}
             columns={columns}
             renderCell={renderCell}

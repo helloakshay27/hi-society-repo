@@ -222,6 +222,7 @@ const OrganizationList = () => {
         </div>
 
           <EnhancedTable
+            storageKey="organization-list-table"
             data={items}
             columns={columns}
             renderCell={renderCell}

@@ -535,6 +535,7 @@ const JobStatusTab = ({
 
       {/* Enhanced Table */}
       <EnhancedTable
+        storageKey="jobs-page-table"
         data={filteredUsers}
         columns={columns}
         renderCell={renderCell}
@@ -1382,6 +1383,7 @@ const JDTab = ({
       {/* Enhanced Table / Grid View */}
       {viewType === "list" ? (
         <EnhancedTable
+          storageKey="jobs-page-table-2"
           data={filteredJDs}
           columns={columns}
           renderCell={renderCell}

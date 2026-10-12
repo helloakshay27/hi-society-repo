@@ -140,6 +140,7 @@ const AccountingTaxSummary: React.FC = () => {
           </div>
         ) : (
           <EnhancedTable
+            storageKey="accounting-tax-summary-table"
             data={rows}
             columns={columns}
             renderCell={renderCell}

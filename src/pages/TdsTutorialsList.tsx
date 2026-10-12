@@ -267,6 +267,7 @@ const TdsTutorialList = () => {
   const renderListTab = () => (
     <div className="space-y-4">
       <EnhancedTable
+        storageKey="tds-tutorials-list-table"
         data={tutorials}
         columns={columns}
         renderCell={renderCell}

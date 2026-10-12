@@ -1028,6 +1028,7 @@ export const ViewOccupantUserPage = () => {
 
       <div className="mt-6">
         <EnhancedTable
+          storageKey="view-occupant-user-page-table"
           data={attendanceData}
           columns={attendanceColumns}
           renderCell={renderCell}

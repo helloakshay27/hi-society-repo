@@ -1,9 +1,34 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X, Edit, Mail } from "lucide-react";
-import { FormControl, MenuItem, Select as MuiSelect, InputLabel, TextField, ListItemText, InputAdornment } from "@mui/material";
-import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import {
+  Eye,
+  Plus,
+  Download,
+  Users,
+  UserCheck,
+  UserX,
+  Clock,
+  MonitorSmartphone,
+  Calendar,
+  Filter,
+  X,
+  Edit,
+  Mail,
+} from "lucide-react";
+import {
+  FormControl,
+  MenuItem,
+  Select as MuiSelect,
+  InputLabel,
+  TextField,
+  ListItemText,
+  InputAdornment,
+} from "@mui/material";
+import {
+  fieldStyles,
+  menuProps,
+} from "@/components/ticket-management/fieldStyles";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
@@ -16,7 +41,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { getFullUrl } from "@/config/apiConfig";
 import { toast } from "sonner";
 import axios from "axios";
@@ -25,7 +58,6 @@ import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
-
   { key: "actions", label: "Actions", sortable: false, draggable: false },
   { key: "srNo", label: "SR.NO", sortable: false, draggable: false },
   { key: "tower", label: "Tower", sortable: true, draggable: true },
@@ -33,17 +65,37 @@ const columns: ColumnConfig[] = [
   { key: "occupancy", label: "Occupancy", sortable: true, draggable: true },
   // { key: "title", label: "Title", sortable: true, draggable: true },
   { key: "name", label: "Name", sortable: true, draggable: true },
-  { key: "mobileNumber", label: "Mobile Number", sortable: true, draggable: true },
+  {
+    key: "mobileNumber",
+    label: "Mobile Number",
+    sortable: true,
+    draggable: true,
+  },
   { key: "email", label: "Email", sortable: true, draggable: true },
   { key: "role", label: "Role", sortable: true, draggable: true },
-  { key: "residentType", label: "Resident Type", sortable: true, draggable: true },
+  {
+    key: "residentType",
+    label: "Resident Type",
+    sortable: true,
+    draggable: true,
+  },
   { key: "phase", label: "Phase", sortable: true, draggable: true },
   { key: "livesHere", label: "Lives Here", sortable: true, draggable: true },
-  { key: "membership_type", label: "Membership Type", sortable: true, draggable: true },
+  {
+    key: "membership_type",
+    label: "Membership Type",
+    sortable: true,
+    draggable: true,
+  },
   { key: "status", label: "Status", sortable: true, draggable: true },
   // { key: "staff", label: "Staff", sortable: true, draggable: true },
   // { key: "vehicle", label: "Vehicle", sortable: true, draggable: true },
-  { key: "appDownloaded", label: "App Downloaded", sortable: true, draggable: true },
+  {
+    key: "appDownloaded",
+    label: "App Downloaded",
+    sortable: true,
+    draggable: true,
+  },
   // { key: "alternateEmail1", label: "Alternate Email -1", sortable: true, draggable: true },
   // { key: "alternateEmail2", label: "Alternate Email -2", sortable: true, draggable: true },
   // { key: "alternateAddress", label: "Alternate Address", sortable: true, draggable: true },
@@ -51,9 +103,24 @@ const columns: ColumnConfig[] = [
   // { key: "intercomNumber", label: "Intercom Number", sortable: true, draggable: true },
   { key: "gstNumber", label: "GST Number", sortable: true, draggable: true },
   { key: "panNumber", label: "PAN Number", sortable: true, draggable: true },
-  { key: "booking_number", label: "Booking Number", sortable: true, draggable: true },
-  { key: "customer_code", label: "Customer Code", sortable: true, draggable: true },
-  { key: "clubMembership", label: "Club Membership", sortable: true, draggable: true },
+  {
+    key: "booking_number",
+    label: "Booking Number",
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: "customer_code",
+    label: "Customer Code",
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: "clubMembership",
+    label: "Club Membership",
+    sortable: true,
+    draggable: true,
+  },
   { key: "createdOn", label: "Created On", sortable: true, draggable: true },
   { key: "updatedOn", label: "Updated On", sortable: true, draggable: true },
 ];
@@ -71,9 +138,15 @@ const formattedResponse = (data) => {
     email: item.email || "-",
     residentType: item.resident_type || "-",
     phase: item.display_view || "-",
-    livesHere: item.lives_here ? item.lives_here.charAt(0).toUpperCase() + item.lives_here.slice(1) : "-",
+    livesHere: item.lives_here
+      ? item.lives_here.charAt(0).toUpperCase() + item.lives_here.slice(1)
+      : "-",
     membershipType: item?.is_primary ? "Primary" : "Secondary",
-    status: item.approve ? "Approved" : item.approve === false ? "Rejected" : "Pending",
+    status: item.approve
+      ? "Approved"
+      : item.approve === false
+        ? "Rejected"
+        : "Pending",
     role: item.role_name || "-",
     staff: item.staff || "-",
     vehicle: item.vehicle || "-",
@@ -91,7 +164,7 @@ const formattedResponse = (data) => {
     createdOn: item.created_at ? item.created_at.split("T")[0] : "-",
     updatedOn: item.updated_at ? item.updated_at.split("T")[0] : "-",
   }));
-}
+};
 
 type Option = { label: string; value: string };
 
@@ -163,11 +236,17 @@ const filtersFromUrl = (params: URLSearchParams): UserFilters => {
     (filters as any)[field] = params.get(key) || "";
   });
   // Flat labels are resolved from flatOptions once the tower's flats load
-  filters.flat = splitList(params.get("flat")).map((v) => ({ label: v, value: v }));
-  filters.status = STATUS_OPTIONS.filter((o) => splitList(params.get("status")).includes(o.value));
+  filters.flat = splitList(params.get("flat")).map((v) => ({
+    label: v,
+    value: v,
+  }));
+  filters.status = STATUS_OPTIONS.filter((o) =>
+    splitList(params.get("status")).includes(o.value)
+  );
   filters.residentType = RESIDENT_TYPE_OPTIONS.filter((o) =>
     splitList(params.get("resident_type")).includes(o.value)
-  );  return filters;
+  );
+  return filters;
 };
 
 const buildUrlParams = (filters: UserFilters, search: string, page: number) => {
@@ -176,34 +255,50 @@ const buildUrlParams = (filters: UserFilters, search: string, page: number) => {
     const value = filters[field] as string;
     if (value && value !== "none") params.set(key, value);
   });
-  if (filters.flat.length) params.set("flat", filters.flat.map((f) => f.value).join(","));
-  if (filters.status.length) params.set("status", filters.status.map((s) => s.value).join(","));
+  if (filters.flat.length)
+    params.set("flat", filters.flat.map((f) => f.value).join(","));
+  if (filters.status.length)
+    params.set("status", filters.status.map((s) => s.value).join(","));
   if (filters.residentType.length) {
-    params.set("resident_type", filters.residentType.map((r) => r.value).join(","));
-  }  if (search) params.set("search", search);
+    params.set(
+      "resident_type",
+      filters.residentType.map((r) => r.value).join(",")
+    );
+  }
+  if (search) params.set("search", search);
   if (page > 1) params.set("page", page.toString());
   return params;
 };
 
 const buildFilterParams = (filters: UserFilters, search: string) => {
   const filterParams: any = {};
-  if (filters.firstName) filterParams["q[user_firstname_cont]"] = filters.firstName;
-  if (filters.lastName) filterParams["q[user_lastname_cont]"] = filters.lastName;
+  if (filters.firstName)
+    filterParams["q[user_firstname_cont]"] = filters.firstName;
+  if (filters.lastName)
+    filterParams["q[user_lastname_cont]"] = filters.lastName;
   if (filters.email) filterParams["q[user_email_cont]"] = filters.email;
   if (filters.mobile) filterParams["q[user_mobile_cont]"] = filters.mobile;
-  if (filters.tower && filters.tower !== "none") filterParams["q[user_flat_society_flat_society_block_id_eq]"] = filters.tower;
+  if (filters.tower && filters.tower !== "none")
+    filterParams["q[user_flat_society_flat_society_block_id_eq]"] =
+      filters.tower;
   if (filters.flat.length > 0) {
-    filterParams["q[user_flat_society_flat_id_in][]"] = filters.flat.map(f => f.value);
+    filterParams["q[user_flat_society_flat_id_in][]"] = filters.flat.map(
+      (f) => f.value
+    );
   }
   if (filters.status.length > 0) {
-    filterParams["q[approve_in][]"] = filters.status.map(s => s.value);
+    filterParams["q[approve_in][]"] = filters.status.map((s) => s.value);
   }
   if (filters.residentType.length > 0) {
-    filterParams["q[user_flat_ownership_in][]"] = filters.residentType.map(r => r.value);
+    filterParams["q[user_flat_ownership_in][]"] = filters.residentType.map(
+      (r) => r.value
+    );
   }
   if (filters.role) filterParams["q[role_id_eq]"] = filters.role;
-  if (filters.livesHere) filterParams["q[user_flat_lives_here_eq]"] = filters.livesHere;
-  if (filters.membershipType) filterParams["q[is_primary_eq]"] = filters.membershipType;
+  if (filters.livesHere)
+    filterParams["q[user_flat_lives_here_eq]"] = filters.livesHere;
+  if (filters.membershipType)
+    filterParams["q[is_primary_eq]"] = filters.membershipType;
   if (filters.startDate && filters.endDate) {
     filterParams["q[date_range]"] = `${filters.startDate} - ${filters.endDate}`;
   }
@@ -216,8 +311,8 @@ const buildFilterParams = (filters: UserFilters, search: string) => {
 };
 
 const ManageUsersPage = () => {
-  const baseUrl = localStorage.getItem('baseUrl')
-  const token = localStorage.getItem('token')
+  const baseUrl = localStorage.getItem("baseUrl");
+  const token = localStorage.getItem("token");
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -228,12 +323,16 @@ const ManageUsersPage = () => {
   const [showSendEmail, setShowSendEmail] = useState(false);
   const [showFiltersDialog, setShowFiltersDialog] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
-  const [selectedImportFile, setSelectedImportFile] = useState<File | null>(null);
+  const [selectedImportFile, setSelectedImportFile] = useState<File | null>(
+    null
+  );
   const [isImporting, setIsImporting] = useState(false);
   const [importId, setImportId] = useState<number | null>(null);
   const importPollRef = useRef<number | null>(null);
   const [isDownloadingSample, setIsDownloadingSample] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || "");
+  const [searchTerm, setSearchTerm] = useState(
+    () => searchParams.get("search") || ""
+  );
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current_page: 1,
@@ -244,7 +343,9 @@ const ManageUsersPage = () => {
 
   // Filter states — `filters` is the dialog's draft; the applied filters live
   // in the URL and are mirrored into these refs for the debounced search.
-  const [filters, setFilters] = useState<UserFilters>(() => filtersFromUrl(searchParams));
+  const [filters, setFilters] = useState<UserFilters>(() =>
+    filtersFromUrl(searchParams)
+  );
   const appliedFiltersRef = useRef<UserFilters>(filtersFromUrl(searchParams));
   const setSearchParamsRef = useRef(setSearchParams);
   setSearchParamsRef.current = setSearchParams;
@@ -263,12 +364,16 @@ const ManageUsersPage = () => {
     post_possession_downloads: 0,
   });
 
-  const [towerOptions, setTowerOptions] = useState<{ id: number; name: string }[]>([]);
-  const [flatOptions, setFlatOptions] = useState<{ label: string; value: string }[]>([]);
+  const [towerOptions, setTowerOptions] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [flatOptions, setFlatOptions] = useState<
+    { label: string; value: string }[]
+  >([]);
   const [roleOptions, setRoleOptions] = useState<Option[]>([]);
 
   const getSocietyId = () => {
-    return localStorage.getItem('selectedSocietyId') || '';
+    return localStorage.getItem("selectedSocietyId") || "";
   };
 
   const fetchTowers = async () => {
@@ -278,24 +383,36 @@ const ManageUsersPage = () => {
         setTowerOptions([]);
         return;
       }
-      const url = getFullUrl(`/get_society_blocks.json?token=${token}&society_id=${societyId}`);
+      const url = getFullUrl(
+        `/get_society_blocks.json?token=${token}&society_id=${societyId}`
+      );
       const res = await axios.get(url);
-      setTowerOptions(Array.isArray(res.data.society_blocks) ? res.data.society_blocks : []);
+      setTowerOptions(
+        Array.isArray(res.data.society_blocks) ? res.data.society_blocks : []
+      );
     } catch (e) {
       console.error("Error fetching towers:", e);
       setTowerOptions([]);
     }
   };
 
-  console.log(towerOptions)
+  console.log(towerOptions);
 
   // Same roles dropdown API as AddUserPage
   const fetchRoles = async () => {
     try {
       if (!baseUrl || !token) return;
-      const res = await axios.get(`https://${baseUrl}/admin/roles/roles_for_dropdown.json?token=${token}`);
-      const roles = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.roles) ? res.data.roles : []);
-      setRoleOptions(roles.map((r: any) => ({ label: r.name, value: r.id.toString() })));
+      const res = await axios.get(
+        `https://${baseUrl}/admin/roles/roles_for_dropdown.json?token=${token}`
+      );
+      const roles = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.roles)
+          ? res.data.roles
+          : [];
+      setRoleOptions(
+        roles.map((r: any) => ({ label: r.name, value: r.id.toString() }))
+      );
     } catch (e) {
       console.error("Error fetching roles:", e);
       setRoleOptions([]);
@@ -313,10 +430,16 @@ const ManageUsersPage = () => {
         setFlatOptions([]);
         return;
       }
-      const url = getFullUrl(`/get_society_flats.json?token=${token}&society_id=${societyId}&society_block_id=${blockId}`);
+      const url = getFullUrl(
+        `/get_society_flats.json?token=${token}&society_id=${societyId}&society_block_id=${blockId}`
+      );
       const res = await axios.get(url);
-      const flats = Array.isArray(res.data.society_flats) ? res.data.society_flats : [];
-      setFlatOptions(flats.map((f: any) => ({ label: f.flat_no, value: f.id.toString() })));
+      const flats = Array.isArray(res.data.society_flats)
+        ? res.data.society_flats
+        : [];
+      setFlatOptions(
+        flats.map((f: any) => ({ label: f.flat_no, value: f.id.toString() }))
+      );
     } catch (e) {
       console.error("Error fetching flats:", e);
       setFlatOptions([]);
@@ -331,17 +454,20 @@ const ManageUsersPage = () => {
 
       Object.entries(filterParams).forEach(([key, value]) => {
         if (Array.isArray(value)) {
-          value.forEach(v => queryParams.append(key, v));
+          value.forEach((v) => queryParams.append(key, v));
         } else if (value !== undefined && value !== null) {
           queryParams.append(key, value as string);
         }
       });
 
-      const response = await axios.get(`https://${baseUrl}/crm/admin/user_societies.json?${queryParams}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const response = await axios.get(
+        `https://${baseUrl}/crm/admin/user_societies.json?${queryParams}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      })
+      );
 
       setUsers(formattedResponse(response.data.user_societies));
       if (response.data.pagination) {
@@ -351,12 +477,12 @@ const ManageUsersPage = () => {
         setDashboardData(response.data.dashboard);
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       toast.error("Failed to fetch users. Please try again later.");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchTowers();
@@ -368,7 +494,10 @@ const ManageUsersPage = () => {
   useEffect(() => {
     const urlFilters = filtersFromUrl(searchParams);
     const urlSearch = searchParams.get("search") || "";
-    const urlPage = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const urlPage = Math.max(
+      1,
+      parseInt(searchParams.get("page") || "1", 10) || 1
+    );
 
     appliedFiltersRef.current = urlFilters;
     setFilters(urlFilters);
@@ -388,7 +517,9 @@ const ManageUsersPage = () => {
     page: number,
     replace = false
   ) => {
-    setSearchParamsRef.current(buildUrlParams(nextFilters, search, page), { replace });
+    setSearchParamsRef.current(buildUrlParams(nextFilters, search, page), {
+      replace,
+    });
   };
 
   useEffect(() => {
@@ -430,7 +561,13 @@ const ManageUsersPage = () => {
         );
         setIsImporting(false);
         setImportId(null);
-        fetchUsers(1, buildFilterParams(appliedFiltersRef.current, searchParams.get("search") || ""));
+        fetchUsers(
+          1,
+          buildFilterParams(
+            appliedFiltersRef.current,
+            searchParams.get("search") || ""
+          )
+        );
         setShowImportModal(false);
         setSelectedImportFile(null);
       } else if (statusInfo.status === "failed") {
@@ -478,39 +615,42 @@ const ManageUsersPage = () => {
       setIsDownloadingSample(true);
 
       if (!baseUrl || !token) {
-        toast.error('Missing authentication details. Please login again.', {
-          position: 'top-right',
+        toast.error("Missing authentication details. Please login again.", {
+          position: "top-right",
           duration: 4000,
           style: {
-            background: '#f59e0b',
-            color: 'white',
-            border: 'none',
+            background: "#f59e0b",
+            color: "white",
+            border: "none",
           },
         });
         return;
       }
 
-      const response = await axios.get(`https://${baseUrl}/assets/sample_user.xlsx`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        responseType: 'blob',
-      });
+      const response = await axios.get(
+        `https://${baseUrl}/assets/sample_user.xlsx`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: "blob",
+        }
+      );
 
       // Create a blob URL and trigger download
       const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', 'sample_user.xlsx');
+      link.setAttribute("download", "sample_user.xlsx");
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success('Sample file downloaded successfully.');
+      toast.success("Sample file downloaded successfully.");
     } catch (error) {
-      console.error('Error downloading sample file:', error);
-      toast.error('Failed to download sample file. Please try again.');
+      console.error("Error downloading sample file:", error);
+      toast.error("Failed to download sample file. Please try again.");
     } finally {
       setIsDownloadingSample(false);
     }
@@ -519,7 +659,7 @@ const ManageUsersPage = () => {
   const handleDownloadUsers = async (endpoint: string, fileName: string) => {
     try {
       if (!baseUrl || !token) {
-        toast.error('Missing authentication details. Please login again.');
+        toast.error("Missing authentication details. Please login again.");
         return;
       }
 
@@ -527,13 +667,13 @@ const ManageUsersPage = () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        responseType: 'blob',
+        responseType: "blob",
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', fileName);
+      link.setAttribute("download", fileName);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -541,14 +681,14 @@ const ManageUsersPage = () => {
 
       toast.success(`${fileName} downloaded successfully.`);
     } catch (error) {
-      console.error('Error downloading file:', error);
-      toast.error('Failed to download file. Please try again.');
+      console.error("Error downloading file:", error);
+      toast.error("Failed to download file. Please try again.");
     }
   };
 
   const handleImportUsers = async () => {
     if (!selectedImportFile) {
-      toast.error('Please select a file to import.');
+      toast.error("Please select a file to import.");
       return;
     }
 
@@ -556,52 +696,64 @@ const ManageUsersPage = () => {
       setIsImporting(true);
 
       if (!baseUrl || !token) {
-        toast.error('Missing authentication details. Please login again.');
+        toast.error("Missing authentication details. Please login again.");
         setIsImporting(false);
         return;
       }
 
       const formData = new FormData();
-      formData.append('product_import[file]', selectedImportFile);
+      formData.append("product_import[file]", selectedImportFile);
 
-      const response = await axios.post(`https://${baseUrl}/crm/admin/upload_user_societies.json`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.post(
+        `https://${baseUrl}/crm/admin/upload_user_societies.json`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       if (response.data?.[0]?.error) {
-        toast.error(response.data?.[0]?.error)
+        toast.error(response.data?.[0]?.error);
         setIsImporting(false);
-        return
+        return;
       }
 
-      if (response.data?.status === 'queued' && response.data?.import_id) {
-        toast.success(response.data?.message || 'Import queued. Processing...');
+      if (response.data?.status === "queued" && response.data?.import_id) {
+        toast.success(response.data?.message || "Import queued. Processing...");
         setImportId(response.data.import_id);
         startImportStatusPolling(response.data.import_id);
         // isImporting stays true until the polled status is completed/failed
         return;
       }
 
-      toast.success('Users imported successfully.');
+      toast.success("Users imported successfully.");
 
       // Refresh the users list
-      fetchUsers(1, buildFilterParams(appliedFiltersRef.current, searchParams.get("search") || ""));
+      fetchUsers(
+        1,
+        buildFilterParams(
+          appliedFiltersRef.current,
+          searchParams.get("search") || ""
+        )
+      );
       setShowImportModal(false);
       setSelectedImportFile(null);
       setIsImporting(false);
     } catch (error) {
-      console.error('Error importing users:', error);
-      const errorMessage = error?.response?.data?.message || 'Failed to import users. Please try again.';
+      console.error("Error importing users:", error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        "Failed to import users. Please try again.";
       toast.error(errorMessage, {
-        position: 'top-right',
+        position: "top-right",
         duration: 4000,
         style: {
-          background: '#f59e0b',
-          color: 'white',
-          border: 'none',
+          background: "#f59e0b",
+          color: "white",
+          border: "none",
         },
       });
       setIsImporting(false);
@@ -612,21 +764,27 @@ const ManageUsersPage = () => {
     try {
       const queryParams = new URLSearchParams();
       Object.entries(
-        buildFilterParams(appliedFiltersRef.current, searchParams.get("search") || "")
+        buildFilterParams(
+          appliedFiltersRef.current,
+          searchParams.get("search") || ""
+        )
       ).forEach(([key, value]) => {
         if (Array.isArray(value)) {
-          value.forEach(v => queryParams.append(key, v));
+          value.forEach((v) => queryParams.append(key, v));
         } else if (value !== undefined && value !== null) {
           queryParams.append(key, value as string);
         }
       });
 
-      const response = await axios.get(`https://${baseUrl}/crm/admin/user_societies.xlsx?${queryParams}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        responseType: 'blob'
-      })
+      const response = await axios.get(
+        `https://${baseUrl}/crm/admin/user_societies.xlsx?${queryParams}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: "blob",
+        }
+      );
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -637,10 +795,10 @@ const ManageUsersPage = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.log(error)
-      toast.error("Failed to export users")
+      console.log(error);
+      toast.error("Failed to export users");
     }
-  }
+  };
 
   const handleFilters = () => {
     setShowFiltersDialog(true);
@@ -657,11 +815,20 @@ const ManageUsersPage = () => {
   };
 
   const handlePageChange = (page: number) => {
-    if (page < 1 || page > pagination.total_pages || page === pagination.current_page || loading) {
+    if (
+      page < 1 ||
+      page > pagination.total_pages ||
+      page === pagination.current_page ||
+      loading
+    ) {
       return;
     }
     setPagination((prev) => ({ ...prev, current_page: page }));
-    updateUrl(appliedFiltersRef.current, searchParams.get("search") || "", page);
+    updateUrl(
+      appliedFiltersRef.current,
+      searchParams.get("search") || "",
+      page
+    );
   };
 
   const renderPaginationItems = () => {
@@ -846,15 +1013,15 @@ const ManageUsersPage = () => {
   const handleUpdateUserStatus = async (userId: string, newStatus: string) => {
     try {
       if (!baseUrl || !token) {
-        toast.error('Missing authentication details. Please login again.');
+        toast.error("Missing authentication details. Please login again.");
         return;
       }
 
       // Convert status display value to API value
       const statusMap: { [key: string]: boolean | null } = {
-        'Approved': true,
-        'Rejected': false,
-        'Pending': null,
+        Approved: true,
+        Rejected: false,
+        Pending: null,
       };
 
       const approve = statusMap[newStatus];
@@ -866,7 +1033,7 @@ const ManageUsersPage = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -883,8 +1050,8 @@ const ManageUsersPage = () => {
         // fetchUsers(pagination.current_page);
       }
     } catch (error) {
-      console.error('Error updating user status:', error);
-      toast.error('Failed to update user status. Please try again.');
+      console.error("Error updating user status:", error);
+      toast.error("Failed to update user status. Please try again.");
     }
   };
 
@@ -894,7 +1061,8 @@ const ManageUsersPage = () => {
       case "srNo":
         return (
           <span className="text-sm text-gray-600 font-medium">
-            {(pagination.current_page - 1) * pagination.per_page + (users.indexOf(user) + 1)}
+            {(pagination.current_page - 1) * pagination.per_page +
+              (users.indexOf(user) + 1)}
           </span>
         );
       case "actions":
@@ -931,7 +1099,9 @@ const ManageUsersPage = () => {
           Rejected: { dot: "bg-red-500" },
         };
 
-        const colors = statusColorMap[user.status as keyof typeof statusColorMap] || statusColorMap.Pending;
+        const colors =
+          statusColorMap[user.status as keyof typeof statusColorMap] ||
+          statusColorMap.Pending;
 
         return (
           <FormControl
@@ -947,8 +1117,12 @@ const ManageUsersPage = () => {
               }
               disableUnderline
               renderValue={(value) => (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span className={`inline-block w-2 h-2 rounded-full ${colors.dot}`}></span>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <span
+                    className={`inline-block w-2 h-2 rounded-full ${colors.dot}`}
+                  ></span>
                   <span>{value}</span>
                 </div>
               )}
@@ -964,10 +1138,17 @@ const ManageUsersPage = () => {
               }}
             >
               {["Pending", "Approved", "Rejected"].map((status) => {
-                const statusColors = statusColorMap[status as keyof typeof statusColorMap];
+                const statusColors =
+                  statusColorMap[status as keyof typeof statusColorMap];
                 return (
-                  <MenuItem key={status} value={status} sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span className={`inline-block w-2 h-2 rounded-full ${statusColors?.dot || "bg-gray-500"}`}></span>
+                  <MenuItem
+                    key={status}
+                    value={status}
+                    sx={{ display: "flex", alignItems: "center", gap: "8px" }}
+                  >
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full ${statusColors?.dot || "bg-gray-500"}`}
+                    ></span>
                     <span>{status}</span>
                   </MenuItem>
                 );
@@ -979,7 +1160,11 @@ const ManageUsersPage = () => {
       case "membership_type":
         return user.membershipType;
       case "phase":
-        return user.phase === "Pre Sales" ? "Post Sales" : user.phase === "Post Sales" ? "Post Possession" : "-"
+        return user.phase === "Pre Sales"
+          ? "Post Sales"
+          : user.phase === "Post Sales"
+            ? "Post Possession"
+            : "-";
       default:
         return <span className="text-sm">{user[columnKey] || "-"}</span>;
     }
@@ -995,35 +1180,60 @@ const ManageUsersPage = () => {
             value={dashboardData.total_users.toString()}
             icon={<Users className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
-            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx', 'total_users.xlsx')}
+            onDownload={() =>
+              handleDownloadUsers(
+                "/crm/admin/user_societies.xlsx",
+                "total_users.xlsx"
+              )
+            }
           />
           <StatsCard
             title="Pending Users"
             value={dashboardData.pending_users.toString()}
             icon={<Clock className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
-            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[approve_eq]=null', 'pending_users.xlsx')}
+            onDownload={() =>
+              handleDownloadUsers(
+                "/crm/admin/user_societies.xlsx?q[approve_eq]=null",
+                "pending_users.xlsx"
+              )
+            }
           />
           <StatsCard
             title="Approved Users"
             value={dashboardData.approved_users.toString()}
             icon={<UserCheck className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
-            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[approve_eq]=true', 'approved_users.xlsx')}
+            onDownload={() =>
+              handleDownloadUsers(
+                "/crm/admin/user_societies.xlsx?q[approve_eq]=true",
+                "approved_users.xlsx"
+              )
+            }
           />
           <StatsCard
             title="Rejected Users"
             value={dashboardData.rejected_users.toString()}
             icon={<UserX className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
-            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[approve_eq]=false', 'rejected_users.xlsx')}
+            onDownload={() =>
+              handleDownloadUsers(
+                "/crm/admin/user_societies.xlsx?q[approve_eq]=false",
+                "rejected_users.xlsx"
+              )
+            }
           />
           <StatsCard
             title="Total No. Of Downloads"
             value={dashboardData.app_downloads.toString()}
             icon={<MonitorSmartphone className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
-            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?app_download=yes', 'app_downloaded.xlsx')}
+            onDownload={() =>
+              handleDownloadUsers(
+                "/crm/admin/user_societies.xlsx?app_download=yes",
+                "app_downloaded.xlsx"
+              )
+            }
           />
         </div>
 
@@ -1034,35 +1244,60 @@ const ManageUsersPage = () => {
             value={dashboardData.total_flat_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
-            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?app_download=no', 'not_downloaded.xlsx')}
+            onDownload={() =>
+              handleDownloadUsers(
+                "/crm/admin/user_societies.xlsx?app_download=no",
+                "not_downloaded.xlsx"
+              )
+            }
           />
           <StatsCard
             title="Total No. Of Owners Downloads"
             value={dashboardData.total_owner_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
-            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=owner', 'owners.xlsx')}
+            onDownload={() =>
+              handleDownloadUsers(
+                "/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=owner",
+                "owners.xlsx"
+              )
+            }
           />
           <StatsCard
             title="Total No. Of Tenants Downloads"
             value={dashboardData.total_tenant_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
-            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=tenant', 'tenants.xlsx')}
+            onDownload={() =>
+              handleDownloadUsers(
+                "/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=tenant",
+                "tenants.xlsx"
+              )
+            }
           />
           <StatsCard
             title="Post Sale Downloads"
             value={dashboardData.post_sale_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
-            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[display_view_eq]=Pre Sales', 'pre_sales.xlsx')}
+            onDownload={() =>
+              handleDownloadUsers(
+                "/crm/admin/user_societies.xlsx?q[display_view_eq]=Pre Sales",
+                "pre_sales.xlsx"
+              )
+            }
           />
           <StatsCard
             title="Post Possession Downloads"
             value={dashboardData.post_possession_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
-            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[display_view_eq]=Post Sales', 'post_sales.xlsx')}
+            onDownload={() =>
+              handleDownloadUsers(
+                "/crm/admin/user_societies.xlsx?q[display_view_eq]=Post Sales",
+                "post_sales.xlsx"
+              )
+            }
           />
         </div>
 
@@ -1077,7 +1312,13 @@ const ManageUsersPage = () => {
             }}
             actions={[
               ...(shouldShow("Manage Users", "mail")
-                ? [{ label: "Send Email", icon: Mail, onClick: handleSendEmailAction }]
+                ? [
+                    {
+                      label: "Send Email",
+                      icon: Mail,
+                      onClick: handleSendEmailAction,
+                    },
+                  ]
                 : []),
             ]}
           />
@@ -1089,10 +1330,16 @@ const ManageUsersPage = () => {
           recipients={getSelectedRecipients()}
         />
 
-        <Dialog modal={false} open={showFiltersDialog} onOpenChange={setShowFiltersDialog}>
+        <Dialog
+          modal={false}
+          open={showFiltersDialog}
+          onOpenChange={setShowFiltersDialog}
+        >
           <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white border-none shadow-2xl max-h-[90vh] flex flex-col">
             <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between shrink-0">
-              <DialogTitle className="text-base font-bold text-white text-center w-full">Advance Filter</DialogTitle>
+              <DialogTitle className="text-base font-bold text-white text-center w-full">
+                Advance Filter
+              </DialogTitle>
               <button
                 onClick={() => setShowFiltersDialog(false)}
                 className="text-red-500 hover:text-red-700 transition-colors absolute right-4"
@@ -1108,7 +1355,9 @@ const ManageUsersPage = () => {
                   label="First Name"
                   placeholder="Enter First Name"
                   value={filters.firstName}
-                  onChange={(e) => setFilters({ ...filters, firstName: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, firstName: e.target.value })
+                  }
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}
@@ -1120,7 +1369,9 @@ const ManageUsersPage = () => {
                   label="Last Name"
                   placeholder="Enter Last Name"
                   value={filters.lastName}
-                  onChange={(e) => setFilters({ ...filters, lastName: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, lastName: e.target.value })
+                  }
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}
@@ -1132,7 +1383,9 @@ const ManageUsersPage = () => {
                   label="Email ID"
                   placeholder="Enter Email ID"
                   value={filters.email}
-                  onChange={(e) => setFilters({ ...filters, email: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, email: e.target.value })
+                  }
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}
@@ -1144,7 +1397,9 @@ const ManageUsersPage = () => {
                   label="Mobile"
                   placeholder="Enter Mobile"
                   value={filters.mobile}
-                  onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, mobile: e.target.value })
+                  }
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}
@@ -1153,24 +1408,41 @@ const ManageUsersPage = () => {
 
                 {/* Resident Type */}
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Resident Type</InputLabel>
+                  <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                    Resident Type
+                  </InputLabel>
                   <MuiSelect
                     multiple
                     value={filters.residentType.map((r: any) => r.value)}
                     onChange={(e) => {
                       const values = e.target.value as string[];
-                      const options = [{ label: "Owner", value: "Owner" }, { label: "Tenant", value: "Tenant" }];
-                      setFilters({ ...filters, residentType: options.filter((o) => values.includes(o.value)) });
+                      const options = [
+                        { label: "Owner", value: "Owner" },
+                        { label: "Tenant", value: "Tenant" },
+                      ];
+                      setFilters({
+                        ...filters,
+                        residentType: options.filter((o) =>
+                          values.includes(o.value)
+                        ),
+                      });
                     }}
                     displayEmpty
                     label="Resident Type"
                     sx={fieldStyles}
                     MenuProps={menuProps}
                     renderValue={(selected: string[]) =>
-                      selected.length ? selected.join(', ') : <em>Select Resident Type</em>
+                      selected.length ? (
+                        selected.join(", ")
+                      ) : (
+                        <em>Select Resident Type</em>
+                      )
                     }
                   >
-                    {[{ label: "Owner", value: "Owner" }, { label: "Tenant", value: "Tenant" }].map((opt) => (
+                    {[
+                      { label: "Owner", value: "Owner" },
+                      { label: "Tenant", value: "Tenant" },
+                    ].map((opt) => (
                       <MenuItem key={opt.value} value={opt.value}>
                         <ListItemText primary={opt.label} />
                       </MenuItem>
@@ -1180,7 +1452,9 @@ const ManageUsersPage = () => {
 
                 {/* Tower */}
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower</InputLabel>
+                  <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                    Tower
+                  </InputLabel>
                   <MuiSelect
                     value={filters.tower}
                     onChange={(e) => {
@@ -1193,31 +1467,47 @@ const ManageUsersPage = () => {
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value="" disabled><em>Select Tower</em></MenuItem>
+                    <MenuItem value="" disabled>
+                      <em>Select Tower</em>
+                    </MenuItem>
                     {towerOptions.map((tower) => (
-                      <MenuItem key={tower.id} value={tower.id.toString()}>{tower.name}</MenuItem>
+                      <MenuItem key={tower.id} value={tower.id.toString()}>
+                        {tower.name}
+                      </MenuItem>
                     ))}
                   </MuiSelect>
                 </FormControl>
 
                 {/* Flat Number */}
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Flat Number</InputLabel>
+                  <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                    Flat Number
+                  </InputLabel>
                   <MuiSelect
                     multiple
                     value={filters.flat.map((f: any) => f.value)}
                     onChange={(e) => {
                       const values = e.target.value as string[];
-                      setFilters({ ...filters, flat: flatOptions.filter((o) => values.includes(o.value)) });
+                      setFilters({
+                        ...filters,
+                        flat: flatOptions.filter((o) =>
+                          values.includes(o.value)
+                        ),
+                      });
                     }}
                     displayEmpty
                     label="Flat Number"
                     sx={fieldStyles}
                     MenuProps={menuProps}
                     renderValue={(selected: string[]) =>
-                      selected.length
-                        ? flatOptions.filter((o) => selected.includes(o.value)).map((o) => o.label).join(', ')
-                        : <em>Select Flat Number</em>
+                      selected.length ? (
+                        flatOptions
+                          .filter((o) => selected.includes(o.value))
+                          .map((o) => o.label)
+                          .join(", ")
+                      ) : (
+                        <em>Select Flat Number</em>
+                      )
                     }
                   >
                     {flatOptions.map((opt) => (
@@ -1230,16 +1520,22 @@ const ManageUsersPage = () => {
 
                 {/* Lives Here */}
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Lives Here</InputLabel>
+                  <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                    Lives Here
+                  </InputLabel>
                   <MuiSelect
                     value={filters.livesHere}
-                    onChange={(e) => setFilters({ ...filters, livesHere: e.target.value })}
+                    onChange={(e) =>
+                      setFilters({ ...filters, livesHere: e.target.value })
+                    }
                     displayEmpty
                     label="Lives Here"
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value=""><em>Select Lives Here</em></MenuItem>
+                    <MenuItem value="">
+                      <em>Select Lives Here</em>
+                    </MenuItem>
                     <MenuItem value="Yes">Yes</MenuItem>
                     <MenuItem value="No">No</MenuItem>
                   </MuiSelect>
@@ -1247,7 +1543,9 @@ const ManageUsersPage = () => {
 
                 {/* Status */}
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status</InputLabel>
+                  <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                    Status
+                  </InputLabel>
                   <MuiSelect
                     multiple
                     value={filters.status.map((s: any) => s.value)}
@@ -1258,14 +1556,21 @@ const ManageUsersPage = () => {
                         { label: "Rejected", value: "0" },
                         { label: "Pending", value: "null" },
                       ];
-                      setFilters({ ...filters, status: options.filter((o) => values.includes(o.value)) });
+                      setFilters({
+                        ...filters,
+                        status: options.filter((o) => values.includes(o.value)),
+                      });
                     }}
                     displayEmpty
                     label="Status"
                     sx={fieldStyles}
                     MenuProps={menuProps}
                     renderValue={(selected: string[]) =>
-                      selected.length ? selected.join(', ') : <em>Select Status</em>
+                      selected.length ? (
+                        selected.join(", ")
+                      ) : (
+                        <em>Select Status</em>
+                      )
                     }
                   >
                     {[
@@ -1282,34 +1587,48 @@ const ManageUsersPage = () => {
 
                 {/* Role */}
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Role</InputLabel>
+                  <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                    Role
+                  </InputLabel>
                   <MuiSelect
                     value={filters.role}
-                    onChange={(e) => setFilters({ ...filters, role: e.target.value })}
+                    onChange={(e) =>
+                      setFilters({ ...filters, role: e.target.value })
+                    }
                     displayEmpty
                     label="Role"
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value=""><em>Select Role</em></MenuItem>
+                    <MenuItem value="">
+                      <em>Select Role</em>
+                    </MenuItem>
                     {roleOptions.map((opt) => (
-                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                      <MenuItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </MenuItem>
                     ))}
                   </MuiSelect>
                 </FormControl>
 
                 {/* Membership Type */}
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Membership Type</InputLabel>
+                  <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                    Membership Type
+                  </InputLabel>
                   <MuiSelect
                     value={filters.membershipType}
-                    onChange={(e) => setFilters({ ...filters, membershipType: e.target.value })}
+                    onChange={(e) =>
+                      setFilters({ ...filters, membershipType: e.target.value })
+                    }
                     displayEmpty
                     label="Membership Type"
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value=""><em>Select Membership</em></MenuItem>
+                    <MenuItem value="">
+                      <em>Select Membership</em>
+                    </MenuItem>
                     <MenuItem value="1">Primary</MenuItem>
                     <MenuItem value="0">Secondary</MenuItem>
                   </MuiSelect>
@@ -1320,7 +1639,9 @@ const ManageUsersPage = () => {
                   label="Start Date"
                   type="date"
                   value={filters.startDate}
-                  onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, startDate: e.target.value })
+                  }
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}
@@ -1339,7 +1660,9 @@ const ManageUsersPage = () => {
                   label="End Date"
                   type="date"
                   value={filters.endDate}
-                  onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, endDate: e.target.value })
+                  }
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}
@@ -1387,7 +1710,6 @@ const ManageUsersPage = () => {
           isDownloading={isDownloadingSample}
         />
 
-
         <div className="">
           <EnhancedTable
             columns={columns}
@@ -1399,6 +1721,7 @@ const ManageUsersPage = () => {
             onSelectItem={handleSelectUser}
             getItemId={(user) => String(user.id)}
             selectAllLabel="Select all users"
+            storageKey="manage_user"
             onFilterClick={handleFilters}
             enableSelection={true}
             enableExport={true}
@@ -1430,15 +1753,33 @@ const ManageUsersPage = () => {
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    onClick={() => handlePageChange(Math.max(1, pagination.current_page - 1))}
-                    className={pagination.current_page === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    onClick={() =>
+                      handlePageChange(Math.max(1, pagination.current_page - 1))
+                    }
+                    className={
+                      pagination.current_page === 1 || loading
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
                 {renderPaginationItems()}
                 <PaginationItem>
                   <PaginationNext
-                    onClick={() => handlePageChange(Math.min(pagination.total_pages, pagination.current_page + 1))}
-                    className={pagination.current_page === pagination.total_pages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    onClick={() =>
+                      handlePageChange(
+                        Math.min(
+                          pagination.total_pages,
+                          pagination.current_page + 1
+                        )
+                      )
+                    }
+                    className={
+                      pagination.current_page === pagination.total_pages ||
+                      loading
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
               </PaginationContent>

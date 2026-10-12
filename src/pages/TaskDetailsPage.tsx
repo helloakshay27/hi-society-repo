@@ -1997,6 +1997,7 @@ export const TaskDetailsPage = () => {
 
                       {/* Section Table */}
                       <EnhancedTable
+                        storageKey="task-details-page-table"
                         data={section.activities}
                         columns={activityColumns}
                         renderCell={renderActivityCell}

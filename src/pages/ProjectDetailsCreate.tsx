@@ -4129,6 +4129,7 @@ const ProjectDetailsCreate = () => {
                 <div className="col-md-12">
                   <div className="mt-4">
                     <EnhancedTable
+                      storageKey="project-details-create-table"
                       data={plans.map((plan, index) => ({
                         ...plan,
                         id: plan.id || index,
@@ -5766,6 +5767,7 @@ variant="ghost"
                     <div className="col-md-12 mt-2">
                       <div className="mt-4">
                         <EnhancedTable
+                          storageKey="project-details-create-table-2"
                           data={formData.virtual_tour_url_multiple.map(
                             (item, index) => ({
                               ...item,

@@ -58,9 +58,23 @@ export function useEnhancedTable<T>({
     return defaultVisibility;
   });
 
-  const [columnOrder, setColumnOrder] = useState<string[]>(() =>
-    columns.map(column => column.key)
-  );
+  // Initialize column order from the saved order (if any). Saved keys that no
+  // longer exist are dropped; columns missing from it are appended in code order.
+  const [columnOrder, setColumnOrder] = useState<string[]>(() => {
+    const keys = columns.map(column => column.key);
+    if (!storageKey) return keys;
+    const savedOrder = localStorage.getItem(`${storageKey}-column-order`);
+    if (!savedOrder) return keys;
+    try {
+      const parsed = JSON.parse(savedOrder);
+      if (!Array.isArray(parsed)) return keys;
+      const kept = parsed.filter((key): key is string => typeof key === 'string' && keys.includes(key));
+      return [...kept, ...keys.filter(key => !kept.includes(key))];
+    } catch (e) {
+      console.error('Error parsing saved column order:', e);
+      return keys;
+    }
+  });
 
   // Sync columnOrder and columnVisibility if columns prop changes (e.g. dynamically added columns)
   useEffect(() => {
@@ -129,9 +143,13 @@ export function useEnhancedTable<T>({
       const newOrder = [...prevOrder];
       newOrder.splice(oldIndex, 1);
       newOrder.splice(newIndex, 0, sourceId);
+      // Save the full order (hidden columns included) so it can be restored on refresh
+      if (storageKey) {
+        localStorage.setItem(`${storageKey}-column-order`, JSON.stringify(newOrder));
+      }
       return newOrder;
     });
-  }, []);
+  }, [storageKey]);
 
   // Handle sorting
   const handleSort = useCallback((columnKey: string) => {

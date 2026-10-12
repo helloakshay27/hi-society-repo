@@ -129,6 +129,7 @@ const SOSCategorySetupPage = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="sos-category-setup-page-table"
                 data={[...categories].reverse()}
                 columns={columns}
                 renderCell={renderCell}

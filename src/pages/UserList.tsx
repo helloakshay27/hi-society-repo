@@ -261,6 +261,7 @@ const UserList = () => {
   const renderListTab = () => (
     <div className="space-y-6">
           <EnhancedTable
+            storageKey="user-list-table"
             data={users}
             columns={columns}
             renderCell={renderCell}

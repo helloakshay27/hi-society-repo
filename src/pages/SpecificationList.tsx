@@ -201,6 +201,7 @@ const SpecificationList = () => {
 
 
           <EnhancedTable
+            storageKey="specification-list-table"
             data={items}
             columns={columns}
             renderCell={renderCell}

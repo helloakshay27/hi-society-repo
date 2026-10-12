@@ -171,6 +171,7 @@ const BannerSetupDashboard = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="banner-setup-dashboard-table"
                 data={[...banners].reverse()}
                 columns={columns}
                 renderCell={renderCell}

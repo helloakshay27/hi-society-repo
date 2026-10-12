@@ -564,17 +564,8 @@ export function EnhancedTable<T extends Record<string, any>>({
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
+      // useEnhancedTable saves the full column order to localStorage
       reorderColumns(String(active.id), String(over.id));
-      // Save the new column order to localStorage
-      if (storageKey) {
-        const newOrder = columnIds.filter((id) => id !== active.id);
-        const overIndex = newOrder.indexOf(String(over.id));
-        newOrder.splice(overIndex, 0, String(active.id));
-        localStorage.setItem(
-          `${storageKey}-column-order`,
-          JSON.stringify(newOrder)
-        );
-      }
     }
   };
 

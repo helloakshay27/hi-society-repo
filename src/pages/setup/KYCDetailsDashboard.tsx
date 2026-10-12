@@ -341,6 +341,7 @@ export const KYCDetailsDashboard = () => {
       {/* Table Section */}
       <div className="">
         <EnhancedTable
+          storageKey="kyc-details-dashboard-table"
           data={paginatedKycDetails}
           columns={columns}
           loading={loading}

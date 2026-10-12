@@ -251,6 +251,7 @@ const EventPendingList = () => {
                 </div>
             ) : (
                 <EnhancedTable
+                    storageKey="event-pending-list-table"
                     data={data}
                     columns={columns}
                     renderCell={renderCell}

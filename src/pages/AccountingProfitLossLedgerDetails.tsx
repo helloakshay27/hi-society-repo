@@ -258,6 +258,7 @@ const AccountingProfitLossLedgerDetails: React.FC = () => {
       </div>
 
       <EnhancedTable
+        storageKey="accounting-profit-loss-ledger-details-table"
         data={tableRows}
         columns={LEDGER_COLUMNS}
         renderCell={renderLedgerCell}

@@ -1150,6 +1150,7 @@ const IssuesListPage = ({
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <EnhancedTable
+        storageKey="issues-list-page-table"
         data={issues}
         columns={columns}
         renderActions={renderActions}

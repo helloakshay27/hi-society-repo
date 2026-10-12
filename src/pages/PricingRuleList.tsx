@@ -287,6 +287,7 @@ variant="ghost"
       <Toaster position="top-right" richColors closeButton />
       <div className="space-y-6">
         <EnhancedTable
+          storageKey="pricing-rule-list-table"
           data={pricingRules}
           columns={columns}
           renderCell={renderCell}

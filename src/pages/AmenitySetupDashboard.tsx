@@ -116,6 +116,7 @@ const AmenitySetupDashboard = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="amenity-setup-dashboard-table"
                 columns={columns}
                 data={amenities}
                 renderCell={renderCell}

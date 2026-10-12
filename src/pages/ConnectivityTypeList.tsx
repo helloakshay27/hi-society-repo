@@ -267,6 +267,7 @@ variant="ghost"
       <Toaster position="top-right" richColors closeButton />
       <div className="space-y-6">
         <EnhancedTable
+          storageKey="connectivity-type-list-table"
           data={connectivityTypes}
           columns={columns}
           renderCell={renderCell}

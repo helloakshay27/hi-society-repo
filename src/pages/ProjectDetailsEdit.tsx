@@ -4953,6 +4953,7 @@ const ProjectDetailsEdit = () => {
                 <div className="col-md-12">
                   <div className="mt-4">
                     <EnhancedTable
+                      storageKey="project-details-edit-table"
                       data={plans.map((plan, index) => ({
                         ...plan,
                         id: plan.id || index,
@@ -7036,6 +7037,7 @@ const ProjectDetailsEdit = () => {
                 <div className="col-md-12 mt-2">
                   <div className="mt-4">
                     <EnhancedTable
+                      storageKey="project-details-edit-table-2"
                       data={formData.virtual_tour_url_multiple.map(
                         (item, index) => ({
                           ...item,

@@ -599,6 +599,7 @@ const AppointmentzRMConfig = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <EnhancedTable
+        storageKey="appointmentz-rm-config-table"
         data={data}
         columns={columns}
         renderCell={renderCell}
