@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import TextField from "@mui/material/TextField";
 import { API_CONFIG } from "@/config/apiConfig";
 import { ArrowLeft } from "lucide-react";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 // Real response shape returned by GET /lock_account_ledgers/:id
 interface LedgerDetailAPI {
@@ -118,6 +119,11 @@ const AccountingLedgerDetails: React.FC = () => {
   }, [ledgerId]);
 
   const handleSubmit = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'ledger_details', screen_name: 'AccountingLedgerDetails' });
+  }, []);
+
     fetchLedgerDetail(fromDate, toDate);
   };
 

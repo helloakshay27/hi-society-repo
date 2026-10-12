@@ -14,6 +14,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { toast } from "sonner";
 import { API_CONFIG } from '@/config/apiConfig';
 import axios from 'axios';
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
@@ -168,6 +169,11 @@ const AccountingTaxSetup: React.FC = () => {
 
   // ── Text / Select field change handler ────────────────────────────────────
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'tax_setup', screen_name: 'AccountingTaxSetup' });;
+  }, []);
+
     const { name, value, type } = e.target as HTMLInputElement;
     const checked = (e.target as HTMLInputElement).checked;
     setForm((prev) => ({

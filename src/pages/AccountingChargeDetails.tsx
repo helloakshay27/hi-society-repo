@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Pencil, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_CONFIG } from "@/config/apiConfig";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface ChargeSetupDetail {
   name: string;
@@ -56,6 +57,11 @@ const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value
 );
 
 const AccountingChargeDetails: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'charge_details', screen_name: 'AccountingChargeDetails' });
+  }, [onAccountingViewed]);
+
   const navigate = useNavigate();
   const { id } = useParams();
   const lockAccountId = localStorage.getItem("lock_account_id");

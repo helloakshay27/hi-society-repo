@@ -9,6 +9,7 @@ import { Plus, Search, Upload, X, Edit, File } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useApiConfig } from '@/hooks/useApiConfig';
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 // List of all world countries
 const worldCountries = [
@@ -35,6 +36,11 @@ const worldCountries = [
 ];
 
 export const LocationAccountPage = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'location_account', screen_name: 'LocationAccountPage' });
+  }, [onAccountingViewed]);
+
   const { getFullUrl, getAuthHeader } = useApiConfig();
   const [activeTab, setActiveTab] = useState('organization');
   const [searchQuery, setSearchQuery] = useState('');

@@ -8,6 +8,7 @@ import { API_CONFIG } from "@/config/apiConfig";
 import { ArrowLeft } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 // Real, flat response shape returned by GET /lock_account_ledgers/:id — the
 // ledger's own fields at the top level, plus a nested "statement" object
@@ -138,6 +139,11 @@ const AccountingProfitLossLedgerDetails: React.FC = () => {
   }, [ledgerId]);
 
   const handleSubmit = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'profit_loss_ledger_details', screen_name: 'AccountingProfitLossLedgerDetails' });;
+  }, []);
+
     fetchLedgerDetail(fromDate, toDate);
   };
 

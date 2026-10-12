@@ -7,11 +7,17 @@ import { NotepadText } from "lucide-react";
 import { API_CONFIG } from "@/config/apiConfig";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 const formatAmount = (value: number) => (Number(value) || 0).toFixed(2);
 
 // "2026-04-01" → "01/04/2026"
 const toDdMmYyyy = (iso: string) => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'gst_receivable', screen_name: 'AccountingGSTReceivable' });
+  }, []);
+
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;

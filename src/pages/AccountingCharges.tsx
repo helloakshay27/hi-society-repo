@@ -8,6 +8,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { ArrowLeft, Edit, Eye, Plus } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface ChargeSetup {
   id: number;
@@ -44,6 +45,10 @@ const formatDateTime = (value?: string) => {
 };
 
 const AccountingCharges: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'charges_list', screen_name: 'AccountingCharges' });
+  }, [onAccountingViewed]);
   const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [charges, setCharges] = useState<ChargeSetup[]>([]);

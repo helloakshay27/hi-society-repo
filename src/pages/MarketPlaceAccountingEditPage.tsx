@@ -4,8 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 export const MarketPlaceAccountingEditPage = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'marketplace_accounting_edit', screen_name: 'MarketPlaceAccountingEditPage' });
+  }, []);
+
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     uniq: 'uso24bn',

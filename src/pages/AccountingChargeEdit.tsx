@@ -13,6 +13,7 @@ import ListItemText from "@mui/material/ListItemText";
 import { Button } from "@/components/ui/button";
 import { menuProps } from "@/components/ticket-management/fieldStyles";
 import { API_CONFIG } from "@/config/apiConfig";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 // input_type drives which extra field(s) render for the selected charge type:
 // "amount" -> a single Value field, "flat_amounts" -> a per-flat-type breakup
@@ -152,6 +153,11 @@ const emptyForm = {
 };
 
 const AccountingChargeEdit: React.FC = () => {
+  const { onAccountingViewed, onAccountingUpdated } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'charge_edit', screen_name: 'AccountingChargeEdit' });
+  }, [onAccountingViewed]);
+
   const navigate = useNavigate();
   const { id } = useParams();
   const lockAccountId = localStorage.getItem("lock_account_id");
@@ -322,6 +328,11 @@ const AccountingChargeEdit: React.FC = () => {
         },
       });
       toast.success("Charge updated successfully");
+      onAccountingUpdated({
+        accounting_id: String(id ?? form.chargeName ?? 'charge'),
+        status: 'success',
+        screen_name: 'AccountingChargeEdit',
+      });
       navigate("/accounting/charges");
     } catch (error) {
       console.error("Error updating charge:", error);

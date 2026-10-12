@@ -14,6 +14,7 @@ import {
 import { API_CONFIG } from "@/config/apiConfig";
 import { Plus, X, CalendarDays, Wallet } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface LedgerOption {
   id: number;
@@ -103,6 +104,11 @@ const AccountingOpeningBalances: React.FC = () => {
   );
 
   const handleValueChange = (ledgerId: number, field: "debit" | "credit", value: string) => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'opening_balances', screen_name: 'AccountingOpeningBalances' });
+  }, []);
+
     if (value.startsWith("-")) return;
     if (value !== "" && Number.isNaN(Number(value))) return;
     setValues((prev) => ({

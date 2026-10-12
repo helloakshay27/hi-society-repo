@@ -13,6 +13,7 @@ import ListItemText from "@mui/material/ListItemText";
 import { Button } from "@/components/ui/button";
 import { menuProps } from "@/components/ticket-management/fieldStyles";
 import { API_CONFIG } from "@/config/apiConfig";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 // input_type drives which extra field(s) render for the selected charge type:
 // "amount" -> a single Value field, "flat_amounts" -> a per-flat-type breakup
@@ -115,6 +116,10 @@ const emptyForm = {
 
 const AccountingChargeCreation: React.FC = () => {
   const navigate = useNavigate();
+  const { onAccountingViewed, onAccountingCreated } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'charge_creation', screen_name: 'AccountingChargeCreation' });
+  }, []);
   const lockAccountId = localStorage.getItem("lock_account_id");
   const [categories, setCategories] = useState<ChargeCategoryOption[]>([]);
   const [form, setForm] = useState(emptyForm);
@@ -242,6 +247,13 @@ const AccountingChargeCreation: React.FC = () => {
         },
       });
       toast.success("Charge created successfully");
+      
+      onAccountingCreated({
+        accounting_id: form.chargeName || 'unknown_charge',
+        type: 'charge',
+        status: 'success'
+      });
+
       return true;
     } catch (error) {
       console.error("Error creating charge:", error);

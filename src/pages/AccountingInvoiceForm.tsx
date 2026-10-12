@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Plus, Trash2 } from "lucide-react";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface LedgerOption {
   id: number;
@@ -56,6 +57,11 @@ const INVOICE_FORMATS = ["Standard", "GST Invoice", "Simple Receipt"];
 const BILL_FREQUENCIES = ["Monthly", "Quarterly", "Half Yearly", "Yearly"];
 
 const computeChargeAmounts = (row: ChargeRow) => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'invoice_form', screen_name: 'AccountingInvoiceForm' });
+  }, []);
+
   const quantity = Number(row.quantity) || 0;
   const rate = Number(row.rate) || 0;
   const amount = quantity * rate;

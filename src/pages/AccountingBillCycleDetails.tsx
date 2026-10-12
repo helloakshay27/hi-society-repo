@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { CommonImportModal } from "@/components/CommonImportModal";
 import { API_CONFIG } from "@/config/apiConfig";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface SocietyBillCycleDetail {
   name: string;
@@ -118,6 +119,11 @@ const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value
 );
 
 const AccountingBillCycleDetails: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'bill_cycle_details', screen_name: 'AccountingBillCycleDetails' });
+  }, [onAccountingViewed]);
+
   const navigate = useNavigate();
   const { id } = useParams();
   const [detail, setDetail] = useState<SocietyBillCycleDetail | null>(null);

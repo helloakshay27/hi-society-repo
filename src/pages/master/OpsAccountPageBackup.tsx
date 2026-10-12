@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 import {
   OrganizationTab,
   CompanyTab,
@@ -12,6 +13,11 @@ import {
 } from "@/components/ops-account";
 
 export const OpsAccountPage = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'ops_account_backup', screen_name: 'OpsAccountPageBackup' });
+  }, []);
+
   const [activeTab, setActiveTab] = useState("organization");
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState("25");

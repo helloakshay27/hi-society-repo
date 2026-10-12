@@ -10,6 +10,7 @@ import MenuItem from "@mui/material/MenuItem";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import { Button } from "@/components/ui/button";
 import { API_CONFIG } from "@/config/apiConfig";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface BillCycleOption {
   id: number;
@@ -96,6 +97,11 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ t
 );
 
 const AccountingUnitsBillCycleMappingCreation: React.FC = () => {
+  const { onAccountingViewed, onAccountingCreated } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'units_bill_cycle_mapping_creation', screen_name: 'AccountingUnitsBillCycleMappingCreation' });
+  }, [onAccountingViewed]);
+
   const navigate = useNavigate();
   const lockAccountId = localStorage.getItem("lock_account_id");
   const [billCycles, setBillCycles] = useState<BillCycleOption[]>([]);
@@ -222,6 +228,12 @@ const AccountingUnitsBillCycleMappingCreation: React.FC = () => {
         },
       });
       toast.success("Bill cycle mapped to flats successfully");
+      onAccountingCreated({
+        accounting_id: String(billCycleId ?? 'units_mapping'),
+        type: 'units_bill_cycle_mapping',
+        status: 'success',
+        screen_name: 'AccountingUnitsBillCycleMappingCreation',
+      });
       navigate("/accounting/units-bill-cycle-mapping");
     } catch (error) {
       console.error("Error mapping bill cycle to flats:", error);

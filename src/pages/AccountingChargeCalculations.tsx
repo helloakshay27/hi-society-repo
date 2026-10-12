@@ -13,6 +13,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Calculator, Send } from "lucide-react";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface BillCycleOption {
   id: number;
@@ -92,6 +93,11 @@ const AccountingChargeCalculations: React.FC = () => {
   }, [fetchLookups]);
 
   const handleCalculate = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'charge_calculations', screen_name: 'AccountingChargeCalculations' });
+  }, []);
+
     if (!selectedCycleId) {
       toast.error("Please select a Bill Cycle first.");
       return;

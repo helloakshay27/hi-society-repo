@@ -8,9 +8,15 @@ import { API_CONFIG } from "@/config/apiConfig";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { formatAmount } from "@/utils/financialStatement";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 // "2026-04-01" → "01/04/2026"
 const toDdMmYyyy = (iso: string) => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'gst_payable', screen_name: 'AccountingGSTPayable' });
+  }, []);
+
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;

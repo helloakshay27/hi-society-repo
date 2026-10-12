@@ -8,6 +8,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Eye, Edit, Plus, Trash2, ListTree, Table2, UploadCloud, DownloadCloud, Folder, Code2 } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -205,6 +206,11 @@ const AccountingChartOfAccounts: React.FC = () => {
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
   const authHeaders = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'chart_of_accounts', screen_name: 'AccountingChartOfAccounts' });
+  }, []);
+
     const token = API_CONFIG.TOKEN;
     return {
       Accept: "application/json",

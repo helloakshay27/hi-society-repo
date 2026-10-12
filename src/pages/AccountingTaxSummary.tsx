@@ -8,6 +8,7 @@ import { formatAmount } from "@/utils/financialStatement";
 import { TaxSummaryApiRow, TaxSummaryRow, mapTaxSummaryRow, formatLedgerTaxName } from "@/utils/taxSummary";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 const columns: ColumnConfig[] = [
   { key: "ledgerId", label: "Ledger ID", sortable: true },
@@ -18,6 +19,11 @@ const columns: ColumnConfig[] = [
 ];
 
 const renderCell = (row: TaxSummaryRow, columnKey: string) => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'tax_summary', screen_name: 'AccountingTaxSummary' });;
+  }, []);
+
   switch (columnKey) {
     case "ledgerId":
       return row.ledgerId || "-";

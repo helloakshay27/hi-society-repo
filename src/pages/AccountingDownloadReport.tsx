@@ -4,8 +4,14 @@ import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_CONFIG } from "@/config/apiConfig";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 const AccountingDownloadReport: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'download_report', screen_name: 'AccountingDownloadReport' });
+  }, [onAccountingViewed]);
+
   const [downloading, setDownloading] = useState(false);
 
   const handleDownload = async () => {
