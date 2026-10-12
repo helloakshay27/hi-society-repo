@@ -6220,3 +6220,61 @@ html body .MuiDialog-paper,
 html body .MuiCard-root {
   border-radius: 16px !important;
 }
+
+
+/* ============================================================
+   FORM ACTION BUTTONS — match the helpdesk "New Ticket" footer
+   (src/pages/BMS/AddHelpdeskTicket.tsx). Overrides the black-outlined
+   cancel rule above: secondary/cancel buttons get a hairline border and
+   muted ink that darkens on hover; primary keeps solid ink. Colour,
+   border, weight and radius only — sizes stay per-component so 36px
+   toolbar buttons still line up with the search box.
+   ============================================================ */
+html body button.btn-cancel,
+html body .btn-cancel,
+html body button.cancel-btn,
+html body button[class*="bg-white" i][class*="text-[#C72030]" i],
+html body button[class*="bg-white" i][class*="text-[#DA7756]" i],
+html body button[class*="bg-white" i][class*="text-[#d97757]" i],
+html body button[class*="border-[#da7756]" i],
+html body button[class*="border-[#d97757]" i] {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(26, 26, 24, 0.08) !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+  -webkit-text-fill-color: rgba(26, 26, 24, 0.68) !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-button, 8px) !important;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+html body button.btn-cancel:hover,
+html body .btn-cancel:hover,
+html body button.cancel-btn:hover,
+html body button[class*="bg-white" i][class*="text-[#C72030]" i]:hover,
+html body button[class*="bg-white" i][class*="text-[#DA7756]" i]:hover,
+html body button[class*="bg-white" i][class*="text-[#d97757]" i]:hover,
+html body button[class*="border-[#da7756]" i]:hover,
+html body button[class*="border-[#d97757]" i]:hover {
+  background-color: #ffffff !important;
+  border-color: rgba(26, 26, 24, 0.28) !important;
+  color: #1a1a18 !important;
+  -webkit-text-fill-color: #1a1a18 !important;
+}
+html body :is(button.btn-cancel, .btn-cancel, button.cancel-btn, button[class*="border-[#da7756]" i]) svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+html body button[type="submit"]:not([role="switch"]),
+html body button.btn-primary {
+  font-weight: 600 !important;
+  border-radius: var(--radius-button, 8px) !important;
+}
+html body button[type="submit"]:not([role="switch"]):hover,
+html body button.btn-primary:hover {
+  background-color: #12100e !important;
+  border-color: #12100e !important;
+}
+html body button[type="submit"]:disabled,
+html body button.btn-primary:disabled {
+  opacity: 0.6;
+}
