@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Checkbox, FormControlLabel, Dialog, DialogContent, IconButton } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import { ArrowLeft, FileText, ShieldCheck, Paperclip } from 'lucide-react';
 import { Heading } from '@/components/ui/heading';
 
 const fieldStyles = {
@@ -102,6 +101,36 @@ interface ExistingAttachment {
     url: string;
     doctype: string;
 }
+
+interface SectionCardProps {
+    icon: React.ComponentType<{ size?: number; color?: string }>;
+    title: string;
+    count?: number;
+    children: React.ReactNode;
+}
+
+const SectionCard = ({ icon: Icon, title, count, children }: SectionCardProps) => (
+    <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-3">
+            <div className="flex items-center">
+                <span
+                    className="mr-3 flex h-8 w-8 items-center justify-center rounded-full"
+                    style={{ backgroundColor: '#E5E0D3' }}
+                >
+                    <Icon size={16} color="#C72030" />
+                </span>
+                <h2 className="text-lg font-medium text-gray-900">{title}</h2>
+            </div>
+
+            {/* {typeof count === 'number' && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C72030] px-1.5 text-[11px] font-medium text-white">
+                    {count}
+                </span>
+            )} */}
+        </div>
+        <div className="p-6">{children}</div>
+    </div>
+);
 
 export const EditIncidentPage = () => {
     const navigate = useNavigate();
@@ -692,329 +721,383 @@ export const EditIncidentPage = () => {
     return (
         <div className="p-6">
             <div className="mb-6">
-                {/* Breadcrumb */}
-                <nav className="flex items-center text-sm text-gray-600 mb-8">
-                    <Button
-                        variant="ghost"
-                        onClick={() => navigate(-1)}
-                        aria-label="Go back to previous page"
-                        className="!h-10 !w-10 !min-w-10 !rounded-full !p-0 !border !border-[#E5E7EB] !bg-white shadow-sm hover:!bg-[#F3F4F6] mr-1"
-                    >
-                        <ArrowBackIcon className="!text-[#E07856]" />
-                    </Button>
+                <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E7EB] bg-white shadow-sm hover:bg-gray-50"
+                >
+                    <ArrowLeft className="h-5 w-5 text-[#1A1A1A]" />
+                </button>
 
+                <nav className="mb-4 flex items-center text-sm text-gray-600">
                     <span>Home</span>
-                    <span className="mx-2 text-gray-400">{'>'}</span>
+                    <span className="mx-2">{'>'}</span>
                     <span>Safety</span>
-                    <span className="mx-2 text-gray-400">{'>'}</span>
+                    <span className="mx-2">{'>'}</span>
                     <span>Incident</span>
                 </nav>
 
-                {/* Page Title */}
                 <Heading
                     level="h1"
                     variant="primary"
                     spacing="none"
-                    className="text-[#E07856] font-semibold text-2xl"
+                    className="text-[#C72030] font-semibold"
                 >
                     EDIT INCIDENT (#{id})
                 </Heading>
             </div>
 
-            {/* Basic Details */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className='bg-[#F6F4EE] mb-4'>
-                    <CardTitle className="text-lg text-black flex items-center">
-                        <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">1</span>
-                        INCIDENT DETAILS
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 bg-white">
-                    {/* Time & Date Section */}
-                    <div className="mb-6">
-                        <h3 className="text-sm font-medium mb-3">Time & Date <span style={{ color: '#C72030' }}>*</span></h3>
-                        <div className="grid grid-cols-5 gap-2">
-                            <FormControl fullWidth variant="outlined">
-                                <InputLabel shrink>Year <span style={{ color: '#C72030' }}>*</span></InputLabel>
-                                <MuiSelect
-                                    label="Year *"
-                                    value={incidentData.year}
-                                    onChange={e => handleInputChange('year', e.target.value)}
-                                    displayEmpty
-                                    sx={fieldStyles}
-                                    MenuProps={menuProps}
-                                >
-                                    <MenuItem value=""><em>Select Year</em></MenuItem>
-                                    {Array.from({ length: new Date().getFullYear() + 50 - 2010 + 1 }, (_, i) => {
-                                        const year = new Date().getFullYear() + 50 - i;
-                                        return (
-                                            <MenuItem key={year} value={String(year)}>
-                                                {year}
-                                            </MenuItem>
-                                        );
-                                    })}
-                                </MuiSelect>
-                            </FormControl>
+            <SectionCard icon={FileText} title="INCIDENT DETAILS">
+                {/* Time & Date Section */}
+                <div className="mb-6">
+                    <h3 className="text-sm font-medium mb-3">Time & Date <span style={{ color: '#C72030' }}>*</span></h3>
+                    <div className="grid grid-cols-5 gap-2">
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel shrink>Year <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <MuiSelect
+                                label="Year *"
+                                value={incidentData.year}
+                                onChange={e => handleInputChange('year', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Year</em></MenuItem>
+                                {Array.from({ length: new Date().getFullYear() + 50 - 2010 + 1 }, (_, i) => {
+                                    const year = new Date().getFullYear() + 50 - i;
+                                    return (
+                                        <MenuItem key={year} value={String(year)}>
+                                            {year}
+                                        </MenuItem>
+                                    );
+                                })}
+                            </MuiSelect>
+                        </FormControl>
 
-                            <FormControl fullWidth variant="outlined">
-                                <InputLabel shrink>Month <span style={{ color: '#C72030' }}>*</span></InputLabel>
-                                <MuiSelect
-                                    label="Month *"
-                                    value={incidentData.month}
-                                    onChange={e => handleInputChange('month', e.target.value)}
-                                    displayEmpty
-                                    sx={fieldStyles}
-                                    MenuProps={menuProps}
-                                >
-                                    <MenuItem value=""><em>Select Month</em></MenuItem>
-                                    {monthNames.map(m => (
-                                        <MenuItem key={m} value={m}>{m}</MenuItem>
-                                    ))}
-                                </MuiSelect>
-                            </FormControl>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel shrink>Month <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <MuiSelect
+                                label="Month *"
+                                value={incidentData.month}
+                                onChange={e => handleInputChange('month', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Month</em></MenuItem>
+                                {monthNames.map(m => (
+                                    <MenuItem key={m} value={m}>{m}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
 
-                            <FormControl fullWidth variant="outlined">
-                                <InputLabel shrink>Day <span style={{ color: '#C72030' }}>*</span></InputLabel>
-                                <MuiSelect
-                                    label="Day *"
-                                    value={incidentData.day}
-                                    onChange={e => handleInputChange('day', e.target.value)}
-                                    displayEmpty
-                                    sx={fieldStyles}
-                                    MenuProps={menuProps}
-                                >
-                                    <MenuItem value=""><em>Select Day</em></MenuItem>
-                                    {Array.from({ length: 31 }, (_, i) => (
-                                        <MenuItem key={i + 1} value={String(i + 1)}>{i + 1}</MenuItem>
-                                    ))}
-                                </MuiSelect>
-                            </FormControl>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel shrink>Day <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <MuiSelect
+                                label="Day *"
+                                value={incidentData.day}
+                                onChange={e => handleInputChange('day', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Day</em></MenuItem>
+                                {Array.from({ length: 31 }, (_, i) => (
+                                    <MenuItem key={i + 1} value={String(i + 1)}>{i + 1}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
 
-                            <FormControl fullWidth variant="outlined">
-                                <InputLabel shrink>Hour <span style={{ color: '#C72030' }}>*</span></InputLabel>
-                                <MuiSelect
-                                    label="Hour *"
-                                    value={incidentData.hour}
-                                    onChange={e => handleInputChange('hour', e.target.value)}
-                                    displayEmpty
-                                    sx={fieldStyles}
-                                    MenuProps={menuProps}
-                                >
-                                    <MenuItem value=""><em>Select Hour</em></MenuItem>
-                                    {Array.from({ length: 24 }, (_, i) => (
-                                        <MenuItem key={i} value={String(i)}>{i}</MenuItem>
-                                    ))}
-                                </MuiSelect>
-                            </FormControl>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel shrink>Hour <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <MuiSelect
+                                label="Hour *"
+                                value={incidentData.hour}
+                                onChange={e => handleInputChange('hour', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Hour</em></MenuItem>
+                                {Array.from({ length: 24 }, (_, i) => (
+                                    <MenuItem key={i} value={String(i)}>{i}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
 
-                            <FormControl fullWidth variant="outlined">
-                                <InputLabel shrink>Minute <span style={{ color: '#C72030' }}>*</span></InputLabel>
-                                <MuiSelect
-                                    label="Minute *"
-                                    value={incidentData.minute}
-                                    onChange={e => handleInputChange('minute', e.target.value)}
-                                    displayEmpty
-                                    sx={fieldStyles}
-                                    MenuProps={menuProps}
-                                >
-                                    <MenuItem value=""><em>Select Minute</em></MenuItem>
-                                    {Array.from({ length: 60 }, (_, i) => (
-                                        <MenuItem key={i} value={String(i)}>{i}</MenuItem>
-                                    ))}
-                                </MuiSelect>
-                            </FormControl>
-                        </div>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel shrink>Minute <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <MuiSelect
+                                label="Minute *"
+                                value={incidentData.minute}
+                                onChange={e => handleInputChange('minute', e.target.value)}
+                                displayEmpty
+                                sx={fieldStyles}
+                                MenuProps={menuProps}
+                            >
+                                <MenuItem value=""><em>Select Minute</em></MenuItem>
+                                {Array.from({ length: 60 }, (_, i) => (
+                                    <MenuItem key={i} value={String(i)}>{i}</MenuItem>
+                                ))}
+                            </MuiSelect>
+                        </FormControl>
                     </div>
+                </div>
 
-                    {/* Building and Categories Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        {/* Tower Dropdown */}
+                {/* Building and Categories Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {/* Tower Dropdown */}
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                        <InputLabel shrink>Tower <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                        <MuiSelect
+                            label="Tower *"
+                            value={incidentData.tower}
+                            onChange={e => handleInputChange('tower', e.target.value)}
+                            displayEmpty
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
+                        >
+                            <MenuItem value=""><em>Select Tower</em></MenuItem>
+                            {towers.map(t => (
+                                <MenuItem key={t.id} value={String(t.id)}>{t.name}</MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    {/* PRIMARY CATEGORY HIERARCHY */}
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                        <InputLabel shrink>Primary Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                        <MuiSelect
+                            label="Primary Category *"
+                            value={incidentData.primaryCategory}
+                            onChange={e => handleInputChange('primaryCategory', e.target.value)}
+                            displayEmpty
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
+                        >
+                            <MenuItem value=""><em>Select Primary Category</em></MenuItem>
+                            {categories.map(cat => (
+                                <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.primaryCategory}>
+                        <InputLabel shrink>Sub Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                        <MuiSelect
+                            label="Sub Category *"
+                            value={incidentData.subCategory}
+                            onChange={e => handleInputChange('subCategory', e.target.value)}
+                            displayEmpty
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
+                        >
+                            <MenuItem value=""><em>Select Sub Category</em></MenuItem>
+                            {subCategories.filter(sub => String(sub.parent_id) === incidentData.primaryCategory).map(sub => (
+                                <MenuItem key={sub.id} value={String(sub.id)}>{sub.name}</MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.subCategory}>
+                        <InputLabel shrink>Sub Sub Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                        <MuiSelect
+                            label="Sub Sub Category *"
+                            value={incidentData.subSubCategory}
+                            onChange={e => handleInputChange('subSubCategory', e.target.value)}
+                            displayEmpty
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
+                        >
+                            <MenuItem value=""><em>Select Sub Sub Category</em></MenuItem>
+                            {subSubCategories.filter(subsub => String(subsub.parent_id) === incidentData.subCategory).map(subsub => (
+                                <MenuItem key={subsub.id} value={String(subsub.id)}>{subsub.name}</MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.subSubCategory}>
+                        <InputLabel shrink>Sub Sub Sub Category </InputLabel>
+                        <MuiSelect
+                            label="Sub Sub Sub Category "
+                            value={incidentData.subSubSubCategory}
+                            onChange={e => handleInputChange('subSubSubCategory', e.target.value)}
+                            displayEmpty
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
+                        >
+                            <MenuItem value=""><em>Select Sub Sub Sub Category</em></MenuItem>
+                            {subSubSubCategories.filter(subsubsub => String(subsubsub.parent_id) === incidentData.subSubCategory).map(subsubsub => (
+                                <MenuItem key={subsubsub.id} value={String(subsubsub.id)}>{subsubsub.name}</MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    {/* SECONDARY CATEGORY HIERARCHY */}
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                        <InputLabel shrink>Secondary Category</InputLabel>
+                        <MuiSelect
+                            label="Secondary Category *"
+                            value={incidentData.secondaryCategory}
+                            onChange={e => handleInputChange('secondaryCategory', e.target.value)}
+                            displayEmpty
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
+                        >
+                            <MenuItem value=""><em>Select Secondary Category</em></MenuItem>
+                            {secondaryCategories.map(cat => (
+                                <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondaryCategory}>
+                        <InputLabel shrink>Secondary Sub Category</InputLabel>
+                        <MuiSelect
+                            label="Secondary Sub Category *"
+                            value={incidentData.secondarySubCategory}
+                            onChange={e => handleInputChange('secondarySubCategory', e.target.value)}
+                            displayEmpty
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
+                        >
+                            <MenuItem value=""><em>Select Secondary Sub Category</em></MenuItem>
+                            {secondarySubCategories.filter(sub => String(sub.parent_id) === incidentData.secondaryCategory).map(sub => (
+                                <MenuItem key={sub.id} value={String(sub.id)}>{sub.name}</MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondarySubCategory}>
+                        <InputLabel shrink>Secondary Sub Sub Category</InputLabel>
+                        <MuiSelect
+                            label="Secondary Sub Sub Category *"
+                            value={incidentData.secondarySubSubCategory}
+                            onChange={e => handleInputChange('secondarySubSubCategory', e.target.value)}
+                            displayEmpty
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
+                        >
+                            <MenuItem value=""><em>Select Secondary Sub Sub Category</em></MenuItem>
+                            {secondarySubSubCategories.filter(subsub => String(subsub.parent_id) === incidentData.secondarySubCategory).map(subsub => (
+                                <MenuItem key={subsub.id} value={String(subsub.id)}>{subsub.name}</MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondarySubSubCategory}>
+                        <InputLabel shrink>Secondary Sub Sub Sub Category</InputLabel>
+                        <MuiSelect
+                            label="Secondary Sub Sub Sub Category *"
+                            value={incidentData.secondarySubSubSubCategory}
+                            onChange={e => handleInputChange('secondarySubSubSubCategory', e.target.value)}
+                            displayEmpty
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
+                        >
+                            <MenuItem value=""><em>Select Secondary Sub Sub Sub Category</em></MenuItem>
+                            {secondarySubSubSubCategories.filter(subsubsub => String(subsubsub.parent_id) === incidentData.secondarySubSubCategory).map(subsubsub => (
+                                <MenuItem key={subsubsub.id} value={String(subsubsub.id)}>{subsubsub.name}</MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                        <InputLabel shrink>Incident level <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                        <MuiSelect
+                            label="Incident level *"
+                            value={incidentData.incidentLevel}
+                            onChange={e => handleInputChange('incidentLevel', e.target.value)}
+                            displayEmpty
+                            sx={{
+                                ...fieldStyles,
+                                '& .MuiInputBase-input.Mui-disabled': {
+                                    WebkitTextFillColor: '#000',
+                                    backgroundColor: '#f5f5f5'
+                                }
+                            }}
+                            MenuProps={menuProps}
+                        >
+                            <MenuItem value=""><em>Select Level</em></MenuItem>
+                            {incidentLevels.map(level => (
+                                <MenuItem key={level.id} value={String(level.id)}>{level.name}</MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    {/* Work related injury (show when subcategory indicates injury) */}
+                    {showWorkRelated && (
                         <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                            <InputLabel shrink>Tower <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <InputLabel shrink>Work Related Injury</InputLabel>
                             <MuiSelect
-                                label="Tower *"
-                                value={incidentData.tower}
-                                onChange={e => handleInputChange('tower', e.target.value)}
+                                label="Work Related Injury"
+                                value={incidentData.workRelatedInjury}
+                                onChange={e => handleInputChange('workRelatedInjury', e.target.value)}
                                 displayEmpty
                                 sx={fieldStyles}
                                 MenuProps={menuProps}
                             >
-                                <MenuItem value=""><em>Select Tower</em></MenuItem>
-                                {towers.map(t => (
-                                    <MenuItem key={t.id} value={String(t.id)}>{t.name}</MenuItem>
-                                ))}
+                                <MenuItem value=""><em>select</em></MenuItem>
+                                <MenuItem value="false">No</MenuItem>
+                                <MenuItem value="true">Yes</MenuItem>
                             </MuiSelect>
                         </FormControl>
+                    )}
 
-                        {/* PRIMARY CATEGORY HIERARCHY */}
+                    {/* Property damage selection */}
+                    {!isBuildingDamageCategory && (
                         <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                            <InputLabel shrink>Primary Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                            <InputLabel shrink>Has Any Property Damage Happened In The Incident? <span style={{ color: '#C72030' }}>*</span></InputLabel>
                             <MuiSelect
-                                label="Primary Category *"
-                                value={incidentData.primaryCategory}
-                                onChange={e => handleInputChange('primaryCategory', e.target.value)}
+                                label="Property Damage"
+                                value={incidentData.propertyDamage}
+                                onChange={e => handleInputChange('propertyDamage', e.target.value)}
                                 displayEmpty
                                 sx={fieldStyles}
                                 MenuProps={menuProps}
                             >
-                                <MenuItem value=""><em>Select Primary Category</em></MenuItem>
-                                {categories.map(cat => (
-                                    <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
-                                ))}
+                                <MenuItem value=""><em>select</em></MenuItem>
+                                <MenuItem value="false">No</MenuItem>
+                                <MenuItem value="true">Yes</MenuItem>
                             </MuiSelect>
                         </FormControl>
+                    )}
 
-                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.primaryCategory}>
-                            <InputLabel shrink>Sub Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
-                            <MuiSelect
-                                label="Sub Category *"
-                                value={incidentData.subCategory}
-                                onChange={e => handleInputChange('subCategory', e.target.value)}
-                                displayEmpty
-                                sx={fieldStyles}
-                                MenuProps={menuProps}
-                            >
-                                <MenuItem value=""><em>Select Sub Category</em></MenuItem>
-                                {subCategories.filter(sub => String(sub.parent_id) === incidentData.primaryCategory).map(sub => (
-                                    <MenuItem key={sub.id} value={String(sub.id)}>{sub.name}</MenuItem>
-                                ))}
-                            </MuiSelect>
-                        </FormControl>
-
-                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.subCategory}>
-                            <InputLabel shrink>Sub Sub Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
-                            <MuiSelect
-                                label="Sub Sub Category *"
-                                value={incidentData.subSubCategory}
-                                onChange={e => handleInputChange('subSubCategory', e.target.value)}
-                                displayEmpty
-                                sx={fieldStyles}
-                                MenuProps={menuProps}
-                            >
-                                <MenuItem value=""><em>Select Sub Sub Category</em></MenuItem>
-                                {subSubCategories.filter(subsub => String(subsub.parent_id) === incidentData.subCategory).map(subsub => (
-                                    <MenuItem key={subsub.id} value={String(subsub.id)}>{subsub.name}</MenuItem>
-                                ))}
-                            </MuiSelect>
-                        </FormControl>
-
-                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.subSubCategory}>
-                            <InputLabel shrink>Sub Sub Sub Category </InputLabel>
-                            <MuiSelect
-                                label="Sub Sub Sub Category "
-                                value={incidentData.subSubSubCategory}
-                                onChange={e => handleInputChange('subSubSubCategory', e.target.value)}
-                                displayEmpty
-                                sx={fieldStyles}
-                                MenuProps={menuProps}
-                            >
-                                <MenuItem value=""><em>Select Sub Sub Sub Category</em></MenuItem>
-                                {subSubSubCategories.filter(subsubsub => String(subsubsub.parent_id) === incidentData.subSubCategory).map(subsubsub => (
-                                    <MenuItem key={subsubsub.id} value={String(subsubsub.id)}>{subsubsub.name}</MenuItem>
-                                ))}
-                            </MuiSelect>
-                        </FormControl>
-
-                        {/* SECONDARY CATEGORY HIERARCHY */}
-                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                            <InputLabel shrink>Secondary Category</InputLabel>
-                            <MuiSelect
-                                label="Secondary Category *"
-                                value={incidentData.secondaryCategory}
-                                onChange={e => handleInputChange('secondaryCategory', e.target.value)}
-                                displayEmpty
-                                sx={fieldStyles}
-                                MenuProps={menuProps}
-                            >
-                                <MenuItem value=""><em>Select Secondary Category</em></MenuItem>
-                                {secondaryCategories.map(cat => (
-                                    <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
-                                ))}
-                            </MuiSelect>
-                        </FormControl>
-
-                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondaryCategory}>
-                            <InputLabel shrink>Secondary Sub Category</InputLabel>
-                            <MuiSelect
-                                label="Secondary Sub Category *"
-                                value={incidentData.secondarySubCategory}
-                                onChange={e => handleInputChange('secondarySubCategory', e.target.value)}
-                                displayEmpty
-                                sx={fieldStyles}
-                                MenuProps={menuProps}
-                            >
-                                <MenuItem value=""><em>Select Secondary Sub Category</em></MenuItem>
-                                {secondarySubCategories.filter(sub => String(sub.parent_id) === incidentData.secondaryCategory).map(sub => (
-                                    <MenuItem key={sub.id} value={String(sub.id)}>{sub.name}</MenuItem>
-                                ))}
-                            </MuiSelect>
-                        </FormControl>
-
-                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondarySubCategory}>
-                            <InputLabel shrink>Secondary Sub Sub Category</InputLabel>
-                            <MuiSelect
-                                label="Secondary Sub Sub Category *"
-                                value={incidentData.secondarySubSubCategory}
-                                onChange={e => handleInputChange('secondarySubSubCategory', e.target.value)}
-                                displayEmpty
-                                sx={fieldStyles}
-                                MenuProps={menuProps}
-                            >
-                                <MenuItem value=""><em>Select Secondary Sub Sub Category</em></MenuItem>
-                                {secondarySubSubCategories.filter(subsub => String(subsub.parent_id) === incidentData.secondarySubCategory).map(subsub => (
-                                    <MenuItem key={subsub.id} value={String(subsub.id)}>{subsub.name}</MenuItem>
-                                ))}
-                            </MuiSelect>
-                        </FormControl>
-
-                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondarySubSubCategory}>
-                            <InputLabel shrink>Secondary Sub Sub Sub Category</InputLabel>
-                            <MuiSelect
-                                label="Secondary Sub Sub Sub Category *"
-                                value={incidentData.secondarySubSubSubCategory}
-                                onChange={e => handleInputChange('secondarySubSubSubCategory', e.target.value)}
-                                displayEmpty
-                                sx={fieldStyles}
-                                MenuProps={menuProps}
-                            >
-                                <MenuItem value=""><em>Select Secondary Sub Sub Sub Category</em></MenuItem>
-                                {secondarySubSubSubCategories.filter(subsubsub => String(subsubsub.parent_id) === incidentData.secondarySubSubCategory).map(subsubsub => (
-                                    <MenuItem key={subsubsub.id} value={String(subsubsub.id)}>{subsubsub.name}</MenuItem>
-                                ))}
-                            </MuiSelect>
-                        </FormControl>
-
-                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                            <InputLabel shrink>Incident level <span style={{ color: '#C72030' }}>*</span></InputLabel>
-                            <MuiSelect
-                                label="Incident level *"
-                                value={incidentData.incidentLevel}
-                                onChange={e => handleInputChange('incidentLevel', e.target.value)}
-                                displayEmpty
-                                sx={{
-                                    ...fieldStyles,
-                                    '& .MuiInputBase-input.Mui-disabled': {
-                                        WebkitTextFillColor: '#000',
-                                        backgroundColor: '#f5f5f5'
-                                    }
-                                }}
-                                MenuProps={menuProps}
-                            >
-                                <MenuItem value=""><em>Select Level</em></MenuItem>
-                                {incidentLevels.map(level => (
-                                    <MenuItem key={level.id} value={String(level.id)}>{level.name}</MenuItem>
-                                ))}
-                            </MuiSelect>
-                        </FormControl>
-
-                        {/* Work related injury (show when subcategory indicates injury) */}
-                        {showWorkRelated && (
+                    {(isBuildingDamageCategory || incidentData.propertyDamage === 'true') && (
+                        <>
                             <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                                <InputLabel shrink>Work Related Injury</InputLabel>
+                                <InputLabel shrink>Property damage category</InputLabel>
                                 <MuiSelect
-                                    label="Work Related Injury"
-                                    value={incidentData.workRelatedInjury}
-                                    onChange={e => handleInputChange('workRelatedInjury', e.target.value)}
+                                    label="Property damage category"
+                                    value={incidentData.propertyDamageId}
+                                    onChange={e => handleInputChange('propertyDamageId', e.target.value)}
+                                    displayEmpty
+                                    sx={fieldStyles}
+                                    MenuProps={menuProps}
+                                >
+                                    <MenuItem value=""><em>Select</em></MenuItem>
+                                    {propertyDamageCategories.map(cat => (
+                                        <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                                    ))}
+                                </MuiSelect>
+                            </FormControl>
+
+                            <TextField
+                                label="Damage Evaluation (INR)"
+                                value={incidentData.damageEvaluation}
+                                onChange={e => handleInputChange('damageEvaluation', e.target.value)}
+                                fullWidth
+                                variant="outlined"
+                                sx={{ mt: 1 }}
+                            />
+
+                            <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                                <InputLabel shrink>Damage covered under insurance</InputLabel>
+                                <MuiSelect
+                                    label="Damage covered under insurance"
+                                    value={incidentData.damageCoveredInsurance}
+                                    onChange={e => handleInputChange('damageCoveredInsurance', e.target.value)}
                                     displayEmpty
                                     sx={fieldStyles}
                                     MenuProps={menuProps}
@@ -1024,297 +1107,303 @@ export const EditIncidentPage = () => {
                                     <MenuItem value="true">Yes</MenuItem>
                                 </MuiSelect>
                             </FormControl>
-                        )}
 
-                        {/* Property damage selection */}
-                        {!isBuildingDamageCategory && (
-                            <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                                <InputLabel shrink>Has Any Property Damage Happened In The Incident? <span style={{ color: '#C72030' }}>*</span></InputLabel>
-                                <MuiSelect
-                                    label="Property Damage"
-                                    value={incidentData.propertyDamage}
-                                    onChange={e => handleInputChange('propertyDamage', e.target.value)}
-                                    displayEmpty
-                                    sx={fieldStyles}
-                                    MenuProps={menuProps}
-                                >
-                                    <MenuItem value=""><em>select</em></MenuItem>
-                                    <MenuItem value="false">No</MenuItem>
-                                    <MenuItem value="true">Yes</MenuItem>
-                                </MuiSelect>
-                            </FormControl>
-                        )}
-
-                        {(isBuildingDamageCategory || incidentData.propertyDamage === 'true') && (
-                            <>
+                            {Number(incidentData.damageEvaluation) > 0 && (
                                 <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                                    <InputLabel shrink>Property damage category</InputLabel>
+                                    <InputLabel shrink>Whether damaged was recovered</InputLabel>
                                     <MuiSelect
-                                        label="Property damage category"
-                                        value={incidentData.propertyDamageId}
-                                        onChange={e => handleInputChange('propertyDamageId', e.target.value)}
-                                        displayEmpty
-                                        sx={fieldStyles}
-                                        MenuProps={menuProps}
-                                    >
-                                        <MenuItem value=""><em>Select</em></MenuItem>
-                                        {propertyDamageCategories.map(cat => (
-                                            <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
-                                        ))}
-                                    </MuiSelect>
-                                </FormControl>
-
-                                <TextField
-                                    label="Damage Evaluation (INR)"
-                                    value={incidentData.damageEvaluation}
-                                    onChange={e => handleInputChange('damageEvaluation', e.target.value)}
-                                    fullWidth
-                                    variant="outlined"
-                                    sx={{ mt: 1 }}
-                                />
-
-                                <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                                    <InputLabel shrink>Damage covered under insurance</InputLabel>
-                                    <MuiSelect
-                                        label="Damage covered under insurance"
-                                        value={incidentData.damageCoveredInsurance}
-                                        onChange={e => handleInputChange('damageCoveredInsurance', e.target.value)}
+                                        label="Whether damaged was recovered"
+                                        value={incidentData.damagedRecovered}
+                                        onChange={e => handleInputChange('damagedRecovered', e.target.value)}
                                         displayEmpty
                                         sx={fieldStyles}
                                         MenuProps={menuProps}
                                     >
                                         <MenuItem value=""><em>select</em></MenuItem>
-                                        <MenuItem value="false">No</MenuItem>
-                                        <MenuItem value="true">Yes</MenuItem>
+                                        <MenuItem value="Yes, from the insurance agency">Yes, from the insurance agency</MenuItem>
+                                        <MenuItem value="Yes, from the involved party in the incident">Yes, from the involved party in the incident</MenuItem>
+                                        <MenuItem value="Not recovered.">Not recovered.</MenuItem>
                                     </MuiSelect>
                                 </FormControl>
+                            )}
 
-                                {Number(incidentData.damageEvaluation) > 0 && (
-                                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                                        <InputLabel shrink>Whether damaged was recovered</InputLabel>
-                                        <MuiSelect
-                                            label="Whether damaged was recovered"
-                                            value={incidentData.damagedRecovered}
-                                            onChange={e => handleInputChange('damagedRecovered', e.target.value)}
-                                            displayEmpty
-                                            sx={fieldStyles}
-                                            MenuProps={menuProps}
-                                        >
-                                            <MenuItem value=""><em>select</em></MenuItem>
-                                            <MenuItem value="Yes, from the insurance agency">Yes, from the insurance agency</MenuItem>
-                                            <MenuItem value="Yes, from the involved party in the incident">Yes, from the involved party in the incident</MenuItem>
-                                            <MenuItem value="Not recovered.">Not recovered.</MenuItem>
-                                        </MuiSelect>
-                                    </FormControl>
-                                )}
+                            {incidentData.damageCoveredInsurance === 'true' && (
+                                <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                                    <InputLabel shrink>Insured by</InputLabel>
+                                    <MuiSelect
+                                        label="Insured by"
+                                        value={incidentData.insuredBy}
+                                        onChange={e => handleInputChange('insuredBy', e.target.value)}
+                                        displayEmpty
+                                        sx={fieldStyles}
+                                        MenuProps={menuProps}
+                                    >
+                                        <MenuItem value=""><em>select</em></MenuItem>
+                                        <MenuItem value="Building insurance">Building insurance</MenuItem>
+                                        <MenuItem value="Private/ individual insurance">Private/ individual insurance</MenuItem>
+                                        <MenuItem value="Others">Others</MenuItem>
+                                    </MuiSelect>
+                                </FormControl>
+                            )}
+                        </>
+                    )}
 
-                                {incidentData.damageCoveredInsurance === 'true' && (
-                                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                                        <InputLabel shrink>Insured by</InputLabel>
-                                        <MuiSelect
-                                            label="Insured by"
-                                            value={incidentData.insuredBy}
-                                            onChange={e => handleInputChange('insuredBy', e.target.value)}
-                                            displayEmpty
-                                            sx={fieldStyles}
-                                            MenuProps={menuProps}
-                                        >
-                                            <MenuItem value=""><em>select</em></MenuItem>
-                                            <MenuItem value="Building insurance">Building insurance</MenuItem>
-                                            <MenuItem value="Private/ individual insurance">Private/ individual insurance</MenuItem>
-                                            <MenuItem value="Others">Others</MenuItem>
-                                        </MuiSelect>
-                                    </FormControl>
-                                )}
-                            </>
-                        )}
-
-                        {/* RCA and action fields */}
-                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                            <InputLabel shrink>RCA</InputLabel>
-                            <TextField
-                                value={incidentData.rca}
-                                onChange={e => handleInputChange('rca', e.target.value)}
-                                fullWidth
-                                variant="outlined"
-                                sx={{ mt: 1 }}
-                            />
-                        </FormControl>
-
-                        <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                            <InputLabel shrink>Primary root cause category</InputLabel>
-                            <MuiSelect
-                                label="Primary root cause category"
-                                value={incidentData.rcaCategoryId}
-                                onChange={e => handleInputChange('rcaCategoryId', e.target.value)}
-                                displayEmpty
-                                sx={fieldStyles}
-                                MenuProps={menuProps}
-                            >
-                                <MenuItem value=""><em>Select</em></MenuItem>
-                                {rcaCategories.map(cat => (
-                                    <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
-                                ))}
-                            </MuiSelect>
-                        </FormControl>
-
+                    {/* RCA and action fields */}
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                        <InputLabel shrink>RCA</InputLabel>
                         <TextField
-                            label="Corrective action"
-                            value={incidentData.correctiveAction}
-                            onChange={e => handleInputChange('correctiveAction', e.target.value)}
+                            value={incidentData.rca}
+                            onChange={e => handleInputChange('rca', e.target.value)}
                             fullWidth
                             variant="outlined"
                             sx={{ mt: 1 }}
                         />
+                    </FormControl>
 
-                        <TextField
-                            label="Preventive action"
-                            value={incidentData.preventiveAction}
-                            onChange={e => handleInputChange('preventiveAction', e.target.value)}
-                            fullWidth
-                            variant="outlined"
-                            sx={{ mt: 1 }}
+                    <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
+                        <InputLabel shrink>Primary root cause category</InputLabel>
+                        <MuiSelect
+                            label="Primary root cause category"
+                            value={incidentData.rcaCategoryId}
+                            onChange={e => handleInputChange('rcaCategoryId', e.target.value)}
+                            displayEmpty
+                            sx={fieldStyles}
+                            MenuProps={menuProps}
+                        >
+                            <MenuItem value=""><em>Select</em></MenuItem>
+                            {rcaCategories.map(cat => (
+                                <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    <TextField
+                        label="Corrective action"
+                        value={incidentData.correctiveAction}
+                        onChange={e => handleInputChange('correctiveAction', e.target.value)}
+                        fullWidth
+                        variant="outlined"
+                        sx={{ mt: 1 }}
+                    />
+
+                    <TextField
+                        label="Preventive action"
+                        value={incidentData.preventiveAction}
+                        onChange={e => handleInputChange('preventiveAction', e.target.value)}
+                        fullWidth
+                        variant="outlined"
+                        sx={{ mt: 1 }}
+                    />
+                </div>
+
+                {/* Description */}
+                <div className="mt-6">
+                    <TextField
+                        label={<>Description<span style={{ color: '#C72030' }}>*</span></>}
+                        value={incidentData.description}
+                        onChange={e => handleInputChange('description', e.target.value)}
+                        fullWidth
+                        variant="outlined"
+                        multiline
+                        rows={4}
+                        InputLabelProps={{
+                            shrink: true
+                        }}
+                        sx={{
+                            "& .MuiOutlinedInput-root": {
+                                height: "auto !important",
+                                padding: "2px !important",
+                                display: "flex",
+                            },
+                            "& .MuiInputBase-input[aria-hidden='true']": {
+                                flex: 0,
+                                width: 0,
+                                height: 0,
+                                padding: "0 !important",
+                                margin: 0,
+                                display: "none",
+                            },
+                            "& .MuiInputBase-input": {
+                                resize: "none !important",
+                            },
+                        }}
+                    />
+                    <div className="mt-2 text-sm text-gray-600">
+                        {incidentData.description.length} / 240
+                    </div>
+                </div>
+            </SectionCard>
+
+            <SectionCard icon={ShieldCheck} title="SUPPORT & DISCLAIMER">
+                <div className="space-y-4">
+                    <div>
+                        <h3 className="text-lg font-medium mb-3">Support</h3>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={incidentData.supportRequired}
+                                    onChange={(e) => handleCheckboxChange('supportRequired', e.target.checked)}
+                                    sx={{
+                                        color: '#C72030',
+                                        '&.Mui-checked': {
+                                            color: '#C72030',
+                                        },
+                                    }}
+                                />
+                            }
+                            label="Support required"
                         />
                     </div>
 
-                    {/* Description */}
-                    <div className="mt-6">
-                        <TextField
-                            label={<>Description<span style={{ color: '#C72030' }}>*</span></>}
-                            value={incidentData.description}
-                            onChange={e => handleInputChange('description', e.target.value)}
-                            fullWidth
-                            variant="outlined"
-                            multiline
-                            rows={4}
-                            InputLabelProps={{
-                                shrink: true
-                            }}
-                            sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    height: "auto !important",
-                                    padding: "2px !important",
-                                    display: "flex",
-                                },
-                                "& .MuiInputBase-input[aria-hidden='true']": {
-                                    flex: 0,
-                                    width: 0,
-                                    height: 0,
-                                    padding: "0 !important",
-                                    margin: 0,
-                                    display: "none",
-                                },
-                                "& .MuiInputBase-input": {
-                                    resize: "none !important",
-                                },
-                            }}
+                    <div>
+                        <h3 className="text-lg font-medium mb-3">Disclaimer <span style={{ color: '#C72030' }}>*</span></h3>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={incidentData.factsCorrect}
+                                    onChange={(e) => handleCheckboxChange('factsCorrect', e.target.checked)}
+                                    sx={{
+                                        color: '#C72030',
+                                        '&.Mui-checked': {
+                                            color: '#C72030',
+                                        },
+                                    }}
+                                />
+                            }
+                            label={<>I have correctly stated all the facts related to the incident. </>}
                         />
-                        <div className="mt-2 text-sm text-gray-600">
-                            {incidentData.description.length} / 240
-                        </div>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </SectionCard>
 
-            {/* Support and Disclaimer */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className='bg-[#F6F4EE] mb-4'>
-                    <CardTitle className="text-lg text-black flex items-center">
-                        <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">2</span>
-                        SUPPORT & DISCLAIMER
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 bg-white">
+            <SectionCard
+                icon={Paperclip}
+                title="ATTACHMENTS"
+                count={existingAttachments.length + incidentData.attachments.length}
+            >
+                <div className="space-y-4">
+                    {/* Existing attachments already on the incident */}
+                    {existingAttachments.length > 0 && (
+                        <div className="space-y-2">
+                            <p className="text-sm font-medium text-gray-700">Existing Attachments:</p>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                                {existingAttachments.map((attachment) => {
+                                    const isImage = String(attachment.doctype || '').startsWith('image/');
+                                    return (
+                                        <div key={attachment.id} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="aspect-square bg-gray-100 flex items-center justify-center p-2">
+                                                {isImage ? (
+                                                    // show image thumbnail
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img src={attachment.url} alt={attachment.doctype || `Attachment ${attachment.id}`} className="w-full h-full object-contain" />
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center text-gray-400">
+                                                        <svg className="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4a1 1 0 011-1h8a1 1 0 011 1v12" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l5-5 5 5" />
+                                                        </svg>
+                                                        <span className="text-xs text-gray-600 truncate">{attachment.doctype || `Attachment ${attachment.id}`}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="p-2 bg-white border-t border-gray-100">
+                                                <p className="text-xs text-gray-600 truncate" title={attachment.doctype || `Attachment ${attachment.id}`}>
+                                                    {attachment.doctype || `Attachment ${attachment.id}`}
+                                                </p>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => isImage && setPreviewAttachment({ url: attachment.url, fileName: attachment.doctype || `Attachment_${attachment.id}` })}
+                                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 transition-opacity"
+                                                aria-label={`Preview ${attachment.doctype || `Attachment ${attachment.id}`}`}
+                                            >
+                                                <ZoomInIcon style={{ color: '#fff' }} />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="space-y-4">
-                        <div>
-                            <h3 className="text-lg font-medium mb-3">Support</h3>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={incidentData.supportRequired}
-                                        onChange={(e) => handleCheckboxChange('supportRequired', e.target.checked)}
-                                        sx={{
-                                            color: '#C72030',
-                                            '&.Mui-checked': {
-                                                color: '#C72030',
-                                            },
-                                        }}
-                                    />
-                                }
-                                label="Support required"
+                        <div className="flex items-center gap-4">
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileUpload}
+                                className="hidden"
+                                id="file-upload"
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                multiple
                             />
+                            <label htmlFor="file-upload" className="cursor-pointer">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="flex items-center gap-2 !bg-white !text-[#C72030] !border !border-[#C72030] hover:!bg-[#F6F4EE] hover:!text-[#C72030]"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    Choose Files
+                                </Button>
+                            </label>
+                            <span className="text-sm text-gray-500">
+                                {incidentData.attachments.length > 0
+                                    ? `${incidentData.attachments.length} file(s) selected`
+                                    : 'No files chosen'}
+                            </span>
                         </div>
 
-                        <div>
-                            <h3 className="text-lg font-medium mb-3">Disclaimer <span style={{ color: '#C72030' }}>*</span></h3>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={incidentData.factsCorrect}
-                                        onChange={(e) => handleCheckboxChange('factsCorrect', e.target.checked)}
-                                        sx={{
-                                            color: '#C72030',
-                                            '&.Mui-checked': {
-                                                color: '#C72030',
-                                            },
-                                        }}
-                                    />
-                                }
-                                label={<>I have correctly stated all the facts related to the incident. </>}
-                            />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Attachments */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className='bg-[#F6F4EE] mb-4'>
-                    <CardTitle className="text-lg text-black flex items-center">
-                        <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">3</span>
-                        ATTACHMENTS
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 bg-white">
-                    <div className="space-y-4">
-                        {/* Existing attachments already on the incident */}
-                        {existingAttachments.length > 0 && (
+                        {/* Display newly selected files with preview thumbnails */}
+                        {incidentData.attachments.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-sm font-medium text-gray-700">Existing Attachments:</p>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                                    {existingAttachments.map((attachment) => {
-                                        const isImage = String(attachment.doctype || '').startsWith('image/');
+                                <p className="text-sm font-medium text-gray-700">New Files To Upload:</p>
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    {incidentData.attachments.map((file, index) => {
+                                        const isImage = file.type.startsWith('image/');
+                                        const fileUrl = URL.createObjectURL(file);
+
                                         return (
-                                            <div key={attachment.id} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                                            <div key={index} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
                                                 <div className="aspect-square bg-gray-100 flex items-center justify-center p-2">
                                                     {isImage ? (
-                                                        // show image thumbnail
-                                                        // eslint-disable-next-line @next/next/no-img-element
-                                                        <img src={attachment.url} alt={attachment.doctype || `Attachment ${attachment.id}`} className="w-full h-full object-contain" />
+                                                        <img
+                                                            src={fileUrl}
+                                                            alt={file.name}
+                                                            className="w-full h-full object-contain"
+                                                            onLoad={() => URL.revokeObjectURL(fileUrl)}
+                                                        />
                                                     ) : (
                                                         <div className="flex flex-col items-center justify-center text-gray-400">
-                                                            <svg className="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4a1 1 0 011-1h8a1 1 0 011 1v12" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l5-5 5 5" />
+                                                            <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                             </svg>
-                                                            <span className="text-xs text-gray-600 truncate">{attachment.doctype || `Attachment ${attachment.id}`}</span>
+                                                            <span className="text-xs font-medium uppercase">
+                                                                {file.name.split('.').pop()}
+                                                            </span>
                                                         </div>
                                                     )}
                                                 </div>
 
                                                 <div className="p-2 bg-white border-t border-gray-100">
-                                                    <p className="text-xs text-gray-600 truncate" title={attachment.doctype || `Attachment ${attachment.id}`}>
-                                                        {attachment.doctype || `Attachment ${attachment.id}`}
+                                                    <p className="text-xs text-gray-600 truncate" title={file.name}>
+                                                        {file.name}
+                                                    </p>
+                                                    <p className="text-xs text-gray-400">
+                                                        {(file.size / 1024).toFixed(1)} KB
                                                     </p>
                                                 </div>
 
                                                 <button
-                                                    type="button"
-                                                    onClick={() => isImage && setPreviewAttachment({ url: attachment.url, fileName: attachment.doctype || `Attachment_${attachment.id}` })}
-                                                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 transition-opacity"
-                                                    aria-label={`Preview ${attachment.doctype || `Attachment ${attachment.id}`}`}
+                                                    onClick={() => removeFile(index)}
+                                                    className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    title="Remove file"
                                                 >
-                                                    <ZoomInIcon style={{ color: '#fff' }} />
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
                                                 </button>
                                             </div>
                                         );
@@ -1322,94 +1411,9 @@ export const EditIncidentPage = () => {
                                 </div>
                             </div>
                         )}
-
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-4">
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleFileUpload}
-                                    className="hidden"
-                                    id="file-upload"
-                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                    multiple
-                                />
-                                <label htmlFor="file-upload" className="cursor-pointer">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="flex items-center gap-2 !bg-white !text-[#C72030] !border !border-[#C72030] hover:!bg-[#F6F4EE] hover:!text-[#C72030]"
-                                        onClick={() => fileInputRef.current?.click()}
-                                    >
-                                        Choose Files
-                                    </Button>
-                                </label>
-                                <span className="text-sm text-gray-500">
-                                    {incidentData.attachments.length > 0
-                                        ? `${incidentData.attachments.length} file(s) selected`
-                                        : 'No files chosen'}
-                                </span>
-                            </div>
-
-                            {/* Display newly selected files with preview thumbnails */}
-                            {incidentData.attachments.length > 0 && (
-                                <div className="space-y-2">
-                                    <p className="text-sm font-medium text-gray-700">New Files To Upload:</p>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                        {incidentData.attachments.map((file, index) => {
-                                            const isImage = file.type.startsWith('image/');
-                                            const fileUrl = URL.createObjectURL(file);
-
-                                            return (
-                                                <div key={index} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
-                                                    <div className="aspect-square bg-gray-100 flex items-center justify-center p-2">
-                                                        {isImage ? (
-                                                            <img
-                                                                src={fileUrl}
-                                                                alt={file.name}
-                                                                className="w-full h-full object-contain"
-                                                                onLoad={() => URL.revokeObjectURL(fileUrl)}
-                                                            />
-                                                        ) : (
-                                                            <div className="flex flex-col items-center justify-center text-gray-400">
-                                                                <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                                </svg>
-                                                                <span className="text-xs font-medium uppercase">
-                                                                    {file.name.split('.').pop()}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="p-2 bg-white border-t border-gray-100">
-                                                        <p className="text-xs text-gray-600 truncate" title={file.name}>
-                                                            {file.name}
-                                                        </p>
-                                                        <p className="text-xs text-gray-400">
-                                                            {(file.size / 1024).toFixed(1)} KB
-                                                        </p>
-                                                    </div>
-
-                                                    <button
-                                                        onClick={() => removeFile(index)}
-                                                        className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        title="Remove file"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </SectionCard>
 
             {/* Submit Button */}
             <Dialog
@@ -1443,7 +1447,7 @@ export const EditIncidentPage = () => {
                     )}
                 </DialogContent>
             </Dialog>
-            <div className="flex justify-center gap-4 pt-6">
+            <div className="flex justify-end gap-4 pt-6">
                 <Button
                     variant="outline"
                     onClick={() => navigate(-1)}
@@ -1455,7 +1459,7 @@ export const EditIncidentPage = () => {
                 <Button
                     onClick={handleSubmit}
                     disabled={submitting}
-                    className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white px-8 py-3 text-[18px]"
+                    className="!bg-[#C72030] hover:!bg-[#b3222d] !text-white px-8 py-3 text-[18px]"
                 >
                     {submitting ? 'Updating…' : 'Update Incident'}
                 </Button>

@@ -747,7 +747,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 // Adjust this import path to wherever incidentService actually lives in your project
 import { incidentService, Incident, IncidentAttachment } from '@/services/incidentService';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileText, ShieldCheck, Paperclip, Users } from 'lucide-react';
 
 interface InjuryRow {
     injuryType: string;
@@ -848,11 +848,11 @@ const DetailField = ({
     }
 
     return (
-        <div className="pb-4 mb-4 border-b border-dashed border-gray-200">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+        <div className="rounded-lg border border-gray-200 bg-[#F9F9F9] p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-500 mb-1">
                 {label}
             </p>
-            <p className="text-sm text-gray-800">
+            <p className="text-sm text-gray-800 break-words">
                 {value}
             </p>
         </div>
@@ -1279,74 +1279,61 @@ export const NewIncidentDetailsPage = () => {
             {/* =====================================================
                 INCIDENT DETAIL CARD
             ====================================================== */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className="bg-[#F6F4EE] mb-0 flex flex-row items-center justify-between space-y-0">
-                    <CardTitle className="text-lg text-black">
-                        DETAIL (#{incident.id})
-                    </CardTitle>
+            <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-6 py-3">
+                    <div className="flex items-center">
+                        <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: '#E5E0D3' }}>
+                            <FileText size={16} color="#C72030" />
+                        </span>
+                        <h2 className="text-lg font-medium text-gray-900">DETAIL (#{incident.id})</h2>
+                    </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <Button
                             onClick={handleEditDetails}
-                            className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white text-sm px-4 py-2"
+                            className="bg-[#C72030] text-white hover:bg-[#b3222d]"
                         >
                             Edit Details
                         </Button>
 
                         <Button
                             onClick={() => setUpdateStatusOpen(true)}
-                            className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white text-sm px-4 py-2"
+                            className="bg-[#C72030] text-white hover:bg-[#b3222d]"
                         >
                             Update Status
                         </Button>
 
                         <Button
                             onClick={handleDownloadReport}
-                            className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white text-sm px-4 py-2"
+                            className="bg-[#C72030] text-white hover:bg-[#b3222d]"
                         >
                             Download Report
                         </Button>
                     </div>
-                </CardHeader>
+                </div>
 
-                <CardContent className="p-6 bg-white">
-                    {/* Status / Site / Region / Tower */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8">
+                <div className="space-y-6 p-6">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                         <DetailField label="Status" value={incident.status} />
                         <DetailField label="Site" value={incident.site} />
                         <DetailField label="Region" value={incident.region} />
                         <DetailField label="Tower" value={incident.tower} />
                     </div>
 
-                    {/* Description */}
                     <div className="grid grid-cols-1">
                         <DetailField label="Description" value={incident.description} />
                     </div>
 
-                    {/* Date / Time */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8">
-                        <DetailField
-                            label="Incident Date and Time"
-                            value={incident.incidentDateTime}
-                        />
-                        <DetailField
-                            label="Revision Date and Time"
-                            value={incident.revisionDateTime}
-                        />
-                        <DetailField
-                            label="Reporting Date and Time"
-                            value={incident.reportingDateTime}
-                        />
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                        <DetailField label="Incident Date and Time" value={incident.incidentDateTime} />
+                        <DetailField label="Revision Date and Time" value={incident.revisionDateTime} />
+                        <DetailField label="Reporting Date and Time" value={incident.reportingDateTime} />
                         <DetailField label="Reported By" value={incident.reportedBy} />
                     </div>
 
-                    {/* Level / Categories */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                         <DetailField label="Level" value={incident.level} />
-                        <DetailField
-                            label="Incident Primary Category"
-                            value={incident.primaryCategory}
-                        />
+                        <DetailField label="Incident Primary Category" value={incident.primaryCategory} />
                         <DetailField
                             label={
                                 incident.primaryCategory
@@ -1355,14 +1342,10 @@ export const NewIncidentDetailsPage = () => {
                             }
                             value={incident.categoryForPrimary}
                         />
-                        <DetailField
-                            label="Incident Secondary Category"
-                            value={incident.secondaryCategory}
-                        />
+                        <DetailField label="Incident Secondary Category" value={incident.secondaryCategory} />
                     </div>
 
-                    {/* Secondary Categories / Support / Property Damage */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                         <DetailField
                             label={
                                 incident.secondaryCategory
@@ -1382,63 +1365,36 @@ export const NewIncidentDetailsPage = () => {
                         />
                     </div>
 
-                    {/* Property Damage */}
                     {incident.propertyDamage === 'Yes' && (
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8">
-                            <DetailField
-                                label="Property Damage Category"
-                                value={incident.propertyDamageCategory}
-                            />
-                            <DetailField
-                                label="Damage Evaluation"
-                                value={incident.damageEvaluation}
-                            />
-                            <DetailField
-                                label="Damage Covered Under Insurance"
-                                value={incident.damageCoveredInsurance}
-                            />
-                            <DetailField
-                                label="Damaged Recovered"
-                                value={incident.damagedRecovered}
-                            />
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                            <DetailField label="Property Damage Category" value={incident.propertyDamageCategory} />
+                            <DetailField label="Damage Evaluation" value={incident.damageEvaluation} />
+                            <DetailField label="Damage Covered Under Insurance" value={incident.damageCoveredInsurance} />
+                            <DetailField label="Damaged Recovered" value={incident.damagedRecovered} />
                         </div>
                     )}
 
-                    {/* Work Related Injury */}
                     <div className="grid grid-cols-1">
-                        <DetailField
-                            label="Work Related Injury"
-                            value={incident.workRelatedInjury}
-                        />
+                        <DetailField label="Work Related Injury" value={incident.workRelatedInjury} />
                     </div>
 
-                    {/* RCA */}
                     <div className="grid grid-cols-1">
                         <DetailField label="RCA" value={incident.rca} />
                     </div>
 
-                    {/* RCA Category */}
                     <div className="grid grid-cols-1">
                         <DetailField label="RCA Category" value={incident.rcaCategory} />
                     </div>
 
-                    {/* Corrective Action */}
                     <div className="grid grid-cols-1">
-                        <DetailField
-                            label="Corrective Action"
-                            value={incident.correctiveAction}
-                        />
+                        <DetailField label="Corrective Action" value={incident.correctiveAction} />
                     </div>
 
-                    {/* Preventive Action */}
                     <div className="grid grid-cols-1">
-                        <DetailField
-                            label="Preventive Action"
-                            value={incident.preventiveAction}
-                        />
+                        <DetailField label="Preventive Action" value={incident.preventiveAction} />
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             <Dialog
                 open={!!previewAttachment}
@@ -1477,16 +1433,19 @@ export const NewIncidentDetailsPage = () => {
             ====================================================== */}
 
             {/* INJURIES */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className="bg-[#F6F4EE] mb-0">
-                    <CardTitle className="text-lg text-black flex items-center gap-2">
-                        INJURIES
-                        <span className="bg-[#C72030] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                            {incident.injuries.length}
+            <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div className="flex items-center justify-between border-b border-gray-200 px-6 py-3">
+                    <div className="flex items-center">
+                        <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: '#E5E0D3' }}>
+                            <Users size={16} color="#C72030" />
                         </span>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 bg-white overflow-x-auto">
+                        <h2 className="text-lg font-medium text-gray-900">INJURIES</h2>
+                    </div>
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C72030] px-1.5 text-[11px] font-medium text-white">
+                        {incident.injuries.length}
+                    </span>
+                </div>
+                <div className="overflow-x-auto bg-white">
                     {incident.injuries.length > 0 ? (
                         <table className="w-full text-sm">
                             <thead>
@@ -1509,38 +1468,41 @@ export const NewIncidentDetailsPage = () => {
                     ) : (
                         <p className="px-6 py-4 text-sm text-gray-500">No injuries recorded.</p>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* ATTACHMENTS */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className="bg-[#F6F4EE] mb-0">
-                    <CardTitle className="text-lg text-black flex items-center gap-2">
-                        ATTACHMENTS
-                        <span className="bg-[#C72030] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                            {incident.attachments.length}
+            <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div className="flex items-center justify-between border-b border-gray-200 px-6 py-3">
+                    <div className="flex items-center">
+                        <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: '#E5E0D3' }}>
+                            <Paperclip size={16} color="#C72030" />
                         </span>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 bg-white">
+                        <h2 className="text-lg font-medium text-gray-900">ATTACHMENTS</h2>
+                    </div>
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C72030] px-1.5 text-[11px] font-medium text-white">
+                        {incident.attachments.length}
+                    </span>
+                </div>
+                <div className="bg-white p-6">
                     {incident.attachments.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                             {incident.attachments.map((attachment) => {
                                 const isImage = String(attachment.label || '').startsWith('image/');
                                 if (isImage) {
                                     return (
-                                        <div key={attachment.id} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
-                                            <div className="aspect-square bg-gray-100 flex items-center justify-center p-2">
+                                        <div key={attachment.id} className="relative group overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+                                            <div className="flex aspect-square items-center justify-center bg-gray-100 p-2">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={attachment.url} alt={attachment.label} className="w-full h-full object-contain" />
+                                                <img src={attachment.url} alt={attachment.label} className="h-full w-full object-contain" />
                                             </div>
-                                            <div className="p-2 bg-white border-t border-gray-100">
-                                                <p className="text-xs text-gray-600 truncate" title={attachment.label}>{attachment.label}</p>
+                                            <div className="border-t border-gray-100 bg-white p-2">
+                                                <p className="truncate text-xs text-gray-600" title={attachment.label}>{attachment.label}</p>
                                             </div>
                                             <button
                                                 type="button"
                                                 onClick={() => setPreviewAttachment({ url: attachment.url, fileName: attachment.label })}
-                                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 transition-opacity"
+                                                className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100"
                                                 aria-label={`Preview ${attachment.label}`}
                                             >
                                                 <ZoomInIcon style={{ color: '#fff' }} />
@@ -1549,25 +1511,24 @@ export const NewIncidentDetailsPage = () => {
                                     );
                                 }
 
-                                // Non-image: keep as a link but styled as a box
                                 return (
                                     <a
                                         key={attachment.id}
                                         href={attachment.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow"
+                                        className="group overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
                                     >
-                                        <div className="aspect-square bg-gray-100 flex items-center justify-center p-2">
+                                        <div className="flex aspect-square items-center justify-center bg-gray-100 p-2">
                                             <div className="flex flex-col items-center justify-center text-gray-400">
-                                                <svg className="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="mb-1 h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4a1 1 0 011-1h8a1 1 0 011 1v12" />
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l5-5 5 5" />
                                                 </svg>
                                             </div>
                                         </div>
-                                        <div className="p-2 bg-white border-t border-gray-100">
-                                            <p className="text-xs text-gray-600 truncate" title={attachment.label}>{attachment.label}</p>
+                                        <div className="border-t border-gray-100 bg-white p-2">
+                                            <p className="truncate text-xs text-gray-600" title={attachment.label}>{attachment.label}</p>
                                         </div>
                                     </a>
                                 );
@@ -1576,21 +1537,23 @@ export const NewIncidentDetailsPage = () => {
                     ) : (
                         <p className="text-sm text-gray-500">No attachments uploaded.</p>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* UPDATE STATUS (log history) */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className="bg-[#F6F4EE] mb-0 flex flex-row items-center justify-between space-y-0">
-                    <CardTitle className="text-lg text-black">UPDATE STATUS</CardTitle>
-                    {/* <Button
-                        onClick={() => setUpdateStatusOpen(true)}
-                        className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white text-sm px-4 py-2"
-                    >
-                        Update Status
-                    </Button> */}
-                </CardHeader>
-                <CardContent className="p-0 bg-white overflow-x-auto">
+            <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div className="flex items-center justify-between border-b border-gray-200 px-6 py-3">
+                    <div className="flex items-center">
+                        <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: '#E5E0D3' }}>
+                            <ShieldCheck size={16} color="#C72030" />
+                        </span>
+                        <h2 className="text-lg font-medium text-gray-900">UPDATE STATUS</h2>
+                    </div>
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C72030] px-1.5 text-[11px] font-medium text-white">
+                        {incident.statusLogs.length}
+                    </span>
+                </div>
+                <div className="overflow-x-auto bg-white">
                     {incident.statusLogs.length > 0 ? (
                         <table className="w-full text-sm">
                             <thead>
@@ -1606,7 +1569,7 @@ export const NewIncidentDetailsPage = () => {
                                         <td className="px-6 py-3">
                                             <span className="font-semibold text-[#C72030]">{log.updatedBy}</span>
                                             {log.dateTime && (
-                                                <span className="text-xs text-gray-500 ml-2">{log.dateTime}</span>
+                                                <span className="ml-2 text-xs text-gray-500">{log.dateTime}</span>
                                             )}
                                         </td>
                                         <td className="px-6 py-3">{log.status}</td>
@@ -1618,8 +1581,8 @@ export const NewIncidentDetailsPage = () => {
                     ) : (
                         <p className="px-6 py-4 text-sm text-gray-500">No status updates yet.</p>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
 
             <Dialog
