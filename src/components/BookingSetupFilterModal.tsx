@@ -122,12 +122,14 @@ export const BookingSetupFilterModal: React.FC<BookingSetupFilterModalProps> = (
   };
 
   const handleReset = () => {
-    setFilters({
+    const resetFilters = {
       fromDate: '',
       toDate: '',
       facilityType: '',
       bookingMethod: ''
-    });
+    };
+    setFilters(resetFilters);
+    onApply(resetFilters);
   };
 
   return (

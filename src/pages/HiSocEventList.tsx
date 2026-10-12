@@ -29,6 +29,7 @@ interface Event {
   active: boolean;
   show_on_home: boolean;
   publish: number;
+  created_by?: string;
   created_at: string;
   updated_at: string;
 }
@@ -104,18 +105,6 @@ const HiSocEventList = () => {
         // Build query params from active filters
         const params = new URLSearchParams();
         if (filters) {
-          filters.tower_ids.forEach((id) =>
-            params.append(
-              "q[user_society_user_flat_society_flat_society_block_id_in][]",
-              id
-            )
-          );
-          filters.flat_ids.forEach((id) =>
-            params.append(
-              "q[user_society_user_flat_society_flat_id_in][]",
-              id
-            )
-          );
           if (filters.date_range) {
             params.append("q[date_range]", filters.date_range);
           }
@@ -187,8 +176,6 @@ const HiSocEventList = () => {
 
   const handleApplyFilters = (filters: EventFilters) => {
     const hasFilters =
-      filters.tower_ids.length > 0 ||
-      filters.flat_ids.length > 0 ||
       filters.date_range !== "" ||
       filters.publish_in.length > 0;
     setActiveFilters(hasFilters ? filters : null);
@@ -345,6 +332,7 @@ const HiSocEventList = () => {
     { key: "event_at", label: "Event At", sortable: true },
     { key: "from_time", label: "Event Date", sortable: false },
     { key: "to_time", label: "Event Time", sortable: false },
+    { key: "created_by", label: "Created By", sortable: false },
     { key: "show_on_home", label: "Show on Home", sortable: false },
     { key: "publish", label: "Publish", sortable: false },
     // { key: "active", label: "Status", sortable: false },
@@ -395,6 +383,8 @@ const HiSocEventList = () => {
         return formatDateOnly(item.from_time);
       case "to_time":
         return formatTimeOnly(item.from_time);
+      case "created_by":
+        return item.created_by || "-";
       case "show_on_home":
         return (
           <div className="flex items-center justify-center">
