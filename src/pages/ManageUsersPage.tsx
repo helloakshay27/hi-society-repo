@@ -10,7 +10,6 @@ import {
   UserX,
   Clock,
   MonitorSmartphone,
-  Calendar,
   Filter,
   X,
   Edit,
@@ -23,7 +22,6 @@ import {
   InputLabel,
   TextField,
   ListItemText,
-  InputAdornment,
 } from "@mui/material";
 import {
   fieldStyles,
@@ -1335,16 +1333,18 @@ const ManageUsersPage = () => {
           open={showFiltersDialog}
           onOpenChange={setShowFiltersDialog}
         >
-          <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white border-none shadow-2xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between shrink-0">
-              <DialogTitle className="text-base font-bold text-white text-center w-full">
+          <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-2xl max-h-[90vh] flex flex-col focus:outline-none focus-visible:outline-none">
+            <DialogHeader className="py-4 px-6 flex flex-row items-center justify-between space-y-0 shrink-0 border-b border-[rgba(26,26,24,.09)]">
+              <DialogTitle className="text-lg font-semibold text-[#1A1A18]">
                 Advance Filter
               </DialogTitle>
               <button
+                type="button"
                 onClick={() => setShowFiltersDialog(false)}
-                className="text-red-500 hover:text-red-700 transition-colors absolute right-4"
+                aria-label="Close"
+                className="flex items-center justify-center w-8 h-8 rounded-md text-[rgba(26,26,24,.68)] hover:bg-[#F5F4F0] hover:text-[#1A1A18] transition-colors focus:outline-none"
               >
-                <X className="h-5 w-5 fill-current" />
+                <X className="h-5 w-5" />
               </button>
             </DialogHeader>
 
@@ -1435,7 +1435,9 @@ const ManageUsersPage = () => {
                       selected.length ? (
                         selected.join(", ")
                       ) : (
-                        <em>Select Resident Type</em>
+                        <span className="text-gray-400">
+                          Select Resident Type
+                        </span>
                       )
                     }
                   >
@@ -1468,7 +1470,7 @@ const ManageUsersPage = () => {
                     MenuProps={menuProps}
                   >
                     <MenuItem value="" disabled>
-                      <em>Select Tower</em>
+                      <span className="text-gray-400">Select Tower</span>
                     </MenuItem>
                     {towerOptions.map((tower) => (
                       <MenuItem key={tower.id} value={tower.id.toString()}>
@@ -1506,7 +1508,9 @@ const ManageUsersPage = () => {
                           .map((o) => o.label)
                           .join(", ")
                       ) : (
-                        <em>Select Flat Number</em>
+                        <span className="text-gray-400">
+                          Select Flat Number
+                        </span>
                       )
                     }
                   >
@@ -1534,7 +1538,7 @@ const ManageUsersPage = () => {
                     MenuProps={menuProps}
                   >
                     <MenuItem value="">
-                      <em>Select Lives Here</em>
+                      <span className="text-gray-400">Select Lives Here</span>
                     </MenuItem>
                     <MenuItem value="Yes">Yes</MenuItem>
                     <MenuItem value="No">No</MenuItem>
@@ -1569,7 +1573,7 @@ const ManageUsersPage = () => {
                       selected.length ? (
                         selected.join(", ")
                       ) : (
-                        <em>Select Status</em>
+                        <span className="text-gray-400">Select Status</span>
                       )
                     }
                   >
@@ -1601,7 +1605,7 @@ const ManageUsersPage = () => {
                     MenuProps={menuProps}
                   >
                     <MenuItem value="">
-                      <em>Select Role</em>
+                      <span className="text-gray-400">Select Role</span>
                     </MenuItem>
                     {roleOptions.map((opt) => (
                       <MenuItem key={opt.value} value={opt.value}>
@@ -1627,7 +1631,7 @@ const ManageUsersPage = () => {
                     MenuProps={menuProps}
                   >
                     <MenuItem value="">
-                      <em>Select Membership</em>
+                      <span className="text-gray-400">Select Membership</span>
                     </MenuItem>
                     <MenuItem value="1">Primary</MenuItem>
                     <MenuItem value="0">Secondary</MenuItem>
@@ -1645,14 +1649,7 @@ const ManageUsersPage = () => {
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}
-                  InputProps={{
-                    sx: fieldStyles,
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Calendar className="w-4 h-4 text-gray-600" />
-                      </InputAdornment>
-                    ),
-                  }}
+                  InputProps={{ sx: fieldStyles }}
                 />
 
                 {/* End Date */}
@@ -1666,31 +1663,26 @@ const ManageUsersPage = () => {
                   fullWidth
                   variant="outlined"
                   InputLabelProps={{ shrink: true }}
-                  InputProps={{
-                    sx: fieldStyles,
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Calendar className="w-4 h-4 text-gray-600" />
-                      </InputAdornment>
-                    ),
-                  }}
+                  InputProps={{ sx: fieldStyles }}
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-center gap-4 pt-2">
-                <Button
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
                   onClick={handleResetFilters}
-                  className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"
+                  className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
                 >
                   Reset
-                </Button>
-                <Button
+                </button>
+                <button
+                  type="button"
                   onClick={handleApplyFilters}
-                  className="!bg-[#C72030]  !text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                 >
                   Apply
-                </Button>
+                </button>
               </div>
             </div>
           </DialogContent>

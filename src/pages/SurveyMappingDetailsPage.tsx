@@ -13,6 +13,7 @@ import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
 import { QuestionMark } from '@mui/icons-material';
+import { Switch } from "@/components/ui/switch";
 // Questions table item interface
 interface QuestionsTableItem {
   qnumber: string;
@@ -535,16 +536,7 @@ export const SurveyMappingDetailsPage = () => {
       case "status": {
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleQuestionStatusToggle(item)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-[#C72030]" : "bg-gray-300"
-                }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${item.active ? "translate-x-6" : "translate-x-1"
-                  }`}
-              />
-            </button>
+            <Switch checked={!!(item.active)} onCheckedChange={() => handleQuestionStatusToggle(item)} />
           </div>
         );
       }
@@ -748,16 +740,7 @@ export const SurveyMappingDetailsPage = () => {
       case "status":
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleStatusToggle(item)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.active ? "bg-[#C72030]" : "bg-gray-300"
-                }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${item.active ? "translate-x-6" : "translate-x-1"
-                  }`}
-              />
-            </button>
+            <Switch checked={!!(item.active)} onCheckedChange={() => handleStatusToggle(item)} />
           </div>
         );
       default:

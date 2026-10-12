@@ -13,6 +13,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationEllipsis, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 import { ExternalFilterDialog } from './ExternalFilterDialog';
 
+import { Switch } from "@/components/ui/switch";
 // Define External User interface (different from FMUser)
 interface ExternalUser {
   id: number;
@@ -294,14 +295,7 @@ export const ExternalUsersDashboard = () => {
         const disabled = updatingIds.has(user.id);
         return (
           <div className="w-full flex justify-center">
-            <div
-              onClick={() => !disabled && handleToggleActive(user)}
-              className={`mx-auto relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isActive ? 'bg-green-500' : 'bg-gray-400'} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-            >
-              <span
-                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`}
-              />
-            </div>
+            <Switch checked={!!(isActive)} onCheckedChange={() => !disabled && handleToggleActive(user)} />
           </div>
         );
       }

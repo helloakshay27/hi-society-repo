@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { X, Plus, Loader2, Edit, Trash2, Filter, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react'
+import { X, Plus, Loader2, Edit, Trash2, Filter, Eye, EyeOff, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react'
 import { AppDispatch, RootState } from '@/store/store'
 import { fetchHelpdeskCategories } from '@/store/slices/helpdeskCategoriesSlice'
 import { createResponseEscalation, clearState, fetchResponseEscalations, updateResponseEscalation, deleteResponseEscalation } from '@/store/slices/responseEscalationSlice'
@@ -640,7 +640,7 @@ export const ResponseEscalationTab: React.FC = () => {
         <button
           onClick={() => { if (activeFmProjectTab !== 'fm') { clearFormState(); setActiveFmProjectTab('fm'); } }}
           className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeFmProjectTab === 'fm'
-              ? 'border-[#C72030] text-[#C72030]'
+              ? 'border-[#1A1A18] text-[#1A1A18]'
               : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
         >
@@ -649,7 +649,7 @@ export const ResponseEscalationTab: React.FC = () => {
         <button
           onClick={() => { if (activeFmProjectTab !== 'project') { clearFormState(); setActiveFmProjectTab('project'); } }}
           className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeFmProjectTab === 'project'
-              ? 'border-[#C72030] text-[#C72030]'
+              ? 'border-[#1A1A18] text-[#1A1A18]'
               : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
         >
@@ -660,15 +660,20 @@ export const ResponseEscalationTab: React.FC = () => {
       <div className="p-6 space-y-6">
         {/* Form Section */}
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card>
+          <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
             <CardHeader>
-              <CardTitle>Response Escalation Configuration</CardTitle>
+              <CardTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                <TrendingUp size={14} color="#1A1A18" />
+              </span>
+              Response Escalation Configuration
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Issue Type & Category Type Dropdowns */}
               <div className="grid grid-cols-2 gap-4">
                 <MuiFormControl fullWidth variant="outlined">
-                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type <span style={{ color: '#D97757' }}>*</span></InputLabel>
                   <MuiSelect
                     value={selectedIssueTypeId}
                     onChange={(e) => setSelectedIssueTypeId(e.target.value)}
@@ -677,7 +682,7 @@ export const ResponseEscalationTab: React.FC = () => {
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                    <MenuItem value="" disabled><span className="text-gray-400">Select Issue Type</span></MenuItem>
                     {issueTypeOptions.map((issueType) => (
                       <MenuItem key={issueType.id} value={String(issueType.id)}>
                         {issueType.name}
@@ -686,7 +691,7 @@ export const ResponseEscalationTab: React.FC = () => {
                   </MuiSelect>
                 </MuiFormControl>
                 <MuiFormControl fullWidth variant="outlined" disabled={!selectedIssueTypeId || formCategoriesLoading}>
-                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type <span style={{ color: '#D97757' }}>*</span></InputLabel>
                   <MuiSelect
                     value={selectedCategoryTypeId}
                     onChange={(e) => setSelectedCategoryTypeId(e.target.value)}
@@ -695,7 +700,7 @@ export const ResponseEscalationTab: React.FC = () => {
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value="" disabled><em>{selectedIssueTypeId ? 'Loading categories...' : 'Select Issue Type first'}</em></MenuItem>
+                    <MenuItem value="" disabled><span className="text-gray-400">{selectedIssueTypeId ? 'Loading categories...' : 'Select Issue Type first'}</span></MenuItem>
                     {formCategoryOptions.map((category) => (
                       <MenuItem key={category.id} value={String(category.id)}>
                         {category.name}
@@ -754,7 +759,7 @@ export const ResponseEscalationTab: React.FC = () => {
               {/* Escalation Matrix Table */}
               <div className="space-y-3">
                 <Label className="text-base font-semibold">Escalation Matrix</Label>
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="border border-[rgba(26,26,24,.09)] rounded-xl overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50">
@@ -835,10 +840,10 @@ export const ResponseEscalationTab: React.FC = () => {
           </Card>
 
           {/* Submit Button */}
-          <div className="flex justify-center">
-            <Button
+          <div className="flex justify-end">
+            <button
               type="submit"
-              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
               disabled={submissionLoading || loadingUsers}
             >
               {submissionLoading ? (
@@ -849,15 +854,20 @@ export const ResponseEscalationTab: React.FC = () => {
               ) : (
                 'Submit'
               )}
-            </Button>
+            </button>
           </div>
         </form>
 
         {/* Rules List Section */}
-        <Card className="border border-gray-200">
-          <CardHeader className="border-b border-gray-200 bg-white">
+        <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none overflow-hidden">
+          <CardHeader className="border-b border-[rgba(26,26,24,.09)] bg-white">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold text-gray-900">Filter</CardTitle>
+              <CardTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                <Filter size={14} color="#1A1A18" />
+              </span>
+              Filter
+              </CardTitle>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <Label className="text-sm font-medium text-gray-700">Issue Type</Label>
@@ -891,22 +901,20 @@ export const ResponseEscalationTab: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                <button
+                  type="button"
+                  className="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                   onClick={handleApplyFilter}
                 >
                   Apply
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-4 text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
                   onClick={handleResetFilter}
                 >
                   Reset
-                </Button>
+                </button>
               </div>
             </div>
           </CardHeader>
@@ -924,8 +932,8 @@ export const ResponseEscalationTab: React.FC = () => {
             ) : (
               <div className="space-y-6 p-6">
                 {escalationRulesList.map((rule, index) => (
-                  <div key={rule.id} className="border border-gray-200 rounded-lg bg-white shadow-sm">
-                    <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
+                  <div key={rule.id} className="border border-[rgba(26,26,24,.09)] rounded-xl bg-white overflow-hidden">
+                    <div className="flex items-center justify-between p-4 border-b border-[rgba(26,26,24,.09)] bg-[#FDFDFB]">
                       <div className="flex items-center gap-3">
                         <h3 className="text-base font-semibold text-gray-900">Rule {index + 1}</h3>
                         <div className="flex gap-2">
@@ -1080,7 +1088,7 @@ export const ResponseEscalationTab: React.FC = () => {
               {/* Issue Type & Category Type Dropdowns */}
               <div className="grid grid-cols-2 gap-4">
                 <MuiFormControl fullWidth variant="outlined">
-                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type <span style={{ color: '#D97757' }}>*</span></InputLabel>
                   <MuiSelect
                     value={editIssueTypeId}
                     onChange={(e) => setEditIssueTypeId(e.target.value)}
@@ -1089,7 +1097,7 @@ export const ResponseEscalationTab: React.FC = () => {
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                    <MenuItem value="" disabled><span className="text-gray-400">Select Issue Type</span></MenuItem>
                     {issueTypeOptions.map((issueType) => (
                       <MenuItem key={issueType.id} value={String(issueType.id)}>
                         {issueType.name}
@@ -1098,7 +1106,7 @@ export const ResponseEscalationTab: React.FC = () => {
                   </MuiSelect>
                 </MuiFormControl>
                 <MuiFormControl fullWidth variant="outlined" disabled={!editIssueTypeId || editCategoriesLoading}>
-                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type <span style={{ color: '#D97757' }}>*</span></InputLabel>
                   <MuiSelect
                     value={editCategoryTypeId}
                     onChange={(e) => setEditCategoryTypeId(e.target.value)}
@@ -1107,7 +1115,7 @@ export const ResponseEscalationTab: React.FC = () => {
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value="" disabled><em>{editIssueTypeId ? 'Loading categories...' : 'Select Issue Type first'}</em></MenuItem>
+                    <MenuItem value="" disabled><span className="text-gray-400">{editIssueTypeId ? 'Loading categories...' : 'Select Issue Type first'}</span></MenuItem>
                     {editCategoryOptions.map((category) => (
                       <MenuItem key={category.id} value={String(category.id)}>
                         {category.name}
@@ -1166,7 +1174,7 @@ export const ResponseEscalationTab: React.FC = () => {
               {/* Escalation Levels */}
               <div className="space-y-3">
                 <Label className="text-base font-semibold">Escalation Matrix</Label>
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="border border-[rgba(26,26,24,.09)] rounded-xl overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50">
@@ -1204,15 +1212,16 @@ export const ResponseEscalationTab: React.FC = () => {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => { setIsEditDialogOpen(false); setEditSelectedUsers({ e1: [], e2: [], e3: [], e4: [], e5: [] }); }}>
+                <button type="button" className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]" onClick={() => { setIsEditDialogOpen(false); setEditSelectedUsers({ e1: [], e2: [], e3: [], e4: [], e5: [] }); }}>
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
+                  type="button"
                   onClick={handleUpdateRule}
-                  className="bg-[#C72030] hover:bg-[#A61B29] text-white"
+                  className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                 >
                   Update Rule
-                </Button>
+                </button>
               </div>
             </div>
           </DialogContent>

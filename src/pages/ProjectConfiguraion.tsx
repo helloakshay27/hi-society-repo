@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { ArrowLeft, Settings } from "lucide-react";
+import { ArrowLeft, FileText, Settings, Upload } from "lucide-react";
 import { TextField } from "@mui/material";
-import { Button } from "@/components/ui/button";
 
 const fieldStyles = {
   height: '45px',
@@ -17,15 +16,15 @@ const fieldStyles = {
       borderColor: '#ddd',
     },
     '&:hover fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#D97757',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#D97757',
     },
   },
   '& .MuiInputLabel-root': {
     '&.Mui-focused': {
-      color: '#C72030',
+      color: '#D97757',
     },
   },
 };
@@ -99,7 +98,7 @@ const ProjectConfiguration = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-[#FDFDFB] min-h-screen">
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
           <button 
@@ -115,15 +114,15 @@ const ProjectConfiguration = () => {
           <span>{">"}</span>
           <span className="text-gray-900 font-medium">Create</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">CREATE PROJECT CONFIGURATION</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Create Project Configuration</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                <Settings size={16} color="#C72030" />
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                <Settings size={14} color="#1A1A18" />
               </span>
               Configuration Details
             </h2>
@@ -146,21 +145,18 @@ const ProjectConfiguration = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5.41421C14 5.149 13.8946 4.89464 13.7071 4.70711L11.2929 2.29289C11.1054 2.10536 10.851 2 10.5858 2H3Z" fill="#C72030"/>
-                  <path d="M10 2V5C10 5.55228 10.4477 6 11 6H14" fill="#E5E0D3"/>
-                </svg>
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                <FileText size={14} color="#1A1A18" />
               </span>
               Add Attachments
             </h2>
           </div>
           <div className="p-6">
   {/* Label box */}
-  <div className="border border-gray-300 rounded-md p-4">
+  <div>
     {/* <span className="block text-sm font-medium text-gray-700 mb-3">
       Project QR Code Images
     </span> */}
@@ -177,25 +173,10 @@ const ProjectConfiguration = () => {
     <button
       type="button"
       onClick={() => document.getElementById("file-upload")?.click()}
-      className="inline-flex items-center gap-2 px-2 py-1 border rounded-md  border-[#e0d9c859] bg-[#e0d9c859] text-gray-800 transition"
+      className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
     >
-      <span className="font-medium">Upload Files</span>
-
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#C72030"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <polyline points="17 8 12 3 7 8" />
-        <line x1="12" y1="3" x2="12" y2="15" />
-      </svg>
+      <Upload className="h-4 w-4" />
+      Upload Files
     </button>
 
     {/* Preview (UNCHANGED) */}
@@ -211,23 +192,22 @@ const ProjectConfiguration = () => {
 </div>
         </div>
 
-        <div className="flex gap-4 justify-center pt-6">
-          <Button
-            type="submit"
-            className="bg-[#C72030] hover:bg-[#C72030] text-white px-8 py-2"
-            disabled={loading}
-          >
-            {loading ? "Creating..." : "Submit"}
-          </Button>
-          <Button
+        <div className="flex justify-end gap-3 pb-8">
+          <button
             type="button"
             onClick={handleGoBack}
-            variant="outline"
-            className="border-[#C4B89D59] text-gray-700 hover:bg-gray-50 px-8 py-2"
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
             disabled={loading}
           >
             Cancel
-          </Button>
+          </button>
+          <button
+            type="submit"
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+            disabled={loading}
+          >
+            {loading ? "Creating..." : "Submit"}
+          </button>
         </div>
       </form>
     </div>

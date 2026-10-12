@@ -4,6 +4,7 @@ import { Eye, Filter, Plus, Import, QrCode, RotateCcw } from 'lucide-react';
 import { EnhancedTable } from "./enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 
+import { Switch } from "@/components/ui/switch";
 const services = [
   {
     id: 1,
@@ -144,13 +145,7 @@ export const ServiceTable = ({ onAddService }: ServiceTableProps) => {
   const getStatusToggle = (status: boolean) => {
     return (
       <div className="flex items-center">
-        <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          status ? 'bg-green-500' : 'bg-gray-300'
-        }`}>
-          <div className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            status ? 'translate-x-6' : 'translate-x-1'
-          }`} />
-        </div>
+        <Switch checked={!!(status)} tabIndex={-1} className="pointer-events-none" />
       </div>
     );
   };

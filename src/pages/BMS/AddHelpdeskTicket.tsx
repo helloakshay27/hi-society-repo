@@ -141,15 +141,15 @@ const fieldStyles = {
       borderColor: '#ddd',
     },
     '&:hover fieldset': {
-      borderColor: '#D97757',
+      borderColor: '#1A1A18',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#D97757',
+      borderColor: '#1A1A18',
     },
   },
   '& .MuiInputLabel-root': {
     '&.Mui-focused': {
-      color: '#D97757',
+      color: '#1A1A18',
     },
   },
 };
@@ -1476,7 +1476,7 @@ export const AddTicketDashboard = () => {
 
   return (
     <div className="p-6 bg-[#FDFDFB] min-h-screen add-helpdesk-ticket-page">
-      <style>{`.add-helpdesk-ticket-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
+      <style>{`.add-helpdesk-ticket-page .MuiFormLabel-asterisk { color: var(--color-primary, #1A1A18) !important; }`}</style>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
@@ -1551,8 +1551,8 @@ export const AddTicketDashboard = () => {
                       value="self"
                       checked={onBehalfOf === 'self'}
                       onChange={(e) => setOnBehalfOf(e.target.value)}
-                      className="w-4 h-4 text-[#D97757] border-gray-300 focus:ring-[#D97757]"
-                      style={{ accentColor: '#D97757' }}
+                      className="w-4 h-4 text-[#1A1A18] border-gray-300 focus:ring-[#1A1A18]"
+                      style={{ accentColor: '#1A1A18' }}
                     />
                     <label htmlFor="behalf-admin" className="text-sm font-medium">{isSupervisorOrg ? 'Supervisor' : 'Admin'}</label>
                   </div>
@@ -1564,8 +1564,8 @@ export const AddTicketDashboard = () => {
                       value="occupant-user"
                       checked={onBehalfOf === 'occupant-user'}
                       onChange={(e) => setOnBehalfOf(e.target.value)}
-                      className="w-4 h-4 text-[#D97757] border-gray-300 focus:ring-[#D97757]"
-                      style={{ accentColor: '#D97757' }}
+                      className="w-4 h-4 text-[#1A1A18] border-gray-300 focus:ring-[#1A1A18]"
+                      style={{ accentColor: '#1A1A18' }}
                     />
                     <label htmlFor="behalf-user" className="text-sm font-medium">User</label>
                   </div>
@@ -2146,7 +2146,7 @@ export const AddTicketDashboard = () => {
             </h2>
           </div>
           <div className="p-6">
-      <div className="border-2 border-dashed border-[#EBE9E2] rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-[#D97757] transition-colors">
+      <div className="border-2 border-dashed border-[#EBE9E2] rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-[#1A1A18] transition-colors">
         <input
           type="file"
           id="file-upload"

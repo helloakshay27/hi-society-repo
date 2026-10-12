@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, CalendarX2, CircleOff, Save } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
 import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import { toast } from 'sonner';
@@ -81,9 +80,11 @@ const defaultForm = (): SetupRuleForm => ({
 
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-3 bg-[#FFF5F5] border border-[#F5C6C6] rounded-t-md">
-      <Icon className="w-4 h-4 text-[#C72030]" />
-      <span className="text-sm font-semibold text-[#C72030]">{title}</span>
+    <div className="flex items-center gap-3 px-5 py-3 border-b border-[rgba(26,26,24,.09)]">
+      <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+        <Icon size={14} color="#1A1A18" />
+      </span>
+      <span className="text-sm font-semibold leading-[1.4] text-[#1A1A18]">{title}</span>
     </div>
   );
 }
@@ -332,7 +333,7 @@ export const OSRSetupRulePage: React.FC = () => {
       <div className="p-6 space-y-3">
 
         {/* ── 1. Notification Reminder for Staff ──────────────────────────── */}
-        <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
           <SectionHeader icon={Bell} title="Notification Reminder for Staff" />
           <div className="px-5 py-3 grid grid-cols-2 gap-x-10 gap-y-3">
             {/* Reminder 01 */}
@@ -396,7 +397,7 @@ export const OSRSetupRulePage: React.FC = () => {
         </div>
 
         {/* ── 2. Notification Reminder for User ───────────────────────────── */}
-        <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
           <SectionHeader icon={Bell} title="Notification Reminder for User" />
           <div className="px-5 py-3 grid grid-cols-2 items-start gap-x-10 gap-y-3">
             {/* Reminder 01 */}
@@ -477,7 +478,7 @@ export const OSRSetupRulePage: React.FC = () => {
         </div>
 
         {/* ── 3. Final Reminder Notification to User ───────────────────────── */}
-        <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
           <SectionHeader icon={Bell} title="Final Reminder Notification to User" />
           <div className="px-5 py-3">
             <div className="flex items-center gap-3">
@@ -513,7 +514,7 @@ export const OSRSetupRulePage: React.FC = () => {
         </div>
 
         {/* ── 4. Cancellation Setup ────────────────────────────────────────── */}
-        <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
           <SectionHeader icon={CalendarX2} title="Cancellation Setup" />
           <div className="px-5 py-3 space-y-3">
             {/* Policy textarea */}
@@ -521,7 +522,7 @@ export const OSRSetupRulePage: React.FC = () => {
               rows={4}
               value={form.cancellationPolicyText}
               onChange={e => set('cancellationPolicyText', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-[#1A1A18] focus:border-transparent"
               placeholder="Enter cancellation policy..."
             />
 
@@ -597,7 +598,7 @@ export const OSRSetupRulePage: React.FC = () => {
         </div>
 
         {/* ── 5. Schedule Setting ──────────────────────────────────────────── */}
-        <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
           <SectionHeader icon={CircleOff} title="Schedule Setting" />
           <div className="px-5 py-3">
             <div className="flex items-center gap-3 flex-wrap">
@@ -636,29 +637,30 @@ export const OSRSetupRulePage: React.FC = () => {
         </div>
 
         {/* ── 6. Disclaimer ────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
           <SectionHeader icon={CircleOff} title="Disclaimer" />
           <div className="px-5 py-3">
             <textarea
               rows={4}
               value={form.disclaimerText}
               onChange={e => set('disclaimerText', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-[#1A1A18] focus:border-transparent"
               placeholder="Enter disclaimer text..."
             />
           </div>
         </div>
 
         {/* ── Save Button ──────────────────────────────────────────────────── */}
-        <div className="flex justify-center pb-6">
-          <Button
+        <div className="flex justify-end pb-6">
+          <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
-            className="px-12 py-2.5 font-medium shadow-sm flex items-center gap-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
           >
             <Save className="w-4 h-4" />
             {saving ? 'Saving...' : 'Save'}
-          </Button>
+          </button>
         </div>
 
       </div>

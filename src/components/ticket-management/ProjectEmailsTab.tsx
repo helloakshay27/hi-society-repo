@@ -427,7 +427,7 @@ export const ProjectEmailsTab: React.FC = () => {
       </Dialog>
 
       {/* Main Table */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div>
         <EnhancedTable
           data={paginatedEmails}
           columns={columns}

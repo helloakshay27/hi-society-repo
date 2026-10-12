@@ -320,7 +320,7 @@ export const FitoutGuideTab: React.FC = () => {
   }, [paginatedGuides, startIndex]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div>
       <div className="mb-6">
         <input
           ref={fileInputRef}

@@ -532,7 +532,7 @@ export const LocationTab: React.FC = () => {
       </Dialog>
 
       {/* Level Tabs + Table */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div>
         {/* Level toggle buttons */}
         <div className="flex items-center gap-3 mb-4">
           {levels.map((level) => (

@@ -3,6 +3,7 @@ import React from 'react';
 import { Edit, Copy, Eye, Plus, Download, Filter, Download as Export, Search, RotateCcw } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 
+import { Switch } from "@/components/ui/switch";
 interface ScheduleTableProps {
   onAddSchedule: () => void;
 }
@@ -173,9 +174,7 @@ export const ScheduleTable = ({ onAddSchedule }: ScheduleTableProps) => {
               <TableCell>{schedule.category}</TableCell>
               <TableCell>
                 <div className="flex items-center">
-                  <div className={`w-12 h-6 rounded-full ${schedule.active ? 'bg-orange-500' : 'bg-gray-300'} relative cursor-pointer transition-colors`}>
-                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${schedule.active ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
-                  </div>
+                  <Switch checked={!!(schedule.active)} tabIndex={-1} className="pointer-events-none" />
                 </div>
               </TableCell>
               <TableCell>{schedule.createdOn}</TableCell>

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { AddVehicleParkingModal } from '../components/AddVehicleParkingModal';
 
+import { Switch } from "@/components/ui/switch";
 const mockVehicleData = [
   {
     id: 1,
@@ -167,18 +168,7 @@ export const VehicleParkingDashboard = () => {
                       <td className="px-4 py-3 border-r">{vehicle.staffName}</td>
                       <td className="px-4 py-3 border-r">
                         <div className="flex items-center">
-                          <div
-                            className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${
-                              vehicle.status === 'Active' ? 'bg-green-500' : 'bg-gray-300'
-                            }`}
-                            onClick={() => handleStatusToggle(vehicle.id)}
-                          >
-                            <span
-                              className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
-                                vehicle.status === 'Active' ? 'translate-x-6' : 'translate-x-1'
-                              }`}
-                            />
-                          </div>
+                          <Switch checked={!!(vehicle.status === 'Active')} onCheckedChange={() => handleStatusToggle(vehicle.id)} />
                         </div>
                       </td>
                       <td className="px-4 py-3">{vehicle.qrCode}</td>

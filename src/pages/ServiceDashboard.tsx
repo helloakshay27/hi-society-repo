@@ -23,6 +23,7 @@ import axios from 'axios';
 import { useDebounce } from '@/hooks/useDebounce';
 import { StatsCard } from '@/components/StatsCard';
 
+import { Switch } from "@/components/ui/switch";
 interface ServiceRecord {
   id: number;
   service_name: string;
@@ -772,14 +773,7 @@ export const ServiceDashboard = () => {
       case 'status':
         return (
           <div className="flex justify-center items-center h-full w-full">
-            <div
-              onClick={() => !togglingIds.has(item.id) && handleStatusToggle(item.id)}
-              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${item.active ? 'bg-green-500' : 'bg-gray-400'} ${togglingIds.has(item.id) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-            >
-              <span
-                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${item.active ? 'translate-x-6' : 'translate-x-1'}`}
-              />
-            </div>
+            <Switch checked={!!(item.active)} onCheckedChange={() => !togglingIds.has(item.id) && handleStatusToggle(item.id)} />
           </div>
         );
       case 'createdOn':

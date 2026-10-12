@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
 import { X, Upload, FileText, Image as ImageIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -246,13 +245,15 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
 
   return (
     <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white">
-        <DialogHeader className="border-b pb-4">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
+        <DialogHeader className="border-b border-[rgba(26,26,24,.09)] pb-4">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg font-semibold">Add Flat</DialogTitle>
+            <DialogTitle className="text-lg font-semibold text-[#1A1A18]">Add Flat</DialogTitle>
             <button
+              type="button"
               onClick={() => onOpenChange(false)}
-              className="text-red-500 hover:text-red-700 transition-colors"
+              aria-label="Close"
+              className="flex items-center justify-center w-8 h-8 rounded-md text-[rgba(26,26,24,.68)] hover:bg-[#F5F4F0] hover:text-[#1A1A18] transition-colors focus:outline-none"
             >
               <X className="h-5 w-5" />
             </button>
@@ -314,7 +315,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
             </div> */}
 
             <MuiFormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower <span style={{ color: 'red' }}>*</span></InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower <span style={{ color: '#1A1A18' }}>*</span></InputLabel>
               <MuiSelect
                 value={formData.tower}
                 onChange={(e) => {
@@ -326,7 +327,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value="" disabled><em>Select Tower</em></MenuItem>
+                <MenuItem value="" disabled><span className="text-gray-400">Select Tower</span></MenuItem>
                 {filteredTowers.map((tower: any) => (
                   <MenuItem key={tower.id} value={tower.id.toString()}>
                     {tower.name}
@@ -361,7 +362,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Floor</em></MenuItem>
+                <MenuItem value=""><span className="text-gray-400">Select Floor</span></MenuItem>
                 {floorOptions.map((floor: any) => (
                   <MenuItem key={floor.id} value={floor.id.toString()}>
                     {floor.name}
@@ -413,7 +414,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Flat Type</em></MenuItem>
+                <MenuItem value=""><span className="text-gray-400">Select Flat Type</span></MenuItem>
                 {flatTypeOptions.map((flatType: any) => (
                   <MenuItem key={flatType.id} value={flatType.id.toString()}>
                     {flatType.society_flat_type}
@@ -432,7 +433,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Please Select</em></MenuItem>
+                <MenuItem value=""><span className="text-gray-400">Please Select</span></MenuItem>
                 <MenuItem value="Yes">Yes</MenuItem>
                 <MenuItem value="No">No</MenuItem>
               </MuiSelect>
@@ -470,9 +471,9 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select</em></MenuItem>
+                <MenuItem value=""><span className="text-gray-400">Select</span></MenuItem>
                 {rmUsers.length === 0 ? (
-                  <MenuItem value="no-rm-user" disabled><em>No Rm User Found</em></MenuItem>
+                  <MenuItem value="no-rm-user" disabled><span className="text-gray-400">No Rm User Found</span></MenuItem>
                 ) : (
                   rmUsers.map((user: any) => (
                     <MenuItem key={user.id} value={user.id.toString()}>
@@ -491,14 +492,14 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
             {!attachment ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-[#C72030] hover:bg-red-50/40 transition-colors"
+                className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[#EBE9E2] rounded-xl p-8 cursor-pointer hover:border-[#1A1A18] transition-colors"
               >
                 <Upload className="h-7 w-7 text-gray-400" />
                 <p className="text-sm font-medium text-gray-600">Click to upload a file</p>
                 <p className="text-xs text-gray-400">Image, PDF, or document</p>
               </div>
             ) : (
-              <div className="relative group rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
+              <div className="relative group rounded-xl border border-[#EBE9E2] overflow-hidden bg-[#F5F4F0]">
                 {preview ? (
                   <img
                     src={preview}
@@ -517,7 +518,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 <button
                   type="button"
                   onClick={removeAttachment}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                  className="absolute top-2 right-2 bg-[#1A1A18] text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-[#12100E] transition-colors"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -539,14 +540,23 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center pt-4">
-            <Button
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-8"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {loading ? "Submitting..." : "Submit"}
-            </Button>
+            </button>
           </div>
         </div>
       </DialogContent>

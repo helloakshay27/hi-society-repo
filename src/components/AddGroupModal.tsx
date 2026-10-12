@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { X } from 'lucide-react';
@@ -173,19 +172,19 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
   };
 
   return (
-    <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px', border: '1px solid rgba(26,26,24,.09)' } }}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-hidden" sx={{ padding: 0 }}>
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-[rgba(26,26,24,.09)]">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg font-medium text-gray-900">{isEditing ? "Edit Group" : "Add Group"}</h1>
-            <Button
-              variant="ghost"
-              size="sm"
+            <h1 className="text-lg font-semibold text-[#1A1A18]">{isEditing ? "Edit Group" : "Add Group"}</h1>
+            <button
+              type="button"
               onClick={onClose}
-              className="h-6 w-6 p-0"
+              aria-label="Close"
+              className="flex items-center justify-center w-8 h-8 rounded-md text-[rgba(26,26,24,.68)] hover:bg-[#F5F4F0] hover:text-[#1A1A18] transition-colors focus:outline-none"
             >
-              <X className="h-4 w-4" />
-            </Button>
+              <X className="h-5 w-5" />
+            </button>
           </div>
         </div>
 
@@ -209,12 +208,13 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
                 <Label className="text-sm font-medium text-gray-700">Add Members</Label>
               </div>
 
-              <Button
+              <button
+                type="button"
                 onClick={handleSelectAll}
-                className="bg-[#C72030] hover:bg-[#B8252F] text-white text-sm px-4 py-2"
+                className="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-4 text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
               >
                 {selectAll ? 'Deselect All' : 'Select All Members'}
-              </Button>
+              </button>
             </div>
             <TextField
               label="Search..."
@@ -255,23 +255,23 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
           </div>
         </div>
 
-        <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
-          <Button
-            onClick={handleSubmit}
-            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
-            disabled={loading}
-          >
-            {loading ? 'Submitting...' : 'Submit'}
-          </Button>
-          <Button
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.09)]">
+          <button
+            type="button"
             onClick={handleClose}
-            // variant="outline"
-            variant="outline"
-            className="px-8"
             disabled={loading}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
           >
             Cancel
-          </Button>
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+          >
+            {loading ? 'Submitting...' : 'Submit'}
+          </button>
         </div>
       </DialogContent>
     </Dialog>

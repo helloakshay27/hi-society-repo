@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { ArrowLeft, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   FormControl,
   InputLabel,
@@ -25,15 +24,15 @@ const fieldStyles = {
       borderColor: '#ddd',
     },
     '&:hover fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#D97757',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#D97757',
     },
   },
   '& .MuiInputLabel-root': {
     '&.Mui-focused': {
-      color: '#C72030',
+      color: '#D97757',
     },
   },
 };
@@ -148,7 +147,7 @@ const ConnectivityTypeEdit: React.FC = () => {
 
   if (fetchingData) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="p-6 bg-[#FDFDFB] min-h-screen">
         <Toaster position="top-right" richColors closeButton />
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex justify-center items-center py-12">
@@ -160,7 +159,7 @@ const ConnectivityTypeEdit: React.FC = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-[#FDFDFB] min-h-screen">
       <Toaster position="top-right" richColors closeButton />
       
       <div className="mb-8">
@@ -178,15 +177,15 @@ const ConnectivityTypeEdit: React.FC = () => {
           <span>{">"}</span>
           <span className="text-gray-900 font-medium">Edit</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">EDIT CONNECTIVITY TYPE</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Edit Connectivity Type</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                <Zap size={16} color="#C72030" />
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                <Zap size={14} color="#1A1A18" />
               </span>
               Connectivity Type Details
             </h2>
@@ -243,21 +242,22 @@ const ConnectivityTypeEdit: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 justify-center pt-6">
-          <Button
-            type="submit"
-            className="bg-[#C72030] hover:bg-[#C72030] text-white px-8 py-2"
-            disabled={loading}
-          >
-            {loading ? "Updating..." : "Submit"}
-          </Button>
-          <Button
+        <div className="flex justify-end gap-3 pb-8">
+          <button
             type="button"
             onClick={handleGoBack}
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"             disabled={loading}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
+            disabled={loading}
           >
             Cancel
-          </Button>
+          </button>
+          <button
+            type="submit"
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+            disabled={loading}
+          >
+            {loading ? "Updating..." : "Update"}
+          </button>
         </div>
       </form>
     </div>

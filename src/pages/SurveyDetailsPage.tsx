@@ -9,6 +9,9 @@ import {
   ChevronDown,
   CheckCircle,
   Edit,
+  HelpCircle,
+  ClipboardList,
+  ListChecks,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -194,7 +197,10 @@ export const SurveyDetailsPage = () => {
       <Card className="border border-gray-200 bg-white shadow-sm">
         <CardHeader className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-gray-900">
+            <CardTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                <ClipboardList size={14} color="#1A1A18" />
+              </span>
               Question Details
             </CardTitle>
           </div>
@@ -291,7 +297,10 @@ export const SurveyDetailsPage = () => {
               {!loading && snagChecklist && (
                 <div>
                   <div className="mb-4 pb-2 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center gap-3">
+                      <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                        <ListChecks size={14} color="#1A1A18" />
+                      </span>
                       {snagChecklist.check_type.charAt(0).toUpperCase() +
                         snagChecklist.check_type.slice(1)}{" "}
                       Questions
@@ -312,11 +321,9 @@ export const SurveyDetailsPage = () => {
                         >
                           <CardHeader className="px-6 py-4 border-b border-gray-200">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                                <span className="text-sm font-semibold text-gray-600">
-                                  {index + 1}
-                                </span>
-                              </div>
+                              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                                <HelpCircle size={14} color="#1A1A18" />
+                              </span>
                               <CardTitle className="text-base font-medium text-gray-900">
                                 Question {index + 1}
                               </CardTitle>

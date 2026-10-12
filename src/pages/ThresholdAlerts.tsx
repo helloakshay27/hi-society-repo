@@ -28,6 +28,7 @@ import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField, InputAdornment } from '@mui/material';
 import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
+import { Switch } from "@/components/ui/switch";
 // ────────────────────────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────────────────────────
@@ -466,13 +467,13 @@ variant="ghost"
 
   // ── Render ──────────────────────────────────────────────────
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
+    <div className="p-6">
       <Toaster position="top-right" richColors closeButton />
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-          <Bell className="w-5 h-5 text-[#C72030]" />
+        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+          <Bell size={18} color="#1A1A18" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-[#1a1a1a]">Threshold Alerts</h1>
@@ -486,7 +487,7 @@ variant="ghost"
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4">
           <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center rounded">
-            <Bell className="w-6 h-6 text-[#C72030]" />
+            <Bell className="w-6 h-6 text-[#1A1A18]" />
           </div>
           <div>
             <div className="text-2xl font-semibold text-[#1A1A1A]">{rows.length}</div>
@@ -575,8 +576,10 @@ variant="ghost"
       <Dialog modal={false} open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#1a1a1a]">
-              <Bell className="h-5 w-5 text-[#C72030]" />
+            <DialogTitle className="flex items-center gap-3 text-[#1A1A18]">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                <Bell size={14} color="#1A1A18" />
+              </span>
               {modalMode === "add"
                 ? "Add Threshold Alert Setting"
                 : `Edit Threshold Alert — ${editForm.organization_name}`}
@@ -638,11 +641,11 @@ variant="ghost"
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center">
-                      <AlertCircle className="w-5 h-5 text-red-500" />
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+                      <AlertCircle size={16} color="#1A1A18" />
                     </div>
                     <div>
-                      <p className="font-semibold text-[#C72030] text-sm">Threshold Alerts</p>
+                      <p className="font-semibold text-[#1A1A18] text-sm">Threshold Alerts</p>
                       <p className="text-xs text-gray-500">Get notified when balance is low</p>
                     </div>
                   </div>
@@ -656,23 +659,8 @@ variant="ghost"
                     >
                       {editForm.alert_enabled ? "Active" : "Inactive"}
                     </span>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={editForm.alert_enabled ? "true" : "false"}
-                      onClick={() =>
-                        handleFormChange("alert_enabled", !editForm.alert_enabled)
-                      }
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                        editForm.alert_enabled ? "bg-[#C72030]" : "bg-gray-300"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                          editForm.alert_enabled ? "translate-x-6" : "translate-x-1"
-                        }`}
-                      />
-                    </button>
+                    <Switch checked={!!(editForm.alert_enabled)} onCheckedChange={() =>
+                        handleFormChange("alert_enabled", !editForm.alert_enabled)} />
                   </div>
                 </div>
               </CardContent>

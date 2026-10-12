@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 
+import { Switch } from "@/components/ui/switch";
 interface SurveyListTableProps {
   searchTerm: string;
 }
@@ -254,18 +255,7 @@ export const SurveyListTable = ({ searchTerm }: SurveyListTableProps) => {
             
             <div className="flex justify-between items-center mt-3">
               <span className="text-xs text-gray-500">Ticket Creation:</span>
-              <div 
-                className={`relative inline-flex items-center h-5 rounded-full w-9 cursor-pointer transition-colors ${
-                  survey.ticketCreation ? 'bg-green-400' : 'bg-gray-300'
-                }`} 
-                onClick={() => handleTicketCreationToggle(index)}
-              >
-                <span 
-                  className={`inline-block w-3 h-3 transform bg-white rounded-full transition-transform ${
-                    survey.ticketCreation ? 'translate-x-5' : 'translate-x-1'
-                  }`} 
-                />
-              </div>
+              <Switch checked={!!(survey.ticketCreation)} onCheckedChange={() => handleTicketCreationToggle(index)} />
             </div>
           </div>
         ))}
@@ -332,18 +322,7 @@ export const SurveyListTable = ({ searchTerm }: SurveyListTableProps) => {
                   <TableCell>{survey.title}</TableCell>
                   <TableCell>
                     <div className="flex items-center">
-                      <div 
-                        className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${
-                          survey.ticketCreation ? 'bg-green-400' : 'bg-gray-300'
-                        }`} 
-                        onClick={() => handleTicketCreationToggle(index)}
-                      >
-                        <span 
-                          className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
-                            survey.ticketCreation ? 'translate-x-6' : 'translate-x-1'
-                          }`} 
-                        />
-                      </div>
+                      <Switch checked={!!(survey.ticketCreation)} onCheckedChange={() => handleTicketCreationToggle(index)} />
                     </div>
                   </TableCell>
                   <TableCell>{survey.ticketCategory}</TableCell>

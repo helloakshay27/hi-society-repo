@@ -33,6 +33,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
+import { Switch } from "@/components/ui/switch";
 const PAGE_SIZE = 10;
 
 interface OtherProjectData {
@@ -631,19 +632,7 @@ const CampaignsOtherProject: React.FC = () => {
       case "active":
         return (
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => !updatingStatus[item.id] && handleToggleActive(item)}
-              disabled={!!updatingStatus[item.id]}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                item.active ? "bg-[#C72030]" : "bg-gray-300"
-              } ${updatingStatus[item.id] ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  item.active ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch checked={!!(item.active)} onCheckedChange={() => !updatingStatus[item.id] && handleToggleActive(item)} disabled={!!updatingStatus[item.id]} />
             {updatingStatus[item.id] && (
               <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
             )}

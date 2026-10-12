@@ -13,6 +13,7 @@ import {
 import { gatePassTypeService } from '@/services/gatePassTypeService';
 import { toast } from 'sonner';
 
+import { Switch } from "@/components/ui/switch";
 export interface GatePassType {
   id: number;
   name: string;
@@ -173,15 +174,7 @@ const GatePassTypePage = () => {
               : isActiveValue(item.active);
             return (
               <div className="flex items-center justify-center">
-                <div
-                  className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${isActive ? 'bg-green-500' : 'bg-gray-300'}`}
-                  onClick={() => handleToggleActive(item.id)}
-                  aria-label={isActive ? 'Deactivate' : 'Activate'}
-                >
-                  <span
-                    className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`}
-                  />
-                </div>
+                <Switch checked={!!(isActive)} onCheckedChange={() => handleToggleActive(item.id)} aria-label={isActive ? 'Deactivate' : 'Activate'} />
               </div>
             );
           }

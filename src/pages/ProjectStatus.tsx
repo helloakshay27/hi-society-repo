@@ -8,6 +8,7 @@ import { AppDispatch, RootState } from "@/store/store";
 import { fetchProjectStatuses, createProjectStatus, updateProjectStatus, deleteProjectStatus } from "@/store/slices/projectStatusSlice";
 import { toast } from "sonner";
 
+import { Switch } from "@/components/ui/switch";
 const columns: ColumnConfig[] = [
     {
         key: 'statusName',
@@ -181,16 +182,7 @@ const ProjectStatus = () => {
                 return (
                     <div className="flex items-center gap-2">
                         <span className="text-sm">{isActive ? 'Active' : 'Inactive'}</span>
-                        <div
-                            onClick={() => handleToggleStatus(item.id)}
-                            className={`cursor-pointer relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isActive ? 'bg-green-500' : 'bg-gray-300'
-                                }`}
-                        >
-                            <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'
-                                    }`}
-                            />
-                        </div>
+                        <Switch checked={!!(isActive)} onCheckedChange={() => handleToggleStatus(item.id)} />
                     </div>
                 );
             default:

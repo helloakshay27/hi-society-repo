@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { TextField } from "@mui/material";
-import { X, Upload, FileImage } from "lucide-react";
+import { X, Upload, FileImage, Gift } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getReferralSetupById,
@@ -23,15 +23,15 @@ const fieldStyles = {
       borderColor: "#ddd",
     },
     "&:hover fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#1A1A18",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#1A1A18",
     },
   },
   "& .MuiInputLabel-root": {
     "&.Mui-focused": {
-      color: "#C72030",
+      color: "#1A1A18",
     },
   },
 };
@@ -203,21 +203,24 @@ const CampaignsReferralSetupEdit: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-gray-50 min-h-screen p-6 flex items-center justify-center">
+      <div className="bg-[#FDFDFB] min-h-screen p-6 flex items-center justify-center">
         <div className="text-gray-600">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen p-6">
+    <div className="bg-[#FDFDFB] min-h-screen p-6">
       <div className="mx-auto">
         {/* Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
           {/* Header */}
-          <div className="border-b border-gray-200 px-6 py-4">
-            <h1 className="text-lg font-normal text-gray-700">
-              Referral Setup
+          <div className="px-6 pt-[22px]">
+            <h1 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                <Gift size={14} color="#1A1A18" />
+              </span>
+              Edit Referral Setup
             </h1>
           </div>
 
@@ -257,8 +260,8 @@ const CampaignsReferralSetupEdit: React.FC = () => {
                     }
                     className={
                       formData.bannerEnabled
-                        ? "data-[state=checked]:!bg-green-500"
-                        : "data-[state=unchecked]:!bg-gray-300"
+                        ? "data-[state=checked]:!bg-[#798c5e]"
+                        : "data-[state=unchecked]:!bg-[#e7848e]"
                     }
                   />
                   <span className="text-sm text-gray-600">
@@ -284,8 +287,8 @@ const CampaignsReferralSetupEdit: React.FC = () => {
                     }
                     className={
                       formData.referralBannerEnabled
-                        ? "data-[state=checked]:!bg-green-500"
-                        : "data-[state=unchecked]:!bg-gray-300"
+                        ? "data-[state=checked]:!bg-[#798c5e]"
+                        : "data-[state=unchecked]:!bg-[#e7848e]"
                     }
                   />
                   <span className="text-sm text-gray-600">
@@ -347,10 +350,10 @@ const CampaignsReferralSetupEdit: React.FC = () => {
                   name="description"
                   rows={3}
                   placeholder=" "
-                  className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
+                  className="peer block w-full appearance-none rounded border border-[#ddd] bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
       focus:outline-none
-      focus:border-[2px]
-      focus:border-[rgb(25,118,210)]
+      focus:border-[1px] hover:border-[#1A1A18]
+      focus:border-[#1A1A18]
       resize-vertical"
                 />
                 <label
@@ -361,7 +364,7 @@ const CampaignsReferralSetupEdit: React.FC = () => {
       peer-placeholder-shown:text-gray-400
       peer-focus:-top-[10px]
       peer-focus:text-sm
-      peer-focus:text-[rgb(25,118,210)]"
+      peer-focus:text-[#1A1A18]"
                 >
                   Description
                 </label>
@@ -390,10 +393,10 @@ const CampaignsReferralSetupEdit: React.FC = () => {
                   name="details"
                   rows={3}
                   placeholder=" "
-                  className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
+                  className="peer block w-full appearance-none rounded border border-[#ddd] bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
       focus:outline-none
-      focus:border-[2px]
-      focus:border-[rgb(25,118,210)]
+      focus:border-[1px] hover:border-[#1A1A18]
+      focus:border-[#1A1A18]
       resize-vertical"
                 />
                 <label
@@ -404,7 +407,7 @@ const CampaignsReferralSetupEdit: React.FC = () => {
       peer-placeholder-shown:text-gray-400
       peer-focus:-top-[10px]
       peer-focus:text-sm
-      peer-focus:text-[rgb(25,118,210)]"
+      peer-focus:text-[#1A1A18]"
                 >
                   Details
                 </label>
@@ -474,15 +477,14 @@ const CampaignsReferralSetupEdit: React.FC = () => {
                     />
                   )}
                 </div>
-                <Button
+                <button
                   type="button"
-                  variant="outline"
                   onClick={handleBrowseClick}
-                  className="bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                  className="inline-flex h-[45px] shrink-0 items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[18px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
                 >
                   <Upload className="w-4 h-4" />
                   Browse
-                </Button>
+                </button>
               </div>
             </div>
 
@@ -511,15 +513,14 @@ const CampaignsReferralSetupEdit: React.FC = () => {
                       />
                     )}
                 </div>
-                <Button
+                <button
                   type="button"
-                  variant="outline"
                   onClick={handleHorizontalBrowseClick}
-                  className="bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                  className="inline-flex h-[45px] shrink-0 items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[18px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
                 >
                   <Upload className="w-4 h-4" />
                   Browse
-                </Button>
+                </button>
               </div>
 
               {formData.existingDocuments.length > 0 && (
@@ -583,19 +584,24 @@ const CampaignsReferralSetupEdit: React.FC = () => {
               )}
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-dashed border-gray-300 my-6"></div>
 
             {/* Submit Button */}
-            <div className="flex justify-center">
-              <Button
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                disabled={isSubmitting}
+                className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
                 type="submit"
                 disabled={isSubmitting}
-                variant="outline"
-                className="bg-[#C72030] hover:bg-[#A01828] !text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
               >
-                {isSubmitting ? "Submitting..." : "Submit"}
-              </Button>
+                {isSubmitting ? "Updating..." : "Update"}
+              </button>
             </div>
           </form>
         </div>

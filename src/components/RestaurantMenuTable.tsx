@@ -14,6 +14,7 @@ import { EnhancedTable } from './enhanced-table/EnhancedTable';
 import { SelectionPanel } from './water-asset-details/PannelTab';
 import { ProductEditPage } from '@/pages/ProductEditPage';
 
+import { Switch } from "@/components/ui/switch";
 interface MenuItem {
   id: number;
   restaurant_id: number;
@@ -228,12 +229,7 @@ export const RestaurantMenuTable = () => {
       case 'active':
         return (
           <div className="flex items-center justify-center">
-            <div
-              className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${item.active ? "bg-green-500" : "bg-gray-300"}`}
-              onClick={() => toggleActive(item.id, item.active)}
-            >
-              <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${item.active ? "translate-x-6" : "translate-x-1"}`} />
-            </div>
+            <Switch checked={!!(item.active)} onCheckedChange={() => toggleActive(item.id, item.active)} />
           </div>
         );
       default:

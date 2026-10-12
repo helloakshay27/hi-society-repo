@@ -6,7 +6,7 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbS
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Checkbox, FormControlLabel, Box, FormHelperText } from '@mui/material';
-import { Plus, X, ArrowLeft } from "lucide-react";
+import { Plus, X, ArrowLeft, Layers } from "lucide-react";
 
 interface ApprovalLevel {
   order: number;
@@ -269,7 +269,7 @@ const AddApprovalMatrixPage = () => {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage className="text-[#C72030]">Add</BreadcrumbPage>
+            <BreadcrumbPage className="text-gray-900 font-medium">Add</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -284,11 +284,11 @@ const AddApprovalMatrixPage = () => {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <Heading level="h1" className="text-[#1a1a1a]">
-          ADD APPROVAL MATRIX
+          Add Approval Matrix
         </Heading>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6">
         {/* Function Selection */}
         <div className="mb-8">
           <FormControl fullWidth error={!!functionError}>
@@ -297,7 +297,7 @@ const AddApprovalMatrixPage = () => {
               shrink={true}
               sx={{
                 color: '#1a1a1a',
-                '&.Mui-focused': { color: '#C72030' },
+                '&.Mui-focused': { color: '#D97757' },
                 '& .MuiFormLabel-asterisk': { color: '#da7756' },
               }}
             >
@@ -312,10 +312,10 @@ const AddApprovalMatrixPage = () => {
                   borderColor: '#D5DbDB',
                 },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#C72030',
+                  borderColor: '#D97757',
                 },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#C72030',
+                  borderColor: '#D97757',
                 },
               }}
             >
@@ -332,14 +332,14 @@ const AddApprovalMatrixPage = () => {
         {/* Approval Levels Section */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-6">
-            <div className="w-6 h-6 bg-[#C72030] rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">!</span>
-            </div>
-            <h2 className="text-xl font-semibold text-[#C72030]">Approval Levels</h2>
+            <span className="w-8 h-8 rounded-full flex items-center justify-center mr-1" style={{ backgroundColor: '#F5F4F0' }}>
+              <Layers size={14} color="#1A1A18" />
+            </span>
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18]">Approval Levels</h2>
           </div>
 
           {approvalLevels.map((level, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4 mb-4">
+            <div key={index} className="border border-[rgba(26,26,24,.09)] rounded-xl p-4 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
                 {/* Order */}
                 <div className="md:col-span-1">
@@ -355,10 +355,10 @@ const AddApprovalMatrixPage = () => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         '& fieldset': { borderColor: '#D5DbDB' },
-                        '&:hover fieldset': { borderColor: '#C72030' },
-                        '&.Mui-focused fieldset': { borderColor: '#C72030' },
+                        '&:hover fieldset': { borderColor: '#D97757' },
+                        '&.Mui-focused fieldset': { borderColor: '#D97757' },
                       },
-                      '& .MuiInputLabel-root.Mui-focused': { color: '#C72030' },
+                      '& .MuiInputLabel-root.Mui-focused': { color: '#D97757' },
                     }}
                     error={!!levelErrors[index]?.order}
                     helperText={levelErrors[index]?.order}
@@ -379,10 +379,10 @@ const AddApprovalMatrixPage = () => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         '& fieldset': { borderColor: '#D5DbDB' },
-                        '&:hover fieldset': { borderColor: '#C72030' },
-                        '&.Mui-focused fieldset': { borderColor: '#C72030' },
+                        '&:hover fieldset': { borderColor: '#D97757' },
+                        '&.Mui-focused fieldset': { borderColor: '#D97757' },
                       },
-                      '& .MuiInputLabel-root.Mui-focused': { color: '#C72030' },
+                      '& .MuiInputLabel-root.Mui-focused': { color: '#D97757' },
                     }}
                     error={!!levelErrors[index]?.name}
                     helperText={levelErrors[index]?.name}
@@ -397,7 +397,7 @@ const AddApprovalMatrixPage = () => {
                       shrink={true}
                       sx={{
                         color: '#1a1a1a',
-                        '&.Mui-focused': { color: '#C72030' },
+                        '&.Mui-focused': { color: '#D97757' },
                         '& .MuiFormLabel-asterisk': { color: '#da7756' },
                       }}
                     >
@@ -420,10 +420,10 @@ const AddApprovalMatrixPage = () => {
                           borderColor: '#D5DbDB',
                         },
                         '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#C72030',
+                          borderColor: '#D97757',
                         },
                         '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#C72030',
+                          borderColor: '#D97757',
                         },
                       }}
                     >
@@ -438,8 +438,8 @@ const AddApprovalMatrixPage = () => {
                               <Checkbox
                                 checked={level.users.includes(userItem.user.id.toString())}
                                 sx={{
-                                  color: '#C72030',
-                                  '&.Mui-checked': { color: '#C72030' },
+                                  color: '#D97757',
+                                  '&.Mui-checked': { color: '#D97757' },
                                 }}
                               />
                               {`${userItem.user.firstname} ${userItem.user.lastname}`}
@@ -462,8 +462,8 @@ const AddApprovalMatrixPage = () => {
                         checked={level.sendEmails}
                         onChange={(e) => updateApprovalLevel(index, 'sendEmails', e.target.checked)}
                         sx={{
-                          color: '#C72030',
-                          '&.Mui-checked': { color: '#C72030' },
+                          color: '#D97757',
+                          '&.Mui-checked': { color: '#D97757' },
                         }}
                       />
                     }
@@ -476,7 +476,7 @@ const AddApprovalMatrixPage = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => removeApprovalLevel(index)}
-                      className="bg-[#f6f4ee] hover:bg-[#e8e5dc] text-[#C72030] min-w-[32px] h-8 p-0"
+                      className="bg-white border border-[rgba(26,26,24,.08)] hover:bg-[#F5F4F0] text-[rgba(26,26,24,.68)] hover:text-[#1A1A18] min-w-[32px] h-8 p-0 rounded-md"
                     >
                       <X className="w-4 h-4" />
                     </Button>
@@ -487,32 +487,34 @@ const AddApprovalMatrixPage = () => {
           ))}
 
           {/* Add More Level Button */}
-          <Button
-            variant="ghost"
+          <button
+            type="button"
             onClick={addApprovalLevel}
-            className="w-12 h-12 rounded-lg p-0 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
           >
-            <Plus className="w-6 h-6" />
-          </Button>
+            <Plus className="w-4 h-4" />
+            Add Level
+          </button>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 pt-6 border-t border-gray-200">
-          <Button
-            onClick={handleCreate}
-            disabled={isSubmitting}
-            className="px-8 disabled:opacity-50 bg-[#C72030] text-white hover:bg-[#C72030]/90"
-          >
-            {isSubmitting ? 'Creating...' : 'Create'}
-          </Button>
-
-          <Button
-            variant="outline"
+        <div className="flex justify-end gap-3 pt-6 border-t border-[rgba(26,26,24,.09)]">
+          <button
+            type="button"
             onClick={handleSaveAndCreateNew}
-            className="border-[#6B2C91] px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+            disabled={isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
           >
             Save And Create New
-          </Button>
+          </button>
+          <button
+            type="button"
+            onClick={handleCreate}
+            disabled={isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+          >
+            {isSubmitting ? 'Creating...' : 'Create'}
+          </button>
         </div>
       </div>
     </div>

@@ -512,14 +512,16 @@ export const OSRSchedulePage: React.FC = () => {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-0 space-y-0">
+    <div className="p-6 bg-[#fafafa] min-h-screen">
       {/* Page Header */}
-      <div className="bg-white px-6 py-4 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-900">Schedule</h1>
+      <div className="mb-3">
+        <div className="py-4">
+          <h1 className="text-2xl font-semibold text-gray-900">Schedule</h1>
+        </div>
       </div>
 
       {/* Enhanced Table */}
-      <div className="p-4">
+      <div>
         <EnhancedTable
           data={schedules}
           columns={SCHEDULE_COLUMNS}
@@ -551,7 +553,7 @@ export const OSRSchedulePage: React.FC = () => {
               <>
                 {shouldShow("OSRSchedule", "update") && (
                   <button
-                    className="p-1.5 rounded hover:bg-amber-50 transition-colors text-amber-500"
+                    className="p-1 rounded hover:bg-gray-100 transition-colors text-[#1A1A18]"
                     onClick={() => openEdit(entry)}
                     title="Edit"
                   >
@@ -560,7 +562,7 @@ export const OSRSchedulePage: React.FC = () => {
                 )}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <button className="p-1.5 rounded hover:bg-red-50 transition-colors text-red-600" title="Delete">
+                    <button className="p-1 rounded hover:bg-gray-100 transition-colors text-[#1A1A18]" title="Delete">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </AlertDialogTrigger>
@@ -632,17 +634,18 @@ export const OSRSchedulePage: React.FC = () => {
             <DialogTitle className="text-lg font-semibold text-gray-900">Add Schedule</DialogTitle>
           </DialogHeader>
           <ScheduleForm data={formData} setData={setFormData} />
-          <div className="flex justify-center gap-3 pt-2">
-            <Button variant="outline" onClick={() => setShowAddModal(false)} disabled={submitting}>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => setShowAddModal(false)} disabled={submitting} className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-white px-[22px] text-[13px] font-semibold text-[#1A1A18] transition-colors hover:bg-[#F6F4EE] disabled:opacity-60">
               Cancel
-            </Button>
-            <Button
+            </button>
+            <button
+              type="button"
               onClick={handleAdd}
               disabled={submitting}
-              className="px-10 font-medium bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              className="btn-primary inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {submitting ? 'Submitting...' : 'Submit'}
-            </Button>
+            </button>
           </div>
         </DialogContent>
       </Dialog>
@@ -654,17 +657,18 @@ export const OSRSchedulePage: React.FC = () => {
             <DialogTitle className="text-lg font-semibold text-gray-900">Edit Schedule</DialogTitle>
           </DialogHeader>
           <ScheduleForm data={editFormData} setData={setEditFormData} />
-          <div className="flex justify-center gap-3 pt-2">
-            <Button variant="outline" onClick={() => setShowEditModal(false)} disabled={submitting}>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => setShowEditModal(false)} disabled={submitting} className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-white px-[22px] text-[13px] font-semibold text-[#1A1A18] transition-colors hover:bg-[#F6F4EE] disabled:opacity-60">
               Cancel
-            </Button>
-            <Button
+            </button>
+            <button
+              type="button"
               onClick={handleUpdate}
               disabled={submitting}
-              className="px-10 font-medium bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              className="btn-primary inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {submitting ? 'Updating...' : 'Update'}
-            </Button>
+            </button>
           </div>
         </DialogContent>
       </Dialog>

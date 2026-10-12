@@ -12,6 +12,7 @@ import { Edit, Eye, Plus, X } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
+import { Switch } from "@/components/ui/switch";
 const CHARGES_PREVIEW_COUNT = 2;
 
 interface SocietyBillCycle {
@@ -203,18 +204,7 @@ const AccountingBillCycles: React.FC = () => {
       case "active":
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleToggleStatus(item.id, !!item.active)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                item.active ? "bg-[#C72030]" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  item.active ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch checked={!!(item.active)} onCheckedChange={() => handleToggleStatus(item.id, !!item.active)} />
           </div>
         );
       default:

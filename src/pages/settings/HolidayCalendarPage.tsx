@@ -37,6 +37,7 @@ import { cn } from '@/lib/utils';
 import { Calendar as CalendarIcon, X } from 'lucide-react';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 
+import { Switch } from "@/components/ui/switch";
 interface Holiday {
   id: string;
   holidayName: string;
@@ -734,23 +735,12 @@ export const HolidayCalendarPage = () => {
       </div>
     ),
     status: (
-      <button
-        onClick={() => handleToggleStatus(holiday)}
-        disabled={togglingId === holiday.id}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-          holiday.active ? 'bg-green-500' : 'bg-gray-300'
-        } ${togglingId === holiday.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-        title={holiday.active ? 'Click to Deactivate' : 'Click to Activate'}
-      >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-            holiday.active ? 'translate-x-6' : 'translate-x-1'
-          }`}
-        />
+      <span className="relative inline-flex items-center">
+        <Switch checked={!!holiday.active} onCheckedChange={() => handleToggleStatus(holiday)} disabled={togglingId === holiday.id} title={holiday.active ? 'Click to Deactivate' : 'Click to Activate'} />
         {togglingId === holiday.id && (
           <Loader2 className="absolute right-[-20px] top-1 w-4 h-4 animate-spin text-gray-400" />
         )}
-      </button>
+      </span>
     ),
   });
 

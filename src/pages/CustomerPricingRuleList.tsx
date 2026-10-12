@@ -196,14 +196,8 @@ variant="ghost"
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-semibold">Customer Pricing Rules</h1>
-        <Button variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium" onClick={() => setEditOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" /> Add Rule
-        </Button>
-      </div>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">Customer Pricing Rules</h1>
       <EnhancedTable
         data={pricingRules}
         columns={columns}
@@ -217,11 +211,11 @@ variant="ghost"
         leftActions={renderCustomActions()}
       />
       <Dialog modal={false} open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto bg-white rounded-2xl border border-[rgba(26,26,24,.09)] focus:outline-none focus-visible:outline-none">
           <DialogHeader>
             <div className="flex justify-between items-start">
               <div>
-                <DialogTitle className="text-xl font-semibold text-[#1A1A1A]">
+                <DialogTitle className="text-lg font-semibold text-[#1A1A18]">
                   {editId ? "Edit Pricing Rule" : "Add Pricing Rule"}
                 </DialogTitle>
                 <DialogDescription className="text-sm text-gray-500 mt-1">
@@ -235,7 +229,7 @@ variant="ghost"
               fullWidth
               variant="outlined"
               required
-              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#1A1A18' } }}
             >
               <InputLabel shrink>Organization</InputLabel>
               <MuiSelect
@@ -262,7 +256,7 @@ variant="ghost"
               fullWidth
               variant="outlined"
               required
-              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#1A1A18' } }}
             >
               <InputLabel shrink>Category</InputLabel>
               <MuiSelect
@@ -289,7 +283,7 @@ variant="ghost"
               fullWidth
               variant="outlined"
               required
-              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#1A1A18' } }}
             >
               <InputLabel shrink>Margin Type</InputLabel>
               <MuiSelect
@@ -315,22 +309,25 @@ variant="ghost"
               placeholder="e.g., 10"
               InputLabelProps={{ shrink: true }}
               inputProps={{ min: 0, step: 0.01 }}
-              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
+              sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#1A1A18' } }}
             />
-            <div className="flex justify-center gap-4 pt-4">
-              <Button
-                onClick={handleEditSubmit}
-                className="bg-[#C72030] hover:bg-[#A01828] text-white px-12"
-                disabled={editLoading}
-              >
-                {editLoading ? "Saving..." : "Save"}
-              </Button>
-              <Button
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
                 onClick={handleEditClose}
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"                 disabled={editLoading}
+                disabled={editLoading}
+                className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
               >
                 Cancel
-              </Button>
+              </button>
+              <button
+                type="button"
+                onClick={handleEditSubmit}
+                disabled={editLoading}
+                className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+              >
+                {editLoading ? "Saving..." : "Save"}
+              </button>
             </div>
           </div>
         </DialogContent>

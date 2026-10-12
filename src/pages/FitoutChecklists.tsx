@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/utils/apiClient";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
+import { Switch } from "@/components/ui/switch";
 interface Question {
   id: number;
   descr: string;
@@ -413,18 +414,7 @@ const FitoutChecklists: React.FC = () => {
           return (
             <div className="flex items-center justify-center">
               {shouldShow("Fitout Checklists", "update") && (
-              <button
-                onClick={() => handleToggle(item.id, item.active)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  item.active === 1 ? "bg-[#C72030]" : "bg-gray-300"
-                }`}
-              >
-                <div
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    item.active === 1 ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
+              <Switch checked={!!(item.active === 1)} onCheckedChange={() => handleToggle(item.id, item.active)} />
               )}
             </div>
           );

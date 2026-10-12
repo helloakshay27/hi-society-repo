@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Upload, Plus, Pencil, Trash2, Download, X } from "lucide-react";
 import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
+import { Switch } from "@/components/ui/switch";
 type SettingsTab = "invoices" | "receipts";
 type NumberMode = "auto" | "manual";
 
@@ -664,19 +665,7 @@ const AccountingCustomSettings: React.FC = () => {
         {activeTab === "invoices" && (
           <div className="bg-white rounded-lg border border-gray-200 p-6 flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">Online Payment Allowed</span>
-            <button
-              type="button"
-              onClick={() => setOnlinePaymentAllowed((prev) => !prev)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                onlinePaymentAllowed ? "bg-[#C72030]" : "bg-gray-300"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  onlinePaymentAllowed ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch checked={!!(onlinePaymentAllowed)} onCheckedChange={() => setOnlinePaymentAllowed((prev) => !prev)} />
           </div>
         )}
 

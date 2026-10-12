@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Plus, ArrowLeft, CheckCircle, Upload, Star } from "lucide-react";
+import { X, Plus, ArrowLeft, CheckCircle, Upload, Star, ClipboardList, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
@@ -90,15 +90,15 @@ const fieldStyles = {
       borderColor: "#e5e7eb",
     },
     "&:hover fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#1A1A18",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#1A1A18",
     },
   },
   "& .MuiInputLabel-root": {
     "&.Mui-focused": {
-      color: "#C72030",
+      color: "#1A1A18",
     },
   },
 };
@@ -114,10 +114,10 @@ const textareaStyles = {
       borderColor: "#e5e7eb",
     },
     "&:hover fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#1A1A18",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#1A1A18",
     },
   },
 };
@@ -1328,27 +1328,32 @@ export const EditSurveyPage = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-[#FDFDFB] min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            type="button"
             onClick={() => navigate("/settings/survey/list")}
-            className="p-2"
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors"
+            aria-label="Go back"
           >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-3xl font-bold tracking-tight">Edit Question</h1>
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900">Edit Question</h1>
         </div>
       </div>
 
       <div className="space-y-6">
         {/* Basic Information Card */}
-        <Card className="w-full">
+        <Card className="w-full bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
+            <CardTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                <ClipboardList size={14} color="#1A1A18" />
+              </span>
+              Basic Information
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1516,7 +1521,7 @@ export const EditSurveyPage = () => {
                 <label className="text-sm font-medium text-gray-700">
                   Upload Image
                 </label>
-                <div className="flex items-center gap-4 grid grid-cols-3">
+                <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <input
                       type="file"
@@ -1531,10 +1536,10 @@ export const EditSurveyPage = () => {
                     />
                     <label
                       htmlFor="survey-image"
-                      className={`block w-full px-4 py-2 text-sm text-center border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                      className={`flex w-full flex-col items-center justify-center p-8 text-sm text-center border-2 border-dashed border-[#EBE9E2] rounded-xl transition-colors ${
                         isSubmitting
-                          ? "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
-                          : "border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-600 hover:text-gray-600"
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "cursor-pointer hover:border-[#1A1A18] text-gray-600"
                       }`}
                     >
                       {surveyImage
@@ -1543,15 +1548,14 @@ export const EditSurveyPage = () => {
                     </label>
                   </div>
                   {surveyImage && (
-                    <Button
+                    <button
+ type="button"
                       onClick={() => setSurveyImage(null)}
-                      variant="ghost"
-                      size="sm"
-                      className="p-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                      className="inline-flex items-center justify-center p-2 rounded-lg bg-[#1A1A18] text-white hover:bg-[#12100E] hover:text-white"
                       disabled={isSubmitting}
                     >
                       <X className="w-4 h-4" />
-                    </Button>
+                    </button>
                   )}
                 </div>
                 {surveyImage && (
@@ -1584,9 +1588,14 @@ export const EditSurveyPage = () => {
         </Card>
 
         {/* Questions Card */}
-        <Card className="w-full">
+        <Card className="w-full bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
           <CardHeader>
-            <CardTitle>Questions</CardTitle>
+            <CardTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                <HelpCircle size={14} color="#1A1A18" />
+              </span>
+              Questions
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
@@ -1619,14 +1628,13 @@ export const EditSurveyPage = () => {
                         return activeCount.toString().padStart(2, "0");
                       })()}
                     </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
+                    <button
+ type="button"
                       onClick={handleAddQuestion}
-                      className="p-1 h-6 w-6 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                      className="inline-flex items-center justify-center p-1 h-6 w-6 rounded-md bg-[#1A1A18] text-white hover:bg-[#12100E] hover:text-white"
                     >
                       <Plus className="w-4 h-4" />
-                    </Button>
+                    </button>
                   </div>
                   <span className="text-sm">No. of Questions</span>
                   <span className="bg-gray-200 px-2 py-1 rounded text-sm">
@@ -1693,11 +1701,14 @@ export const EditSurveyPage = () => {
                 })().map((question, index) => (
                   <Card
                     key={`active-${question.id}-${index}`}
-                    className="relative"
+                    className="relative rounded-xl border border-[rgba(26,26,24,.09)] shadow-none"
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium text-black">
+                        <CardTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                            <HelpCircle size={14} color="#1A1A18" />
+                          </span>
                           Question {index + 1}
                         </CardTitle>
                         <Button
@@ -1864,15 +1875,14 @@ export const EditSurveyPage = () => {
                               </div>
                             )
                           )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
+                          <button
+ type="button"
                             onClick={() => handleAddAnswerOption(question.id!)}
-                            className="p-0 h-auto font-medium flex items-center bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                            className="inline-flex h-8 items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#12100E] hover:text-white"
                           >
                             <Plus className="w-4 h-4 mr-1" />
                             Add Option
-                          </Button>
+                          </button>
                         </div>
                       )}
 
@@ -2044,19 +2054,18 @@ export const EditSurveyPage = () => {
                                       </div>
 
                                       {!isOnlyField && (
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
+                                        <button
+                                          type="button"
                                           onClick={() =>
                                             handleRemoveAdditionalField(
                                               question.id!,
                                               fieldIndex
                                             )
                                           }
-                                          className="p-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                                          className="inline-flex items-center justify-center p-2 rounded-lg bg-[#1A1A18] text-white hover:bg-[#12100E] hover:text-white"
                                         >
                                           <X className="w-4 h-4" />
-                                        </Button>
+                                        </button>
                                       )}
                                     </div>
                                   );
@@ -2219,17 +2228,16 @@ export const EditSurveyPage = () => {
                                 </div>
                               )}
 
-                              <Button
-                                size="sm"
-                                variant="ghost"
+                              <button
+                                type="button"
                                 onClick={() =>
                                   handleAddAdditionalField(question.id!)
                                 }
-                                className="p-0 h-auto font-medium flex items-center bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                                className="inline-flex h-8 items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#12100E] hover:text-white"
                               >
                                 <Plus className="w-4 h-4 mr-1" /> Add Additional
                                 Field
-                              </Button>
+                              </button>
                             </div>
                           </div>
                         )}
@@ -2239,33 +2247,38 @@ export const EditSurveyPage = () => {
               </div>
 
               <div className="flex justify-center">
-                <Button
+                <button
+                  type="button"
                   onClick={handleAddQuestion}
-                  variant="outline"
-                  className="border-dashed border-red-400 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                  className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add More Questions
-                </Button>
-              </div>
-
-              <div className="flex justify-center gap-4 pt-6">
-                <Button
-                  onClick={handleUpdateQuestion}
-                  disabled={loading || isSubmitting}
-                  className="px-8 bg-[#C72030] text-white hover:bg-[#C72030]/90"
-                >
-                  {loading || isSubmitting ? "Updating..." : "Update Question"}
-                </Button>
-                <Button
-                  onClick={() => navigate("/settings/survey/list")}
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"                >
-                  Cancel
-                </Button>
+                </button>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 pb-8">
+          <button
+            type="button"
+            onClick={() => navigate("/settings/survey/list")}
+            disabled={loading || isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleUpdateQuestion}
+            disabled={loading || isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+          >
+            {loading || isSubmitting ? "Updating..." : "Update Question"}
+          </button>
+        </div>
       </div>
     </div>
   );

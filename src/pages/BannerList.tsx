@@ -19,6 +19,7 @@ import {
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
+import { Switch } from "@/components/ui/switch";
 interface Banner {
   id: number;
   title: string;
@@ -374,18 +375,7 @@ const BannerList = () => {
       case "status":
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => onToggle(item.id, item.active)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                item.active ? "bg-[#C72030]" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  item.active ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch checked={!!(item.active)} onCheckedChange={() => onToggle(item.id, item.active)} />
           </div>
         );
       default:

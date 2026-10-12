@@ -200,32 +200,32 @@ const GenericCategories: React.FC = () => {
   const catTypeBadgeColor = (catType: string) => {
     switch (catType) {
       case "merchandise":
-        return "bg-blue-100 text-blue-700 border-blue-200";
+        return "bg-[rgba(158,200,186,0.25)] text-[#3f6b5c] border-[rgba(158,200,186,0.6)]";
       case "voucher_category":
-        return "bg-purple-100 text-purple-700 border-purple-200";
+        return "bg-[rgba(206,203,246,0.35)] text-[#55508f] border-[rgba(206,203,246,0.8)]";
       case "mile_category":
-        return "bg-amber-100 text-amber-700 border-amber-200";
+        return "bg-[rgba(237,196,136,0.25)] text-[#8a6327] border-[rgba(237,196,136,0.6)]";
       case "indian_lounge":
-        return "bg-green-100 text-green-700 border-green-200";
+        return "bg-[rgba(121,140,94,0.15)] text-[#56663f] border-[rgba(121,140,94,0.35)]";
       default:
         return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f4ee] p-6">
+    <div className="min-h-screen bg-[#FDFDFB] p-6">
       <div className=" mx-auto">
 
         {/* ── Header ── */}
         <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             onClick={() => navigate(-1)}
-            className="hover:bg-[#DBC2A9]"
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors"
+            aria-label="Go back"
           >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
           <div>
             <h1 className="text-2xl font-bold text-[#1a1a1a]">Generic Categories</h1>
             <p className="text-sm text-[#666666]">
@@ -235,10 +235,12 @@ const GenericCategories: React.FC = () => {
         </div>
 
         {/* ── Organization Selection ── */}
-        <Card className="border-[#e5e1d8] mb-6">
-          <CardHeader className="bg-gradient-to-r from-[#f6f4ee] to-[#e5e1d8]">
-            <CardTitle className="flex items-center gap-2 text-[#1a1a1a]">
-              <Tag className="h-5 w-5" />
+        <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none mb-6">
+          <CardHeader className="pt-[22px]">
+            <CardTitle className="flex items-center gap-3 text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                <Tag size={14} color="#1A1A18" />
+              </span>
               Select Organization
             </CardTitle>
           </CardHeader>
@@ -249,7 +251,7 @@ const GenericCategories: React.FC = () => {
                 variant="outlined"
                 required
                 disabled={loadingOrgs}
-                sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#da7756' } }}
+                sx={{ '& .MuiInputBase-root': fieldStyles, '& .MuiFormLabel-asterisk': { color: '#1A1A18' } }}
               >
                 <InputLabel shrink>Organization</InputLabel>
                 <MuiSelect
@@ -292,10 +294,12 @@ const GenericCategories: React.FC = () => {
         {/* ── Category Selection (only shown after org is selected) ── */}
         {selectedOrgId && (
           <form onSubmit={handleSubmit}>
-            <Card className="border-[#e5e1d8] mb-6">
-              <CardHeader className="bg-gradient-to-r from-[#f6f4ee] to-[#e5e1d8]">
-                <CardTitle className="flex items-center gap-2 text-[#1a1a1a]">
-                  <CheckSquare className="h-5 w-5" />
+            <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none mb-6">
+              <CardHeader className="pt-[22px]">
+                <CardTitle className="flex items-center gap-3 text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                <CheckSquare size={14} color="#1A1A18" />
+              </span>
                   Select Categories
                   <span className="text-xs font-normal text-[#666] ml-1">
                     (multiple selection allowed)
@@ -348,7 +352,7 @@ const GenericCategories: React.FC = () => {
                 {/* Category grid */}
                 {loadingCategories ? (
                   <div className="flex items-center justify-center py-10 text-[#666]">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#C72030] mr-3" />
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1A1A18] mr-3" />
                     Loading categories...
                   </div>
                 ) : availableCategories.length === 0 ? (
@@ -368,17 +372,17 @@ const GenericCategories: React.FC = () => {
                             key={cat.id}
                             type="button"
                             onClick={() => toggleCategory(cat.id)}
-                            className={`flex items-start gap-3 w-full rounded-xl border-2 p-4 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:ring-offset-1 ${
+                            className={`flex items-start gap-3 w-full rounded-xl border-2 p-4 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#1A1A18] focus:ring-offset-1 ${
                               isSelected
-                                ? "border-[#C72030] bg-red-50 shadow-sm"
-                                : "border-[#e5e1d8] bg-white hover:border-[#C72030] hover:bg-[#fdf7f7]"
+                                ? "border-[#1A1A18] bg-[rgba(26,26,24,0.08)]"
+                                : "border-[rgba(26,26,24,.09)] bg-white hover:border-[#1A1A18] hover:bg-[rgba(26,26,24,0.04)]"
                             }`}
                           >
                             {/* Checkbox indicator */}
                             <span
                               className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                                 isSelected
-                                  ? "bg-[#C72030] border-[#C72030]"
+                                  ? "bg-[#1A1A18] border-[#1A1A18]"
                                   : "border-gray-300 bg-white"
                               }`}
                             >
@@ -423,13 +427,13 @@ const GenericCategories: React.FC = () => {
 
                 {/* Submit button */}
                 <div className="flex justify-end pt-2">
-                  <Button
+                  <button
                     type="submit"
                     disabled={saving || loadingCategories}
-                    className="bg-[#C72030] hover:bg-[#A01828] text-white px-8 py-2 text-base font-semibold rounded shadow-none"
+                    className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                   >
                     {saving ? "Saving..." : "Save Categories"}
-                  </Button>
+                  </button>
                 </div>
               </CardContent>
             </Card>
@@ -438,9 +442,12 @@ const GenericCategories: React.FC = () => {
 
         {/* ── Active Categories Summary ── */}
         {selectedOrgId && activeCategories.length > 0 && (
-          <Card className="border-[#e5e1d8]">
-            <CardHeader className="bg-gradient-to-r from-[#f6f4ee] to-[#e5e1d8]">
-              <CardTitle className="text-[#1a1a1a] text-base">
+          <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
+            <CardHeader className="pt-[22px]">
+              <CardTitle className="flex items-center gap-3 text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+                <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                  <Tag size={14} color="#1A1A18" />
+                </span>
                 Currently Active Categories
               </CardTitle>
             </CardHeader>

@@ -22,6 +22,7 @@ import { userService, User } from "@/services/userService";
 import { taskServiceFilter } from "@/services/taskServiceFilter";
 import { API_CONFIG } from "@/config/apiConfig";
 
+import { Switch } from "@/components/ui/switch";
 interface CustomForm {
   id: number;
   form_name: string;
@@ -642,9 +643,7 @@ export const TaskFilterDialog: React.FC<TaskFilterDialogProps> = ({
                     onChange={(e) => onShowAllChange(e.target.checked)}
                     className="sr-only"
                   />
-                  <div className={`w-11 h-6 rounded-full ${showAll ? 'bg-[#C72030]' : 'bg-gray-300'} transition-colors duration-200 ease-in-out relative`}>
-                    <div className={`w-5 h-5 bg-white rounded-full shadow-lg transform transition-transform duration-200 ease-in-out absolute top-0.5 ${showAll ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
-                  </div>
+                  <Switch checked={!!(showAll)} tabIndex={-1} className="pointer-events-none" />
                   <span className="ml-3 text-sm font-medium text-gray-700">
                     Show All Tasks
                   </span>

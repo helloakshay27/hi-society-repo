@@ -10,6 +10,7 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
 import { useNavigate } from 'react-router-dom';
 
+import { Switch } from "@/components/ui/switch";
 interface Vehicle {
   id: number;
   vehicleNumber: string;
@@ -242,18 +243,7 @@ export const RVehiclesDashboard = () => {
     staffName: vehicle.staffName || '--',
     status: (
       <div className="flex items-center">
-        <div
-          className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${
-            vehicle.statusCode === 'Active' ? 'bg-green-500' : 'bg-gray-300'
-          }`}
-          onClick={() => handleStatusToggle(vehicle.id)}
-        >
-          <span
-            className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
-              vehicle.statusCode === 'Active' ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          />
-        </div>
+        <Switch checked={!!(vehicle.statusCode === 'Active')} onCheckedChange={() => handleStatusToggle(vehicle.id)} />
       </div>
     ),
     qrCode: vehicle.qrCode

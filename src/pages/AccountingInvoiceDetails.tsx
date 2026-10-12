@@ -18,6 +18,7 @@ import { ArrowLeft, Download, Printer, FileText, Receipt, Wallet, X } from "luci
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
+import { Switch } from "@/components/ui/switch";
 interface BillCharge {
   id: number;
   name: string;
@@ -408,19 +409,7 @@ const AccountingInvoiceDetails: React.FC = () => {
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Raise to Builder:</span>
-              <button
-                type="button"
-                onClick={() => handleToggleRaiseToBuilder(!isRaisedToBuilder)}
-                disabled={isRaiseToBuilderLocked}
-                aria-pressed={isRaisedToBuilder}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${isRaisedToBuilder ? "bg-brand" : "bg-gray-300"
-                  }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isRaisedToBuilder ? "translate-x-6" : "translate-x-1"
-                    }`}
-                />
-              </button>
+              <Switch checked={!!(isRaisedToBuilder)} onCheckedChange={() => handleToggleRaiseToBuilder(!isRaisedToBuilder)} disabled={isRaiseToBuilderLocked} />
             </div>
             {bill.bill_actions?.can_publish && (
               <Button

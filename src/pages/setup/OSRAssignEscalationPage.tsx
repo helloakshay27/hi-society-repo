@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
 import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -565,14 +564,15 @@ export const OSRAssignEscalationPage: React.FC = () => {
             <LevelForm data={formData} setData={setFormData} staffOptions={staffOptions} />
           </div>
 
-          <div className="mt-6 flex justify-center">
-            <Button
+          <div className="mt-6 flex justify-end">
+            <button
+              type="button"
               onClick={handleCreate}
               disabled={submitting}
-              className="px-10 py-2 font-medium bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {submitting ? 'Submitting...' : 'Submit'}
-            </Button>
+            </button>
           </div>
         </div>
 
@@ -685,17 +685,23 @@ export const OSRAssignEscalationPage: React.FC = () => {
             <LevelForm data={editFormData} setData={setEditFormData} staffOptions={staffOptions} />
           </div>
 
-          <div className="flex justify-center gap-3 mt-6">
-            <Button variant="outline" onClick={() => setIsEditOpen(false)} disabled={editSubmitting}>
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              type="button"
+              onClick={() => setIsEditOpen(false)}
+              disabled={editSubmitting}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-white px-[22px] text-[13px] font-semibold text-[#1A1A18] transition-colors hover:bg-[#F6F4EE] disabled:opacity-60"
+            >
               Cancel
-            </Button>
-            <Button
+            </button>
+            <button
+              type="button"
               onClick={handleUpdate}
               disabled={editSubmitting}
-              className="px-10 font-medium bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {editSubmitting ? 'Updating...' : 'Update'}
-            </Button>
+            </button>
           </div>
         </DialogContent>
       </Dialog>

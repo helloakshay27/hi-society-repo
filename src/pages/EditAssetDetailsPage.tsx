@@ -84,6 +84,7 @@ import { FormatShapes } from "@mui/icons-material";
 import { toast } from "sonner";
 import { assetFieldsConfig } from "../config/assetFieldsConfig";
 
+import { Switch } from "@/components/ui/switch";
 // Image compression function
 const compressImage = async (
   file: File,
@@ -11762,25 +11763,7 @@ export const EditAssetDetailsPage = () => {
                                                                                                                                                                           className="relative inline-block w-12 h-6"
                                                                                                                                                                           onClick={(e) => e.stopPropagation()}
                                                                                                                                                                         >
-                                                                                                                                                                          <input
-                                                                                                                                                                            type="checkbox"
-                                                                                                                                                                            className="sr-only peer"
-                                                                                                                                                                            id="it-assets-toggle"
-                                                                                                                                                                            checked={itAssetsToggle}
-                                                                                                                                                                            onChange={(e) =>
-                                                                                                                                                                              handleItAssetsToggleChange(e.target.checked)
-                                                                                                                                                                            }
-                                                                                                                                                                          />
-                                                                                                                                                                          <label
-                                                                                                                                                                            htmlFor="it-assets-toggle"
-                                                                                                                                                                            className={`flex items-center w-12 h-6 rounded-full cursor-pointer transition-colors ${itAssetsToggle ? "bg-green-400" : "bg-gray-300"
-                                                                                                                                                                              }`}
-                                                                                                                                                                          >
-                                                                                                                                                                            <span
-                                                                                                                                                                              className={`block w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${itAssetsToggle ? "translate-x-6" : "translate-x-1"
-                                                                                                                                                                                }`}
-                                                                                                                                                                            ></span>
-                                                                                                                                                                          </label>
+                                                                                                                                                                          <Switch id="it-assets-toggle" checked={!!itAssetsToggle} onCheckedChange={(checked) => handleItAssetsToggleChange(checked)} />
                                                                                                                                                                         </div>
                                                                                                                                                                       </div> */}
                       <button
