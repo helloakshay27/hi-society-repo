@@ -2921,15 +2921,14 @@ const ProjectDetailsEdit = () => {
         {/* Basic Information Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div
-            className="px-6 py-3 border-b border-gray-200"
-            style={{ backgroundColor: "#F6F4EE" }}
+            className="px-6 py-3"
+            style={{ backgroundColor: "#FFFFFF" }}
           >
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span
-                className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
-                style={{ backgroundColor: "#E5E0D3" }}
+                className="w-7 h-7 flex items-center justify-center mr-3"
               >
-                <Building2 size={16} color="var(--color-primary,#da7756)" />
+                <Building2 size={14} color="#2C2C2C" />
               </span>
               Basic Information
             </h2>
@@ -3620,15 +3619,14 @@ const ProjectDetailsEdit = () => {
         <>
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div
-              className="px-6 py-3 border-b border-gray-200"
-              style={{ backgroundColor: "#F6F4EE" }}
+              className="px-6 py-3"
+              style={{ backgroundColor: "#FFFFFF" }}
             >
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <h2 className="text-sm font-semibold text-gray-900 flex items-center">
                 <span
-                  className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
-                  style={{ backgroundColor: "#E5E0D3" }}
+                  className="w-7 h-7 flex items-center justify-center mr-3"
                 >
-                  <FileText size={16} color="var(--color-primary,#da7756)" />
+                  <FileText size={14} color="#2C2C2C" />
                 </span>
                 RERA Number
               </h2>
@@ -4214,15 +4212,14 @@ const ProjectDetailsEdit = () => {
         {/* Amenities Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div
-            className="px-6 py-3 border-b border-gray-200"
-            style={{ backgroundColor: "#F6F4EE" }}
+            className="px-6 py-3"
+            style={{ backgroundColor: "#FFFFFF" }}
           >
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span
-                className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
-                style={{ backgroundColor: "#E5E0D3" }}
+                className="w-7 h-7 flex items-center justify-center mr-3"
               >
-                <Building2 size={16} color="var(--color-primary,#da7756)" />
+                <Building2 size={14} color="#2C2C2C" />
               </span>
               Amenities
             </h2>
@@ -4277,15 +4274,14 @@ const ProjectDetailsEdit = () => {
         {/* Connectivity Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div
-            className="px-6 py-3 border-b border-gray-200"
-            style={{ backgroundColor: "#F6F4EE" }}
+            className="px-6 py-3"
+            style={{ backgroundColor: "#FFFFFF" }}
           >
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span
-                className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
-                style={{ backgroundColor: "#E5E0D3" }}
+                className="w-7 h-7 flex items-center justify-center mr-3"
               >
-                <Building2 size={16} color="var(--color-primary,#da7756)" />
+                <Building2 size={14} color="#2C2C2C" />
               </span>
               Connectivity
             </h2>
@@ -4719,15 +4715,14 @@ const ProjectDetailsEdit = () => {
         {/* Address Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div
-            className="px-6 py-3 border-b border-gray-200"
-            style={{ backgroundColor: "#F6F4EE" }}
+            className="px-6 py-3"
+            style={{ backgroundColor: "#FFFFFF" }}
           >
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span
-                className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
-                style={{ backgroundColor: "#E5E0D3" }}
+                className="w-7 h-7 flex items-center justify-center mr-3"
               >
-                <Building2 size={16} color="#C72030" />
+                <Building2 size={14} color="#2C2C2C" />
               </span>
               Address
             </h2>
@@ -5034,15 +5029,14 @@ const ProjectDetailsEdit = () => {
        
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div
-            className="px-6 py-3 border-b border-gray-200"
-            style={{ backgroundColor: "#F6F4EE" }}
+            className="px-6 py-3"
+            style={{ backgroundColor: "#FFFFFF" }}
           >
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span
-                className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
-                style={{ backgroundColor: "#E5E0D3" }}
+                className="w-7 h-7 flex items-center justify-center mr-3"
               >
-                <FileUpload sx={{ fontSize: 16, color: "var(--color-primary,#da7756)" }} />
+                <FileUpload sx={{ fontSize: 14, color: "#2C2C2C" }} />
               </span>
               File Uploads
             </h2>
@@ -6980,15 +6974,14 @@ const ProjectDetailsEdit = () => {
         <>
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div
-              className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
-              style={{ backgroundColor: "#F6F4EE" }}
+              className="px-6 py-3 flex items-center justify-between"
+              style={{ backgroundColor: "#FFFFFF" }}
             >
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <h2 className="text-sm font-semibold text-gray-900 flex items-center">
                 <span
-                  className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
-                  style={{ backgroundColor: "#E5E0D3" }}
+                  className="w-7 h-7 flex items-center justify-center mr-3"
                 >
-                  <FileText size={16} color="#C72030" />
+                  <FileText size={14} color="#2C2C2C" />
                 </span>
                 Virtual Tours
               </h2>
@@ -7169,19 +7162,19 @@ const ProjectDetailsEdit = () => {
         {/* Visibility Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div
-            className="px-6 py-3 border-b border-gray-200"
-            style={{ backgroundColor: "#F6F4EE" }}
+            className="px-6 py-3"
+            style={{ backgroundColor: "#FFFFFF" }}
           >
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <Avatar
                 sx={{
-                  width: 32,
-                  height: 32,
-                  backgroundColor: "#E5E0D3",
+                  width: 28,
+                  height: 28,
+                  backgroundColor: "transparent",
                   mr: 1.5,
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: "var(--color-primary,#da7756)" }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 14, color: "#2C2C2C" }} />
               </Avatar>
               Visibility
             </h2>
@@ -7384,20 +7377,21 @@ const ProjectDetailsEdit = () => {
         </div>
 
         {/* Sticky footer with Update button */}
-        <div className=" bottom-0 left-0 w-full py-4 flex justify-center">
+        <div className="bottom-0 left-0 w-full py-4 flex justify-end">
           <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100 h-10"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={isSubmitting || loading}
               className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
             >
               {isSubmitting ? "Updating..." : "Update"}
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"                 >
-              Cancel
             </button>
           </div>
         </div>
