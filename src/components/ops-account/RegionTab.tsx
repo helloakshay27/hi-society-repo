@@ -1,21 +1,32 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Plus, Download, Filter, Upload, Eye, Edit, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { AddRegionModal } from '@/components/AddRegionModal';
-import { EditRegionModal } from '@/components/EditRegionModal';
-import { DeleteRegionModal } from '@/components/DeleteRegionModal';
-import { RegionFilterModal, RegionFilters } from '@/components/RegionFilterModal';
-import { ExportModal } from '@/components/ExportModal';
-import { BulkUploadModal } from '@/components/BulkUploadModal';
-import { EnhancedTaskTable } from '@/components/enhanced-table/EnhancedTaskTable';
-import { ColumnConfig } from '@/hooks/useEnhancedTable';
-import { TicketPagination } from '@/components/TicketPagination';
-import { toast } from 'sonner';
-import { formatApiErrorMessage } from '@/utils/apiErrorMessage';
-import { useApiConfig } from '@/hooks/useApiConfig';
-import { getUser } from '@/utils/auth';
-import { useDebounce } from '@/hooks/useDebounce';
+import React, { useState, useEffect, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Plus,
+  Download,
+  Filter,
+  Upload,
+  Eye,
+  Edit,
+  Trash2,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { AddRegionModal } from "@/components/AddRegionModal";
+import { EditRegionModal } from "@/components/EditRegionModal";
+import { DeleteRegionModal } from "@/components/DeleteRegionModal";
+import {
+  RegionFilterModal,
+  RegionFilters,
+} from "@/components/RegionFilterModal";
+import { ExportModal } from "@/components/ExportModal";
+import { BulkUploadModal } from "@/components/BulkUploadModal";
+import { EnhancedTaskTable } from "@/components/enhanced-table/EnhancedTaskTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { TicketPagination } from "@/components/TicketPagination";
+import { toast } from "sonner";
+import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
+import { useApiConfig } from "@/hooks/useApiConfig";
+import { getUser } from "@/utils/auth";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Switch } from "@/components/ui/switch";
 // Type definitions for the API response
 interface RegionItem {
@@ -169,7 +180,9 @@ export const RegionTab: React.FC<RegionTabProps> = ({
       "sumitra.patil@lockated.com",
       "komalshinde0101@lockated.com",
       "demo@lockated.com",
-      "dineshshinde6666@gmail.com"
+      "dineshshinde6666@gmail.com",
+      "dinesh.shinde@lockated.com",
+      "tejas.chaudhari@lockated.com",
     ];
     setCanEditRegion(allowedEmails.includes(userEmail));
   };
@@ -425,8 +438,12 @@ export const RegionTab: React.FC<RegionTabProps> = ({
 
   // Use API data directly instead of client-side filtering
   const displayedData = useMemo(
-    () => regions.map((r, i) => ({ ...r, srno: (currentPage - 1) * perPage + i + 1 })),
-    [regions, currentPage, perPage],
+    () =>
+      regions.map((r, i) => ({
+        ...r,
+        srno: (currentPage - 1) * perPage + i + 1,
+      })),
+    [regions, currentPage, perPage]
   );
 
   // Render row function for enhanced table
@@ -586,7 +603,9 @@ export const RegionTab: React.FC<RegionTabProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(formatApiErrorMessage(errorData, "Failed to delete region"));
+        throw new Error(
+          formatApiErrorMessage(errorData, "Failed to delete region")
+        );
       }
 
       toast.success("Region deleted successfully!", {
@@ -612,28 +631,28 @@ export const RegionTab: React.FC<RegionTabProps> = ({
       </header>
 
       <>
-          <EnhancedTaskTable
-            data={displayedData}
-            columns={columns}
-            renderRow={renderRow}
-            storageKey="region-dashboard-v1"
-            hideTableExport={true}
-            hideTableSearch={false}
-            enableSearch={true}
-            searchTerm={searchTerm}
-            onSearchChange={handleSearch}
-            onFilterClick={() => setIsFilterOpen(true)}
-            pagination={true}
-            loading={loading}
-            leftActions={
-              <Button
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => setIsAddModalOpen(true)}
-                disabled={!canEditRegion}
-              >
-                <Plus className="w-4 h-4 mr-2" /> Add Region
-              </Button>
-            }
+        <EnhancedTaskTable
+          data={displayedData}
+          columns={columns}
+          renderRow={renderRow}
+          storageKey="region-dashboard-v1"
+          hideTableExport={true}
+          hideTableSearch={false}
+          enableSearch={true}
+          searchTerm={searchTerm}
+          onSearchChange={handleSearch}
+          onFilterClick={() => setIsFilterOpen(true)}
+          pagination={true}
+          loading={loading}
+          leftActions={
+            <Button
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setIsAddModalOpen(true)}
+              disabled={!canEditRegion}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add Region
+            </Button>
+          }
           // rightActions={(
           //   <div className="flex items-center gap-2">
           //     <Button
@@ -655,18 +674,18 @@ export const RegionTab: React.FC<RegionTabProps> = ({
           //     </Button>
           //   </div>
           // )}
-          />
+        />
 
-          <TicketPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalRecords={totalRecords}
-            perPage={perPage}
-            isLoading={loading}
-            onPageChange={handlePageChange}
-            onPerPageChange={handlePerPageChange}
-          />
-        </>
+        <TicketPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
+          perPage={perPage}
+          isLoading={loading}
+          onPageChange={handlePageChange}
+          onPerPageChange={handlePerPageChange}
+        />
+      </>
 
       {/* Modals */}
       <AddRegionModal

@@ -198,7 +198,9 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
       "komalshinde0101@lockated.com",
       "demo@lockated.com",
       "ajay.ghenand@lockated.com",
-      "dineshshinde6666@gmail.com"
+      "dineshshinde6666@gmail.com",
+      "dinesh.shinde@lockated.com",
+      "tejas.chaudhari@lockated.com",
     ];
     setCanEditCompany(allowedEmails.includes(userEmail));
   };
@@ -508,8 +510,12 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
 
   // Use API data directly instead of client-side filtering
   const displayedData = useMemo(
-    () => companies.map((c, i) => ({ ...c, srno: (currentPage - 1) * perPage + i + 1 })),
-    [companies, currentPage, perPage],
+    () =>
+      companies.map((c, i) => ({
+        ...c,
+        srno: (currentPage - 1) * perPage + i + 1,
+      })),
+    [companies, currentPage, perPage]
   );
 
   // Render row function for enhanced table
@@ -699,7 +705,9 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(formatApiErrorMessage(errorData, "Failed to delete company"));
+        throw new Error(
+          formatApiErrorMessage(errorData, "Failed to delete company")
+        );
       }
 
       toast.success("Company deleted successfully!", {
@@ -730,27 +738,27 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
       </header>
 
       <>
-          <EnhancedTaskTable
-            data={displayedData}
-            columns={columns}
-            renderRow={renderRow}
-            storageKey="company-dashboard-v1"
-            hideTableExport={true}
-            hideTableSearch={false}
-            enableSearch={true}
-            searchTerm={searchQuery}
-            onSearchChange={handleSearch}
-            onFilterClick={() => setIsFilterOpen(true)}
-            loading={loading}
-            leftActions={
-              <Button
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => setIsAddModalOpen(true)}
-                disabled={!canEditCompany}
-              >
-                <Plus className="w-4 h-4 mr-2" /> Add Company
-              </Button>
-            }
+        <EnhancedTaskTable
+          data={displayedData}
+          columns={columns}
+          renderRow={renderRow}
+          storageKey="company-dashboard-v1"
+          hideTableExport={true}
+          hideTableSearch={false}
+          enableSearch={true}
+          searchTerm={searchQuery}
+          onSearchChange={handleSearch}
+          onFilterClick={() => setIsFilterOpen(true)}
+          loading={loading}
+          leftActions={
+            <Button
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setIsAddModalOpen(true)}
+              disabled={!canEditCompany}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add Company
+            </Button>
+          }
           // rightActions={(
           //   <div className="flex items-center gap-2">
           //     <Button
@@ -772,18 +780,18 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({
           //     </Button>
           //   </div>
           // )}
-          />
+        />
 
-          <TicketPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalRecords={totalRecords}
-            perPage={perPage}
-            isLoading={loading}
-            onPageChange={handlePageChange}
-            onPerPageChange={handlePerPageChange}
-          />
-        </>
+        <TicketPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
+          perPage={perPage}
+          isLoading={loading}
+          onPageChange={handlePageChange}
+          onPerPageChange={handlePerPageChange}
+        />
+      </>
 
       {/* Modals */}
       <AddCompanyModal

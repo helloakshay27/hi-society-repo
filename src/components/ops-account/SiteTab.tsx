@@ -228,7 +228,9 @@ export const SiteTab: React.FC<SiteTabProps> = ({
       "sumitra.patil@lockated.com",
       "komalshinde0101@lockated.com",
       "demo@lockated.com",
-      "dineshshinde6666@gmail.com"
+      "dineshshinde6666@gmail.com",
+      "dinesh.shinde@lockated.com",
+      "tejas.chaudhari@lockated.com",
     ];
     setCanEditSite(allowedEmails.includes(userEmail));
   }, [user.email]);
@@ -579,8 +581,12 @@ export const SiteTab: React.FC<SiteTabProps> = ({
 
   // Use API data directly instead of client-side filtering
   const displayedData = useMemo(
-    () => sites.map((s, i) => ({ ...s, srno: (currentPage - 1) * perPage + i + 1 })),
-    [sites, currentPage, perPage],
+    () =>
+      sites.map((s, i) => ({
+        ...s,
+        srno: (currentPage - 1) * perPage + i + 1,
+      })),
+    [sites, currentPage, perPage]
   );
 
   // Render row function for enhanced table
@@ -763,7 +769,7 @@ export const SiteTab: React.FC<SiteTabProps> = ({
             govt_id_enabled: site.govt_id_enabled,
             visitor_host_mandatory: site.visitor_host_mandatory,
             // Optionally include all other fields from API response
-            ...site
+            ...site,
           };
           setSelectedSiteData(mappedSiteData);
           setIsEditModalOpen(true);
@@ -807,7 +813,9 @@ export const SiteTab: React.FC<SiteTabProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(formatApiErrorMessage(errorData, "Failed to delete site"));
+        throw new Error(
+          formatApiErrorMessage(errorData, "Failed to delete site")
+        );
       }
 
       toast.success("Site deleted successfully!", {
@@ -834,27 +842,27 @@ export const SiteTab: React.FC<SiteTabProps> = ({
       </header>
 
       <>
-          <EnhancedTaskTable
-            data={displayedData}
-            columns={columns}
-            renderRow={renderRow}
-            storageKey="site-dashboard-v1"
-            hideTableExport={true}
-            hideTableSearch={false}
-            enableSearch={true}
-            searchTerm={searchTerm}
-            onSearchChange={handleSearch}
-            onFilterClick={() => setIsFilterOpen(true)}
-            loading={loading}
-            leftActions={
-              <Button
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => setIsAddModalOpen(true)}
-                disabled={!canEditSite}
-              >
-                <Plus className="w-4 h-4 mr-2" /> Add Site
-              </Button>
-            }
+        <EnhancedTaskTable
+          data={displayedData}
+          columns={columns}
+          renderRow={renderRow}
+          storageKey="site-dashboard-v1"
+          hideTableExport={true}
+          hideTableSearch={false}
+          enableSearch={true}
+          searchTerm={searchTerm}
+          onSearchChange={handleSearch}
+          onFilterClick={() => setIsFilterOpen(true)}
+          loading={loading}
+          leftActions={
+            <Button
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setIsAddModalOpen(true)}
+              disabled={!canEditSite}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add Site
+            </Button>
+          }
           // rightActions={(
           //   <div className="flex items-center gap-2">
           //     <Button
@@ -876,18 +884,18 @@ export const SiteTab: React.FC<SiteTabProps> = ({
           //     </Button>
           //   </div>
           // )}
-          />
+        />
 
-          <TicketPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalRecords={totalRecords}
-            perPage={perPage}
-            isLoading={loading}
-            onPageChange={handlePageChange}
-            onPerPageChange={handlePerPageChange}
-          />
-        </>
+        <TicketPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
+          perPage={perPage}
+          isLoading={loading}
+          onPageChange={handlePageChange}
+          onPerPageChange={handlePerPageChange}
+        />
+      </>
 
       {/* Modals */}
       <AddSiteModal
