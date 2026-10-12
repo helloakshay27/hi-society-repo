@@ -511,6 +511,60 @@ html body [class*="MuiSwitch-switchBase"]:not(.Mui-checked)
   opacity: 1 !important;
 }
 
+/* Project Details Edit page toggles (Enable Enquiry / Is Sold / Show on Home):
+   thumb circle must be black — the page sx sets #C72030 and colorPatch.ts
+   repaints the checked thumb brand orange. Scoped to the page by its
+   "EDIT PROJECT" header (root div > div.mb-8 > h1). */
+html body #root div.p-6.bg-gray-50:has(> div.mb-8 > h1)
+  .MuiSwitch-root
+  .MuiSwitch-switchBase.Mui-checked
+  .MuiSwitch-thumb {
+  color: #000000 !important;
+  background-color: #000000 !important;
+}
+
+/* Event create pages (EventCreate + its HiSoc/Loyalty/Communication clones,
+   which share the same header: root div > div.mb-6 > "Go back" button):
+   checked thumb circle must be black instead of #C72030 / brand orange. */
+html body #root div.p-6.bg-gray-50.min-h-screen:has(> div.mb-6 > button[aria-label="Go back"])
+  .MuiSwitch-root
+  .MuiSwitch-switchBase.Mui-checked
+  .MuiSwitch-thumb {
+  color: #000000 !important;
+  background-color: #000000 !important;
+}
+
+/* Event edit stepper: only the current and completed step boxes are black. */
+html body #root div.p-6.bg-gray-50.min-h-screen:has(> form.space-y-6)
+  > .MuiBox-root
+  > .MuiBox-root
+  > .MuiBox-root:first-child
+  > .MuiBox-root
+  > .MuiBox-root {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Event edit page checked toggles should use a black thumb as well as track. */
+html body #root div.p-6.bg-gray-50.min-h-screen:has(> form.space-y-6)
+  .MuiSwitch-root
+  .MuiSwitch-switchBase.Mui-checked
+  .MuiSwitch-thumb {
+  color: #000000 !important;
+  background-color: #000000 !important;
+}
+
+/* Project Details Create page toggles (Enable Enquiry / Is Sold / Show on Home):
+   checked thumb circle must be black — the page sx sets #C72030 and
+   colorPatch.ts repaints the checked thumb brand orange. Scoped by the page's
+   unique root class .project-details-create-page. */
+html body .project-details-create-page .MuiSwitch-root
+  .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb {
+  color: #000000 !important;
+  background-color: #000000 !important;
+}
+
 /* Radix / custom switches (any checked switch) */
 html body button[role="switch"][data-state="checked"],
 html body [role="switch"][aria-checked="true"] {
@@ -1602,6 +1656,24 @@ html body #root button[class*="border-[#D9D9D9]"] svg.lucide-edit,
 html body #root button[class*="border-[#D9D9D9]"] svg.lucide-edit * {
   color: #000 !important;
   stroke: #000 !important;
+}
+
+/* Fitout request details section header icons (Request Details / Payment /
+   Annexures / Deviations cards): black instead of orange. These circles carry
+   #E5E0D3 as an inline style rather than a Tailwind class, and colorPatch.ts
+   repaints the icon's inline #C72030 to brand orange — so scope by the page
+   root (p-4 sm:p-6 min-h-screen bg-gray-50 > div.mb-6 > back button) and win
+   over the inline style with !important. */
+html body #root div.p-4.sm\:p-6.min-h-screen.bg-gray-50:has(> div.mb-6 > button)
+  div.rounded-full[style*="rgb(229, 224, 211)"] svg,
+html body #root div.p-4.sm\:p-6.min-h-screen.bg-gray-50:has(> div.mb-6 > button)
+  div.rounded-full[style*="rgb(229, 224, 211)"] svg *,
+html body #root div.p-4.sm\:p-6.min-h-screen.bg-gray-50:has(> div.mb-6 > button)
+  div.rounded-full[style*="#E5E0D3"] svg,
+html body #root div.p-4.sm\:p-6.min-h-screen.bg-gray-50:has(> div.mb-6 > button)
+  div.rounded-full[style*="#E5E0D3"] svg * {
+  color: #000000 !important;
+  stroke: #000000 !important;
 }
 
 /* User details section heading icons: black instead of orange. */
@@ -5334,6 +5406,40 @@ html body #root div.p-2.sm\:p-4.lg\:p-6 > div.bg-white.rounded-lg.border.border-
   opacity: 1 !important;
 }
 
+/* Block Days Configuration: checked status-toggle thumb should be black. */
+html body #root div.p-6.bg-gray-50.min-h-screen:has(input[placeholder="Search"])
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+}
+
+html body #root div.p-6.bg-gray-50.min-h-screen:has(input[placeholder="Search"])
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb {
+  background-color: #000000 !important;
+}
+
+/* Slots Configuration: keep labels visible on black Save and Submit buttons. */
+html body #root div.p-6.bg-brand-bg.min-h-screen
+  .space-y-4.rounded-lg.border.border-brand-border.bg-white.p-4 button.bg-brand,
+html body:has(#root div.p-6.bg-brand-bg.min-h-screen)
+  [role="dialog"][class*="sm:max-w-[700px]"]
+  button[class*="bg-[#C72030]"] {
+  background-color: #1a1a18 !important;
+  border-color: #1a1a18 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root div.p-6.bg-brand-bg.min-h-screen
+  .space-y-4.rounded-lg.border.border-brand-border.bg-white.p-4 button.bg-brand *,
+html body:has(#root div.p-6.bg-brand-bg.min-h-screen)
+  [role="dialog"][class*="sm:max-w-[700px]"]
+  button[class*="bg-[#C72030]"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
 /* Template list status toggle thumb. */
 html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
   .MuiSwitch-root .MuiSwitch-switchBase,
@@ -5562,6 +5668,96 @@ html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root:h
 html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root.Mui-focused,
 html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiFormLabel-asterisk {
   color: #000000 !important;
+}
+
+/* Roster edit: keep selected recurring-day labels readable on black buttons. */
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button[class*="bg-[#C72030]"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Roster edit: previous/next and back-navigation arrows should be black. */
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button:has(
+    svg.lucide-arrow-left,
+    svg.lucide-arrow-right,
+    svg.lucide-chevron-left,
+    svg.lucide-chevron-right
+  ),
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button[aria-label*="previous" i],
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button[aria-label*="next" i],
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  .MuiPickersArrowSwitcher-button {
+  color: #000000 !important;
+}
+
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button:has(
+    svg.lucide-arrow-left,
+    svg.lucide-arrow-right,
+    svg.lucide-chevron-left,
+    svg.lucide-chevron-right
+  ) svg,
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button[aria-label*="previous" i] svg,
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button[aria-label*="next" i] svg,
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  .MuiPickersArrowSwitcher-button svg {
+  color: #000000 !important;
+  fill: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Roster list pagination arrows: override the legacy red arrow color. */
+html body #root div.flex.items-center.justify-between.mt-4
+  button:has(svg.lucide-chevron-left, svg.lucide-chevron-right) {
+  color: #000000 !important;
+}
+
+html body #root div.flex.items-center.justify-between.mt-4
+  button:has(svg.lucide-chevron-left, svg.lucide-chevron-right) svg {
+  color: #000000 !important;
+  fill: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Roster detail back arrow and Edit icon should use black instead of red. */
+html body #root div.p-6.space-y-6:has(> header button[title="Back to Roster Management"])
+  header button[title="Back to Roster Management"] svg,
+html body #root div.p-6.space-y-6:has(> header button[title="Back to Roster Management"])
+  > header > div.flex.items-center.gap-3 button svg {
+  color: #000000 !important;
+  fill: none !important;
+  stroke: #000000 !important;
+}
+
+html body #root div.p-6.space-y-6:has(> header button[title="Back to Roster Management"])
+  > header > div.flex.items-center.gap-3 button svg * {
+  fill: none !important;
+  stroke: #000000 !important;
+}
+
+/* Manage Flat details: orange date text, Refetch Data border and icon in black. */
+html body #root div:has(> div > div > div > button[title="Back to Manage Flats"]) .text-\[\#da7756\] {
+  color: #000000 !important;
+}
+
+html body #root div:has(> div > div > div > button[title="Back to Manage Flats"])
+  button:not([title]):has(svg.lucide-refresh-cw) {
+  border-color: #000000 !important;
+}
+
+html body #root div:has(> div > div > div > button[title="Back to Manage Flats"])
+  button:not([title]) svg.lucide-refresh-cw,
+html body #root div:has(> div > div > div > button[title="Back to Manage Flats"])
+  button:not([title]) svg.lucide-refresh-cw * {
+  color: #000000 !important;
+  stroke: #000000 !important;
+  fill: none !important;
 }
 
 /* Active step in the Create Contest wizard. */
