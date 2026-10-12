@@ -83,6 +83,8 @@ export const StatusTab: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<StatusType | null>(null);
   const [closeByUser, setCloseByUser] = useState(false);
   const [autoComplaintClose, setAutoComplaintClose] = useState(false);
+  const [pocFlatDate, setPocFlatDate] = useState('');
+  const [pocDate, setPocDate] = useState('');
   const [isSavingTicketSettings, setIsSavingTicketSettings] = useState(false);
   const [settingsSocietyId, setSettingsSocietyId] = useState<number | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -141,6 +143,8 @@ export const StatusTab: React.FC = () => {
             auto_complaint_close: autoComplaintClose,
             close_by_user: closeByUser,
           },
+          poc_flat_date: pocFlatDate,
+          poc_date: pocDate,
         }),
       });
       if (response.ok) {
@@ -189,6 +193,8 @@ export const StatusTab: React.FC = () => {
         if (societySettings) {
           setCloseByUser(societySettings.close_by_user || false);
           setAutoComplaintClose(societySettings.auto_complaint_close || false);
+          setPocFlatDate(societySettings.poc_flat_date?.toString() ?? data.poc_flat_date?.toString() ?? '');
+          setPocDate(societySettings.poc_date?.toString() ?? data.poc_date?.toString() ?? '');
           if (societySettings.society_id) {
             setSettingsSocietyId(societySettings.society_id);
           }
@@ -769,6 +775,34 @@ export const StatusTab: React.FC = () => {
                 <label htmlFor="autoComplaintClose" className="text-sm font-medium">
                   Auto Close Tickets
                 </label>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label htmlFor="pocFlatDate" className="text-sm font-medium mb-2 block">
+                    Flat option disable after days of possession
+                  </label>
+                  <Input
+                    id="pocFlatDate"
+                    type="number"
+                    min="0"
+                    placeholder="Enter days"
+                    value={pocFlatDate}
+                    onChange={(e) => setPocFlatDate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="pocDate" className="text-sm font-medium mb-2 block">
+                    Module disable after days of possession
+                  </label>
+                  <Input
+                    id="pocDate"
+                    type="number"
+                    min="0"
+                    placeholder="Enter days"
+                    value={pocDate}
+                    onChange={(e) => setPocDate(e.target.value)}
+                  />
+                </div>
               </div>
               <div className="flex justify-end">
                 <Button

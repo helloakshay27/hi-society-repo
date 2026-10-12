@@ -163,7 +163,7 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
     };
 
     const handleReset = () => {
-        setFilters({
+        const resetFilters = {
             search: '',
             towerId: '',
             flatId: '',
@@ -171,7 +171,9 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
             status: '',
             cardAllocated: '',
             expired: ''
-        });
+        };
+        setFilters(resetFilters);
+        onApply(resetFilters);
     };
 
     return (

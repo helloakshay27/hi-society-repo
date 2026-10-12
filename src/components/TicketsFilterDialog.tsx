@@ -1,23 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
-import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
-import { X } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
-import { 
-  ticketManagementAPI, 
-  TicketFilters, 
-  CategoryOption, 
-  SubcategoryOption, 
-  DepartmentOption, 
-  SiteOption, 
-  UnitOption, 
-  StatusOption, 
-  UserOption 
-} from '@/services/ticketManagementAPI';
+import React, { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+} from "@mui/material";
+import {
+  fieldStyles,
+  menuProps,
+} from "@/components/ticket-management/fieldStyles";
+import { X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { apiClient } from "@/utils/apiClient";
+import {
+  ticketManagementAPI,
+  TicketFilters,
+  CategoryOption,
+  SubcategoryOption,
+  DepartmentOption,
+  SiteOption,
+  UnitOption,
+  StatusOption,
+  UserOption,
+} from "@/services/ticketManagementAPI";
 
 interface TicketsFilterDialogProps {
   isOpen: boolean;
@@ -26,17 +40,17 @@ interface TicketsFilterDialogProps {
 }
 
 const priorityOptions = [
-  { value: 'p1', label: 'P1 - Critical' },
-  { value: 'p2', label: 'P2 - Very High' },
-  { value: 'p3', label: 'P3 - High' },
-  { value: 'p4', label: 'P4 - Medium' },
-  { value: 'p5', label: 'P5 - Low' }
+  { value: "p1", label: "P1 - Critical" },
+  { value: "p2", label: "P2 - Very High" },
+  { value: "p3", label: "P3 - High" },
+  { value: "p4", label: "P4 - Medium" },
+  { value: "p5", label: "P5 - Low" },
 ];
 
 const ticketTypeOptions = [
-  { value: 'request', label: 'Request' },
-  { value: 'complaint', label: 'Complaint' },
-  { value: 'suggestion', label: 'Suggestion' }
+  { value: "request", label: "Request" },
+  { value: "complaint", label: "Complaint" },
+  { value: "suggestion", label: "Suggestion" },
 ];
 
 interface TowerOption {
@@ -59,32 +73,36 @@ interface ComplaintModeOption {
   name: string;
 }
 
-export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: TicketsFilterDialogProps) => {
+export const TicketsFilterDialog = ({
+  isOpen,
+  onClose,
+  onApplyFilters,
+}: TicketsFilterDialogProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  
+
   // Filter state
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [ticketNumber, setTicketNumber] = useState('');
-  const [issueType, setIssueType] = useState('');
-  const [category, setCategory] = useState('');
-  const [subCategory, setSubCategory] = useState('');
-  const [assignedUser, setAssignedUser] = useState('');
-  const [tower, setTower] = useState('');
-  const [flat, setFlat] = useState('');
-  const [complaintMode, setComplaintMode] = useState('');
-  const [ticketType, setTicketType] = useState('');
-  const [issueRelatedTo, setIssueRelatedTo] = useState('');
-  const [status, setStatus] = useState('');
-  const [priority, setPriority] = useState('');
-  const [escalation, setEscalation] = useState('');
-  const [rating, setRating] = useState('');
-  const [department, setDepartment] = useState('');
-  const [site, setSite] = useState('');
-  const [unit, setUnit] = useState('');
-  const [userSearch, setUserSearch] = useState('');
-  
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [ticketNumber, setTicketNumber] = useState("");
+  const [issueType, setIssueType] = useState("");
+  const [category, setCategory] = useState("");
+  const [subCategory, setSubCategory] = useState("");
+  const [assignedUser, setAssignedUser] = useState("");
+  const [tower, setTower] = useState("");
+  const [flat, setFlat] = useState("");
+  const [complaintMode, setComplaintMode] = useState("");
+  const [ticketType, setTicketType] = useState("");
+  const [issueRelatedTo, setIssueRelatedTo] = useState("");
+  const [status, setStatus] = useState("");
+  const [priority, setPriority] = useState("");
+  const [escalation, setEscalation] = useState("");
+  const [rating, setRating] = useState("");
+  const [department, setDepartment] = useState("");
+  const [site, setSite] = useState("");
+  const [unit, setUnit] = useState("");
+  const [userSearch, setUserSearch] = useState("");
+
   // State to track if filters are already cleared (for double-click behavior)
   const [filtersCleared, setFiltersCleared] = useState(false);
 
@@ -99,7 +117,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
   const [towers, setTowers] = useState<TowerOption[]>([]);
   const [flats, setFlats] = useState<FlatOption[]>([]);
   const [issueTypes, setIssueTypes] = useState<IssueTypeOption[]>([]);
-  const [complaintModes, setComplaintModes] = useState<ComplaintModeOption[]>([]);
+  const [complaintModes, setComplaintModes] = useState<ComplaintModeOption[]>(
+    []
+  );
 
   // Load data when dialog opens
   useEffect(() => {
@@ -111,34 +131,74 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
   // Check if all filters are empty to determine cleared state
   useEffect(() => {
-    const allFiltersEmpty = !dateFrom && !dateTo && !ticketNumber && !issueType && 
-                           !category && !subCategory && !assignedUser && !tower && 
-                           !flat && !complaintMode && !ticketType && !issueRelatedTo &&
-                           !department && !site && !unit && !status && 
-                           !priority && !escalation && !rating && !userSearch;
-    
+    const allFiltersEmpty =
+      !dateFrom &&
+      !dateTo &&
+      !ticketNumber &&
+      !issueType &&
+      !category &&
+      !subCategory &&
+      !assignedUser &&
+      !tower &&
+      !flat &&
+      !complaintMode &&
+      !ticketType &&
+      !issueRelatedTo &&
+      !department &&
+      !site &&
+      !unit &&
+      !status &&
+      !priority &&
+      !escalation &&
+      !rating &&
+      !userSearch;
+
     if (allFiltersEmpty) {
       setFiltersCleared(true);
     } else {
       setFiltersCleared(false);
     }
-  }, [dateFrom, dateTo, ticketNumber, issueType, category, subCategory, assignedUser, tower, flat, complaintMode, ticketType, issueRelatedTo, department, site, unit, status, priority, escalation, rating, userSearch]);
+  }, [
+    dateFrom,
+    dateTo,
+    ticketNumber,
+    issueType,
+    category,
+    subCategory,
+    assignedUser,
+    tower,
+    flat,
+    complaintMode,
+    ticketType,
+    issueRelatedTo,
+    department,
+    site,
+    unit,
+    status,
+    priority,
+    escalation,
+    rating,
+    userSearch,
+  ]);
 
   // Add effect to load subcategories when category changes
   useEffect(() => {
     const loadSubCategories = async () => {
       if (category) {
         try {
-          const subcategoriesData = await ticketManagementAPI.getSubCategoriesByCategory(Number(category));
+          const subcategoriesData =
+            await ticketManagementAPI.getSubCategoriesByCategory(
+              Number(category)
+            );
           // Map SubCategoryResponse to SubcategoryOption
-          const mappedSubcategories = subcategoriesData.map(sub => ({
+          const mappedSubcategories = subcategoriesData.map((sub) => ({
             id: sub.id,
             name: sub.name,
-            category_id: sub.helpdesk_category_id
+            category_id: sub.helpdesk_category_id,
           }));
           setSubcategories(mappedSubcategories);
         } catch (error) {
-          console.error('Error loading subcategories:', error);
+          console.error("Error loading subcategories:", error);
           toast({
             title: "Error",
             description: "Failed to load subcategories.",
@@ -159,20 +219,24 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
       loadFlats(tower);
     } else {
       setFlats([]);
-      setFlat('');
+      setFlat("");
     }
   }, [tower]);
 
   const loadFilterData = async () => {
     try {
-      console.log('🔄 Loading filter data...');
+      // Load additional data for new filters
+      loadTowers();
+      loadIssueTypes();
+      loadComplaintModes();
+
       const [
         categoriesData,
         departmentsData,
         sitesData,
         unitsData,
         statusesData,
-        usersData
+        usersData,
       ] = await Promise.all([
         ticketManagementAPI.getHelpdeskCategories(),
         ticketManagementAPI.getDepartments(),
@@ -182,45 +246,17 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
         ticketManagementAPI.getFMUsers(),
       ]);
 
-      console.log('✅ Filter data loaded successfully:', {
-        categories: categoriesData.length,
-        departments: departmentsData.length,
-        sites: sitesData.length,
-        units: unitsData.length,
-        statuses: statusesData.length,
-        users: usersData.length,
-        usersData: usersData.slice(0, 3), // Show first 3 users for debugging
-        sitesData: sitesData.slice(0, 3) // Show first 3 sites for debugging
-      });
-
-      console.log('🏢 SITES DEBUG:', {
-        sitesArray: sitesData,
-        sitesLength: sitesData.length,
-        firstSite: sitesData[0]
-      });
-
-      console.log('👥 USERS DEBUG:', {
-        usersArray: usersData,
-        usersLength: usersData.length,
-        firstUser: usersData[0]
-      });
-
       setCategories(categoriesData);
       setDepartments(departmentsData);
       setSites(sitesData);
       setUnits(unitsData);
       setStatuses(statusesData);
       setUsers(usersData);
-
-      // Load additional data for new filters
-      loadTowers();
-      loadIssueTypes();
-      loadComplaintModes();
     } catch (error) {
-      console.error('❌ Error loading filter data:', error);
-      console.error('❌ Detailed error:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
+      console.error("❌ Error loading filter data:", error);
+      console.error("❌ Detailed error:", {
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
       });
       toast({
         title: "Error",
@@ -232,74 +268,57 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
   const loadTowers = async () => {
     try {
-      const response = await fetch(getFullUrl('/crm/admin/society_blocks.json'), {
-        headers: getAuthHeader()
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setTowers(data.society_blocks || []);
-      }
+      const response = await apiClient.get("/crm/admin/society_blocks.json");
+      setTowers(response.data.society_blocks || []);
     } catch (error) {
-      console.error('Error loading towers:', error);
+      console.error("Error loading towers:", error);
     }
   };
 
   const loadFlats = async (towerId: string) => {
     try {
-      const response = await fetch(getFullUrl(`/crm/admin/society_flats.json?q[society_block_id_eq]=${towerId}`), {
-        headers: getAuthHeader()
+      const response = await apiClient.get("/crm/admin/society_flats.json", {
+        params: { "q[society_block_id_eq]": towerId },
       });
-      if (response.ok) {
-        const data = await response.json();
-        setFlats(data.society_flats || []);
-      }
+      setFlats(response.data.society_flats || []);
     } catch (error) {
-      console.error('Error loading flats:', error);
+      console.error("Error loading flats:", error);
     }
   };
 
   const loadIssueTypes = async () => {
     try {
-      const userData = localStorage.getItem('user');
-      let societyId = '';
+      const userData = localStorage.getItem("user");
+      let societyId = "";
       if (userData) {
         const parsedUser = JSON.parse(userData);
-        societyId = parsedUser.society?.id || parsedUser.selected_user_society || parsedUser.site_id;
+        societyId =
+          parsedUser.society?.id ||
+          parsedUser.selected_user_society ||
+          parsedUser.site_id;
       }
-      
-      const url = societyId 
-        ? getFullUrl(`/user/issue_type.json?society_id=${societyId}`)
-        : getFullUrl('/user/issue_type.json');
-      
-      const response = await fetch(url, {
-        headers: getAuthHeader()
+
+      const response = await apiClient.get("/user/issue_type.json", {
+        params: societyId ? { society_id: societyId } : undefined,
       });
-      if (response.ok) {
-        const data = await response.json();
-        setIssueTypes(data.data || data || []);
-      }
+      setIssueTypes(response.data.data || response.data || []);
     } catch (error) {
-      console.error('Error loading issue types:', error);
+      console.error("Error loading issue types:", error);
     }
   };
 
   const loadComplaintModes = async () => {
     try {
-      const response = await fetch(getFullUrl('/crm/admin/complaint_modes.json'), {
-        headers: getAuthHeader()
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setComplaintModes(Array.isArray(data) ? data : []);
-      }
+      const response = await apiClient.get("/crm/admin/complaint_modes.json");
+      setComplaintModes(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
-      console.error('Error loading complaint modes:', error);
+      console.error("Error loading complaint modes:", error);
     }
   };
 
   // Filter subcategories based on selected category
-  const filteredSubcategories = subcategories.filter(sub => 
-    !category || sub.category_id === Number(category)
+  const filteredSubcategories = subcategories.filter(
+    (sub) => !category || sub.category_id === Number(category)
   );
 
   const handleSubmit = () => {
@@ -307,7 +326,8 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
     if ((dateFrom && !dateTo) || (!dateFrom && dateTo)) {
       toast({
         title: "Validation Error",
-        description: "Please select both 'Date From' and 'Date To' for the date range.",
+        description:
+          "Please select both 'Date From' and 'Date To' for the date range.",
         variant: "destructive",
       });
       return;
@@ -320,36 +340,44 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
       // Convert from YYYY-MM-DD to MM/DD/YYYY format
       const formatDate = (dateString: string) => {
         const date = new Date(dateString);
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const day = date.getDate().toString().padStart(2, "0");
         const year = date.getFullYear();
         return `${month}/${day}/${year}`;
       };
-      
+
       const formattedDateFrom = formatDate(dateFrom);
       const formattedDateTo = formatDate(dateTo);
       filters.date_range = `${formattedDateFrom} - ${formattedDateTo}`;
     }
 
     // Add other filters
+    if (ticketNumber) filters.ticket_number_cont = ticketNumber;
+    if (issueType) filters.issue_type_id_eq = Number(issueType);
     if (category) filters.category_type_id_eq = Number(category);
     if (subCategory) filters.sub_category_id_eq = Number(subCategory);
+    if (tower) {
+      filters.user_society_user_flat_society_flat_society_block_id_eq =
+        Number(tower);
+    }
+    if (flat) {
+      filters.user_society_user_flat_society_flat_id_eq = Number(flat);
+    }
+    if (complaintMode) filters.complaint_mode_id_eq = Number(complaintMode);
+    if (ticketType) filters.complaint_type_eq = ticketType;
+    if (issueRelatedTo) filters.issue_related_to_eq = issueRelatedTo;
     if (department) filters.dept_id_eq = Number(department);
     if (site) {
       filters.site_id_eq = Number(site);
-      console.log('🏢 SITE FILTER APPLIED:', {
-        siteValue: site,
-        siteId: Number(site),
-        filterParameter: 'site_id_eq'
-      });
     }
     if (unit) filters.unit_id_eq = Number(unit);
     if (status) filters.issue_status_in = [Number(status)];
     if (priority) filters.priority_eq = priority;
+    if (escalation) filters.response_escalation_cont = escalation;
+    if (rating) filters.rating_eq = rating;
     if (assignedUser) filters.assigned_to_in = [Number(assignedUser)];
     if (userSearch) filters.user_firstname_or_user_lastname_cont = userSearch;
 
-    console.log('Applying filters:', filters);
     onApplyFilters(filters);
     toast({
       title: "Success",
@@ -367,35 +395,35 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
         description: "Navigating to tickets list page...",
       });
       onClose(); // Close the dialog first
-      navigate('/maintenance/ticket'); // Redirect to list page
+      navigate("/maintenance/ticket"); // Redirect to list page
       return;
     }
 
     // First click - clear all filters and show all records
-    setDateFrom('');
-    setDateTo('');
-    setTicketNumber('');
-    setIssueType('');
-    setCategory('');
-    setSubCategory('');
-    setAssignedUser('');
-    setTower('');
-    setFlat('');
-    setComplaintMode('');
-    setTicketType('');
-    setIssueRelatedTo('');
-    setDepartment('');
-    setSite('');
-    setUnit('');
-    setStatus('');
-    setPriority('');
-    setEscalation('');
-    setRating('');
-    setUserSearch('');
-    
+    setDateFrom("");
+    setDateTo("");
+    setTicketNumber("");
+    setIssueType("");
+    setCategory("");
+    setSubCategory("");
+    setAssignedUser("");
+    setTower("");
+    setFlat("");
+    setComplaintMode("");
+    setTicketType("");
+    setIssueRelatedTo("");
+    setDepartment("");
+    setSite("");
+    setUnit("");
+    setStatus("");
+    setPriority("");
+    setEscalation("");
+    setRating("");
+    setUserSearch("");
+
     // Apply empty filters to show all records
     onApplyFilters({});
-    
+
     toast({
       title: "Filters Cleared",
       description: "All filters have been cleared.",
@@ -406,7 +434,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
     <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white">
         <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
-          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">FILTER BY</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
+            FILTER BY
+          </DialogTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="w-4 h-4" />
           </Button>
@@ -415,7 +445,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
         <div className="space-y-6 py-4">
           {/* Date Range Section */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-[hsl(var(--analytics-text))]">Date Range</h3>
+            <h3 className="text-lg font-medium text-[hsl(var(--analytics-text))]">
+              Date Range
+            </h3>
             <div className="grid grid-cols-2 gap-4">
               <TextField
                 label="Date From"
@@ -442,7 +474,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
           {/* Filter Options Section */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-[hsl(var(--analytics-text))]">Filter Options</h3>
+            <h3 className="text-lg font-medium text-[hsl(var(--analytics-text))]">
+              Filter Options
+            </h3>
             <div className="grid grid-cols-2 gap-4">
               {/* Ticket Number */}
               <TextField
@@ -458,7 +492,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
               {/* Issue Type */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Issue Type
+                </InputLabel>
                 <MuiSelect
                   value={issueType}
                   onChange={(e) => setIssueType(e.target.value)}
@@ -467,7 +503,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Issue Type</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Issue Type</em>
+                  </MenuItem>
                   {issueTypes.map((type) => (
                     <MenuItem key={type.id} value={type.id.toString()}>
                       {type.name}
@@ -478,19 +516,23 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
               {/* Category */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category</InputLabel>
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Category
+                </InputLabel>
                 <MuiSelect
                   value={category}
                   onChange={(e) => {
                     setCategory(e.target.value);
-                    setSubCategory(''); // Reset subcategory when category changes
+                    setSubCategory(""); // Reset subcategory when category changes
                   }}
                   displayEmpty
                   label="Category"
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Category</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Category</em>
+                  </MenuItem>
                   {categories.map((cat) => (
                     <MenuItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
@@ -501,7 +543,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
               {/* Assign to */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Assign to</InputLabel>
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Assign to
+                </InputLabel>
                 <MuiSelect
                   value={assignedUser}
                   onChange={(e) => setAssignedUser(e.target.value)}
@@ -510,7 +554,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Assignee</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Assignee</em>
+                  </MenuItem>
                   {users.length === 0 ? (
                     <MenuItem value="no-users" disabled>
                       No users available
@@ -527,21 +573,28 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
               {/* Tower */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Tower</InputLabel>
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Tower
+                </InputLabel>
                 <MuiSelect
                   value={tower}
                   onChange={(e) => {
                     setTower(e.target.value);
-                    setFlat(''); // Reset flat when tower changes
+                    setFlat(""); // Reset flat when tower changes
                   }}
                   displayEmpty
                   label="Tower"
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Tower</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Tower</em>
+                  </MenuItem>
                   {towers.map((towerItem) => (
-                    <MenuItem key={towerItem.id} value={towerItem.id.toString()}>
+                    <MenuItem
+                      key={towerItem.id}
+                      value={towerItem.id.toString()}
+                    >
                       {towerItem.name}
                     </MenuItem>
                   ))}
@@ -550,7 +603,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
               {/* Flat */}
               <FormControl fullWidth variant="outlined" disabled={!tower}>
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Flat</InputLabel>
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Flat
+                </InputLabel>
                 <MuiSelect
                   value={flat}
                   onChange={(e) => setFlat(e.target.value)}
@@ -559,7 +614,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Flat</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Flat</em>
+                  </MenuItem>
                   {flats.map((flatItem) => (
                     <MenuItem key={flatItem.id} value={flatItem.id.toString()}>
                       {flatItem.flat_no}
@@ -570,7 +627,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
               {/* Complaint Mode */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Complaint Mode</InputLabel>
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Complaint Mode
+                </InputLabel>
                 <MuiSelect
                   value={complaintMode}
                   onChange={(e) => setComplaintMode(e.target.value)}
@@ -579,7 +638,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Complaint Mode</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Complaint Mode</em>
+                  </MenuItem>
                   {complaintModes.map((mode) => (
                     <MenuItem key={mode.id} value={mode.id.toString()}>
                       {mode.name}
@@ -590,7 +651,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
               {/* Ticket Type */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Ticket Type</InputLabel>
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Ticket Type
+                </InputLabel>
                 <MuiSelect
                   value={ticketType}
                   onChange={(e) => setTicketType(e.target.value)}
@@ -599,7 +662,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Ticket Type</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Ticket Type</em>
+                  </MenuItem>
                   {ticketTypeOptions.map((type) => (
                     <MenuItem key={type.value} value={type.value}>
                       {type.label}
@@ -610,7 +675,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
               {/* Issue Related To */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Related To</InputLabel>
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Issue Related To
+                </InputLabel>
                 <MuiSelect
                   value={issueRelatedTo}
                   onChange={(e) => setIssueRelatedTo(e.target.value)}
@@ -619,11 +686,16 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Issue Related To</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Issue Related To</em>
+                  </MenuItem>
                   <MenuItem value="fm">FM</MenuItem>
                   <MenuItem value="project">Project</MenuItem>
                   {issueTypes.map((type) => (
-                    <MenuItem key={`related-${type.id}`} value={type.id.toString()}>
+                    <MenuItem
+                      key={`related-${type.id}`}
+                      value={type.id.toString()}
+                    >
                       {type.name}
                     </MenuItem>
                   ))}
@@ -634,7 +706,7 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
               <TextField
                 label="Date Range"
                 placeholder="Select Date Range"
-                value={dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : ''}
+                value={dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : ""}
                 InputProps={{ readOnly: true, sx: fieldStyles }}
                 fullWidth
                 variant="outlined"
@@ -643,7 +715,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
               {/* Status */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Status</InputLabel>
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Status
+                </InputLabel>
                 <MuiSelect
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
@@ -652,9 +726,14 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Status</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Status</em>
+                  </MenuItem>
                   {statuses.map((statusItem) => (
-                    <MenuItem key={statusItem.id} value={statusItem.id.toString()}>
+                    <MenuItem
+                      key={statusItem.id}
+                      value={statusItem.id.toString()}
+                    >
                       {statusItem.name}
                     </MenuItem>
                   ))}
@@ -663,7 +742,9 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
               {/* Priority */}
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Priority</InputLabel>
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Priority
+                </InputLabel>
                 <MuiSelect
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
@@ -672,9 +753,14 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Priority</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Priority</em>
+                  </MenuItem>
                   {priorityOptions.map((priorityItem) => (
-                    <MenuItem key={priorityItem.value} value={priorityItem.value}>
+                    <MenuItem
+                      key={priorityItem.value}
+                      value={priorityItem.value}
+                    >
                       {priorityItem.label}
                     </MenuItem>
                   ))}
@@ -709,14 +795,14 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleReset}
               className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
             >
-              {filtersCleared ? 'Go to List' : 'Reset'}
+              {filtersCleared ? "Go to List" : "Reset"}
             </Button>
-            <Button 
+            <Button
               onClick={handleSubmit}
               className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >

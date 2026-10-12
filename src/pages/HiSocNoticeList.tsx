@@ -92,18 +92,6 @@ const HiSocNoticeList = () => {
           params.set("q[notice_heading_or_notice_text_cont]", search);
         }
         if (filters) {
-          filters.tower_ids.forEach((id) =>
-            params.append(
-              "q[user_society_user_flat_society_flat_society_block_id_in][]",
-              id
-            )
-          );
-          filters.flat_ids.forEach((id) =>
-            params.append(
-              "q[user_society_user_flat_society_flat_id_in][]",
-              id
-            )
-          );
           filters.shared_in.forEach((v) =>
             params.append("q[shared_in][]", v)
           );
@@ -262,8 +250,6 @@ const HiSocNoticeList = () => {
 
   const handleApplyFilters = (filters: NoticeFilters) => {
     const hasFilters =
-      filters.tower_ids.length > 0 ||
-      filters.flat_ids.length > 0 ||
       filters.shared_in.length > 0 ||
       filters.date_range !== "" ||
       filters.publish_in.length > 0;
