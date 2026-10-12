@@ -566,6 +566,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
           </div>
 
           <EnhancedTable
+            storageKey="bms-business-directory-setup-table"
             data={categories.slice((categoryPage - 1) * PAGE_SIZE, categoryPage * PAGE_SIZE)}
             columns={categoryColumns}
             renderCell={renderCategoryCell}
@@ -594,6 +595,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
           </div>
 
           <EnhancedTable
+            storageKey="bms-business-directory-setup-table-2"
             data={[...subCategories].reverse().slice((subCategoryPage - 1) * PAGE_SIZE, subCategoryPage * PAGE_SIZE)}
             columns={subCategoryColumns}
             renderCell={renderSubCategoryCell}

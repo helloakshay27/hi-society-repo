@@ -90,6 +90,7 @@ const CorrectiveActionListPage = () => {
         />
       )}
       <EnhancedTable
+        storageKey="corrective-action-list-page-table"
         loading={loading}
         columns={[
           { key: 'srno', label: 'Sr. No.' },

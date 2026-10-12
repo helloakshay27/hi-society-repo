@@ -620,6 +620,7 @@ export const ManageFlatsPage = () => {
         {/* Table */}
         <div className="">
           <EnhancedTable
+            storageKey="manage-flats-page-table"
             columns={columns}
             data={flats}
             onRowClick={(flat) => console.log("Row clicked:", flat)}

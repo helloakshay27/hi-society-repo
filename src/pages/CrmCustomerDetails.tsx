@@ -233,6 +233,7 @@ export const CrmCustomerDetails = () => {
             <div className="bg-white rounded-lg p-6 mb-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Lease Information</h3>
                 <EnhancedTable
+                    storageKey="crm-customer-details-table"
                     data={lease}
                     columns={leaseColumns}
                     renderCell={renderCell}

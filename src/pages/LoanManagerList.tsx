@@ -223,6 +223,7 @@ const LoanManagerList = () => {
   const renderListTab = () => (
     <div className="space-y-4">
           <EnhancedTable
+            storageKey="loan-manager-list-table"
             data={loanManagers}
             columns={columns}
             renderCell={renderCell}

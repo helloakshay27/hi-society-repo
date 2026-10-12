@@ -1687,6 +1687,7 @@ const Petrolling = () => {
       </div>
 
       <EnhancedTable
+        storageKey="petrolling-table"
         data={data}
         columns={columns}
         renderCell={renderCell}

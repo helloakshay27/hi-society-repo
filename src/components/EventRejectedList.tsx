@@ -251,6 +251,7 @@ const EventRejectedList = () => {
                 </div>
             ) : (
                 <EnhancedTable
+                    storageKey="event-rejected-list-table"
                     data={data}
                     columns={columns}
                     renderCell={renderCell}

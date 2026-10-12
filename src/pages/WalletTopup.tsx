@@ -747,6 +747,7 @@ const WalletTopup: React.FC = () => {
             </CardHeader>
             <CardContent className="p-6">
               <EnhancedTable
+                storageKey="wallet-topup-table"
                 data={transactions}
                 columns={transactionColumns}
                 renderCell={renderTransactionCell}

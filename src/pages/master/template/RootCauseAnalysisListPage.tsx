@@ -90,6 +90,7 @@ const RootCauseAnalysisListPage = () => {
         />
       )}
       <EnhancedTable
+        storageKey="root-cause-analysis-list-page-table"
         loading={loading}
         columns={[
           { key: 'srno', label: 'Sr. No.' },

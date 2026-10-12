@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Plus, Eye, Pencil, X } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
-import { NoticeFilterDialog, NoticeFilters } from "@/components/NoticeFilterDialog";
+import {
+  NoticeFilterDialog,
+  NoticeFilters,
+} from "@/components/NoticeFilterDialog";
 import {
   Pagination,
   PaginationContent,
@@ -32,7 +35,9 @@ const HiSocNoticeList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<NoticeFilters | null>(null);
+  const [activeFilters, setActiveFilters] = useState<NoticeFilters | null>(
+    null
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const PER_PAGE = 10;
@@ -65,11 +70,11 @@ const HiSocNoticeList = () => {
 
   // Cleanup body overflow styles when component mounts (fixes scroll-lock from modals)
   useEffect(() => {
-    document.body.style.overflow = 'unset';
-    document.body.style.paddingRight = '0px';
+    document.body.style.overflow = "unset";
+    document.body.style.paddingRight = "0px";
     return () => {
-      document.body.style.overflow = 'unset';
-      document.body.style.paddingRight = '0px';
+      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
     };
   }, []);
 
@@ -92,9 +97,7 @@ const HiSocNoticeList = () => {
           params.set("q[notice_heading_or_notice_text_cont]", search);
         }
         if (filters) {
-          filters.shared_in.forEach((v) =>
-            params.append("q[shared_in][]", v)
-          );
+          filters.shared_in.forEach((v) => params.append("q[shared_in][]", v));
           if (filters.date_range) {
             params.append("q[date_range]", filters.date_range);
           }
@@ -168,7 +171,10 @@ const HiSocNoticeList = () => {
     if (showEllipsis) {
       items.push(
         <PaginationItem key={1} className="cursor-pointer">
-          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+          >
             1
           </PaginationLink>
         </PaginationItem>
@@ -184,7 +190,10 @@ const HiSocNoticeList = () => {
         for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
           items.push(
             <PaginationItem key={i} className="cursor-pointer">
-              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+              >
                 {i}
               </PaginationLink>
             </PaginationItem>
@@ -196,7 +205,10 @@ const HiSocNoticeList = () => {
         for (let i = currentPage - 1; i <= currentPage + 1; i++) {
           items.push(
             <PaginationItem key={i} className="cursor-pointer">
-              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+              >
                 {i}
               </PaginationLink>
             </PaginationItem>
@@ -215,7 +227,10 @@ const HiSocNoticeList = () => {
           if (!items.find((item) => item.key === i.toString())) {
             items.push(
               <PaginationItem key={i} className="cursor-pointer">
-                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                <PaginationLink
+                  onClick={() => handlePageChange(i)}
+                  isActive={currentPage === i}
+                >
                   {i}
                 </PaginationLink>
               </PaginationItem>
@@ -227,7 +242,10 @@ const HiSocNoticeList = () => {
       if (totalPages > 1) {
         items.push(
           <PaginationItem key={totalPages} className="cursor-pointer">
-            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+            <PaginationLink
+              onClick={() => handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+            >
               {totalPages}
             </PaginationLink>
           </PaginationItem>
@@ -237,7 +255,10 @@ const HiSocNoticeList = () => {
       for (let i = 1; i <= totalPages; i++) {
         items.push(
           <PaginationItem key={i} className="cursor-pointer">
-            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+            >
               {i}
             </PaginationLink>
           </PaginationItem>
@@ -350,33 +371,35 @@ const HiSocNoticeList = () => {
     rowIndex?: number
   ) => {
     /* eslint-enable @typescript-eslint/no-explicit-any */
-    const index = rowIndex ?? noticeboards.findIndex((n: any) => n.id === item.id);
-    
+    const index =
+      rowIndex ?? noticeboards.findIndex((n: any) => n.id === item.id);
+
     switch (columnKey) {
       case "actions":
         return (
           <div className="flex gap-1">
-            {noticeboardPermission.show === "true" && shouldShow("Notice","show") && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleViewNoticeboard(item.id)}
-                title="View"
-              >
-                <Eye className="w-4 h-4" />
-              </Button>
-  
-            )}
-            {noticeboardPermission.update === "true" && shouldShow("Notice","update") &&(
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleEditNoticeboard(item.id)}
-                title="Edit"
-              >
-                <Pencil className="w-4 h-4" />
-              </Button>
-            )}
+            {noticeboardPermission.show === "true" &&
+              shouldShow("Notice", "show") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleViewNoticeboard(item.id)}
+                  title="View"
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
+              )}
+            {noticeboardPermission.update === "true" &&
+              shouldShow("Notice", "update") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEditNoticeboard(item.id)}
+                  title="Edit"
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+              )}
           </div>
         );
       case "id":
@@ -389,9 +412,7 @@ const HiSocNoticeList = () => {
               item.notice_type.slice(1).toLowerCase()
           : "-";
       case "block":
-         return [item.block, item.flat]
-        .filter(Boolean)
-        .join(" - ") || "-";
+        return [item.block, item.flat].filter(Boolean).join(" - ") || "-";
       case "user_name":
         return item.user_name || "-";
       case "society_name":
@@ -438,14 +459,14 @@ const HiSocNoticeList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap gap-2">
-      {shouldShow("Notice","create")&&(
-      <Button
-        onClick={handleAddNoticeboard}
-        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-      >
-        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-        Add
-      </Button>
+      {shouldShow("Notice", "create") && (
+        <Button
+          onClick={handleAddNoticeboard}
+          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+        >
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+          Add
+        </Button>
       )}
     </div>
   );
@@ -457,7 +478,7 @@ const HiSocNoticeList = () => {
         columns={columns}
         renderCell={renderCell}
         pagination={false}
-        enableExport={true}
+        enableExport={false}
         exportFileName="broadcasts"
         storageKey="noticeboards-table"
         enableGlobalSearch={true}
@@ -489,14 +510,22 @@ const HiSocNoticeList = () => {
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => handlePageChange(currentPage - 1)}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                className={
+                  currentPage === 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
               />
             </PaginationItem>
             {renderPaginationItems()}
             <PaginationItem>
               <PaginationNext
                 onClick={() => handlePageChange(currentPage + 1)}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                className={
+                  currentPage === totalPages
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
               />
             </PaginationItem>
           </PaginationContent>

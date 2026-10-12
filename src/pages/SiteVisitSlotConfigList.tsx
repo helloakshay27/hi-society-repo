@@ -209,6 +209,7 @@ const SiteVisitSlotConfigList = () => {
   const renderListTab = () => (
     <div className="space-y-4">
       <EnhancedTable
+        storageKey="site-visit-slot-config-list-table"
         data={slots}
         columns={columns}
         renderCell={renderCell}

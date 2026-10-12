@@ -489,6 +489,7 @@ const AppointmentzSlotsConfig = () => {
       </div>
 
       <EnhancedTable
+        storageKey="appointmentz-slots-config-table"
         data={paginatedData}
         columns={columns}
         renderCell={renderCell}

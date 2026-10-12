@@ -623,6 +623,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
 
         <TabsContent value="society-staff" className="mt-6">
           <EnhancedTable
+            storageKey="smart-secure-setup-support-staff-table"
             data={paginate(societyStaffData)}
             columns={columns}
             renderCell={renderStaffCell}
@@ -650,6 +651,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
 
         <TabsContent value="delivery-service" className="mt-6">
           <EnhancedTable
+            storageKey="smart-secure-setup-support-staff-table-2"
             data={paginate(deliveryServiceData)}
             columns={deliveryServiceColumns}
             renderCell={renderDeliveryCell}

@@ -345,6 +345,7 @@ const AnnouncementsSetup: React.FC = () => {
 
           <div className="overflow-hidden rounded-lg border border-gray-200">
             <EnhancedTable
+              storageKey="announcements-setup-table"
               data={announcementHistory}
               columns={historyColumns}
               renderCell={renderCellHistory}

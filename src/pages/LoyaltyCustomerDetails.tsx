@@ -769,6 +769,7 @@ const LoyaltyCustomerDetails = () => {
                         </div>
                         <div className="bg-[#FBFBFA]">
                             <EnhancedTable
+                                storageKey="loyalty-customer-details-table"
                                 data={walletTransactions}
                                 columns={walletTransactionColumns}
                                 renderCell={renderWalletTransactionCell}
@@ -799,6 +800,7 @@ const LoyaltyCustomerDetails = () => {
                         </div>
                         <div className="bg-[#FBFBFA]">
                             <EnhancedTable
+                                storageKey="loyalty-customer-details-table-2"
                                 data={orders}
                                 columns={ordersColumns}
                                 renderCell={renderOrderCell}
@@ -828,6 +830,7 @@ const LoyaltyCustomerDetails = () => {
                         </div>
                         <div className="bg-[#FBFBFA]">
                             <EnhancedTable
+                                storageKey="loyalty-customer-details-table-3"
                                 data={vouchers}
                                 columns={voucherColumns}
                                 renderCell={renderVoucherCell}
@@ -860,6 +863,7 @@ const LoyaltyCustomerDetails = () => {
                         </div>
                         <div className="bg-[#FBFBFA]">
                             <EnhancedTable
+                                storageKey="loyalty-customer-details-table-4"
                                 data={encashments}
                                 columns={encashmentColumns}
                                 renderCell={renderEncashmentCell}

@@ -310,6 +310,7 @@ const ProjectTeams = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="project-teams-table"
                 data={teams}
                 columns={columns}
                 renderActions={renderActions}

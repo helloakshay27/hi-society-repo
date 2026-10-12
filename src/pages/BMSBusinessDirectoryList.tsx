@@ -306,6 +306,7 @@ const BMSBusinessDirectoryList: React.FC = () => {
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <EnhancedTable
+        storageKey="bms-business-directory-list-table"
         data={paginatedDirectories}
         columns={columns}
         renderActions={renderActions}

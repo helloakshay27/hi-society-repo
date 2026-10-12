@@ -912,6 +912,7 @@ const AccountingInvoiceEdit: React.FC = () => {
 
             <div className="p-4">
               <EnhancedTable
+                storageKey="accounting-invoice-edit-table"
                 data={charges}
                 columns={CHARGE_COLUMNS}
                 getItemId={(item) => item.key}

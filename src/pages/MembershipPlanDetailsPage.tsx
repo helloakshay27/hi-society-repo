@@ -342,6 +342,7 @@ export const MembershipPlanDetailsPage = () => {
             </div>
 
             <EnhancedTaskTable
+              storageKey="membership-plan-details-page-table"
               data={amenities.filter((a) => formData.amenities.includes(a.value))}
               hideColumnsButton={true}
               columns={[

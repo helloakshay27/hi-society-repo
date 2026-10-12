@@ -4255,6 +4255,7 @@ export const EditBookingSetupClubPage = () => {
                         </div>
 
                         <EnhancedTable
+                            storageKey="amenity-booking-setup-club-edit-table"
                             data={formData.blockDays.filter((bd) => !!bd.id)}
                             columns={blockDayColumns}
                             renderCell={renderBlockDayCell}

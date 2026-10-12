@@ -465,6 +465,7 @@ const BMSHelpdesk: React.FC = () => {
             {/* Table */}
             <div className="bg-white rounded-lg border border-[#D5D5D5]">
               <EnhancedTable
+                storageKey="bms-helpdesk-table"
                 data={tickets}
                 columns={columns}
                 renderCell={renderCell}
@@ -526,6 +527,7 @@ const BMSHelpdesk: React.FC = () => {
             {/* Table */}
             <div className="bg-white rounded-lg border border-[#D5D5D5]">
               <EnhancedTable
+                storageKey="bms-helpdesk-table-2"
                 data={tickets}
                 columns={columns}
                 renderCell={renderCell}

@@ -405,6 +405,7 @@ export const EditFolderPage = () => {
                 </div>
                 <div className="overflow-x-auto">
                   <EnhancedTable
+                    storageKey="edit-folder-page-table"
                     data={newDocuments}
                     columns={columns}
                     renderCell={(doc, columnKey) => {
@@ -449,6 +450,7 @@ export const EditFolderPage = () => {
                 </div>
                 <div className="overflow-x-auto">
                   <EnhancedTable
+                    storageKey="edit-folder-page-table-2"
                     data={moveDocuments}
                     columns={columns}
                     renderCell={(doc, columnKey) => {
@@ -489,6 +491,7 @@ export const EditFolderPage = () => {
                 </div>
                 <div className="overflow-x-auto">
                   <EnhancedTable
+                    storageKey="edit-folder-page-table-3"
                     data={copyDocuments}
                     columns={columns}
                     renderCell={(doc, columnKey) => {

@@ -479,6 +479,7 @@ const FieldsSetupPage = () => {
           <div>
             <h2 className="text-base font-semibold mb-3 text-[#1a1a1a]">Saved Custom Fields</h2>
             <EnhancedTable
+              storageKey="fields-setup-page-table"
               loading={loadingFields}
               columns={[
                 { key: 'srno', label: 'Sr. No.' },

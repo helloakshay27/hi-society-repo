@@ -58,6 +58,7 @@ const DocumentCategoryListPage = () => {
         />
       )}
       <EnhancedTable
+        storageKey="document-category-list-page-table"
         loading={loading}
         columns={[
           { key: "srno", label: "Sr. No." },

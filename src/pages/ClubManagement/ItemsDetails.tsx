@@ -285,6 +285,7 @@ export const ItemsDetails = () => {
 
                         <h3 className="font-semibold">Sale Orders</h3>
                         <EnhancedTaskTable
+                            storageKey="items-details-table"
                             data={itemData?.sale_orders || []}
                             columns={[
                                 { key: "sale_order_number", label: "Order #" },
@@ -298,6 +299,7 @@ export const ItemsDetails = () => {
 
                         <h3 className="font-semibold">Invoices</h3>
                         <EnhancedTaskTable
+                            storageKey="items-details-table-2"
                             data={itemData?.invoices || []}
                             columns={[
                                 { key: "invoice_number", label: "Invoice #" },
@@ -311,6 +313,7 @@ export const ItemsDetails = () => {
 
                         <h3 className="font-semibold">Quotes</h3>
                         <EnhancedTaskTable
+                            storageKey="items-details-table-3"
                             data={itemData?.quotes || []}
                             columns={[
                                 { key: "quote_number", label: "Quote #" },
@@ -357,6 +360,7 @@ export const ItemsDetails = () => {
                             <>
                                 <h3 className="font-semibold">Quotes</h3>
                                 <EnhancedTaskTable
+                                    storageKey="items-details-table-4"
                                     data={itemData?.quotes || []}
                                     columns={[
                                         { key: "quote_number", label: "Quote #" },
@@ -374,6 +378,7 @@ export const ItemsDetails = () => {
                             <>
                                 <h3 className="font-semibold">Sale Orders</h3>
                                 <EnhancedTaskTable
+                                    storageKey="items-details-table-5"
                                     data={itemData?.sale_orders || []}
                                     columns={[
                                         { key: "sale_order_number", label: "Order #" },
@@ -391,6 +396,7 @@ export const ItemsDetails = () => {
                             <>
                                 <h3 className="font-semibold">Invoices</h3>
                                 <EnhancedTaskTable
+                                    storageKey="items-details-table-6"
                                     data={itemData?.invoices || []}
                                     columns={[
                                         { key: "invoice_number", label: "Invoice #" },
@@ -408,6 +414,7 @@ export const ItemsDetails = () => {
                             <>
                                 <h3 className="font-semibold">Bills</h3>
                                 <EnhancedTaskTable
+                                    storageKey="items-details-table-7"
                                     data={itemData?.bills || []}
                                     columns={[
                                         { key: "bill_number", label: "Bill #" },
@@ -425,6 +432,7 @@ export const ItemsDetails = () => {
                             <>
                                 <h3 className="font-semibold">Credit Notes</h3>
                                 <EnhancedTaskTable
+                                    storageKey="items-details-table-8"
                                     data={itemData?.credit_notes || []}
                                     columns={[
                                         { key: "credit_note_number", label: "Credit Note #" },

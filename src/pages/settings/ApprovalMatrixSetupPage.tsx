@@ -114,6 +114,7 @@ variant="ghost"
 
     {/* Table */}
     <EnhancedTable
+      storageKey="approval-matrix-setup-page-table"
       data={approvalData}
       columns={[
         { key: 'edit', label: 'Edit' },

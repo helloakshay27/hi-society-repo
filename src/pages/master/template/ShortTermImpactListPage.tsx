@@ -90,6 +90,7 @@ const ShortTermImpactListPage = () => {
         />
       )}
       <EnhancedTable
+        storageKey="short-term-impact-list-page-table"
         loading={loading}
         columns={[
           { key: 'srno', label: 'Sr. No.' },

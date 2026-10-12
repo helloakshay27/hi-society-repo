@@ -223,6 +223,7 @@ const ProjectTags = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="project-tags-table"
                 data={projectTags}
                 columns={columns}
                 renderActions={renderActions}

@@ -121,6 +121,7 @@ const CommunityWaitingList = ({ communityId }: { communityId: string }) => {
                 </div>
             ) : (
                 <EnhancedTable
+                    storageKey="community-waiting-list-table"
                     data={waitingListMembers}
                     columns={columns}
                     renderCell={renderCell}

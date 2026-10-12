@@ -285,6 +285,7 @@ const RedemptionReport = () => {
       {/* Transactions Table */}
       <div className="w-full">
         <EnhancedTable
+          storageKey="redemption-report-table"
           data={transactions}
           columns={columns}
           renderCell={renderCell}

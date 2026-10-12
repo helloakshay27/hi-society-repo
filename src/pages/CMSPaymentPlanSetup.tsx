@@ -203,6 +203,7 @@ const CMSPaymentPlanSetup = () => {
     return (
         <div className='p-6'>
             <EnhancedTable
+                storageKey="cms-payment-plan-setup-table"
                 data={paginatedPlans}
                 columns={columns}
                 renderActions={renderActions}

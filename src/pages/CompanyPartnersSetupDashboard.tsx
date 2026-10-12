@@ -157,6 +157,7 @@ export const CompanyPartnersSetupDashboard = () => {
   return (
     <div className="p-6">
       <EnhancedTable
+        storageKey="company-partners-setup-dashboard-table"
         data={[...companyPartners].reverse()}
         columns={columns}
         renderCell={renderCell}

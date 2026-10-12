@@ -267,6 +267,7 @@ const InternalSosDirectory = ({
     return (
         <div>
             <EnhancedTable
+                storageKey="internal-sos-directory-table"
                 data={internalSos}
                 columns={columns}
                 renderActions={renderActions}

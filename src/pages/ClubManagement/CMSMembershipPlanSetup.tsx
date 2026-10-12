@@ -222,6 +222,7 @@ variant="ghost"
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="cms-membership-plan-setup-table"
                 data={paginatedPlans}
                 columns={columns}
                 renderCell={renderCell}

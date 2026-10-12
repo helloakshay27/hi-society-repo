@@ -282,6 +282,7 @@ const ConstructionUpdatesList = () => {
         </div>
         <div className="p-6">
           <EnhancedTable
+            storageKey="construction-updates-list-table"
             data={constructionUpdates}
             columns={columns}
             renderCell={renderCell}

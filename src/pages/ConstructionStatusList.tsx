@@ -280,6 +280,7 @@ variant="ghost"
   const renderListTab = () => (
     <div className="space-y-6">
       <EnhancedTable
+        storageKey="construction-status-list-table"
         data={statuses}
         columns={columns}
         renderCell={renderCell}

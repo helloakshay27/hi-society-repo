@@ -544,6 +544,7 @@ const CMSClubMembers = () => {
       </div>
 
       <EnhancedTable
+        storageKey="cms-club-members-table"
         data={paginatedMembers}
         columns={columns}
         renderCell={renderCell}

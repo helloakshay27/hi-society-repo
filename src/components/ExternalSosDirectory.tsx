@@ -267,6 +267,7 @@ const ExternalSosDirectory = ({
     return (
         <div>
             <EnhancedTable
+                storageKey="external-sos-directory-table"
                 data={externalSos}
                 columns={columns}
                 renderActions={renderActions}

@@ -169,6 +169,7 @@ const BankList = () => {
   const renderListTab = () => (
     <div className="space-y-6">
           <EnhancedTable
+            storageKey="banks-list-table"
             data={banks}
             columns={columns}
             renderCell={renderCell}

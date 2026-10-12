@@ -287,6 +287,7 @@ variant="ghost"
   const renderListTab = () => (
     <div className="space-y-4">
           <EnhancedTable
+            storageKey="property-type-list-table"
             data={propertyTypes}
             columns={columns}
             renderCell={renderCell}

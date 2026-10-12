@@ -487,6 +487,7 @@ const LMCDashboard = () => {
             </div> */}
             <div className="rounded-lg">
                 <EnhancedTable
+                    storageKey="lmc-dashboard-table"
                     data={filteredData}
                     columns={columns}
                     renderCell={renderCell}

@@ -331,6 +331,7 @@ const UtilityWasteGenerationDashboard = () => {
           {/* ===================== LIST TAB ===================== */}
           <TabsContent value="list" className="mt-6">
             <EnhancedTable
+              storageKey="utility-waste-generation-dashboard-table"
               data={wasteGenerations}
               columns={[
                 { key: 'actions', label: 'Actions' },

@@ -196,6 +196,7 @@ const CommunityPendingList = ({ communityId }: { communityId: string }) => {
                 </div>
             ) : (
                 <EnhancedTable
+                    storageKey="community-pending-list-table"
                     data={pendingMembers}
                     columns={columns}
                     renderCell={renderCell}

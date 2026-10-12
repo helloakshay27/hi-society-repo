@@ -585,6 +585,7 @@ export const CountryTab: React.FC<CountryTabProps> = ({
       </header>
       <>
           <EnhancedTaskTable
+            storageKey="country-tab-table"
             data={displayedData}
             columns={columns}
             searchTerm={searchQuery}

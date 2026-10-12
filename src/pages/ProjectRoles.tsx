@@ -178,6 +178,7 @@ const ProjectRoles = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="project-roles-table"
                 data={roles}
                 columns={columns}
                 renderActions={renderActions}

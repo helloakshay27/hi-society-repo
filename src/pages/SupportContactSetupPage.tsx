@@ -94,6 +94,7 @@ const SupportContactSetupPage = () => {
   return (
     <div className="p-6">
       <EnhancedTable
+        storageKey="support-contact-setup-page-table"
         data={contacts}
         columns={columns}
         renderCell={renderCell}
