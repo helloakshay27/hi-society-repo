@@ -126,24 +126,60 @@ export const BookingSetupClubDashboard = () => {
     }
   };
 
+  // q[...] filters shared by the list and the export, so both always match
+  const buildFilterParams = (currentFilters = appliedFilters) => {
+    const params: Record<string, string> = {};
+
+    if (currentFilters.facilityType) {
+      params["q[fac_type_eq]"] = currentFilters.facilityType;
+    }
+    if (currentFilters.fromDate) {
+      params["q[created_at_gteq]"] = currentFilters.fromDate;
+    }
+    if (currentFilters.toDate) {
+      params["q[created_at_lteq]"] = currentFilters.toDate;
+    }
+
+    return params;
+  };
+
+  // GET /crm/admin/facility_setups/export.xlsx — every facility (active and
+  // inactive, no pagination) matching the current filters
+  const [isExporting, setIsExporting] = useState(false);
+  const handleExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const response = await apiClient.get("/crm/admin/facility_setups/export.xlsx", {
+        params: buildFilterParams(),
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "facility_setups.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("File downloaded successfully");
+    } catch (error) {
+      console.error("Error exporting facility setups:", error);
+      toast.error("Failed to export facility setups");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Fetch booking setup data from API
   const fetchBookingSetupData = async (page: number = 1, currentFilters = appliedFilters) => {
     try {
       setLoading(true);
-      const params: any = {
+      const params = {
         page,
         per_page: pageSize,
+        ...buildFilterParams(currentFilters),
       };
-
-      if (currentFilters.facilityType) {
-        params["q[fac_type_eq]"] = currentFilters.facilityType;
-      }
-      if (currentFilters.fromDate) {
-        params["q[created_at_gteq]"] = currentFilters.fromDate;
-      }
-      if (currentFilters.toDate) {
-        params["q[created_at_lteq]"] = currentFilters.toDate;
-      }
 
       const response = await apiClient.get("/crm/admin/facility_setups.json", {
         params
@@ -486,7 +522,8 @@ export const BookingSetupClubDashboard = () => {
           enableSearch={true}
           onFilterClick={() => setIsFilterOpen(true)}
           enableSelection={false}
-          hideTableExport={true}
+          enableExport={true}
+          onExport={handleExport}
         />
 
         <div className="flex justify-center mt-6">
