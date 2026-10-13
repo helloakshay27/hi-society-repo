@@ -384,6 +384,7 @@ const CommunityDetailsTab = ({ communityId, setCommunityName, setCommunityImg }:
                         </div>
 
                         <EnhancedTable
+                            storageKey="community-details-tab-table"
                             data={members}
                             columns={memberColumns}
                             renderCell={renderMemberCell}

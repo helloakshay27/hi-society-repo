@@ -628,6 +628,7 @@ const SmsManagementPage: React.FC = () => {
 
       <div className="mt-8">
         <EnhancedTable
+          storageKey="sms-management-page-table"
           data={smsTemplates}
           columns={columns}
           renderCell={renderCell}

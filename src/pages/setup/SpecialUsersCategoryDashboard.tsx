@@ -377,6 +377,7 @@ export const SpecialUsersCategoryDashboard = () => {
         {/* Table */}
         <div className="bg-[#fafafa] rounded-lg shadow-sm">
           <EnhancedTable
+            storageKey="special-users-category-dashboard-table"
             columns={columns}
             data={paginatedCategories}
             onRowClick={(category) => console.log("Row clicked:", category)}

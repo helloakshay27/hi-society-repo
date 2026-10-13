@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import axios from "axios";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
@@ -121,7 +120,6 @@ const NoticePageDetails = () => {
 
   return (
     <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28">
-      <Toaster position="top-right" richColors closeButton />
       
       <style>
         {`

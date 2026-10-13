@@ -213,6 +213,7 @@ const BannerListPage = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="banner-list-page-table"
                 data={[...banners].reverse()}
                 columns={columns}
                 renderCell={renderCell}

@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import {
-  TextField,
-  Checkbox,
-  FormControlLabel,
-} from "@mui/material";
+import { TextField, Checkbox, FormControlLabel } from "@mui/material";
 import {
   Dialog,
   DialogContent,
@@ -153,7 +149,9 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedSocietyId, setSelectedSocietyId] = useState<number | null>(null);
+  const [selectedSocietyId, setSelectedSocietyId] = useState<number | null>(
+    null
+  );
   const [selectedSocietyName, setSelectedSocietyName] = useState("");
 
   // IVR modal state
@@ -169,7 +167,11 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
 
   // Debug modal states
   useEffect(() => {
-    console.log("🔔 Modal states changed:", { isAddModalOpen, isEditModalOpen, isDeleteModalOpen });
+    console.log("🔔 Modal states changed:", {
+      isAddModalOpen,
+      isEditModalOpen,
+      isDeleteModalOpen,
+    });
   }, [isAddModalOpen, isEditModalOpen, isDeleteModalOpen]);
 
   // Permissions
@@ -193,10 +195,16 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       "komalshinde0101@lockated.com",
       "demo@lockated.com",
       "ajay.ghenand@lockated.com",
-      "dineshshinde6666@gmail.com"
+      "dineshshinde6666@gmail.com",
+      "dinesh.shinde@lockated.com",
+      "tejas.chaudhari@lockated.com",
     ];
     const hasPermission = allowedEmails.includes(userEmail);
-    console.log("🔐 Edit Permission Check:", { userEmail, hasPermission, allowedEmails });
+    console.log("🔐 Edit Permission Check:", {
+      userEmail,
+      hasPermission,
+      allowedEmails,
+    });
     setCanEditSociety(hasPermission);
   };
 
@@ -216,7 +224,11 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       const baseUrl = HI_SOCIETY_CONFIG.BASE_URL;
       const token = HI_SOCIETY_CONFIG.TOKEN;
 
-      console.log("🔧 API Config:", { baseUrl, tokenExists: !!token, tokenLength: token?.length });
+      console.log("🔧 API Config:", {
+        baseUrl,
+        tokenExists: !!token,
+        tokenLength: token?.length,
+      });
 
       if (!baseUrl) {
         throw new Error("Base URL is not configured");
@@ -233,7 +245,10 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         apiUrl += `&q[building_name_cont]=${encodeURIComponent(search.trim())}`;
       }
 
-      console.log("🔗 Fetching societies from:", apiUrl.replace(token, "***TOKEN***"));
+      console.log(
+        "🔗 Fetching societies from:",
+        apiUrl.replace(token, "***TOKEN***")
+      );
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -247,7 +262,9 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       if (!response.ok) {
         const errorText = await response.text();
         console.error("❌ API Error:", errorText);
-        throw new Error(`Failed to fetch societies: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch societies: ${response.status} ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -256,7 +273,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       console.log("📊 Data keys:", Object.keys(data));
 
       // Handle array response or object with societies array
-      const societiesList = Array.isArray(data) ? data : (data.societies || []);
+      const societiesList = Array.isArray(data) ? data : data.societies || [];
       console.log("📋 Societies list length:", societiesList.length);
       console.log("📋 First society sample:", societiesList[0]);
 
@@ -339,7 +356,9 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         throw new Error("Failed to update status");
       }
 
-      toast.success(`Society ${!currentStatus ? "activated" : "deactivated"} successfully`);
+      toast.success(
+        `Society ${!currentStatus ? "activated" : "deactivated"} successfully`
+      );
       fetchSocieties(currentPage, perPage, debouncedSearchQuery);
     } catch (error: any) {
       console.error("Error updating status:", error);
@@ -369,7 +388,9 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         throw new Error("Failed to update incident status");
       }
 
-      toast.success(`Incident ${!currentStatus ? "enabled" : "disabled"} successfully`);
+      toast.success(
+        `Incident ${!currentStatus ? "enabled" : "disabled"} successfully`
+      );
       fetchSocieties(currentPage, perPage, debouncedSearchQuery);
     } catch (error: any) {
       console.error("Error updating incident status:", error);
@@ -380,7 +401,12 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
   const handleIvrToggle = async (id: number, currentIvr: boolean) => {
     if (currentIvr) {
       // Disabling — call API directly, no modal
-      submitIvrUpdate(id, { ivr_enabled: false, ivr_name: "", ivr_api_key: "", ivr_caller_id: "" });
+      submitIvrUpdate(id, {
+        ivr_enabled: false,
+        ivr_name: "",
+        ivr_api_key: "",
+        ivr_caller_id: "",
+      });
       return;
     }
 
@@ -388,7 +414,9 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
     try {
       const baseUrl = HI_SOCIETY_CONFIG.BASE_URL;
       const token = HI_SOCIETY_CONFIG.TOKEN;
-      const response = await fetch(`${baseUrl}/admin/societies/${id}.json?token=${token}`);
+      const response = await fetch(
+        `${baseUrl}/admin/societies/${id}.json?token=${token}`
+      );
       if (!response.ok) throw new Error("Failed to fetch society data");
       const data = await response.json();
 
@@ -401,13 +429,20 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       });
       setIsIvrModalOpen(true);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to load IVR data");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to load IVR data"
+      );
     }
   };
 
   const submitIvrUpdate = async (
     id: number,
-    data: { ivr_enabled: boolean; ivr_name: string; ivr_api_key: string; ivr_caller_id: string }
+    data: {
+      ivr_enabled: boolean;
+      ivr_name: string;
+      ivr_api_key: string;
+      ivr_caller_id: string;
+    }
   ) => {
     try {
       const baseUrl = HI_SOCIETY_CONFIG.BASE_URL;
@@ -422,7 +457,9 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
 
       if (!response.ok) throw new Error("Failed to update IVR settings");
 
-      toast.success(`IVR ${data.ivr_enabled ? "enabled" : "disabled"} successfully`);
+      toast.success(
+        `IVR ${data.ivr_enabled ? "enabled" : "disabled"} successfully`
+      );
       fetchSocieties(currentPage, perPage, debouncedSearchQuery);
     } catch (error: any) {
       toast.error(error.message || "Failed to update IVR settings");
@@ -439,8 +476,12 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
   };
 
   const displayedData = useMemo(
-    () => societies.map((s, i) => ({ ...s, srno: (currentPage - 1) * perPage + i + 1 })),
-    [societies, currentPage, perPage],
+    () =>
+      societies.map((s, i) => ({
+        ...s,
+        srno: (currentPage - 1) * perPage + i + 1,
+      })),
+    [societies, currentPage, perPage]
   );
 
   const renderRow = (society: Society & { srno?: number }) => ({
@@ -484,29 +525,41 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
     ),
     area: <span className="text-sm text-gray-600">{society.area || "-"}</span>,
     city: <span className="text-sm text-gray-600">{society.city || "-"}</span>,
-    state: <span className="text-sm text-gray-600">{society.state || "-"}</span>,
-    project_type: (
-      <span className="text-sm text-gray-600">{society.project_type || "-"}</span>
+    state: (
+      <span className="text-sm text-gray-600">{society.state || "-"}</span>
     ),
-    postcode: <span className="text-sm text-gray-600">{society.postcode || "-"}</span>,
+    project_type: (
+      <span className="text-sm text-gray-600">
+        {society.project_type || "-"}
+      </span>
+    ),
+    postcode: (
+      <span className="text-sm text-gray-600">{society.postcode || "-"}</span>
+    ),
     status: (
       <Switch
         checked={society.active === 1}
-        onCheckedChange={() => handleStatusToggle(society.id, society.active === 1)}
+        onCheckedChange={() =>
+          handleStatusToggle(society.id, society.active === 1)
+        }
         disabled={!canEditSociety}
       />
     ),
     ivr_enabled: (
       <Switch
         checked={society.ivr_enabled === true}
-        onCheckedChange={() => handleIvrToggle(society.id, society.ivr_enabled === true)}
+        onCheckedChange={() =>
+          handleIvrToggle(society.id, society.ivr_enabled === true)
+        }
         disabled={!canEditSociety}
       />
     ),
     incident_enabled: (
       <Switch
         checked={society.incident_enabled === true}
-        onCheckedChange={() => handleIncidentToggle(society.id, society.incident_enabled === true)}
+        onCheckedChange={() =>
+          handleIncidentToggle(society.id, society.incident_enabled === true)
+        }
         disabled={!canEditSociety}
       />
     ),
@@ -522,35 +575,37 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
           <h1 className="text-2xl font-bold">Society</h1>
         </header>
         <>
-            <EnhancedTaskTable
-              columns={columns}
-              data={displayedData}
-              renderRow={renderRow}
-              storageKey="society-dashboard-v1"
-              hideTableExport={true}
-              hideTableSearch={false}
-              enableSearch={true}
-              searchTerm={searchQuery}
-              onSearchChange={setSearchQuery}
-              loading={loading}
-              leftActions={
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => {
-                    console.log("🔵 Add Society button clicked", { canEditSociety });
-                    setIsAddModalOpen(true);
-                  }}
-                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!canEditSociety}
-                >
-                  <Plus className="w-4 h-4 mr-2 text-white" />
-                  Add Society
-                </Button>
-              }
-              rightActions={
-                <div className="flex items-center gap-2">
-                  {/* <Button
+          <EnhancedTaskTable
+            columns={columns}
+            data={displayedData}
+            renderRow={renderRow}
+            storageKey="society-dashboard-v1"
+            hideTableExport={true}
+            hideTableSearch={false}
+            enableSearch={true}
+            searchTerm={searchQuery}
+            onSearchChange={setSearchQuery}
+            loading={loading}
+            leftActions={
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  console.log("🔵 Add Society button clicked", {
+                    canEditSociety,
+                  });
+                  setIsAddModalOpen(true);
+                }}
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!canEditSociety}
+              >
+                <Plus className="w-4 h-4 mr-2 text-white" />
+                Add Society
+              </Button>
+            }
+            rightActions={
+              <div className="flex items-center gap-2">
+                {/* <Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
@@ -561,29 +616,29 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
                     <Upload className="w-4 h-4 mr-2" />
                     Bulk Upload
                   </Button> */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      toast.info("Export feature coming soon");
-                    }}
-                  >
-                    <Download className="w-4 h-4 text-[#DA7756] !text-[#DA7756]" />
-                  </Button>
-                </div>
-              }
-            />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    toast.info("Export feature coming soon");
+                  }}
+                >
+                  <Download className="w-4 h-4 text-[#DA7756] !text-[#DA7756]" />
+                </Button>
+              </div>
+            }
+          />
 
-            <TicketPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalRecords={totalRecords}
-              perPage={perPage}
-              isLoading={loading}
-              onPageChange={handlePageChange}
-              onPerPageChange={handlePerPageChange}
-            />
-          </>
+          <TicketPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            perPage={perPage}
+            isLoading={loading}
+            onPageChange={handlePageChange}
+            onPerPageChange={handlePerPageChange}
+          />
+        </>
 
         {/* Modals */}
         <AddSocietyModal
@@ -624,7 +679,13 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
         />
 
         {/* IVR Configuration Modal */}
-        <Dialog open={isIvrModalOpen} onOpenChange={(open) => { if (!open) setIsIvrModalOpen(false); }} modal={false}>
+        <Dialog
+          open={isIvrModalOpen}
+          onOpenChange={(open) => {
+            if (!open) setIsIvrModalOpen(false);
+          }}
+          modal={false}
+        >
           <DialogContent className="max-w-md bg-white z-50">
             <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
               <DialogTitle className="text-lg font-semibold text-gray-900">
@@ -643,13 +704,20 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <span className="text-sm font-medium">IVR Enabled</span>
-                  <p className="text-xs text-gray-500">Enable IVR for this society</p>
+                  <p className="text-xs text-gray-500">
+                    Enable IVR for this society
+                  </p>
                 </div>
                 <FormControlLabel
                   control={
                     <Checkbox
                       checked={ivrForm.ivr_enabled}
-                      onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_enabled: e.target.checked }))}
+                      onChange={(e) =>
+                        setIvrForm((prev) => ({
+                          ...prev,
+                          ivr_enabled: e.target.checked,
+                        }))
+                      }
                     />
                   }
                   label={ivrForm.ivr_enabled ? "Enabled" : "Disabled"}
@@ -659,34 +727,65 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
                 label="IVR Name"
                 placeholder="Enter IVR name"
                 value={ivrForm.ivr_name}
-                onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_name: e.target.value }))}
+                onChange={(e) =>
+                  setIvrForm((prev) => ({ ...prev, ivr_name: e.target.value }))
+                }
                 fullWidth
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
-                InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+                InputProps={{
+                  sx: {
+                    height: "45px",
+                    "& .MuiInputBase-input": { padding: "12px 14px" },
+                  },
+                }}
               />
               <TextField
                 label="IVR API Key"
                 placeholder="Enter IVR API key"
                 value={ivrForm.ivr_api_key}
-                onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_api_key: e.target.value }))}
+                onChange={(e) =>
+                  setIvrForm((prev) => ({
+                    ...prev,
+                    ivr_api_key: e.target.value,
+                  }))
+                }
                 fullWidth
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
-                InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+                InputProps={{
+                  sx: {
+                    height: "45px",
+                    "& .MuiInputBase-input": { padding: "12px 14px" },
+                  },
+                }}
               />
               <TextField
                 label="IVR Caller ID"
                 placeholder="Enter IVR caller ID"
                 value={ivrForm.ivr_caller_id}
-                onChange={(e) => setIvrForm((prev) => ({ ...prev, ivr_caller_id: e.target.value }))}
+                onChange={(e) =>
+                  setIvrForm((prev) => ({
+                    ...prev,
+                    ivr_caller_id: e.target.value,
+                  }))
+                }
                 fullWidth
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
-                InputProps={{ sx: { height: "45px", "& .MuiInputBase-input": { padding: "12px 14px" } } }}
+                InputProps={{
+                  sx: {
+                    height: "45px",
+                    "& .MuiInputBase-input": { padding: "12px 14px" },
+                  },
+                }}
               />
               <div className="flex justify-end gap-3 pt-2 border-t">
-                <Button variant="outline" onClick={() => setIsIvrModalOpen(false)} disabled={isIvrSubmitting}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsIvrModalOpen(false)}
+                  disabled={isIvrSubmitting}
+                >
                   Cancel
                 </Button>
                 <Button
@@ -694,7 +793,9 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
                   disabled={isIvrSubmitting}
                   className="bg-[#c72030] hover:bg-[#a01828]"
                 >
-                  {isIvrSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  {isIvrSubmitting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : null}
                   Save IVR Settings
                 </Button>
               </div>

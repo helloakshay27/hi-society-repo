@@ -427,11 +427,8 @@ const CampaignsReferralCreate: React.FC = () => {
             </FormControl>
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-dashed border-gray-300 mx-6" />
-
           {/* Submit Button */}
-          <div className="flex justify-center py-6">
+          <div className="flex justify-end py-6">
             <Button
               type="submit"
               disabled={isSubmitting}

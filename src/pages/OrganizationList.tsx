@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
 import { ChevronRight, ArrowLeft, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -222,6 +222,7 @@ const OrganizationList = () => {
         </div>
 
           <EnhancedTable
+            storageKey="organization-list-table"
             data={items}
             columns={columns}
             renderCell={renderCell}
@@ -259,7 +260,6 @@ const OrganizationList = () => {
 
   return (
     <>
-      <Toaster position="top-right" />
       {renderListTab()}
     </>
   );

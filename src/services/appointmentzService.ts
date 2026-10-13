@@ -1039,6 +1039,8 @@ export interface ManageFlatsFilters {
   tower?: string;
   flat?: string;
   payment_status?: string;
+  master_status?: string;
+  occupancy?: string;
   rm_assigned?: string;
   search?: string;
 }
@@ -1083,6 +1085,12 @@ export const getAppointmentzManageFlats = async (
     }
     if (filters?.payment_status) {
       params["q[payment_status_eq]"] = filters.payment_status;
+    }
+    if (filters?.master_status) {
+      params["q[master_status_eq]"] = filters.master_status;
+    }
+    if (filters?.occupancy) {
+      params["q[occupancy_eq]"] = filters.occupancy;
     }
     if (filters?.search) {
       params["q[search_all_fields_cont]"] = filters.search;

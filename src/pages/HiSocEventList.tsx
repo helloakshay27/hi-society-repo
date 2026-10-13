@@ -3,12 +3,25 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Eye, Settings, Users, UserCheck, UserX, Clock, Pencil, X } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Eye,
+  Settings,
+  Users,
+  UserCheck,
+  UserX,
+  Clock,
+  Pencil,
+  X,
+} from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { EventFilterDialog, EventFilters } from "@/components/EventFilterDialog";
+import {
+  EventFilterDialog,
+  EventFilters,
+} from "@/components/EventFilterDialog";
 import {
   Pagination,
   PaginationContent,
@@ -44,7 +57,7 @@ interface EventPermissions {
 
 const HiSocEventList = () => {
   const navigate = useNavigate();
-      const { shouldShow } = useDynamicPermissions();
+  const { shouldShow } = useDynamicPermissions();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [eventPermissions, setEventPermissions] = useState<EventPermissions>(
@@ -85,11 +98,11 @@ const HiSocEventList = () => {
 
   // Cleanup body overflow styles when component mounts (fixes scroll-lock from modals)
   useEffect(() => {
-    document.body.style.overflow = 'unset';
-    document.body.style.paddingRight = '0px';
+    document.body.style.overflow = "unset";
+    document.body.style.paddingRight = "0px";
     return () => {
-      document.body.style.overflow = 'unset';
-      document.body.style.paddingRight = '0px';
+      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
     };
   }, []);
 
@@ -176,8 +189,7 @@ const HiSocEventList = () => {
 
   const handleApplyFilters = (filters: EventFilters) => {
     const hasFilters =
-      filters.date_range !== "" ||
-      filters.publish_in.length > 0;
+      filters.date_range !== "" || filters.publish_in.length > 0;
     setActiveFilters(hasFilters ? filters : null);
     setCurrentPage(1);
   };
@@ -209,7 +221,7 @@ const HiSocEventList = () => {
         getFullUrl(`/crm/admin/events/${id}.json`),
         { event: { active: !currentStatus } },
         {
-         headers: {
+          headers: {
             Authorization: getAuthHeader(),
           },
         }
@@ -227,8 +239,8 @@ const HiSocEventList = () => {
     toast.dismiss();
     const newPublish = currentPublish === 1 ? 0 : 1;
     try {
-      setEvents(prevEvents =>
-        prevEvents.map(event =>
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
           event.id === id ? { ...event, publish: newPublish } : event
         )
       );
@@ -242,12 +254,16 @@ const HiSocEventList = () => {
           },
         }
       );
-      toast.success(newPublish === 1 ? "Event published successfully!" : "Event rejected successfully!");
+      toast.success(
+        newPublish === 1
+          ? "Event published successfully!"
+          : "Event rejected successfully!"
+      );
     } catch (error) {
       console.error("Error toggling publish status:", error);
       toast.error("Failed to update publish status.");
-      setEvents(prevEvents =>
-        prevEvents.map(event =>
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
           event.id === id ? { ...event, publish: currentPublish } : event
         )
       );
@@ -258,11 +274,9 @@ const HiSocEventList = () => {
     toast.dismiss();
     try {
       // Update local state immediately for better UX
-      setEvents(prevEvents => 
-        prevEvents.map(event => 
-          event.id === id 
-            ? { ...event, show_on_home: !currentStatus }
-            : event
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.id === id ? { ...event, show_on_home: !currentStatus } : event
         )
       );
 
@@ -282,11 +296,9 @@ const HiSocEventList = () => {
       console.error("Error toggling show on home:", error);
       toast.error("Failed to update Show on Home.");
       // Revert the change on error
-      setEvents(prevEvents => 
-        prevEvents.map(event => 
-          event.id === id 
-            ? { ...event, show_on_home: currentStatus }
-            : event
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.id === id ? { ...event, show_on_home: currentStatus } : event
         )
       );
     }
@@ -339,33 +351,35 @@ const HiSocEventList = () => {
   ];
 
   const renderCell = (item: Event, columnKey: string, rowIndex?: number) => {
-    const index = rowIndex ?? events.findIndex(e => e.id === item.id);
-    
+    const index = rowIndex ?? events.findIndex((e) => e.id === item.id);
+
     switch (columnKey) {
       case "actions":
         return (
           <div className="flex gap-1">
             {/* {eventPermissions.show === "true" && ( */}
-            {shouldShow("Events","show")&&(
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleViewEvent(item.id)}
-              title="View"
-            >
-              <Eye className="w-4 h-4" />
-            </Button>)}
+            {shouldShow("Events", "show") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleViewEvent(item.id)}
+                title="View"
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+            )}
             {/* )} */}
             {/* {eventPermissions.update === "true" && ( */}
-            {shouldShow("Events","update")&&(
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleEditEvent(item.id)}
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>)}
+            {shouldShow("Events", "update") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEditEvent(item.id)}
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+            )}
             {/* )} */}
           </div>
         );
@@ -443,14 +457,16 @@ const HiSocEventList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      {shouldShow("Events","create")&&(
-      <Button
-        onClick={handleAddEvent}
-        variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"      >
-        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-        Add
-      </Button>)}
+      {shouldShow("Events", "create") && (
+        <Button
+          onClick={handleAddEvent}
+          variant="ghost"
+          className="btn-primary h-9 px-4 text-sm font-medium"
+        >
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+          Add
+        </Button>
+      )}
     </div>
   );
 
@@ -526,13 +542,12 @@ const HiSocEventList = () => {
           columns={columns}
           renderCell={renderCell}
           pagination={true}
-          enableExport={true}
-          exportFileName="events"
+          enableExport={false}
           storageKey="events-table"
           enableGlobalSearch={true}
           onGlobalSearch={handleGlobalSearch}
           searchPlaceholder="Search events..."
-        leftActions={renderCustomActions()}
+          leftActions={renderCustomActions()}
           rightActions={
             activeFilters ? (
               <Button
@@ -608,7 +623,6 @@ const HiSocEventList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       <div className="w-full">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">

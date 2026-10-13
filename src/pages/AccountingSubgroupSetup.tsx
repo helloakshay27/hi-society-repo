@@ -7,6 +7,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 import {
   AddLockAccountGroupModal,
   EditableLockAccountGroup,
@@ -84,6 +85,11 @@ const AccountingSubgroupSetup: React.FC = () => {
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
   const authHeaders = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'subgroup_setup', screen_name: 'AccountingSubgroupSetup' });;
+  }, []);
+
     const token = API_CONFIG.TOKEN;
     return {
       Accept: "application/json",

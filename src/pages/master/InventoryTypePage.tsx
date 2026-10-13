@@ -122,6 +122,7 @@ const InventoryTypePage = () => {
         />
       )}
       <EnhancedTable
+        storageKey="inventory-type-page-table"
         loading={loading}
         columns={[
           { key: 'srno', label: 'Sr. No.', sortable: true },

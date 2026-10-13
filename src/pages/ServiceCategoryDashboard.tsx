@@ -235,6 +235,7 @@ const ServiceCategoryDashboard = () => {
   return (
     <div className="p-6">
       <EnhancedTable
+        storageKey="service-category-dashboard-table"
         data={[...serviceCategories].reverse()}
         columns={columns}
         renderCell={renderCell}

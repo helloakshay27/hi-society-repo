@@ -332,21 +332,21 @@ const ProjectDetails = () => {
         </div>
       </div>
       <div>
-        <div className="w-full bg-white rounded-lg shadow-sm border mt-3">
-          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+        <div className="w-full bg-white rounded-2xl border border-[#E5E5E5] mt-3 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-6 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                <svg className="w-6 h-6 text-[#C72030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                <svg className="w-4 h-4 text-[var(--color-primary,#da7756)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold uppercase text-black">
+              <h3 className="text-sm font-semibold text-gray-900">
                 Project Details
               </h3>
             </div>
           </div>
           
-          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+          <div className="bg-white px-5 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-4 gap-x-8 mx-6">
                 {/* <div className="col-lg-6 col-md-6 col-sm-12 row px-3 ">
                   <div className="col-6">
@@ -719,11 +719,11 @@ const ProjectDetails = () => {
             </div>
           </div>
         {/* RERA Number Section */}
-        <div className="w-full bg-white rounded-lg shadow-sm border mt-4">
-          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+        <div className="w-full bg-white rounded-2xl border border-[#E5E5E5] mt-4 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-6 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#E5E0D3] flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2">
+              <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary,#da7756)" strokeWidth="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                   <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -731,12 +731,12 @@ const ProjectDetails = () => {
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
               </div>
-              <h3 className="text-[16px] font-bold text-gray-900 tracking-wide">
+              <h3 className="text-sm font-semibold text-gray-900">
                 RERA Number
               </h3>
             </div>
           </div>
-          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+          <div className="bg-white px-5 py-4">
             <div className="space-y-6 mx-6">
               {formData?.rera_number_multiple?.length > 0 ? (
                 formData.rera_number_multiple.map((rera, idx) => {
@@ -795,22 +795,22 @@ const ProjectDetails = () => {
         </div>
 
         {/* Amenities Section */}
-        <div className="w-full bg-white rounded-lg shadow-sm border mt-4">
-          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+        <div className="w-full bg-white rounded-2xl border border-[#E5E5E5] mt-4 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-6 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#E5E0D3] flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2">
+              <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary,#da7756)" strokeWidth="2">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="9" y1="9" x2="15" y2="9"></line>
                   <line x1="9" y1="15" x2="15" y2="15"></line>
                 </svg>
               </div>
-              <h3 className="text-[16px] font-bold text-gray-900 tracking-wide">
+              <h3 className="text-sm font-semibold text-gray-900">
                 Amenities
               </h3>
             </div>
           </div>
-          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+          <div className="bg-white px-5 py-4">
             <div className="flex items-start mx-6">
               <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
                 Amenities
@@ -830,22 +830,22 @@ const ProjectDetails = () => {
         </div>
 
         {/* Connectivity Section */}
-        <div className="w-full bg-white rounded-lg shadow-sm border mt-4">
-          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+        <div className="w-full bg-white rounded-2xl border border-[#E5E5E5] mt-4 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-6 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#E5E0D3] flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2">
+              <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary,#da7756)" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="2" y1="12" x2="22" y2="12"></line>
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                 </svg>
               </div>
-              <h3 className="text-[16px] font-bold text-gray-900 tracking-wide">
+              <h3 className="text-sm font-semibold text-gray-900">
                 Connectivity
               </h3>
             </div>
           </div>
-          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+          <div className="bg-white px-5 py-4">
             <div className="space-y-6 mx-6">
               {formData.connectivities && formData.connectivities.length > 0 ? (
                 formData.connectivities.map((connectivity, idx) => (
@@ -894,21 +894,21 @@ const ProjectDetails = () => {
         </div>
 
         {/* Address Section */}
-        <div className="w-full bg-white rounded-lg shadow-sm border mt-4">
-          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+        <div className="w-full bg-white rounded-2xl border border-[#E5E5E5] mt-4 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-6 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#E5E0D3] flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2">
+              <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary,#da7756)" strokeWidth="2">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
               </div>
-              <h3 className="text-[16px] font-bold text-gray-900 tracking-wide">
+              <h3 className="text-sm font-semibold text-gray-900">
                 Address
               </h3>
             </div>
           </div>
-          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+          <div className="bg-white px-5 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-4 gap-x-8 mx-6">
               {/* Address */}
               <div className="flex items-start gap-4">
@@ -990,21 +990,21 @@ const ProjectDetails = () => {
 
         {(API_CONFIG.BASE_URL === "https://dev-panchshil-super-app.lockated.com/" || API_CONFIG.BASE_URL === "https://rustomjee-live.lockated.com/") && (
           /* Plans Section */
-          <div className="w-full bg-white rounded-lg shadow-sm border mt-4">
-          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+          <div className="w-full bg-white rounded-2xl border border-[#E5E5E5] mt-4 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-6 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#E5E0D3] flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2">
+              <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary,#da7756)" strokeWidth="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                 </svg>
               </div>
-              <h3 className="text-[16px] font-bold text-gray-900 tracking-wide">
+              <h3 className="text-sm font-semibold text-gray-900">
                 Plans
               </h3>
             </div>
           </div>
-          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+          <div className="bg-white px-5 py-4">
             <div className="mt-4">
               <h5 className="text-[15px] font-semibold text-gray-900 mb-3">Project Plans</h5>
               <div className="tbl-container">
@@ -1073,23 +1073,23 @@ const ProjectDetails = () => {
         )}
 
         {/* Document Attachment Section */}
-        <div className="w-full bg-white rounded-lg shadow-sm border mt-4">
-          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+        <div className="w-full bg-white rounded-2xl border border-[#E5E5E5] mt-4 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-6 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#E5E0D3] flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2">
+              <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary,#da7756)" strokeWidth="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                   <line x1="16" y1="13" x2="8" y2="13"></line>
                   <line x1="16" y1="17" x2="8" y2="17"></line>
                 </svg>
               </div>
-              <h3 className="text-[16px] font-bold text-gray-900 tracking-wide">
+              <h3 className="text-sm font-semibold text-gray-900">
                 Document Attachment
               </h3>
             </div>
           </div>
-          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+          <div className="bg-white px-5 py-4">
             <div className="row ">
               {/* <div className="col-md-12 mt-2">
                 <h5 className=" ">Gallery Images</h5>
@@ -1800,21 +1800,21 @@ const ProjectDetails = () => {
         </div>
 
         {/* Virtual Tour Section */}
-        <div className="w-full bg-white rounded-lg shadow-sm border mt-4">
-          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+        <div className="w-full bg-white rounded-2xl border border-[#E5E5E5] mt-4 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-6 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#E5E0D3] flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2">
+              <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary,#da7756)" strokeWidth="2">
                   <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
                   <line x1="2" y1="20" x2="2.01" y2="20"></line>
                 </svg>
               </div>
-              <h3 className="text-[16px] font-bold text-gray-900 tracking-wide">
+              <h3 className="text-sm font-semibold text-gray-900">
                 Virtual Tour
               </h3>
             </div>
           </div>
-          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+          <div className="bg-white px-5 py-4">
             <div className="space-y-3 mx-6">
               {formData?.virtual_tour_url_multiple?.length > 0 ? (
                 formData.virtual_tour_url_multiple.map((virtual, idx) => (
@@ -1838,18 +1838,18 @@ const ProjectDetails = () => {
         </div>
 
         {/* Visibility Section */}
-        <div className="w-full bg-white rounded-lg shadow-sm border mt-4">
-          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+        <div className="w-full bg-white rounded-2xl border border-[#E5E5E5] mt-4 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-6 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                <SettingsOutlinedIcon className="w-5 h-5 text-[#C72030]" />
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                <SettingsOutlinedIcon className="w-4 h-4 text-[var(--color-primary,#da7756)]" />
               </div>
-              <h3 className="text-[16px] font-bold text-gray-900 tracking-wide">
+              <h3 className="text-sm font-semibold text-gray-900">
                 Visibility
               </h3>
             </div>
           </div>
-          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+          <div className="bg-white px-5 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 mx-6">
               {/* Show on Home Page */}
               <div className="flex items-start gap-6">

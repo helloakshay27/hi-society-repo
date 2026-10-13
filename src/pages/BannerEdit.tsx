@@ -855,10 +855,10 @@ const BannerEdit = () => {
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
         {/* Section: Banner Information */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                <FileText size={16} color="#C72030" />
+          <div className="px-6 py-3 border-b border-gray-200 bg-white">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+              <span className="w-7 h-7 rounded-full flex items-center justify-center mr-3 bg-[#F6F4EE]">
+                <FileText size={14} color="#2C2C2C" />
               </span>
               Banner Information
             </h2>

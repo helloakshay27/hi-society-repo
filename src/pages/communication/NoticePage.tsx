@@ -282,6 +282,7 @@ const NoticePage = () => {
     <div className="flex-1 bg-white min-h-screen">
       <div className="p-6">
         <EnhancedTable
+          storageKey="notice-page-table"
           data={notices}
           columns={columns}
           enableSearch={true}

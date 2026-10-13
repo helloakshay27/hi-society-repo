@@ -522,6 +522,7 @@ const LockFees = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="lock-fees-table"
                 data={lockFees}
                 columns={columns}
                 renderActions={renderActions}

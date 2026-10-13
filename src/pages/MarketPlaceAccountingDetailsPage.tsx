@@ -1,8 +1,14 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 export const MarketPlaceAccountingDetailsPage = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'marketplace_accounting_details', screen_name: 'MarketPlaceAccountingDetailsPage' });
+  }, []);
+
   const navigate = useNavigate();
 
   return (

@@ -28,6 +28,7 @@ import {
 import { API_CONFIG } from "@/config/apiConfig";
 import { Plus, X } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 const PAGE_SIZE = 20;
 
@@ -135,6 +136,11 @@ const downloadBlob = (data: BlobPart, filename: string, mimeType: string) => {
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 const AccountingTransactions: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'transactions_list', screen_name: 'AccountingTransactions' });
+  }, [onAccountingViewed]);
+
   const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();

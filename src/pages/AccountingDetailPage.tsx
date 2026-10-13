@@ -2,8 +2,14 @@ import React, { useState } from 'react';
 import { ArrowLeft, Star, Calculator, Download, ThumbsUp, ThumbsDown, User, Building, Mail, Phone, Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { InstallModal } from '@/components/InstallModal';
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 const AccountingDetailPage = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'accounting_detail', screen_name: 'AccountingDetailPage' });;
+  }, []);
+
   const navigate = useNavigate();
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Overview');

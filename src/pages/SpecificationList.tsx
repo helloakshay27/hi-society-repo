@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
 import { ChevronRight, ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -201,6 +201,7 @@ const SpecificationList = () => {
 
 
           <EnhancedTable
+            storageKey="specification-list-table"
             data={items}
             columns={columns}
             renderCell={renderCell}
@@ -236,7 +237,6 @@ const SpecificationList = () => {
 
   return (
     <>
-      <Toaster position="top-right" />
       {renderListTab()}
     </>
   );

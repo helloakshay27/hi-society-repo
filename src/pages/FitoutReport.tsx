@@ -7,7 +7,6 @@ import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, ChevronsRight, Che
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
 import axios from "axios";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -228,7 +227,6 @@ const FitoutReport: React.FC = () => {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <Toaster position="top-right" richColors closeButton />
 
       {/* Date Range Picker */}
       <div className="mb-6">

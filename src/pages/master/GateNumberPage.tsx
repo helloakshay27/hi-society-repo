@@ -117,6 +117,7 @@ const GateNumberPage = () => {
         />
       )}
       <EnhancedTable
+        storageKey="gate-number-page-table"
         loading={loading}
         columns={[
           { key: 'srno', label: 'Sr. No.' },

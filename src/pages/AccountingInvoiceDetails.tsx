@@ -16,6 +16,7 @@ import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyl
 import { API_CONFIG } from "@/config/apiConfig";
 import { ArrowLeft, Download, Printer, FileText, Receipt, Wallet, X } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface BillCharge {
   id: number;
@@ -117,6 +118,11 @@ const numberToWords = (num: number): string => {
 };
 
 const AccountingInvoiceDetails: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'invoice_details', screen_name: 'AccountingInvoiceDetails' });
+  }, [onAccountingViewed]);
+
   const { shouldShow } = useDynamicPermissions();
   const { id } = useParams();
   const navigate = useNavigate();

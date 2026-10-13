@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Plus, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -259,6 +258,7 @@ const ReferralProgramList = () => {
   const renderListTab = () => (
     <div className="space-y-6">
           <EnhancedTable
+            storageKey="referral-program-list-table"
             data={referrals}
             columns={columns}
             renderCell={renderCell}
@@ -306,7 +306,6 @@ const ReferralProgramList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       {renderListTab()}
     </div>
   );

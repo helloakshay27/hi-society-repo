@@ -106,6 +106,7 @@ const GreSiteAssignmentSetupPage = () => {
   return (
     <div className="p-6">
       <EnhancedTable
+        storageKey="gre-site-assignment-setup-page-table"
         data={assignments}
         columns={columns}
         renderCell={renderCell}

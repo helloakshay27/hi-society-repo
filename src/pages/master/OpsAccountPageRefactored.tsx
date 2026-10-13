@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 import { 
-  OrganizationTab, 
+  OrganizationTab,
   CompanyTab, 
   CountryTab, 
   RegionTab, 
@@ -12,6 +13,11 @@ import {
 } from '@/components/ops-account';
 
 export const OpsAccountPage = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'ops_account_refactored', screen_name: 'OpsAccountPageRefactored' });
+  }, []);
+
   const [activeTab, setActiveTab] = useState('organization');
   const [searchQuery, setSearchQuery] = useState('');
   const [entriesPerPage, setEntriesPerPage] = useState('25');

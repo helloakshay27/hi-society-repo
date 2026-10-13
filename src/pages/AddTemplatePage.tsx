@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import {
     Box,
     Typography,
@@ -247,7 +247,6 @@ export default function AddTemplatePage() {
 
     return (
         <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-            <Toaster position="top-right" richColors closeButton />
 
             {/* Breadcrumb */}
             <Typography variant="body2" sx={{ mb: 3, color: '#666', fontFamily: 'Work Sans, sans-serif' }}>

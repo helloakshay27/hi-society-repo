@@ -14,6 +14,7 @@ import MuiCheckbox from "@mui/material/Checkbox";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { API_CONFIG } from "@/config/apiConfig";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface ChargeSetup {
   id: number;
@@ -146,6 +147,11 @@ const emptyForm = {
 };
 
 const AccountingBillCycleEdit: React.FC = () => {
+  const { onAccountingViewed, onAccountingUpdated } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'bill_cycle_edit', screen_name: 'AccountingBillCycleEdit' });
+  }, [onAccountingViewed]);
+
   const navigate = useNavigate();
   const { id } = useParams();
   const [form, setForm] = useState(emptyForm);
@@ -289,6 +295,11 @@ const AccountingBillCycleEdit: React.FC = () => {
         },
       });
       toast.success("Bill cycle updated successfully");
+      onAccountingUpdated({
+        accounting_id: String(id ?? form.name ?? 'bill_cycle'),
+        status: 'success',
+        screen_name: 'AccountingBillCycleEdit',
+      });
       navigate("/accounting/bill-cycles");
     } catch (error) {
       console.error("Error updating bill cycle:", error);

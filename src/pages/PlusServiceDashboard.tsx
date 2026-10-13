@@ -318,6 +318,7 @@ const PlusServiceDashboard = () => {
       </div>
 
       <EnhancedTable
+        storageKey="plus-service-dashboard-table"
         data={[...plusServices].reverse()}
         columns={columns}
         renderCell={renderCell}

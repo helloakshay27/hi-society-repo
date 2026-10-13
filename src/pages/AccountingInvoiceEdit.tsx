@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 const CHARGE_COLUMNS: ColumnConfig[] = [
   { key: "ledgerId", label: "Ledger", sortable: false },
@@ -302,6 +303,11 @@ const FormSelect: React.FC<{
 };
 
 const AccountingInvoiceEdit: React.FC = () => {
+  const { onAccountingViewed, onAccountingUpdated } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'invoice_edit', screen_name: 'AccountingInvoiceEdit' });
+  }, [onAccountingViewed]);
+
   const navigate = useNavigate();
   const { id } = useParams();
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
@@ -697,6 +703,11 @@ const AccountingInvoiceEdit: React.FC = () => {
         },
       });
       toast.success("Invoice updated successfully");
+      onAccountingUpdated({
+        accounting_id: String(id ?? billNumber ?? 'invoice'),
+        status: 'success',
+        screen_name: 'AccountingInvoiceEdit',
+      });
       navigate("/accounting/invoices");
     } catch (error) {
       console.error("Error updating invoice:", error);
@@ -912,6 +923,7 @@ const AccountingInvoiceEdit: React.FC = () => {
 
             <div className="p-4">
               <EnhancedTable
+                storageKey="accounting-invoice-edit-table"
                 data={charges}
                 columns={CHARGE_COLUMNS}
                 getItemId={(item) => item.key}

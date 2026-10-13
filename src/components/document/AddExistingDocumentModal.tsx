@@ -175,6 +175,7 @@ export const AddExistingDocumentModal: React.FC<
             </div>
           ) : (
             <EnhancedTable
+              storageKey="add-existing-document-modal-table"
               data={filteredDocuments}
               columns={columns}
               selectable={true}

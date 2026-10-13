@@ -121,6 +121,7 @@ const CommunityApprovedList = ({ communityId }: { communityId: string }) => {
                 </div>
             ) : (
                 <EnhancedTable
+                    storageKey="community-approved-list-table"
                     data={approvedUsers}
                     columns={columns}
                     renderCell={renderCell}

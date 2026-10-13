@@ -18,6 +18,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Eye, Plus, Trash2 } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface FlatChargeMapping {
   id: number;
@@ -46,6 +47,11 @@ const formatDateTime = (value?: string) => {
 };
 
 const AccountingUnitsBillCycleMapping: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'units_bill_cycle_mapping_list', screen_name: 'AccountingUnitsBillCycleMapping' });
+  }, [onAccountingViewed]);
+
   const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [mappings, setMappings] = useState<FlatChargeMapping[]>([]);

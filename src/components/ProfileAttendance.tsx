@@ -231,6 +231,7 @@ const ProfileAttendance = () => {
     return (
         <div>
             <EnhancedTable
+                storageKey="profile-attendance-table"
                 data={attendanceData}
                 columns={attendanceColumns}
                 renderCell={renderCell}

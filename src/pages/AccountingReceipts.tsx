@@ -15,6 +15,7 @@ import { Download, Plus } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { CommonImportModal } from "@/components/CommonImportModal";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface BillPaymentAPI {
   id?: number;
@@ -112,6 +113,11 @@ const toRow = (lp: LockPaymentAPI): ReceiptRow => ({
 });
 
 const AccountingReceipts: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'receipts_list', screen_name: 'AccountingReceipts' });
+  }, [onAccountingViewed]);
+
   const { shouldShow } = useDynamicPermissions();
   const [payments, setPayments] = useState<LockPaymentAPI[]>([]);
   const [loading, setLoading] = useState(false);

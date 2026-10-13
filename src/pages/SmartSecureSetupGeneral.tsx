@@ -568,6 +568,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
 
         <TabsContent value="visit-purpose" className="mt-6">
           <EnhancedTable
+            storageKey="smart-secure-setup-general-table"
             data={paginate(visitPurposeData)}
             columns={columns}
             renderCell={(item, columnKey) =>
@@ -595,6 +596,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
 
         <TabsContent value="move-in-out" className="mt-6">
           <EnhancedTable
+            storageKey="smart-secure-setup-general-table-2"
             data={paginate(moveInOutData)}
             columns={columns}
             renderCell={(item, columnKey) =>
@@ -622,6 +624,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
 
         <TabsContent value="staff-type" className="mt-6">
           <EnhancedTable
+            storageKey="smart-secure-setup-general-table-3"
             data={paginate(staffTypeData)}
             columns={staffColumns}
             renderCell={(item, columnKey) =>

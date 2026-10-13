@@ -6,7 +6,7 @@ import { Paper, Box, Typography, CircularProgress } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Settings } from '@mui/icons-material';
 import axios from 'axios';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { HI_SOCIETY_CONFIG } from '@/config/apiConfig';
 
 // Styled Components
@@ -175,7 +175,6 @@ export default function TemplateView() {
 
   return (
     <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      <Toaster position="top-right" richColors closeButton />
 
       {/* Breadcrumb */}
       <Typography 

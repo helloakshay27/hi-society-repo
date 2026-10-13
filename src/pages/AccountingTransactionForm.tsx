@@ -14,6 +14,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { ArrowLeft, Plus, Receipt, Trash2, Upload, X } from "lucide-react";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 const LINE_COLUMNS: ColumnConfig[] = [
   { key: "ledger", label: "Ledger", sortable: false },
@@ -122,6 +123,11 @@ const AccountingTransactionForm: React.FC = () => {
   };
 
   const addRow = (setRows: React.Dispatch<React.SetStateAction<LineItem[]>>) => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'transaction_form', screen_name: 'AccountingTransactionForm' });;
+  }, []);
+
     setRows((prev) => [...prev, emptyLine()]);
   };
 
@@ -351,6 +357,7 @@ const AccountingTransactionForm: React.FC = () => {
 
       <div className="p-4">
         <EnhancedTable
+          storageKey="accounting-transaction-form-table"
           data={rows}
           columns={LINE_COLUMNS}
           getItemId={(item) => item.key}

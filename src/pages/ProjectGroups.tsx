@@ -269,6 +269,7 @@ const ProjectGroups = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="project-groups-table"
                 data={groups}
                 columns={columns}
                 renderActions={renderActions}

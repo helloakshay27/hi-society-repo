@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Button as MuiButton } from '@mui/material';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -513,7 +513,6 @@ export default function OffersList() {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
-      <Toaster position="top-right" richColors closeButton />
       
       {/* Draft Detection Modal */}
       <Dialog open={showDraftModal} onClose={() => setShowDraftModal(false)}>

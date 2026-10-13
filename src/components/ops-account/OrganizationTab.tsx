@@ -98,7 +98,6 @@ interface OrganizationTabProps {
 
 // Column configuration for the enhanced table
 const columns: ColumnConfig[] = [
-
   {
     key: "actions",
     label: "Action",
@@ -207,7 +206,9 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
       "sumitra.patil@lockated.com",
       "komalshinde0101@lockated.com",
       "demo@lockated.com",
-      "dineshshinde6666@gmail.com"
+      "dineshshinde6666@gmail.com",
+      "dinesh.shinde@lockated.com",
+      "tejas.chaudhari@lockated.com",
     ];
     setCanEditOrganization(allowedEmails.includes(userEmail));
   };
@@ -495,10 +496,11 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
       <div className="flex items-center gap-2">
         <button
           onClick={() => org?.id && org?.active && handleView(org.id)}
-          className={`p-1 rounded ${org?.active
-            ? "text-blue-600 hover:bg-blue-50 cursor-pointer"
-            : "text-gray-400 cursor-not-allowed"
-            }`}
+          className={`p-1 rounded ${
+            org?.active
+              ? "text-blue-600 hover:bg-blue-50 cursor-pointer"
+              : "text-gray-400 cursor-not-allowed"
+          }`}
           title={org?.active ? "View" : "Inactive organization - View disabled"}
           disabled={!org?.id || !org?.active}
         >
@@ -667,7 +669,9 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(formatApiErrorMessage(errorData, "Failed to delete organization"));
+        throw new Error(
+          formatApiErrorMessage(errorData, "Failed to delete organization")
+        );
       }
 
       toast.success("Organization deleted successfully!", {
@@ -698,27 +702,27 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
       </header>
 
       <>
-          <EnhancedTaskTable
-            data={displayedData}
-            columns={columns}
-            renderRow={renderRow}
-            storageKey="organization-dashboard-v1"
-            hideTableExport={true}
-            hideTableSearch={false}
-            enableSearch={true}
-            searchTerm={searchQuery}
-            onSearchChange={handleSearch}
-            onFilterClick={() => setIsFilterOpen(true)}
-            loading={loading}
-            leftActions={
-              <Button
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => setIsAddModalOpen(true)}
-                disabled={!canEditOrganization}
-              >
-                <Plus className="w-4 h-4 mr-2" /> Add Organization
-              </Button>
-            }
+        <EnhancedTaskTable
+          data={displayedData}
+          columns={columns}
+          renderRow={renderRow}
+          storageKey="organization-dashboard-v1"
+          hideTableExport={true}
+          hideTableSearch={false}
+          enableSearch={true}
+          searchTerm={searchQuery}
+          onSearchChange={handleSearch}
+          onFilterClick={() => setIsFilterOpen(true)}
+          loading={loading}
+          leftActions={
+            <Button
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setIsAddModalOpen(true)}
+              disabled={!canEditOrganization}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add Organization
+            </Button>
+          }
           // rightActions={(
           //   <div className="flex items-center gap-2">
           //     <Button
@@ -740,18 +744,18 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
           //     </Button>
           //   </div>
           // )}
-          />
+        />
 
-          <TicketPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalRecords={totalRecords}
-            perPage={perPage}
-            isLoading={loading}
-            onPageChange={handlePageChange}
-            onPerPageChange={handlePerPageChange}
-          />
-        </>
+        <TicketPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
+          perPage={perPage}
+          isLoading={loading}
+          onPageChange={handlePageChange}
+          onPerPageChange={handlePerPageChange}
+        />
+      </>
 
       {/* Modals */}
       <AddOrganizationModal

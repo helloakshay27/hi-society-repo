@@ -277,6 +277,7 @@ const LockRoleList = () => {
         {/* Search and Add Button - Above Tables */}
         <div className="mb-4">
           <EnhancedTable
+            storageKey="lock-role-list-table"
             data={[]}
             columns={[]}
             renderCell={() => null}

@@ -400,6 +400,7 @@ export const AddMembershipPlanPage = () => {
             </div>
 
             <EnhancedTaskTable
+              storageKey="add-membership-plan-page-table"
               data={amenities}
               hideColumnsButton={true}
               columns={[

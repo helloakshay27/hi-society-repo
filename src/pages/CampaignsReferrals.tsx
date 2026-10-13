@@ -70,7 +70,23 @@ const CampaignsReferrals: React.FC = () => {
     }
   };
 
+  // Age = days since created_at
+  const getAge = (dateString: string) => {
+    try {
+      const created = new Date(dateString);
+      const now = new Date();
+      const diffMs = now.getTime() - created.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) return "Today";
+      if (diffDays === 1) return "1 day";
+      return `${diffDays} days`;
+    } catch {
+      return "-";
+    }
+  };
+
   const columns: ColumnConfig[] = [
+    // ── Primary columns (always visible) ──────────────────────
     {
       key: "actions",
       label: "Actions",
@@ -79,15 +95,8 @@ const CampaignsReferrals: React.FC = () => {
       defaultVisible: true,
     },
     {
-      key: "id",
-      label: "ID",
-      sortable: true,
-      draggable: true,
-      defaultVisible: true,
-    },
-    {
       key: "ref_name",
-      label: "Refer Name",
+      label: "Referrer",
       sortable: true,
       draggable: true,
       defaultVisible: true,
@@ -100,23 +109,16 @@ const CampaignsReferrals: React.FC = () => {
       defaultVisible: true,
     },
     {
-      key: "ref_phone",
-      label: "Mobile",
-      sortable: true,
-      draggable: true,
-      defaultVisible: true,
-    },
-    {
-      key: "client_email",
-      label: "Client Email",
-      sortable: true,
-      draggable: true,
-      defaultVisible: true,
-    },
-    {
       key: "status",
       label: "Status",
       sortable: true,
+      draggable: true,
+      defaultVisible: true,
+    },
+    {
+      key: "age",
+      label: "Age",
+      sortable: false,
       draggable: true,
       defaultVisible: true,
     },
@@ -127,7 +129,37 @@ const CampaignsReferrals: React.FC = () => {
       draggable: true,
       defaultVisible: true,
     },
+    // ── Secondary columns (hidden by default, toggle via ⋮ columns) ──
+    {
+      key: "id",
+      label: "ID",
+      sortable: true,
+      draggable: true,
+      defaultVisible: false,
+    },
+    {
+      key: "ref_phone",
+      label: "Mobile",
+      sortable: true,
+      draggable: true,
+      defaultVisible: false,
+    },
+    {
+      key: "client_email",
+      label: "Client Email",
+      sortable: true,
+      draggable: true,
+      defaultVisible: false,
+    },
   ];
+
+  const getStatusStyle = (status: string) => {
+    const s = (status || "").toLowerCase();
+    if (s === "hot") return "bg-red-100 text-red-700";
+    if (s === "warm") return "bg-orange-100 text-orange-700";
+    if (s === "cold") return "bg-blue-100 text-blue-700";
+    return "bg-green-100 text-green-700";
+  };
 
   const renderCell = (item: CampaignReferral, columnKey: string) => {
     switch (columnKey) {
@@ -146,28 +178,38 @@ const CampaignsReferrals: React.FC = () => {
             )}
           </div>
         );
-      case "id":
-        return <span className="text-sm font-medium">#{item.id}</span>;
+      // ── Primary columns ────────────────────────────────────
       case "ref_name":
-        return <span className="text-sm">{item.ref_name || "-"}</span>;
+        return (
+          <div>
+            <p className="text-sm font-medium text-gray-900">{item.ref_name || "-"}</p>
+          </div>
+        );
       case "project_name":
         return <span className="text-sm">{item.project_name || "-"}</span>;
-      case "ref_phone":
-        return <span className="text-sm">{item.ref_phone || "-"}</span>;
-      case "client_email":
-        return <span className="text-sm">{item.client_email || "-"}</span>;
       case "status":
         return item.status ? (
-          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusStyle(item.status)}`}>
             {item.status}
           </span>
         ) : (
           <span className="text-sm text-gray-400">-</span>
         );
+      case "age":
+        return (
+          <span className="text-sm text-gray-500">{item.created_at ? getAge(item.created_at) : "-"}</span>
+        );
       case "created_at":
         return (
-          <span className="text-sm">{formatDate(item.created_at)}</span>
+          <span className="text-sm text-gray-500">{formatDate(item.created_at)}</span>
         );
+      // ── Secondary columns (hidden by default) ──────────────
+      case "id":
+        return <span className="text-sm font-mono text-gray-500">#{item.id}</span>;
+      case "ref_phone":
+        return <span className="text-sm">{item.ref_phone || "-"}</span>;
+      case "client_email":
+        return <span className="text-sm text-gray-500">{item.client_email || "-"}</span>;
       default:
         return null;
     }

@@ -855,6 +855,7 @@ export const ViewFMUserPage = () => {
         !isClubSite && (
           <div className="mt-6">
             <EnhancedTable
+              storageKey="view-fm-user-page-table"
               data={attendanceData}
               columns={attendanceColumns}
               renderCell={renderCell}

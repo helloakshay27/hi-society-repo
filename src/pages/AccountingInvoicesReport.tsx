@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface InvoiceReportRow {
   sr: number;
@@ -250,6 +251,11 @@ const AccountingInvoicesReport: React.FC = () => {
   const handleCloseFilter = () => setFilterDialogOpen(false);
 
   const handleApplyFilters = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'invoices_report', screen_name: 'AccountingInvoicesReport' });
+  }, []);
+
     const next = { ...filterValues };
     setAppliedFilters(next);
     fetchInvoiceReport(next);

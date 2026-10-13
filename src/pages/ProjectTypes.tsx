@@ -202,6 +202,7 @@ const ProjectTypes = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="project-types-table"
                 data={projectTypes}
                 columns={columns}
                 renderActions={renderActions}

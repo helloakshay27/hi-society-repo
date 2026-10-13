@@ -21,18 +21,13 @@ export const CampaignsSidebar: React.FC = () => {
   const location = useLocation();
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
 
-  const campaignsMenuItems: MenuItem[] = [
+  // Operational items — day-to-day referral workflows
+  const operationalItems: MenuItem[] = [
     {
       id: "referrals",
       label: "Referrals",
       icon: Gift,
       path: "/campaigns/referrals",
-    },
-    {
-      id: "referral-setup",
-      label: "Referral-Setup",
-      icon: Settings,
-      path: "/campaigns/referral-setup",
     },
     {
       id: "other-project",
@@ -42,11 +37,46 @@ export const CampaignsSidebar: React.FC = () => {
     },
   ];
 
+  // Configuration items — grouped under Setup
+  const setupItems: MenuItem[] = [
+    {
+      id: "referral-setup",
+      label: "Referral Setup",
+      icon: Settings,
+      path: "/campaigns/referral-setup",
+    },
+  ];
+
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");
 
   const handleNavigation = (path: string) => {
     navigate(path);
+  };
+
+  const renderMenuItem = (item: MenuItem) => {
+    const active = isActive(item.path);
+    const Icon = item.icon;
+    return (
+      <div key={item.id}>
+        <button
+          onClick={() => handleNavigation(item.path)}
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+          title={item.label}
+        >
+          {/* Active Indicator */}
+          {active && (
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+          )}
+          {/* Icon */}
+          <Icon className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+          {/* Label */}
+          {!isSidebarCollapsed && (
+            <span className="truncate">{item.label}</span>
+          )}
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -74,35 +104,24 @@ export const CampaignsSidebar: React.FC = () => {
         {/* Spacer */}
         <div className="w-full h-4 bg-[#f6f4ee] border-[#e5e1d8] mb-2 mt-4" />
 
-        {/* Menu */}
-        <nav className="space-y-2">
-          {campaignsMenuItems.map((item) => {
-            const active = isActive(item.path);
-            const Icon = item.icon;
+        {/* Operational nav */}
+        <nav className="space-y-1">
+          {operationalItems.map(renderMenuItem)}
+        </nav>
 
-            return (
-              <div key={item.id}>
-                <button
-                  onClick={() => handleNavigation(item.path)}
-                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-                  title={item.label}
-                >
-                  {/* Active Indicator */}
-                  {active && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
-                  )}
+        {/* Setup section divider + label */}
+        <div className="mt-4 mb-1">
+          <div className="border-t border-[#D5DbDB]" />
+          {!isSidebarCollapsed && (
+            <p className="mt-2 mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400 select-none">
+              Setup
+            </p>
+          )}
+        </div>
 
-                  {/* Icon */}
-                  <Icon className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
-
-                  {/* Label */}
-                  {!isSidebarCollapsed && (
-                    <span className="truncate">{item.label}</span>
-                  )}
-                </button>
-              </div>
-            );
-          })}
+        {/* Setup nav */}
+        <nav className="space-y-1">
+          {setupItems.map(renderMenuItem)}
         </nav>
       </div>
     </div>

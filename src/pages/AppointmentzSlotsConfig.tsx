@@ -428,18 +428,18 @@ const AppointmentzSlotsConfig = () => {
 
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
-    { key: "rmUser", label: "Rm User", sortable: true },
-    { key: "startDate", label: "Start Date", sortable: true },
-    { key: "endDate", label: "End Date", sortable: true },
+    { key: "rmUser", label: "RM User", sortable: true },
+    { key: "startDate", label: "Effective From", sortable: true },
+    { key: "endDate", label: "Effective To", sortable: true },
     { key: "startTime", label: "Start Time", sortable: true },
     { key: "endTime", label: "End Time", sortable: true },
-    { key: "mon", label: "M", sortable: false },
-    { key: "tue", label: "T", sortable: false },
-    { key: "wed", label: "W", sortable: false },
-    { key: "thu", label: "T", sortable: false },
-    { key: "fri", label: "F", sortable: false },
-    { key: "sat", label: "S", sortable: false },
-    { key: "sun", label: "S", sortable: false },
+    { key: "mon", label: "Mon", sortable: false },
+    { key: "tue", label: "Tue", sortable: false },
+    { key: "wed", label: "Wed", sortable: false },
+    { key: "thu", label: "Thu", sortable: false },
+    { key: "fri", label: "Fri", sortable: false },
+    { key: "sat", label: "Sat", sortable: false },
+    { key: "sun", label: "Sun", sortable: false },
   ];
 
   const renderCell = (item: SlotConfig, columnKey: string) => {
@@ -464,16 +464,19 @@ const AppointmentzSlotsConfig = () => {
       case "fri":
       case "sat":
       case "sun": {
-        const isActive = item[columnKey as keyof SlotConfig] === 1;
+        const val = item[columnKey as keyof SlotConfig];
+        const isActive = val === 1 || Number(val) > 0;
+        const dayLabel = columnKey.charAt(0).toUpperCase() + columnKey.slice(1);
         return (
           <div
-            className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+            className={`min-w-[34px] h-6 px-1.5 rounded flex items-center justify-center text-[10px] font-bold ${
               isActive
-                ? "bg-green-100 text-green-700 border border-green-200"
+                ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                 : "bg-gray-100 text-gray-400 border border-gray-200"
             }`}
+            title={`${dayLabel}: ${isActive ? `${val} slot(s) active` : "Disabled"}`}
           >
-            {columnKey.toUpperCase().substring(0, 1)}
+            {dayLabel}
           </div>
         );
       }
@@ -489,6 +492,7 @@ const AppointmentzSlotsConfig = () => {
       </div>
 
       <EnhancedTable
+        storageKey="appointmentz-slots-config-table"
         data={paginatedData}
         columns={columns}
         renderCell={renderCell}
@@ -752,18 +756,33 @@ const AppointmentzSlotsConfig = () => {
             {/* Row 3: Days of Week */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-gray-700 block">
-                Slots Count per Day
+                Slots Capacity per Weekday
               </label>
-              <div className="flex flex-wrap items-center gap-3">
-                {["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((dayKey) => {
-                  const label = dayKey.toUpperCase().substring(0, 1);
+              <div className="grid grid-cols-7 gap-2">
+                {[
+                  { key: "mon", label: "Mon" },
+                  { key: "tue", label: "Tue" },
+                  { key: "wed", label: "Wed" },
+                  { key: "thu", label: "Thu" },
+                  { key: "fri", label: "Fri" },
+                  { key: "sat", label: "Sat" },
+                  { key: "sun", label: "Sun" },
+                ].map(({ key: dayKey, label }) => {
+                  const isWeekend = dayKey === "sun" || dayKey === "sat";
                   return (
-                    <div key={dayKey} className="flex flex-col items-center gap-1 w-12">
-                      <span className={`text-xs font-bold ${dayKey === "sun" ? "text-[#C72030]" : "text-gray-700"}`}>
+                    <div
+                      key={dayKey}
+                      className="flex flex-col items-center gap-1.5 p-2 bg-[#FAF9F6] border border-[#EBE8E1] rounded-lg"
+                    >
+                      <span
+                        className={`text-xs font-bold ${
+                          isWeekend ? "text-[#C72030]" : "text-gray-700"
+                        }`}
+                      >
                         {label}
                       </span>
                       <Input
-                        className="h-8 px-1 text-center border-[#D5DbDB] text-xs font-semibold"
+                        className="h-8 px-1 text-center bg-white border-[#D5DbDB] text-xs font-semibold focus-visible:ring-[#C72030]"
                         value={formData.days[dayKey as keyof typeof formData.days]}
                         onChange={(e) =>
                           handleDayChange(dayKey as keyof typeof formData.days, e.target.value)

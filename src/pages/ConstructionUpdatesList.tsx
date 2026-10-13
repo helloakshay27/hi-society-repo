@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Toaster } from '@/components/ui/sonner';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
@@ -282,6 +281,7 @@ const ConstructionUpdatesList = () => {
         </div>
         <div className="p-6">
           <EnhancedTable
+            storageKey="construction-updates-list-table"
             data={constructionUpdates}
             columns={columns}
             renderCell={renderCell}
@@ -334,7 +334,6 @@ const ConstructionUpdatesList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       <div className="w-full">
         {renderListTab()}
       </div>

@@ -1346,6 +1346,7 @@ export const BookingSetupDetailClubPage = () => {
             </div>
 
             <EnhancedTable
+              storageKey="amenity-booking-setup-club-details-table"
               data={formData.blockDays}
               columns={blockDayColumns}
               renderCell={renderBlockDayCell}

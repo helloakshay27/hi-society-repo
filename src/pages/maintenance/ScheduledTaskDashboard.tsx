@@ -68,7 +68,6 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
-import { Toaster } from "sonner";
 import { AIAssistantWidget } from "@/components/AIAssistantWidget";
 import { DashboardAIAssistant } from "@/components/DashboardAIAssistant";
 import { TaskExportModal } from "@/components/TaskExportModal";
@@ -1629,8 +1628,6 @@ export const ScheduledTaskDashboard = () => {
           })()}
         />
 
-        {/* Sonner Toaster for notifications */}
-        <Toaster position="top-right" richColors closeButton />
       </div>
 
       {/* Task Export Modal */}

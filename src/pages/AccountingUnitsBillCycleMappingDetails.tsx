@@ -5,6 +5,7 @@ import { ArrowLeft, Building2, Logs } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LogsTimeline, LogEntry } from "@/components/LogTimeline";
 import { API_CONFIG } from "@/config/apiConfig";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface MappingDetail {
   id: number;
@@ -84,6 +85,11 @@ const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value
 );
 
 const AccountingUnitsBillCycleMappingDetails: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'units_bill_cycle_mapping_details', screen_name: 'AccountingUnitsBillCycleMappingDetails' });
+  }, [onAccountingViewed]);
+
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();

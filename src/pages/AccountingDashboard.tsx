@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Badge } from "@/components/ui/badge";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 interface AccountingData {
   id: number;
@@ -26,6 +27,11 @@ interface AccountingData {
 }
 
 const AccountingDashboard = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'accounting_dashboard', screen_name: 'AccountingDashboard' });
+  }, []);
+
   const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   

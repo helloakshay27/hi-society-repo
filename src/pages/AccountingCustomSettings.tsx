@@ -17,6 +17,7 @@ import { FormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } fro
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { toast } from "sonner";
 import { Upload, Plus, Pencil, Trash2, Download, X } from "lucide-react";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 type SettingsTab = "invoices" | "receipts";
 type NumberMode = "auto" | "manual";
@@ -339,6 +340,11 @@ const AccountingCustomSettings: React.FC = () => {
   const handleLogoUploadClick = () => fileInputRef.current?.click();
 
   const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'custom_settings', screen_name: 'AccountingCustomSettings' });
+  }, []);
+
     const file = e.target.files?.[0] || null;
     setLogoFile((prev) => ({ ...prev, [activeTab]: file }));
   };

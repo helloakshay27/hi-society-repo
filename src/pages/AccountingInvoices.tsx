@@ -21,6 +21,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 import {
   AccountingInvoiceFilterDialog,
   AccountingInvoiceFilters,
@@ -335,6 +336,11 @@ const AccountingInvoices: React.FC = () => {
   ];
 
   const handleApplyFilters = (filters: AccountingInvoiceFilters) => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'invoices_list', screen_name: 'AccountingInvoices' });
+  }, []);
+
     setAppliedFilters(filters);
     setCurrentPage(1);
     setSelectedIds([]);

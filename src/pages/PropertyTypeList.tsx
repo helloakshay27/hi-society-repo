@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { Plus, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -287,6 +286,7 @@ variant="ghost"
   const renderListTab = () => (
     <div className="space-y-4">
           <EnhancedTable
+            storageKey="property-type-list-table"
             data={propertyTypes}
             columns={columns}
             renderCell={renderCell}
@@ -325,7 +325,6 @@ variant="ghost"
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       <div className="w-full">
         {renderListTab()}
       </div>

@@ -464,6 +464,7 @@ const ARAgingSummaryReport: React.FC = () => {
           </div>
 
           <EnhancedTaskTable
+            storageKey="ar-aging-summary-report-table"
             data={allDetailRows}
             columns={detailColumns}
             renderRow={renderDetailRow}
@@ -535,6 +536,7 @@ const ARAgingSummaryReport: React.FC = () => {
         </div>
 
         <EnhancedTaskTable
+          storageKey="ar-aging-summary-report-table-2"
           data={tableData}
           columns={summaryColumns}
           renderRow={renderSummaryRow}

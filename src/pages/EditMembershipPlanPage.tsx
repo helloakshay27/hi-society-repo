@@ -473,6 +473,7 @@ export const EditMembershipPlanPage = () => {
             </div>
 
             <EnhancedTaskTable
+              storageKey="edit-membership-plan-page-table"
               data={amenities}
               hideColumnsButton={true}
               pagination={true}

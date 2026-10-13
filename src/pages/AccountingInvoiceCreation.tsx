@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 const CHARGE_COLUMNS: ColumnConfig[] = [
   { key: "ledgerId", label: "Ledger", sortable: false },
@@ -271,6 +272,12 @@ const FormSelect: React.FC<{
 
 const AccountingInvoiceCreation: React.FC = () => {
   const navigate = useNavigate();
+  const { onAccountingViewed, onAccountingCreated } = useAccountingEvents();
+
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'invoice_creation', screen_name: 'AccountingInvoiceCreation' });;
+  }, []);
+
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
   const [billNumber, setBillNumber] = useState("");
@@ -579,6 +586,13 @@ const AccountingInvoiceCreation: React.FC = () => {
         },
       });
       toast.success("Invoice created successfully");
+      
+      onAccountingCreated({
+        accounting_id: billNumber || 'auto-generated',
+        type: 'invoice',
+        status: 'success'
+      });
+
       navigate("/accounting/invoices");
     } catch (error) {
       console.error("Error creating invoice:", error);
@@ -791,6 +805,7 @@ const AccountingInvoiceCreation: React.FC = () => {
 
           <div className="p-4">
             <EnhancedTable
+              storageKey="accounting-invoice-creation-table"
               data={charges}
               columns={CHARGE_COLUMNS}
               getItemId={(item) => item.key}

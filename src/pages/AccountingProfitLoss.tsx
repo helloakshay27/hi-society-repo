@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { NotepadText } from "lucide-react";
 import { API_CONFIG } from "@/config/apiConfig";
 import { StatementRow, formatAmount } from "@/utils/financialStatement";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 // Real response shape returned by GET /lock_account_transactions/pnl —
 // mirrors the Balance Sheet API (AccountingBalanceSheet.tsx): each side
@@ -55,6 +56,11 @@ const buildSideRows = (side: ApiSide | undefined, total: number): StatementRow[]
   const rows: StatementRow[] = [];
 
   const walkGroup = (group: ApiGroup, level: number) => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'profit_loss', screen_name: 'AccountingProfitLoss' });;
+  }, []);
+
     rows.push({ level, label: group.group_name, amount: group.group_total, isHeader: level === 0 });
     (group.children || []).forEach((child) => walkGroup(child, level + 1));
     (group.ledgers || []).forEach((ledger) => {

@@ -152,6 +152,7 @@ const ModulesManagement = () => {
                 </div>
             </div>
             <EnhancedTable
+                storageKey="modules-management-table"
                 data={modules}
                 columns={columns}
                 renderCell={renderCell}

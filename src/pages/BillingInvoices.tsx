@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, FileText, TrendingUp, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
-import { Toaster } from '@/components/ui/sonner';
 import { BillingInvoicesFilterModal } from '@/components/BillingInvoicesFilterModal';
 import axios from 'axios';
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
@@ -217,7 +216,6 @@ export default function BillingInvoices() {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
 
       {/* Header with Month Selector */}
       <div className="flex justify-between items-center mb-6">
@@ -274,6 +272,7 @@ export default function BillingInvoices() {
       {/* Invoices Table */}
       <div className="">
         <EnhancedTable
+          storageKey="billing-invoices-table"
           data={paginatedInvoices}
           columns={columns}
           renderCell={renderCell}

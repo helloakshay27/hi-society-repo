@@ -130,6 +130,7 @@ const ProjectTemplates = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="project-templates-table"
                 data={templates}
                 columns={columns}
                 renderActions={renderActions}

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Plus, Eye } from 'lucide-react';
 import { toast } from 'sonner';
-import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
@@ -340,7 +339,6 @@ const RuleEngineList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster />
       {renderListTab()}
     </div>
   );

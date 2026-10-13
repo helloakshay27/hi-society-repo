@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { getFullUrl, getAuthenticatedFetchOptions } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
@@ -284,9 +283,9 @@ variant="ghost"
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       <div className="space-y-6">
         <EnhancedTable
+          storageKey="pricing-rule-list-table"
           data={pricingRules}
           columns={columns}
           renderCell={renderCell}

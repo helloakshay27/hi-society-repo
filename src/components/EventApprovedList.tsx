@@ -159,6 +159,7 @@ const EventApprovedList = () => {
                 </div>
             ) : (
                 <EnhancedTable
+                    storageKey="event-approved-list-table"
                     data={data}
                     columns={columns}
                     renderCell={renderCell}

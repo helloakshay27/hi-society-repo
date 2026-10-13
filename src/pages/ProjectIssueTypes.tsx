@@ -255,6 +255,7 @@ const ProjectIssueTypes = () => {
     return (
         <div className="p-6">
             <EnhancedTable
+                storageKey="project-issue-types-table"
                 data={issueTypes}
                 columns={columns}
                 renderActions={renderActions}

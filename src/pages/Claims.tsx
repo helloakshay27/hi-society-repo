@@ -308,6 +308,7 @@ const Claims = () => {
                 </p>
             </div>
             <EnhancedTable
+                storageKey="claims-table"
                 data={paginatedClaims}
                 columns={columns}
                 renderCell={renderCell}

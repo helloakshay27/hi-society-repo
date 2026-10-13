@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { StatsCard } from "@/components/StatsCard";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Toaster } from "@/components/ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import axios from "axios";
 import { toast } from "sonner";
@@ -469,7 +468,6 @@ const AggregatorInventorySection = () => {
 
     return (
         <div className="p-6 space-y-6 bg-white min-h-screen">
-            <Toaster position="top-right" richColors closeButton />
 
             {/* Header */}
             <div className="flex justify-between items-center">

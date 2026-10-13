@@ -10,6 +10,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Edit, Eye, Plus, X } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
 const CHARGES_PREVIEW_COUNT = 2;
 
@@ -60,6 +61,11 @@ const formatDate = (value?: string) => {
 };
 
 const AccountingBillCycles: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'bill_cycles_list', screen_name: 'AccountingBillCycles' });
+  }, [onAccountingViewed]);
+
   const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
   const [cycles, setCycles] = useState<SocietyBillCycle[]>([]);

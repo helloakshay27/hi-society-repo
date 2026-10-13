@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit, Loader2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -187,7 +186,6 @@ export const APNSList = () => {
 
   return (
     <div className="space-y-6 p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
 
       <div className="flex justify-between items-center">
         <h1 className="text-xl lg:text-2xl font-bold text-[#1a1a1a]">

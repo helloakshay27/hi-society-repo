@@ -564,17 +564,8 @@ export function EnhancedTable<T extends Record<string, any>>({
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
+      // useEnhancedTable saves the full column order to localStorage
       reorderColumns(String(active.id), String(over.id));
-      // Save the new column order to localStorage
-      if (storageKey) {
-        const newOrder = columnIds.filter((id) => id !== active.id);
-        const overIndex = newOrder.indexOf(String(over.id));
-        newOrder.splice(overIndex, 0, String(active.id));
-        localStorage.setItem(
-          `${storageKey}-column-order`,
-          JSON.stringify(newOrder)
-        );
-      }
     }
   };
 
@@ -909,7 +900,7 @@ export function EnhancedTable<T extends Record<string, any>>({
               variant="outline"
               size="sm"
               className={cn(
-                "flex items-center gap-2 rounded-lg",
+                "flex items-center gap-2 rounded-lg w-9",
                 filterButtonClassName
               )}
               onClick={onFilterClick}
@@ -933,7 +924,7 @@ export function EnhancedTable<T extends Record<string, any>>({
               variant="outline"
               size="sm"
               onClick={handleExportClick}
-              className="flex items-center gap-2 rounded-lg"
+              className="flex items-center gap-2 rounded-lg w-9"
               title="Export"
             >
               <Download className="w-4 h-4" />

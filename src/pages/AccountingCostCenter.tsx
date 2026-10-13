@@ -8,6 +8,7 @@ import { API_CONFIG } from "@/config/apiConfig";
 import { Plus, Eye, Edit, RotateCw, Trash2 } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { AddCostCentreModal, CostCentre } from "@/components/AddCostCentreModal";
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -39,6 +40,11 @@ const columns: ColumnConfig[] = [
 ];
 
 const AccountingCostCenter: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  useEffect(() => {
+    onAccountingViewed({ accounting_id: 'cost_center_list', screen_name: 'AccountingCostCenter' });
+  }, [onAccountingViewed]);
+
   const { shouldShow } = useDynamicPermissions();
   const [costCentres, setCostCentres] = useState<CostCentre[]>([]);
   const [loading, setLoading] = useState(false);

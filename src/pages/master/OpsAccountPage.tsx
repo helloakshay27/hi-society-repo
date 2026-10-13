@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 import {
   OrganizationTab,
   CompanyTab,
@@ -16,6 +17,11 @@ import {
 const VALID_TABS = ['organization', 'company', 'country', 'region', 'zone', 'society', 'site'];
 
 export const OpsAccountPage = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'ops_account', screen_name: 'OpsAccountPage' });
+  }, []);
+
   // The active tab lives in the URL (not just component state) so that
   // navigating away to a details/edit page and back (e.g. via the page's
   // "Back" button, which returns to this same base URL) restores the tab

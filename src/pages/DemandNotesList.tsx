@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 // import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
@@ -265,7 +264,6 @@ const DemandNotesList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       {renderListTab()}
     </div>
   );

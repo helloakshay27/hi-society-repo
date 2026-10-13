@@ -141,15 +141,15 @@ const fieldStyles = {
       borderColor: '#ddd',
     },
     '&:hover fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#D97757',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#D97757',
     },
   },
   '& .MuiInputLabel-root': {
     '&.Mui-focused': {
-      color: '#C72030',
+      color: '#D97757',
     },
   },
 };
@@ -1475,7 +1475,7 @@ export const AddTicketDashboard = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen add-helpdesk-ticket-page">
+    <div className="p-6 bg-[#FDFDFB] min-h-screen add-helpdesk-ticket-page">
       <style>{`.add-helpdesk-ticket-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Header */}
       <div className="mb-8">
@@ -1528,11 +1528,11 @@ export const AddTicketDashboard = () => {
 
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
         {/* Section 1: Requestor Details */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                <User size={16} color="#C72030" />
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                <User size={14} color="#1A1A18" />
               </span>
               Requestor Details
             </h2>
@@ -1551,8 +1551,8 @@ export const AddTicketDashboard = () => {
                       value="self"
                       checked={onBehalfOf === 'self'}
                       onChange={(e) => setOnBehalfOf(e.target.value)}
-                      className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
+                      className="w-4 h-4 text-[#D97757] border-gray-300 focus:ring-[#D97757]"
+                      style={{ accentColor: '#D97757' }}
                     />
                     <label htmlFor="behalf-admin" className="text-sm font-medium">{isSupervisorOrg ? 'Supervisor' : 'Admin'}</label>
                   </div>
@@ -1564,8 +1564,8 @@ export const AddTicketDashboard = () => {
                       value="occupant-user"
                       checked={onBehalfOf === 'occupant-user'}
                       onChange={(e) => setOnBehalfOf(e.target.value)}
-                      className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
+                      className="w-4 h-4 text-[#D97757] border-gray-300 focus:ring-[#D97757]"
+                      style={{ accentColor: '#D97757' }}
                     />
                     <label htmlFor="behalf-user" className="text-sm font-medium">User</label>
                   </div>
@@ -2131,54 +2131,74 @@ export const AddTicketDashboard = () => {
                 </>
               )}
 
-              {/* File Upload Section */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer hover:border-[#C72030] transition-colors">
-                <input
-                  type="file"
-                  id="file-upload"
-                  multiple
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  accept="image/*,.pdf,.doc,.docx"
-                />
-                <label htmlFor="file-upload" className="cursor-pointer text-center">
-
-                  <p className="text-sm text-gray-600">Click to upload files</p>
-                </label>
-                {attachedFiles.length > 0 && (
-                  <div className="mt-4 w-full">
-                    <p className="text-sm font-medium mb-2">Attached Files:</p>
-                    <ul className="space-y-2">
-                      {attachedFiles.map((file, index) => (
-                        <li key={index} className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded">
-                          <span>{file.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeFile(index)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            Remove
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
 
+        {/* Section 2: Attachments */}
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                <Paperclip size={14} color="#1A1A18" />
+              </span>
+              Attachments
+            </h2>
+          </div>
+          <div className="p-6">
+      <div className="border-2 border-dashed border-[#EBE9E2] rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-[#D97757] transition-colors">
+        <input
+          type="file"
+          id="file-upload"
+          multiple
+          onChange={handleFileUpload}
+          className="hidden"
+          accept="image/*,.pdf,.doc,.docx"
+        />
+        <label htmlFor="file-upload" className="cursor-pointer text-center">
+
+          <p className="text-sm text-gray-600">Click to upload files</p>
+        </label>
+        {attachedFiles.length > 0 && (
+          <div className="mt-4 w-full">
+            <p className="text-sm font-medium mb-2">Attached Files:</p>
+            <ul className="space-y-2">
+              {attachedFiles.map((file, index) => (
+                <li key={index} className="flex items-center justify-between text-sm bg-[#F5F4F0] p-2 rounded-lg">
+                  <span>{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(index)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+          </div>
+        </div>
+
         {/* Submit Button */}
-        <div className="flex justify-center pb-8">
-          <Button
+        <div className="flex justify-end gap-3 pb-8">
+          <button
+            type="button"
+            onClick={handleGoBack}
+            disabled={isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+          >
+            Cancel
+          </button>
+          <button
             type="submit"
             disabled={isSubmitting}
-            variant="ghost"
-            className="btn-primary h-9 px-4 text-sm font-medium"
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
           >
             {isSubmitting ? 'Submitting...' : 'Submit'}
-          </Button>
+          </button>
         </div>
 
         {/* Commented out sections for future use */}
