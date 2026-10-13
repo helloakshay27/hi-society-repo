@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Eye, Plus, Download, X, Loader2, Edit } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Eye, Plus, X, Loader2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,15 +17,12 @@ import {
 import { ExportByCentreModal } from "@/components/ExportByCentreModal";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import type { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import {
-  exportReport,
-  fetchFacilityBookingsData,
-  filterBookings,
-} from "@/store/slices/facilityBookingsSlice";
+import { useAppDispatch } from "@/store/hooks";
+import { filterBookings } from "@/store/slices/facilityBookingsSlice";
 import type { BookingData } from "@/services/bookingService";
 import { toast } from "sonner";
-import { format, parse } from "date-fns";
+import { format, isValid, parse } from "date-fns";
+import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
@@ -184,6 +181,129 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
+// URL query keys for the bookings list (page, search and applied filters)
+const URL_KEYS = {
+  page: "page",
+  search: "search",
+  facility: "facility",
+  status: "status",
+  paymentStatus: "payment_status",
+  bookedOnFrom: "booked_on_from",
+  bookedOnTo: "booked_on_to",
+  scheduledFrom: "scheduled_from",
+  scheduledTo: "scheduled_to",
+} as const;
+
+// Free-text search param sent to /crm/admin/facility_bookings.json
+const BOOKING_SEARCH_PARAM = "q[search_all_fields_cont]";
+const PAGE_SIZE = 10;
+
+interface AppliedBookingFilters {
+  page: number;
+  search: string;
+  facilityName: string;
+  status: string;
+  paymentStatus: string;
+  // The modal's "Booked On" inputs use scheduledDate*, "Scheduled On" uses createdOnDate*
+  scheduledDateFrom: string;
+  scheduledDateTo: string;
+  createdOnDateFrom: string;
+  createdOnDateTo: string;
+}
+
+// yyyy-MM-dd only; anything else in the URL is ignored rather than crashing date-fns
+const readUrlDate = (params: URLSearchParams, key: string) => {
+  const value = params.get(key) || "";
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    isValid(parse(value, "yyyy-MM-dd", new Date()))
+    ? value
+    : "";
+};
+
+const readAppliedFromUrl = (params: URLSearchParams): AppliedBookingFilters => ({
+  page: Math.max(1, Math.floor(Number(params.get(URL_KEYS.page))) || 1),
+  search: (params.get(URL_KEYS.search) || "").trim(),
+  facilityName: params.get(URL_KEYS.facility) || "",
+  status: params.get(URL_KEYS.status) || "",
+  paymentStatus: params.get(URL_KEYS.paymentStatus) || "",
+  scheduledDateFrom: readUrlDate(params, URL_KEYS.bookedOnFrom),
+  scheduledDateTo: readUrlDate(params, URL_KEYS.bookedOnTo),
+  createdOnDateFrom: readUrlDate(params, URL_KEYS.scheduledFrom),
+  createdOnDateTo: readUrlDate(params, URL_KEYS.scheduledTo),
+});
+
+const toApiDate = (value: string) =>
+  value ? format(parse(value, "yyyy-MM-dd", new Date()), "MM/dd/yyyy") : null;
+
+// q[...] filters shared by the list fetch and the export, so both always match
+const buildFilterParams = (f: AppliedBookingFilters): Record<string, string> => {
+  const formatedScheduleStartDate = toApiDate(f.scheduledDateFrom);
+  const formatedScheduleEndDate = toApiDate(f.scheduledDateTo);
+  const formatedCreatedStartDate = toApiDate(f.createdOnDateFrom);
+  const formatedCreatedEndDate = toApiDate(f.createdOnDateTo);
+
+  return {
+    ...(f.facilityName && { "q[facility_id_in]": f.facilityName }),
+    ...(f.status && { "q[current_status_cont]": f.status }),
+    ...(f.paymentStatus && { "q[pg_state_eq]": f.paymentStatus }),
+    ...(formatedCreatedStartDate &&
+      formatedCreatedEndDate && {
+      "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
+    }),
+    ...(formatedScheduleStartDate &&
+      formatedScheduleEndDate && {
+      "q[date_range1]": `${formatedScheduleStartDate} - ${formatedScheduleEndDate}`,
+    }),
+  };
+};
+
+const formatBookingDate = (dateString: string): string => {
+  if (!dateString) return '-';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  } catch (error) {
+    return '-';
+  }
+};
+
+const safeValue = (value: any): string => {
+  if (value === 0) return "0";
+  return value?.toString().trim() ? value.toString() : "-";
+};
+
+// API booking -> table row
+const toBookingRow = (item: any) => ({
+  id: item.id,
+  bookedBy: safeValue(item.booked_by_name || item.book_by),
+  tower: safeValue(item.tower),
+  flat: safeValue(item.flat),
+  bookedFor: safeValue(item.booked_by_name || item.book_for),
+  companyName: safeValue(item.company_name),
+  facility: safeValue(item.facility_name),
+  subFacilityName: safeValue(item.sub_facility_name),
+  facilityType: safeValue(item.fac_type),
+  scheduledDate: formatBookingDate(item.startdate),
+  scheduledTime: safeValue(item.show_schedule_24_hour || item.show_schedule),
+  createdOn: format(item.created_at, 'dd MMMM yyyy, hh:mm a'),
+  source: safeValue(item.source),
+  totalAmount: safeValue(item.amount_full),
+  refundableAmount: safeValue(item.refunded_amount),
+  gst: safeValue(item.gst),
+  amountPaid: safeValue(item.amount_paid),
+  paymentStatus: safeValue(item.pg_state),
+  bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'cancelled' | 'Rejected') || 'Pending',
+  member: safeValue(item.member_count),
+  nonMember: safeValue(item.non_member_count),
+  guest: safeValue(item.guest_count),
+  tenant: safeValue(item.tenant_count),
+});
+
 const BookingListDashboard = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -191,11 +311,10 @@ const BookingListDashboard = () => {
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
 
-  const {
-    data: bookings,
-    loading,
-    error,
-  } = useAppSelector((state) => state.facilityBookings);
+  // Applied filters, search and page live in the URL so the view survives
+  // refresh, back/forward and can be shared as a link.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const applied = useMemo(() => readAppliedFromUrl(searchParams), [searchParams]);
 
   const [bookingData, setBookingData] = useState([]);
   const [facilities, setFacilities] = useState([]);
@@ -203,25 +322,53 @@ const BookingListDashboard = () => {
   const [isExportByCentreModalOpen, setIsExportByCentreModalOpen] =
     useState(false);
   const [exportLoading, setExportLoading] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const isPageLoading = loading;
+  const isFiltering = loading;
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState<number | null>(null);
+  // Filter modal draft — copied from the URL, written back on Apply
   const [filters, setFilters] = useState({
-    facilityName: "",
-    status: "",
+    facilityName: applied.facilityName,
+    status: applied.status,
+    paymentStatus: applied.paymentStatus,
     scheduledDateRange: "",
     createdOnDateRange: "",
   });
-  const [scheduledDateFrom, setScheduledDateFrom] = useState<string>("");
-  const [scheduledDateTo, setScheduledDateTo] = useState<string>("");
-  const [createdOnDateFrom, setCreatedOnDateFrom] = useState<string>("");
-  const [createdOnDateTo, setCreatedOnDateTo] = useState<string>("");
-  const [isFiltering, setIsFiltering] = useState(false);
+  const [scheduledDateFrom, setScheduledDateFrom] = useState<string>(applied.scheduledDateFrom);
+  const [scheduledDateTo, setScheduledDateTo] = useState<string>(applied.scheduledDateTo);
+  const [createdOnDateFrom, setCreatedOnDateFrom] = useState<string>(applied.createdOnDateFrom);
+  const [createdOnDateTo, setCreatedOnDateTo] = useState<string>(applied.createdOnDateTo);
+  const [searchInput, setSearchInput] = useState(applied.search);
+  const debouncedSearch = useDebounce(searchInput, 800);
   const [pagination, setPagination] = useState({
-    current_page: 1,
+    current_page: applied.page,
     total_count: 0,
     total_pages: 0,
   });
+
+  // Write URL params; null/"" removes the key. Page 1 is the default, so it is dropped.
+  const updateUrl = (
+    changes: Record<string, string | null>,
+    { replace = false }: { replace?: boolean } = {}
+  ) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        Object.entries(changes).forEach(([key, value]) => {
+          if (value && !(key === URL_KEYS.page && value === "1")) {
+            next.set(key, value);
+          } else {
+            next.delete(key);
+          }
+        });
+        return next;
+      },
+      { replace }
+    );
+  };
 
   useEffect(() => {
     const fetchFacilities = async () => {
@@ -244,40 +391,75 @@ const BookingListDashboard = () => {
     fetchFacilities();
   }, [baseUrl, token]);
 
+  // Keep the modal draft in step with the URL (initial load, back/forward, reset)
   useEffect(() => {
-    if (error) {
-      setBookingData([]);
-      setPagination({
-        current_page: 1,
-        total_count: 0,
-        total_pages: 0,
-      });
-    } else if (bookings) {
-      setBookingData(bookings.bookings || []);
-      setPagination({
-        current_page: bookings.pagination?.current_page || 1,
-        total_count: bookings.pagination?.total_count || 0,
-        total_pages: bookings.pagination?.total_pages || 0,
-      });
-    }
-  }, [bookings, error]);
+    setFilters({
+      facilityName: applied.facilityName,
+      status: applied.status,
+      paymentStatus: applied.paymentStatus,
+      scheduledDateRange: "",
+      createdOnDateRange: "",
+    });
+    setScheduledDateFrom(applied.scheduledDateFrom);
+    setScheduledDateTo(applied.scheduledDateTo);
+    setCreatedOnDateFrom(applied.createdOnDateFrom);
+    setCreatedOnDateTo(applied.createdOnDateTo);
+  }, [applied]);
 
+  // Search box -> URL (debounced; replaces history so typing doesn't add entries)
   useEffect(() => {
-    setIsPageLoading(true);
-    dispatch(
-      fetchFacilityBookingsData({
-        baseUrl,
-        token,
-        pageSize: 10,
-        currentPage: pagination.current_page,
+    const term = debouncedSearch.trim();
+    if (term !== applied.search) {
+      updateUrl({ [URL_KEYS.search]: term || null, [URL_KEYS.page]: null }, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+
+  // URL -> search box, when the search changed from outside the box (back/forward, link)
+  useEffect(() => {
+    if (applied.search !== debouncedSearch.trim()) {
+      setSearchInput(applied.search);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applied.search]);
+
+  // Single fetch path: whatever the URL says (page, search, filters)
+  const latestRequest = useRef(0);
+  useEffect(() => {
+    const requestId = ++latestRequest.current;
+    const params = {
+      page: String(applied.page),
+      per_page: String(PAGE_SIZE),
+      ...buildFilterParams(applied),
+      ...(applied.search && { [BOOKING_SEARCH_PARAM]: applied.search }),
+    };
+    const queryString = new URLSearchParams(params).toString();
+
+    setLoading(true);
+    setError(null);
+    dispatch(filterBookings({ baseUrl, token, queryString }))
+      .unwrap()
+      .then((response) => {
+        if (requestId !== latestRequest.current) return; // a newer request superseded this one
+        setBookingData((response?.data || []).map(toBookingRow));
+        setPagination({
+          current_page: response?.meta?.current_page || applied.page,
+          total_count: response?.meta?.total_count || 0,
+          total_pages: response?.meta?.total_pages || 0,
+        });
       })
-    )
-      .then(() => setIsPageLoading(false))
-      .catch(() => {
-        setIsPageLoading(false);
+      .catch((err) => {
+        if (requestId !== latestRequest.current) return;
+        console.error("Error fetching bookings:", err);
+        setBookingData([]);
+        setPagination({ current_page: 1, total_count: 0, total_pages: 0 });
+        setError(typeof err === "string" ? err : "Failed to fetch bookings");
         toast.error("Failed to fetch bookings");
+      })
+      .finally(() => {
+        if (requestId === latestRequest.current) setLoading(false);
       });
-  }, [dispatch, baseUrl, token]);
+  }, [applied, reloadKey, dispatch, baseUrl, token]);
 
   const handleStatusChange = async (bookingId: number, newStatus: string) => {
     setStatusUpdating(bookingId);
@@ -379,114 +561,33 @@ const BookingListDashboard = () => {
     }
   };
 
-  const handleApplyFilters = async () => {
-    const formatedScheduleStartDate = scheduledDateFrom
-      ? format(parse(scheduledDateFrom, "yyyy-MM-dd", new Date()), "MM/dd/yyyy")
-      : null;
-    const formatedScheduleEndDate = scheduledDateTo
-      ? format(parse(scheduledDateTo, "yyyy-MM-dd", new Date()), "MM/dd/yyyy")
-      : null;
-    const formatedCreatedStartDate = createdOnDateFrom
-      ? format(parse(createdOnDateFrom, "yyyy-MM-dd", new Date()), "MM/dd/yyyy")
-      : null;
-    const formatedCreatedEndDate = createdOnDateTo
-      ? format(parse(createdOnDateTo, "yyyy-MM-dd", new Date()), "MM/dd/yyyy")
-      : null;
-
-    const filterParams = {
-      ...(filters.facilityName && { "q[facility_id_in]": filters.facilityName }),
-      ...(filters.status && { "q[current_status_cont]": filters.status }),
-      ...(formatedCreatedStartDate &&
-        formatedCreatedEndDate && {
-        "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
-      }),
-      ...(formatedScheduleStartDate &&
-        formatedScheduleEndDate && {
-        "q[date_range1]": `${formatedScheduleStartDate} - ${formatedScheduleEndDate}`,
-      }),
-    };
-
-    const queryString = new URLSearchParams(filterParams).toString();
-    setIsFiltering(true);
-    try {
-      const response = await dispatch(
-        filterBookings({ baseUrl, token, queryString })
-      ).unwrap();
-      const formatDate = (dateString: string): string => {
-        if (!dateString) return '-';
-        try {
-          const date = new Date(dateString);
-          if (isNaN(date.getTime())) return '-';
-          return date.toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-          });
-        } catch (error) {
-          return '-';
-        }
-      };
-
-      const safeValue = (value: any): string => {
-        if (value === 0) return "0";
-        return value?.toString().trim() ? value.toString() : "-";
-      };
-
-      const updatedResponse = response.data.map((item: any) => ({
-        id: item.id,
-        bookedBy: safeValue(item.booked_by_name || item.book_by),
-        tower: safeValue(item.tower),
-        flat: safeValue(item.flat),
-        bookedFor: safeValue(item.booked_by_name || item.book_for),
-        companyName: safeValue(item.company_name),
-        facility: safeValue(item.facility_name),
-        subFacilityName: safeValue(item.sub_facility_name),
-        facilityType: safeValue(item.fac_type),
-        scheduledDate: formatDate(item.startdate),
-        scheduledTime: safeValue(item.show_schedule_24_hour || item.show_schedule),
-        createdOn: format(item.created_at, 'dd MMMM yyyy, hh:mm a'),
-        source: safeValue(item.source),
-        totalAmount: safeValue(item.amount_full),
-        refundableAmount: safeValue(item.refunded_amount),
-        gst: safeValue(item.gst),
-        amountPaid: safeValue(item.amount_paid),
-        paymentStatus: safeValue(item.pg_state),
-        bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'cancelled' | 'Rejected') || 'Pending',
-        member: safeValue(item.member_count),
-        nonMember: safeValue(item.non_member_count),
-        guest: safeValue(item.guest_count),
-        tenant: safeValue(item.tenant_count),
-      }));
-      setBookingData(updatedResponse);
-      setPagination({
-        current_page: response.meta.current_page || 1,
-        total_count: response.meta.total_count || 0,
-        total_pages: response.meta.total_pages || 0,
-      });
-      setIsFilterModalOpen(false);
-      toast.success("Filters applied successfully");
-    } catch (error) {
-      console.error("Error applying filters:", error);
-      toast.error("Failed to apply filters");
-    } finally {
-      setIsFiltering(false);
-    }
+  // Apply the modal draft: write it to the URL and go back to page 1
+  const handleApplyFilters = () => {
+    updateUrl({
+      [URL_KEYS.facility]: filters.facilityName ? String(filters.facilityName) : null,
+      [URL_KEYS.status]: filters.status || null,
+      [URL_KEYS.paymentStatus]: filters.paymentStatus || null,
+      [URL_KEYS.bookedOnFrom]: scheduledDateFrom || null,
+      [URL_KEYS.bookedOnTo]: scheduledDateTo || null,
+      [URL_KEYS.scheduledFrom]: createdOnDateFrom || null,
+      [URL_KEYS.scheduledTo]: createdOnDateTo || null,
+      [URL_KEYS.page]: null,
+    });
+    setIsFilterModalOpen(false);
+    toast.success("Filters applied successfully");
   };
 
+  // Clear every filter from the URL (search is kept) and go back to page 1
   const handleResetFilters = () => {
-    setFilters({
-      facilityName: "",
-      status: "",
-      scheduledDateRange: "",
-      createdOnDateRange: "",
-    });
-    setScheduledDateFrom("");
-    setScheduledDateTo("");
-    setCreatedOnDateFrom("");
-    setCreatedOnDateTo("");
-    setPagination({
-      ...pagination,
-      current_page: 1,
+    updateUrl({
+      [URL_KEYS.facility]: null,
+      [URL_KEYS.status]: null,
+      [URL_KEYS.paymentStatus]: null,
+      [URL_KEYS.bookedOnFrom]: null,
+      [URL_KEYS.bookedOnTo]: null,
+      [URL_KEYS.scheduledFrom]: null,
+      [URL_KEYS.scheduledTo]: null,
+      [URL_KEYS.page]: null,
     });
     toast.info("Filters reset");
   };
@@ -495,140 +596,9 @@ const BookingListDashboard = () => {
     navigate("/cms/facility-bookings/add");
   };
 
-  const handlePageChange = async (page: number) => {
-    setIsPageLoading(true);
-    setPagination((prev) => ({
-      ...prev,
-      current_page: page,
-    }));
-
-    try {
-      // Check if any filters are applied
-      const areFiltersApplied =
-        filters.facilityName ||
-        filters.status ||
-        scheduledDateFrom ||
-        scheduledDateTo ||
-        createdOnDateFrom ||
-        createdOnDateTo;
-
-      if (areFiltersApplied) {
-        // Format dates for filterBookings if needed
-        const formatedScheduleStartDate = scheduledDateFrom
-          ? format(
-            parse(scheduledDateFrom, "yyyy-MM-dd", new Date()),
-            "MM/dd/yyyy"
-          )
-          : null;
-        const formatedScheduleEndDate = scheduledDateTo
-          ? format(
-            parse(scheduledDateTo, "yyyy-MM-dd", new Date()),
-            "MM/dd/yyyy"
-          )
-          : null;
-        const formatedCreatedStartDate = createdOnDateFrom
-          ? format(
-            parse(createdOnDateFrom, "yyyy-MM-dd", new Date()),
-            "MM/dd/yyyy"
-          )
-          : null;
-        const formatedCreatedEndDate = createdOnDateTo
-          ? format(
-            parse(createdOnDateTo, "yyyy-MM-dd", new Date()),
-            "MM/dd/yyyy"
-          )
-          : null;
-
-        // Construct filter parameters, including page for pagination
-        const filterParams = {
-          page: page.toString(),
-          "q[facility_id_in]": filters.facilityName,
-          "q[current_status_cont]": filters.status,
-          ...(formatedCreatedStartDate &&
-            formatedCreatedEndDate && {
-            "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
-          }),
-          ...(formatedScheduleStartDate &&
-            formatedScheduleEndDate && {
-            "q[date_range1]": `${formatedScheduleStartDate} - ${formatedScheduleEndDate}`,
-          }),
-        };
-
-        const queryString = new URLSearchParams(filterParams).toString();
-
-        // Call filterBookings with the constructed query string
-        const response = await dispatch(
-          filterBookings({ baseUrl, token, queryString })
-        ).unwrap();
-        const formatDate = (dateString: string): string => {
-          if (!dateString) return '-';
-          try {
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return '-';
-            return date.toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric'
-            });
-          } catch (error) {
-            return '-';
-          }
-        };
-
-        const safeValue = (value: any): string => {
-          if (value === 0) return "0";
-          return value?.toString().trim() ? value.toString() : "-";
-        };
-
-        const updatedResponse = response.facility_bookings.map((item: any) => ({
-          id: item.id,
-          bookedBy: safeValue(item.booked_by_name || item.book_by),
-          tower: safeValue(item.tower),
-          flat: safeValue(item.flat),
-          bookedFor: safeValue(item.booked_by_name || item.book_for),
-          companyName: safeValue(item.company_name),
-          facility: safeValue(item.facility_name),
-          subFacilityName: safeValue(item.sub_facility_name),
-          facilityType: safeValue(item.fac_type),
-          scheduledDate: formatDate(item.startdate),
-          scheduledTime: safeValue(item.show_schedule_24_hour || item.show_schedule),
-          createdOn: format(item.created_at, 'dd MMMM yyyy, hh:mm a'),
-          source: safeValue(item.source),
-          totalAmount: safeValue(item.amount_full),
-          refundableAmount: safeValue(item.refunded_amount),
-          gst: safeValue(item.gst),
-          amountPaid: safeValue(item.amount_paid),
-          paymentStatus: safeValue(item.pg_state),
-          bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'cancelled' | 'Rejected') || 'Pending',
-          member: safeValue(item.member_count),
-          nonMember: safeValue(item.non_member_count),
-          guest: safeValue(item.guest_count),
-          tenant: safeValue(item.tenant_count),
-        }));
-
-        setBookingData(updatedResponse);
-        setPagination({
-          current_page: response.pagination.current_page || page,
-          total_count: response.pagination.total_count || 0,
-          total_pages: response.pagination.total_pages || 0,
-        });
-      } else {
-        // Call fetchFacilityBookingsData if no filters are applied
-        await dispatch(
-          fetchFacilityBookingsData({
-            baseUrl,
-            token,
-            pageSize: 10,
-            currentPage: page,
-          })
-        ).unwrap();
-      }
-    } catch (error) {
-      console.error("Error fetching bookings for page change:", error);
-      toast.error("Failed to fetch bookings");
-    } finally {
-      setIsPageLoading(false);
-    }
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page === applied.page || isPageLoading) return;
+    updateUrl({ [URL_KEYS.page]: String(page) });
   };
 
   const renderPaginationItems = () => {
@@ -845,13 +815,22 @@ const BookingListDashboard = () => {
     }));
   };
 
+  // GET /pms/admin/facility_bookings/export.xlsx with the same filters as the list
   const handleDownload = async () => {
+    if (exportLoading) return;
     setExportLoading(true);
     try {
-      const response = await dispatch(
-        exportReport({ baseUrl, token })
-      ).unwrap();
-      const url = window.URL.createObjectURL(new Blob([response]));
+      const queryString = new URLSearchParams(buildFilterParams(applied)).toString();
+      const response = await axios.get(
+        `https://${baseUrl}/pms/admin/facility_bookings/export.xlsx${queryString ? `?${queryString}` : ""}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: "blob",
+        }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", "facility_bookings.xlsx");
@@ -868,32 +847,13 @@ const BookingListDashboard = () => {
     }
   };
 
-  const selectionActions = [
-    {
-      label: "Export",
-      icon: Download,
-      onClick: handleDownload,
-      variant: "outline" as const,
-      loading: exportLoading,
-    },
-  ];
-
   return (
     <div className="space-y-6">
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
           <p>Error loading bookings: {error}</p>
           <Button
-            onClick={() =>
-              dispatch(
-                fetchFacilityBookingsData({
-                  baseUrl,
-                  token,
-                  pageSize: 10,
-                  currentPage: 1,
-                })
-              )
-            }
+            onClick={() => setReloadKey((key) => key + 1)}
             variant="outline"
             size="sm"
             className="mt-2 border-[var(--color-primary,#da7756)] text-[var(--color-primary,#da7756)] hover:bg-[var(--color-primary-light,rgba(218,119,86,0.15))]"
@@ -906,7 +866,6 @@ const BookingListDashboard = () => {
 
       {showActionPanel && (
         <SelectionPanel
-          actions={selectionActions}
           onAdd={handleAddBooking}
           onClearSelection={() => setShowActionPanel(false)}
         />
@@ -920,6 +879,12 @@ const BookingListDashboard = () => {
         storageKey="booking-list-table"
         loading={loading || isPageLoading}
         onFilterClick={() => setIsFilterModalOpen(true)}
+        searchTerm={searchInput}
+        onSearchChange={setSearchInput}
+        disableClientSearch={true}
+        searchPlaceholder="Search bookings..."
+        enableExport={true}
+        onExport={handleDownload}
         emptyMessage={
           loading || isPageLoading ? "Loading bookings..." : "No bookings found"
         }
@@ -1041,6 +1006,26 @@ const BookingListDashboard = () => {
                       <MenuItem value="Pending">Pending</MenuItem>
                       <MenuItem value="Rejected">Rejected</MenuItem>
                       <MenuItem value="Closed">Closed</MenuItem>
+                    </MuiSelect>
+                  </FormControl>
+
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink>Payment Status</InputLabel>
+                    <MuiSelect
+                      label="Payment Status"
+                      value={filters.paymentStatus}
+                      onChange={(e) =>
+                        handleFilterChange("paymentStatus", e.target.value)
+                      }
+                      displayEmpty
+                      variant="outlined"
+                      fullWidth
+                    >
+                      <MenuItem value="">Select Payment Status</MenuItem>
+                      <MenuItem value="Success">Success</MenuItem>
+                      <MenuItem value="Pending">Pending</MenuItem>
+                      <MenuItem value="Failed">Failed</MenuItem>
+                      <MenuItem value="NA">NA</MenuItem>
                     </MuiSelect>
                   </FormControl>
                 </div>

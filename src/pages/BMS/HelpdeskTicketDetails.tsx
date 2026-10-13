@@ -1,39 +1,80 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Plus, FileText, Star, Flag, Paperclip, Download, Eye, ChevronDown, ChevronUp, User, MapPin, FileSearch, PlusCircle, ClipboardList, DollarSign, History, File, FileSpreadsheet, X, Edit, FileIcon, Check, Minus, MessageSquare, Ticket } from 'lucide-react';
-import { ticketManagementAPI } from '@/services/ticketManagementAPI';
-import { toast } from 'sonner';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import { Select as MuiSelect, Tooltip, Radio, RadioGroup, FormControlLabel, FormLabel } from '@mui/material';
-import MenuItem from '@mui/material/MenuItem';
-import { TextField } from '@mui/material';
-import { Button as MuiButton } from '@mui/material';
-import { API_CONFIG, getAuthHeader, getFullUrl } from '@/config/apiConfig';
-import { AttachmentPreviewModal } from '@/components/AttachmentPreviewModal';
-import { TicketJobSheetModal } from '@/components/TicketJobSheetModal';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  ArrowLeft,
+  Plus,
+  FileText,
+  Star,
+  Flag,
+  Paperclip,
+  Download,
+  Eye,
+  ChevronDown,
+  ChevronUp,
+  User,
+  MapPin,
+  FileSearch,
+  PlusCircle,
+  ClipboardList,
+  DollarSign,
+  History,
+  File,
+  FileSpreadsheet,
+  X,
+  Edit,
+  FileIcon,
+  Check,
+  Minus,
+  MessageSquare,
+  Ticket,
+} from "lucide-react";
+import { ticketManagementAPI } from "@/services/ticketManagementAPI";
+import { toast } from "sonner";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import {
+  Select as MuiSelect,
+  Tooltip,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormLabel,
+} from "@mui/material";
+import MenuItem from "@mui/material/MenuItem";
+import { TextField } from "@mui/material";
+import { Button as MuiButton } from "@mui/material";
+import { API_CONFIG, getAuthHeader, getFullUrl } from "@/config/apiConfig";
+import { AttachmentPreviewModal } from "@/components/AttachmentPreviewModal";
+import { TicketJobSheetModal } from "@/components/TicketJobSheetModal";
 import Select, { components } from "react-select";
-import { min } from 'lodash';
+import { min } from "lodash";
 
 // Utility function to format date to DD/MM/YYYY
 const formatDateToDDMMYYYY = (dateString: string) => {
-  if (!dateString) return '-';
+  if (!dateString) return "-";
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '-';
+    if (isNaN(date.getTime())) return "-";
 
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
 
     return `${day}/${month}/${year}`;
   } catch (error) {
-    return '-';
+    return "-";
   }
 };
 
@@ -50,7 +91,9 @@ const CustomMultiValue = (props) => (
       alignItems: "center",
     }}
   >
-    <span style={{ fontSize: "13px", color: "#1a1a1a8a", fontWeight: "500" }}>{props.data.label}</span>
+    <span style={{ fontSize: "13px", color: "#1a1a1a8a", fontWeight: "500" }}>
+      {props.data.label}
+    </span>
     <div
       onClick={(e) => {
         e.stopPropagation();
@@ -213,43 +256,46 @@ const singleSelectStyles = {
 };
 
 const fieldStyles = {
-  height: '40px',
-  backgroundColor: '#fff',
-  borderRadius: '4px',
-  '& .MuiOutlinedInput-root': {
-    height: '40px',
-    fontSize: '14px',
-    '& fieldset': {
-      borderColor: '#ddd',
+  height: "40px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "40px",
+    fontSize: "14px",
+    "& fieldset": {
+      borderColor: "#ddd",
     },
-    '&:hover fieldset': {
-      borderColor: '#C72030',
+    "&:hover fieldset": {
+      borderColor: "#C72030",
     },
-    '&.Mui-focused fieldset': {
-      borderColor: '#C72030',
+    "&.Mui-focused fieldset": {
+      borderColor: "#C72030",
     },
   },
-  '& .MuiInputLabel-root': {
-    fontSize: '14px',
-    '&.Mui-focused': {
-      color: '#C72030',
+  "& .MuiInputLabel-root": {
+    fontSize: "14px",
+    "&.Mui-focused": {
+      color: "#C72030",
     },
   },
 };
 
 const formatMinutesToDDHHMM = (minutes: number | null | undefined): string => {
-  if (!minutes || minutes === 0 || minutes === null || minutes === undefined) return '00:00:00';
+  if (!minutes || minutes === 0 || minutes === null || minutes === undefined)
+    return "00:00:00";
 
   const totalMinutes = Math.abs(minutes);
   const days = Math.floor(totalMinutes / (24 * 60));
   const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
   const mins = Math.floor(totalMinutes % 60);
 
-  return `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  return `${String(days).padStart(2, "0")}:${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 };
 
-const formatTicketAgeingToDDHHMM = (ageingString: string | null | undefined): string => {
-  if (!ageingString) return '00:00:00:00';
+const formatTicketAgeingToDDHHMM = (
+  ageingString: string | null | undefined
+): string => {
+  if (!ageingString) return "00:00:00:00";
 
   // If it's already in the format "52 hour 20 min", parse it
   const hourMatch = ageingString.match(/(\d+)\s*hour/i);
@@ -265,7 +311,7 @@ const formatTicketAgeingToDDHHMM = (ageingString: string | null | undefined): st
     const remainingMins = Math.floor(totalMinutes % 60);
     const seconds = 0; // No seconds in the original format
 
-    return `${String(days).padStart(2, '0')}:${String(remainingHours).padStart(2, '0')}:${String(remainingMins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    return `${String(days).padStart(2, "0")}:${String(remainingHours).padStart(2, "0")}:${String(remainingMins).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   }
 
   // If it's in minutes format, convert it
@@ -275,18 +321,18 @@ const formatTicketAgeingToDDHHMM = (ageingString: string | null | undefined): st
     const hours = Math.floor((minutesValue % (24 * 60)) / 60);
     const mins = Math.floor(minutesValue % 60);
     const seconds = 0;
-    return `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    return `${String(days).padStart(2, "0")}:${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   }
 
-  return '00:00:00:00';
+  return "00:00:00:00";
 };
 
 // Add function to format response/resolution time if needed
 const formatTimeToDDHHMM = (timeString: string | null | undefined): string => {
-  if (!timeString) return '00:00:00';
+  if (!timeString) return "00:00:00";
 
   // If already in HH:MM:SS format, convert to DD:HH:MM
-  const parts = timeString.split(':');
+  const parts = timeString.split(":");
   if (parts.length === 3) {
     const hours = parseInt(parts[0]);
     const minutes = parseInt(parts[1]);
@@ -297,14 +343,14 @@ const formatTimeToDDHHMM = (timeString: string | null | undefined): string => {
     const remainingHours = Math.floor((totalMinutes % (24 * 60)) / 60);
     const remainingMins = Math.floor(totalMinutes % 60);
 
-    return `${String(days).padStart(2, '0')}:${String(remainingHours).padStart(2, '0')}:${String(remainingMins).padStart(2, '0')}`;
+    return `${String(days).padStart(2, "0")}:${String(remainingHours).padStart(2, "0")}:${String(remainingMins).padStart(2, "0")}`;
   }
 
-  return '00:00:00';
+  return "00:00:00";
 };
 
 const formatTicketAgeing = (ageingSeconds: number): string => {
-  if (!ageingSeconds || ageingSeconds === 0) return '00:00:00:00';
+  if (!ageingSeconds || ageingSeconds === 0) return "00:00:00:00";
 
   // ageingSeconds is already in seconds, no conversion needed
   const totalSeconds = ageingSeconds;
@@ -314,7 +360,7 @@ const formatTicketAgeing = (ageingSeconds: number): string => {
   const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
   const seconds = totalSeconds % 60;
 
-  return `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  return `${String(days).padStart(2, "0")}:${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 };
 
 // Asset and Service interfaces for association functionality
@@ -331,102 +377,182 @@ interface ServiceOption {
 
 // Helper function to format asset status (handles underscores and capitalizes)
 const formatAssetStatus = (status: string | null | undefined): string => {
-  if (!status || typeof status !== 'string') return '-';
+  if (!status || typeof status !== "string") return "-";
   // Replace underscores with spaces, then capitalize each word
   return status
     .toLowerCase()
-    .replace(/_/g, ' ')
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 // Helper function to render association-specific data
 const renderAssociationSpecificData = (ticketData: any) => {
-  const associationType = ticketData?.asset_service || ticketData?.service_or_asset || 'Asset';
+  const associationType =
+    ticketData?.asset_service || ticketData?.service_or_asset || "Asset";
 
   switch (associationType) {
-    case 'Checklist':
+    case "Checklist":
       return [
-        { label: 'Task ID', value: ticketData.task_id || '-' },
-        { label: 'Task Name', value: ticketData.task_name || '-' },
-        { label: 'Schedule Time', value: ticketData.checklist_schedule_time ? new Date(ticketData.checklist_schedule_time).toLocaleString('en-GB') : '-' },
-        { label: 'Completion Time', value: ticketData.checklist_completion_time ? new Date(ticketData.checklist_completion_time).toLocaleString('en-GB') : '-' },
-        { label: 'Checklist Type', value: ticketData.checklist_type || '-' },
+        { label: "Task ID", value: ticketData.task_id || "-" },
+        { label: "Task Name", value: ticketData.task_name || "-" },
+        {
+          label: "Schedule Time",
+          value: ticketData.checklist_schedule_time
+            ? new Date(ticketData.checklist_schedule_time).toLocaleString(
+                "en-GB"
+              )
+            : "-",
+        },
+        {
+          label: "Completion Time",
+          value: ticketData.checklist_completion_time
+            ? new Date(ticketData.checklist_completion_time).toLocaleString(
+                "en-GB"
+              )
+            : "-",
+        },
+        { label: "Checklist Type", value: ticketData.checklist_type || "-" },
         // { label: 'Assigned To ID', value: Array.isArray(ticketData.checklist_assigned_to_id) ? ticketData.checklist_assigned_to_id.join(', ') : (ticketData.checklist_assigned_to_id || '-') },
-        { label: 'Assigned To', value: ticketData.checklist_assigned_to_name || '-' },
+        {
+          label: "Assigned To",
+          value: ticketData.checklist_assigned_to_name || "-",
+        },
       ];
 
-    case 'Patrolling':
+    case "Patrolling":
       return [
-        { label: 'Patrolling ID', value: ticketData.patrolling_id || '-' },
-        { label: 'Patrolling Name', value: ticketData.patrolling_name || '-' },
-        { label: 'Conducted By', value: ticketData.patrol_conducted_by || '-' },
-        { label: 'Patrol Time', value: ticketData.patrol_time ? new Date(ticketData.patrol_time).toLocaleString('en-GB') : '-' },
-        { label: 'Patrol Attachment', value: ticketData.patrol_attachment ? 'Available' : 'Not Available' },
-        { label: '', value: '' }, // Empty cells for grid alignment
-        { label: '', value: '' },
-        { label: '', value: '' },
+        { label: "Patrolling ID", value: ticketData.patrolling_id || "-" },
+        { label: "Patrolling Name", value: ticketData.patrolling_name || "-" },
+        { label: "Conducted By", value: ticketData.patrol_conducted_by || "-" },
+        {
+          label: "Patrol Time",
+          value: ticketData.patrol_time
+            ? new Date(ticketData.patrol_time).toLocaleString("en-GB")
+            : "-",
+        },
+        {
+          label: "Patrol Attachment",
+          value: ticketData.patrol_attachment ? "Available" : "Not Available",
+        },
+        { label: "", value: "" }, // Empty cells for grid alignment
+        { label: "", value: "" },
+        { label: "", value: "" },
       ];
 
-    case 'Incident':
+    case "Incident":
       return [
-        { label: 'Incident ID', value: ticketData.incident_id || '-' },
-        { label: 'Incident Name', value: ticketData.incident_name || '-' },
-        { label: 'Primary Category', value: ticketData.incident_primary_category || '-' },
-        { label: 'Secondary Category', value: ticketData.incident_secondary_category || '-' },
-        { label: 'Third Level Category', value: ticketData.incident_third_level_category || '-' },
-        { label: 'Level of Incident', value: ticketData.level_of_incident || '-' },
-        { label: 'Support Required', value: ticketData.incident_support_required ? 'Yes' : 'No' },
-        { label: '', value: '' }, // Empty cell for grid alignment
+        { label: "Incident ID", value: ticketData.incident_id || "-" },
+        { label: "Incident Name", value: ticketData.incident_name || "-" },
+        {
+          label: "Primary Category",
+          value: ticketData.incident_primary_category || "-",
+        },
+        {
+          label: "Secondary Category",
+          value: ticketData.incident_secondary_category || "-",
+        },
+        {
+          label: "Third Level Category",
+          value: ticketData.incident_third_level_category || "-",
+        },
+        {
+          label: "Level of Incident",
+          value: ticketData.level_of_incident || "-",
+        },
+        {
+          label: "Support Required",
+          value: ticketData.incident_support_required ? "Yes" : "No",
+        },
+        { label: "", value: "" }, // Empty cell for grid alignment
       ];
 
-    case 'Audit':
+    case "Audit":
       return [
-        { label: 'Audit ID', value: ticketData.audit_id || '-' },
-        { label: 'Conducted By', value: ticketData.audit_conducted_by || '-' },
-        { label: 'Audit Type', value: ticketData.audit_type || '-' },
-        { label: '', value: '' }, // Empty cells for grid alignment
-        { label: '', value: '' },
-        { label: '', value: '' },
-        { label: '', value: '' },
-        { label: '', value: '' },
+        { label: "Audit ID", value: ticketData.audit_id || "-" },
+        { label: "Conducted By", value: ticketData.audit_conducted_by || "-" },
+        { label: "Audit Type", value: ticketData.audit_type || "-" },
+        { label: "", value: "" }, // Empty cells for grid alignment
+        { label: "", value: "" },
+        { label: "", value: "" },
+        { label: "", value: "" },
+        { label: "", value: "" },
       ];
 
-    case 'Asset':
+    case "Asset":
     default:
       // Check if allocated to Service or Asset based on asset_service field
-      if (ticketData.asset_service === 'Service') {
+      if (ticketData.asset_service === "Service") {
         // Show only Service-specific fields
         return [
-          { label: 'Service Name', value: ticketData.asset_or_service_name || '-' },
-          { label: 'Service ID', value: ticketData.asset_or_service_id || '-' },
-          { label: 'Allocated', value: 'Service' },
-          { label: '', value: '' }, // Empty cells for grid alignment
-          { label: '', value: '' },
-          { label: '', value: '' },
-          { label: '', value: '' },
-          { label: '', value: '' },
-          { label: '', value: '' },
-          { label: '', value: '' },
-          { label: '', value: '' },
-          { label: '', value: '' },
+          {
+            label: "Service Name",
+            value: ticketData.asset_or_service_name || "-",
+          },
+          { label: "Service ID", value: ticketData.asset_or_service_id || "-" },
+          { label: "Allocated", value: "Service" },
+          { label: "", value: "" }, // Empty cells for grid alignment
+          { label: "", value: "" },
+          { label: "", value: "" },
+          { label: "", value: "" },
+          { label: "", value: "" },
+          { label: "", value: "" },
+          { label: "", value: "" },
+          { label: "", value: "" },
+          { label: "", value: "" },
         ];
       } else {
         // Show Asset-specific fields (default)
         return [
-          { label: 'Asset Name', value: ticketData.asset_or_service_name || '-' },
-          { label: 'Group', value: ticketData.asset_group || '-' },
-          { label: 'Asset Status', value: formatAssetStatus(ticketData.asset_status || ticketData.amc?.asset_status) },
-          { label: 'Criticality', value: ticketData.asset_criticality === null || ticketData.asset_criticality === "" ? '-' : (ticketData.asset_criticality ? 'Critical' : 'Non Critical') },
-          { label: 'Asset ID', value: ticketData.pms_asset_id || ticketData.asset_or_service_id || '-' },
-          { label: 'Sub group', value: ticketData.asset_sub_group || '-' },
-          { label: 'AMC Status', value: ticketData.amc?.amc_status || '-' },
-          { label: 'Under Warranty', value: ticketData.warranty === null || ticketData.warranty === undefined ? '-' : (ticketData.warranty ? 'Yes' : 'No') },
-          { label: 'Category', value: ticketData.asset_type_category || '-' },
-          { label: 'Allocated', value: ticketData.asset_service || '-' },
-          { label: 'AMC Type', value: ticketData.amc?.amc_type || '-' },
-          { label: 'Warranty Expiry', value: ticketData.asset_warranty_expiry ? new Date(ticketData.asset_warranty_expiry).toLocaleDateString('en-GB') : '-' },
+          {
+            label: "Asset Name",
+            value: ticketData.asset_or_service_name || "-",
+          },
+          { label: "Group", value: ticketData.asset_group || "-" },
+          {
+            label: "Asset Status",
+            value: formatAssetStatus(
+              ticketData.asset_status || ticketData.amc?.asset_status
+            ),
+          },
+          {
+            label: "Criticality",
+            value:
+              ticketData.asset_criticality === null ||
+              ticketData.asset_criticality === ""
+                ? "-"
+                : ticketData.asset_criticality
+                  ? "Critical"
+                  : "Non Critical",
+          },
+          {
+            label: "Asset ID",
+            value:
+              ticketData.pms_asset_id || ticketData.asset_or_service_id || "-",
+          },
+          { label: "Sub group", value: ticketData.asset_sub_group || "-" },
+          { label: "AMC Status", value: ticketData.amc?.amc_status || "-" },
+          {
+            label: "Under Warranty",
+            value:
+              ticketData.warranty === null || ticketData.warranty === undefined
+                ? "-"
+                : ticketData.warranty
+                  ? "Yes"
+                  : "No",
+          },
+          { label: "Category", value: ticketData.asset_type_category || "-" },
+          { label: "Allocated", value: ticketData.asset_service || "-" },
+          { label: "AMC Type", value: ticketData.amc?.amc_type || "-" },
+          {
+            label: "Warranty Expiry",
+            value: ticketData.asset_warranty_expiry
+              ? new Date(ticketData.asset_warranty_expiry).toLocaleDateString(
+                  "en-GB"
+                )
+              : "-",
+          },
         ];
       }
   }
@@ -434,44 +560,77 @@ const renderAssociationSpecificData = (ticketData: any) => {
 
 // Helper function to check if association data is available
 const hasAssociationData = (ticketData: any) => {
-  const associationType = ticketData?.asset_service || ticketData?.service_or_asset || 'Asset';
+  const associationType =
+    ticketData?.asset_service || ticketData?.service_or_asset || "Asset";
 
   switch (associationType) {
-    case 'Checklist':
-      return !!(ticketData.task_id || ticketData.task_name || ticketData.checklist_schedule_time ||
-        ticketData.checklist_completion_time || ticketData.checklist_type ||
-        ticketData.checklist_assigned_to_name || ticketData.response_attachments);
-    case 'Patrolling':
-      return !!(ticketData.patrolling_id || ticketData.patrolling_name || ticketData.patrol_conducted_by ||
-        ticketData.patrol_time || ticketData.patrol_attachment);
-    case 'Incident':
-      return !!(ticketData.incident_id || ticketData.incident_name || ticketData.incident_primary_category ||
-        ticketData.incident_secondary_category || ticketData.incident_third_level_category ||
-        ticketData.level_of_incident || ticketData.incident_attachments);
-    case 'Audit':
-      return !!(ticketData.audit_id || ticketData.audit_conducted_by || ticketData.audit_type ||
-        ticketData.audit_attachments);
-    case 'Asset':
+    case "Checklist":
+      return !!(
+        ticketData.task_id ||
+        ticketData.task_name ||
+        ticketData.checklist_schedule_time ||
+        ticketData.checklist_completion_time ||
+        ticketData.checklist_type ||
+        ticketData.checklist_assigned_to_name ||
+        ticketData.response_attachments
+      );
+    case "Patrolling":
+      return !!(
+        ticketData.patrolling_id ||
+        ticketData.patrolling_name ||
+        ticketData.patrol_conducted_by ||
+        ticketData.patrol_time ||
+        ticketData.patrol_attachment
+      );
+    case "Incident":
+      return !!(
+        ticketData.incident_id ||
+        ticketData.incident_name ||
+        ticketData.incident_primary_category ||
+        ticketData.incident_secondary_category ||
+        ticketData.incident_third_level_category ||
+        ticketData.level_of_incident ||
+        ticketData.incident_attachments
+      );
+    case "Audit":
+      return !!(
+        ticketData.audit_id ||
+        ticketData.audit_conducted_by ||
+        ticketData.audit_type ||
+        ticketData.audit_attachments
+      );
+    case "Asset":
     default:
       // Check if allocated to Service or Asset
-      if (ticketData?.asset_service === 'Service') {
+      if (ticketData?.asset_service === "Service") {
         // For Service: check if we have service name or service ID
-        return !!(ticketData.asset_or_service_name || ticketData.asset_or_service_id);
+        return !!(
+          ticketData.asset_or_service_name || ticketData.asset_or_service_id
+        );
       } else {
         // For Asset: check if we have asset-specific data
-        return !!(ticketData.asset_or_service_name || ticketData.asset_group || ticketData.asset_status ||
-          ticketData.pms_asset_id || ticketData.asset_or_service_id || ticketData.asset_type_category);
+        return !!(
+          ticketData.asset_or_service_name ||
+          ticketData.asset_group ||
+          ticketData.asset_status ||
+          ticketData.pms_asset_id ||
+          ticketData.asset_or_service_id ||
+          ticketData.asset_type_category
+        );
       }
   }
 };
 
 // Helper function to calculate balance TAT
-const calculateBalanceTAT = (tatTime: string | null | undefined, tatMinutes: number | null | undefined): { value: string; isExceeded: boolean; exceededBy: string } => {
+const calculateBalanceTAT = (
+  tatTime: string | null | undefined,
+  tatMinutes: number | null | undefined
+): { value: string; isExceeded: boolean; exceededBy: string } => {
   if (!tatTime) {
     return {
-      value: tatMinutes ? formatMinutesToDDHHMM(tatMinutes) : '00:00:00:00',
+      value: tatMinutes ? formatMinutesToDDHHMM(tatMinutes) : "00:00:00:00",
       isExceeded: false,
-      exceededBy: ''
+      exceededBy: "",
     };
   }
 
@@ -488,12 +647,12 @@ const calculateBalanceTAT = (tatTime: string | null | undefined, tatMinutes: num
       const hours = Math.floor((exceededSeconds % (24 * 60 * 60)) / (60 * 60));
       const mins = Math.floor((exceededSeconds % (60 * 60)) / 60);
       const secs = exceededSeconds % 60;
-      const exceededTime = `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      const exceededTime = `${String(days).padStart(2, "0")}:${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
       return {
         value: exceededTime,
         isExceeded: true,
-        exceededBy: exceededTime
+        exceededBy: exceededTime,
       };
     } else {
       // Time remaining
@@ -501,36 +660,38 @@ const calculateBalanceTAT = (tatTime: string | null | undefined, tatMinutes: num
       const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
       const mins = Math.floor((totalSeconds % (60 * 60)) / 60);
       const secs = totalSeconds % 60;
-      const remainingTime = `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      const remainingTime = `${String(days).padStart(2, "0")}:${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
       return {
         value: remainingTime,
         isExceeded: false,
-        exceededBy: ''
+        exceededBy: "",
       };
     }
   } catch (error) {
-    console.error('Error calculating balance TAT:', error);
+    console.error("Error calculating balance TAT:", error);
     return {
-      value: tatMinutes ? formatMinutesToDDHHMM(tatMinutes) : '00:00:00:00',
+      value: tatMinutes ? formatMinutesToDDHHMM(tatMinutes) : "00:00:00:00",
       isExceeded: false,
-      exceededBy: ''
+      exceededBy: "",
     };
   }
 };
 
 const formatSecondsToDDHHMMSS = (seconds: number): string => {
-  if (!seconds || seconds <= 0) return '00:00:00:00';
+  if (!seconds || seconds <= 0) return "00:00:00:00";
   const totalSeconds = Math.abs(seconds);
   const days = Math.floor(totalSeconds / (24 * 60 * 60));
   const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
   const mins = Math.floor((totalSeconds % (60 * 60)) / 60);
   const secs = totalSeconds % 60;
-  return `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  return `${String(days).padStart(2, "0")}:${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 };
 
 // Helper to calculate balance TAT in seconds from escalation time
-const getBalanceTATSeconds = (escalationTime: string | null | undefined): number => {
+const getBalanceTATSeconds = (
+  escalationTime: string | null | undefined
+): number => {
   if (!escalationTime) return 0;
   try {
     const escalationDate = new Date(escalationTime);
@@ -562,9 +723,12 @@ export const TicketDetailsPage = () => {
   const [jobSheetLoading, setJobSheetLoading] = useState(false);
 
   // Real-time timer states
-  const [responseEscalationSeconds, setResponseEscalationSeconds] = useState<number>(0);
-  const [resolutionEscalationSeconds, setResolutionEscalationSeconds] = useState<number>(0);
-  const [goldenTicketEscalationSeconds, setGoldenTicketEscalationSeconds] = useState<number>(0);
+  const [responseEscalationSeconds, setResponseEscalationSeconds] =
+    useState<number>(0);
+  const [resolutionEscalationSeconds, setResolutionEscalationSeconds] =
+    useState<number>(0);
+  const [goldenTicketEscalationSeconds, setGoldenTicketEscalationSeconds] =
+    useState<number>(0);
   // Extra TAT timings fetched from dedicated endpoints
   const [responseTatTimings, setResponseTatTimings] = useState<any>(null);
   const [responseTatData, setResponseTatData] = useState<any>(null);
@@ -574,120 +738,156 @@ export const TicketDetailsPage = () => {
   const [responseSequence, setResponseSequence] = useState<any[] | null>(null);
   const responseSeqRef = useRef<any[] | null>(null);
   const responseSeqIndexRef = useRef<number>(-1);
-  const [responseSequenceIndex, setResponseSequenceIndex] = useState<number>(-1);
+  const [responseSequenceIndex, setResponseSequenceIndex] =
+    useState<number>(-1);
 
-  const [resolutionSequence, setResolutionSequence] = useState<any[] | null>(null);
+  const [resolutionSequence, setResolutionSequence] = useState<any[] | null>(
+    null
+  );
   const resolutionSeqRef = useRef<any[] | null>(null);
   const resolutionSeqIndexRef = useRef<number>(-1);
-  const [resolutionSequenceIndex, setResolutionSequenceIndex] = useState<number>(-1);
+  const [resolutionSequenceIndex, setResolutionSequenceIndex] =
+    useState<number>(-1);
 
   // Refs to track if escalation timers have been initialized (to prevent reinitialization on status changes)
   const escalationInitRef = useRef<boolean>(false);
 
-  const [communicationTemplates, setCommunicationTemplates] = useState<Array<{
-    id: number;
-    identifier: string;
-    identifier_action: string;
-    body: string;
-    created_by_id: number;
-    created_by: { id: number; email: string };
-    resource: { id: number };
-    created_at: string;
-    updated_at: string;
-    active?: boolean;
-  }>>([]);
-  const [selectedInternalTemplate, setSelectedInternalTemplate] = useState<number | string>("");
-  const [selectedCustomerTemplate, setSelectedCustomerTemplate] = useState<number | string>("");
+  const [communicationTemplates, setCommunicationTemplates] = useState<
+    Array<{
+      id: number;
+      identifier: string;
+      identifier_action: string;
+      body: string;
+      created_by_id: number;
+      created_by: { id: number; email: string };
+      resource: { id: number };
+      created_at: string;
+      updated_at: string;
+      active?: boolean;
+    }>
+  >([]);
+  const [selectedInternalTemplate, setSelectedInternalTemplate] = useState<
+    number | string
+  >("");
+  const [selectedCustomerTemplate, setSelectedCustomerTemplate] = useState<
+    number | string
+  >("");
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [internalCommentText, setInternalCommentText] = useState("");
   const [customerAttachments, setCustomerAttachments] = useState<File[]>([]);
   const [internalAttachments, setInternalAttachments] = useState<File[]>([]);
   const [submittingComment, setSubmittingComment] = useState(false);
-  const [responsiblePersons, setResponsiblePersons] = useState<Array<{
-    id: number;
-    person_id?: number | string | null;
-    employee_type: string;
-    full_name: string;
-  }>>([]);
-  const [loadingResponsiblePersons, setLoadingResponsiblePersons] = useState(false);
+  const [responsiblePersons, setResponsiblePersons] = useState<
+    Array<{
+      id: number;
+      person_id?: number | string | null;
+      employee_type: string;
+      full_name: string;
+    }>
+  >([]);
+  const [loadingResponsiblePersons, setLoadingResponsiblePersons] =
+    useState(false);
 
-  const [suppliers, setSuppliers] = useState<Array<{
-    id: number;
-    company_name: string;
-    email: string;
-  }>>([]);
+  const [suppliers, setSuppliers] = useState<
+    Array<{
+      id: number;
+      company_name: string;
+      email: string;
+    }>
+  >([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(false);
-  const [complaintModes, setComplaintModes] = useState<Array<{
-    id: number;
-    name: string;
-  }>>([]);
+  const [complaintModes, setComplaintModes] = useState<
+    Array<{
+      id: number;
+      name: string;
+    }>
+  >([]);
   const [loadingComplaintModes, setLoadingComplaintModes] = useState(false);
   const [loadingComplaintStatus, setLoadingComplaintStatus] = useState(false);
 
   // Add missing complaintStatus state
   const [complaintStatus, setComplaintStatus] = useState<Array<any>>([]);
 
-
-  const [costRows, setCostRows] = useState<Array<{
-    id: number;
-    quotation: string;
-    vendor: string;
-    vendor_id: string;
-    description: string;
-    cost: string;
-    attachment: string;
-    attachmentFiles: File[];
-  }>>([
-    { id: 1, quotation: '', vendor: '', vendor_id: '', description: '', cost: '', attachment: '', attachmentFiles: [] }
+  const [costRows, setCostRows] = useState<
+    Array<{
+      id: number;
+      quotation: string;
+      vendor: string;
+      vendor_id: string;
+      description: string;
+      cost: string;
+      attachment: string;
+      attachmentFiles: File[];
+    }>
+  >([
+    {
+      id: 1,
+      quotation: "",
+      vendor: "",
+      vendor_id: "",
+      description: "",
+      cost: "",
+      attachment: "",
+      attachmentFiles: [],
+    },
   ]);
 
   const [submittingCostApproval, setSubmittingCostApproval] = useState(false);
 
   // Cancel confirmation modal state
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [cancelRequestId, setCancelRequestId] = useState<string>('');
+  const [cancelRequestId, setCancelRequestId] = useState<string>("");
 
   // Ticket Management Edit State
   const [isEditingTicketMgmt, setIsEditingTicketMgmt] = useState(false);
   const [ticketMgmtFormData, setTicketMgmtFormData] = useState({
-    selectedStatus: '',
-    severity: '',
-    assigned_to: '',
-    asset_service: '',
-    visit_date: '',
-    expected_completion_date: '',
-    issue_related_to: '',
-    complaint_mode_id: '',
+    selectedStatus: "",
+    severity: "",
+    assigned_to: "",
+    asset_service: "",
+    visit_date: "",
+    expected_completion_date: "",
+    issue_related_to: "",
+    complaint_mode_id: "",
     rca_template_ids: [] as number[],
-    rca_text: '',
-    additional_notes: '',
-    proactive_reactive: '', // <-- Add this property
-    review_tracking: '',
-    supplier_id: '',
+    rca_text: "",
+    additional_notes: "",
+    proactive_reactive: "", // <-- Add this property
+    review_tracking: "",
+    supplier_id: "",
     // Association fields - updated structure
-    associatedTo: { id: '', name: '', type: '' },
-    selectedAsset: '',
-    selectedService: '',
+    associatedTo: { id: "", name: "", type: "" },
+    selectedAsset: "",
+    selectedService: "",
   });
   const [submittingTicketMgmt, setSubmittingTicketMgmt] = useState(false);
 
   // Ticket Details Edit State (Ticket Type / Related To / Issue Related To / Category / Sub Category)
   const [isEditingTicketDetails, setIsEditingTicketDetails] = useState(false);
   const [ticketDetailsFormData, setTicketDetailsFormData] = useState({
-    complaint_type: '',
-    priority: '',
-    issue_type_id: '',
-    issue_related_to: '',
-    category_type_id: '',
-    sub_category_id: '',
+    complaint_type: "",
+    priority: "",
+    issue_type_id: "",
+    issue_related_to: "",
+    category_type_id: "",
+    sub_category_id: "",
   });
-  const [detailsIssueTypes, setDetailsIssueTypes] = useState<{ id: number; name: string; active: number | null }[]>([]);
-  const [detailsCategories, setDetailsCategories] = useState<{ id: number; name: string }[]>([]);
-  const [detailsSubCategories, setDetailsSubCategories] = useState<{ id: number; name: string }[]>([]);
-  const [loadingDetailsIssueTypes, setLoadingDetailsIssueTypes] = useState(false);
-  const [loadingDetailsCategories, setLoadingDetailsCategories] = useState(false);
-  const [loadingDetailsSubCategories, setLoadingDetailsSubCategories] = useState(false);
+  const [detailsIssueTypes, setDetailsIssueTypes] = useState<
+    { id: number; name: string; active: number | null }[]
+  >([]);
+  const [detailsCategories, setDetailsCategories] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [detailsSubCategories, setDetailsSubCategories] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [loadingDetailsIssueTypes, setLoadingDetailsIssueTypes] =
+    useState(false);
+  const [loadingDetailsCategories, setLoadingDetailsCategories] =
+    useState(false);
+  const [loadingDetailsSubCategories, setLoadingDetailsSubCategories] =
+    useState(false);
   const [submittingTicketDetails, setSubmittingTicketDetails] = useState(false);
 
   // Asset and Service state for association functionality
@@ -695,7 +895,9 @@ export const TicketDetailsPage = () => {
   const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
-  const [associationType, setAssociationType] = useState<'asset' | 'service' | ''>('');
+  const [associationType, setAssociationType] = useState<
+    "asset" | "service" | ""
+  >("");
 
   // New form state similar to UpdateTicketsPage
   const [formData, setFormData] = useState({
@@ -707,61 +909,92 @@ export const TicketDetailsPage = () => {
   // Ticket Closure Edit State
   const [isEditingTicketClosure, setIsEditingTicketClosure] = useState(false);
   const [ticketClosureFormData, setTicketClosureFormData] = useState({
-    preventive_action_text: '',
-    short_term_impact_text: '',
-    corrective_action_text: '',
-    long_term_impact_text: '',
-    responsible_person: '',
-    review_tracking: '',
+    preventive_action_text: "",
+    short_term_impact_text: "",
+    corrective_action_text: "",
+    long_term_impact_text: "",
+    responsible_person: "",
+    review_tracking: "",
   });
   const [submittingTicketClosure, setSubmittingTicketClosure] = useState(false);
 
   // Location Edit State
   const [isEditingLocation, setIsEditingLocation] = useState(false);
   const [locationFormData, setLocationFormData] = useState({
-    building: '',
-    wing: '',
-    area: '',
-    floor: '',
-    room: ''
+    building: "",
+    wing: "",
+    area: "",
+    floor: "",
+    room: "",
   });
   const [submittingLocation, setSubmittingLocation] = useState(false);
 
   // Society Location (new cascading dropdowns: Society → Wing → Area)
-  const [societyLocations, setSocietyLocations] = useState<Array<{ id: number; name: string }>>([]);
-  const [societyWings, setSocietyWings] = useState<Array<{ id: number; name: string }>>([]);
-  const [societyAreas, setSocietyAreas] = useState<Array<{ id: number; name: string }>>([]);
+  const [societyLocations, setSocietyLocations] = useState<
+    Array<{ id: number; name: string }>
+  >([]);
+  const [societyWings, setSocietyWings] = useState<
+    Array<{ id: number; name: string }>
+  >([]);
+  const [societyAreas, setSocietyAreas] = useState<
+    Array<{ id: number; name: string }>
+  >([]);
   const [loadingSocietyLocations, setLoadingSocietyLocations] = useState(false);
   const [loadingSocietyWings, setLoadingSocietyWings] = useState(false);
   const [loadingSocietyAreas, setLoadingSocietyAreas] = useState(false);
-  const [isEditingSocietyLocation, setIsEditingSocietyLocation] = useState(false);
+  const [isEditingSocietyLocation, setIsEditingSocietyLocation] =
+    useState(false);
   // Tower/Flat dropdowns — same /get_society_blocks.json + /get_society_flats.json
   // API used by the Add Helpdesk Ticket form (AddHelpdeskTicket.tsx).
-  const [societyBlocks, setSocietyBlocks] = useState<Array<{ id: number; name: string }>>([]);
-  const [societyFlatOptions, setSocietyFlatOptions] = useState<Array<{ id: number; flat_no: string; approve?: boolean }>>([]);
+  const [societyBlocks, setSocietyBlocks] = useState<
+    Array<{ id: number; name: string }>
+  >([]);
+  const [societyFlatOptions, setSocietyFlatOptions] = useState<
+    Array<{ id: number; flat_no: string; approve?: boolean }>
+  >([]);
   const [loadingSocietyBlocks, setLoadingSocietyBlocks] = useState(false);
-  const [loadingSocietyFlatOptions, setLoadingSocietyFlatOptions] = useState(false);
+  const [loadingSocietyFlatOptions, setLoadingSocietyFlatOptions] =
+    useState(false);
   const [societyLocationFormData, setSocietyLocationFormData] = useState({
-    society_location_id: '',
-    wing_id: '',
-    area_id: '',
-    tower_id: '',
-    flat_id: '',
+    society_location_id: "",
+    wing_id: "",
+    area_id: "",
+    tower_id: "",
+    flat_id: "",
   });
-  const [submittingSocietyLocation, setSubmittingSocietyLocation] = useState(false);
+  const [submittingSocietyLocation, setSubmittingSocietyLocation] =
+    useState(false);
 
   // Location data states
-  const [buildings, setBuildings] = useState<Array<{ id: number; name: string }>>([]);
-  const [wings, setWings] = useState<Array<{ id: number; name: string; building_id: string }>>([]);
-  const [areas, setAreas] = useState<Array<{ id: number; name: string; wing_id: string }>>([]);
-  const [floors, setFloors] = useState<Array<{ id: number; name: string; area_id: string }>>([]);
-  const [rooms, setRooms] = useState<Array<{ id: number; name: string; floor_id: number }>>([]);
+  const [buildings, setBuildings] = useState<
+    Array<{ id: number; name: string }>
+  >([]);
+  const [wings, setWings] = useState<
+    Array<{ id: number; name: string; building_id: string }>
+  >([]);
+  const [areas, setAreas] = useState<
+    Array<{ id: number; name: string; wing_id: string }>
+  >([]);
+  const [floors, setFloors] = useState<
+    Array<{ id: number; name: string; area_id: string }>
+  >([]);
+  const [rooms, setRooms] = useState<
+    Array<{ id: number; name: string; floor_id: number }>
+  >([]);
 
   // Filtered location states
-  const [filteredWings, setFilteredWings] = useState<Array<{ id: number; name: string; building_id: string }>>([]);
-  const [filteredAreas, setFilteredAreas] = useState<Array<{ id: number; name: string; wing_id: string }>>([]);
-  const [filteredFloors, setFilteredFloors] = useState<Array<{ id: number; name: string; area_id: string }>>([]);
-  const [filteredRooms, setFilteredRooms] = useState<Array<{ id: number; name: string; floor_id: number }>>([]);
+  const [filteredWings, setFilteredWings] = useState<
+    Array<{ id: number; name: string; building_id: string }>
+  >([]);
+  const [filteredAreas, setFilteredAreas] = useState<
+    Array<{ id: number; name: string; wing_id: string }>
+  >([]);
+  const [filteredFloors, setFilteredFloors] = useState<
+    Array<{ id: number; name: string; area_id: string }>
+  >([]);
+  const [filteredRooms, setFilteredRooms] = useState<
+    Array<{ id: number; name: string; floor_id: number }>
+  >([]);
 
   // Loading states for location dropdowns
   const [loadingBuildings, setLoadingBuildings] = useState(false);
@@ -772,32 +1005,35 @@ export const TicketDetailsPage = () => {
 
   // (Add handlers near other handlers)
   const addCostRow = () => {
-    setCostRows(prev => [...prev, {
-      id: Date.now(),
-      quotation: '',
-      vendor: '',
-      vendor_id: '',
-      description: '',
-      cost: '',
-      attachment: '',
-      attachmentFiles: []
-    }])
-  }
+    setCostRows((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        quotation: "",
+        vendor: "",
+        vendor_id: "",
+        description: "",
+        cost: "",
+        attachment: "",
+        attachmentFiles: [],
+      },
+    ]);
+  };
   const removeCostRow = () => {
-    setCostRows(prev => prev.length > 1 ? prev.slice(0, -1) : prev);
+    setCostRows((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
   };
 
   // Display timestamps - extract date and time from ISO format
-  const formatLogDate = (d: string) => d ? d.split('T')[0] : '';
+  const formatLogDate = (d: string) => (d ? d.split("T")[0] : "");
   const formatLogTime = (d: string) => {
-    if (!d) return '';
+    if (!d) return "";
     try {
       const date = new Date(d);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
       const year = date.getFullYear();
       // Extract time directly from API timestamp without conversion
-      const timePart = d.split('T')[1]?.split('.')[0] || '';
+      const timePart = d.split("T")[1]?.split(".")[0] || "";
       return `${day}/${month}/${year}, ${timePart}`;
     } catch {
       return d;
@@ -806,31 +1042,44 @@ export const TicketDetailsPage = () => {
 
   // Format date for logs card display as "19 Nov 2025"
   const formatLogCardDate = (d: string) => {
-    if (!d) return '';
+    if (!d) return "";
     try {
       const date = new Date(d);
       const day = date.getDate();
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
       const month = monthNames[date.getMonth()];
       const year = date.getFullYear();
       return `${day} ${month} ${year}`;
     } catch {
-      return d.split('T')[0];
+      return d.split("T")[0];
     }
   };
 
   // Format time for logs card (just the time part)
   const formatLogCardTime = (d: string) => {
-    if (!d) return '';
+    if (!d) return "";
     try {
       const date = new Date(d);
       let hours = date.getHours();
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
       hours = hours % 12 || 12;
       return `${hours}:${minutes}${ampm}`;
     } catch {
-      return d.split('T')[1]?.split('.')[0] || '';
+      return d.split("T")[1]?.split(".")[0] || "";
     }
   };
 
@@ -847,37 +1096,37 @@ export const TicketDetailsPage = () => {
   };
 
   const formatDate = (d?: string) => {
-    if (!d || d.trim() === '') return 'DD/MM/YYYY';
+    if (!d || d.trim() === "") return "DD/MM/YYYY";
 
     try {
       const date = new Date(d);
       // Use 'en-GB' locale for DD/MM/YYYY format
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
       });
     } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'DD/MM/YYYY';
+      console.error("Error formatting date:", error);
+      return "DD/MM/YYYY";
     }
   };
 
   // Helper to truncate text to 5 characters and append ellipsis; shows full text on hover via title
   const truncateWithEllipsis = (value: string, max: number = 5) => {
-    if (typeof value !== 'string') return value;
+    if (typeof value !== "string") return value;
     if (value.length <= max) return value;
-    return value.slice(0, max) + '...';
+    return value.slice(0, max) + "...";
   };
 
   // Helper to capitalize first letter of each word
   const capitalizeWords = (text: string | null | undefined): string => {
-    if (!text || typeof text !== 'string') return '-';
+    if (!text || typeof text !== "string") return "-";
     return text
       .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   // State for expandable sections - will be set dynamically based on data
@@ -889,7 +1138,7 @@ export const TicketDetailsPage = () => {
     additionalInfo: false,
     attachments: false,
     costApproval: false,
-    actionLogs: false
+    actionLogs: false,
   });
 
   // Update expanded sections based on data availability
@@ -898,22 +1147,77 @@ export const TicketDetailsPage = () => {
       const complaintLogs = ticketData.complaint_logs || [];
 
       setExpandedSections({
-        ticketDetails: hasData(ticketData.heading) || hasData(ticketData.issue_status) || hasData(ticketData.ticket_number) || hasData(ticketData.sub_category_type) || hasData(ticketData.created_by_name) || hasData(ticketData.created_date) || hasData(ticketData.created_time) || hasData(ticketData.category_type) || hasData(ticketData.updated_by) || hasData(ticketData.complaint_mode) || hasData(ticketData.priority) || hasData(ticketData.external_priority) || hasData(ticketData.priority_status) || hasData(ticketData.effective_priority) || hasData(ticketData.assigned_to),
-        creatorInfo: hasData(ticketData.posted_by) || hasData(ticketData.id_society),
-        locationInfo: hasData(ticketData.region) || hasData(ticketData.building_name) || hasData(ticketData.city) || hasData(ticketData.floor_name) || hasData(ticketData.flat_number) || hasData(ticketData.unit_name) || hasData(ticketData.zone) || hasData(ticketData.district) || hasData(ticketData.room_name) || hasData(ticketData.area_name) || hasData(ticketData.site_name) || hasData(ticketData.state) || hasData(ticketData.address) || hasData(ticketData.wing_name),
-        surveyInfo: ticketData.survey && (hasData(ticketData.survey.survey?.id) || hasData(ticketData.survey.survey?.name) || hasData(ticketData.survey.site_name) || hasData(ticketData.survey.building_name) || hasData(ticketData.survey.wing_name) || hasData(ticketData.survey.area_name) || hasData(ticketData.survey.floor_name) || hasData(ticketData.survey.room_name)),
-        additionalInfo: hasData(ticketData.corrective_action) || hasData(ticketData.preventive_action) || hasData(ticketData.root_cause) || hasData(ticketData.response_tat) || hasData(ticketData.ticket_urgency) || hasData(ticketData.responsible_person) || hasData(ticketData.asset_service) || hasData(ticketData.resolution_tat) || hasData(ticketData.task_id) || hasData(ticketData.asset_service_location) || hasData(ticketData.resolution_time) || hasData(ticketData.escalation_response_name) || hasData(ticketData.escalation_resolution_name),
+        ticketDetails:
+          hasData(ticketData.heading) ||
+          hasData(ticketData.issue_status) ||
+          hasData(ticketData.ticket_number) ||
+          hasData(ticketData.sub_category_type) ||
+          hasData(ticketData.created_by_name) ||
+          hasData(ticketData.created_date) ||
+          hasData(ticketData.created_time) ||
+          hasData(ticketData.category_type) ||
+          hasData(ticketData.updated_by) ||
+          hasData(ticketData.complaint_mode) ||
+          hasData(ticketData.priority) ||
+          hasData(ticketData.external_priority) ||
+          hasData(ticketData.priority_status) ||
+          hasData(ticketData.effective_priority) ||
+          hasData(ticketData.assigned_to),
+        creatorInfo:
+          hasData(ticketData.posted_by) || hasData(ticketData.id_society),
+        locationInfo:
+          hasData(ticketData.region) ||
+          hasData(ticketData.building_name) ||
+          hasData(ticketData.city) ||
+          hasData(ticketData.floor_name) ||
+          hasData(ticketData.flat_number) ||
+          hasData(ticketData.unit_name) ||
+          hasData(ticketData.zone) ||
+          hasData(ticketData.district) ||
+          hasData(ticketData.room_name) ||
+          hasData(ticketData.area_name) ||
+          hasData(ticketData.site_name) ||
+          hasData(ticketData.state) ||
+          hasData(ticketData.address) ||
+          hasData(ticketData.wing_name),
+        surveyInfo:
+          ticketData.survey &&
+          (hasData(ticketData.survey.survey?.id) ||
+            hasData(ticketData.survey.survey?.name) ||
+            hasData(ticketData.survey.site_name) ||
+            hasData(ticketData.survey.building_name) ||
+            hasData(ticketData.survey.wing_name) ||
+            hasData(ticketData.survey.area_name) ||
+            hasData(ticketData.survey.floor_name) ||
+            hasData(ticketData.survey.room_name)),
+        additionalInfo:
+          hasData(ticketData.corrective_action) ||
+          hasData(ticketData.preventive_action) ||
+          hasData(ticketData.root_cause) ||
+          hasData(ticketData.response_tat) ||
+          hasData(ticketData.ticket_urgency) ||
+          hasData(ticketData.responsible_person) ||
+          hasData(ticketData.asset_service) ||
+          hasData(ticketData.resolution_tat) ||
+          hasData(ticketData.task_id) ||
+          hasData(ticketData.asset_service_location) ||
+          hasData(ticketData.resolution_time) ||
+          hasData(ticketData.escalation_response_name) ||
+          hasData(ticketData.escalation_resolution_name),
         attachments: ticketData.documents && ticketData.documents.length > 0,
-        costApproval: ticketData.cost_approval_enabled && ticketData.requests && ticketData.requests.length > 0,
-        actionLogs: complaintLogs.length > 0
+        costApproval:
+          ticketData.cost_approval_enabled &&
+          ticketData.requests &&
+          ticketData.requests.length > 0,
+        actionLogs: complaintLogs.length > 0,
       });
     }
   }, [ticketData]);
 
   const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section],
     }));
   };
 
@@ -933,9 +1237,9 @@ export const TicketDetailsPage = () => {
         setTicketData(data);
         setTicketDetailsLoaded(true); // Mark details as loaded
       } catch (err) {
-        console.error('Error fetching ticket details:', err);
-        setError('Failed to fetch ticket details');
-        toast.error('Failed to fetch ticket details');
+        console.error("Error fetching ticket details:", err);
+        setError("Failed to fetch ticket details");
+        toast.error("Failed to fetch ticket details");
       } finally {
         setLoading(false);
       }
@@ -951,7 +1255,7 @@ export const TicketDetailsPage = () => {
       const data = await ticketManagementAPI.getCrmTicketFeeds(id);
       setTicketFeedsData(data);
     } catch (err) {
-      console.error('Error fetching ticket feeds:', err);
+      console.error("Error fetching ticket feeds:", err);
     }
   }, [id]);
 
@@ -961,7 +1265,7 @@ export const TicketDetailsPage = () => {
 
   // Re-fetch feeds when returning from the edit page
   useEffect(() => {
-    if (location.state?.from === 'edit') {
+    if (location.state?.from === "edit") {
       refreshFeeds();
     }
   }, [location.state, refreshFeeds]);
@@ -974,7 +1278,7 @@ export const TicketDetailsPage = () => {
       const data = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(data);
     } catch (err) {
-      console.error('Error refreshing ticket details:', err);
+      console.error("Error refreshing ticket details:", err);
       // Don't show toast for refresh errors to avoid spam
     }
   }, [id]);
@@ -985,7 +1289,9 @@ export const TicketDetailsPage = () => {
 
     const fetchTatTimings = async () => {
       try {
-        const resp = await ticketManagementAPI.getResponseTatTimings(String(ticketData.id || id));
+        const resp = await ticketManagementAPI.getResponseTatTimings(
+          String(ticketData.id || id)
+        );
         // Normalize new API response: { complaint, response_tat, escalation_matrix: [{name, tat_minutes, fired, fired_at, escalated_to}] }
         if (resp?.response_tat) {
           setResponseTatData(resp.response_tat);
@@ -1001,40 +1307,44 @@ export const TicketDetailsPage = () => {
               fired: step.fired,
               fired_at: step.fired_at,
             }))
-          : Array.isArray(resp) ? resp.map((step: any) => ({
-              ...step,
-              minutes: step.minutes ?? step.scheduled_minutes,
-              users: step.users ?? step.escalate_to_user ?? [],
-            })) : [];
+          : Array.isArray(resp)
+            ? resp.map((step: any) => ({
+                ...step,
+                minutes: step.minutes ?? step.scheduled_minutes,
+                users: step.users ?? step.escalate_to_user ?? [],
+              }))
+            : [];
         setResponseTatTimings(tatSteps.length > 0 ? tatSteps : null);
         if (tatSteps.length > 0) {
           setResponseSequence(tatSteps);
           responseSeqRef.current = tatSteps;
-          console.log('✅ Response TAT timings fetched:', tatSteps);
+          console.log("✅ Response TAT timings fetched:", tatSteps);
         }
       } catch (err) {
-        console.error('Error fetching response TAT timings:', err);
+        console.error("Error fetching response TAT timings:", err);
         setResponseTatTimings(null);
       }
 
       try {
-        const res = await ticketManagementAPI.getResolutionTatTimings(String(ticketData.id || id));
+        const res = await ticketManagementAPI.getResolutionTatTimings(
+          String(ticketData.id || id)
+        );
         setResolutionTatTimings(res);
         if (Array.isArray(res) && res.length > 0) {
           setResolutionSequence(res);
           resolutionSeqRef.current = res;
-          console.log('✅ Resolution TAT timings fetched:', res);
+          console.log("✅ Resolution TAT timings fetched:", res);
         }
       } catch (err) {
-        console.error('Error fetching resolution TAT timings:', err);
+        console.error("Error fetching resolution TAT timings:", err);
         setResolutionTatTimings(null);
       }
     };
 
     fetchTatTimings();
   }, [ticketData?.id, id, ticketDetailsLoaded]);
-  console.log("responce tat time ------------------", responseTatTimings)
-  console.log("resolution  tat time ------------------", resolutionTatTimings)
+  console.log("responce tat time ------------------", responseTatTimings);
+  console.log("resolution  tat time ------------------", resolutionTatTimings);
   // PRIORITY 3: Fetch communication templates after ticket details are loaded
   useEffect(() => {
     if (!ticketDetailsLoaded) return;
@@ -1042,14 +1352,17 @@ export const TicketDetailsPage = () => {
     const fetchCommunicationTemplates = async () => {
       try {
         setLoadingTemplates(true);
-        const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, "").replace(
+          /\/$/,
+          ""
+        );
         const url = `https://${baseUrl}${API_CONFIG.ENDPOINTS.COMMUNICATION_TEMPLATES}`;
 
         const response = await fetch(url, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': getAuthHeader(),
-            'Content-Type': 'application/json',
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
           },
         });
 
@@ -1058,11 +1371,11 @@ export const TicketDetailsPage = () => {
         }
 
         const data = await response.json();
-        console.log('Communication templates response:', data);
+        console.log("Communication templates response:", data);
         // The API returns an array directly
         setCommunicationTemplates(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error('Error fetching communication templates:', err);
+        console.error("Error fetching communication templates:", err);
         // toast.error('Failed to load communication templates');
       } finally {
         setLoadingTemplates(false);
@@ -1079,14 +1392,17 @@ export const TicketDetailsPage = () => {
     const fetchComplaintModes = async () => {
       try {
         setLoadingComplaintModes(true);
-        const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, "").replace(
+          /\/$/,
+          ""
+        );
         const url = `https://${baseUrl}/crm/admin/complaint_modes.json`;
 
         const response = await fetch(url, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': getAuthHeader(),
-            'Content-Type': 'application/json',
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
           },
         });
 
@@ -1095,11 +1411,13 @@ export const TicketDetailsPage = () => {
         }
 
         const complaintModesResponse = await response.json();
-        console.log('Complaint modes response:', complaintModesResponse);
-        setComplaintModes(complaintModesResponse.complaint_modes || complaintModesResponse || []);
+        console.log("Complaint modes response:", complaintModesResponse);
+        setComplaintModes(
+          complaintModesResponse.complaint_modes || complaintModesResponse || []
+        );
       } catch (err) {
-        console.error('Error fetching complaint modes:', err);
-        toast.error('Failed to load complaint modes');
+        console.error("Error fetching complaint modes:", err);
+        toast.error("Failed to load complaint modes");
       } finally {
         setLoadingComplaintModes(false);
       }
@@ -1114,14 +1432,17 @@ export const TicketDetailsPage = () => {
     const fetchComplaintStatus = async () => {
       try {
         setLoadingComplaintStatus(true);
-        const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, "").replace(
+          /\/$/,
+          ""
+        );
         const url = `https://${baseUrl}/crm/admin/complaint_statuses.json`;
 
         const response = await fetch(url, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': getAuthHeader(),
-            'Content-Type': 'application/json',
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
           },
         });
 
@@ -1130,11 +1451,15 @@ export const TicketDetailsPage = () => {
         }
 
         const complaintStatusResponse = await response.json();
-        console.log('Complaint status response:', complaintStatusResponse);
-        setComplaintStatus(Array.isArray(complaintStatusResponse) ? complaintStatusResponse : (complaintStatusResponse.data || []));
+        console.log("Complaint status response:", complaintStatusResponse);
+        setComplaintStatus(
+          Array.isArray(complaintStatusResponse)
+            ? complaintStatusResponse
+            : complaintStatusResponse.data || []
+        );
       } catch (err) {
-        console.error('Error fetching complaint status:', err);
-        toast.error('Failed to load complaint status');
+        console.error("Error fetching complaint status:", err);
+        toast.error("Failed to load complaint status");
       } finally {
         setLoadingComplaintStatus(false);
       }
@@ -1150,14 +1475,17 @@ export const TicketDetailsPage = () => {
     const fetchResponsiblePersons = async () => {
       try {
         setLoadingResponsiblePersons(true);
-        const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, "").replace(
+          /\/$/,
+          ""
+        );
         const url = `https://${baseUrl}/dropdown/service_engineers`;
 
         const response = await fetch(url, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': getAuthHeader(),
-            'Content-Type': 'application/json',
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
           },
         });
 
@@ -1166,18 +1494,26 @@ export const TicketDetailsPage = () => {
         }
 
         const data = await response.json();
-        const engineers = Array.isArray(data.helpdesk_users) ? data.helpdesk_users : [];
+        const engineers = Array.isArray(data.helpdesk_users)
+          ? data.helpdesk_users
+          : [];
         setResponsiblePersons(
-          engineers.map((engineer: { id: number; person_id?: number | string | null; full_name: string }) => ({
-            id: engineer.id,
-            person_id: engineer.person_id,
-            employee_type: '',
-            full_name: engineer.full_name,
-          }))
+          engineers.map(
+            (engineer: {
+              id: number;
+              person_id?: number | string | null;
+              full_name: string;
+            }) => ({
+              id: engineer.id,
+              person_id: engineer.person_id,
+              employee_type: "",
+              full_name: engineer.full_name,
+            })
+          )
         );
       } catch (err) {
-        console.error('Error fetching responsible persons:', err);
-        toast.error('Failed to load responsible persons');
+        console.error("Error fetching responsible persons:", err);
+        toast.error("Failed to load responsible persons");
       } finally {
         setLoadingResponsiblePersons(false);
       }
@@ -1186,7 +1522,6 @@ export const TicketDetailsPage = () => {
     fetchResponsiblePersons();
   }, [ticketDetailsLoaded]);
 
-
   // PRIORITY 3: Fetch suppliers after ticket details are loaded
   useEffect(() => {
     if (!ticketDetailsLoaded) return;
@@ -1194,14 +1529,17 @@ export const TicketDetailsPage = () => {
     const fetchSuppliers = async () => {
       try {
         setLoadingSuppliers(true);
-        const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, "").replace(
+          /\/$/,
+          ""
+        );
         const url = `https://${baseUrl}/crm/admin/vendor_setup.json`;
 
         const response = await fetch(url, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': getAuthHeader(),
-            'Content-Type': 'application/json',
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
           },
         });
 
@@ -1210,7 +1548,7 @@ export const TicketDetailsPage = () => {
         }
 
         const data = await response.json();
-        console.log('Vendors response:', data);
+        console.log("Vendors response:", data);
         // API returns a direct array of vendor objects
         const list = Array.isArray(data)
           ? data
@@ -1219,8 +1557,8 @@ export const TicketDetailsPage = () => {
             : [];
         setSuppliers(list);
       } catch (err) {
-        console.error('Error fetching vendors:', err);
-        toast.error('Failed to load vendors');
+        console.error("Error fetching vendors:", err);
+        toast.error("Failed to load vendors");
       } finally {
         setLoadingSuppliers(false);
       }
@@ -1230,99 +1568,103 @@ export const TicketDetailsPage = () => {
   }, [ticketDetailsLoaded]);
 
   // Fetch Assets for association functionality
-  const fetchAssets = useCallback(async (shouldSetSelectedValue = true) => {
-    if (isLoadingAssets) return;
+  const fetchAssets = useCallback(
+    async (shouldSetSelectedValue = true) => {
+      if (isLoadingAssets) return;
 
-    setIsLoadingAssets(true);
-    try {
-      console.log("🔄 Fetching assets from API...");
-      const url = getFullUrl('/pms/assets/get_assets.json');
-      const options = {
-        method: 'GET',
-        headers: {
-          Authorization: getAuthHeader(),
-        },
-      };
-      const response = await fetch(url, options);
+      setIsLoadingAssets(true);
+      try {
+        console.log("🔄 Fetching assets from API...");
+        const url = getFullUrl("/pms/assets/get_assets.json");
+        const options = {
+          method: "GET",
+          headers: {
+            Authorization: getAuthHeader(),
+          },
+        };
+        const response = await fetch(url, options);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("🔄 Raw Assets API Response:", data);
+
+        // Handle different response structures
+        let assets = [];
+        if (data.success && Array.isArray(data.data)) {
+          assets = data.data;
+        } else if (Array.isArray(data)) {
+          assets = data;
+        } else {
+          console.warn("⚠️ Unexpected assets response structure:", data);
+          assets = [];
+        }
+
+        console.log("📦 Assets received:", assets.length, "items");
+        setAssetOptions(assets);
+      } catch (error) {
+        console.error("Error fetching assets:", error);
+        setAssetOptions([]);
+      } finally {
+        setIsLoadingAssets(false);
       }
-
-      const data = await response.json();
-      console.log('🔄 Raw Assets API Response:', data);
-
-      // Handle different response structures
-      let assets = [];
-      if (data.success && Array.isArray(data.data)) {
-        assets = data.data;
-      } else if (Array.isArray(data)) {
-        assets = data;
-      } else {
-        console.warn('⚠️ Unexpected assets response structure:', data);
-        assets = [];
-      }
-
-      console.log("📦 Assets received:", assets.length, "items");
-      setAssetOptions(assets);
-
-    } catch (error) {
-      console.error("Error fetching assets:", error);
-      setAssetOptions([]);
-    } finally {
-      setIsLoadingAssets(false);
-    }
-  }, [isLoadingAssets]);
+    },
+    [isLoadingAssets]
+  );
 
   // Fetch Services for association functionality
-  const fetchServices = useCallback(async (shouldSetSelectedValue = true) => {
-    if (isLoadingServices) return;
+  const fetchServices = useCallback(
+    async (shouldSetSelectedValue = true) => {
+      if (isLoadingServices) return;
 
-    setIsLoadingServices(true);
-    try {
-      console.log("🔄 Fetching services from API...");
-      const url = getFullUrl('/pms/services/get_services.json');
-      const options = {
-        method: 'GET',
-        headers: {
-          Authorization: getAuthHeader(),
-        },
-      };
-      const response = await fetch(url, options);
+      setIsLoadingServices(true);
+      try {
+        console.log("🔄 Fetching services from API...");
+        const url = getFullUrl("/pms/services/get_services.json");
+        const options = {
+          method: "GET",
+          headers: {
+            Authorization: getAuthHeader(),
+          },
+        };
+        const response = await fetch(url, options);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("🔄 Raw Services API Response:", data);
+
+        // Handle API response - expect direct array of services
+        let services = [];
+        if (Array.isArray(data)) {
+          // Direct array response with {id, service_name} structure
+          services = data.map((service) => ({
+            id: service.id,
+            service_name: service.service_name,
+            service_code: service.service_code || "", // Optional service_code
+          }));
+        } else {
+          console.warn("⚠️ Unexpected services response structure:", data);
+          console.warn("⚠️ Expected array, received:", typeof data);
+          services = [];
+        }
+
+        console.log("📦 Services received:", services.length, "items");
+        console.log("📦 Sample services:", services.slice(0, 3));
+        setServiceOptions(services);
+      } catch (error) {
+        console.error("Error fetching services:", error);
+        setServiceOptions([]);
+      } finally {
+        setIsLoadingServices(false);
       }
-
-      const data = await response.json();
-      console.log('🔄 Raw Services API Response:', data);
-
-      // Handle API response - expect direct array of services
-      let services = [];
-      if (Array.isArray(data)) {
-        // Direct array response with {id, service_name} structure
-        services = data.map(service => ({
-          id: service.id,
-          service_name: service.service_name,
-          service_code: service.service_code || '' // Optional service_code
-        }));
-      } else {
-        console.warn('⚠️ Unexpected services response structure:', data);
-        console.warn('⚠️ Expected array, received:', typeof data);
-        services = [];
-      }
-
-      console.log("📦 Services received:", services.length, "items");
-      console.log("📦 Sample services:", services.slice(0, 3));
-      setServiceOptions(services);
-
-    } catch (error) {
-      console.error("Error fetching services:", error);
-      setServiceOptions([]);
-    } finally {
-      setIsLoadingServices(false);
-    }
-  }, [isLoadingServices]);
+    },
+    [isLoadingServices]
+  );
 
   // Track if we've already fetched data to prevent duplicate calls
   const hasLoadedAssets = useRef(false);
@@ -1333,31 +1675,68 @@ export const TicketDetailsPage = () => {
     if (!ticketDetailsLoaded) return;
 
     // Only fetch if we haven't already loaded the data
-    if (!hasLoadedAssets.current && assetOptions.length === 0 && !isLoadingAssets) {
+    if (
+      !hasLoadedAssets.current &&
+      assetOptions.length === 0 &&
+      !isLoadingAssets
+    ) {
       fetchAssets(false);
       hasLoadedAssets.current = true;
     }
-    if (!hasLoadedServices.current && serviceOptions.length === 0 && !isLoadingServices) {
+    if (
+      !hasLoadedServices.current &&
+      serviceOptions.length === 0 &&
+      !isLoadingServices
+    ) {
       fetchServices(false);
       hasLoadedServices.current = true;
     }
-  }, [ticketDetailsLoaded, assetOptions.length, serviceOptions.length, isLoadingAssets, isLoadingServices, fetchAssets, fetchServices]);
+  }, [
+    ticketDetailsLoaded,
+    assetOptions.length,
+    serviceOptions.length,
+    isLoadingAssets,
+    isLoadingServices,
+    fetchAssets,
+    fetchServices,
+  ]);
 
   // Handle association changes for the new formData (similar to UpdateTicketsPage)
   useEffect(() => {
-    console.log("🔄 FormData AssociatedTo change detected:", formData.associatedTo);
+    console.log(
+      "🔄 FormData AssociatedTo change detected:",
+      formData.associatedTo
+    );
 
     // Only fetch if the option is selected and we don't have data yet
-    if (formData.associatedTo.asset && assetOptions.length === 0 && !isLoadingAssets && !hasLoadedAssets.current) {
+    if (
+      formData.associatedTo.asset &&
+      assetOptions.length === 0 &&
+      !isLoadingAssets &&
+      !hasLoadedAssets.current
+    ) {
       fetchAssets(false);
       hasLoadedAssets.current = true;
     }
 
-    if (formData.associatedTo.service && serviceOptions.length === 0 && !isLoadingServices && !hasLoadedServices.current) {
+    if (
+      formData.associatedTo.service &&
+      serviceOptions.length === 0 &&
+      !isLoadingServices &&
+      !hasLoadedServices.current
+    ) {
       fetchServices(false);
       hasLoadedServices.current = true;
     }
-  }, [formData.associatedTo, assetOptions.length, serviceOptions.length, isLoadingAssets, isLoadingServices, fetchAssets, fetchServices]);
+  }, [
+    formData.associatedTo,
+    assetOptions.length,
+    serviceOptions.length,
+    isLoadingAssets,
+    isLoadingServices,
+    fetchAssets,
+    fetchServices,
+  ]);
 
   // PRIORITY 3: Load location data after ticket details are loaded
   useEffect(() => {
@@ -1369,7 +1748,7 @@ export const TicketDetailsPage = () => {
         loadWings(),
         loadAreas(),
         loadFloors(),
-        loadRooms()
+        loadRooms(),
       ]);
     };
 
@@ -1399,8 +1778,8 @@ export const TicketDetailsPage = () => {
       const targetId = ticketData.asset_or_service_id.toString();
 
       if (ticketData.asset_service === "Asset" && assetOptions.length > 0) {
-        const matchingAsset = assetOptions.find((asset: AssetOption) =>
-          asset.id.toString() === targetId
+        const matchingAsset = assetOptions.find(
+          (asset: AssetOption) => asset.id.toString() === targetId
         );
 
         if (matchingAsset && !formData.selectedAsset) {
@@ -1408,35 +1787,44 @@ export const TicketDetailsPage = () => {
             ...prev,
             associatedTo: { asset: true, service: false },
             selectedAsset: matchingAsset.id.toString(),
-            selectedService: '',
+            selectedService: "",
           }));
-          setAssociationType('asset');
+          setAssociationType("asset");
         }
-      } else if (ticketData.asset_service === "Service" && serviceOptions.length > 0) {
-        const matchingService = serviceOptions.find((service: ServiceOption) =>
-          service.id.toString() === targetId
+      } else if (
+        ticketData.asset_service === "Service" &&
+        serviceOptions.length > 0
+      ) {
+        const matchingService = serviceOptions.find(
+          (service: ServiceOption) => service.id.toString() === targetId
         );
 
         if (matchingService && !formData.selectedService) {
           setFormData((prev) => ({
             ...prev,
             associatedTo: { asset: false, service: true },
-            selectedAsset: '',
+            selectedAsset: "",
             selectedService: matchingService.id.toString(),
           }));
-          setAssociationType('service');
+          setAssociationType("service");
         }
       }
     }
-  }, [ticketData, assetOptions, serviceOptions, formData.selectedAsset, formData.selectedService]);
+  }, [
+    ticketData,
+    assetOptions,
+    serviceOptions,
+    formData.selectedAsset,
+    formData.selectedService,
+  ]);
 
   // Location data loading functions
   const loadBuildings = async () => {
     setLoadingBuildings(true);
     try {
-      const url = getFullUrl('/pms/buildings.json');
+      const url = getFullUrl("/pms/buildings.json");
       const options = {
-        method: 'GET',
+        method: "GET",
         headers: {
           Authorization: getAuthHeader(),
         },
@@ -1446,8 +1834,8 @@ export const TicketDetailsPage = () => {
       const data = await response.json();
       setBuildings(data.pms_buildings || data || []);
     } catch (error) {
-      console.error('Error loading buildings:', error);
-      toast.error('Failed to load buildings');
+      console.error("Error loading buildings:", error);
+      toast.error("Failed to load buildings");
     } finally {
       setLoadingBuildings(false);
     }
@@ -1458,10 +1846,10 @@ export const TicketDetailsPage = () => {
     try {
       const url = buildingId
         ? getFullUrl(`/pms/wings.json?building_id=${buildingId}`)
-        : getFullUrl('/pms/wings.json');
+        : getFullUrl("/pms/wings.json");
 
       const options = {
-        method: 'GET',
+        method: "GET",
         headers: {
           Authorization: getAuthHeader(),
         },
@@ -1471,8 +1859,8 @@ export const TicketDetailsPage = () => {
       const data = await response.json();
       setWings(data.wings || []);
     } catch (error) {
-      console.error('Error loading wings:', error);
-      toast.error('Failed to load wings');
+      console.error("Error loading wings:", error);
+      toast.error("Failed to load wings");
     } finally {
       setLoadingWings(false);
     }
@@ -1483,10 +1871,10 @@ export const TicketDetailsPage = () => {
     try {
       const url = wingId
         ? getFullUrl(`/pms/areas.json?wing_id=${wingId}`)
-        : getFullUrl('/pms/areas.json');
+        : getFullUrl("/pms/areas.json");
 
       const options = {
-        method: 'GET',
+        method: "GET",
         headers: {
           Authorization: getAuthHeader(),
         },
@@ -1496,8 +1884,8 @@ export const TicketDetailsPage = () => {
       const data = await response.json();
       setAreas(data.areas || []);
     } catch (error) {
-      console.error('Error loading areas:', error);
-      toast.error('Failed to load areas');
+      console.error("Error loading areas:", error);
+      toast.error("Failed to load areas");
     } finally {
       setLoadingAreas(false);
     }
@@ -1508,10 +1896,10 @@ export const TicketDetailsPage = () => {
     try {
       const url = areaId
         ? getFullUrl(`/pms/floors.json?area_id=${areaId}`)
-        : getFullUrl('/pms/floors.json');
+        : getFullUrl("/pms/floors.json");
 
       const options = {
-        method: 'GET',
+        method: "GET",
         headers: {
           Authorization: getAuthHeader(),
         },
@@ -1521,8 +1909,8 @@ export const TicketDetailsPage = () => {
       const data = await response.json();
       setFloors(data.floors || []);
     } catch (error) {
-      console.error('Error loading floors:', error);
-      toast.error('Failed to load floors');
+      console.error("Error loading floors:", error);
+      toast.error("Failed to load floors");
     } finally {
       setLoadingFloors(false);
     }
@@ -1533,10 +1921,10 @@ export const TicketDetailsPage = () => {
     try {
       const url = floorId
         ? getFullUrl(`/pms/rooms.json?floor_id=${floorId}`)
-        : getFullUrl('/pms/rooms.json');
+        : getFullUrl("/pms/rooms.json");
 
       const options = {
-        method: 'GET',
+        method: "GET",
         headers: {
           Authorization: getAuthHeader(),
         },
@@ -1546,8 +1934,8 @@ export const TicketDetailsPage = () => {
       const data = await response.json();
       setRooms(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error loading rooms:', error);
-      toast.error('Failed to load rooms');
+      console.error("Error loading rooms:", error);
+      toast.error("Failed to load rooms");
     } finally {
       setLoadingRooms(false);
     }
@@ -1557,13 +1945,16 @@ export const TicketDetailsPage = () => {
   const loadSocietyLocations = async () => {
     setLoadingSocietyLocations(true);
     try {
-      const url = getFullUrl('/crm/admin/society_locations.json');
-      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      const url = getFullUrl("/crm/admin/society_locations.json");
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: getAuthHeader() },
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setSocietyLocations(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error loading society locations:', error);
+      console.error("Error loading society locations:", error);
     } finally {
       setLoadingSocietyLocations(false);
     }
@@ -1573,13 +1964,18 @@ export const TicketDetailsPage = () => {
     setSocietyWings([]);
     setLoadingSocietyWings(true);
     try {
-      const url = getFullUrl(`/pms/wings.json?q[society_location_id_eq]=${societyLocationId}`);
-      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      const url = getFullUrl(
+        `/pms/wings.json?q[society_location_id_eq]=${societyLocationId}`
+      );
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: getAuthHeader() },
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setSocietyWings(data.wings || []);
     } catch (error) {
-      console.error('Error loading society wings:', error);
+      console.error("Error loading society wings:", error);
     } finally {
       setLoadingSocietyWings(false);
     }
@@ -1590,12 +1986,15 @@ export const TicketDetailsPage = () => {
     setLoadingSocietyAreas(true);
     try {
       const url = getFullUrl(`/pms/areas.json?q[wing_id_eq]=${wingId}`);
-      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: getAuthHeader() },
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setSocietyAreas(data.areas || []);
     } catch (error) {
-      console.error('Error loading society areas:', error);
+      console.error("Error loading society areas:", error);
     } finally {
       setLoadingSocietyAreas(false);
     }
@@ -1609,13 +2008,16 @@ export const TicketDetailsPage = () => {
       const sid = societyId || ticketData?.id_society?.toString();
       const url = sid
         ? getFullUrl(`/get_society_blocks.json?society_id=${sid}`)
-        : getFullUrl('/get_society_blocks.json');
-      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+        : getFullUrl("/get_society_blocks.json");
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: getAuthHeader() },
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setSocietyBlocks(data.society_blocks || []);
     } catch (error) {
-      console.error('Error loading towers:', error);
+      console.error("Error loading towers:", error);
     } finally {
       setLoadingSocietyBlocks(false);
     }
@@ -1627,19 +2029,23 @@ export const TicketDetailsPage = () => {
     try {
       const sid = ticketData?.id_society?.toString();
       const url = sid
-        ? getFullUrl(`/get_society_flats.json?society_block_id=${blockId}&society_id=${sid}`)
+        ? getFullUrl(
+            `/get_society_flats.json?society_block_id=${blockId}&society_id=${sid}`
+          )
         : getFullUrl(`/get_society_flats.json?society_block_id=${blockId}`);
-      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: getAuthHeader() },
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setSocietyFlatOptions(data.society_flats || []);
     } catch (error) {
-      console.error('Error loading flats:', error);
+      console.error("Error loading flats:", error);
     } finally {
       setLoadingSocietyFlatOptions(false);
     }
   };
-
 
   const handleBackToList = () => {
     const currentPath = window.location.pathname;
@@ -1681,8 +2087,9 @@ export const TicketDetailsPage = () => {
       const taskData = await ticketManagementAPI.getCreateTaskData(id);
       console.log("Create task data:", taskData);
 
-      toast.success('Create task data fetched successfully! Check console for details.');
-
+      toast.success(
+        "Create task data fetched successfully! Check console for details."
+      );
     } catch (error) {
       console.error("Error fetching create task data:", error);
       toast.error("Failed to fetch create task data. Please try again.");
@@ -1727,7 +2134,9 @@ export const TicketDetailsPage = () => {
   };
 
   // Handle file selection for customer comments
-  const handleCustomerFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCustomerFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = event.target.files;
     if (files) {
       setCustomerAttachments(Array.from(files));
@@ -1735,7 +2144,9 @@ export const TicketDetailsPage = () => {
   };
 
   // Handle file selection for internal comments
-  const handleInternalFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInternalFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = event.target.files;
     if (files) {
       setInternalAttachments(Array.from(files));
@@ -1743,58 +2154,82 @@ export const TicketDetailsPage = () => {
   };
 
   // Handle Root Cause multi-select change with auto-save
-  const handleRootCauseChange = async (selectedValues: string | string[] | number | number[]) => {
+  const handleRootCauseChange = async (
+    selectedValues: string | string[] | number | number[]
+  ) => {
     try {
       // Convert to array of numbers (template IDs)
       let templateIds: number[] = [];
       if (Array.isArray(selectedValues)) {
-        templateIds = selectedValues.map(v => typeof v === 'number' ? v : parseInt(String(v)));
+        templateIds = selectedValues.map((v) =>
+          typeof v === "number" ? v : parseInt(String(v))
+        );
       } else {
-        templateIds = [typeof selectedValues === 'number' ? selectedValues : parseInt(String(selectedValues))];
+        templateIds = [
+          typeof selectedValues === "number"
+            ? selectedValues
+            : parseInt(String(selectedValues)),
+        ];
       }
 
       // Filter out any NaN values
-      templateIds = templateIds.filter(id => !isNaN(id));
+      templateIds = templateIds.filter((id) => !isNaN(id));
 
       // Get the selected templates to store their names
-      const selectedTemplates = communicationTemplates.filter(t => templateIds.includes(t.id));
-      const rootCauseString = selectedTemplates.map(t => t.identifier_action).join(', ');
+      const selectedTemplates = communicationTemplates.filter((t) =>
+        templateIds.includes(t.id)
+      );
+      const rootCauseString = selectedTemplates
+        .map((t) => t.identifier_action)
+        .join(", ");
 
-      console.log('🔄 Auto-saving root cause template IDs:', templateIds);
+      console.log("🔄 Auto-saving root cause template IDs:", templateIds);
 
       // Call API to save immediately
       if (!id) {
-        console.error('No ticket ID available for update');
+        console.error("No ticket ID available for update");
         return;
       }
 
       const formDataToSend = new FormData();
-      formDataToSend.append('complaint_log[complaint_id]', id);
+      formDataToSend.append("complaint_log[complaint_id]", id);
 
       // Add each template ID with array notation
-      templateIds.forEach(templateId => {
-        formDataToSend.append('root_cause[template_ids][]', String(templateId));
+      templateIds.forEach((templateId) => {
+        formDataToSend.append("root_cause[template_ids][]", String(templateId));
       });
 
       // Add asset_id and service_id based on current ticket's association
-      if (ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id) {
-        formDataToSend.append('asset_id', ticketData.asset_or_service_id.toString());
-        formDataToSend.append('service_id', '');
-      } else if (ticketData?.asset_service === 'Service' && ticketData?.asset_or_service_id) {
-        formDataToSend.append('asset_id', '');
-        formDataToSend.append('service_id', ticketData.asset_or_service_id.toString());
+      if (
+        ticketData?.asset_service === "Asset" &&
+        ticketData?.asset_or_service_id
+      ) {
+        formDataToSend.append(
+          "asset_id",
+          ticketData.asset_or_service_id.toString()
+        );
+        formDataToSend.append("service_id", "");
+      } else if (
+        ticketData?.asset_service === "Service" &&
+        ticketData?.asset_or_service_id
+      ) {
+        formDataToSend.append("asset_id", "");
+        formDataToSend.append(
+          "service_id",
+          ticketData.asset_or_service_id.toString()
+        );
       } else {
         // Default empty values if no association
-        formDataToSend.append('asset_id', '');
-        formDataToSend.append('service_id', '');
+        formDataToSend.append("asset_id", "");
+        formDataToSend.append("service_id", "");
       }
 
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
         },
         body: formDataToSend,
       });
@@ -1804,7 +2239,7 @@ export const TicketDetailsPage = () => {
       }
 
       const data = await response.json();
-      console.log('✅ Root cause auto-saved successfully:', data);
+      console.log("✅ Root cause auto-saved successfully:", data);
 
       // Update local state AFTER successful API call
       setTicketData((prev) => {
@@ -1812,15 +2247,16 @@ export const TicketDetailsPage = () => {
         return {
           ...prev,
           root_cause: rootCauseString,
-          rca_template_ids: templateIds
+          rca_template_ids: templateIds,
         };
       });
 
-      toast.success('Root cause updated successfully');
-
+      toast.success("Root cause updated successfully");
     } catch (error) {
-      console.error('❌ Error auto-saving root cause:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update root cause');
+      console.error("❌ Error auto-saving root cause:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update root cause"
+      );
 
       // Optionally: Revert the UI change on error
       // You could refetch the ticket data here to ensure UI is in sync
@@ -1829,91 +2265,143 @@ export const TicketDetailsPage = () => {
 
   // Handle Root Cause change for Ticket Management form (no API call, just form update)
   const handleRootCauseFormChange = (selectedValues: number[]) => {
-    console.log('🔄 Updating Root Cause form data only (no API call):', selectedValues);
+    console.log(
+      "🔄 Updating Root Cause form data only (no API call):",
+      selectedValues
+    );
     // Just update the form data, don't call API
-    handleTicketMgmtInputChange('rca_template_ids', selectedValues);
+    handleTicketMgmtInputChange("rca_template_ids", selectedValues);
   };
 
   // Handle Preventive Action change for Ticket Closure form (no API call, just form update)
-  const handlePreventiveActionFormChange = (selectedOptions: Array<{ value: number; label: string }>) => {
-    console.log('🔄 Updating Preventive Action form data only (no API call):', selectedOptions);
-    const selectedIds = selectedOptions.map(option => option.value);
-    handleTicketClosureInputChange('preventive_action_template_ids', selectedIds);
+  const handlePreventiveActionFormChange = (
+    selectedOptions: Array<{ value: number; label: string }>
+  ) => {
+    console.log(
+      "🔄 Updating Preventive Action form data only (no API call):",
+      selectedOptions
+    );
+    const selectedIds = selectedOptions.map((option) => option.value);
+    handleTicketClosureInputChange(
+      "preventive_action_template_ids",
+      selectedIds
+    );
   };
 
   // Handle Short-term Impact change for Ticket Closure form (no API call, just form update)
-  const handleShortTermImpactFormChange = (selectedOptions: Array<{ value: number; label: string }>) => {
-    console.log('🔄 Updating Short-term Impact form data only (no API call):', selectedOptions);
-    const selectedIds = selectedOptions.map(option => option.value);
-    handleTicketClosureInputChange('short_term_impact_template_ids', selectedIds);
+  const handleShortTermImpactFormChange = (
+    selectedOptions: Array<{ value: number; label: string }>
+  ) => {
+    console.log(
+      "🔄 Updating Short-term Impact form data only (no API call):",
+      selectedOptions
+    );
+    const selectedIds = selectedOptions.map((option) => option.value);
+    handleTicketClosureInputChange(
+      "short_term_impact_template_ids",
+      selectedIds
+    );
   };
 
   // Handle Corrective Action change for Ticket Closure form (no API call, just form update)
-  const handleCorrectiveActionFormChange = (selectedOptions: Array<{ value: number; label: string }>) => {
-    console.log('🔄 Updating Corrective Action form data only (no API call):', selectedOptions);
-    const selectedIds = selectedOptions.map(option => option.value);
-    handleTicketClosureInputChange('corrective_action_template_ids', selectedIds);
+  const handleCorrectiveActionFormChange = (
+    selectedOptions: Array<{ value: number; label: string }>
+  ) => {
+    console.log(
+      "🔄 Updating Corrective Action form data only (no API call):",
+      selectedOptions
+    );
+    const selectedIds = selectedOptions.map((option) => option.value);
+    handleTicketClosureInputChange(
+      "corrective_action_template_ids",
+      selectedIds
+    );
   };
 
   // Handle Long-term Impact change for Ticket Closure form (no API call, just form update)
-  const handleLongTermImpactFormChange = (selectedOptions: Array<{ value: number; label: string }>) => {
-    console.log('🔄 Updating Long-term Impact form data only (no API call):', selectedOptions);
-    const selectedIds = selectedOptions.map(option => option.value);
-    handleTicketClosureInputChange('long_term_impact_template_ids', selectedIds);
+  const handleLongTermImpactFormChange = (
+    selectedOptions: Array<{ value: number; label: string }>
+  ) => {
+    console.log(
+      "🔄 Updating Long-term Impact form data only (no API call):",
+      selectedOptions
+    );
+    const selectedIds = selectedOptions.map((option) => option.value);
+    handleTicketClosureInputChange(
+      "long_term_impact_template_ids",
+      selectedIds
+    );
   };
 
   // Handle Responsible Person change for Ticket Closure form (no API call, just form update)
   const handleResponsiblePersonFormChange = (selectedPersonId: string) => {
-    console.log('🔄 Updating Responsible Person form data only (no API call):', selectedPersonId);
-    handleTicketClosureInputChange('responsible_person', selectedPersonId);
+    console.log(
+      "🔄 Updating Responsible Person form data only (no API call):",
+      selectedPersonId
+    );
+    handleTicketClosureInputChange("responsible_person", selectedPersonId);
   };
 
   // Handle Preventive Action change with auto-save (multi-select)
-  const handlePreventiveActionChange = async (selectedOptions: Array<{ value: number; label: string }>) => {
+  const handlePreventiveActionChange = async (
+    selectedOptions: Array<{ value: number; label: string }>
+  ) => {
     try {
       // Handle clear/unselect case
       if (!selectedOptions || selectedOptions.length === 0) {
-        console.log('🔄 Clearing preventive action');
+        console.log("🔄 Clearing preventive action");
 
         // Update local state
         setTicketData((prev) => {
           if (!prev) return prev;
           return {
             ...prev,
-            preventive_action: '',
-            preventive_action_template_ids: []
+            preventive_action: "",
+            preventive_action_template_ids: [],
           };
         });
 
         // Call API to clear
         if (!id) {
-          console.error('No ticket ID available for update');
+          console.error("No ticket ID available for update");
           return;
         }
 
         const formDataToSend = new FormData();
-        formDataToSend.append('complaint_log[complaint_id]', id);
-        formDataToSend.append('preventive_action[template_ids][]', '');
+        formDataToSend.append("complaint_log[complaint_id]", id);
+        formDataToSend.append("preventive_action[template_ids][]", "");
 
         // Add asset_id and service_id based on current ticket's association
-        if (ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id) {
-          formDataToSend.append('asset_id', ticketData.asset_or_service_id.toString());
-          formDataToSend.append('service_id', '');
-        } else if (ticketData?.asset_service === 'Service' && ticketData?.asset_or_service_id) {
-          formDataToSend.append('asset_id', '');
-          formDataToSend.append('service_id', ticketData.asset_or_service_id.toString());
+        if (
+          ticketData?.asset_service === "Asset" &&
+          ticketData?.asset_or_service_id
+        ) {
+          formDataToSend.append(
+            "asset_id",
+            ticketData.asset_or_service_id.toString()
+          );
+          formDataToSend.append("service_id", "");
+        } else if (
+          ticketData?.asset_service === "Service" &&
+          ticketData?.asset_or_service_id
+        ) {
+          formDataToSend.append("asset_id", "");
+          formDataToSend.append(
+            "service_id",
+            ticketData.asset_or_service_id.toString()
+          );
         } else {
           // Default empty values if no association
-          formDataToSend.append('asset_id', '');
-          formDataToSend.append('service_id', '');
+          formDataToSend.append("asset_id", "");
+          formDataToSend.append("service_id", "");
         }
 
         const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
         const response = await fetch(apiUrl, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': getAuthHeader(),
+            Authorization: getAuthHeader(),
           },
           body: formDataToSend,
         });
@@ -1922,13 +2410,15 @@ export const TicketDetailsPage = () => {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        toast.success('Preventive action cleared successfully');
+        toast.success("Preventive action cleared successfully");
         return;
       }
 
       // Get template IDs from selected options
-      const templateIds = selectedOptions.map(option => option.value);
-      const templateLabels = selectedOptions.map(option => option.label).join(', ');
+      const templateIds = selectedOptions.map((option) => option.value);
+      const templateLabels = selectedOptions
+        .map((option) => option.label)
+        .join(", ");
 
       // Update local state
       setTicketData((prev) => {
@@ -1936,30 +2426,36 @@ export const TicketDetailsPage = () => {
         return {
           ...prev,
           preventive_action: templateLabels,
-          preventive_action_template_ids: templateIds
+          preventive_action_template_ids: templateIds,
         };
       });
 
       // Call API to save immediately
       if (!id) {
-        console.error('No ticket ID available for update');
+        console.error("No ticket ID available for update");
         return;
       }
 
-      console.log('🔄 Auto-saving preventive action template IDs:', templateIds);
+      console.log(
+        "🔄 Auto-saving preventive action template IDs:",
+        templateIds
+      );
 
       const formDataToSend = new FormData();
-      formDataToSend.append('complaint_log[complaint_id]', id);
-      templateIds.forEach(templateId => {
-        formDataToSend.append('preventive_action[template_ids][]', String(templateId));
+      formDataToSend.append("complaint_log[complaint_id]", id);
+      templateIds.forEach((templateId) => {
+        formDataToSend.append(
+          "preventive_action[template_ids][]",
+          String(templateId)
+        );
       });
 
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
         },
         body: formDataToSend,
       });
@@ -1969,49 +2465,54 @@ export const TicketDetailsPage = () => {
       }
 
       const data = await response.json();
-      console.log('✅ Preventive action auto-saved successfully:', data);
+      console.log("✅ Preventive action auto-saved successfully:", data);
 
-      toast.success('Preventive action updated successfully');
-
+      toast.success("Preventive action updated successfully");
     } catch (error) {
-      console.error('❌ Error auto-saving preventive action:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update preventive action');
+      console.error("❌ Error auto-saving preventive action:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update preventive action"
+      );
     }
   };
 
   // Handle Corrective Action change with auto-save (multi-select)
-  const handleCorrectiveActionChange = async (selectedOptions: Array<{ value: number; label: string }>) => {
+  const handleCorrectiveActionChange = async (
+    selectedOptions: Array<{ value: number; label: string }>
+  ) => {
     try {
       // Handle clear/unselect case
       if (!selectedOptions || selectedOptions.length === 0) {
-        console.log('🔄 Clearing corrective action');
+        console.log("🔄 Clearing corrective action");
 
         // Update local state
         setTicketData((prev) => {
           if (!prev) return prev;
           return {
             ...prev,
-            corrective_action: '',
-            corrective_action_template_ids: []
+            corrective_action: "",
+            corrective_action_template_ids: [],
           };
         });
 
         // Call API to clear
         if (!id) {
-          console.error('No ticket ID available for update');
+          console.error("No ticket ID available for update");
           return;
         }
 
         const formDataToSend = new FormData();
-        formDataToSend.append('complaint_log[complaint_id]', id);
-        formDataToSend.append('corrective_action[template_ids][]', '');
+        formDataToSend.append("complaint_log[complaint_id]", id);
+        formDataToSend.append("corrective_action[template_ids][]", "");
 
         const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
         const response = await fetch(apiUrl, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': getAuthHeader(),
+            Authorization: getAuthHeader(),
           },
           body: formDataToSend,
         });
@@ -2020,13 +2521,15 @@ export const TicketDetailsPage = () => {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        toast.success('Corrective action cleared successfully');
+        toast.success("Corrective action cleared successfully");
         return;
       }
 
       // Get template IDs from selected options
-      const templateIds = selectedOptions.map(option => option.value);
-      const templateLabels = selectedOptions.map(option => option.label).join(', ');
+      const templateIds = selectedOptions.map((option) => option.value);
+      const templateLabels = selectedOptions
+        .map((option) => option.label)
+        .join(", ");
 
       // Update local state
       setTicketData((prev) => {
@@ -2034,30 +2537,36 @@ export const TicketDetailsPage = () => {
         return {
           ...prev,
           corrective_action: templateLabels,
-          corrective_action_template_ids: templateIds
+          corrective_action_template_ids: templateIds,
         };
       });
 
       // Call API to save immediately
       if (!id) {
-        console.error('No ticket ID available for update');
+        console.error("No ticket ID available for update");
         return;
       }
 
-      console.log('🔄 Auto-saving corrective action template IDs:', templateIds);
+      console.log(
+        "🔄 Auto-saving corrective action template IDs:",
+        templateIds
+      );
 
       const formDataToSend = new FormData();
-      formDataToSend.append('complaint_log[complaint_id]', id);
-      templateIds.forEach(templateId => {
-        formDataToSend.append('corrective_action[template_ids][]', String(templateId));
+      formDataToSend.append("complaint_log[complaint_id]", id);
+      templateIds.forEach((templateId) => {
+        formDataToSend.append(
+          "corrective_action[template_ids][]",
+          String(templateId)
+        );
       });
 
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
         },
         body: formDataToSend,
       });
@@ -2067,49 +2576,54 @@ export const TicketDetailsPage = () => {
       }
 
       const data = await response.json();
-      console.log('✅ Corrective action auto-saved successfully:', data);
+      console.log("✅ Corrective action auto-saved successfully:", data);
 
-      toast.success('Corrective action updated successfully');
-
+      toast.success("Corrective action updated successfully");
     } catch (error) {
-      console.error('❌ Error auto-saving corrective action:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update corrective action');
+      console.error("❌ Error auto-saving corrective action:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update corrective action"
+      );
     }
   };
 
   // Handle Short-term Impact change with auto-save (multi-select)
-  const handleShortTermImpactChange = async (selectedOptions: Array<{ value: number; label: string }>) => {
+  const handleShortTermImpactChange = async (
+    selectedOptions: Array<{ value: number; label: string }>
+  ) => {
     try {
       // Handle clear/unselect case
       if (!selectedOptions || selectedOptions.length === 0) {
-        console.log('🔄 Clearing short-term impact');
+        console.log("🔄 Clearing short-term impact");
 
         // Update local state
         setTicketData((prev) => {
           if (!prev) return prev;
           return {
             ...prev,
-            short_term_impact: '',
-            short_term_impact_template_ids: []
+            short_term_impact: "",
+            short_term_impact_template_ids: [],
           };
         });
 
         // Call API to clear
         if (!id) {
-          console.error('No ticket ID available for update');
+          console.error("No ticket ID available for update");
           return;
         }
 
         const formDataToSend = new FormData();
-        formDataToSend.append('complaint_log[complaint_id]', id);
-        formDataToSend.append('short_term_impact[template_ids][]', '');
+        formDataToSend.append("complaint_log[complaint_id]", id);
+        formDataToSend.append("short_term_impact[template_ids][]", "");
 
         const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
         const response = await fetch(apiUrl, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': getAuthHeader(),
+            Authorization: getAuthHeader(),
           },
           body: formDataToSend,
         });
@@ -2118,13 +2632,15 @@ export const TicketDetailsPage = () => {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        toast.success('Short-term impact cleared successfully');
+        toast.success("Short-term impact cleared successfully");
         return;
       }
 
       // Get template IDs from selected options
-      const templateIds = selectedOptions.map(option => option.value);
-      const templateLabels = selectedOptions.map(option => option.label).join(', ');
+      const templateIds = selectedOptions.map((option) => option.value);
+      const templateLabels = selectedOptions
+        .map((option) => option.label)
+        .join(", ");
 
       // Update local state
       setTicketData((prev) => {
@@ -2132,30 +2648,36 @@ export const TicketDetailsPage = () => {
         return {
           ...prev,
           short_term_impact: templateLabels,
-          short_term_impact_template_ids: templateIds
+          short_term_impact_template_ids: templateIds,
         };
       });
 
       // Call API to save immediately
       if (!id) {
-        console.error('No ticket ID available for update');
+        console.error("No ticket ID available for update");
         return;
       }
 
-      console.log('🔄 Auto-saving short-term impact template IDs:', templateIds);
+      console.log(
+        "🔄 Auto-saving short-term impact template IDs:",
+        templateIds
+      );
 
       const formDataToSend = new FormData();
-      formDataToSend.append('complaint_log[complaint_id]', id);
-      templateIds.forEach(templateId => {
-        formDataToSend.append('short_term_impact[template_ids][]', String(templateId));
+      formDataToSend.append("complaint_log[complaint_id]", id);
+      templateIds.forEach((templateId) => {
+        formDataToSend.append(
+          "short_term_impact[template_ids][]",
+          String(templateId)
+        );
       });
 
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
         },
         body: formDataToSend,
       });
@@ -2165,49 +2687,54 @@ export const TicketDetailsPage = () => {
       }
 
       const data = await response.json();
-      console.log('✅ Short-term impact auto-saved successfully:', data);
+      console.log("✅ Short-term impact auto-saved successfully:", data);
 
-      toast.success('Short-term impact updated successfully');
-
+      toast.success("Short-term impact updated successfully");
     } catch (error) {
-      console.error('❌ Error auto-saving short-term impact:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update short-term impact');
+      console.error("❌ Error auto-saving short-term impact:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update short-term impact"
+      );
     }
   };
 
   // Handle Long-term Impact change with auto-save (multi-select)
-  const handleLongTermImpactChange = async (selectedOptions: Array<{ value: number; label: string }>) => {
+  const handleLongTermImpactChange = async (
+    selectedOptions: Array<{ value: number; label: string }>
+  ) => {
     try {
       // Handle clear/unselect case
       if (!selectedOptions || selectedOptions.length === 0) {
-        console.log('🔄 Clearing long-term impact');
+        console.log("🔄 Clearing long-term impact");
 
         // Update local state
         setTicketData((prev) => {
           if (!prev) return prev;
           return {
             ...prev,
-            impact: '',
-            long_term_impact_template_ids: []
+            impact: "",
+            long_term_impact_template_ids: [],
           };
         });
 
         // Call API to clear
         if (!id) {
-          console.error('No ticket ID available for update');
+          console.error("No ticket ID available for update");
           return;
         }
 
         const formDataToSend = new FormData();
-        formDataToSend.append('complaint_log[complaint_id]', id);
-        formDataToSend.append('long_term_impact[template_ids][]', '');
+        formDataToSend.append("complaint_log[complaint_id]", id);
+        formDataToSend.append("long_term_impact[template_ids][]", "");
 
         const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
         const response = await fetch(apiUrl, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': getAuthHeader(),
+            Authorization: getAuthHeader(),
           },
           body: formDataToSend,
         });
@@ -2216,13 +2743,15 @@ export const TicketDetailsPage = () => {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        toast.success('Long-term impact cleared successfully');
+        toast.success("Long-term impact cleared successfully");
         return;
       }
 
       // Get template IDs from selected options
-      const templateIds = selectedOptions.map(option => option.value);
-      const templateLabels = selectedOptions.map(option => option.label).join(', ');
+      const templateIds = selectedOptions.map((option) => option.value);
+      const templateLabels = selectedOptions
+        .map((option) => option.label)
+        .join(", ");
 
       // Update local state
       setTicketData((prev) => {
@@ -2230,30 +2759,33 @@ export const TicketDetailsPage = () => {
         return {
           ...prev,
           impact: templateLabels,
-          long_term_impact_template_ids: templateIds
+          long_term_impact_template_ids: templateIds,
         };
       });
 
       // Call API to save immediately
       if (!id) {
-        console.error('No ticket ID available for update');
+        console.error("No ticket ID available for update");
         return;
       }
 
-      console.log('🔄 Auto-saving long-term impact template IDs:', templateIds);
+      console.log("🔄 Auto-saving long-term impact template IDs:", templateIds);
 
       const formDataToSend = new FormData();
-      formDataToSend.append('complaint_log[complaint_id]', id);
-      templateIds.forEach(templateId => {
-        formDataToSend.append('long_term_impact[template_ids][]', String(templateId));
+      formDataToSend.append("complaint_log[complaint_id]", id);
+      templateIds.forEach((templateId) => {
+        formDataToSend.append(
+          "long_term_impact[template_ids][]",
+          String(templateId)
+        );
       });
 
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
         },
         body: formDataToSend,
       });
@@ -2263,13 +2795,16 @@ export const TicketDetailsPage = () => {
       }
 
       const data = await response.json();
-      console.log('✅ Long-term impact auto-saved successfully:', data);
+      console.log("✅ Long-term impact auto-saved successfully:", data);
 
-      toast.success('Long-term impact updated successfully');
-
+      toast.success("Long-term impact updated successfully");
     } catch (error) {
-      console.error('❌ Error auto-saving long-term impact:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update long-term impact');
+      console.error("❌ Error auto-saving long-term impact:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update long-term impact"
+      );
     }
   };
 
@@ -2278,11 +2813,11 @@ export const TicketDetailsPage = () => {
     try {
       // Find the person by ID
       const selectedPerson = responsiblePersons.find(
-        person => person.id.toString() === selectedPersonId
+        (person) => person.id.toString() === selectedPersonId
       );
 
       if (!selectedPerson) {
-        console.error('Selected responsible person not found');
+        console.error("Selected responsible person not found");
         return;
       }
 
@@ -2291,41 +2826,56 @@ export const TicketDetailsPage = () => {
         if (!prev) return prev;
         return {
           ...prev,
-          responsible_person: selectedPerson.full_name
+          responsible_person: selectedPerson.full_name,
         };
       });
 
       // Call API to save immediately
       if (!id) {
-        console.error('No ticket ID available for update');
+        console.error("No ticket ID available for update");
         return;
       }
 
-      console.log('🔄 Auto-saving responsible person ID:', selectedPersonId);
+      console.log("🔄 Auto-saving responsible person ID:", selectedPersonId);
 
       const formDataToSend = new FormData();
-      formDataToSend.append('complaint_log[complaint_id]', id);
-      formDataToSend.append('person_id', String(selectedPerson.person_id ?? selectedPersonId));
+      formDataToSend.append("complaint_log[complaint_id]", id);
+      formDataToSend.append(
+        "person_id",
+        String(selectedPerson.person_id ?? selectedPersonId)
+      );
 
       // Add asset_id and service_id based on current ticket's association
-      if (ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id) {
-        formDataToSend.append('asset_id', ticketData.asset_or_service_id.toString());
-        formDataToSend.append('service_id', '');
-      } else if (ticketData?.asset_service === 'Service' && ticketData?.asset_or_service_id) {
-        formDataToSend.append('asset_id', '');
-        formDataToSend.append('service_id', ticketData.asset_or_service_id.toString());
+      if (
+        ticketData?.asset_service === "Asset" &&
+        ticketData?.asset_or_service_id
+      ) {
+        formDataToSend.append(
+          "asset_id",
+          ticketData.asset_or_service_id.toString()
+        );
+        formDataToSend.append("service_id", "");
+      } else if (
+        ticketData?.asset_service === "Service" &&
+        ticketData?.asset_or_service_id
+      ) {
+        formDataToSend.append("asset_id", "");
+        formDataToSend.append(
+          "service_id",
+          ticketData.asset_or_service_id.toString()
+        );
       } else {
         // Default empty values if no association
-        formDataToSend.append('asset_id', '');
-        formDataToSend.append('service_id', '');
+        formDataToSend.append("asset_id", "");
+        formDataToSend.append("service_id", "");
       }
 
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
         },
         body: formDataToSend,
       });
@@ -2335,26 +2885,29 @@ export const TicketDetailsPage = () => {
       }
 
       const data = await response.json();
-      console.log('✅ Responsible person auto-saved successfully:', data);
+      console.log("✅ Responsible person auto-saved successfully:", data);
 
-      toast.success('Responsible person updated successfully');
-
+      toast.success("Responsible person updated successfully");
     } catch (error) {
-      console.error('❌ Error auto-saving responsible person:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update responsible person');
+      console.error("❌ Error auto-saving responsible person:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update responsible person"
+      );
     }
   };
 
   // Submit comment handler
   const handleSubmitComment = async () => {
     if (!id) {
-      toast.error('Ticket ID not found');
+      toast.error("Ticket ID not found");
       return;
     }
 
     // Validate that at least one comment is provided
     if (!commentText.trim() && !internalCommentText.trim()) {
-      toast.error('Please enter at least one comment');
+      toast.error("Please enter at least one comment");
       return;
     }
 
@@ -2362,10 +2915,10 @@ export const TicketDetailsPage = () => {
       setSubmittingComment(true);
 
       // Get user ID from localStorage or auth context
-      const userId = localStorage.getItem('userId') || '';
+      const userId = localStorage.getItem("userId") || "";
 
       if (!userId) {
-        toast.error('User ID not found. Please log in again.');
+        toast.error("User ID not found. Please log in again.");
         return;
       }
 
@@ -2373,45 +2926,51 @@ export const TicketDetailsPage = () => {
       const formData = new FormData();
 
       // Required fields
-      formData.append('complaint_log[complaint_id]', id);
-      formData.append('complaint_log[changed_by]', userId);
+      formData.append("complaint_log[complaint_id]", id);
+      formData.append("complaint_log[changed_by]", userId);
 
       // Add customer comment if provided
       if (commentText.trim()) {
-        formData.append('complaint_log[comment]', commentText.trim());
+        formData.append("complaint_log[comment]", commentText.trim());
         // Add customer attachments with array notation
         customerAttachments.forEach((file) => {
-          formData.append('complaint_comment[docs][]', file);
+          formData.append("complaint_comment[docs][]", file);
         });
       }
 
       // Add internal comment if provided
       if (internalCommentText.trim()) {
-        formData.append('complaint_log[internal_comment]', internalCommentText.trim());
+        formData.append(
+          "complaint_log[internal_comment]",
+          internalCommentText.trim()
+        );
         // Add internal attachments with array notation
         internalAttachments.forEach((file) => {
-          formData.append('internal_complaint_comment[docs][]', file);
+          formData.append("internal_complaint_comment[docs][]", file);
         });
       }
 
       // Make API call
-      const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, "").replace(
+        /\/$/,
+        ""
+      );
       const url = `https://${baseUrl}${API_CONFIG.ENDPOINTS.UPDATE_TICKET}`;
 
-      console.log('Submitting comment to:', url);
-      console.log('FormData contents:', {
+      console.log("Submitting comment to:", url);
+      console.log("FormData contents:", {
         complaint_id: id,
         changed_by: userId,
-        comment: commentText.trim() || '-',
-        internal_comment: internalCommentText.trim() || '-',
+        comment: commentText.trim() || "-",
+        internal_comment: internalCommentText.trim() || "-",
         customer_attachments: customerAttachments.length,
         internal_attachments: internalAttachments.length,
       });
 
       const response = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
           // Don't set Content-Type header when using FormData, browser will set it automatically with boundary
         },
         body: formData,
@@ -2419,19 +2978,21 @@ export const TicketDetailsPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(
+          errorData.message || `HTTP ${response.status}: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
-      console.log('Comment submitted successfully:', data);
+      console.log("Comment submitted successfully:", data);
 
-      toast.success('Comment submitted successfully!');
+      toast.success("Comment submitted successfully!");
 
       // Clear form
-      setCommentText('');
-      setInternalCommentText('');
-      setSelectedInternalTemplate('');
-      setSelectedCustomerTemplate('');
+      setCommentText("");
+      setInternalCommentText("");
+      setSelectedInternalTemplate("");
+      setSelectedCustomerTemplate("");
       setCustomerAttachments([]);
       setInternalAttachments([]);
 
@@ -2439,21 +3000,29 @@ export const TicketDetailsPage = () => {
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
       refreshFeeds();
-
     } catch (error) {
-      console.error('Error submitting comment:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to submit comment. Please try again.');
+      console.error("Error submitting comment:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit comment. Please try again."
+      );
     } finally {
       setSubmittingComment(false);
     }
   };
 
   // Handle cost approval file change
-  const handleCostAttachmentChange = (rowId: number, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCostAttachmentChange = (
+    rowId: number,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = event.target.files;
     if (files) {
-      setCostRows(prev =>
-        prev.map(r => r.id === rowId ? { ...r, attachmentFiles: Array.from(files) } : r)
+      setCostRows((prev) =>
+        prev.map((r) =>
+          r.id === rowId ? { ...r, attachmentFiles: Array.from(files) } : r
+        )
       );
     }
   };
@@ -2461,17 +3030,17 @@ export const TicketDetailsPage = () => {
   // Submit cost approval handler
   const handleSubmitCostApproval = async () => {
     if (!id) {
-      toast.error('Ticket ID not found');
+      toast.error("Ticket ID not found");
       return;
     }
 
     // Validate that all required fields are filled
-    const invalidRows = costRows.filter(row =>
-      !row.cost.trim() || !row.description.trim()
+    const invalidRows = costRows.filter(
+      (row) => !row.cost.trim() || !row.description.trim()
     );
 
     if (invalidRows.length > 0) {
-      toast.error('Please fill in all required fields (Cost and Description)');
+      toast.error("Please fill in all required fields (Cost and Description)");
       return;
     }
 
@@ -2482,7 +3051,7 @@ export const TicketDetailsPage = () => {
       const formData = new FormData();
 
       // Add complaint_id (single value)
-      formData.append('complaint_id', id);
+      formData.append("complaint_id", id);
 
       // Add each cost approval with array indices
       costRows.forEach((row, index) => {
@@ -2501,20 +3070,26 @@ export const TicketDetailsPage = () => {
 
         // Add attachment (single file) for this row
         if (row.attachmentFiles.length > 0) {
-          formData.append(`cost_approvals[${index}][attachment]`, row.attachmentFiles[0]);
+          formData.append(
+            `cost_approvals[${index}][attachment]`,
+            row.attachmentFiles[0]
+          );
         }
       });
 
       // Make API call
-      const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, "").replace(
+        /\/$/,
+        ""
+      );
       const url = `https://${baseUrl}${API_CONFIG.ENDPOINTS.COST_APPROVALS_CREATE_MULTIPLE}`;
 
-      console.log('Submitting cost approval to:', url);
+      console.log("Submitting cost approval to:", url);
 
       const response = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
           // Don't set Content-Type, browser will set it with boundary for FormData
         },
         body: formData,
@@ -2522,27 +3097,41 @@ export const TicketDetailsPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(
+          errorData.message || `HTTP ${response.status}: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
-      console.log('Cost approval submitted successfully:', data);
+      console.log("Cost approval submitted successfully:", data);
 
-      toast.success('Cost approval submitted successfully!');
+      toast.success("Cost approval submitted successfully!");
 
       // Reset cost rows to initial state
       setCostRows([
-        { id: 1, quotation: '', vendor: '', vendor_id: '', description: '', cost: '', attachment: '', attachmentFiles: [] }
+        {
+          id: 1,
+          quotation: "",
+          vendor: "",
+          vendor_id: "",
+          description: "",
+          cost: "",
+          attachment: "",
+          attachmentFiles: [],
+        },
       ]);
 
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
       refreshFeeds();
-
     } catch (error) {
-      console.error('Error submitting cost approval:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to submit cost approval. Please try again.');
+      console.error("Error submitting cost approval:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit cost approval. Please try again."
+      );
     } finally {
       setSubmittingCostApproval(false);
     }
@@ -2557,31 +3146,36 @@ export const TicketDetailsPage = () => {
   // Cancel cost approval handler
   const handleCancelCostApproval = async () => {
     if (!cancelRequestId) {
-      toast.error('Request ID not found');
+      toast.error("Request ID not found");
       return;
     }
 
     try {
-      const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, "").replace(
+        /\/$/,
+        ""
+      );
       const url = `https://${baseUrl}/costapprequpdate/${cancelRequestId}`;
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(
+          errorData.message || `HTTP ${response.status}: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
-      console.log('Cost approval cancelled successfully:', data);
+      console.log("Cost approval cancelled successfully:", data);
 
-      toast.success('Cost approval request cancelled successfully!');
+      toast.success("Cost approval request cancelled successfully!");
 
       // Refresh ticket data
       if (id) {
@@ -2592,16 +3186,19 @@ export const TicketDetailsPage = () => {
 
       // Close modal and reset state
       setCancelModalOpen(false);
-      setCancelRequestId('');
-
+      setCancelRequestId("");
     } catch (error) {
-      console.error('Error cancelling cost approval:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to cancel cost approval request. Please try again.');
+      console.error("Error cancelling cost approval:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to cancel cost approval request. Please try again."
+      );
     }
   };
 
   const convertDateFormat = (dateString: string | null | undefined): string => {
-    if (!dateString) return '';
+    if (!dateString) return "";
 
     // If it's already in YYYY-MM-DD format, return as is
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
@@ -2610,156 +3207,185 @@ export const TicketDetailsPage = () => {
 
     // If it's in DD/MM/YYYY format, convert to YYYY-MM-DD
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
-      const [day, month, year] = dateString.split('/');
-      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      const [day, month, year] = dateString.split("/");
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
     }
 
     // Try to parse other formats
     try {
       const date = new Date(dateString);
       if (!isNaN(date.getTime())) {
-        return date.toISOString().split('T')[0];
+        return date.toISOString().split("T")[0];
       }
     } catch (error) {
-      console.error('Error parsing date:', dateString, error);
+      console.error("Error parsing date:", dateString, error);
     }
 
-    return '';
+    return "";
   };
 
   // Update the handleTicketMgmtEdit function
   const handleTicketMgmtEdit = () => {
-    console.log('=== Form Initialization Debug ===');
-    console.log('ticketData:', ticketData);
-    console.log('visit_date from API:', ticketData?.visit_date);
-    console.log('expected_completion_date from API:', ticketData?.expected_completion_date);
+    console.log("=== Form Initialization Debug ===");
+    console.log("ticketData:", ticketData);
+    console.log("visit_date from API:", ticketData?.visit_date);
+    console.log(
+      "expected_completion_date from API:",
+      ticketData?.expected_completion_date
+    );
 
     // Find the status ID by matching status name with complaintStatus
     const findStatusId = () => {
-      if (!ticketData?.issue_status) return '';
-      const matchedStatus = complaintStatus.find(status =>
-        status.name === ticketData.issue_status ||
-        status.id.toString() === ticketData.issue_status
+      if (!ticketData?.issue_status) return "";
+      const matchedStatus = complaintStatus.find(
+        (status) =>
+          status.name === ticketData.issue_status ||
+          status.id.toString() === ticketData.issue_status
       );
-      console.log('Status mapping:', {
+      console.log("Status mapping:", {
         original: ticketData.issue_status,
         matched: matchedStatus,
-        result: matchedStatus ? matchedStatus.id.toString() : ''
+        result: matchedStatus ? matchedStatus.id.toString() : "",
       });
-      return matchedStatus ? matchedStatus.id.toString() : '';
+      return matchedStatus ? matchedStatus.id.toString() : "";
     };
 
     // Find the mode ID by matching mode name with complaintModes
     const findModeId = () => {
-      if (!ticketData?.complaint_mode) return '';
-      const matchedMode = complaintModes.find(mode =>
-        mode.name === ticketData.complaint_mode ||
-        mode.id.toString() === ticketData.complaint_mode
+      if (!ticketData?.complaint_mode) return "";
+      const matchedMode = complaintModes.find(
+        (mode) =>
+          mode.name === ticketData.complaint_mode ||
+          mode.id.toString() === ticketData.complaint_mode
       );
-      console.log('Mode mapping:', {
+      console.log("Mode mapping:", {
         original: ticketData.complaint_mode,
         matched: matchedMode,
-        result: matchedMode ? matchedMode.id.toString() : ''
+        result: matchedMode ? matchedMode.id.toString() : "",
       });
-      return matchedMode ? matchedMode.id.toString() : '';
+      return matchedMode ? matchedMode.id.toString() : "";
     };
 
     // Find the assigned user ID by matching user name with responsiblePersons
     const findAssignedUserId = () => {
-      if (!ticketData?.assigned_to) return '';
-      const matchedUser = responsiblePersons.find(user =>
-        user.full_name === ticketData.assigned_to ||
-        user.id.toString() === ticketData.assigned_to
+      if (!ticketData?.assigned_to) return "";
+      const matchedUser = responsiblePersons.find(
+        (user) =>
+          user.full_name === ticketData.assigned_to ||
+          user.id.toString() === ticketData.assigned_to
       );
-      console.log('User mapping:', {
+      console.log("User mapping:", {
         original: ticketData.assigned_to,
         matched: matchedUser,
-        result: matchedUser ? matchedUser.id.toString() : ''
+        result: matchedUser ? matchedUser.id.toString() : "",
       });
-      return matchedUser ? matchedUser.id.toString() : '';
+      return matchedUser ? matchedUser.id.toString() : "";
     };
 
     // Convert dates to proper format for HTML date inputs
     const convertedVisitDate = convertDateFormat(ticketData?.visit_date);
-    const convertedCompletionDate = convertDateFormat(ticketData?.expected_completion_date);
+    const convertedCompletionDate = convertDateFormat(
+      ticketData?.expected_completion_date
+    );
 
-    console.log('Date conversion:', {
+    console.log("Date conversion:", {
       original_visit_date: ticketData?.visit_date,
       converted_visit_date: convertedVisitDate,
       original_completion_date: ticketData?.expected_completion_date,
-      converted_completion_date: convertedCompletionDate
+      converted_completion_date: convertedCompletionDate,
     });
 
     // Convert review_tracking date to YYYY-MM-DD format for input field
-    let convertedReviewDate = '';
+    let convertedReviewDate = "";
     if (ticketData?.review_tracking) {
       const reviewDate = new Date(ticketData.review_tracking);
       if (!isNaN(reviewDate.getTime())) {
-        convertedReviewDate = reviewDate.toISOString().split('T')[0];
+        convertedReviewDate = reviewDate.toISOString().split("T")[0];
       }
     }
 
     // Initialize form data with current ticket data
     const formData = {
       selectedStatus: findStatusId(),
-      severity: ticketData?.severity || '',
+      severity: ticketData?.severity || "",
       assigned_to: findAssignedUserId(),
-      asset_service: ticketData?.asset_service || '',
+      asset_service: ticketData?.asset_service || "",
       visit_date: convertedVisitDate,
       expected_completion_date: convertedCompletionDate,
-      issue_related_to: ticketData?.issue_related_to || 'FM',
+      issue_related_to: ticketData?.issue_related_to || "FM",
       complaint_mode_id: findModeId(),
       rca_template_ids: ticketData?.rca_template_ids || [],
       rca_text: ticketData?.root_cause
-        ? (typeof ticketData.root_cause === 'string'
-            ? ticketData.root_cause
-            : Array.isArray(ticketData.root_cause)
-              ? ticketData.root_cause.join(', ')
-              : '')
-        : '',
-      additional_notes: ticketData?.notes || '',
-      supplier_id: ticketData?.supplier_id ? ticketData.supplier_id.toString() : '',
-      proactive_reactive: ticketData?.proactive_reactive || '',
+        ? typeof ticketData.root_cause === "string"
+          ? ticketData.root_cause
+          : Array.isArray(ticketData.root_cause)
+            ? ticketData.root_cause.join(", ")
+            : ""
+        : "",
+      additional_notes: ticketData?.notes || "",
+      supplier_id: ticketData?.supplier_id
+        ? ticketData.supplier_id.toString()
+        : "",
+      proactive_reactive: ticketData?.proactive_reactive || "",
       review_tracking: convertedReviewDate,
       // Association fields - use new structure
       associatedTo: (() => {
-        if (ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id) {
+        if (
+          ticketData?.asset_service === "Asset" &&
+          ticketData?.asset_or_service_id
+        ) {
           // Find the asset details
           const assetId = ticketData.asset_or_service_id.toString();
-          const asset = assetOptions.find(a => a.id.toString() === assetId);
+          const asset = assetOptions.find((a) => a.id.toString() === assetId);
           return {
             id: ticketData.asset_or_service_id,
-            name: asset?.name || ticketData.asset_or_service_name || 'Unknown Asset',
-            type: 'asset'
+            name:
+              asset?.name ||
+              ticketData.asset_or_service_name ||
+              "Unknown Asset",
+            type: "asset",
           };
-        } else if (ticketData?.asset_service === 'Service' && ticketData?.asset_or_service_id) {
+        } else if (
+          ticketData?.asset_service === "Service" &&
+          ticketData?.asset_or_service_id
+        ) {
           // Find the service details
           const serviceId = ticketData.asset_or_service_id.toString();
-          const service = serviceOptions.find(s => s.id.toString() === serviceId);
+          const service = serviceOptions.find(
+            (s) => s.id.toString() === serviceId
+          );
           return {
             id: ticketData.asset_or_service_id,
-            name: service?.service_name || ticketData.asset_or_service_name || 'Unknown Service',
-            type: 'service'
+            name:
+              service?.service_name ||
+              ticketData.asset_or_service_name ||
+              "Unknown Service",
+            type: "service",
           };
         }
-        return { id: '', name: '', type: '' };
+        return { id: "", name: "", type: "" };
       })(),
-      selectedAsset: ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id
-        ? ticketData.asset_or_service_id.toString() : '',
-      selectedService: ticketData?.asset_service === 'Service' && ticketData?.asset_or_service_id
-        ? ticketData.asset_or_service_id.toString() : '',
+      selectedAsset:
+        ticketData?.asset_service === "Asset" && ticketData?.asset_or_service_id
+          ? ticketData.asset_or_service_id.toString()
+          : "",
+      selectedService:
+        ticketData?.asset_service === "Service" &&
+        ticketData?.asset_or_service_id
+          ? ticketData.asset_or_service_id.toString()
+          : "",
     };
 
-    console.log('Final form data:', formData);
+    console.log("Final form data:", formData);
     setTicketMgmtFormData(formData);
 
     // Initialize association type based on existing ticket data
-    if (ticketData?.asset_service === 'Asset') {
-      setAssociationType('asset');
-    } else if (ticketData?.asset_service === 'Service') {
-      setAssociationType('service');
+    if (ticketData?.asset_service === "Asset") {
+      setAssociationType("asset");
+    } else if (ticketData?.asset_service === "Service") {
+      setAssociationType("service");
     } else {
-      setAssociationType('');
+      setAssociationType("");
     }
 
     setIsEditingTicketMgmt(true);
@@ -2768,76 +3394,99 @@ export const TicketDetailsPage = () => {
   // Handle Ticket Management Form Input Change
   const handleTicketMgmtInputChange = (field: string, value: any) => {
     console.log(`🔄 handleTicketMgmtInputChange: ${field} =`, value);
-    setTicketMgmtFormData(prev => {
+    setTicketMgmtFormData((prev) => {
       const newData = {
         ...prev,
-        [field]: value
+        [field]: value,
       };
-      console.log('🔄 Updated ticketMgmtFormData:', newData);
+      console.log("🔄 Updated ticketMgmtFormData:", newData);
       return newData;
     });
   };
 
   // Helper function to handle asset/service selection with proper associatedTo update
-  const handleAssetServiceSelection = (type: 'asset' | 'service', value: string) => {
+  const handleAssetServiceSelection = (
+    type: "asset" | "service",
+    value: string
+  ) => {
     console.log(`🔄 handleAssetServiceSelection: ${type} = ${value}`);
-    if (type === 'asset') {
-      handleTicketMgmtInputChange('selectedAsset', value);
-      handleTicketMgmtInputChange('selectedService', '');
-      handleTicketMgmtInputChange('asset_service', value); // Pass the actual asset ID
+    if (type === "asset") {
+      handleTicketMgmtInputChange("selectedAsset", value);
+      handleTicketMgmtInputChange("selectedService", "");
+      handleTicketMgmtInputChange("asset_service", value); // Pass the actual asset ID
 
       // Update associatedTo with proper asset data
-      const selectedAsset = assetOptions.find(asset => asset.id.toString() === value);
+      const selectedAsset = assetOptions.find(
+        (asset) => asset.id.toString() === value
+      );
       if (selectedAsset) {
-        setTicketMgmtFormData(prev => ({
+        setTicketMgmtFormData((prev) => ({
           ...prev,
-          associatedTo: { id: selectedAsset.id.toString(), name: selectedAsset.name, type: 'asset' }
+          associatedTo: {
+            id: selectedAsset.id.toString(),
+            name: selectedAsset.name,
+            type: "asset",
+          },
         }));
-        console.log('✅ Updated associatedTo for asset:', { id: selectedAsset.id, name: selectedAsset.name, type: 'asset' });
+        console.log("✅ Updated associatedTo for asset:", {
+          id: selectedAsset.id,
+          name: selectedAsset.name,
+          type: "asset",
+        });
       }
     } else {
-      handleTicketMgmtInputChange('selectedService', value);
-      handleTicketMgmtInputChange('selectedAsset', '');
-      handleTicketMgmtInputChange('asset_service', value); // Pass the actual service ID
+      handleTicketMgmtInputChange("selectedService", value);
+      handleTicketMgmtInputChange("selectedAsset", "");
+      handleTicketMgmtInputChange("asset_service", value); // Pass the actual service ID
 
       // Update associatedTo with proper service data
-      const selectedService = serviceOptions.find(service => service.id.toString() === value);
+      const selectedService = serviceOptions.find(
+        (service) => service.id.toString() === value
+      );
       if (selectedService) {
-        setTicketMgmtFormData(prev => ({
+        setTicketMgmtFormData((prev) => ({
           ...prev,
-          associatedTo: { id: selectedService.id.toString(), name: selectedService.service_name, type: 'service' }
+          associatedTo: {
+            id: selectedService.id.toString(),
+            name: selectedService.service_name,
+            type: "service",
+          },
         }));
-        console.log('✅ Updated associatedTo for service:', { id: selectedService.id, name: selectedService.service_name, type: 'service' });
+        console.log("✅ Updated associatedTo for service:", {
+          id: selectedService.id,
+          name: selectedService.service_name,
+          type: "service",
+        });
       }
     }
   };
 
   // Handle Input Change for the new formData (similar to UpdateTicketsPage)
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
   // Handle Association Changes for Ticket Management
-  const handleTicketMgmtAssociationChange = (type: 'asset' | 'service') => {
-    if (type === 'asset') {
-      setTicketMgmtFormData(prev => ({
+  const handleTicketMgmtAssociationChange = (type: "asset" | "service") => {
+    if (type === "asset") {
+      setTicketMgmtFormData((prev) => ({
         ...prev,
         associatedTo: { asset: true, service: false },
-        selectedService: '', // Reset service selection
-        asset_service: 'Asset'
+        selectedService: "", // Reset service selection
+        asset_service: "Asset",
       }));
       if (assetOptions.length === 0) {
         fetchAssets(false); // Don't auto-select when manually changing
       }
     } else {
-      setTicketMgmtFormData(prev => ({
+      setTicketMgmtFormData((prev) => ({
         ...prev,
         associatedTo: { asset: false, service: true },
-        selectedAsset: '', // Reset asset selection
-        asset_service: 'Service'
+        selectedAsset: "", // Reset asset selection
+        asset_service: "Service",
       }));
       if (serviceOptions.length === 0) {
         fetchServices(false); // Don't auto-select when manually changing
@@ -2851,84 +3500,135 @@ export const TicketDetailsPage = () => {
       setSubmittingTicketMgmt(true);
 
       if (!id) {
-        throw new Error('No ticket ID available');
+        throw new Error("No ticket ID available");
       }
 
       // Build FormData with properly nested parameters
       const formDataToSend = new FormData();
 
       // complaint_log parameters
-      formDataToSend.append('complaint_log[complaint_id]', id);
+      formDataToSend.append("complaint_log[complaint_id]", id);
       if (ticketMgmtFormData.selectedStatus) {
-        formDataToSend.append('complaint_log[complaint_status_id]', ticketMgmtFormData.selectedStatus);
+        formDataToSend.append(
+          "complaint_log[complaint_status_id]",
+          ticketMgmtFormData.selectedStatus
+        );
       }
 
       // complaint parameters
       if (ticketMgmtFormData.severity) {
-        formDataToSend.append('complaint[severity]', ticketMgmtFormData.severity);
+        formDataToSend.append(
+          "complaint[severity]",
+          ticketMgmtFormData.severity
+        );
       }
 
       if (ticketMgmtFormData.complaint_mode_id) {
-        formDataToSend.append('complaint[complaint_mode_id]', ticketMgmtFormData.complaint_mode_id);
+        formDataToSend.append(
+          "complaint[complaint_mode_id]",
+          ticketMgmtFormData.complaint_mode_id
+        );
       }
 
       if (ticketMgmtFormData.issue_related_to) {
-        formDataToSend.append('complaint[issue_related_to]', ticketMgmtFormData.issue_related_to);
+        formDataToSend.append(
+          "complaint[issue_related_to]",
+          ticketMgmtFormData.issue_related_to
+        );
       }
 
       if (ticketMgmtFormData.assigned_to) {
-        formDataToSend.append('complaint[assigned_to]', ticketMgmtFormData.assigned_to);
+        formDataToSend.append(
+          "complaint[assigned_to]",
+          ticketMgmtFormData.assigned_to
+        );
       }
 
       if (ticketMgmtFormData.expected_completion_date) {
-        formDataToSend.append('complaint[expected_completion_date]', ticketMgmtFormData.expected_completion_date);
+        formDataToSend.append(
+          "complaint[expected_completion_date]",
+          ticketMgmtFormData.expected_completion_date
+        );
       }
 
       if (ticketMgmtFormData.visit_date) {
-        formDataToSend.append('complaint[visit_date]', ticketMgmtFormData.visit_date);
+        formDataToSend.append(
+          "complaint[visit_date]",
+          ticketMgmtFormData.visit_date
+        );
       }
 
       if (ticketMgmtFormData.additional_notes) {
-        formDataToSend.append('complaint[additional_notes]', ticketMgmtFormData.additional_notes);
+        formDataToSend.append(
+          "complaint[additional_notes]",
+          ticketMgmtFormData.additional_notes
+        );
       }
 
       if (ticketMgmtFormData.supplier_id) {
-        formDataToSend.append('complaint[supplier_id]', ticketMgmtFormData.supplier_id);
+        formDataToSend.append(
+          "complaint[supplier_id]",
+          ticketMgmtFormData.supplier_id
+        );
       }
 
       if (ticketMgmtFormData.proactive_reactive) {
-        formDataToSend.append('complaint[proactive_reactive]', ticketMgmtFormData.proactive_reactive);
+        formDataToSend.append(
+          "complaint[proactive_reactive]",
+          ticketMgmtFormData.proactive_reactive
+        );
       }
 
       if (ticketMgmtFormData.review_tracking) {
-        formDataToSend.append('complaint[review_tracking_date]', ticketMgmtFormData.review_tracking);
+        formDataToSend.append(
+          "complaint[review_tracking_date]",
+          ticketMgmtFormData.review_tracking
+        );
       }
 
       // Root level parameters (asset/service association)
-      if (associationType === 'asset' && ticketMgmtFormData.selectedAsset) {
-        formDataToSend.append('asset_id', ticketMgmtFormData.selectedAsset);
-      } else if (associationType === 'service' && ticketMgmtFormData.selectedService) {
-        formDataToSend.append('service_id', ticketMgmtFormData.selectedService);
-      } else if (ticketMgmtFormData.associatedTo?.type === 'asset' && ticketMgmtFormData.associatedTo?.id) {
-        formDataToSend.append('asset_id', ticketMgmtFormData.associatedTo.id.toString());
-      } else if (ticketMgmtFormData.associatedTo?.type === 'service' && ticketMgmtFormData.associatedTo?.id) {
-        formDataToSend.append('service_id', ticketMgmtFormData.associatedTo.id.toString());
+      if (associationType === "asset" && ticketMgmtFormData.selectedAsset) {
+        formDataToSend.append("asset_id", ticketMgmtFormData.selectedAsset);
+      } else if (
+        associationType === "service" &&
+        ticketMgmtFormData.selectedService
+      ) {
+        formDataToSend.append("service_id", ticketMgmtFormData.selectedService);
+      } else if (
+        ticketMgmtFormData.associatedTo?.type === "asset" &&
+        ticketMgmtFormData.associatedTo?.id
+      ) {
+        formDataToSend.append(
+          "asset_id",
+          ticketMgmtFormData.associatedTo.id.toString()
+        );
+      } else if (
+        ticketMgmtFormData.associatedTo?.type === "service" &&
+        ticketMgmtFormData.associatedTo?.id
+      ) {
+        formDataToSend.append(
+          "service_id",
+          ticketMgmtFormData.associatedTo.id.toString()
+        );
       }
 
       // Add Root Cause Analysis as plain text
       if (ticketMgmtFormData.rca_text) {
-        formDataToSend.append('complaint[root_cause]', ticketMgmtFormData.rca_text);
+        formDataToSend.append(
+          "complaint[root_cause]",
+          ticketMgmtFormData.rca_text
+        );
       }
 
-      console.log('🔄 Submitting ticket management with FormData');
-      console.log('🔄 Form data:', ticketMgmtFormData);
+      console.log("🔄 Submitting ticket management with FormData");
+      console.log("🔄 Form data:", ticketMgmtFormData);
 
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
         },
         body: formDataToSend,
       });
@@ -2938,21 +3638,24 @@ export const TicketDetailsPage = () => {
       }
 
       const data = await response.json();
-      console.log('✅ Ticket management updated successfully:', data);
+      console.log("✅ Ticket management updated successfully:", data);
 
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
       refreshFeeds();
 
-      toast.success('Ticket management updated successfully');
+      toast.success("Ticket management updated successfully");
 
       // Exit edit mode
       setIsEditingTicketMgmt(false);
-
     } catch (error) {
-      console.error('❌ Error updating ticket management:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update ticket management');
+      console.error("❌ Error updating ticket management:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update ticket management"
+      );
     } finally {
       setSubmittingTicketMgmt(false);
     }
@@ -2961,14 +3664,15 @@ export const TicketDetailsPage = () => {
   // ---- Ticket Details edit (same dropdowns/params as AddHelpdeskTicket) ----
   const getDetailsSocietyId = (): string | number | undefined => {
     if (ticketData?.id_society) return ticketData.id_society;
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
         if (parsedUser.society?.id) return parsedUser.society.id;
-        if (parsedUser.selected_user_society) return parsedUser.selected_user_society;
+        if (parsedUser.selected_user_society)
+          return parsedUser.selected_user_society;
       } catch (e) {
-        console.error('Error parsing user from localStorage:', e);
+        console.error("Error parsing user from localStorage:", e);
       }
     }
     return undefined;
@@ -2980,17 +3684,20 @@ export const TicketDetailsPage = () => {
       const societyId = getDetailsSocietyId();
       const url = societyId
         ? getFullUrl(`/user/issue_type.json?society_id=${societyId}`)
-        : getFullUrl('/user/issue_type.json');
-      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
-      if (!response.ok) throw new Error('Failed to fetch issue types');
+        : getFullUrl("/user/issue_type.json");
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: getAuthHeader() },
+      });
+      if (!response.ok) throw new Error("Failed to fetch issue types");
       const responseData = await response.json();
       const issueTypesData = responseData.data || responseData;
       const list = Array.isArray(issueTypesData) ? issueTypesData : [];
       setDetailsIssueTypes(list);
       return list;
     } catch (error) {
-      console.error('Error loading issue types:', error);
-      toast.error('Failed to load issue types');
+      console.error("Error loading issue types:", error);
+      toast.error("Failed to load issue types");
       return [];
     } finally {
       setLoadingDetailsIssueTypes(false);
@@ -3000,16 +3707,21 @@ export const TicketDetailsPage = () => {
   const loadDetailsCategories = async (issueTypeId: string) => {
     setLoadingDetailsCategories(true);
     try {
-      const url = getFullUrl(`/crm/admin/helpdesk_categories.json?q[issue_type_id_eq]=${issueTypeId}`);
-      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
-      if (!response.ok) throw new Error('Failed to fetch categories');
+      const url = getFullUrl(
+        `/crm/admin/helpdesk_categories.json?q[issue_type_id_eq]=${issueTypeId}`
+      );
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: getAuthHeader() },
+      });
+      if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
       const list = data.helpdesk_categories || [];
       setDetailsCategories(list);
       return list;
     } catch (error) {
-      console.error('Error loading categories:', error);
-      toast.error('Failed to load categories');
+      console.error("Error loading categories:", error);
+      toast.error("Failed to load categories");
       return [];
     } finally {
       setLoadingDetailsCategories(false);
@@ -3019,16 +3731,21 @@ export const TicketDetailsPage = () => {
   const loadDetailsSubCategories = async (categoryId: string) => {
     setLoadingDetailsSubCategories(true);
     try {
-      const url = getFullUrl(`/crm/admin/complaints_sub_categories.json?category_type_id=${categoryId}`);
-      const response = await fetch(url, { method: 'GET', headers: { Authorization: getAuthHeader() } });
-      if (!response.ok) throw new Error('Failed to fetch subcategories');
+      const url = getFullUrl(
+        `/crm/admin/complaints_sub_categories.json?category_type_id=${categoryId}`
+      );
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: getAuthHeader() },
+      });
+      if (!response.ok) throw new Error("Failed to fetch subcategories");
       const data = await response.json();
       const list = data.sub_categories || [];
       setDetailsSubCategories(list);
       return list;
     } catch (error) {
-      console.error('Error loading subcategories:', error);
-      toast.error('Failed to load subcategories');
+      console.error("Error loading subcategories:", error);
+      toast.error("Failed to load subcategories");
       return [];
     } finally {
       setLoadingDetailsSubCategories(false);
@@ -3039,35 +3756,58 @@ export const TicketDetailsPage = () => {
     setIsEditingTicketDetails(true);
     setDetailsCategories([]);
     setDetailsSubCategories([]);
-    const currentTicketType = (ticketData?.complaint_type || ticketData?.ticket_type || '').toLowerCase();
+    const currentTicketType = (
+      ticketData?.complaint_type ||
+      ticketData?.ticket_type ||
+      ""
+    ).toLowerCase();
     setTicketDetailsFormData({
-      complaint_type: ['request', 'complaint', 'suggestion'].includes(currentTicketType) ? currentTicketType : '',
-      priority: (ticketData?.priority || '').toString().toUpperCase().match(/^P[1-5]/)?.[0] || '',
-      issue_type_id: '',
-      issue_related_to: ticketData?.issue_related_to || '',
-      category_type_id: '',
-      sub_category_id: '',
+      complaint_type: ["request", "complaint", "suggestion"].includes(
+        currentTicketType
+      )
+        ? currentTicketType
+        : "",
+      priority:
+        (ticketData?.priority || "")
+          .toString()
+          .toUpperCase()
+          .match(/^P[1-5]/)?.[0] || "",
+      issue_type_id: "",
+      issue_related_to: ticketData?.issue_related_to || "",
+      category_type_id: "",
+      sub_category_id: "",
     });
 
     // Resolve current values to IDs (fall back to matching by name)
     const issueTypes = await loadDetailsIssueTypes();
     const issueTypeId = ticketData?.issue_type_id
       ? ticketData.issue_type_id.toString()
-      : issueTypes.find((t) => t.name && t.name.toLowerCase() === (ticketData?.issue_type || '').toLowerCase())?.id?.toString() || '';
+      : issueTypes
+          .find(
+            (t) =>
+              t.name &&
+              t.name.toLowerCase() ===
+                (ticketData?.issue_type || "").toLowerCase()
+          )
+          ?.id?.toString() || "";
 
-    let categoryId = '';
-    let subCategoryId = '';
+    let categoryId = "";
+    let subCategoryId = "";
     if (issueTypeId) {
       const categories = await loadDetailsCategories(issueTypeId);
       categoryId = ticketData?.category_type_id
         ? ticketData.category_type_id.toString()
-        : categories.find((c) => c.name === ticketData?.category_type)?.id?.toString() || '';
+        : categories
+            .find((c) => c.name === ticketData?.category_type)
+            ?.id?.toString() || "";
     }
     if (categoryId) {
       const subCategories = await loadDetailsSubCategories(categoryId);
       subCategoryId = ticketData?.sub_category_id
         ? ticketData.sub_category_id.toString()
-        : subCategories.find((sc) => sc.name === ticketData?.sub_category_type)?.id?.toString() || '';
+        : subCategories
+            .find((sc) => sc.name === ticketData?.sub_category_type)
+            ?.id?.toString() || "";
     }
 
     setTicketDetailsFormData((prev) => ({
@@ -3079,14 +3819,23 @@ export const TicketDetailsPage = () => {
   };
 
   const handleDetailsIssueTypeChange = (issueTypeId: string) => {
-    setTicketDetailsFormData((prev) => ({ ...prev, issue_type_id: issueTypeId, category_type_id: '', sub_category_id: '' }));
+    setTicketDetailsFormData((prev) => ({
+      ...prev,
+      issue_type_id: issueTypeId,
+      category_type_id: "",
+      sub_category_id: "",
+    }));
     setDetailsCategories([]);
     setDetailsSubCategories([]);
     if (issueTypeId) loadDetailsCategories(issueTypeId);
   };
 
   const handleDetailsCategoryChange = (categoryId: string) => {
-    setTicketDetailsFormData((prev) => ({ ...prev, category_type_id: categoryId, sub_category_id: '' }));
+    setTicketDetailsFormData((prev) => ({
+      ...prev,
+      category_type_id: categoryId,
+      sub_category_id: "",
+    }));
     setDetailsSubCategories([]);
     if (categoryId) loadDetailsSubCategories(categoryId);
   };
@@ -3094,15 +3843,15 @@ export const TicketDetailsPage = () => {
   const handleTicketDetailsSubmit = async () => {
     if (!id) return;
     if (!ticketDetailsFormData.complaint_type) {
-      toast.error('Please select Ticket Type');
+      toast.error("Please select Ticket Type");
       return;
     }
     if (!ticketDetailsFormData.issue_type_id) {
-      toast.error('Please select Related To');
+      toast.error("Please select Related To");
       return;
     }
     if (!ticketDetailsFormData.category_type_id) {
-      toast.error('Please select Category');
+      toast.error("Please select Category");
       return;
     }
 
@@ -3110,23 +3859,44 @@ export const TicketDetailsPage = () => {
       setSubmittingTicketDetails(true);
 
       const formDataToSend = new FormData();
-      formDataToSend.append('complaint_log[complaint_id]', id);
-      formDataToSend.append('complaint[complaint_type]', ticketDetailsFormData.complaint_type);
-      formDataToSend.append('complaint[issue_type_id]', ticketDetailsFormData.issue_type_id);
+      formDataToSend.append("complaint_log[complaint_id]", id);
+      formDataToSend.append(
+        "complaint[complaint_type]",
+        ticketDetailsFormData.complaint_type
+      );
+      formDataToSend.append(
+        "complaint[issue_type_id]",
+        ticketDetailsFormData.issue_type_id
+      );
       if (ticketDetailsFormData.priority) {
-        formDataToSend.append('complaint[priority]', ticketDetailsFormData.priority);
+        formDataToSend.append(
+          "complaint[priority]",
+          ticketDetailsFormData.priority
+        );
       }
-      formDataToSend.append('complaint[category_type_id]', ticketDetailsFormData.category_type_id);
-      formDataToSend.append('complaint[sub_category_id]', ticketDetailsFormData.sub_category_id || '');
+      formDataToSend.append(
+        "complaint[category_type_id]",
+        ticketDetailsFormData.category_type_id
+      );
+      formDataToSend.append(
+        "complaint[sub_category_id]",
+        ticketDetailsFormData.sub_category_id || ""
+      );
       if (ticketDetailsFormData.issue_related_to) {
-        formDataToSend.append('complaint[issue_related_to]', ticketDetailsFormData.issue_related_to);
+        formDataToSend.append(
+          "complaint[issue_related_to]",
+          ticketDetailsFormData.issue_related_to
+        );
       }
 
-      const response = await fetch(getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET), {
-        method: 'POST',
-        headers: { Authorization: getAuthHeader() },
-        body: formDataToSend,
-      });
+      const response = await fetch(
+        getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET),
+        {
+          method: "POST",
+          headers: { Authorization: getAuthHeader() },
+          body: formDataToSend,
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -3136,11 +3906,15 @@ export const TicketDetailsPage = () => {
       setTicketData(ticketDetails);
       refreshFeeds();
 
-      toast.success('Ticket details updated successfully');
+      toast.success("Ticket details updated successfully");
       setIsEditingTicketDetails(false);
     } catch (error) {
-      console.error('Error updating ticket details:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update ticket details');
+      console.error("Error updating ticket details:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update ticket details"
+      );
     } finally {
       setSubmittingTicketDetails(false);
     }
@@ -3160,7 +3934,7 @@ export const TicketDetailsPage = () => {
   );
 
   const renderTicketDetailsEditForm = () => {
-    const issueRelatedToOptions = ['FM', 'Project'];
+    const issueRelatedToOptions = ["FM", "Project"];
     const currentIssueRelatedTo = ticketDetailsFormData.issue_related_to;
 
     return (
@@ -3170,7 +3944,12 @@ export const TicketDetailsPage = () => {
             <InputLabel>Ticket Type</InputLabel>
             <MuiSelect
               value={ticketDetailsFormData.complaint_type}
-              onChange={(e) => setTicketDetailsFormData((prev) => ({ ...prev, complaint_type: e.target.value as string }))}
+              onChange={(e) =>
+                setTicketDetailsFormData((prev) => ({
+                  ...prev,
+                  complaint_type: e.target.value as string,
+                }))
+              }
               label="Ticket Type"
             >
               <MenuItem value="">
@@ -3186,15 +3965,25 @@ export const TicketDetailsPage = () => {
             <InputLabel>Related To</InputLabel>
             <MuiSelect
               value={ticketDetailsFormData.issue_type_id}
-              onChange={(e) => handleDetailsIssueTypeChange(e.target.value as string)}
+              onChange={(e) =>
+                handleDetailsIssueTypeChange(e.target.value as string)
+              }
               label="Related To"
               disabled={loadingDetailsIssueTypes}
             >
               <MenuItem value="">
-                <span className="text-gray-500">{loadingDetailsIssueTypes ? 'Loading...' : 'Select Related To'}</span>
+                <span className="text-gray-500">
+                  {loadingDetailsIssueTypes
+                    ? "Loading..."
+                    : "Select Related To"}
+                </span>
               </MenuItem>
               {detailsIssueTypes
-                .filter((type) => type.active === 1 || type.id.toString() === ticketDetailsFormData.issue_type_id)
+                .filter(
+                  (type) =>
+                    type.active === 1 ||
+                    type.id.toString() === ticketDetailsFormData.issue_type_id
+                )
                 .map((type) => (
                   <MenuItem key={type.id} value={type.id.toString()}>
                     {type.name}
@@ -3207,18 +3996,28 @@ export const TicketDetailsPage = () => {
             <InputLabel>Issue Related To</InputLabel>
             <MuiSelect
               value={currentIssueRelatedTo}
-              onChange={(e) => setTicketDetailsFormData((prev) => ({ ...prev, issue_related_to: e.target.value as string }))}
+              onChange={(e) =>
+                setTicketDetailsFormData((prev) => ({
+                  ...prev,
+                  issue_related_to: e.target.value as string,
+                }))
+              }
               label="Issue Related To"
             >
               <MenuItem value="">
                 <span className="text-gray-500">Select Issue Related To</span>
               </MenuItem>
               {issueRelatedToOptions.map((option) => (
-                <MenuItem key={option} value={option}>{option}</MenuItem>
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
               ))}
-              {currentIssueRelatedTo && !issueRelatedToOptions.includes(currentIssueRelatedTo) && (
-                <MenuItem value={currentIssueRelatedTo}>{currentIssueRelatedTo}</MenuItem>
-              )}
+              {currentIssueRelatedTo &&
+                !issueRelatedToOptions.includes(currentIssueRelatedTo) && (
+                  <MenuItem value={currentIssueRelatedTo}>
+                    {currentIssueRelatedTo}
+                  </MenuItem>
+                )}
             </MuiSelect>
           </FormControl>
 
@@ -3226,17 +4025,21 @@ export const TicketDetailsPage = () => {
             <InputLabel>Category</InputLabel>
             <MuiSelect
               value={ticketDetailsFormData.category_type_id}
-              onChange={(e) => handleDetailsCategoryChange(e.target.value as string)}
+              onChange={(e) =>
+                handleDetailsCategoryChange(e.target.value as string)
+              }
               label="Category"
-              disabled={loadingDetailsCategories || !ticketDetailsFormData.issue_type_id}
+              disabled={
+                loadingDetailsCategories || !ticketDetailsFormData.issue_type_id
+              }
             >
               <MenuItem value="">
                 <span className="text-gray-500">
                   {loadingDetailsCategories
-                    ? 'Loading...'
+                    ? "Loading..."
                     : !ticketDetailsFormData.issue_type_id
-                      ? 'Select Issue Type First'
-                      : 'Select Category'}
+                      ? "Select Issue Type First"
+                      : "Select Category"}
                 </span>
               </MenuItem>
               {detailsCategories.map((category) => (
@@ -3251,15 +4054,30 @@ export const TicketDetailsPage = () => {
             <InputLabel>Sub Category</InputLabel>
             <MuiSelect
               value={ticketDetailsFormData.sub_category_id}
-              onChange={(e) => setTicketDetailsFormData((prev) => ({ ...prev, sub_category_id: e.target.value as string }))}
+              onChange={(e) =>
+                setTicketDetailsFormData((prev) => ({
+                  ...prev,
+                  sub_category_id: e.target.value as string,
+                }))
+              }
               label="Sub Category"
-              disabled={loadingDetailsSubCategories || !ticketDetailsFormData.category_type_id}
+              disabled={
+                loadingDetailsSubCategories ||
+                !ticketDetailsFormData.category_type_id
+              }
             >
               <MenuItem value="">
-                <span className="text-gray-500">{loadingDetailsSubCategories ? 'Loading...' : 'Select Sub Category'}</span>
+                <span className="text-gray-500">
+                  {loadingDetailsSubCategories
+                    ? "Loading..."
+                    : "Select Sub Category"}
+                </span>
               </MenuItem>
               {detailsSubCategories.map((subCategory) => (
-                <MenuItem key={subCategory.id} value={subCategory.id.toString()}>
+                <MenuItem
+                  key={subCategory.id}
+                  value={subCategory.id.toString()}
+                >
                   {subCategory.name}
                 </MenuItem>
               ))}
@@ -3270,13 +4088,18 @@ export const TicketDetailsPage = () => {
             <InputLabel>Priority</InputLabel>
             <MuiSelect
               value={ticketDetailsFormData.priority}
-              onChange={(e) => setTicketDetailsFormData((prev) => ({ ...prev, priority: e.target.value as string }))}
+              onChange={(e) =>
+                setTicketDetailsFormData((prev) => ({
+                  ...prev,
+                  priority: e.target.value as string,
+                }))
+              }
               label="Priority"
             >
               <MenuItem value="">
                 <span className="text-gray-500">Select Priority</span>
               </MenuItem>
-              {['P1', 'P2', 'P3', 'P4', 'P5'].map((p) => (
+              {["P1", "P2", "P3", "P4", "P5"].map((p) => (
                 <MenuItem key={p} value={p}>
                   {getPriorityLabel(p)}
                 </MenuItem>
@@ -3301,7 +4124,7 @@ export const TicketDetailsPage = () => {
             onClick={handleTicketDetailsSubmit}
             disabled={submittingTicketDetails}
           >
-            {submittingTicketDetails ? 'Saving...' : 'Save'}
+            {submittingTicketDetails ? "Saving..." : "Save"}
           </Button>
         </div>
       </div>
@@ -3310,82 +4133,95 @@ export const TicketDetailsPage = () => {
 
   // Handle Ticket Closure Edit
   const handleTicketClosureEdit = () => {
-    console.log('=== Ticket Closure Form Initialization ===');
-    console.log('🚀 Edit button clicked for Ticket Closure!');
-    console.log('Current isEditingTicketClosure state:', isEditingTicketClosure);
-    console.log('ticketData:', ticketData);
+    console.log("=== Ticket Closure Form Initialization ===");
+    console.log("🚀 Edit button clicked for Ticket Closure!");
+    console.log(
+      "Current isEditingTicketClosure state:",
+      isEditingTicketClosure
+    );
+    console.log("ticketData:", ticketData);
 
     // Find the responsible person ID by matching name with responsiblePersons
     const findResponsiblePersonId = () => {
-      if (!ticketData?.responsible_person) return '';
-      const matchedPerson = responsiblePersons.find(person =>
-        person.full_name === ticketData.responsible_person ||
-        person.id.toString() === ticketData.responsible_person
+      if (!ticketData?.responsible_person) return "";
+      const matchedPerson = responsiblePersons.find(
+        (person) =>
+          person.full_name === ticketData.responsible_person ||
+          person.id.toString() === ticketData.responsible_person
       );
-      console.log('Responsible person mapping:', {
+      console.log("Responsible person mapping:", {
         original: ticketData.responsible_person,
         matched: matchedPerson,
-        result: matchedPerson ? matchedPerson.id.toString() : ''
+        result: matchedPerson ? matchedPerson.id.toString() : "",
       });
-      return matchedPerson ? matchedPerson.id.toString() : '';
+      return matchedPerson ? matchedPerson.id.toString() : "";
     };
 
     // Convert review_tracking date to YYYY-MM-DD format for input field
-    let convertedReviewDate = '';
+    let convertedReviewDate = "";
     if (ticketData?.review_tracking) {
-      console.log('🔍 Raw review_tracking value:', ticketData.review_tracking);
-      console.log('🔍 Type of review_tracking:', typeof ticketData.review_tracking);
+      console.log("🔍 Raw review_tracking value:", ticketData.review_tracking);
+      console.log(
+        "🔍 Type of review_tracking:",
+        typeof ticketData.review_tracking
+      );
 
       try {
         // Handle different date formats
         let reviewDate;
 
         // If it's already in YYYY-MM-DD format, use it directly
-        if (typeof ticketData.review_tracking === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(ticketData.review_tracking)) {
+        if (
+          typeof ticketData.review_tracking === "string" &&
+          /^\d{4}-\d{2}-\d{2}$/.test(ticketData.review_tracking)
+        ) {
           convertedReviewDate = ticketData.review_tracking;
         }
         // If it's in DD/MM/YYYY format, convert it
-        else if (typeof ticketData.review_tracking === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(ticketData.review_tracking)) {
-          const [day, month, year] = ticketData.review_tracking.split('/');
-          convertedReviewDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        else if (
+          typeof ticketData.review_tracking === "string" &&
+          /^\d{2}\/\d{2}\/\d{4}$/.test(ticketData.review_tracking)
+        ) {
+          const [day, month, year] = ticketData.review_tracking.split("/");
+          convertedReviewDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
         }
         // Otherwise, try to parse as a date
         else {
           reviewDate = new Date(ticketData.review_tracking);
           if (!isNaN(reviewDate.getTime())) {
-            convertedReviewDate = reviewDate.toISOString().split('T')[0];
+            convertedReviewDate = reviewDate.toISOString().split("T")[0];
           }
         }
       } catch (error) {
-        console.error('🔥 Error converting review date:', error);
+        console.error("🔥 Error converting review date:", error);
       }
     }
 
-    console.log('Ticket closure date conversion:', {
+    console.log("Ticket closure date conversion:", {
       original_review_date: ticketData?.review_tracking,
       converted_review_date: convertedReviewDate,
-      length: convertedReviewDate.length
+      length: convertedReviewDate.length,
     });
 
     // Initialize form data with current ticket data (filter out null/undefined values)
     const formData = {
-      preventive_action_text: ticketData?.preventive_action || '',
-      short_term_impact_text: ticketData?.short_term_impact || '',
-      corrective_action_text: ticketData?.corrective_action || '',
-      long_term_impact_text: ticketData?.long_term_impact || '',
+      preventive_action_text: ticketData?.preventive_action || "",
+      short_term_impact_text: ticketData?.short_term_impact || "",
+      corrective_action_text: ticketData?.corrective_action || "",
+      long_term_impact_text: ticketData?.long_term_impact || "",
       responsible_person: findResponsiblePersonId(),
       review_tracking: convertedReviewDate,
     };
 
-    console.log('Final ticket closure form data:', formData);
-    console.log('Review tracking value:', convertedReviewDate);
-    console.log('Setting isEditingTicketClosure to true');
-    console.log('Available responsible persons:', responsiblePersons.length);
+    console.log("Final ticket closure form data:", formData);
+    console.log("Review tracking value:", convertedReviewDate);
+    console.log("Setting isEditingTicketClosure to true");
+    console.log("Available responsible persons:", responsiblePersons.length);
 
     // Debug: Log the exact values we're setting
-    console.log('🔍 About to set ticketClosureFormData with:', {
+    console.log("🔍 About to set ticketClosureFormData with:", {
       review_tracking: convertedReviewDate,
-      formData: formData
+      formData: formData,
     });
 
     setTicketClosureFormData(formData);
@@ -3393,20 +4229,26 @@ export const TicketDetailsPage = () => {
 
     // Debug: Check state after setting
     setTimeout(() => {
-      console.log('🔍 After setting form data - Current ticketClosureFormData:', ticketClosureFormData);
+      console.log(
+        "🔍 After setting form data - Current ticketClosureFormData:",
+        ticketClosureFormData
+      );
     }, 50);
 
     // Verify state change with a timeout
     setTimeout(() => {
-      console.log('🔍 After state update - isEditingTicketClosure:', isEditingTicketClosure);
+      console.log(
+        "🔍 After state update - isEditingTicketClosure:",
+        isEditingTicketClosure
+      );
     }, 100);
   };
 
   // Handle Ticket Closure Form Input Change
   const handleTicketClosureInputChange = (field: string, value: any) => {
-    setTicketClosureFormData(prev => ({
+    setTicketClosureFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -3416,67 +4258,101 @@ export const TicketDetailsPage = () => {
       setSubmittingTicketClosure(true);
 
       if (!id) {
-        toast.error('Ticket ID not found');
+        toast.error("Ticket ID not found");
         return;
       }
 
-      console.log('🔄 Submitting ticket closure data:', ticketClosureFormData);
+      console.log("🔄 Submitting ticket closure data:", ticketClosureFormData);
 
       // Create FormData for submission
       const formDataToSend = new FormData();
-      formDataToSend.append('complaint_log[complaint_id]', id);
+      formDataToSend.append("complaint_log[complaint_id]", id);
 
       // Add text fields for each category
       if (ticketClosureFormData.preventive_action_text) {
-        formDataToSend.append('complaint[preventive_action]', ticketClosureFormData.preventive_action_text);
+        formDataToSend.append(
+          "complaint[preventive_action]",
+          ticketClosureFormData.preventive_action_text
+        );
       }
 
       if (ticketClosureFormData.short_term_impact_text) {
-        formDataToSend.append('complaint[short_term_impact]', ticketClosureFormData.short_term_impact_text);
+        formDataToSend.append(
+          "complaint[short_term_impact]",
+          ticketClosureFormData.short_term_impact_text
+        );
       }
 
       if (ticketClosureFormData.corrective_action_text) {
-        formDataToSend.append('complaint[corrective_action]', ticketClosureFormData.corrective_action_text);
+        formDataToSend.append(
+          "complaint[corrective_action]",
+          ticketClosureFormData.corrective_action_text
+        );
       }
 
       if (ticketClosureFormData.long_term_impact_text) {
-        formDataToSend.append('complaint[long_term_impact]', ticketClosureFormData.long_term_impact_text);
+        formDataToSend.append(
+          "complaint[long_term_impact]",
+          ticketClosureFormData.long_term_impact_text
+        );
       }
 
       if (ticketClosureFormData.responsible_person) {
         const selectedPerson = responsiblePersons.find(
-          person => person.id.toString() === ticketClosureFormData.responsible_person
+          (person) =>
+            person.id.toString() === ticketClosureFormData.responsible_person
         );
         formDataToSend.append(
-          'complaint[person_id]',
-          String(selectedPerson?.person_id ?? ticketClosureFormData.responsible_person)
+          "complaint[person_id]",
+          String(
+            selectedPerson?.person_id ??
+              ticketClosureFormData.responsible_person
+          )
         );
       }
 
       // Add asset_id and service_id based on current ticket's association
-      if (ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id) {
-        formDataToSend.append('asset_id', ticketData.asset_or_service_id.toString());
-        formDataToSend.append('service_id', '');
-      } else if (ticketData?.asset_service === 'Service' && ticketData?.asset_or_service_id) {
-        formDataToSend.append('asset_id', '');
-        formDataToSend.append('service_id', ticketData.asset_or_service_id.toString());
+      if (
+        ticketData?.asset_service === "Asset" &&
+        ticketData?.asset_or_service_id
+      ) {
+        formDataToSend.append(
+          "asset_id",
+          ticketData.asset_or_service_id.toString()
+        );
+        formDataToSend.append("service_id", "");
+      } else if (
+        ticketData?.asset_service === "Service" &&
+        ticketData?.asset_or_service_id
+      ) {
+        formDataToSend.append("asset_id", "");
+        formDataToSend.append(
+          "service_id",
+          ticketData.asset_or_service_id.toString()
+        );
       } else {
         // Default empty values if no association
-        formDataToSend.append('asset_id', '');
-        formDataToSend.append('service_id', '');
+        formDataToSend.append("asset_id", "");
+        formDataToSend.append("service_id", "");
       }
 
       if (ticketClosureFormData.review_tracking) {
-        formDataToSend.append('complaint[review_tracking_date]', ticketClosureFormData.review_tracking);
-        console.log('Setting review tracking date:', ticketClosureFormData.review_tracking);
+        formDataToSend.append(
+          "complaint[review_tracking_date]",
+          ticketClosureFormData.review_tracking
+        );
+        console.log(
+          "Setting review tracking date:",
+          ticketClosureFormData.review_tracking
+        );
       }
 
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
         },
         body: formDataToSend,
       });
@@ -3486,7 +4362,7 @@ export const TicketDetailsPage = () => {
       }
 
       const data = await response.json();
-      console.log('✅ Ticket closure updated successfully:', data);
+      console.log("✅ Ticket closure updated successfully:", data);
 
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
@@ -3496,25 +4372,31 @@ export const TicketDetailsPage = () => {
       // Update form data with the fresh ticket data to maintain consistency
       if (ticketDetails) {
         const updatedFormData = {
-          preventive_action_text: ticketDetails.preventive_action || '',
-          short_term_impact_text: ticketDetails.short_term_impact || '',
-          corrective_action_text: ticketDetails.corrective_action || '',
-          long_term_impact_text: ticketDetails.long_term_impact || '',
+          preventive_action_text: ticketDetails.preventive_action || "",
+          short_term_impact_text: ticketDetails.short_term_impact || "",
+          corrective_action_text: ticketDetails.corrective_action || "",
+          long_term_impact_text: ticketDetails.long_term_impact || "",
           responsible_person: ticketClosureFormData.responsible_person, // Keep current form value
           review_tracking: ticketClosureFormData.review_tracking, // Keep current form value
         };
         setTicketClosureFormData(updatedFormData);
-        console.log('🔄 Form data synchronized with updated ticket data:', updatedFormData);
+        console.log(
+          "🔄 Form data synchronized with updated ticket data:",
+          updatedFormData
+        );
       }
 
-      toast.success('Ticket closure updated successfully');
+      toast.success("Ticket closure updated successfully");
 
       // Exit edit mode
       setIsEditingTicketClosure(false);
-
     } catch (error) {
-      console.error('❌ Error updating ticket closure:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update ticket closure');
+      console.error("❌ Error updating ticket closure:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update ticket closure"
+      );
     } finally {
       setSubmittingTicketClosure(false);
     }
@@ -3522,9 +4404,9 @@ export const TicketDetailsPage = () => {
 
   // Location Edit Handlers
   const handleLocationEdit = () => {
-    console.log('=== Location Edit Form Initialization ===');
-    console.log('🚀 Edit button clicked for Location!');
-    console.log('ticketData:', ticketData);
+    console.log("=== Location Edit Form Initialization ===");
+    console.log("🚀 Edit button clicked for Location!");
+    console.log("ticketData:", ticketData);
 
     // Find location IDs by matching names from ticket data
     let buildingId = "";
@@ -3535,120 +4417,139 @@ export const TicketDetailsPage = () => {
 
     // Match building by name using building_name
     if (ticketData?.building_name) {
-      const matchedBuilding = buildings.find(b => b.name === ticketData.building_name);
+      const matchedBuilding = buildings.find(
+        (b) => b.name === ticketData.building_name
+      );
       if (matchedBuilding) {
         buildingId = matchedBuilding.id.toString();
-        console.log('🏢 Matched building:', ticketData.building_name, '-> ID:', buildingId);
+        console.log(
+          "🏢 Matched building:",
+          ticketData.building_name,
+          "-> ID:",
+          buildingId
+        );
       }
     }
 
     // Match wing by name using wing_name
     if (ticketData?.wing_name) {
-      const matchedWing = wings.find(w => w.name === ticketData.wing_name);
+      const matchedWing = wings.find((w) => w.name === ticketData.wing_name);
       if (matchedWing) {
         wingId = matchedWing.id.toString();
-        console.log('🏗️ Matched wing:', ticketData.wing_name, '-> ID:', wingId);
+        console.log("🏗️ Matched wing:", ticketData.wing_name, "-> ID:", wingId);
       }
     }
 
     // Match area by name using area_name
     if (ticketData?.area_name) {
-      const matchedArea = areas.find(a => a.name === ticketData.area_name);
+      const matchedArea = areas.find((a) => a.name === ticketData.area_name);
       if (matchedArea) {
         areaId = matchedArea.id.toString();
-        console.log('🗺️ Matched area:', ticketData.area_name, '-> ID:', areaId);
+        console.log("🗺️ Matched area:", ticketData.area_name, "-> ID:", areaId);
       }
     }
 
     // Match floor by name using floor_name (prioritize name over ID)
     if (ticketData?.floor_name) {
-      const matchedFloor = floors.find(f => f.name === ticketData.floor_name);
+      const matchedFloor = floors.find((f) => f.name === ticketData.floor_name);
       if (matchedFloor) {
         floorId = matchedFloor.id.toString();
-        console.log('🏢 Matched floor by name:', ticketData.floor_name, '-> ID:', floorId);
+        console.log(
+          "🏢 Matched floor by name:",
+          ticketData.floor_name,
+          "-> ID:",
+          floorId
+        );
       }
     } else if (ticketData?.floor_id) {
       // Fallback to floor_id if floor_name is not available
       floorId = ticketData.floor_id.toString();
-      console.log('🏢 Using floor_id:', floorId);
+      console.log("🏢 Using floor_id:", floorId);
     }
 
     // Match room by name using room_name (prioritize name over ID)
     if (ticketData?.room_name) {
-      const matchedRoom = rooms.find(r => r.name === ticketData.room_name);
+      const matchedRoom = rooms.find((r) => r.name === ticketData.room_name);
       if (matchedRoom) {
         roomId = matchedRoom.id.toString();
-        console.log('🚪 Matched room by name:', ticketData.room_name, '-> ID:', roomId);
+        console.log(
+          "🚪 Matched room by name:",
+          ticketData.room_name,
+          "-> ID:",
+          roomId
+        );
       }
     } else if (ticketData?.room_id) {
       // Fallback to room_id if room_name is not available
       roomId = ticketData.room_id.toString();
-      console.log('🚪 Using room_id:', roomId);
+      console.log("🚪 Using room_id:", roomId);
     }
 
     const formData = {
-      building: buildingId || '',
-      wing: wingId || '',
-      area: areaId || '',
-      floor: floorId || '',
-      room: roomId || '',
+      building: buildingId || "",
+      wing: wingId || "",
+      area: areaId || "",
+      floor: floorId || "",
+      room: roomId || "",
     };
 
-    console.log('Final location form data:', formData);
-    console.log('Location data from ticket:', {
-      building_name: ticketData?.building_name || 'null',
-      wing_name: ticketData?.wing_name || 'null',
-      area_name: ticketData?.area_name || 'null',
-      floor_name: ticketData?.floor_name || 'null',
-      room_name: ticketData?.room_name || 'null',
-      site_name: ticketData?.site_name || 'null'
+    console.log("Final location form data:", formData);
+    console.log("Location data from ticket:", {
+      building_name: ticketData?.building_name || "null",
+      wing_name: ticketData?.wing_name || "null",
+      area_name: ticketData?.area_name || "null",
+      floor_name: ticketData?.floor_name || "null",
+      room_name: ticketData?.room_name || "null",
+      site_name: ticketData?.site_name || "null",
     });
-    console.log('Setting isEditingLocation to true');
+    console.log("Setting isEditingLocation to true");
 
     setLocationFormData(formData);
     setIsEditingLocation(true);
 
     // Load cascading data based on current selections using API calls
     if (buildingId) {
-      console.log('🔄 Loading wings for building:', buildingId);
+      console.log("🔄 Loading wings for building:", buildingId);
       loadWings(buildingId);
 
       if (wingId) {
-        console.log('🔄 Loading areas for wing:', wingId);
+        console.log("🔄 Loading areas for wing:", wingId);
         loadAreas(wingId);
 
         if (areaId) {
-          console.log('🔄 Loading floors for area:', areaId);
+          console.log("🔄 Loading floors for area:", areaId);
           loadFloors(areaId);
 
           if (floorId) {
-            console.log('🔄 Loading rooms for floor:', floorId);
+            console.log("🔄 Loading rooms for floor:", floorId);
             loadRooms(floorId);
           }
         }
       }
     }
 
-    console.log('✅ Location edit form initialized with API data loading using name parameters');
+    console.log(
+      "✅ Location edit form initialized with API data loading using name parameters"
+    );
   };
 
   // Handle Location Form Input Change
   const handleLocationInputChange = (field: string, value: any) => {
-    setLocationFormData(prev => ({
+    setLocationFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   // Handle Location Building Change
   const handleLocationBuildingChange = async (buildingId: string) => {
-    setLocationFormData(prev => ({
+    setLocationFormData((prev) => ({
       ...prev,
       building: buildingId,
-      wing: '',
-      area: '',
-      floor: '',
-      room: ''
+      wing: "",
+      area: "",
+      floor: "",
+      room: "",
     }));
 
     // Clear dependent dropdowns and data
@@ -3662,22 +4563,25 @@ export const TicketDetailsPage = () => {
     setFilteredRooms([]);
 
     if (buildingId) {
-      console.log('🔄 Building changed, loading wings for building:', buildingId);
+      console.log(
+        "🔄 Building changed, loading wings for building:",
+        buildingId
+      );
       // Call wings API with building_id parameter - this will fetch wings specific to the building
       await loadWings(buildingId);
     } else {
-      console.log('🔄 Building cleared, no wings to load');
+      console.log("🔄 Building cleared, no wings to load");
     }
   };
 
   // Handle Location Wing Change
   const handleLocationWingChange = async (wingId: string) => {
-    setLocationFormData(prev => ({
+    setLocationFormData((prev) => ({
       ...prev,
       wing: wingId,
-      area: '',
-      floor: '',
-      room: ''
+      area: "",
+      floor: "",
+      room: "",
     }));
 
     // Clear dependent dropdowns and data
@@ -3689,21 +4593,21 @@ export const TicketDetailsPage = () => {
     setFilteredRooms([]);
 
     if (wingId) {
-      console.log('🔄 Wing changed, loading areas for wing:', wingId);
+      console.log("🔄 Wing changed, loading areas for wing:", wingId);
       // Call areas API with wing_id parameter - this will fetch areas specific to the wing
       await loadAreas(wingId);
     } else {
-      console.log('🔄 Wing cleared, no areas to load');
+      console.log("🔄 Wing cleared, no areas to load");
     }
   };
 
   // Handle Location Area Change
   const handleLocationAreaChange = async (areaId: string) => {
-    setLocationFormData(prev => ({
+    setLocationFormData((prev) => ({
       ...prev,
       area: areaId,
-      floor: '',
-      room: ''
+      floor: "",
+      room: "",
     }));
 
     // Clear dependent dropdowns and data
@@ -3713,20 +4617,20 @@ export const TicketDetailsPage = () => {
     setFilteredRooms([]);
 
     if (areaId) {
-      console.log('🔄 Area changed, loading floors for area:', areaId);
+      console.log("🔄 Area changed, loading floors for area:", areaId);
       // Call floors API with area_id parameter - this will fetch floors specific to the area
       await loadFloors(areaId);
     } else {
-      console.log('🔄 Area cleared, no floors to load');
+      console.log("🔄 Area cleared, no floors to load");
     }
   };
 
   // Handle Location Floor Change
   const handleLocationFloorChange = async (floorId: string) => {
-    setLocationFormData(prev => ({
+    setLocationFormData((prev) => ({
       ...prev,
       floor: floorId,
-      room: ''
+      room: "",
     }));
 
     // Clear dependent dropdown and data
@@ -3734,70 +4638,82 @@ export const TicketDetailsPage = () => {
     setFilteredRooms([]);
 
     if (floorId) {
-      console.log('🔄 Floor changed, loading rooms for floor:', floorId);
+      console.log("🔄 Floor changed, loading rooms for floor:", floorId);
       // Call rooms API with floor_id parameter - this will fetch rooms specific to the floor
       await loadRooms(floorId);
     } else {
-      console.log('🔄 Floor cleared, no rooms to load');
+      console.log("🔄 Floor cleared, no rooms to load");
     }
   };
 
   // Handle Location Form Submit
   const handleLocationSubmit = async () => {
     if (!id) {
-      console.error('No ticket ID available for update');
+      console.error("No ticket ID available for update");
       return;
     }
 
     try {
       setSubmittingLocation(true);
-      console.log('🔄 Submitting location data:', locationFormData);
+      console.log("🔄 Submitting location data:", locationFormData);
 
       const formDataToSend = new FormData();
-      formDataToSend.append('id', id);
-      formDataToSend.append('complaint_log[complaint_id]', id);
+      formDataToSend.append("id", id);
+      formDataToSend.append("complaint_log[complaint_id]", id);
 
       // Add person_id for Rails compatibility
-      const userId = localStorage.getItem('userId') || '';
+      const userId = localStorage.getItem("userId") || "";
       if (userId) {
-        formDataToSend.append('person_id', userId);
+        formDataToSend.append("person_id", userId);
       }
 
       // Add asset_id and service_id based on current ticket's association
-      if (ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id) {
-        formDataToSend.append('asset_id', ticketData.asset_or_service_id.toString());
-        formDataToSend.append('service_id', '');
-      } else if (ticketData?.asset_service === 'Service' && ticketData?.asset_or_service_id) {
-        formDataToSend.append('asset_id', '');
-        formDataToSend.append('service_id', ticketData.asset_or_service_id.toString());
+      if (
+        ticketData?.asset_service === "Asset" &&
+        ticketData?.asset_or_service_id
+      ) {
+        formDataToSend.append(
+          "asset_id",
+          ticketData.asset_or_service_id.toString()
+        );
+        formDataToSend.append("service_id", "");
+      } else if (
+        ticketData?.asset_service === "Service" &&
+        ticketData?.asset_or_service_id
+      ) {
+        formDataToSend.append("asset_id", "");
+        formDataToSend.append(
+          "service_id",
+          ticketData.asset_or_service_id.toString()
+        );
       } else {
         // Default empty values if no association
-        formDataToSend.append('asset_id', '');
-        formDataToSend.append('service_id', '');
+        formDataToSend.append("asset_id", "");
+        formDataToSend.append("service_id", "");
       }
 
       // Use direct location parameters without complaint[] wrapper
       // Always send location data - use empty string or null for unselected fields
-      formDataToSend.append('area_id', locationFormData.area || '-');
-      formDataToSend.append('tower_id', locationFormData.building || '-');
-      formDataToSend.append('wing_id', locationFormData.wing || '-');
-      formDataToSend.append('floor_id', locationFormData.floor || '-');
-      formDataToSend.append('room_id', locationFormData.room || '-');
+      formDataToSend.append("area_id", locationFormData.area || "-");
+      formDataToSend.append("tower_id", locationFormData.building || "-");
+      formDataToSend.append("wing_id", locationFormData.wing || "-");
+      formDataToSend.append("floor_id", locationFormData.floor || "-");
+      formDataToSend.append("room_id", locationFormData.room || "-");
 
-      console.log('📍 Location data being sent:', {
-        area_id: locationFormData.area || 'null',
-        tower_id: locationFormData.building || 'null',
-        wing_id: locationFormData.wing || 'null',
-        floor_id: locationFormData.floor || 'null',
-        room_id: locationFormData.room || 'null'
+      console.log("📍 Location data being sent:", {
+        area_id: locationFormData.area || "null",
+        tower_id: locationFormData.building || "null",
+        wing_id: locationFormData.wing || "null",
+        floor_id: locationFormData.floor || "null",
+        room_id: locationFormData.room || "null",
       });
 
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
 
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
         },
         body: formDataToSend,
       });
@@ -3807,21 +4723,22 @@ export const TicketDetailsPage = () => {
       }
 
       const data = await response.json();
-      console.log('✅ Location updated successfully:', data);
+      console.log("✅ Location updated successfully:", data);
 
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
       refreshFeeds();
 
-      toast.success('Location updated successfully!');
+      toast.success("Location updated successfully!");
 
       // Close the edit form
       setIsEditingLocation(false);
-
     } catch (error) {
-      console.error('❌ Error updating location:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update location');
+      console.error("❌ Error updating location:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update location"
+      );
     } finally {
       setSubmittingLocation(false);
     }
@@ -3833,11 +4750,11 @@ export const TicketDetailsPage = () => {
     // alongside the flat_number display string, so Tower/Flat can be
     // pre-selected the same way Wing/Area already are.
     setSocietyLocationFormData({
-      society_location_id: ticketData?.society_location_id?.toString() || '',
-      wing_id: ticketData?.wing_id?.toString() || '',
-      area_id: ticketData?.area_id?.toString() || '',
-      tower_id: ticketData?.society_block_id?.toString() || '',
-      flat_id: ticketData?.society_flat_id?.toString() || '',
+      society_location_id: ticketData?.society_location_id?.toString() || "",
+      wing_id: ticketData?.wing_id?.toString() || "",
+      area_id: ticketData?.area_id?.toString() || "",
+      tower_id: ticketData?.society_block_id?.toString() || "",
+      flat_id: ticketData?.society_flat_id?.toString() || "",
     });
     if (ticketData?.society_location_id) {
       loadSocietyWings(ticketData.society_location_id.toString());
@@ -3854,11 +4771,11 @@ export const TicketDetailsPage = () => {
   };
 
   const handleSocietyChange = async (societyLocationId: string) => {
-    setSocietyLocationFormData(prev => ({
+    setSocietyLocationFormData((prev) => ({
       ...prev,
       society_location_id: societyLocationId,
-      wing_id: '',
-      area_id: '',
+      wing_id: "",
+      area_id: "",
     }));
     setSocietyWings([]);
     setSocietyAreas([]);
@@ -3868,10 +4785,10 @@ export const TicketDetailsPage = () => {
   };
 
   const handleSocietyWingChange = async (wingId: string) => {
-    setSocietyLocationFormData(prev => ({
+    setSocietyLocationFormData((prev) => ({
       ...prev,
       wing_id: wingId,
-      area_id: '',
+      area_id: "",
     }));
     setSocietyAreas([]);
     if (wingId) {
@@ -3884,58 +4801,94 @@ export const TicketDetailsPage = () => {
     try {
       setSubmittingSocietyLocation(true);
       const formDataToSend = new FormData();
-      formDataToSend.append('id', id);
-      formDataToSend.append('complaint_log[complaint_id]', id);
+      formDataToSend.append("id", id);
+      formDataToSend.append("complaint_log[complaint_id]", id);
 
-      if (ticketData?.asset_service === 'Asset' && ticketData?.asset_or_service_id) {
-        formDataToSend.append('asset_id', ticketData.asset_or_service_id.toString());
-        formDataToSend.append('service_id', '');
-      } else if (ticketData?.asset_service === 'Service' && ticketData?.asset_or_service_id) {
-        formDataToSend.append('asset_id', '');
-        formDataToSend.append('service_id', ticketData.asset_or_service_id.toString());
+      if (
+        ticketData?.asset_service === "Asset" &&
+        ticketData?.asset_or_service_id
+      ) {
+        formDataToSend.append(
+          "asset_id",
+          ticketData.asset_or_service_id.toString()
+        );
+        formDataToSend.append("service_id", "");
+      } else if (
+        ticketData?.asset_service === "Service" &&
+        ticketData?.asset_or_service_id
+      ) {
+        formDataToSend.append("asset_id", "");
+        formDataToSend.append(
+          "service_id",
+          ticketData.asset_or_service_id.toString()
+        );
       } else {
-        formDataToSend.append('asset_id', '');
-        formDataToSend.append('service_id', '');
+        formDataToSend.append("asset_id", "");
+        formDataToSend.append("service_id", "");
       }
 
-      formDataToSend.append('complaint[society_location_id]', societyLocationFormData.society_location_id || '');
-      formDataToSend.append('complaint[wing_id]', societyLocationFormData.wing_id || '');
-      formDataToSend.append('complaint[area_id]', societyLocationFormData.area_id || '');
+      formDataToSend.append(
+        "complaint[society_location_id]",
+        societyLocationFormData.society_location_id || ""
+      );
+      formDataToSend.append(
+        "complaint[wing_id]",
+        societyLocationFormData.wing_id || ""
+      );
+      formDataToSend.append(
+        "complaint[area_id]",
+        societyLocationFormData.area_id || ""
+      );
       // Tower/Flat are pre-filled from ticketData.society_block_id /
       // society_flat_id on edit-open, but still guarded here in case those
       // ids are ever missing on a ticket — sending them blank would
       // otherwise clear an existing tower/flat on save.
       if (societyLocationFormData.tower_id) {
-        formDataToSend.append('complaint[tower_id]', societyLocationFormData.tower_id);
+        formDataToSend.append(
+          "complaint[tower_id]",
+          societyLocationFormData.tower_id
+        );
       }
       if (societyLocationFormData.flat_id) {
-        formDataToSend.append('complaint[flat_number]', societyLocationFormData.flat_id);
+        formDataToSend.append(
+          "complaint[flat_number]",
+          societyLocationFormData.flat_id
+        );
       }
 
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.UPDATE_TICKET);
       const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Authorization': getAuthHeader() },
+        method: "POST",
+        headers: { Authorization: getAuthHeader() },
         body: formDataToSend,
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (!response.ok)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
       refreshFeeds();
-      toast.success('Location updated successfully!');
+      toast.success("Location updated successfully!");
       setIsEditingSocietyLocation(false);
     } catch (error) {
-      console.error('Error updating society location:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update location');
+      console.error("Error updating society location:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update location"
+      );
     } finally {
       setSubmittingSocietyLocation(false);
     }
   };
 
   // Check if ticket is closed (all timers stop) or on hold (only escalation timers stop)
-  const isTicketClosed = ticketData?.issue_status ? ['complete', 'completed', 'close', 'closed'].includes(ticketData.issue_status.toLowerCase()) : false;
-  const isTicketOnHold = ticketData?.issue_status ? ['on hold'].includes(ticketData.issue_status.toLowerCase()) : false;
+  const isTicketClosed = ticketData?.issue_status
+    ? ["complete", "completed", "close", "closed"].includes(
+        ticketData.issue_status.toLowerCase()
+      )
+    : false;
+  const isTicketOnHold = ticketData?.issue_status
+    ? ["on hold"].includes(ticketData.issue_status.toLowerCase())
+    : false;
 
   // useEffect(() => {
   //   if (ticketData?.created_at && !isTicketClosed) {
@@ -4071,7 +5024,7 @@ export const TicketDetailsPage = () => {
   //   }
   // }, [ticketData?.created_at, ticketData?.next_response_escalation?.escalation_time, ticketData?.next_resolution_escalation?.escalation_time, ticketData?.next_executive_escalation?.escalation_time, ticketData, isTicketClosed, isTicketOnHold, refreshTicketData, responseTatTimings, resolutionTatTimings]);
 
-  console.log("status logic:", isTicketOnHold, isTicketClosed)
+  console.log("status logic:", isTicketOnHold, isTicketClosed);
   useEffect(() => {
     // Reset initialization flag when TAT timings data changes
     // This allows recalculation with fresh API data
@@ -4081,29 +5034,43 @@ export const TicketDetailsPage = () => {
       // Calculate ageing in seconds from created_at to now
       const createdTime = new Date(ticketData.created_at).getTime();
       const now = Date.now();
-      const initialAgeingSeconds = Math.max(0, Math.floor((now - createdTime) / 1000));
+      const initialAgeingSeconds = Math.max(
+        0,
+        Math.floor((now - createdTime) / 1000)
+      );
       setCurrentAgeing(initialAgeingSeconds);
 
       // Initialize escalation timers based on current aging and API data
       const updateEscalationTimers = () => {
         // Only initialize if not already initialized (in this render cycle)
         if (escalationInitRef.current) {
-          console.log('⏭️ Skipping escalation timer initialization - already initialized in this cycle');
+          console.log(
+            "⏭️ Skipping escalation timer initialization - already initialized in this cycle"
+          );
           return;
         }
 
         const now = Date.now();
         const currentAgeingSeconds = initialAgeingSeconds; // Work with seconds directly
-        console.log("🕐 Current ticket aging:", currentAgeingSeconds, "seconds (", (currentAgeingSeconds / 60).toFixed(2), "minutes)");
-        console.log("Updating escalation timers ", responseTatTimings)
+        console.log(
+          "🕐 Current ticket aging:",
+          currentAgeingSeconds,
+          "seconds (",
+          (currentAgeingSeconds / 60).toFixed(2),
+          "minutes)"
+        );
+        console.log("Updating escalation timers ", responseTatTimings);
 
         // Response Escalation - calculate based on current aging
         // Each escalation level has INDIVIDUAL time, not cumulative
         // Example: E1=5min (300s), Aging=30s → E1 should show 4min 30s (270s) remaining
         try {
-          if (Array.isArray(responseTatTimings) && responseTatTimings.length > 0) {
+          if (
+            Array.isArray(responseTatTimings) &&
+            responseTatTimings.length > 0
+          ) {
             // Check if any step has actual scheduled_minutes configured (non-null, > 0)
-            const hasScheduledMinutes = responseTatTimings.some(step => {
+            const hasScheduledMinutes = responseTatTimings.some((step) => {
               const m = step?.scheduled_minutes ?? step?.minutes;
               return m != null && m > 0;
             });
@@ -4114,10 +5081,14 @@ export const TicketDetailsPage = () => {
               setResponseSequenceIndex(0);
               responseSeqIndexRef.current = 0;
               if (ticketData.next_response_escalation?.escalation_time) {
-                const escDate = new Date(ticketData.next_response_escalation.escalation_time).getTime();
+                const escDate = new Date(
+                  ticketData.next_response_escalation.escalation_time
+                ).getTime();
                 const diffMs = escDate - now;
                 setResponseEscalationSeconds(Math.floor(diffMs / 1000));
-                console.warn(`📍 Response TAT: using escalation_time fallback, ${Math.floor(diffMs / 1000)}s remaining`);
+                console.warn(
+                  `📍 Response TAT: using escalation_time fallback, ${Math.floor(diffMs / 1000)}s remaining`
+                );
               } else {
                 setResponseEscalationSeconds(0);
               }
@@ -4128,15 +5099,19 @@ export const TicketDetailsPage = () => {
 
               for (let i = 0; i < responseTatTimings.length; i++) {
                 const step = responseTatTimings[i];
-                const stepMinutes = step?.scheduled_minutes ?? step?.minutes ?? 0;
+                const stepMinutes =
+                  step?.scheduled_minutes ?? step?.minutes ?? 0;
                 const stepSeconds = step?.scheduled_seconds ?? 0;
-                const stepTotalSeconds = (stepMinutes * 60) + stepSeconds;
+                const stepTotalSeconds = stepMinutes * 60 + stepSeconds;
 
                 if (currentAgeingSeconds < consumedSeconds + stepTotalSeconds) {
                   currentLevelIndex = i;
-                  const secondsUsedInThisLevel = currentAgeingSeconds - consumedSeconds;
+                  const secondsUsedInThisLevel =
+                    currentAgeingSeconds - consumedSeconds;
                   remainingSeconds = stepTotalSeconds - secondsUsedInThisLevel;
-                  console.log(`📍 Response TAT: Found active level ${step.escalation_name}, ${stepTotalSeconds}s total, ${secondsUsedInThisLevel}s used, ${remainingSeconds}s remaining`);
+                  console.log(
+                    `📍 Response TAT: Found active level ${step.escalation_name}, ${stepTotalSeconds}s total, ${secondsUsedInThisLevel}s used, ${remainingSeconds}s remaining`
+                  );
                   break;
                 }
                 consumedSeconds += stepTotalSeconds;
@@ -4145,12 +5120,16 @@ export const TicketDetailsPage = () => {
               if (currentLevelIndex === -1) {
                 currentLevelIndex = responseTatTimings.length - 1;
                 const lastStep = responseTatTimings[currentLevelIndex];
-                const lastStepMinutes = lastStep?.scheduled_minutes ?? lastStep?.minutes ?? 0;
+                const lastStepMinutes =
+                  lastStep?.scheduled_minutes ?? lastStep?.minutes ?? 0;
                 const lastStepSeconds = lastStep?.scheduled_seconds ?? 0;
-                const lastStepTotalSeconds = (lastStepMinutes * 60) + lastStepSeconds;
+                const lastStepTotalSeconds =
+                  lastStepMinutes * 60 + lastStepSeconds;
                 const excessSeconds = currentAgeingSeconds - consumedSeconds;
                 remainingSeconds = lastStepTotalSeconds - excessSeconds;
-                console.log(`⚠️ Response TAT: Exceeded all levels, ${Math.abs(remainingSeconds)}s over`);
+                console.log(
+                  `⚠️ Response TAT: Exceeded all levels, ${Math.abs(remainingSeconds)}s over`
+                );
               }
 
               responseSeqIndexRef.current = currentLevelIndex;
@@ -4160,7 +5139,9 @@ export const TicketDetailsPage = () => {
           } else {
             // No TAT sequence — use escalation_time if available
             if (ticketData.next_response_escalation?.escalation_time) {
-              const escDate = new Date(ticketData.next_response_escalation.escalation_time).getTime();
+              const escDate = new Date(
+                ticketData.next_response_escalation.escalation_time
+              ).getTime();
               const diffMs = escDate - now;
               setResponseEscalationSeconds(Math.floor(diffMs / 1000));
             } else {
@@ -4168,14 +5149,17 @@ export const TicketDetailsPage = () => {
             }
           }
         } catch (e) {
-          console.error('Error initializing response escalation seconds', e);
+          console.error("Error initializing response escalation seconds", e);
           setResponseEscalationSeconds(0);
         }
 
         // Resolution Escalation - calculate based on current aging
         // Same logic as Response TAT using seconds
         try {
-          if (Array.isArray(resolutionTatTimings) && resolutionTatTimings.length > 0) {
+          if (
+            Array.isArray(resolutionTatTimings) &&
+            resolutionTatTimings.length > 0
+          ) {
             let currentLevelIndex = -1;
             let remainingSeconds = 0;
             let consumedSeconds = 0; // Track consumed time in SECONDS
@@ -4185,15 +5169,18 @@ export const TicketDetailsPage = () => {
               const step = resolutionTatTimings[i];
               const stepMinutes = step?.scheduled_minutes ?? step?.minutes ?? 0;
               const stepSeconds = step?.scheduled_seconds ?? 0;
-              const stepTotalSeconds = (stepMinutes * 60) + stepSeconds; // Convert to total seconds
+              const stepTotalSeconds = stepMinutes * 60 + stepSeconds; // Convert to total seconds
 
               // Check if aging fits within this level
               if (currentAgeingSeconds < consumedSeconds + stepTotalSeconds) {
                 // We're in this escalation level
                 currentLevelIndex = i;
-                const secondsUsedInThisLevel = currentAgeingSeconds - consumedSeconds;
+                const secondsUsedInThisLevel =
+                  currentAgeingSeconds - consumedSeconds;
                 remainingSeconds = stepTotalSeconds - secondsUsedInThisLevel;
-                console.log(`📍 Resolution TAT: Found active level ${step.escalation_name}, ${stepTotalSeconds}s total, ${secondsUsedInThisLevel}s used, ${remainingSeconds}s (${Math.floor(remainingSeconds / 60)}m ${remainingSeconds % 60}s) remaining`);
+                console.log(
+                  `📍 Resolution TAT: Found active level ${step.escalation_name}, ${stepTotalSeconds}s total, ${secondsUsedInThisLevel}s used, ${remainingSeconds}s (${Math.floor(remainingSeconds / 60)}m ${remainingSeconds % 60}s) remaining`
+                );
                 break;
               }
 
@@ -4205,12 +5192,16 @@ export const TicketDetailsPage = () => {
             if (currentLevelIndex === -1) {
               currentLevelIndex = resolutionTatTimings.length - 1;
               const lastStep = resolutionTatTimings[currentLevelIndex];
-              const lastStepMinutes = lastStep?.scheduled_minutes ?? lastStep?.minutes ?? 0;
+              const lastStepMinutes =
+                lastStep?.scheduled_minutes ?? lastStep?.minutes ?? 0;
               const lastStepSeconds = lastStep?.scheduled_seconds ?? 0;
-              const lastStepTotalSeconds = (lastStepMinutes * 60) + lastStepSeconds;
+              const lastStepTotalSeconds =
+                lastStepMinutes * 60 + lastStepSeconds;
               const excessSeconds = currentAgeingSeconds - consumedSeconds;
               remainingSeconds = lastStepTotalSeconds - excessSeconds; // Will be negative
-              console.log(`⚠️ Resolution TAT: Exceeded all levels, ${Math.abs(remainingSeconds)}s over`);
+              console.log(
+                `⚠️ Resolution TAT: Exceeded all levels, ${Math.abs(remainingSeconds)}s over`
+              );
             }
 
             resolutionSeqIndexRef.current = currentLevelIndex;
@@ -4220,16 +5211,20 @@ export const TicketDetailsPage = () => {
             setResolutionEscalationSeconds(0);
           }
         } catch (e) {
-          console.error('Error initializing resolution escalation seconds', e);
+          console.error("Error initializing resolution escalation seconds", e);
           setResolutionEscalationSeconds(0);
         }
 
         // Golden Ticket Escalation
         if (ticketData.next_executive_escalation?.escalation_time) {
           try {
-            const escalationDate = new Date(ticketData.next_executive_escalation.escalation_time).getTime();
+            const escalationDate = new Date(
+              ticketData.next_executive_escalation.escalation_time
+            ).getTime();
             const diffMs = escalationDate - now;
-            setGoldenTicketEscalationSeconds(Math.max(0, Math.floor(diffMs / 1000)));
+            setGoldenTicketEscalationSeconds(
+              Math.max(0, Math.floor(diffMs / 1000))
+            );
           } catch {
             setGoldenTicketEscalationSeconds(0);
           }
@@ -4239,7 +5234,7 @@ export const TicketDetailsPage = () => {
 
         // Mark as initialized
         escalationInitRef.current = true;
-        console.log('✅ Escalation timers initialized once');
+        console.log("✅ Escalation timers initialized once");
       };
 
       // Initial calculation (only runs once)
@@ -4249,7 +5244,7 @@ export const TicketDetailsPage = () => {
       const interval = setInterval(() => {
         // Ageing timer: continues when on hold, freezes when closed
         if (!isTicketClosed) {
-          setCurrentAgeing(prev => prev + 1);
+          setCurrentAgeing((prev) => prev + 1);
         }
 
         // Balance TAT timers ONLY decrement when NOT on hold and NOT closed
@@ -4258,7 +5253,7 @@ export const TicketDetailsPage = () => {
           let refreshNeeded = false;
 
           // Response sequence-aware decrement/advance
-          setResponseEscalationSeconds(prev => {
+          setResponseEscalationSeconds((prev) => {
             const next = prev - 1;
             const seq = responseSeqRef.current;
             const idx = responseSeqIndexRef.current;
@@ -4274,10 +5269,14 @@ export const TicketDetailsPage = () => {
               responseSeqIndexRef.current = newIdx;
               setResponseSequenceIndex(newIdx);
               // Get total seconds for next level (minutes * 60 + seconds)
-              const nextStepMinutes = seq[newIdx]?.scheduled_minutes ?? seq[newIdx]?.minutes ?? 0;
+              const nextStepMinutes =
+                seq[newIdx]?.scheduled_minutes ?? seq[newIdx]?.minutes ?? 0;
               const nextStepSeconds = seq[newIdx]?.scheduled_seconds ?? 0;
-              const nextStepTotalSeconds = (nextStepMinutes * 60) + nextStepSeconds;
-              console.log(`⏩ Advancing to ${seq[newIdx]?.escalation_name}, starting ${nextStepTotalSeconds}s timer`);
+              const nextStepTotalSeconds =
+                nextStepMinutes * 60 + nextStepSeconds;
+              console.log(
+                `⏩ Advancing to ${seq[newIdx]?.escalation_name}, starting ${nextStepTotalSeconds}s timer`
+              );
               return nextStepTotalSeconds;
             }
 
@@ -4286,7 +5285,7 @@ export const TicketDetailsPage = () => {
           });
 
           // Resolution sequence-aware decrement/advance
-          setResolutionEscalationSeconds(prev => {
+          setResolutionEscalationSeconds((prev) => {
             const next = prev - 1;
             const seq = resolutionSeqRef.current;
             const idx = resolutionSeqIndexRef.current;
@@ -4300,17 +5299,21 @@ export const TicketDetailsPage = () => {
               resolutionSeqIndexRef.current = newIdx;
               setResolutionSequenceIndex(newIdx);
               // Get total seconds for next level (minutes * 60 + seconds)
-              const nextStepMinutes = seq[newIdx]?.scheduled_minutes ?? seq[newIdx]?.minutes ?? 0;
+              const nextStepMinutes =
+                seq[newIdx]?.scheduled_minutes ?? seq[newIdx]?.minutes ?? 0;
               const nextStepSeconds = seq[newIdx]?.scheduled_seconds ?? 0;
-              const nextStepTotalSeconds = (nextStepMinutes * 60) + nextStepSeconds;
-              console.log(`⏩ Advancing to ${seq[newIdx]?.escalation_name}, starting ${nextStepTotalSeconds}s timer`);
+              const nextStepTotalSeconds =
+                nextStepMinutes * 60 + nextStepSeconds;
+              console.log(
+                `⏩ Advancing to ${seq[newIdx]?.escalation_name}, starting ${nextStepTotalSeconds}s timer`
+              );
               return nextStepTotalSeconds;
             }
             return next;
           });
 
           // Golden ticket decrement
-          setGoldenTicketEscalationSeconds(prev => {
+          setGoldenTicketEscalationSeconds((prev) => {
             const next = prev - 1;
             if (prev > 0 && next <= 0) {
               refreshNeeded = true;
@@ -4320,7 +5323,9 @@ export const TicketDetailsPage = () => {
 
           // If any timer just completed this tick, refresh ticket data once
           if (refreshNeeded) {
-            console.log('🕐 Timer completed — refreshing ticket data for updated escalation info...');
+            console.log(
+              "🕐 Timer completed — refreshing ticket data for updated escalation info..."
+            );
             refreshTicketData();
           }
         }
@@ -4329,7 +5334,20 @@ export const TicketDetailsPage = () => {
 
       return () => clearInterval(interval);
     }
-  }, [ticketData?.created_at, ticketData?.next_response_escalation?.escalation_time, ticketData?.next_resolution_escalation?.escalation_time, ticketData?.next_executive_escalation?.escalation_time, ticketData, isTicketClosed, isTicketOnHold, refreshTicketData, responseTatTimings, resolutionTatTimings, responseSequence, resolutionSequence]);
+  }, [
+    ticketData?.created_at,
+    ticketData?.next_response_escalation?.escalation_time,
+    ticketData?.next_resolution_escalation?.escalation_time,
+    ticketData?.next_executive_escalation?.escalation_time,
+    ticketData,
+    isTicketClosed,
+    isTicketOnHold,
+    refreshTicketData,
+    responseTatTimings,
+    resolutionTatTimings,
+    responseSequence,
+    resolutionSequence,
+  ]);
 
   // Add useEffect to trigger balance TAT recalculation every second for real-time countdown (removed - now handled in main timer)
 
@@ -4355,41 +5373,58 @@ export const TicketDetailsPage = () => {
   console.log("ticketData:-", ticketData);
 
   // Process complaint logs for table display - filter out logs with both null log_comment and log_status
-  const complaintLogs = (ticketData?.complaint_logs || []).filter((log: any) => {
-    const hasComment = log.log_comment && log.log_comment.trim() !== '';
-    const hasStatus = log.log_status && log.log_status.trim() !== '';
-    return hasComment || hasStatus;
-  });
+  const complaintLogs = (ticketData?.complaint_logs || []).filter(
+    (log: any) => {
+      const hasComment = log.log_comment && log.log_comment.trim() !== "";
+      const hasStatus = log.log_status && log.log_status.trim() !== "";
+      return hasComment || hasStatus;
+    }
+  );
 
   // Calculate balance TATs with exceeded check
-  const responseBalanceTAT = calculateBalanceTAT(ticketData.response_tat_time, ticketData.balance_reponse_tat);
-  const resolutionBalanceTAT = calculateBalanceTAT(ticketData.resolution_tat_time, ticketData.balance_resolution_tat);
+  const responseBalanceTAT = calculateBalanceTAT(
+    ticketData.response_tat_time,
+    ticketData.balance_reponse_tat
+  );
+  const resolutionBalanceTAT = calculateBalanceTAT(
+    ticketData.resolution_tat_time,
+    ticketData.balance_resolution_tat
+  );
 
   const tatGridRows = [
     [
       {
-        label: 'Response TAT',
+        label: "Response TAT",
         value: (() => {
           // Use actual_response_minutes from response_tat API if available
           if (responseTatData?.actual_response_minutes != null) {
-            return formatMinutesToDDHHMM(responseTatData.actual_response_minutes);
+            return formatMinutesToDDHHMM(
+              responseTatData.actual_response_minutes
+            );
           }
           // Fallback to sequence step minutes or ticketData
           const seq = responseSequence;
-          const seqMinutes = (seq && seq.length > 0 && responseSequenceIndex >= 0)
-            ? (seq[responseSequenceIndex]?.scheduled_minutes ?? seq[responseSequenceIndex]?.minutes)
-            : null;
-          const sourceMinutes = seqMinutes ?? ticketData.next_response_escalation?.minutes ?? 0;
-          return sourceMinutes ? formatMinutesToDDHHMM(sourceMinutes) : '00:00:00';
-        })()
+          const seqMinutes =
+            seq && seq.length > 0 && responseSequenceIndex >= 0
+              ? (seq[responseSequenceIndex]?.scheduled_minutes ??
+                seq[responseSequenceIndex]?.minutes)
+              : null;
+          const sourceMinutes =
+            seqMinutes ?? ticketData.next_response_escalation?.minutes ?? 0;
+          return sourceMinutes
+            ? formatMinutesToDDHHMM(sourceMinutes)
+            : "00:00:00";
+        })(),
       },
       {
-        label: 'Balance TAT',
+        label: "Balance TAT",
         value: formatSecondsToDDHHMMSS(responseEscalationSeconds),
-        isExceeded: !(isTicketClosed || isTicketOnHold) && responseEscalationSeconds <= 0,
-        exceededBy: !(isTicketClosed || isTicketOnHold) && responseEscalationSeconds <= 0
-          ? formatSecondsToDDHHMMSS(Math.abs(responseEscalationSeconds))
-          : ''
+        isExceeded:
+          !(isTicketClosed || isTicketOnHold) && responseEscalationSeconds <= 0,
+        exceededBy:
+          !(isTicketClosed || isTicketOnHold) && responseEscalationSeconds <= 0
+            ? formatSecondsToDDHHMMSS(Math.abs(responseEscalationSeconds))
+            : "",
       },
       {
         label: (() => {
@@ -4397,189 +5432,259 @@ export const TicketDetailsPage = () => {
           const seq = responseSequence;
           if (seq && seq.length > 0 && responseSequenceIndex >= 0) {
             const step = seq[responseSequenceIndex];
-            const name = (step?.escalation_name || '').toUpperCase();
-            return name ? `Escalation - ${name}` : 'Escalation';
+            const name = (step?.escalation_name || "").toUpperCase();
+            return name ? `Escalation - ${name}` : "Escalation";
           }
-          const escName = (ticketData.next_response_escalation?.escalation_name || '').toUpperCase();
-          return escName ? `Escalation - ${escName}` : 'Escalation';
+          const escName = (
+            ticketData.next_response_escalation?.escalation_name || ""
+          ).toUpperCase();
+          return escName ? `Escalation - ${escName}` : "Escalation";
         })(),
         value: (() => {
           const seq = responseSequence;
           if (seq && seq.length > 0 && responseSequenceIndex >= 0) {
             const step = seq[responseSequenceIndex];
-            const usersArr = Array.isArray(step?.escalate_to_user) ? step.escalate_to_user : (Array.isArray(step?.users) ? step.users : []);
-            if (!usersArr || usersArr.length === 0) return '-';
-            return usersArr.filter(u => !!u).join('\n');
+            const usersArr = Array.isArray(step?.escalate_to_user)
+              ? step.escalate_to_user
+              : Array.isArray(step?.users)
+                ? step.users
+                : [];
+            if (!usersArr || usersArr.length === 0) return "-";
+            return usersArr.filter((u) => !!u).join("\n");
           }
 
-          const users = Array.isArray(ticketData.next_response_escalation?.users)
-            ? ticketData.next_response_escalation.users.filter(u => !!u)
+          const users = Array.isArray(
+            ticketData.next_response_escalation?.users
+          )
+            ? ticketData.next_response_escalation.users.filter((u) => !!u)
             : [];
 
-          if (!users || users.length === 0) return '-';
-          return users.join('\n');
-        })()
+          if (!users || users.length === 0) return "-";
+          return users.join("\n");
+        })(),
       },
     ],
     [
       {
-        label: 'Resolution TAT',
+        label: "Resolution TAT",
         value: (() => {
           const seq = resolutionSequence;
-          const seqMinutes = (seq && seq.length > 0 && resolutionSequenceIndex >= 0)
-            ? (seq[resolutionSequenceIndex]?.scheduled_minutes ?? seq[resolutionSequenceIndex]?.minutes)
-            : null;
-          const sourceMinutes = seqMinutes ?? ticketData.next_resolution_escalation?.minutes ?? 0;
-          return (isTicketClosed || isTicketOnHold)
-            ? (sourceMinutes ? formatMinutesToDDHHMM(sourceMinutes) : '00:00:00')
-            : (sourceMinutes ? formatMinutesToDDHHMM(sourceMinutes) : '00:00:00');
-        })()
+          const seqMinutes =
+            seq && seq.length > 0 && resolutionSequenceIndex >= 0
+              ? (seq[resolutionSequenceIndex]?.scheduled_minutes ??
+                seq[resolutionSequenceIndex]?.minutes)
+              : null;
+          const sourceMinutes =
+            seqMinutes ?? ticketData.next_resolution_escalation?.minutes ?? 0;
+          return isTicketClosed || isTicketOnHold
+            ? sourceMinutes
+              ? formatMinutesToDDHHMM(sourceMinutes)
+              : "00:00:00"
+            : sourceMinutes
+              ? formatMinutesToDDHHMM(sourceMinutes)
+              : "00:00:00";
+        })(),
       },
       {
-        label: 'Balance TAT',
+        label: "Balance TAT",
         value: formatSecondsToDDHHMMSS(resolutionEscalationSeconds),
-        isExceeded: !(isTicketClosed || isTicketOnHold) && resolutionEscalationSeconds <= 0,
-        exceededBy: !(isTicketClosed || isTicketOnHold) && resolutionEscalationSeconds <= 0
-          ? formatSecondsToDDHHMMSS(Math.abs(resolutionEscalationSeconds))
-          : ''
+        isExceeded:
+          !(isTicketClosed || isTicketOnHold) &&
+          resolutionEscalationSeconds <= 0,
+        exceededBy:
+          !(isTicketClosed || isTicketOnHold) &&
+          resolutionEscalationSeconds <= 0
+            ? formatSecondsToDDHHMMSS(Math.abs(resolutionEscalationSeconds))
+            : "",
       },
       {
         label: (() => {
           const seq = resolutionSequence;
           if (seq && seq.length > 0 && resolutionSequenceIndex >= 0) {
             const step = seq[resolutionSequenceIndex];
-            const name = (step?.escalation_name || '').toUpperCase();
-            return name ? `Escalation - ${name}` : 'Escalation';
+            const name = (step?.escalation_name || "").toUpperCase();
+            return name ? `Escalation - ${name}` : "Escalation";
           }
-          const escName = (ticketData.next_resolution_escalation?.escalation_name || '').toUpperCase();
-          return escName ? `Escalation - ${escName}` : 'Escalation';
+          const escName = (
+            ticketData.next_resolution_escalation?.escalation_name || ""
+          ).toUpperCase();
+          return escName ? `Escalation - ${escName}` : "Escalation";
         })(),
         value: (() => {
           const seq = resolutionSequence;
           if (seq && seq.length > 0 && resolutionSequenceIndex >= 0) {
             const step = seq[resolutionSequenceIndex];
-            const usersArr = Array.isArray(step?.escalate_to_user) ? step.escalate_to_user : (Array.isArray(step?.users) ? step.users : []);
-            if (!usersArr || usersArr.length === 0) return '-';
-            return usersArr.filter(u => !!u).join('\n');
+            const usersArr = Array.isArray(step?.escalate_to_user)
+              ? step.escalate_to_user
+              : Array.isArray(step?.users)
+                ? step.users
+                : [];
+            if (!usersArr || usersArr.length === 0) return "-";
+            return usersArr.filter((u) => !!u).join("\n");
           }
 
-          const users = Array.isArray(ticketData.next_resolution_escalation?.users)
-            ? ticketData.next_resolution_escalation.users.filter(u => !!u)
+          const users = Array.isArray(
+            ticketData.next_resolution_escalation?.users
+          )
+            ? ticketData.next_resolution_escalation.users.filter((u) => !!u)
             : [];
 
-          if (!users || users.length === 0) return '-';
-          return users.join('\n');
-        })()
+          if (!users || users.length === 0) return "-";
+          return users.join("\n");
+        })(),
       },
     ],
   ];
 
-  console.log("tatGridRows:-", tatGridRows)
+  console.log("tatGridRows:-", tatGridRows);
   // Helper function to find the matched responsible person
   const getResponsiblePersonValue = () => {
-    if (!ticketData?.responsible_person) return '';
+    if (!ticketData?.responsible_person) return "";
 
-    console.log('🔍 Responsible Person Debug:', {
+    console.log("🔍 Responsible Person Debug:", {
       ticketDataValue: ticketData.responsible_person,
-      availablePersons: responsiblePersons.map(p => ({ id: p.id, name: p.full_name }))
+      availablePersons: responsiblePersons.map((p) => ({
+        id: p.id,
+        name: p.full_name,
+      })),
     });
 
     // Try to find exact match by full_name
     const matchedPerson = responsiblePersons.find(
-      person => person.full_name === ticketData.responsible_person
+      (person) => person.full_name === ticketData.responsible_person
     );
 
-    console.log('🔍 Responsible Person Matched:', matchedPerson ? `${matchedPerson.full_name} (ID: ${matchedPerson.id})` : 'No match');
+    console.log(
+      "🔍 Responsible Person Matched:",
+      matchedPerson
+        ? `${matchedPerson.full_name} (ID: ${matchedPerson.id})`
+        : "No match"
+    );
 
-    return matchedPerson ? matchedPerson.id.toString() : ticketData.responsible_person;
+    return matchedPerson
+      ? matchedPerson.id.toString()
+      : ticketData.responsible_person;
   };
 
   // Helper function to get responsible person value from form data
   const getResponsiblePersonFormValue = () => {
-    return ticketClosureFormData?.responsible_person || '';
+    return ticketClosureFormData?.responsible_person || "";
   };
 
   // Helper function to get template values for Preventive Action (multi-select)
   const getPreventiveActionValues = () => {
-    if (!ticketData?.preventive_action_template_ids || !Array.isArray(ticketData.preventive_action_template_ids)) {
+    if (
+      !ticketData?.preventive_action_template_ids ||
+      !Array.isArray(ticketData.preventive_action_template_ids)
+    ) {
       return [];
     }
 
     const uniqueIds = [...new Set(ticketData.preventive_action_template_ids)];
     const matchedTemplates = communicationTemplates.filter(
-      template => uniqueIds.includes(template.id) &&
+      (template) =>
+        uniqueIds.includes(template.id) &&
         template.identifier === "Preventive Action" &&
         template.active === true
     );
 
-    return matchedTemplates.map(t => ({ value: t.id, label: t.identifier_action }));
+    return matchedTemplates.map((t) => ({
+      value: t.id,
+      label: t.identifier_action,
+    }));
   };
 
   // Helper function to get template values for Short-term Impact (multi-select)
   const getShortTermImpactValues = () => {
-    if (!ticketData?.short_term_impact_template_ids || !Array.isArray(ticketData.short_term_impact_template_ids)) {
+    if (
+      !ticketData?.short_term_impact_template_ids ||
+      !Array.isArray(ticketData.short_term_impact_template_ids)
+    ) {
       return [];
     }
 
     const uniqueIds = [...new Set(ticketData.short_term_impact_template_ids)];
     const matchedTemplates = communicationTemplates.filter(
-      template => uniqueIds.includes(template.id) &&
+      (template) =>
+        uniqueIds.includes(template.id) &&
         template.identifier === "Short-term Impact" &&
         template.active === true
     );
 
-    return matchedTemplates.map(t => ({ value: t.id, label: t.identifier_action }));
+    return matchedTemplates.map((t) => ({
+      value: t.id,
+      label: t.identifier_action,
+    }));
   };
 
   // Helper function to get template values for Corrective Action (multi-select)
   const getCorrectiveActionValues = () => {
-    if (!ticketData?.corrective_action_template_ids || !Array.isArray(ticketData.corrective_action_template_ids)) {
+    if (
+      !ticketData?.corrective_action_template_ids ||
+      !Array.isArray(ticketData.corrective_action_template_ids)
+    ) {
       return [];
     }
 
     const uniqueIds = [...new Set(ticketData.corrective_action_template_ids)];
     const matchedTemplates = communicationTemplates.filter(
-      template => uniqueIds.includes(template.id) &&
+      (template) =>
+        uniqueIds.includes(template.id) &&
         template.identifier === "Corrective Action" &&
         template.active === true
     );
 
-    return matchedTemplates.map(t => ({ value: t.id, label: t.identifier_action }));
+    return matchedTemplates.map((t) => ({
+      value: t.id,
+      label: t.identifier_action,
+    }));
   };
 
   // Helper function to get template values for Long-term Impact (multi-select)
   const getLongTermImpactValues = () => {
-    if (!ticketData?.long_term_impact_template_ids || !Array.isArray(ticketData.long_term_impact_template_ids)) {
+    if (
+      !ticketData?.long_term_impact_template_ids ||
+      !Array.isArray(ticketData.long_term_impact_template_ids)
+    ) {
       return [];
     }
 
     const uniqueIds = [...new Set(ticketData.long_term_impact_template_ids)];
     const matchedTemplates = communicationTemplates.filter(
-      template => uniqueIds.includes(template.id) &&
+      (template) =>
+        uniqueIds.includes(template.id) &&
         template.identifier === "Long-term Impact" &&
         template.active === true
     );
 
-    return matchedTemplates.map(t => ({ value: t.id, label: t.identifier_action }));
+    return matchedTemplates.map((t) => ({
+      value: t.id,
+      label: t.identifier_action,
+    }));
   };
 
   // Helper function to get Root Cause Analysis values for React Select
   const getRootCauseAnalysisValues = () => {
     // First priority: Use template IDs from API if available
-    if (ticketData?.rca_template_ids && Array.isArray(ticketData.rca_template_ids)) {
+    if (
+      ticketData?.rca_template_ids &&
+      Array.isArray(ticketData.rca_template_ids)
+    ) {
       // Filter out duplicate IDs using Set
       const uniqueIds = [...new Set(ticketData.rca_template_ids)];
 
-      console.log('🔍 Root Cause Analysis Template IDs from API:', uniqueIds);
+      console.log("🔍 Root Cause Analysis Template IDs from API:", uniqueIds);
 
       // Find templates by IDs
       const matchedTemplates = communicationTemplates.filter(
         (t) =>
-          uniqueIds.includes(t.id) &&
-          t.identifier === "Root Cause Analysis"
+          uniqueIds.includes(t.id) && t.identifier === "Root Cause Analysis"
       );
 
-      console.log('🔍 Root Cause Analysis Matched Templates:', matchedTemplates.map(t => ({ id: t.id, action: t.identifier_action })));
+      console.log(
+        "🔍 Root Cause Analysis Matched Templates:",
+        matchedTemplates.map((t) => ({ id: t.id, action: t.identifier_action }))
+      );
 
       return matchedTemplates.map((t) => ({
         value: t.id,
@@ -4613,74 +5718,110 @@ export const TicketDetailsPage = () => {
 
   // Helper functions to get form values for Ticket Closure editing
   const getPreventiveActionFormValues = () => {
-    if (!ticketClosureFormData?.preventive_action_template_ids || !Array.isArray(ticketClosureFormData.preventive_action_template_ids)) {
+    if (
+      !ticketClosureFormData?.preventive_action_template_ids ||
+      !Array.isArray(ticketClosureFormData.preventive_action_template_ids)
+    ) {
       return [];
     }
 
-    const uniqueIds = [...new Set(ticketClosureFormData.preventive_action_template_ids)];
+    const uniqueIds = [
+      ...new Set(ticketClosureFormData.preventive_action_template_ids),
+    ];
     const matchedTemplates = communicationTemplates.filter(
-      template => uniqueIds.includes(template.id) &&
+      (template) =>
+        uniqueIds.includes(template.id) &&
         template.identifier === "Preventive Action" &&
         template.active === true
     );
 
-    return matchedTemplates.map(t => ({ value: t.id, label: t.identifier_action }));
+    return matchedTemplates.map((t) => ({
+      value: t.id,
+      label: t.identifier_action,
+    }));
   };
 
   const getShortTermImpactFormValues = () => {
-    if (!ticketClosureFormData?.short_term_impact_template_ids || !Array.isArray(ticketClosureFormData.short_term_impact_template_ids)) {
+    if (
+      !ticketClosureFormData?.short_term_impact_template_ids ||
+      !Array.isArray(ticketClosureFormData.short_term_impact_template_ids)
+    ) {
       return [];
     }
 
-    const uniqueIds = [...new Set(ticketClosureFormData.short_term_impact_template_ids)];
+    const uniqueIds = [
+      ...new Set(ticketClosureFormData.short_term_impact_template_ids),
+    ];
     const matchedTemplates = communicationTemplates.filter(
-      template => uniqueIds.includes(template.id) &&
+      (template) =>
+        uniqueIds.includes(template.id) &&
         template.identifier === "Short-term Impact" &&
         template.active === true
     );
 
-    return matchedTemplates.map(t => ({ value: t.id, label: t.identifier_action }));
+    return matchedTemplates.map((t) => ({
+      value: t.id,
+      label: t.identifier_action,
+    }));
   };
 
   const getCorrectiveActionFormValues = () => {
-    if (!ticketClosureFormData?.corrective_action_template_ids || !Array.isArray(ticketClosureFormData.corrective_action_template_ids)) {
+    if (
+      !ticketClosureFormData?.corrective_action_template_ids ||
+      !Array.isArray(ticketClosureFormData.corrective_action_template_ids)
+    ) {
       return [];
     }
 
-    const uniqueIds = [...new Set(ticketClosureFormData.corrective_action_template_ids)];
+    const uniqueIds = [
+      ...new Set(ticketClosureFormData.corrective_action_template_ids),
+    ];
     const matchedTemplates = communicationTemplates.filter(
-      template => uniqueIds.includes(template.id) &&
+      (template) =>
+        uniqueIds.includes(template.id) &&
         template.identifier === "Corrective Action" &&
         template.active === true
     );
 
-    return matchedTemplates.map(t => ({ value: t.id, label: t.identifier_action }));
+    return matchedTemplates.map((t) => ({
+      value: t.id,
+      label: t.identifier_action,
+    }));
   };
 
   const getLongTermImpactFormValues = () => {
-    if (!ticketClosureFormData?.long_term_impact_template_ids || !Array.isArray(ticketClosureFormData.long_term_impact_template_ids)) {
+    if (
+      !ticketClosureFormData?.long_term_impact_template_ids ||
+      !Array.isArray(ticketClosureFormData.long_term_impact_template_ids)
+    ) {
       return [];
     }
 
-    const uniqueIds = [...new Set(ticketClosureFormData.long_term_impact_template_ids)];
+    const uniqueIds = [
+      ...new Set(ticketClosureFormData.long_term_impact_template_ids),
+    ];
     const matchedTemplates = communicationTemplates.filter(
-      template => uniqueIds.includes(template.id) &&
+      (template) =>
+        uniqueIds.includes(template.id) &&
         template.identifier === "Long-term Impact" &&
         template.active === true
     );
 
-    return matchedTemplates.map(t => ({ value: t.id, label: t.identifier_action }));
+    return matchedTemplates.map((t) => ({
+      value: t.id,
+      label: t.identifier_action,
+    }));
   };
 
   const getPriorityLabel = (priority: string | null | undefined): string => {
-    if (!priority) return '-';
+    if (!priority) return "-";
 
     const priorityMap: Record<string, string> = {
-      'P1': 'P1 - Critical',
-      'P2': 'P2 - Very High',
-      'P3': 'P3 - High',
-      'P4': 'P4 - Medium',
-      'P5': 'P5 - Low'
+      P1: "P1 - Critical",
+      P2: "P2 - Very High",
+      P3: "P3 - High",
+      P4: "P4 - Medium",
+      P5: "P5 - Low",
     };
 
     // Handle case-insensitive matching
@@ -4702,27 +5843,47 @@ export const TicketDetailsPage = () => {
 
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex flex-col gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a] break-words overflow-wrap-anywhere" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+            <h1
+              className="text-xl sm:text-2xl font-bold text-[#1a1a1a] break-words overflow-wrap-anywhere"
+              style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+            >
               {ticketData.heading || "Ticket Summary"}
             </h1>
 
             <div className="text-sm text-gray-600">
               Ticket #{ticketData.ticket_number || "-"} • Created by{" "}
-              {ticketData.created_by_name || "Unknown"} • Last updated{" "}
-              {ticketData.updated_at ? (() => {
-                const date = new Date(ticketData.updated_at);
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                // Extract time directly from API timestamp
-                const timePart = ticketData.updated_at.split('T')[1]?.split('.')[0] || '';
-                return `${day}/${month}/${year}, ${timePart}`;
-              })() : "-"}
+              {ticketData.created_by_name || "Unknown"} •{" "}
+              {hasData(ticketData.flat_number || ticketData.unit_name) && (
+                <>
+                  Flat{" "}
+                  <span className="text-[#1a1a1a]">
+                    {/* API sends flat_number pre-combined as "Tower-FlatNo" (e.g. "T1-101"). */}
+                    {ticketData.flat_number
+                      ? String(ticketData.flat_number).split("-").join(" - ")
+                      : ticketData.unit_name}
+                  </span>{" "}
+                  •{" "}
+                </>
+              )}
+              Last updated{" "}
+              {ticketData.updated_at
+                ? (() => {
+                    const date = new Date(ticketData.updated_at);
+                    const day = String(date.getDate()).padStart(2, "0");
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    const year = date.getFullYear();
+                    // Extract time directly from API timestamp
+                    const timePart =
+                      ticketData.updated_at.split("T")[1]?.split(".")[0] || "";
+                    return `${day}/${month}/${year}, ${timePart}`;
+                  })()
+                : "-"}
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            {(activeTab === "details") || (activeTab === "analytics" && activeSubTab === "details") ? (
+            {activeTab === "details" ||
+            (activeTab === "analytics" && activeSubTab === "details") ? (
               // Show Job Sheet button when on Details tab OR when on Analytics > Ticket Details sub-tab
               <Button
                 onClick={handleJobSheet}
@@ -4767,7 +5928,7 @@ export const TicketDetailsPage = () => {
           defaultValue="analytics"
           className="w-full"
           onValueChange={(value) => {
-            console.log('Tab changed to:', value);
+            console.log("Tab changed to:", value);
             setActiveTab(value);
             // Reset sub-tab to default when switching to analytics tab
             if (value === "analytics") {
@@ -4850,7 +6011,7 @@ export const TicketDetailsPage = () => {
               defaultValue="analytics"
               style={{ width: "100%" }}
               onValueChange={(value) => {
-                console.log('Sub-tab changed to:', value);
+                console.log("Sub-tab changed to:", value);
                 setActiveSubTab(value);
               }}
             >
@@ -4920,19 +6081,46 @@ export const TicketDetailsPage = () => {
                               "Assignee",
                               "Response TAT",
                               "Resolution TAT",
-                              <div key="red-flag" className="flex items-center justify-center w-full gap-1">
+                              <div
+                                key="red-flag"
+                                className="flex items-center justify-center w-full gap-1"
+                              >
                                 Red Flag
-                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="16" viewBox="0 0 13 16" fill="none">
-                                  <path d="M1 8.5V15.5C1 15.642 0.952 15.7607 0.856 15.856C0.76 15.9513 0.641 15.9993 0.499 16C0.357 16.0007 0.238333 15.9527 0.143 15.856C0.0476668 15.7593 0 15.6407 0 15.5V1.308C0 1.07934 0.0773332 0.887338 0.232 0.732004C0.386667 0.576671 0.578667 0.499338 0.808 0.500004H6.521C6.71433 0.500004 6.887 0.559004 7.039 0.677004C7.191 0.795004 7.28567 0.951671 7.323 1.147L7.593 2.5H12.193C12.4217 2.5 12.6133 2.57667 12.768 2.73C12.9227 2.88334 13 3.07334 13 3.3V9.7C13 9.92667 12.9227 10.1167 12.768 10.27C12.6133 10.4233 12.4213 10.5 12.192 10.5H8.48C8.28667 10.5 8.114 10.441 7.962 10.323C7.81 10.205 7.71533 10.0483 7.678 9.853L7.407 8.5H1Z" fill="#C72030" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="13"
+                                  height="16"
+                                  viewBox="0 0 13 16"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M1 8.5V15.5C1 15.642 0.952 15.7607 0.856 15.856C0.76 15.9513 0.641 15.9993 0.499 16C0.357 16.0007 0.238333 15.9527 0.143 15.856C0.0476668 15.7593 0 15.6407 0 15.5V1.308C0 1.07934 0.0773332 0.887338 0.232 0.732004C0.386667 0.576671 0.578667 0.499338 0.808 0.500004H6.521C6.71433 0.500004 6.887 0.559004 7.039 0.677004C7.191 0.795004 7.28567 0.951671 7.323 1.147L7.593 2.5H12.193C12.4217 2.5 12.6133 2.57667 12.768 2.73C12.9227 2.88334 13 3.07334 13 3.3V9.7C13 9.92667 12.9227 10.1167 12.768 10.27C12.6133 10.4233 12.4213 10.5 12.192 10.5H8.48C8.28667 10.5 8.114 10.441 7.962 10.323C7.81 10.205 7.71533 10.0483 7.678 9.853L7.407 8.5H1Z"
+                                    fill="#C72030"
+                                  />
                                 </svg>
                               </div>,
-                              <div key="golden-ticket" className="flex items-center justify-center w-full gap-1">
+                              <div
+                                key="golden-ticket"
+                                className="flex items-center justify-center w-full gap-1"
+                              >
                                 Golden Ticket
-                                <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21" fill="none">
-                                  <path d="M10.5005 3L8.54219 7.8L3.36719 8.18333L7.33385 11.5333L6.09219 16.5667L10.5005 13.8333L14.9089 16.5667L13.6672 11.5333L17.6339 8.18333L12.4589 7.8L10.5005 3Z" fill="#CCC500" stroke="#CCC500" strokeLinecap="round" strokeLinejoin="round" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="21"
+                                  height="21"
+                                  viewBox="0 0 21 21"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M10.5005 3L8.54219 7.8L3.36719 8.18333L7.33385 11.5333L6.09219 16.5667L10.5005 13.8333L14.9089 16.5667L13.6672 11.5333L17.6339 8.18333L12.4589 7.8L10.5005 3Z"
+                                    fill="#CCC500"
+                                    stroke="#CCC500"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
                                 </svg>
                               </div>,
-                              "Attachments"
+                              "Attachments",
                             ].map((header, idx) => (
                               <th
                                 key={idx}
@@ -5007,7 +6195,13 @@ export const TicketDetailsPage = () => {
                         className="flex items-center justify-center rounded-lg mr-4"
                         style={{ background: "#EDEAE3", width: 62, height: 62 }}
                       >
-                        <Ticket style={{ color: '#C72030', width: '24px', height: '24px' }} />
+                        <Ticket
+                          style={{
+                            color: "#C72030",
+                            width: "24px",
+                            height: "24px",
+                          }}
+                        />
                       </div>
                       <div className="flex flex-col justify-center">
                         <span
@@ -5015,11 +6209,17 @@ export const TicketDetailsPage = () => {
                           style={{ fontSize: 24 }}
                         >
                           {isTicketClosed
-                            ? (ticketData.ticket_ageing ? formatTicketAgeingToDDHHMM(ticketData.ticket_ageing) : formatTicketAgeing(currentAgeing))
-                            : formatTicketAgeing(currentAgeing)
-                          }
+                            ? ticketData.ticket_ageing
+                              ? formatTicketAgeingToDDHHMM(
+                                  ticketData.ticket_ageing
+                                )
+                              : formatTicketAgeing(currentAgeing)
+                            : formatTicketAgeing(currentAgeing)}
                         </span>
-                        <span className="text-[#1A1A1A]" style={{ fontSize: 16 }}>
+                        <span
+                          className="text-[#1A1A1A]"
+                          style={{ fontSize: 16 }}
+                        >
                           Ticket Ageing
                         </span>
                       </div>
@@ -5059,19 +6259,36 @@ export const TicketDetailsPage = () => {
                         >
                           {(() => {
                             // Use actual_response_minutes from response_tat API if available
-                            if (responseTatData?.actual_response_minutes != null) {
-                              return formatMinutesToDDHHMM(responseTatData.actual_response_minutes);
+                            if (
+                              responseTatData?.actual_response_minutes != null
+                            ) {
+                              return formatMinutesToDDHHMM(
+                                responseTatData.actual_response_minutes
+                              );
                             }
                             // Fallback to sequence step minutes or ticketData
                             const seq = responseSequence;
-                            const seqMinutes = (seq && seq.length > 0 && responseSequenceIndex >= 0)
-                              ? (seq[responseSequenceIndex]?.scheduled_minutes ?? seq[responseSequenceIndex]?.minutes)
-                              : null;
-                            const sourceMinutes = seqMinutes ?? ticketData.next_response_escalation?.minutes ?? 0;
-                            return sourceMinutes ? formatMinutesToDDHHMM(sourceMinutes) : '00:00:00';
+                            const seqMinutes =
+                              seq &&
+                              seq.length > 0 &&
+                              responseSequenceIndex >= 0
+                                ? (seq[responseSequenceIndex]
+                                    ?.scheduled_minutes ??
+                                  seq[responseSequenceIndex]?.minutes)
+                                : null;
+                            const sourceMinutes =
+                              seqMinutes ??
+                              ticketData.next_response_escalation?.minutes ??
+                              0;
+                            return sourceMinutes
+                              ? formatMinutesToDDHHMM(sourceMinutes)
+                              : "00:00:00";
                           })()}
                         </span>
-                        <span className="text-[#1A1A1A]" style={{ fontSize: 16 }}>
+                        <span
+                          className="text-[#1A1A1A]"
+                          style={{ fontSize: 16 }}
+                        >
                           Response TAT
                         </span>
                       </div>
@@ -5113,14 +6330,27 @@ export const TicketDetailsPage = () => {
                           {(() => {
                             // Prefer sequence step minutes when available, otherwise fallback to ticketData
                             const seq = resolutionSequence;
-                            const seqMinutes = (seq && seq.length > 0 && resolutionSequenceIndex >= 0)
-                              ? (seq[resolutionSequenceIndex]?.scheduled_minutes ?? seq[resolutionSequenceIndex]?.minutes)
-                              : null;
-                            const sourceMinutes = seqMinutes ?? ticketData.next_resolution_escalation?.minutes ?? 0;
-                            return sourceMinutes ? formatMinutesToDDHHMM(sourceMinutes) : '00:00:00';
+                            const seqMinutes =
+                              seq &&
+                              seq.length > 0 &&
+                              resolutionSequenceIndex >= 0
+                                ? (seq[resolutionSequenceIndex]
+                                    ?.scheduled_minutes ??
+                                  seq[resolutionSequenceIndex]?.minutes)
+                                : null;
+                            const sourceMinutes =
+                              seqMinutes ??
+                              ticketData.next_resolution_escalation?.minutes ??
+                              0;
+                            return sourceMinutes
+                              ? formatMinutesToDDHHMM(sourceMinutes)
+                              : "00:00:00";
                           })()}
                         </span>
-                        <span className="text-[#1A1A1A]" style={{ fontSize: 16 }}>
+                        <span
+                          className="text-[#1A1A1A]"
+                          style={{ fontSize: 16 }}
+                        >
                           Resolution TAT
                         </span>
                       </div>
@@ -5135,7 +6365,10 @@ export const TicketDetailsPage = () => {
                         className="flex items-center justify-center rounded-lg mr-4"
                         style={{ background: "#EDEAE3", width: 62, height: 62 }}
                       >
-                        <Ticket className="w-6 h-6" style={{ color: '#C72030' }} />
+                        <Ticket
+                          className="w-6 h-6"
+                          style={{ color: "#C72030" }}
+                        />
                       </div>
                       <div className="flex flex-col justify-center w-full">
                         <div className="flex justify-between w-full">
@@ -5146,17 +6379,33 @@ export const TicketDetailsPage = () => {
                             {formatSecondsToDDHHMMSS(responseEscalationSeconds)}
                           </span>
 
-                          <div className="text-[12px] text-[#9CA3AF] mt-1 leading-tight whitespace-pre-line" style={{ textAlign: 'left' }}>
+                          <div
+                            className="text-[12px] text-[#9CA3AF] mt-1 leading-tight whitespace-pre-line"
+                            style={{ textAlign: "left" }}
+                          >
                             {(() => {
                               // Use responseSequence with responseSequenceIndex for accurate escalation data
                               const seq = responseSequence;
-                              if (seq && seq.length > 0 && responseSequenceIndex >= 0) {
+                              if (
+                                seq &&
+                                seq.length > 0 &&
+                                responseSequenceIndex >= 0
+                              ) {
                                 const step = seq[responseSequenceIndex];
-                                const escName = (step?.escalation_name || '').toUpperCase();
-                                const usersArr = Array.isArray(step?.escalate_to_user) ? step.escalate_to_user : (Array.isArray(step?.users) ? step.users : []);
-                                const users = usersArr.filter(u => !!u);
+                                const escName = (
+                                  step?.escalation_name || ""
+                                ).toUpperCase();
+                                const usersArr = Array.isArray(
+                                  step?.escalate_to_user
+                                )
+                                  ? step.escalate_to_user
+                                  : Array.isArray(step?.users)
+                                    ? step.users
+                                    : [];
+                                const users = usersArr.filter((u) => !!u);
 
-                                if (!escName && (!users || users.length === 0)) return '';
+                                if (!escName && (!users || users.length === 0))
+                                  return "";
 
                                 if (users.length > 1) {
                                   // Show first user with hover for remaining users
@@ -5170,7 +6419,7 @@ export const TicketDetailsPage = () => {
                                           {firstUser}...
                                         </span>
                                         <div className="invisible group-hover:visible absolute z-50 left-0 top-full mt-1 bg-white text-gray-800 text-xs py-2 px-3 rounded-xl shadow-lg whitespace-pre-line min-w-[150px] border-0">
-                                          {remainingUsers.join('\n')}
+                                          {remainingUsers.join("\n")}
                                         </div>
                                       </div>
                                     </div>
@@ -5182,16 +6431,24 @@ export const TicketDetailsPage = () => {
                                 } else if (users.length === 1) {
                                   return users[0];
                                 }
-                                return '';
+                                return "";
                               }
 
                               // Fallback to ticketData if sequence is not available
-                              const escName = (ticketData.next_response_escalation?.escalation_name || '').toUpperCase();
-                              const users = Array.isArray(ticketData.next_response_escalation?.users)
-                                ? ticketData.next_response_escalation.users.filter(u => !!u)
+                              const escName = (
+                                ticketData.next_response_escalation
+                                  ?.escalation_name || ""
+                              ).toUpperCase();
+                              const users = Array.isArray(
+                                ticketData.next_response_escalation?.users
+                              )
+                                ? ticketData.next_response_escalation.users.filter(
+                                    (u) => !!u
+                                  )
                                 : [];
 
-                              if (!escName && (!users || users.length === 0)) return '';
+                              if (!escName && (!users || users.length === 0))
+                                return "";
 
                               if (users.length > 1) {
                                 const firstUser = users[0];
@@ -5204,7 +6461,7 @@ export const TicketDetailsPage = () => {
                                         {firstUser}...
                                       </span>
                                       <div className="invisible group-hover:visible absolute z-50 left-0 top-full mt-1 bg-white text-gray-800 text-xs py-2 px-3 rounded-xl shadow-lg whitespace-pre-line min-w-[150px] border-0">
-                                        {remainingUsers.join('\n')}
+                                        {remainingUsers.join("\n")}
                                       </div>
                                     </div>
                                   </div>
@@ -5216,11 +6473,14 @@ export const TicketDetailsPage = () => {
                               } else if (users.length === 1) {
                                 return users[0];
                               }
-                              return '';
+                              return "";
                             })()}
                           </div>
                         </div>
-                        <span className="text-[#1A1A1A]" style={{ fontSize: 16 }}>
+                        <span
+                          className="text-[#1A1A1A]"
+                          style={{ fontSize: 16 }}
+                        >
                           Response Escalation
                         </span>
                       </div>
@@ -5260,19 +6520,37 @@ export const TicketDetailsPage = () => {
                             className="font-semibold text-[#1A1A1A]"
                             style={{ fontSize: 24 }}
                           >
-                            {formatSecondsToDDHHMMSS(resolutionEscalationSeconds)}
+                            {formatSecondsToDDHHMMSS(
+                              resolutionEscalationSeconds
+                            )}
                           </span>
-                          <div className="text-[12px] text-[#9CA3AF] mt-1 leading-tight whitespace-pre-line" style={{ textAlign: 'left' }}>
+                          <div
+                            className="text-[12px] text-[#9CA3AF] mt-1 leading-tight whitespace-pre-line"
+                            style={{ textAlign: "left" }}
+                          >
                             {(() => {
                               // Use resolutionSequence with resolutionSequenceIndex for accurate escalation data
                               const seq = resolutionSequence;
-                              if (seq && seq.length > 0 && resolutionSequenceIndex >= 0) {
+                              if (
+                                seq &&
+                                seq.length > 0 &&
+                                resolutionSequenceIndex >= 0
+                              ) {
                                 const step = seq[resolutionSequenceIndex];
-                                const escName = (step?.escalation_name || '').toUpperCase();
-                                const usersArr = Array.isArray(step?.escalate_to_user) ? step.escalate_to_user : (Array.isArray(step?.users) ? step.users : []);
-                                const users = usersArr.filter(u => !!u);
+                                const escName = (
+                                  step?.escalation_name || ""
+                                ).toUpperCase();
+                                const usersArr = Array.isArray(
+                                  step?.escalate_to_user
+                                )
+                                  ? step.escalate_to_user
+                                  : Array.isArray(step?.users)
+                                    ? step.users
+                                    : [];
+                                const users = usersArr.filter((u) => !!u);
 
-                                if (!escName && (!users || users.length === 0)) return '';
+                                if (!escName && (!users || users.length === 0))
+                                  return "";
 
                                 if (users.length > 1) {
                                   // Show first user with hover for remaining users
@@ -5286,7 +6564,7 @@ export const TicketDetailsPage = () => {
                                           {firstUser}...
                                         </span>
                                         <div className="invisible group-hover:visible absolute z-50 left-0 top-full mt-1 bg-white text-gray-800 text-xs py-2 px-3 rounded-xl shadow-lg whitespace-pre-line min-w-[150px] border-0">
-                                          {remainingUsers.join('\n')}
+                                          {remainingUsers.join("\n")}
                                         </div>
                                       </div>
                                     </div>
@@ -5298,16 +6576,24 @@ export const TicketDetailsPage = () => {
                                 } else if (users.length === 1) {
                                   return users[0];
                                 }
-                                return '';
+                                return "";
                               }
 
                               // Fallback to ticketData if sequence is not available
-                              const escName = (ticketData.next_resolution_escalation?.escalation_name || '').toUpperCase();
-                              const users = Array.isArray(ticketData.next_resolution_escalation?.users)
-                                ? ticketData.next_resolution_escalation.users.filter(u => !!u)
+                              const escName = (
+                                ticketData.next_resolution_escalation
+                                  ?.escalation_name || ""
+                              ).toUpperCase();
+                              const users = Array.isArray(
+                                ticketData.next_resolution_escalation?.users
+                              )
+                                ? ticketData.next_resolution_escalation.users.filter(
+                                    (u) => !!u
+                                  )
                                 : [];
 
-                              if (!escName && (!users || users.length === 0)) return '';
+                              if (!escName && (!users || users.length === 0))
+                                return "";
 
                               if (users.length > 1) {
                                 // Show first user with hover for remaining users
@@ -5321,7 +6607,7 @@ export const TicketDetailsPage = () => {
                                         {firstUser}...
                                       </span>
                                       <div className="invisible group-hover:visible absolute z-50 left-0 top-full mt-1 bg-white text-gray-800 text-xs py-2 px-3 rounded-xl shadow-lg whitespace-pre-line min-w-[150px] border-0">
-                                        {remainingUsers.join('\n')}
+                                        {remainingUsers.join("\n")}
                                       </div>
                                     </div>
                                   </div>
@@ -5333,11 +6619,14 @@ export const TicketDetailsPage = () => {
                               } else if (users.length === 1) {
                                 return users[0];
                               }
-                              return '';
+                              return "";
                             })()}
                           </div>
                         </div>
-                        <span className="text-[#1A1A1A]" style={{ fontSize: 16 }}>
+                        <span
+                          className="text-[#1A1A1A]"
+                          style={{ fontSize: 16 }}
+                        >
                           Resolution Escalation
                         </span>
                       </div>
@@ -5378,17 +6667,29 @@ export const TicketDetailsPage = () => {
                             style={{ fontSize: 24 }}
                           >
                             {isTicketClosed
-                              ? (ticketData.next_executive_escalation?.minutes ? formatMinutesToDDHHMM(ticketData.next_executive_escalation.minutes) : '00:00:00')
-                              : formatSecondsToDDHHMMSS(goldenTicketEscalationSeconds)
-                            }
+                              ? ticketData.next_executive_escalation?.minutes
+                                ? formatMinutesToDDHHMM(
+                                    ticketData.next_executive_escalation.minutes
+                                  )
+                                : "00:00:00"
+                              : formatSecondsToDDHHMMSS(
+                                  goldenTicketEscalationSeconds
+                                )}
                           </p>
-                          <div className="text-[12px] text-[#9CA3AF] mt-1 leading-tight whitespace-pre-line" style={{ textAlign: 'left' }}>
+                          <div
+                            className="text-[12px] text-[#9CA3AF] mt-1 leading-tight whitespace-pre-line"
+                            style={{ textAlign: "left" }}
+                          >
                             {(() => {
-                              const users = Array.isArray(ticketData.next_executive_escalation?.users)
-                                ? ticketData.next_executive_escalation.users.filter(u => !!u)
+                              const users = Array.isArray(
+                                ticketData.next_executive_escalation?.users
+                              )
+                                ? ticketData.next_executive_escalation.users.filter(
+                                    (u) => !!u
+                                  )
                                 : [];
 
-                              if (!users || users.length === 0) return '';
+                              if (!users || users.length === 0) return "";
 
                               if (users.length > 1) {
                                 // Show first user with hover for remaining users
@@ -5400,7 +6701,7 @@ export const TicketDetailsPage = () => {
                                       {firstUser}
                                     </span>
                                     <div className="invisible group-hover:visible absolute z-50 left-0 top-full mt-1 bg-white text-gray-800 text-xs py-2 px-3 rounded-xl shadow-lg whitespace-pre-line min-w-[150px] border-0">
-                                      {remainingUsers.join('\n')}
+                                      {remainingUsers.join("\n")}
                                     </div>
                                   </div>
                                 );
@@ -5410,10 +6711,18 @@ export const TicketDetailsPage = () => {
                             })()}
                           </div>
                         </div>
-                        <span className="text-[#1A1A1A]" style={{ fontSize: 16 }}>
+                        <span
+                          className="text-[#1A1A1A]"
+                          style={{ fontSize: 16 }}
+                        >
                           {(() => {
-                            const escName = (ticketData.next_executive_escalation?.escalation_name || '').toUpperCase();
-                            return escName ? `Golden Ticket Escalation - ${escName}` : 'Golden Ticket Escalation';
+                            const escName = (
+                              ticketData.next_executive_escalation
+                                ?.escalation_name || ""
+                            ).toUpperCase();
+                            return escName
+                              ? `Golden Ticket Escalation - ${escName}`
+                              : "Golden Ticket Escalation";
                           })()}
                         </span>
                       </div>
@@ -5424,31 +6733,34 @@ export const TicketDetailsPage = () => {
 
               {/* Ticket Details - Full Width */}
               <TabsContent value="details" className="space-y-8">
-
                 <div className="space-y-6">
                   {/* Check if there's any ticket data to display */}
                   {hasData(ticketData.heading) ||
-                    hasData(ticketData.issue_status) ||
-                    hasData(ticketData.sub_category_type) ||
-                    hasData(ticketData.created_by_name) ||
-                    hasData(ticketData.created_date) ||
-                    hasData(ticketData.created_time) ||
-                    hasData(ticketData.created_at) ||
-                    hasData(ticketData.category_type) ||
-                    hasData(ticketData.ticket_number) ||
-                    hasData(ticketData.updated_by) ||
-                    hasData(ticketData.complaint_mode) ||
-                    hasData(ticketData.priority) ||
-                    hasData(ticketData.external_priority) ||
-                    hasData(ticketData.priority_status) ||
-                    hasData(ticketData.effective_priority) ||
-                    hasData(ticketData.assigned_to) ? (
-
-
+                  hasData(ticketData.issue_status) ||
+                  hasData(ticketData.sub_category_type) ||
+                  hasData(ticketData.created_by_name) ||
+                  hasData(ticketData.created_date) ||
+                  hasData(ticketData.created_time) ||
+                  hasData(ticketData.created_at) ||
+                  hasData(ticketData.category_type) ||
+                  hasData(ticketData.ticket_number) ||
+                  hasData(ticketData.updated_by) ||
+                  hasData(ticketData.complaint_mode) ||
+                  hasData(ticketData.priority) ||
+                  hasData(ticketData.external_priority) ||
+                  hasData(ticketData.priority_status) ||
+                  hasData(ticketData.effective_priority) ||
+                  hasData(ticketData.assigned_to) ? (
                     <Card className="w-full">
                       <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
-                        <div style={{ width: '40px', height: '40px' }} className="rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                          <Ticket className="w-5 h-5" style={{ color: '#C72030' }} />
+                        <div
+                          style={{ width: "40px", height: "40px" }}
+                          className="rounded-full flex items-center justify-center bg-[#E5E0D3]"
+                        >
+                          <Ticket
+                            className="w-5 h-5"
+                            style={{ color: "#C72030" }}
+                          />
                         </div>
                         <h3 className="text-lg font-semibold uppercase text-black">
                           Ticket Details
@@ -5457,39 +6769,73 @@ export const TicketDetailsPage = () => {
                       </div>
                       <div className="px-6 bg-[#dfd9cb]">
                         <div className="flex justify-between py-4 border-b border-[#dfd9cb]">
-                          <div className='w-full '>
+                          <div className="w-full ">
                             <div className="">
                               <div className="flex items-start mb-4">
-                                <span className="text-gray-500 min-w-[110px]" style={{ fontSize: '14px' }}>Description</span>
-                                <span className="text-gray-900 font-medium break-words overflow-wrap-anywhere" style={{ fontSize: '14px', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                                  {ticketData.heading || 'No description available'}
+                                <span
+                                  className="text-gray-500 min-w-[110px]"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  Description
+                                </span>
+                                <span
+                                  className="text-gray-900 font-medium break-words overflow-wrap-anywhere"
+                                  style={{
+                                    fontSize: "14px",
+                                    wordBreak: "break-word",
+                                    overflowWrap: "anywhere",
+                                  }}
+                                >
+                                  {ticketData.heading ||
+                                    "No description available"}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <div className="">
                                   <div className="flex items-start mb-4">
-                                    <span className="text-gray-500 min-w-[110px]" style={{ fontSize: '14px' }}>Category</span>
-                                    <span className="text-gray-900 font-medium" style={{ fontSize: '14px' }}>
-                                      {ticketData.category_type || '-'}
+                                    <span
+                                      className="text-gray-500 min-w-[110px]"
+                                      style={{ fontSize: "14px" }}
+                                    >
+                                      Category
+                                    </span>
+                                    <span
+                                      className="text-gray-900 font-medium"
+                                      style={{ fontSize: "14px" }}
+                                    >
+                                      {ticketData.category_type || "-"}
                                     </span>
                                   </div>
                                   <div className="flex items-start mb-4">
-                                    <span className="text-gray-500 min-w-[110px]" style={{ fontSize: '14px' }}>Sub Category</span>
-                                    <span className="text-gray-900 font-medium" style={{ fontSize: '14px' }}>
-                                      {ticketData.sub_category_type || '-'}
+                                    <span
+                                      className="text-gray-500 min-w-[110px]"
+                                      style={{ fontSize: "14px" }}
+                                    >
+                                      Sub Category
+                                    </span>
+                                    <span
+                                      className="text-gray-900 font-medium"
+                                      style={{ fontSize: "14px" }}
+                                    >
+                                      {ticketData.sub_category_type || "-"}
                                     </span>
                                   </div>
                                 </div>
-                                <div className="bg-white p-4" style={{ width: '75%', borderRadius: '4px' }}>
+                                <div
+                                  className="bg-white p-4"
+                                  style={{ width: "75%", borderRadius: "4px" }}
+                                >
                                   <div className="grid grid-cols-3 w-full items-center gap-6">
                                     {tatGridRows.flat().map((cell, idx) => {
                                       // Determine column alignment - make escalation column left-aligned for consistency
                                       const colAlign =
                                         idx % 3 === 0
-                                          ? 'justify-start'
+                                          ? "justify-start"
                                           : idx % 3 === 1
-                                            ? ''
-                                            : cell.label.includes('Escalation') ? 'justify-start' : 'justify-end';
+                                            ? ""
+                                            : cell.label.includes("Escalation")
+                                              ? "justify-start"
+                                              : "justify-end";
 
                                       return (
                                         <div
@@ -5499,36 +6845,61 @@ export const TicketDetailsPage = () => {
                                           {/* Inner flex box for key-value pair with fixed key width and 20px gap */}
                                           <div className="flex items-center gap-[20px]">
                                             {/* Fixed width label to align values */}
-                                            <span className="text-[14px] text-gray-500 whitespace-nowrap" style={{ minWidth: cell.label === 'Response TAT' ? '90px' : '5px' }}>
+                                            <span
+                                              className="text-[14px] text-gray-500 whitespace-nowrap"
+                                              style={{
+                                                minWidth:
+                                                  cell.label === "Response TAT"
+                                                    ? "90px"
+                                                    : "5px",
+                                              }}
+                                            >
                                               {cell.label}
                                             </span>
 
                                             {/* Dynamic value */}
                                             <span
                                               className={`text-[13px] md:text-[14px] font-semibold break-words text-gray-900`}
-                                              style={{ wordBreak: 'break-word', maxWidth: '120px', whiteSpace: 'pre-line' }}
+                                              style={{
+                                                wordBreak: "break-word",
+                                                maxWidth: "120px",
+                                                whiteSpace: "pre-line",
+                                              }}
                                             >
-                                              {cell.isExceeded && cell.label === 'Balance TAT'
-                                                ? 'Exceeded'
-                                                : cell.label.includes('Escalation') && cell.value && cell.value.includes('\n')
+                                              {cell.isExceeded &&
+                                              cell.label === "Balance TAT"
+                                                ? "Exceeded"
+                                                : cell.label.includes(
+                                                      "Escalation"
+                                                    ) &&
+                                                    cell.value &&
+                                                    cell.value.includes("\n")
                                                   ? (() => {
-                                                    const lines = cell.value.split('\n').filter(line => line.trim());
-                                                    if (lines.length > 1) {
-                                                      const firstLine = lines[0];
-                                                      const remainingLines = lines.slice(1);
-                                                      return (
-                                                        <div className="relative inline-block group">
-                                                          <span className="cursor-pointer hover:underline">
-                                                            {firstLine}...
-                                                          </span>
-                                                          <div className="invisible group-hover:visible absolute z-50 left-0 top-full mt-1 bg-white text-gray-800 text-xs py-2 px-3 rounded-xl shadow-lg whitespace-pre-line min-w-[150px] border-0">
-                                                            {remainingLines.join('\n')}
+                                                      const lines = cell.value
+                                                        .split("\n")
+                                                        .filter((line) =>
+                                                          line.trim()
+                                                        );
+                                                      if (lines.length > 1) {
+                                                        const firstLine =
+                                                          lines[0];
+                                                        const remainingLines =
+                                                          lines.slice(1);
+                                                        return (
+                                                          <div className="relative inline-block group">
+                                                            <span className="cursor-pointer hover:underline">
+                                                              {firstLine}...
+                                                            </span>
+                                                            <div className="invisible group-hover:visible absolute z-50 left-0 top-full mt-1 bg-white text-gray-800 text-xs py-2 px-3 rounded-xl shadow-lg whitespace-pre-line min-w-[150px] border-0">
+                                                              {remainingLines.join(
+                                                                "\n"
+                                                              )}
+                                                            </div>
                                                           </div>
-                                                        </div>
-                                                      );
-                                                    }
-                                                    return cell.value;
-                                                  })()
+                                                        );
+                                                      }
+                                                      return cell.value;
+                                                    })()
                                                   : cell.value}
                                             </span>
                                           </div>
@@ -5540,81 +6911,240 @@ export const TicketDetailsPage = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="flex flex-col justify-around" style={{ textAlign: 'center', marginLeft: '20px' }}>
-                            <button className='w-full py-1 bg-black rounded-full text-white mb-2 text-xs px-3'>
-                              {ticketData.issue_status || '-'}
+                          <div
+                            className="flex flex-col justify-around"
+                            style={{ textAlign: "center", marginLeft: "20px" }}
+                          >
+                            <button className="w-full py-1 bg-black rounded-full text-white mb-2 text-xs px-3">
+                              {ticketData.issue_status || "-"}
                             </button>
-                            <div className='mb-2'>
-                              <button className='w-full py-1 bg-[#FFCFCF] rounded-full text-[#C72030] text-xs px-3 font-semibold'>
+                            <div className="mb-2">
+                              <button className="w-full py-1 bg-[#FFCFCF] rounded-full text-[#C72030] text-xs px-3 font-semibold">
                                 {getPriorityLabel(ticketData.priority)}
                               </button>
                             </div>
                             <div className="flex items-center mb-2">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <mask id="mask0_9118_15345" style={{ maskType: "luminance" }} maskUnits="userSpaceOnUse" x="2" y="0" width="20" height="23">
-                                  <path d="M12 21.9995C16.6945 21.9995 20.5 18.194 20.5 13.4995C20.5 8.80501 16.6945 4.99951 12 4.99951C7.3055 4.99951 3.5 8.80501 3.5 13.4995C3.5 18.194 7.3055 21.9995 12 21.9995Z" fill="white" stroke="white" strokeWidth="2" strokeLinejoin="round" />
-                                  <path d="M15.5 1.99951H8.5M19 4.99951L17.5 6.49951" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                  <path d="M12 9V13.5" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                              >
+                                <mask
+                                  id="mask0_9118_15345"
+                                  style={{ maskType: "luminance" }}
+                                  maskUnits="userSpaceOnUse"
+                                  x="2"
+                                  y="0"
+                                  width="20"
+                                  height="23"
+                                >
+                                  <path
+                                    d="M12 21.9995C16.6945 21.9995 20.5 18.194 20.5 13.4995C20.5 8.80501 16.6945 4.99951 12 4.99951C7.3055 4.99951 3.5 8.80501 3.5 13.4995C3.5 18.194 7.3055 21.9995 12 21.9995Z"
+                                    fill="white"
+                                    stroke="white"
+                                    strokeWidth="2"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M15.5 1.99951H8.5M19 4.99951L17.5 6.49951"
+                                    stroke="white"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M12 9V13.5"
+                                    stroke="black"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
                                 </mask>
                                 <g mask="url(#mask0_9118_15345)">
                                   <path d="M0 0H24V24H0V0Z" fill="#434343" />
                                 </g>
                               </svg>
-                              <span style={{ fontSize: '16px', fontWeight: 600 }} className="text-black ml-1">{formatTicketAgeing(currentAgeing)}</span>
+                              <span
+                                style={{ fontSize: "16px", fontWeight: 600 }}
+                                className="text-black ml-1"
+                              >
+                                {formatTicketAgeing(currentAgeing)}
+                              </span>
                             </div>
                             <div className="flex justify-center items-center gap-2 mb-2">
-                              {ticketData.is_executive_ecalation === true && (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="18" viewBox="0 0 16 18" fill="none">
-                                <path d="M12.36 9.76C14.31 10.42 16 11.5 16 13V18H0V13C0 11.5 1.69 10.42 3.65 9.76L4.27 11L4.5 11.5C3 11.96 1.9 12.62 1.9 13V16.1H6.12L7 11.03L6.06 9.15C6.68 9.08 7.33 9.03 8 9.03C8.67 9.03 9.32 9.08 9.94 9.15L9 11.03L9.88 16.1H14.1V13C14.1 12.62 13 11.96 11.5 11.5L11.73 11L12.36 9.76ZM8 2C6.9 2 6 2.9 6 4C6 5.1 6.9 6 8 6C9.1 6 10 5.1 10 4C10 2.9 9.1 2 8 2ZM8 8C5.79 8 4 6.21 4 4C4 1.79 5.79 0 8 0C10.21 0 12 1.79 12 4C12 6.21 10.21 8 8 8Z" fill="black" />
-                              </svg>)}
+                              {ticketData.is_executive_ecalation === true && (
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="16"
+                                  height="18"
+                                  viewBox="0 0 16 18"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M12.36 9.76C14.31 10.42 16 11.5 16 13V18H0V13C0 11.5 1.69 10.42 3.65 9.76L4.27 11L4.5 11.5C3 11.96 1.9 12.62 1.9 13V16.1H6.12L7 11.03L6.06 9.15C6.68 9.08 7.33 9.03 8 9.03C8.67 9.03 9.32 9.08 9.94 9.15L9 11.03L9.88 16.1H14.1V13C14.1 12.62 13 11.96 11.5 11.5L11.73 11L12.36 9.76ZM8 2C6.9 2 6 2.9 6 4C6 5.1 6.9 6 8 6C9.1 6 10 5.1 10 4C10 2.9 9.1 2 8 2ZM8 8C5.79 8 4 6.21 4 4C4 1.79 5.79 0 8 0C10.21 0 12 1.79 12 4C12 6.21 10.21 8 8 8Z"
+                                    fill="black"
+                                  />
+                                </svg>
+                              )}
                               {ticketData.is_golden_ticket && (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="23" height="21" viewBox="0 0 23 21" fill="none">
-                                  <path d="M17.6219 20.0977C17.5715 20.0977 17.5214 20.085 17.4765 20.0585L10.9967 16.2938L4.5084 20.0459C4.46385 20.0719 4.41384 20.0844 4.36383 20.0844C4.3057 20.0844 4.24792 20.0676 4.19919 20.0329C4.10788 19.9695 4.06564 19.8599 4.09105 19.7548L5.82438 12.6847L0.0968238 7.92979C0.011544 7.85906 -0.0211751 7.74629 0.013865 7.64365C0.0486731 7.54111 0.144281 7.4686 0.256711 7.45937L7.80786 6.85484L10.756 0.164147C10.7997 0.0643917 10.9014 0 11.0139 0C11.0141 0 11.0143 0 11.0143 0C11.127 0 11.2288 0.0649467 11.2721 0.164479L14.2058 6.86118L21.7552 7.48095C21.8678 7.49029 21.9631 7.56302 21.9981 7.66555C22.0328 7.7682 22 7.88108 21.9144 7.95136L16.1762 12.6948L17.8943 19.7686C17.9202 19.8736 17.8774 19.983 17.7858 20.0464C17.7373 20.0806 17.6793 20.0977 17.6219 20.0977Z" fill="url(#paint0_radial_9118_15308)" />
-                                  <path d="M17.6229 19.896C17.6103 19.896 17.5977 19.8926 17.5864 19.8862L10.998 16.0584L4.40068 19.8732C4.38954 19.8795 4.37736 19.8826 4.36471 19.8826C4.35021 19.8826 4.3357 19.879 4.32352 19.8696C4.30055 19.8541 4.2901 19.8267 4.2966 19.8006L6.05905 12.6117L0.235078 7.77705C0.213845 7.75947 0.205725 7.73112 0.214311 7.7052C0.223361 7.67996 0.247029 7.66172 0.275107 7.65972L7.95284 7.04474L10.9502 0.241834C10.9614 0.216923 10.9866 0.200684 11.0147 0.200684C11.0147 0.200684 11.0147 0.200684 11.0149 0.200684C11.0432 0.200684 11.0685 0.217032 11.0794 0.241943L14.062 7.05063L21.7385 7.68085C21.7665 7.68307 21.7902 7.70121 21.7992 7.72701C21.8076 7.75281 21.7994 7.78105 21.7783 7.7984L15.9439 12.6213L17.6909 19.8137C17.6973 19.8397 17.6862 19.8674 17.6638 19.883C17.6512 19.8916 17.6371 19.896 17.6229 19.896Z" fill="url(#paint1_linear_9118_15308)" />
-                                  <path d="M7.99743 7.10811L11.0112 0.268066L14.0103 7.11412L21.7291 7.7479L15.8627 12.5975L17.6192 19.8291L10.9944 15.9802L4.36114 19.8159L6.13322 12.5877L0.277344 7.72644L7.99743 7.10811Z" fill="url(#paint2_linear_9118_15308)" />
-                                  <path d="M11.1891 11.551C11.1439 11.4959 11.0748 11.4633 11.0016 11.4633C11.0013 11.4633 11.0013 11.4633 11.0009 11.4633C10.928 11.4633 10.8587 11.4956 10.8138 11.5507L8.37693 14.534L10.5906 11.395C10.6317 11.3368 10.6425 11.2637 10.6201 11.197C10.5972 11.1303 10.5441 11.0772 10.4752 11.053L6.76172 9.75321L10.5606 10.8015C10.5824 10.8077 10.6044 10.8107 10.6263 10.8107C10.6762 10.8107 10.7253 10.7958 10.7663 10.7672C10.8257 10.7258 10.8619 10.6606 10.8644 10.5904L11.0063 6.80371L11.1405 10.5907C11.143 10.6611 11.179 10.7263 11.2382 10.7677C11.2793 10.7962 11.3287 10.8113 11.3782 10.8113C11.4 10.8113 11.4222 10.8084 11.4438 10.8026L15.245 9.76189L11.5286 11.054C11.4599 11.0783 11.4064 11.1311 11.3835 11.1977C11.3608 11.2647 11.3714 11.3376 11.4124 11.396L13.6195 14.5391L11.1891 11.551Z" fill="white" />
-                                  <path d="M10.6435 10.0628L8.08027 6.91957L11.0111 0.267578L10.6435 10.0628ZM21.7289 7.74752H21.7291L14.2765 7.13554L11.9655 10.4201L21.7289 7.74752ZM9.90642 11.0964L0.277344 7.72606L5.98598 12.4647L9.90642 11.0964ZM11.961 11.7709L17.6192 19.8288L15.9261 12.8597L11.961 11.7709ZM4.36114 19.8153L10.7915 16.0971L10.6454 12.1225L4.36114 19.8153Z" fill="url(#paint3_linear_9118_15308)" />
-                                  <path d="M11.3577 10.0658L11.0112 0.267578L13.9241 6.91623L11.3577 10.0658ZM7.72152 7.12998L0.277344 7.72606L10.0372 10.4191L7.72152 7.12998ZM21.7289 7.74752L12.0992 11.0962L16.0235 12.464L21.7289 7.74752ZM11.2154 16.1082L17.6191 19.8288L11.3594 12.1331L11.2154 16.1082ZM10.0325 11.7743L6.06523 12.8657L4.36126 19.8154V19.8152L10.0325 11.7743Z" fill="url(#paint4_linear_9118_15308)" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="23"
+                                  height="21"
+                                  viewBox="0 0 23 21"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M17.6219 20.0977C17.5715 20.0977 17.5214 20.085 17.4765 20.0585L10.9967 16.2938L4.5084 20.0459C4.46385 20.0719 4.41384 20.0844 4.36383 20.0844C4.3057 20.0844 4.24792 20.0676 4.19919 20.0329C4.10788 19.9695 4.06564 19.8599 4.09105 19.7548L5.82438 12.6847L0.0968238 7.92979C0.011544 7.85906 -0.0211751 7.74629 0.013865 7.64365C0.0486731 7.54111 0.144281 7.4686 0.256711 7.45937L7.80786 6.85484L10.756 0.164147C10.7997 0.0643917 10.9014 0 11.0139 0C11.0141 0 11.0143 0 11.0143 0C11.127 0 11.2288 0.0649467 11.2721 0.164479L14.2058 6.86118L21.7552 7.48095C21.8678 7.49029 21.9631 7.56302 21.9981 7.66555C22.0328 7.7682 22 7.88108 21.9144 7.95136L16.1762 12.6948L17.8943 19.7686C17.9202 19.8736 17.8774 19.983 17.7858 20.0464C17.7373 20.0806 17.6793 20.0977 17.6219 20.0977Z"
+                                    fill="url(#paint0_radial_9118_15308)"
+                                  />
+                                  <path
+                                    d="M17.6229 19.896C17.6103 19.896 17.5977 19.8926 17.5864 19.8862L10.998 16.0584L4.40068 19.8732C4.38954 19.8795 4.37736 19.8826 4.36471 19.8826C4.35021 19.8826 4.3357 19.879 4.32352 19.8696C4.30055 19.8541 4.2901 19.8267 4.2966 19.8006L6.05905 12.6117L0.235078 7.77705C0.213845 7.75947 0.205725 7.73112 0.214311 7.7052C0.223361 7.67996 0.247029 7.66172 0.275107 7.65972L7.95284 7.04474L10.9502 0.241834C10.9614 0.216923 10.9866 0.200684 11.0147 0.200684C11.0147 0.200684 11.0147 0.200684 11.0149 0.200684C11.0432 0.200684 11.0685 0.217032 11.0794 0.241943L14.062 7.05063L21.7385 7.68085C21.7665 7.68307 21.7902 7.70121 21.7992 7.72701C21.8076 7.75281 21.7994 7.78105 21.7783 7.7984L15.9439 12.6213L17.6909 19.8137C17.6973 19.8397 17.6862 19.8674 17.6638 19.883C17.6512 19.8916 17.6371 19.896 17.6229 19.896Z"
+                                    fill="url(#paint1_linear_9118_15308)"
+                                  />
+                                  <path
+                                    d="M7.99743 7.10811L11.0112 0.268066L14.0103 7.11412L21.7291 7.7479L15.8627 12.5975L17.6192 19.8291L10.9944 15.9802L4.36114 19.8159L6.13322 12.5877L0.277344 7.72644L7.99743 7.10811Z"
+                                    fill="url(#paint2_linear_9118_15308)"
+                                  />
+                                  <path
+                                    d="M11.1891 11.551C11.1439 11.4959 11.0748 11.4633 11.0016 11.4633C11.0013 11.4633 11.0013 11.4633 11.0009 11.4633C10.928 11.4633 10.8587 11.4956 10.8138 11.5507L8.37693 14.534L10.5906 11.395C10.6317 11.3368 10.6425 11.2637 10.6201 11.197C10.5972 11.1303 10.5441 11.0772 10.4752 11.053L6.76172 9.75321L10.5606 10.8015C10.5824 10.8077 10.6044 10.8107 10.6263 10.8107C10.6762 10.8107 10.7253 10.7958 10.7663 10.7672C10.8257 10.7258 10.8619 10.6606 10.8644 10.5904L11.0063 6.80371L11.1405 10.5907C11.143 10.6611 11.179 10.7263 11.2382 10.7677C11.2793 10.7962 11.3287 10.8113 11.3782 10.8113C11.4 10.8113 11.4222 10.8084 11.4438 10.8026L15.245 9.76189L11.5286 11.054C11.4599 11.0783 11.4064 11.1311 11.3835 11.1977C11.3608 11.2647 11.3714 11.3376 11.4124 11.396L13.6195 14.5391L11.1891 11.551Z"
+                                    fill="white"
+                                  />
+                                  <path
+                                    d="M10.6435 10.0628L8.08027 6.91957L11.0111 0.267578L10.6435 10.0628ZM21.7289 7.74752H21.7291L14.2765 7.13554L11.9655 10.4201L21.7289 7.74752ZM9.90642 11.0964L0.277344 7.72606L5.98598 12.4647L9.90642 11.0964ZM11.961 11.7709L17.6192 19.8288L15.9261 12.8597L11.961 11.7709ZM4.36114 19.8153L10.7915 16.0971L10.6454 12.1225L4.36114 19.8153Z"
+                                    fill="url(#paint3_linear_9118_15308)"
+                                  />
+                                  <path
+                                    d="M11.3577 10.0658L11.0112 0.267578L13.9241 6.91623L11.3577 10.0658ZM7.72152 7.12998L0.277344 7.72606L10.0372 10.4191L7.72152 7.12998ZM21.7289 7.74752L12.0992 11.0962L16.0235 12.464L21.7289 7.74752ZM11.2154 16.1082L17.6191 19.8288L11.3594 12.1331L11.2154 16.1082ZM10.0325 11.7743L6.06523 12.8657L4.36126 19.8154V19.8152L10.0325 11.7743Z"
+                                    fill="url(#paint4_linear_9118_15308)"
+                                  />
                                   <defs>
-                                    <radialGradient id="paint0_radial_9118_15308" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11.0059 10.0489) scale(10.7481 10.3019)">
+                                    <radialGradient
+                                      id="paint0_radial_9118_15308"
+                                      cx="0"
+                                      cy="0"
+                                      r="1"
+                                      gradientUnits="userSpaceOnUse"
+                                      gradientTransform="translate(11.0059 10.0489) scale(10.7481 10.3019)"
+                                    >
                                       <stop stopColor="#D08B01" />
-                                      <stop offset="0.5758" stopColor="#F2B145" />
+                                      <stop
+                                        offset="0.5758"
+                                        stopColor="#F2B145"
+                                      />
                                       <stop offset="1" stopColor="#F8F3BC" />
                                     </radialGradient>
-                                    <linearGradient id="paint1_linear_9118_15308" x1="0.211178" y1="10.0483" x2="21.8026" y2="10.0483" gradientUnits="userSpaceOnUse">
+                                    <linearGradient
+                                      id="paint1_linear_9118_15308"
+                                      x1="0.211178"
+                                      y1="10.0483"
+                                      x2="21.8026"
+                                      y2="10.0483"
+                                      gradientUnits="userSpaceOnUse"
+                                    >
                                       <stop stopColor="#F6DB89" />
                                       <stop offset="1" stopColor="#F8F7DA" />
                                     </linearGradient>
-                                    <linearGradient id="paint2_linear_9118_15308" x1="0.277344" y1="10.0486" x2="21.7291" y2="10.0486" gradientUnits="userSpaceOnUse">
+                                    <linearGradient
+                                      id="paint2_linear_9118_15308"
+                                      x1="0.277344"
+                                      y1="10.0486"
+                                      x2="21.7291"
+                                      y2="10.0486"
+                                      gradientUnits="userSpaceOnUse"
+                                    >
                                       <stop stopColor="#ED9017" />
-                                      <stop offset="0.1464" stopColor="#F09F23" />
-                                      <stop offset="0.4262" stopColor="#F6C642" />
-                                      <stop offset="0.4945" stopColor="#F8D04A" />
+                                      <stop
+                                        offset="0.1464"
+                                        stopColor="#F09F23"
+                                      />
+                                      <stop
+                                        offset="0.4262"
+                                        stopColor="#F6C642"
+                                      />
+                                      <stop
+                                        offset="0.4945"
+                                        stopColor="#F8D04A"
+                                      />
                                       <stop offset="1" stopColor="#F6E6B5" />
                                     </linearGradient>
-                                    <linearGradient id="paint3_linear_9118_15308" x1="0.277344" y1="10.0482" x2="21.7291" y2="10.0482" gradientUnits="userSpaceOnUse">
+                                    <linearGradient
+                                      id="paint3_linear_9118_15308"
+                                      x1="0.277344"
+                                      y1="10.0482"
+                                      x2="21.7291"
+                                      y2="10.0482"
+                                      gradientUnits="userSpaceOnUse"
+                                    >
                                       <stop stopColor="#ED9017" />
-                                      <stop offset="0.1464" stopColor="#F09F23" />
-                                      <stop offset="0.4262" stopColor="#F6C642" />
-                                      <stop offset="0.4945" stopColor="#F8D04A" />
+                                      <stop
+                                        offset="0.1464"
+                                        stopColor="#F09F23"
+                                      />
+                                      <stop
+                                        offset="0.4262"
+                                        stopColor="#F6C642"
+                                      />
+                                      <stop
+                                        offset="0.4945"
+                                        stopColor="#F8D04A"
+                                      />
                                       <stop offset="1" stopColor="#F6E6B5" />
                                     </linearGradient>
-                                    <linearGradient id="paint4_linear_9118_15308" x1="0.277344" y1="10.0482" x2="21.7288" y2="10.0482" gradientUnits="userSpaceOnUse">
+                                    <linearGradient
+                                      id="paint4_linear_9118_15308"
+                                      x1="0.277344"
+                                      y1="10.0482"
+                                      x2="21.7288"
+                                      y2="10.0482"
+                                      gradientUnits="userSpaceOnUse"
+                                    >
                                       <stop stopColor="#DF8D00" />
-                                      <stop offset="0.0848" stopColor="#FFD006" />
-                                      <stop offset="0.2242" stopColor="#F4AD06" />
+                                      <stop
+                                        offset="0.0848"
+                                        stopColor="#FFD006"
+                                      />
+                                      <stop
+                                        offset="0.2242"
+                                        stopColor="#F4AD06"
+                                      />
                                       <stop offset="0.85" stopColor="#F4AD06" />
-                                      <stop offset="0.8777" stopColor="#F2A807" />
-                                      <stop offset="0.9093" stopColor="#EC9B09" />
-                                      <stop offset="0.9428" stopColor="#E2840D" />
-                                      <stop offset="0.9773" stopColor="#D46412" />
+                                      <stop
+                                        offset="0.8777"
+                                        stopColor="#F2A807"
+                                      />
+                                      <stop
+                                        offset="0.9093"
+                                        stopColor="#EC9B09"
+                                      />
+                                      <stop
+                                        offset="0.9428"
+                                        stopColor="#E2840D"
+                                      />
+                                      <stop
+                                        offset="0.9773"
+                                        stopColor="#D46412"
+                                      />
                                       <stop offset="1" stopColor="#C94B16" />
                                     </linearGradient>
                                   </defs>
                                 </svg>
                               )}
                               {ticketData.is_flagged && (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="19" viewBox="0 0 17 19" fill="none">
-                                  <path d="M8.73145 0.5C8.85649 0.5 8.96486 0.537942 9.07324 0.630859C9.18052 0.722846 9.24902 0.836423 9.28125 0.990234V0.991211L9.54785 2.33301L9.62793 2.73535H14.9453C15.1136 2.73541 15.2354 2.78882 15.3438 2.90234C15.4533 3.01712 15.5121 3.1555 15.5117 3.35156V12.2939C15.5117 12.4916 15.4524 12.6312 15.3428 12.7461C15.2344 12.8596 15.1132 12.9125 14.9463 12.9121H9.4248C9.29987 12.9121 9.1923 12.8731 9.08398 12.7803C8.9758 12.6875 8.90589 12.5728 8.87402 12.417L8.6084 11.0791L8.52832 10.6768H1.64551V17.8828C1.64542 18.0801 1.58599 18.2192 1.47656 18.334C1.36825 18.4475 1.24682 18.5003 1.08008 18.5C0.911684 18.4996 0.788548 18.4457 0.679688 18.332C0.570877 18.2183 0.511811 18.08 0.511719 17.8828V1.11719C0.51181 0.919961 0.570878 0.781717 0.679688 0.667969C0.761428 0.582619 0.851184 0.531283 0.961914 0.510742L1.08008 0.5H8.73145Z" fill="#C72030" stroke="#C72030" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="17"
+                                  height="19"
+                                  viewBox="0 0 17 19"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M8.73145 0.5C8.85649 0.5 8.96486 0.537942 9.07324 0.630859C9.18052 0.722846 9.24902 0.836423 9.28125 0.990234V0.991211L9.54785 2.33301L9.62793 2.73535H14.9453C15.1136 2.73541 15.2354 2.78882 15.3438 2.90234C15.4533 3.01712 15.5121 3.1555 15.5117 3.35156V12.2939C15.5117 12.4916 15.4524 12.6312 15.3428 12.7461C15.2344 12.8596 15.1132 12.9125 14.9463 12.9121H9.4248C9.29987 12.9121 9.1923 12.8731 9.08398 12.7803C8.9758 12.6875 8.90589 12.5728 8.87402 12.417L8.6084 11.0791L8.52832 10.6768H1.64551V17.8828C1.64542 18.0801 1.58599 18.2192 1.47656 18.334C1.36825 18.4475 1.24682 18.5003 1.08008 18.5C0.911684 18.4996 0.788548 18.4457 0.679688 18.332C0.570877 18.2183 0.511811 18.08 0.511719 17.8828V1.11719C0.51181 0.919961 0.570878 0.781717 0.679688 0.667969C0.761428 0.582619 0.851184 0.531283 0.961914 0.510742L1.08008 0.5H8.73145Z"
+                                    fill="#C72030"
+                                    stroke="#C72030"
+                                  />
                                 </svg>
                               )}
                             </div>
@@ -5622,22 +7152,52 @@ export const TicketDetailsPage = () => {
                         </div>
                       </div>
                       <CardContent className="pt-6">
-                        {isEditingTicketDetails && renderTicketDetailsEditForm()}
+                        {isEditingTicketDetails &&
+                          renderTicketDetailsEditForm()}
                         {[
                           [
-                            { label: 'Ticket Type', value: capitalizeWords(ticketData.complaint_type || ticketData.ticket_type) },
-                            { label: 'Related To', value: ticketData.issue_type || '-' },
-                            { label: 'Issue Related To', value: ticketData.issue_related_to || '-' },
-                            { label: 'Assigned To', value: ticketData.assigned_to || '-' },
-                            { label: 'Behalf Of', value: ticketData.on_behalf_of || '-' },
-                            { label: 'Identification', value: ticketData.proactive_reactive || '-' },
+                            {
+                              label: "Ticket Type",
+                              value: capitalizeWords(
+                                ticketData.complaint_type ||
+                                  ticketData.ticket_type
+                              ),
+                            },
+                            {
+                              label: "Related To",
+                              value: ticketData.issue_type || "-",
+                            },
+                            {
+                              label: "Issue Related To",
+                              value: ticketData.issue_related_to || "-",
+                            },
+                            {
+                              label: "Assigned To",
+                              value: ticketData.assigned_to || "-",
+                            },
+                            {
+                              label: "Behalf Of",
+                              value: ticketData.on_behalf_of || "-",
+                            },
+                            {
+                              label: "Identification",
+                              value: ticketData.proactive_reactive || "-",
+                            },
                             // { label: 'Source', value: ticketData.asset_service || '-' },
                           ],
                           [
-                            { label: 'Created By', value: ticketData.created_by_name || '-' },
-                            { label: 'Updated By', value: ticketData.updated_by || '-' },
-                            { label: 'Mode', value: ticketData.complaint_mode || '-' },
-                            
+                            {
+                              label: "Created By",
+                              value: ticketData.created_by_name || "-",
+                            },
+                            {
+                              label: "Updated By",
+                              value: ticketData.updated_by || "-",
+                            },
+                            {
+                              label: "Mode",
+                              value: ticketData.complaint_mode || "-",
+                            },
                           ],
                         ].map((row, rIdx) => (
                           <div
@@ -5645,8 +7205,8 @@ export const TicketDetailsPage = () => {
                             className="grid grid-cols-2 md:grid-cols-4 gap-6"
                           >
                             {row
-                              .filter(f => hasData(f.value))
-                              .map(field => (
+                              .filter((f) => hasData(f.value))
+                              .map((field) => (
                                 <div key={field.label} className="mb-4">
                                   <div className="flex">
                                     <div className="w-[120px] text-[14px] leading-tight text-gray-500 tracking-wide pr-2">
@@ -5670,8 +7230,8 @@ export const TicketDetailsPage = () => {
                         No Data Available
                       </h3>
                       <p className="text-gray-400 max-w-sm">
-                        There is no ticket information available to display at this
-                        time.
+                        There is no ticket information available to display at
+                        this time.
                       </p>
                     </div>
                   )}
@@ -5816,14 +7376,19 @@ export const TicketDetailsPage = () => {
                   <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                        <FileText className="w-6 h-6" style={{ color: '#C72030' }} />
+                        <FileText
+                          className="w-6 h-6"
+                          style={{ color: "#C72030" }}
+                        />
                       </div>
                       <h3 className="text-lg font-semibold uppercase text-black">
                         Ticket Management
                       </h3>
-                      {ticketData.closure_date === null || ticketData.closure_date === undefined || ticketData.closure_date === '' && (
-                        <span className="w-2 h-2 rounded-full bg-[#4BE2B9]" />
-                      )}
+                      {ticketData.closure_date === null ||
+                        ticketData.closure_date === undefined ||
+                        (ticketData.closure_date === "" && (
+                          <span className="w-2 h-2 rounded-full bg-[#4BE2B9]" />
+                        ))}
                     </div>
                     <div className="flex items-center gap-2">
                       {ticketData.is_golden_ticket && (
@@ -5832,38 +7397,97 @@ export const TicketDetailsPage = () => {
                           className="w-8 h-8 flex items-center justify-center rounded hover:bg-[#EDEAE3]"
                           title="Favourite"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="23" height="21" viewBox="0 0 23 21" fill="none">
-                            <path d="M17.6219 20.0977C17.5715 20.0977 17.5214 20.085 17.4765 20.0585L10.9967 16.2938L4.5084 20.0459C4.46385 20.0719 4.41384 20.0844 4.36383 20.0844C4.3057 20.0844 4.24792 20.0676 4.19919 20.0329C4.10788 19.9695 4.06564 19.8599 4.09105 19.7548L5.82438 12.6847L0.0968238 7.92979C0.011544 7.85906 -0.0211751 7.74629 0.013865 7.64365C0.0486731 7.54111 0.144281 7.4686 0.256711 7.45937L7.80786 6.85484L10.756 0.164147C10.7997 0.0643917 10.9014 0 11.0139 0C11.0141 0 11.0143 0 11.0143 0C11.127 0 11.2288 0.0649467 11.2721 0.164479L14.2058 6.86118L21.7552 7.48095C21.8678 7.49029 21.9631 7.56302 21.9981 7.66555C22.0328 7.7682 22 7.88108 21.9144 7.95136L16.1762 12.6948L17.8943 19.7686C17.9202 19.8736 17.8774 19.983 17.7858 20.0464C17.7373 20.0806 17.6793 20.0977 17.6219 20.0977Z" fill="url(#paint0_radial_9118_15308)" />
-                            <path d="M17.6229 19.896C17.6103 19.896 17.5977 19.8926 17.5864 19.8862L10.998 16.0584L4.40068 19.8732C4.38954 19.8795 4.37736 19.8826 4.36471 19.8826C4.35021 19.8826 4.3357 19.879 4.32352 19.8696C4.30055 19.8541 4.2901 19.8267 4.2966 19.8006L6.05905 12.6117L0.235078 7.77705C0.213845 7.75947 0.205725 7.73112 0.214311 7.7052C0.223361 7.67996 0.247029 7.66172 0.275107 7.65972L7.95284 7.04474L10.9502 0.241834C10.9614 0.216923 10.9866 0.200684 11.0147 0.200684C11.0147 0.200684 11.0147 0.200684 11.0149 0.200684C11.0432 0.200684 11.0685 0.217032 11.0794 0.241943L14.062 7.05063L21.7385 7.68085C21.7665 7.68307 21.7902 7.70121 21.7992 7.72701C21.8076 7.75281 21.7994 7.78105 21.7783 7.7984L15.9439 12.6213L17.6909 19.8137C17.6973 19.8397 17.6862 19.8674 17.6638 19.883C17.6512 19.8916 17.6371 19.896 17.6229 19.896Z" fill="url(#paint1_linear_9118_15308)" />
-                            <path d="M7.99743 7.10811L11.0112 0.268066L14.0103 7.11412L21.7291 7.7479L15.8627 12.5975L17.6192 19.8291L10.9944 15.9802L4.36114 19.8159L6.13322 12.5877L0.277344 7.72644L7.99743 7.10811Z" fill="url(#paint2_linear_9118_15308)" />
-                            <path d="M11.1891 11.551C11.1439 11.4959 11.0748 11.4633 11.0016 11.4633C11.0013 11.4633 11.0013 11.4633 11.0009 11.4633C10.928 11.4633 10.8587 11.4956 10.8138 11.5507L8.37693 14.534L10.5906 11.395C10.6317 11.3368 10.6425 11.2637 10.6201 11.197C10.5972 11.1303 10.5441 11.0772 10.4752 11.053L6.76172 9.75321L10.5606 10.8015C10.5824 10.8077 10.6044 10.8107 10.6263 10.8107C10.6762 10.8107 10.7253 10.7958 10.7663 10.7672C10.8257 10.7258 10.8619 10.6606 10.8644 10.5904L11.0063 6.80371L11.1405 10.5907C11.143 10.6611 11.179 10.7263 11.2382 10.7677C11.2793 10.7962 11.3287 10.8113 11.3782 10.8113C11.4 10.8113 11.4222 10.8084 11.4438 10.8026L15.245 9.76189L11.5286 11.054C11.4599 11.0783 11.4064 11.1311 11.3835 11.1977C11.3608 11.2647 11.3714 11.3376 11.4124 11.396L13.6195 14.5391L11.1891 11.551Z" fill="white" />
-                            <path d="M10.6435 10.0628L8.08027 6.91957L11.0111 0.267578L10.6435 10.0628ZM21.7289 7.74752H21.7291L14.2765 7.13554L11.9655 10.4201L21.7289 7.74752ZM9.90642 11.0964L0.277344 7.72606L5.98598 12.4647L9.90642 11.0964ZM11.961 11.7709L17.6192 19.8288L15.9261 12.8597L11.961 11.7709ZM4.36114 19.8153L10.7915 16.0971L10.6454 12.1225L4.36114 19.8153Z" fill="url(#paint3_linear_9118_15308)" />
-                            <path d="M11.3577 10.0658L11.0112 0.267578L13.9241 6.91623L11.3577 10.0658ZM7.72152 7.12998L0.277344 7.72606L10.0372 10.4191L7.72152 7.12998ZM21.7289 7.74752L12.0992 11.0962L16.0235 12.464L21.7289 7.74752ZM11.2154 16.1082L17.6191 19.8288L11.3594 12.1331L11.2154 16.1082ZM10.0325 11.7743L6.06523 12.8657L4.36126 19.8154V19.8152L10.0325 11.7743Z" fill="url(#paint4_linear_9118_15308)" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="23"
+                            height="21"
+                            viewBox="0 0 23 21"
+                            fill="none"
+                          >
+                            <path
+                              d="M17.6219 20.0977C17.5715 20.0977 17.5214 20.085 17.4765 20.0585L10.9967 16.2938L4.5084 20.0459C4.46385 20.0719 4.41384 20.0844 4.36383 20.0844C4.3057 20.0844 4.24792 20.0676 4.19919 20.0329C4.10788 19.9695 4.06564 19.8599 4.09105 19.7548L5.82438 12.6847L0.0968238 7.92979C0.011544 7.85906 -0.0211751 7.74629 0.013865 7.64365C0.0486731 7.54111 0.144281 7.4686 0.256711 7.45937L7.80786 6.85484L10.756 0.164147C10.7997 0.0643917 10.9014 0 11.0139 0C11.0141 0 11.0143 0 11.0143 0C11.127 0 11.2288 0.0649467 11.2721 0.164479L14.2058 6.86118L21.7552 7.48095C21.8678 7.49029 21.9631 7.56302 21.9981 7.66555C22.0328 7.7682 22 7.88108 21.9144 7.95136L16.1762 12.6948L17.8943 19.7686C17.9202 19.8736 17.8774 19.983 17.7858 20.0464C17.7373 20.0806 17.6793 20.0977 17.6219 20.0977Z"
+                              fill="url(#paint0_radial_9118_15308)"
+                            />
+                            <path
+                              d="M17.6229 19.896C17.6103 19.896 17.5977 19.8926 17.5864 19.8862L10.998 16.0584L4.40068 19.8732C4.38954 19.8795 4.37736 19.8826 4.36471 19.8826C4.35021 19.8826 4.3357 19.879 4.32352 19.8696C4.30055 19.8541 4.2901 19.8267 4.2966 19.8006L6.05905 12.6117L0.235078 7.77705C0.213845 7.75947 0.205725 7.73112 0.214311 7.7052C0.223361 7.67996 0.247029 7.66172 0.275107 7.65972L7.95284 7.04474L10.9502 0.241834C10.9614 0.216923 10.9866 0.200684 11.0147 0.200684C11.0147 0.200684 11.0147 0.200684 11.0149 0.200684C11.0432 0.200684 11.0685 0.217032 11.0794 0.241943L14.062 7.05063L21.7385 7.68085C21.7665 7.68307 21.7902 7.70121 21.7992 7.72701C21.8076 7.75281 21.7994 7.78105 21.7783 7.7984L15.9439 12.6213L17.6909 19.8137C17.6973 19.8397 17.6862 19.8674 17.6638 19.883C17.6512 19.8916 17.6371 19.896 17.6229 19.896Z"
+                              fill="url(#paint1_linear_9118_15308)"
+                            />
+                            <path
+                              d="M7.99743 7.10811L11.0112 0.268066L14.0103 7.11412L21.7291 7.7479L15.8627 12.5975L17.6192 19.8291L10.9944 15.9802L4.36114 19.8159L6.13322 12.5877L0.277344 7.72644L7.99743 7.10811Z"
+                              fill="url(#paint2_linear_9118_15308)"
+                            />
+                            <path
+                              d="M11.1891 11.551C11.1439 11.4959 11.0748 11.4633 11.0016 11.4633C11.0013 11.4633 11.0013 11.4633 11.0009 11.4633C10.928 11.4633 10.8587 11.4956 10.8138 11.5507L8.37693 14.534L10.5906 11.395C10.6317 11.3368 10.6425 11.2637 10.6201 11.197C10.5972 11.1303 10.5441 11.0772 10.4752 11.053L6.76172 9.75321L10.5606 10.8015C10.5824 10.8077 10.6044 10.8107 10.6263 10.8107C10.6762 10.8107 10.7253 10.7958 10.7663 10.7672C10.8257 10.7258 10.8619 10.6606 10.8644 10.5904L11.0063 6.80371L11.1405 10.5907C11.143 10.6611 11.179 10.7263 11.2382 10.7677C11.2793 10.7962 11.3287 10.8113 11.3782 10.8113C11.4 10.8113 11.4222 10.8084 11.4438 10.8026L15.245 9.76189L11.5286 11.054C11.4599 11.0783 11.4064 11.1311 11.3835 11.1977C11.3608 11.2647 11.3714 11.3376 11.4124 11.396L13.6195 14.5391L11.1891 11.551Z"
+                              fill="white"
+                            />
+                            <path
+                              d="M10.6435 10.0628L8.08027 6.91957L11.0111 0.267578L10.6435 10.0628ZM21.7289 7.74752H21.7291L14.2765 7.13554L11.9655 10.4201L21.7289 7.74752ZM9.90642 11.0964L0.277344 7.72606L5.98598 12.4647L9.90642 11.0964ZM11.961 11.7709L17.6192 19.8288L15.9261 12.8597L11.961 11.7709ZM4.36114 19.8153L10.7915 16.0971L10.6454 12.1225L4.36114 19.8153Z"
+                              fill="url(#paint3_linear_9118_15308)"
+                            />
+                            <path
+                              d="M11.3577 10.0658L11.0112 0.267578L13.9241 6.91623L11.3577 10.0658ZM7.72152 7.12998L0.277344 7.72606L10.0372 10.4191L7.72152 7.12998ZM21.7289 7.74752L12.0992 11.0962L16.0235 12.464L21.7289 7.74752ZM11.2154 16.1082L17.6191 19.8288L11.3594 12.1331L11.2154 16.1082ZM10.0325 11.7743L6.06523 12.8657L4.36126 19.8154V19.8152L10.0325 11.7743Z"
+                              fill="url(#paint4_linear_9118_15308)"
+                            />
                             <defs>
-                              <radialGradient id="paint0_radial_9118_15308" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11.0059 10.0489) scale(10.7481 10.3019)">
+                              <radialGradient
+                                id="paint0_radial_9118_15308"
+                                cx="0"
+                                cy="0"
+                                r="1"
+                                gradientUnits="userSpaceOnUse"
+                                gradientTransform="translate(11.0059 10.0489) scale(10.7481 10.3019)"
+                              >
                                 <stop stopColor="#D08B01" />
                                 <stop offset="0.5758" stopColor="#F2B145" />
                                 <stop offset="1" stopColor="#F8F3BC" />
                               </radialGradient>
-                              <linearGradient id="paint1_linear_9118_15308" x1="0.211178" y1="10.0483" x2="21.8026" y2="10.0483" gradientUnits="userSpaceOnUse">
+                              <linearGradient
+                                id="paint1_linear_9118_15308"
+                                x1="0.211178"
+                                y1="10.0483"
+                                x2="21.8026"
+                                y2="10.0483"
+                                gradientUnits="userSpaceOnUse"
+                              >
                                 <stop stopColor="#F6DB89" />
                                 <stop offset="1" stopColor="#F8F7DA" />
                               </linearGradient>
-                              <linearGradient id="paint2_linear_9118_15308" x1="0.277344" y1="10.0486" x2="21.7291" y2="10.0486" gradientUnits="userSpaceOnUse">
+                              <linearGradient
+                                id="paint2_linear_9118_15308"
+                                x1="0.277344"
+                                y1="10.0486"
+                                x2="21.7291"
+                                y2="10.0486"
+                                gradientUnits="userSpaceOnUse"
+                              >
                                 <stop stopColor="#ED9017" />
                                 <stop offset="0.1464" stopColor="#F09F23" />
                                 <stop offset="0.4262" stopColor="#F6C642" />
                                 <stop offset="0.4945" stopColor="#F8D04A" />
                                 <stop offset="1" stopColor="#F6E6B5" />
                               </linearGradient>
-                              <linearGradient id="paint3_linear_9118_15308" x1="0.277344" y1="10.0482" x2="21.7291" y2="10.0482" gradientUnits="userSpaceOnUse">
+                              <linearGradient
+                                id="paint3_linear_9118_15308"
+                                x1="0.277344"
+                                y1="10.0482"
+                                x2="21.7291"
+                                y2="10.0482"
+                                gradientUnits="userSpaceOnUse"
+                              >
                                 <stop stopColor="#ED9017" />
                                 <stop offset="0.1464" stopColor="#F09F23" />
                                 <stop offset="0.4262" stopColor="#F6C642" />
                                 <stop offset="0.4945" stopColor="#F8D04A" />
                                 <stop offset="1" stopColor="#F6E6B5" />
                               </linearGradient>
-                              <linearGradient id="paint4_linear_9118_15308" x1="0.277344" y1="10.0482" x2="21.7288" y2="10.0482" gradientUnits="userSpaceOnUse">
+                              <linearGradient
+                                id="paint4_linear_9118_15308"
+                                x1="0.277344"
+                                y1="10.0482"
+                                x2="21.7288"
+                                y2="10.0482"
+                                gradientUnits="userSpaceOnUse"
+                              >
                                 <stop stopColor="#DF8D00" />
                                 <stop offset="0.0848" stopColor="#FFD006" />
                                 <stop offset="0.2242" stopColor="#F4AD06" />
@@ -5884,8 +7508,18 @@ export const TicketDetailsPage = () => {
                           className="w-8 h-8 flex items-center justify-center rounded hover:bg-[#EDEAE3]"
                           title="Flag"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="19" viewBox="0 0 17 19" fill="none">
-                            <path d="M8.73145 0.5C8.85649 0.5 8.96486 0.537942 9.07324 0.630859C9.18052 0.722846 9.24902 0.836423 9.28125 0.990234V0.991211L9.54785 2.33301L9.62793 2.73535H14.9453C15.1136 2.73541 15.2354 2.78882 15.3438 2.90234C15.4533 3.01712 15.5121 3.1555 15.5117 3.35156V12.2939C15.5117 12.4916 15.4524 12.6312 15.3428 12.7461C15.2344 12.8596 15.1132 12.9125 14.9463 12.9121H9.4248C9.29987 12.9121 9.1923 12.8731 9.08398 12.7803C8.9758 12.6875 8.90589 12.5728 8.87402 12.417L8.6084 11.0791L8.52832 10.6768H1.64551V17.8828C1.64542 18.0801 1.58599 18.2192 1.47656 18.334C1.36825 18.4475 1.24682 18.5003 1.08008 18.5C0.911684 18.4996 0.788548 18.4457 0.679688 18.332C0.570877 18.2183 0.511811 18.08 0.511719 17.8828V1.11719C0.51181 0.919961 0.570878 0.781717 0.679688 0.667969C0.761428 0.582619 0.851184 0.531283 0.961914 0.510742L1.08008 0.5H8.73145Z" fill="#C72030" stroke="#C72030" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="17"
+                            height="19"
+                            viewBox="0 0 17 19"
+                            fill="none"
+                          >
+                            <path
+                              d="M8.73145 0.5C8.85649 0.5 8.96486 0.537942 9.07324 0.630859C9.18052 0.722846 9.24902 0.836423 9.28125 0.990234V0.991211L9.54785 2.33301L9.62793 2.73535H14.9453C15.1136 2.73541 15.2354 2.78882 15.3438 2.90234C15.4533 3.01712 15.5121 3.1555 15.5117 3.35156V12.2939C15.5117 12.4916 15.4524 12.6312 15.3428 12.7461C15.2344 12.8596 15.1132 12.9125 14.9463 12.9121H9.4248C9.29987 12.9121 9.1923 12.8731 9.08398 12.7803C8.9758 12.6875 8.90589 12.5728 8.87402 12.417L8.6084 11.0791L8.52832 10.6768H1.64551V17.8828C1.64542 18.0801 1.58599 18.2192 1.47656 18.334C1.36825 18.4475 1.24682 18.5003 1.08008 18.5C0.911684 18.4996 0.788548 18.4457 0.679688 18.332C0.570877 18.2183 0.511811 18.08 0.511719 17.8828V1.11719C0.51181 0.919961 0.570878 0.781717 0.679688 0.667969C0.761428 0.582619 0.851184 0.531283 0.961914 0.510742L1.08008 0.5H8.73145Z"
+                              fill="#C72030"
+                              stroke="#C72030"
+                            />
                           </svg>
                         </button>
                       )}
@@ -5894,10 +7528,19 @@ export const TicketDetailsPage = () => {
                         size="sm"
                         className="h-8 px-3 text-[12px] border-[#D9D9D9] hover:bg-[#F6F4EE]"
                         onClick={handleTicketMgmtEdit}
-                        disabled={isEditingTicketMgmt || loadingComplaintStatus || loadingComplaintModes || loadingResponsiblePersons}
+                        disabled={
+                          isEditingTicketMgmt ||
+                          loadingComplaintStatus ||
+                          loadingComplaintModes ||
+                          loadingResponsiblePersons
+                        }
                       >
                         <Edit className="w-4 h-4 mr-1" />
-                        {(loadingComplaintStatus || loadingComplaintModes || loadingResponsiblePersons) ? 'Loading...' : 'Edit'}
+                        {loadingComplaintStatus ||
+                        loadingComplaintModes ||
+                        loadingResponsiblePersons
+                          ? "Loading..."
+                          : "Edit"}
                       </Button>
                     </div>
                   </div>
@@ -5908,23 +7551,54 @@ export const TicketDetailsPage = () => {
                       // View Mode - Show current ticket data
                       (() => {
                         const mgmtFields = [
-                          { label: 'Update Status', value: ticketData.issue_status || '-' },
-                          { label: 'Severity', value: ticketData.severity || '-' },
                           {
-                            label: 'Select Vendor',
-                            value:
-                              ticketData.supplier_name
-                                ? ticketData.supplier_name
-                                : (ticketData.vendors && ticketData.vendors.length > 0
-                                  ? ticketData.vendors.map(v => v.name || v).join(', ')
-                                  : '-')
-                          }, { label: 'Assigned To', value: ticketData.assigned_to || '-' },
+                            label: "Update Status",
+                            value: ticketData.issue_status || "-",
+                          },
+                          {
+                            label: "Severity",
+                            value: ticketData.severity || "-",
+                          },
+                          {
+                            label: "Select Vendor",
+                            value: ticketData.supplier_name
+                              ? ticketData.supplier_name
+                              : ticketData.vendors &&
+                                  ticketData.vendors.length > 0
+                                ? ticketData.vendors
+                                    .map((v) => v.name || v)
+                                    .join(", ")
+                                : "-",
+                          },
+                          {
+                            label: "Assigned To",
+                            value: ticketData.assigned_to || "-",
+                          },
 
-                          { label: 'Expected Visit Date', value: ticketData.visit_date ? ticketData.visit_date : '-' },
-                          { label: 'Expected Completion Date', value: ticketData.expected_completion_date ? formatDate(ticketData.expected_completion_date) : '-' },
-                          { label: 'Scope', value: ticketData.issue_related_to || '-' },
-                          { label: 'Mode', value: ticketData.complaint_mode || '-' },
-                          { label: 'Identification', value: ticketData.proactive_reactive || '-' },
+                          {
+                            label: "Expected Visit Date",
+                            value: ticketData.visit_date
+                              ? ticketData.visit_date
+                              : "-",
+                          },
+                          {
+                            label: "Expected Completion Date",
+                            value: ticketData.expected_completion_date
+                              ? formatDate(ticketData.expected_completion_date)
+                              : "-",
+                          },
+                          {
+                            label: "Scope",
+                            value: ticketData.issue_related_to || "-",
+                          },
+                          {
+                            label: "Mode",
+                            value: ticketData.complaint_mode || "-",
+                          },
+                          {
+                            label: "Identification",
+                            value: ticketData.proactive_reactive || "-",
+                          },
                         ];
 
                         // Split into two vertical columns
@@ -5937,9 +7611,15 @@ export const TicketDetailsPage = () => {
                             {/* Left: two vertical columns of key/value pairs */}
                             <div className="flex-1 flex gap-16 min-w-0">
                               {[colA, colB].map((col, ci) => (
-                                <div key={ci} className="flex flex-col gap-4 min-w-[280px] flex-1">
+                                <div
+                                  key={ci}
+                                  className="flex flex-col gap-4 min-w-[280px] flex-1"
+                                >
                                   {col.map((field) => (
-                                    <div key={field.label} className="flex text-[14px] leading-snug min-w-0">
+                                    <div
+                                      key={field.label}
+                                      className="flex text-[14px] leading-snug min-w-0"
+                                    >
                                       <div className="w-[180px] flex-shrink-0 text-[#6B6B6B] font-medium">
                                         {field.label}
                                       </div>
@@ -5960,7 +7640,9 @@ export const TicketDetailsPage = () => {
                                     Root Cause Analysis
                                   </div>
                                   <div className="flex-1 text-[14px] font-semibold text-[#1A1A1A] break-words overflow-wrap-anywhere min-w-0">
-                                    {ticketData.root_cause ? ticketData.root_cause : '-'}
+                                    {ticketData.root_cause
+                                      ? ticketData.root_cause
+                                      : "-"}
                                   </div>
                                 </div>
                               </div>
@@ -5970,11 +7652,14 @@ export const TicketDetailsPage = () => {
                                 </span>
                                 <div
                                   className="text-[14px] font-medium text-[#000000] leading-[20px] max-h-48 overflow-y-auto pr-1 break-words overflow-wrap-anywhere"
-                                  style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                                  style={{
+                                    wordBreak: "break-word",
+                                    overflowWrap: "anywhere",
+                                  }}
                                 >
                                   {ticketData.notes ||
                                     ticketData.text ||
-                                    'No additional notes available'}
+                                    "No additional notes available"}
                                 </div>
                               </div>
                             </div>
@@ -5997,27 +7682,40 @@ export const TicketDetailsPage = () => {
                             <FormControl
                               fullWidth
                               variant="outlined"
-                              sx={{ '& .MuiInputBase-root': fieldStyles }}
+                              sx={{ "& .MuiInputBase-root": fieldStyles }}
                             >
                               <InputLabel shrink>Status</InputLabel>
                               <MuiSelect
                                 value={ticketMgmtFormData.selectedStatus}
-                                onChange={(e) => handleTicketMgmtInputChange("selectedStatus", e.target.value)}
+                                onChange={(e) =>
+                                  handleTicketMgmtInputChange(
+                                    "selectedStatus",
+                                    e.target.value
+                                  )
+                                }
                                 label="Status"
                                 notched
                                 displayEmpty
-                                disabled={loadingComplaintStatus || complaintStatus.length === 0}
+                                disabled={
+                                  loadingComplaintStatus ||
+                                  complaintStatus.length === 0
+                                }
                               >
                                 <MenuItem value="">
                                   <span className="text-gray-500">
-                                    {loadingComplaintStatus ? 'Loading statuses...' : 'Select status'}
+                                    {loadingComplaintStatus
+                                      ? "Loading statuses..."
+                                      : "Select status"}
                                   </span>
                                 </MenuItem>
                                 {complaintStatus.map((status) => (
-                                    <MenuItem key={status.id} value={status.id.toString()}>
-                                      {status.name}
-                                    </MenuItem>
-                                  ))}
+                                  <MenuItem
+                                    key={status.id}
+                                    value={status.id.toString()}
+                                  >
+                                    {status.name}
+                                  </MenuItem>
+                                ))}
                               </MuiSelect>
                             </FormControl>
 
@@ -6025,11 +7723,18 @@ export const TicketDetailsPage = () => {
                               <InputLabel>Severity</InputLabel>
                               <MuiSelect
                                 value={ticketMgmtFormData.severity}
-                                onChange={(e) => handleTicketMgmtInputChange('severity', e.target.value)}
+                                onChange={(e) =>
+                                  handleTicketMgmtInputChange(
+                                    "severity",
+                                    e.target.value
+                                  )
+                                }
                                 label="Severity"
                               >
                                 <MenuItem value="">
-                                  <span className="text-gray-500">Select severity</span>
+                                  <span className="text-gray-500">
+                                    Select severity
+                                  </span>
                                 </MenuItem>
                                 <MenuItem value="Major">Major</MenuItem>
                                 <MenuItem value="Minor">Minor</MenuItem>
@@ -6039,19 +7744,32 @@ export const TicketDetailsPage = () => {
                             <FormControl fullWidth size="small">
                               <InputLabel>Vendor</InputLabel>
                               <MuiSelect
-                                value={ticketMgmtFormData.supplier_id || ''}
-                                onChange={(e) => handleTicketMgmtInputChange('supplier_id', e.target.value)}
+                                value={ticketMgmtFormData.supplier_id || ""}
+                                onChange={(e) =>
+                                  handleTicketMgmtInputChange(
+                                    "supplier_id",
+                                    e.target.value
+                                  )
+                                }
                                 label="Vendor"
                                 disabled={loadingSuppliers}
                               >
                                 <MenuItem value="">
-                                  <span className="text-gray-500">{loadingSuppliers ? 'Loading vendors...' : 'Select vendor'}</span>
+                                  <span className="text-gray-500">
+                                    {loadingSuppliers
+                                      ? "Loading vendors..."
+                                      : "Select vendor"}
+                                  </span>
                                 </MenuItem>
-                                {suppliers && suppliers.map((vendor) => (
-                                  <MenuItem key={vendor.id} value={vendor.id.toString()}>
-                                    {vendor.company_name}
-                                  </MenuItem>
-                                ))}
+                                {suppliers &&
+                                  suppliers.map((vendor) => (
+                                    <MenuItem
+                                      key={vendor.id}
+                                      value={vendor.id.toString()}
+                                    >
+                                      {vendor.company_name}
+                                    </MenuItem>
+                                  ))}
                               </MuiSelect>
                             </FormControl>
 
@@ -6059,14 +7777,24 @@ export const TicketDetailsPage = () => {
                               <InputLabel>Assigned To</InputLabel>
                               <MuiSelect
                                 value={ticketMgmtFormData.assigned_to}
-                                onChange={(e) => handleTicketMgmtInputChange('assigned_to', e.target.value)}
+                                onChange={(e) =>
+                                  handleTicketMgmtInputChange(
+                                    "assigned_to",
+                                    e.target.value
+                                  )
+                                }
                                 label="Assigned To"
                               >
                                 <MenuItem value="">
-                                  <span className="text-gray-500">Select engineer</span>
+                                  <span className="text-gray-500">
+                                    Select engineer
+                                  </span>
                                 </MenuItem>
                                 {responsiblePersons.map((user) => (
-                                  <MenuItem key={user.id} value={user.id.toString()}>
+                                  <MenuItem
+                                    key={user.id}
+                                    value={user.id.toString()}
+                                  >
                                     {user.full_name}
                                   </MenuItem>
                                 ))}
@@ -6134,7 +7862,6 @@ export const TicketDetailsPage = () => {
                                 </FormControl>
                               )}
                             </div> */}
-
                           </div>
 
                           {/* 2️⃣ MIDDLE COLUMN */}
@@ -6145,9 +7872,16 @@ export const TicketDetailsPage = () => {
                               type="date"
                               label="Expected Visit Date"
                               value={ticketMgmtFormData.visit_date}
-                              onChange={(e) => handleTicketMgmtInputChange('visit_date', e.target.value)}
+                              onChange={(e) =>
+                                handleTicketMgmtInputChange(
+                                  "visit_date",
+                                  e.target.value
+                                )
+                              }
                               InputLabelProps={{ shrink: true }}
-                              inputProps={{ min: new Date().toISOString().split('T')[0] }}
+                              inputProps={{
+                                min: new Date().toISOString().split("T")[0],
+                              }}
                             />
 
                             <TextField
@@ -6155,21 +7889,37 @@ export const TicketDetailsPage = () => {
                               size="small"
                               type="date"
                               label="Expected Completion Date"
-                              value={ticketMgmtFormData.expected_completion_date}
-                              onChange={(e) => handleTicketMgmtInputChange('expected_completion_date', e.target.value)}
+                              value={
+                                ticketMgmtFormData.expected_completion_date
+                              }
+                              onChange={(e) =>
+                                handleTicketMgmtInputChange(
+                                  "expected_completion_date",
+                                  e.target.value
+                                )
+                              }
                               InputLabelProps={{ shrink: true }}
-                              inputProps={{ min: new Date().toISOString().split('T')[0] }}
+                              inputProps={{
+                                min: new Date().toISOString().split("T")[0],
+                              }}
                             />
 
                             <FormControl fullWidth size="small">
                               <InputLabel>Scope</InputLabel>
                               <MuiSelect
                                 value={ticketMgmtFormData.issue_related_to}
-                                onChange={(e) => handleTicketMgmtInputChange('issue_related_to', e.target.value)}
+                                onChange={(e) =>
+                                  handleTicketMgmtInputChange(
+                                    "issue_related_to",
+                                    e.target.value
+                                  )
+                                }
                                 label="Scope"
                               >
                                 <MenuItem value="">
-                                  <span className="text-gray-500">Select scope</span>
+                                  <span className="text-gray-500">
+                                    Select scope
+                                  </span>
                                 </MenuItem>
                                 <MenuItem value="Projects">Projects</MenuItem>
                                 <MenuItem value="FM">FM</MenuItem>
@@ -6179,18 +7929,30 @@ export const TicketDetailsPage = () => {
                             <FormControl fullWidth size="small">
                               <InputLabel>Mode</InputLabel>
                               <MuiSelect
-                                value={ticketMgmtFormData.complaint_mode_id || ''}
-                                onChange={(e) => handleTicketMgmtInputChange('complaint_mode_id', e.target.value)}
+                                value={
+                                  ticketMgmtFormData.complaint_mode_id || ""
+                                }
+                                onChange={(e) =>
+                                  handleTicketMgmtInputChange(
+                                    "complaint_mode_id",
+                                    e.target.value
+                                  )
+                                }
                                 label="Mode"
                                 disabled={loadingComplaintModes}
                               >
                                 <MenuItem value="">
                                   <span className="text-gray-500">
-                                    {loadingComplaintModes ? 'Loading modes...' : 'Select mode'}
+                                    {loadingComplaintModes
+                                      ? "Loading modes..."
+                                      : "Select mode"}
                                   </span>
                                 </MenuItem>
                                 {complaintModes.map((mode) => (
-                                  <MenuItem key={mode.id} value={mode.id.toString()}>
+                                  <MenuItem
+                                    key={mode.id}
+                                    value={mode.id.toString()}
+                                  >
                                     {mode.name}
                                   </MenuItem>
                                 ))}
@@ -6200,18 +7962,26 @@ export const TicketDetailsPage = () => {
                             <FormControl fullWidth size="small">
                               <InputLabel>Identification</InputLabel>
                               <MuiSelect
-                                value={ticketMgmtFormData.proactive_reactive || ''}
-                                onChange={(e) => handleTicketMgmtInputChange('proactive_reactive', e.target.value)}
+                                value={
+                                  ticketMgmtFormData.proactive_reactive || ""
+                                }
+                                onChange={(e) =>
+                                  handleTicketMgmtInputChange(
+                                    "proactive_reactive",
+                                    e.target.value
+                                  )
+                                }
                                 label="Identification"
                               >
                                 <MenuItem value="">
-                                  <span className="text-gray-500">Select identification</span>
+                                  <span className="text-gray-500">
+                                    Select identification
+                                  </span>
                                 </MenuItem>
                                 <MenuItem value="Proactive">Proactive</MenuItem>
                                 <MenuItem value="Reactive">Reactive</MenuItem>
                               </MuiSelect>
                             </FormControl>
-
                           </div>
 
                           {/* 3️⃣ RIGHT COLUMN - Template Fields */}
@@ -6221,7 +7991,12 @@ export const TicketDetailsPage = () => {
                               <textarea
                                 id="ticket-rca-text"
                                 value={ticketMgmtFormData.rca_text}
-                                onChange={e => handleTicketMgmtInputChange('rca_text', e.target.value)}
+                                onChange={(e) =>
+                                  handleTicketMgmtInputChange(
+                                    "rca_text",
+                                    e.target.value
+                                  )
+                                }
                                 rows={4}
                                 placeholder=" "
                                 className="peer block w-full appearance-none rounded border border-[#DAD7D0] bg-[#F2F2F2] px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
@@ -6230,19 +8005,23 @@ export const TicketDetailsPage = () => {
                                   focus:border-[#1976d2]
                                   hover:border-[#C72030]
                                   resize-vertical"
-                                style={{ fontSize: '14px', height: '100px' }}
+                                style={{ fontSize: "14px", height: "100px" }}
                               />
                               <label
                                 htmlFor="ticket-rca-text"
                                 className={`absolute left-3 -top-[10px] px-1 text-sm text-gray-500 z-[1] transition-all duration-200
                                   peer-focus:bg-white
-                                  ${ticketMgmtFormData.rca_text ? 'bg-white' : ''}
+                                  ${ticketMgmtFormData.rca_text ? "bg-white" : ""}
                                   peer-placeholder-shown:top-4
                                   peer-placeholder-shown:text-base
                                   peer-placeholder-shown:text-gray-400
                                   peer-focus:-top-[10px]
                                   peer-focus:text-sm`}
-                                style={{ backgroundColor: ticketMgmtFormData.rca_text ? 'white' : undefined }}
+                                style={{
+                                  backgroundColor: ticketMgmtFormData.rca_text
+                                    ? "white"
+                                    : undefined,
+                                }}
                               >
                                 Root Cause Analysis
                               </label>
@@ -6253,7 +8032,12 @@ export const TicketDetailsPage = () => {
                               <textarea
                                 id="ticket-additional-notes"
                                 value={ticketMgmtFormData.additional_notes}
-                                onChange={e => handleTicketMgmtInputChange('additional_notes', e.target.value)}
+                                onChange={(e) =>
+                                  handleTicketMgmtInputChange(
+                                    "additional_notes",
+                                    e.target.value
+                                  )
+                                }
                                 rows={6}
                                 placeholder=" "
                                 className="peer block w-full appearance-none rounded border border-[#DAD7D0] bg-[#F2F2F2] px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
@@ -6262,20 +8046,25 @@ export const TicketDetailsPage = () => {
                                   focus:border-[#1976d2]
                                   hover:border-[#C72030]
                                   resize-vertical"
-                                style={{ fontSize: '14px', height: '107px' }}
+                                style={{ fontSize: "14px", height: "107px" }}
                               />
 
                               <label
                                 htmlFor="ticket-additional-notes"
                                 className={`absolute left-3 -top-[10px] px-1 text-sm text-gray-500 z-[1] transition-all duration-200
                                   peer-focus:bg-white
-                                  ${ticketMgmtFormData.additional_notes ? 'bg-white' : ''}
+                                  ${ticketMgmtFormData.additional_notes ? "bg-white" : ""}
                                   peer-placeholder-shown:top-4
                                   peer-placeholder-shown:text-base
                                   peer-placeholder-shown:text-gray-400
                                   peer-focus:-top-[10px]
                                   peer-focus:text-sm`}
-                                style={{ backgroundColor: ticketMgmtFormData.additional_notes ? 'white' : undefined }}
+                                style={{
+                                  backgroundColor:
+                                    ticketMgmtFormData.additional_notes
+                                      ? "white"
+                                      : undefined,
+                                }}
                               >
                                 Additional Notes
                               </label>
@@ -6299,7 +8088,6 @@ export const TicketDetailsPage = () => {
                         </div>
                         </div> */}
 
-
                         {/* Action Buttons */}
                         <div className="flex items-center gap-3 justify-end mt-6">
                           <Button
@@ -6316,7 +8104,7 @@ export const TicketDetailsPage = () => {
                             disabled={submittingTicketMgmt}
                             className="bg-[#C72030] hover:bg-[#A01825] text-white px-8"
                           >
-                            {submittingTicketMgmt ? 'Saving...' : 'Submit'}
+                            {submittingTicketMgmt ? "Saving..." : "Submit"}
                           </Button>
                         </div>
                       </form>
@@ -6794,22 +8582,26 @@ export const TicketDetailsPage = () => {
                   <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                        <FileText className="w-6 h-6" style={{ color: '#C72030' }} />
+                        <FileText
+                          className="w-6 h-6"
+                          style={{ color: "#C72030" }}
+                        />
                       </div>
                       <h3 className="text-lg font-semibold uppercase text-black">
                         Ticket Closure
                       </h3>
-
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       className="h-8 px-3 text-[12px] border-[#D9D9D9] hover:bg-[#F6F4EE]"
                       onClick={handleTicketClosureEdit}
-                      disabled={isEditingTicketClosure || loadingResponsiblePersons}
+                      disabled={
+                        isEditingTicketClosure || loadingResponsiblePersons
+                      }
                     >
                       <Edit className="w-4 h-4 mr-1" />
-                      {loadingResponsiblePersons ? 'Loading...' : 'Edit'}
+                      {loadingResponsiblePersons ? "Loading..." : "Edit"}
                     </Button>
                   </div>
 
@@ -6838,7 +8630,9 @@ export const TicketDetailsPage = () => {
                                 Preventive Action
                               </label>
                               <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[20px] pl-4 min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
-                                {ticketData?.preventive_action ? ticketData.preventive_action : 'Not provided'}
+                                {ticketData?.preventive_action
+                                  ? ticketData.preventive_action
+                                  : "Not provided"}
                               </div>
                             </div>
                           </div>
@@ -6886,7 +8680,9 @@ export const TicketDetailsPage = () => {
                                 Corrective Action
                               </label>
                               <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[20px] pl-4 min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
-                                {ticketData?.corrective_action ? ticketData.corrective_action : 'Not provided'}
+                                {ticketData?.corrective_action
+                                  ? ticketData.corrective_action
+                                  : "Not provided"}
                               </div>
                             </div>
                           </div>
@@ -6919,15 +8715,23 @@ export const TicketDetailsPage = () => {
                         {/* Bottom Row: Review Date & Responsible Person - View Only */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                           <div className="flex items-center text-[14px]">
-                            <span className="w-[140px] flex-shrink-0 text-[#6B6B6B] font-medium">Review Date</span>
+                            <span className="w-[140px] flex-shrink-0 text-[#6B6B6B] font-medium">
+                              Review Date
+                            </span>
                             <span className="font-semibold text-[#1A1A1A]">
-                              {ticketData.review_tracking ? ticketData.review_tracking : '-'}
+                              {ticketData.review_tracking
+                                ? ticketData.review_tracking
+                                : "-"}
                             </span>
                           </div>
                           <div className="flex items-center text-[14px]">
-                            <span className="w-[140px] flex-shrink-0 text-[#6B6B6B] font-medium">Responsible Person</span>
+                            <span className="w-[140px] flex-shrink-0 text-[#6B6B6B] font-medium">
+                              Responsible Person
+                            </span>
                             <span className="font-semibold text-[#1A1A1A]">
-                              {ticketData.responsible_person ? ticketData.responsible_person : '-'}
+                              {ticketData.responsible_person
+                                ? ticketData.responsible_person
+                                : "-"}
                             </span>
                           </div>
                         </div>
@@ -6966,40 +8770,46 @@ export const TicketDetailsPage = () => {
                                 fullWidth
                                 size="small"
                                 placeholder="Enter preventive action"
-                                value={ticketClosureFormData.preventive_action_text || ''}
+                                value={
+                                  ticketClosureFormData.preventive_action_text ||
+                                  ""
+                                }
                                 onChange={(e) => {
-                                  handleTicketClosureInputChange('preventive_action_text', e.target.value);
+                                  handleTicketClosureInputChange(
+                                    "preventive_action_text",
+                                    e.target.value
+                                  );
                                 }}
                                 multiline
                                 rows={3}
                                 InputLabelProps={{
                                   shrink: true,
-                                  style: { display: 'none' }
+                                  style: { display: "none" },
                                 }}
                                 inputProps={{
-                                  style: { fontSize: '14px' }
+                                  style: { fontSize: "14px" },
                                 }}
                                 sx={{
-                                  '& .MuiInputBase-root': {
-                                    backgroundColor: '#F2F2F2',
-                                    borderRadius: '4px',
-                                    fontSize: '14px',
+                                  "& .MuiInputBase-root": {
+                                    backgroundColor: "#F2F2F2",
+                                    borderRadius: "4px",
+                                    fontSize: "14px",
                                   },
-                                  '& .MuiOutlinedInput-root': {
-                                    '& fieldset': {
-                                      borderColor: '#DAD7D0',
-                                      borderWidth: '1px',
+                                  "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                      borderColor: "#DAD7D0",
+                                      borderWidth: "1px",
                                     },
-                                    '&:hover fieldset': {
-                                      borderColor: '#C72030',
+                                    "&:hover fieldset": {
+                                      borderColor: "#C72030",
                                     },
-                                    '&.Mui-focused fieldset': {
-                                      borderColor: '#C72030',
+                                    "&.Mui-focused fieldset": {
+                                      borderColor: "#C72030",
                                     },
                                   },
-                                  '& .MuiInputBase-input': {
-                                    fontSize: '14px',
-                                    padding: '10px 12px',
+                                  "& .MuiInputBase-input": {
+                                    fontSize: "14px",
+                                    padding: "10px 12px",
                                   },
                                 }}
                               />
@@ -7092,40 +8902,46 @@ export const TicketDetailsPage = () => {
                                 fullWidth
                                 size="small"
                                 placeholder="Enter corrective action"
-                                value={ticketClosureFormData.corrective_action_text || ''}
+                                value={
+                                  ticketClosureFormData.corrective_action_text ||
+                                  ""
+                                }
                                 onChange={(e) => {
-                                  handleTicketClosureInputChange('corrective_action_text', e.target.value);
+                                  handleTicketClosureInputChange(
+                                    "corrective_action_text",
+                                    e.target.value
+                                  );
                                 }}
                                 multiline
                                 rows={3}
                                 InputLabelProps={{
                                   shrink: true,
-                                  style: { display: 'none' }
+                                  style: { display: "none" },
                                 }}
                                 inputProps={{
-                                  style: { fontSize: '14px' }
+                                  style: { fontSize: "14px" },
                                 }}
                                 sx={{
-                                  '& .MuiInputBase-root': {
-                                    backgroundColor: '#F2F2F2',
-                                    borderRadius: '4px',
-                                    fontSize: '14px',
+                                  "& .MuiInputBase-root": {
+                                    backgroundColor: "#F2F2F2",
+                                    borderRadius: "4px",
+                                    fontSize: "14px",
                                   },
-                                  '& .MuiOutlinedInput-root': {
-                                    '& fieldset': {
-                                      borderColor: '#DAD7D0',
-                                      borderWidth: '1px',
+                                  "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                      borderColor: "#DAD7D0",
+                                      borderWidth: "1px",
                                     },
-                                    '&:hover fieldset': {
-                                      borderColor: '#C72030',
+                                    "&:hover fieldset": {
+                                      borderColor: "#C72030",
                                     },
-                                    '&.Mui-focused fieldset': {
-                                      borderColor: '#C72030',
+                                    "&.Mui-focused fieldset": {
+                                      borderColor: "#C72030",
                                     },
                                   },
-                                  '& .MuiInputBase-input': {
-                                    fontSize: '14px',
-                                    padding: '10px 12px',
+                                  "& .MuiInputBase-input": {
+                                    fontSize: "14px",
+                                    padding: "10px 12px",
                                   },
                                 }}
                               />
@@ -7216,47 +9032,55 @@ export const TicketDetailsPage = () => {
                               Review Date
                             </label>
 
-                            <div style={{ minWidth: '240px' }}>
+                            <div style={{ minWidth: "240px" }}>
                               <TextField
                                 fullWidth
                                 size="small"
                                 type="date"
                                 placeholder="Select review date"
-                                value={ticketClosureFormData.review_tracking || ''}
+                                value={
+                                  ticketClosureFormData.review_tracking || ""
+                                }
                                 onChange={(e) => {
-                                  console.log('Review date changed:', e.target.value);
-                                  handleTicketClosureInputChange('review_tracking', e.target.value);
+                                  console.log(
+                                    "Review date changed:",
+                                    e.target.value
+                                  );
+                                  handleTicketClosureInputChange(
+                                    "review_tracking",
+                                    e.target.value
+                                  );
                                 }}
                                 InputLabelProps={{
                                   shrink: true,
-                                  style: { display: 'none' } // Hide default label since we have floating label
+                                  style: { display: "none" }, // Hide default label since we have floating label
                                 }}
                                 inputProps={{
-                                  style: { fontSize: '14px' },
-                                  min: new Date().toISOString().split('T')[0]
+                                  style: { fontSize: "14px" },
+                                  min: new Date().toISOString().split("T")[0],
                                 }}
                                 sx={{
-                                  '& .MuiInputBase-root': {
-                                    backgroundColor: '#F2F2F2',
-                                    borderRadius: '4px',
-                                    fontSize: '14px',
-                                    minHeight: '40px',
+                                  "& .MuiInputBase-root": {
+                                    backgroundColor: "#F2F2F2",
+                                    borderRadius: "4px",
+                                    fontSize: "14px",
+                                    minHeight: "40px",
                                   },
-                                  '& .MuiOutlinedInput-root': {
-                                    '& fieldset': {
-                                      borderColor: '#DAD7D0',
-                                      borderWidth: '1px',
+                                  "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                      borderColor: "#DAD7D0",
+                                      borderWidth: "1px",
                                     },
-                                    '&:hover fieldset': {
-                                      borderColor: '#C72030',
+                                    "&:hover fieldset": {
+                                      borderColor: "#C72030",
                                     },
-                                    '&.Mui-focused fieldset': {
-                                      borderColor: '#C72030',
+                                    "&.Mui-focused fieldset": {
+                                      borderColor: "#C72030",
                                     },
                                   },
-                                  '& .MuiInputBase-input': {
-                                    fontSize: '14px',
-                                    padding: '10px 12px',
+                                  "& .MuiInputBase-input": {
+                                    fontSize: "14px",
+                                    padding: "10px 12px",
                                   },
                                 }}
                               />
@@ -7284,26 +9108,39 @@ export const TicketDetailsPage = () => {
                               {/* React Select */}
                               <Select
                                 value={(() => {
-                                  const value = isEditingTicketClosure ? getResponsiblePersonFormValue() : getResponsiblePersonValue();
+                                  const value = isEditingTicketClosure
+                                    ? getResponsiblePersonFormValue()
+                                    : getResponsiblePersonValue();
                                   if (!value) return null;
                                   const matchedPerson = responsiblePersons.find(
-                                    p => p.id.toString() === value
+                                    (p) => p.id.toString() === value
                                   );
-                                  return matchedPerson ? {
-                                    value: matchedPerson.id,
-                                    label: `${matchedPerson.full_name}${matchedPerson.employee_type ? ` (${matchedPerson.employee_type})` : ''}`
-                                  } : null;
+                                  return matchedPerson
+                                    ? {
+                                        value: matchedPerson.id,
+                                        label: `${matchedPerson.full_name}${matchedPerson.employee_type ? ` (${matchedPerson.employee_type})` : ""}`,
+                                      }
+                                    : null;
                                 })()}
                                 onChange={(selectedOption) => {
-                                  if (selectedOption && 'value' in selectedOption) {
-                                    handleResponsiblePersonFormChange(selectedOption.value.toString());
+                                  if (
+                                    selectedOption &&
+                                    "value" in selectedOption
+                                  ) {
+                                    handleResponsiblePersonFormChange(
+                                      selectedOption.value.toString()
+                                    );
                                   }
                                 }}
                                 options={responsiblePersons.map((person) => ({
                                   value: person.id,
-                                  label: `${person.full_name}${person.employee_type ? ` (${person.employee_type})` : ''}`,
+                                  label: `${person.full_name}${person.employee_type ? ` (${person.employee_type})` : ""}`,
                                 }))}
-                                placeholder={loadingResponsiblePersons ? "Loading..." : "Select Responsible Person"}
+                                placeholder={
+                                  loadingResponsiblePersons
+                                    ? "Loading..."
+                                    : "Select Responsible Person"
+                                }
                                 styles={singleSelectStyles}
                                 isDisabled={loadingResponsiblePersons}
                                 isClearable
@@ -7312,7 +9149,10 @@ export const TicketDetailsPage = () => {
 
                             {/* Show current value if it doesn't match any option */}
                             {ticketData.responsible_person &&
-                              !responsiblePersons.find(p => p.full_name === ticketData.responsible_person) && (
+                              !responsiblePersons.find(
+                                (p) =>
+                                  p.full_name === ticketData.responsible_person
+                              ) && (
                                 <div className="mt-1 text-[11px] text-[#6B6B6B] italic">
                                   Current: {ticketData.responsible_person}
                                 </div>
@@ -7336,7 +9176,7 @@ export const TicketDetailsPage = () => {
                             disabled={submittingTicketClosure}
                             className="bg-[#C72030] hover:bg-[#A01825] text-white px-8"
                           >
-                            {submittingTicketClosure ? 'Saving...' : 'Submit'}
+                            {submittingTicketClosure ? "Saving..." : "Submit"}
                           </Button>
                         </div>
                       </form>
@@ -7573,7 +9413,10 @@ export const TicketDetailsPage = () => {
                   <Card className="w-full bg-white rounded-lg shadow-sm border">
                     <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                        <Paperclip className="w-6 h-6" style={{ color: '#C72030' }} />
+                        <Paperclip
+                          className="w-6 h-6"
+                          style={{ color: "#C72030" }}
+                        />
                       </div>
                       <h3 className="text-lg font-semibold uppercase text-black">
                         Attachments
@@ -7581,108 +9424,136 @@ export const TicketDetailsPage = () => {
                     </div>
 
                     <CardContent className="pt-4 bg-[#FAFAF8] border border-t-0 border-[#D9D9D9]">
-                      {Array.isArray(ticketData.documents) && ticketData.documents.length > 0 ? (
+                      {Array.isArray(ticketData.documents) &&
+                      ticketData.documents.length > 0 ? (
                         <div className="flex items-center flex-wrap gap-4">
-                          {ticketData.documents.map((attachment: any, idx: number) => {
-                            const url = attachment.document || attachment.document_url || attachment.url || attachment.attachment_url || '';
-                            const isImage = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(url);
-                            const isPdf = /\.pdf$/i.test(url) || attachment.doctype === 'application/pdf';
-                            const isExcel = /\.(xls|xlsx|csv)$/i.test(url) ||
-                              attachment.doctype?.includes('spreadsheet') ||
-                              attachment.doctype?.includes('excel');
-                            const isWord = /\.(doc|docx)$/i.test(url) ||
-                              attachment.doctype?.includes('document') ||
-                              attachment.doctype?.includes('word');
-                            const isDownloadable = isPdf || isExcel || isWord;
+                          {ticketData.documents.map(
+                            (attachment: any, idx: number) => {
+                              const url =
+                                attachment.document ||
+                                attachment.document_url ||
+                                attachment.url ||
+                                attachment.attachment_url ||
+                                "";
+                              const isImage =
+                                /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(url);
+                              const isPdf =
+                                /\.pdf$/i.test(url) ||
+                                attachment.doctype === "application/pdf";
+                              const isExcel =
+                                /\.(xls|xlsx|csv)$/i.test(url) ||
+                                attachment.doctype?.includes("spreadsheet") ||
+                                attachment.doctype?.includes("excel");
+                              const isWord =
+                                /\.(doc|docx)$/i.test(url) ||
+                                attachment.doctype?.includes("document") ||
+                                attachment.doctype?.includes("word");
+                              const isDownloadable = isPdf || isExcel || isWord;
 
-                            return (
-                              <div
-                                key={attachment.id || idx}
-                                className="flex relative flex-col items-center border rounded-lg pt-8 px-3 pb-4 w-full max-w-[150px] bg-[#F6F4EE] shadow-md"
-                              >
-                                {isImage ? (
-                                  <>
-                                    <button
-                                      className="absolute top-2 right-2 z-10 p-1 text-gray-600 hover:text-black rounded-full"
-                                      title="View"
+                              return (
+                                <div
+                                  key={attachment.id || idx}
+                                  className="flex relative flex-col items-center border rounded-lg pt-8 px-3 pb-4 w-full max-w-[150px] bg-[#F6F4EE] shadow-md"
+                                >
+                                  {isImage ? (
+                                    <>
+                                      <button
+                                        className="absolute top-2 right-2 z-10 p-1 text-gray-600 hover:text-black rounded-full"
+                                        title="View"
+                                        onClick={() => {
+                                          setSelectedDoc({
+                                            id: attachment.id || 0,
+                                            document_name:
+                                              attachment.document_name ||
+                                              attachment.document_file_name ||
+                                              `Document_${attachment.id || idx + 1}`,
+                                            url: url,
+                                            document_url: url,
+                                            document: url,
+                                          });
+                                          setShowImagePreview(true);
+                                        }}
+                                        type="button"
+                                      >
+                                        <Eye className="w-4 h-4" />
+                                      </button>
+                                      <img
+                                        src={url}
+                                        alt={
+                                          attachment.document_name ||
+                                          attachment.document_file_name ||
+                                          `Document_${attachment.id || idx + 1}`
+                                        }
+                                        className="w-14 h-14 object-cover rounded-md border mb-2 cursor-pointer"
+                                        onClick={() => {
+                                          setSelectedDoc({
+                                            id: attachment.id || 0,
+                                            document_name:
+                                              attachment.document_name ||
+                                              attachment.document_file_name ||
+                                              `Document_${attachment.id || idx + 1}`,
+                                            url: url,
+                                            document_url: url,
+                                            document: url,
+                                          });
+                                          setShowImagePreview(true);
+                                        }}
+                                        onError={(e) => {
+                                          (
+                                            e.target as HTMLImageElement
+                                          ).style.display = "none";
+                                        }}
+                                      />
+                                    </>
+                                  ) : isPdf ? (
+                                    <div className="w-14 h-14 flex items-center justify-center border rounded-md text-red-600 bg-white mb-2">
+                                      <FileText className="w-6 h-6" />
+                                    </div>
+                                  ) : isExcel ? (
+                                    <div className="w-14 h-14 flex items-center justify-center border rounded-md text-green-600 bg-white mb-2">
+                                      <FileSpreadsheet className="w-6 h-6" />
+                                    </div>
+                                  ) : isWord ? (
+                                    <div className="w-14 h-14 flex items-center justify-center border rounded-md text-blue-600 bg-white mb-2">
+                                      <FileText className="w-6 h-6" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-14 h-14 flex items-center justify-center border rounded-md text-gray-600 bg-white mb-2">
+                                      <File className="w-6 h-6" />
+                                    </div>
+                                  )}
+                                  <span className="text-xs text-center truncate max-w-[120px] mb-2 font-medium">
+                                    {attachment.document_name ||
+                                      attachment.document_file_name ||
+                                      url.split("/").pop() ||
+                                      `Document_${attachment.id || idx + 1}`}
+                                  </span>
+                                  {isDownloadable && (
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="absolute top-2 right-2 h-5 w-5 p-0 text-gray-600 hover:text-black"
                                       onClick={() => {
                                         setSelectedDoc({
                                           id: attachment.id || 0,
-                                          document_name: attachment.document_name || attachment.document_file_name || `Document_${attachment.id || idx + 1}`,
+                                          document_name:
+                                            attachment.document_name ||
+                                            attachment.document_file_name ||
+                                            `Document_${attachment.id || idx + 1}`,
                                           url: url,
                                           document_url: url,
                                           document: url,
                                         });
                                         setShowImagePreview(true);
                                       }}
-                                      type="button"
                                     >
-                                      <Eye className="w-4 h-4" />
-                                    </button>
-                                    <img
-                                      src={url}
-                                      alt={attachment.document_name || attachment.document_file_name || `Document_${attachment.id || idx + 1}`}
-                                      className="w-14 h-14 object-cover rounded-md border mb-2 cursor-pointer"
-                                      onClick={() => {
-                                        setSelectedDoc({
-                                          id: attachment.id || 0,
-                                          document_name: attachment.document_name || attachment.document_file_name || `Document_${attachment.id || idx + 1}`,
-                                          url: url,
-                                          document_url: url,
-                                          document: url,
-                                        });
-                                        setShowImagePreview(true);
-                                      }}
-                                      onError={(e) => {
-                                        (e.target as HTMLImageElement).style.display = 'none';
-                                      }}
-                                    />
-                                  </>
-                                ) : isPdf ? (
-                                  <div className="w-14 h-14 flex items-center justify-center border rounded-md text-red-600 bg-white mb-2">
-                                    <FileText className="w-6 h-6" />
-                                  </div>
-                                ) : isExcel ? (
-                                  <div className="w-14 h-14 flex items-center justify-center border rounded-md text-green-600 bg-white mb-2">
-                                    <FileSpreadsheet className="w-6 h-6" />
-                                  </div>
-                                ) : isWord ? (
-                                  <div className="w-14 h-14 flex items-center justify-center border rounded-md text-blue-600 bg-white mb-2">
-                                    <FileText className="w-6 h-6" />
-                                  </div>
-                                ) : (
-                                  <div className="w-14 h-14 flex items-center justify-center border rounded-md text-gray-600 bg-white mb-2">
-                                    <File className="w-6 h-6" />
-                                  </div>
-                                )}
-                                <span className="text-xs text-center truncate max-w-[120px] mb-2 font-medium">
-                                  {attachment.document_name ||
-                                    attachment.document_file_name ||
-                                    url.split('/').pop() ||
-                                    `Document_${attachment.id || idx + 1}`}
-                                </span>
-                                {isDownloadable && (
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="absolute top-2 right-2 h-5 w-5 p-0 text-gray-600 hover:text-black"
-                                    onClick={() => {
-                                      setSelectedDoc({
-                                        id: attachment.id || 0,
-                                        document_name: attachment.document_name || attachment.document_file_name || `Document_${attachment.id || idx + 1}`,
-                                        url: url,
-                                        document_url: url,
-                                        document: url,
-                                      });
-                                      setShowImagePreview(true);
-                                    }}
-                                  >
-                                    <Download className="w-4 h-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            );
-                          })}
+                                      <Download className="w-4 h-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              );
+                            }
+                          )}
                         </div>
                       ) : (
                         <p className="text-xs text-gray-400">No attachments</p>
@@ -7698,17 +9569,21 @@ export const TicketDetailsPage = () => {
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <MapPin className="w-6 h-6 text-[#C72030]" />
                       </div>
-                      <h3 className="text-lg font-semibold text-black">LOCATION INFORMATION</h3>
+                      <h3 className="text-lg font-semibold text-black">
+                        LOCATION INFORMATION
+                      </h3>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       className="h-8 px-3 text-[12px] border-[#D9D9D9] hover:bg-[#F6F4EE]"
                       onClick={handleSocietyLocationEdit}
-                      disabled={isEditingSocietyLocation || loadingSocietyLocations}
+                      disabled={
+                        isEditingSocietyLocation || loadingSocietyLocations
+                      }
                     >
                       <Edit className="w-4 h-4 mr-1" />
-                      {loadingSocietyLocations ? 'Loading...' : 'Edit'}
+                      {loadingSocietyLocations ? "Loading..." : "Edit"}
                     </Button>
                   </div>
 
@@ -7717,122 +9592,187 @@ export const TicketDetailsPage = () => {
                       /* View Mode */
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Society</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Society
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
                           <span className="text-gray-900 font-medium">
                             {ticketData.society_location_id
-                              ? (societyLocations.find(s => s.id === ticketData.society_location_id)?.name || ticketData.society_location_id)
-                              : '-'}
+                              ? societyLocations.find(
+                                  (s) => s.id === ticketData.society_location_id
+                                )?.name || ticketData.society_location_id
+                              : "-"}
                           </span>
                         </div>
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Wing</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Wing
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
                           <span className="text-gray-900 font-medium">
                             {ticketData.wing_id
-                              ? (societyWings.find(w => w.id === ticketData.wing_id)?.name || ticketData.wing_name || ticketData.wing_id)
-                              : (ticketData.wing_name || '-')}
+                              ? societyWings.find(
+                                  (w) => w.id === ticketData.wing_id
+                                )?.name ||
+                                ticketData.wing_name ||
+                                ticketData.wing_id
+                              : ticketData.wing_name || "-"}
                           </span>
                         </div>
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Area</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Area
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
                           <span className="text-gray-900 font-medium">
                             {ticketData.area_id
-                              ? (societyAreas.find(a => a.id === ticketData.area_id)?.name || ticketData.area_name || ticketData.area_id)
-                              : (ticketData.area_name || '-')}
+                              ? societyAreas.find(
+                                  (a) => a.id === ticketData.area_id
+                                )?.name ||
+                                ticketData.area_name ||
+                                ticketData.area_id
+                              : ticketData.area_name || "-"}
                           </span>
                         </div>
                         {hasData(ticketData.region) && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">Region</span>
+                            <span className="text-gray-500 min-w-[140px]">
+                              Region
+                            </span>
                             <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{ticketData.region}</span>
+                            <span className="text-gray-900 font-medium">
+                              {ticketData.region}
+                            </span>
                           </div>
                         )}
                         {hasData(ticketData.building_name) && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">Building</span>
+                            <span className="text-gray-500 min-w-[140px]">
+                              Building
+                            </span>
                             <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{ticketData.building_name}</span>
+                            <span className="text-gray-900 font-medium">
+                              {ticketData.building_name}
+                            </span>
                           </div>
                         )}
                         {hasData(ticketData.floor_name) && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">Floor</span>
-                            <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{ticketData.floor_name}</span>
-                          </div>
-                        )}
-                        {hasData(ticketData.flat_number) && String(ticketData.flat_number).includes('-') && (
-                          <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">Tower</span>
+                            <span className="text-gray-500 min-w-[140px]">
+                              Floor
+                            </span>
                             <span className="text-gray-500 mx-2">:</span>
                             <span className="text-gray-900 font-medium">
-                              {String(ticketData.flat_number).split('-')[0]}
+                              {ticketData.floor_name}
                             </span>
                           </div>
                         )}
-                        {hasData(ticketData.flat_number || ticketData.unit_name) && (
+                        {hasData(ticketData.flat_number) &&
+                          String(ticketData.flat_number).includes("-") && (
+                            <div className="flex items-center">
+                              <span className="text-gray-500 min-w-[140px]">
+                                Tower
+                              </span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">
+                                {String(ticketData.flat_number).split("-")[0]}
+                              </span>
+                            </div>
+                          )}
+                        {hasData(
+                          ticketData.flat_number || ticketData.unit_name
+                        ) && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">Flat</span>
+                            <span className="text-gray-500 min-w-[140px]">
+                              Flat
+                            </span>
                             <span className="text-gray-500 mx-2">:</span>
                             <span className="text-gray-900 font-medium">
                               {/* API sends flat_number pre-combined as "Tower-FlatNo" (e.g. "T1-101"). */}
                               {ticketData.flat_number
-                                ? String(ticketData.flat_number).split('-').join(' - ')
+                                ? String(ticketData.flat_number)
+                                    .split("-")
+                                    .join(" - ")
                                 : ticketData.unit_name}
                             </span>
                           </div>
                         )}
-                        
+
                         {hasData(ticketData.zone) && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">Zone</span>
+                            <span className="text-gray-500 min-w-[140px]">
+                              Zone
+                            </span>
                             <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{ticketData.zone}</span>
+                            <span className="text-gray-900 font-medium">
+                              {ticketData.zone}
+                            </span>
                           </div>
                         )}
                         {hasData(ticketData.district) && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">District</span>
+                            <span className="text-gray-500 min-w-[140px]">
+                              District
+                            </span>
                             <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{ticketData.district}</span>
+                            <span className="text-gray-900 font-medium">
+                              {ticketData.district}
+                            </span>
                           </div>
                         )}
                         {hasData(ticketData.room_name) && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">Room</span>
+                            <span className="text-gray-500 min-w-[140px]">
+                              Room
+                            </span>
                             <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{ticketData.room_name}</span>
+                            <span className="text-gray-900 font-medium">
+                              {ticketData.room_name}
+                            </span>
                           </div>
                         )}
                         {hasData(ticketData.site_name) && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">Site</span>
+                            <span className="text-gray-500 min-w-[140px]">
+                              Site
+                            </span>
                             <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{ticketData.site_name}</span>
+                            <span className="text-gray-900 font-medium">
+                              {ticketData.site_name}
+                            </span>
                           </div>
                         )}
                         {hasData(ticketData.city) && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">City</span>
+                            <span className="text-gray-500 min-w-[140px]">
+                              City
+                            </span>
                             <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{ticketData.city}</span>
+                            <span className="text-gray-900 font-medium">
+                              {ticketData.city}
+                            </span>
                           </div>
                         )}
                         {hasData(ticketData.state) && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">State</span>
+                            <span className="text-gray-500 min-w-[140px]">
+                              State
+                            </span>
                             <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{ticketData.state}</span>
+                            <span className="text-gray-900 font-medium">
+                              {ticketData.state}
+                            </span>
                           </div>
                         )}
                         {hasData(ticketData.address) && (
                           <div className="flex items-center">
-                            <span className="text-gray-500 min-w-[140px]">Address</span>
+                            <span className="text-gray-500 min-w-[140px]">
+                              Address
+                            </span>
                             <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{ticketData.address}</span>
+                            <span className="text-gray-900 font-medium">
+                              {ticketData.address}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -7847,21 +9787,34 @@ export const TicketDetailsPage = () => {
                       >
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           {/* Society Dropdown */}
-                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                          <FormControl
+                            fullWidth
+                            variant="outlined"
+                            sx={{ "& .MuiInputBase-root": fieldStyles }}
+                          >
                             <InputLabel shrink>Society</InputLabel>
                             <MuiSelect
-                              value={societyLocationFormData.society_location_id}
-                              onChange={(e) => handleSocietyChange(e.target.value)}
+                              value={
+                                societyLocationFormData.society_location_id
+                              }
+                              onChange={(e) =>
+                                handleSocietyChange(e.target.value)
+                              }
                               label="Society"
                               notched
                               displayEmpty
                               disabled={loadingSocietyLocations}
                             >
                               <MenuItem value="">
-                                {loadingSocietyLocations ? 'Loading...' : 'Select Society'}
+                                {loadingSocietyLocations
+                                  ? "Loading..."
+                                  : "Select Society"}
                               </MenuItem>
                               {societyLocations.map((loc) => (
-                                <MenuItem key={loc.id} value={loc.id.toString()}>
+                                <MenuItem
+                                  key={loc.id}
+                                  value={loc.id.toString()}
+                                >
                                   {loc.name}
                                 </MenuItem>
                               ))}
@@ -7869,21 +9822,37 @@ export const TicketDetailsPage = () => {
                           </FormControl>
 
                           {/* Wing Dropdown */}
-                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                          <FormControl
+                            fullWidth
+                            variant="outlined"
+                            sx={{ "& .MuiInputBase-root": fieldStyles }}
+                          >
                             <InputLabel shrink>Wing</InputLabel>
                             <MuiSelect
                               value={societyLocationFormData.wing_id}
-                              onChange={(e) => handleSocietyWingChange(e.target.value)}
+                              onChange={(e) =>
+                                handleSocietyWingChange(e.target.value)
+                              }
                               label="Wing"
                               notched
                               displayEmpty
-                              disabled={loadingSocietyWings || !societyLocationFormData.society_location_id}
+                              disabled={
+                                loadingSocietyWings ||
+                                !societyLocationFormData.society_location_id
+                              }
                             >
                               <MenuItem value="">
-                                {loadingSocietyWings ? 'Loading...' : !societyLocationFormData.society_location_id ? 'Select Society First' : 'Select Wing'}
+                                {loadingSocietyWings
+                                  ? "Loading..."
+                                  : !societyLocationFormData.society_location_id
+                                    ? "Select Society First"
+                                    : "Select Wing"}
                               </MenuItem>
                               {societyWings.map((wing) => (
-                                <MenuItem key={wing.id} value={wing.id.toString()}>
+                                <MenuItem
+                                  key={wing.id}
+                                  value={wing.id.toString()}
+                                >
                                   {wing.name}
                                 </MenuItem>
                               ))}
@@ -7891,21 +9860,40 @@ export const TicketDetailsPage = () => {
                           </FormControl>
 
                           {/* Area Dropdown */}
-                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                          <FormControl
+                            fullWidth
+                            variant="outlined"
+                            sx={{ "& .MuiInputBase-root": fieldStyles }}
+                          >
                             <InputLabel shrink>Area</InputLabel>
                             <MuiSelect
                               value={societyLocationFormData.area_id}
-                              onChange={(e) => setSocietyLocationFormData(prev => ({ ...prev, area_id: e.target.value }))}
+                              onChange={(e) =>
+                                setSocietyLocationFormData((prev) => ({
+                                  ...prev,
+                                  area_id: e.target.value,
+                                }))
+                              }
                               label="Area"
                               notched
                               displayEmpty
-                              disabled={loadingSocietyAreas || !societyLocationFormData.wing_id}
+                              disabled={
+                                loadingSocietyAreas ||
+                                !societyLocationFormData.wing_id
+                              }
                             >
                               <MenuItem value="">
-                                {loadingSocietyAreas ? 'Loading...' : !societyLocationFormData.wing_id ? 'Select Wing First' : 'Select Area'}
+                                {loadingSocietyAreas
+                                  ? "Loading..."
+                                  : !societyLocationFormData.wing_id
+                                    ? "Select Wing First"
+                                    : "Select Area"}
                               </MenuItem>
                               {societyAreas.map((area) => (
-                                <MenuItem key={area.id} value={area.id.toString()}>
+                                <MenuItem
+                                  key={area.id}
+                                  value={area.id.toString()}
+                                >
                                   {area.name}
                                 </MenuItem>
                               ))}
@@ -7913,7 +9901,11 @@ export const TicketDetailsPage = () => {
                           </FormControl>
 
                           {/* Tower Dropdown (read-only — tower is not editable) */}
-                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                          <FormControl
+                            fullWidth
+                            variant="outlined"
+                            sx={{ "& .MuiInputBase-root": fieldStyles }}
+                          >
                             <InputLabel shrink>Tower</InputLabel>
                             <MuiSelect
                               value={societyLocationFormData.tower_id}
@@ -7923,10 +9915,15 @@ export const TicketDetailsPage = () => {
                               disabled
                             >
                               <MenuItem value="">
-                                {loadingSocietyBlocks ? 'Loading...' : 'Select Tower'}
+                                {loadingSocietyBlocks
+                                  ? "Loading..."
+                                  : "Select Tower"}
                               </MenuItem>
                               {societyBlocks.map((block) => (
-                                <MenuItem key={block.id} value={block.id.toString()}>
+                                <MenuItem
+                                  key={block.id}
+                                  value={block.id.toString()}
+                                >
                                   {block.name}
                                 </MenuItem>
                               ))}
@@ -7934,7 +9931,11 @@ export const TicketDetailsPage = () => {
                           </FormControl>
 
                           {/* Flat Dropdown (read-only — flat is not editable) */}
-                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                          <FormControl
+                            fullWidth
+                            variant="outlined"
+                            sx={{ "& .MuiInputBase-root": fieldStyles }}
+                          >
                             <InputLabel shrink>Flat</InputLabel>
                             <MuiSelect
                               value={societyLocationFormData.flat_id}
@@ -7944,13 +9945,22 @@ export const TicketDetailsPage = () => {
                               disabled
                             >
                               <MenuItem value="">
-                                {loadingSocietyFlatOptions ? 'Loading...' : !societyLocationFormData.tower_id ? 'Select Tower First' : 'Select Flat'}
+                                {loadingSocietyFlatOptions
+                                  ? "Loading..."
+                                  : !societyLocationFormData.tower_id
+                                    ? "Select Tower First"
+                                    : "Select Flat"}
                               </MenuItem>
-                              {societyFlatOptions.filter((flat) => flat.approve !== false).map((flat) => (
-                                <MenuItem key={flat.id} value={flat.id.toString()}>
-                                  {flat.flat_no}
-                                </MenuItem>
-                              ))}
+                              {societyFlatOptions
+                                .filter((flat) => flat.approve !== false)
+                                .map((flat) => (
+                                  <MenuItem
+                                    key={flat.id}
+                                    value={flat.id.toString()}
+                                  >
+                                    {flat.flat_no}
+                                  </MenuItem>
+                                ))}
                             </MuiSelect>
                           </FormControl>
                         </div>
@@ -7970,7 +9980,7 @@ export const TicketDetailsPage = () => {
                             disabled={submittingSocietyLocation}
                             className="bg-[#C72030] hover:bg-[#A01825] text-white px-8"
                           >
-                            {submittingSocietyLocation ? 'Saving...' : 'Submit'}
+                            {submittingSocietyLocation ? "Saving..." : "Submit"}
                           </Button>
                         </div>
                       </form>
@@ -7991,7 +10001,7 @@ export const TicketDetailsPage = () => {
                         <h3 className="text-lg font-semibold truncate">
                           {selectedDoc.document_name ||
                             selectedDoc.document_file_name ||
-                            selectedDoc.url?.split('/').pop() ||
+                            selectedDoc.url?.split("/").pop() ||
                             `Document_${selectedDoc.id}`}
                         </h3>
                         <div className="flex gap-2">
@@ -8000,42 +10010,49 @@ export const TicketDetailsPage = () => {
                             size="sm"
                             onClick={async () => {
                               if (!selectedDoc.id) {
-                                toast.error('Unable to download: No document ID found');
+                                toast.error(
+                                  "Unable to download: No document ID found"
+                                );
                                 return;
                               }
 
                               try {
-                                const { API_CONFIG } = await import('@/config/apiConfig');
+                                const { API_CONFIG } =
+                                  await import("@/config/apiConfig");
                                 const baseUrl = API_CONFIG.BASE_URL;
-                                const token = localStorage.getItem('token');
+                                const token = localStorage.getItem("token");
 
                                 const cleanBaseUrl = baseUrl
-                                  .replace(/^https?:\/\//, '')
-                                  .replace(/\/$/, '');
+                                  .replace(/^https?:\/\//, "")
+                                  .replace(/\/$/, "");
                                 const downloadUrl = `https://${cleanBaseUrl}/attachfiles/${selectedDoc.id}?show_file=true`;
 
                                 const response = await fetch(downloadUrl, {
-                                  method: 'GET',
+                                  method: "GET",
                                   headers: {
                                     Authorization: `Bearer ${token}`,
-                                    Accept: '*/*',
+                                    Accept: "*/*",
                                   },
-                                  mode: 'cors',
+                                  mode: "cors",
                                 });
 
                                 if (response.ok) {
                                   const blob = await response.blob();
                                   const fileExtension =
-                                    selectedDoc.doctype?.split('/').pop() ||
-                                    selectedDoc.url?.split('.').pop()?.toLowerCase() ||
-                                    'file';
+                                    selectedDoc.doctype?.split("/").pop() ||
+                                    selectedDoc.url
+                                      ?.split(".")
+                                      .pop()
+                                      ?.toLowerCase() ||
+                                    "file";
                                   const documentName = `document_${selectedDoc.id}.${fileExtension}`;
 
                                   const url = window.URL.createObjectURL(blob);
-                                  const link = window.document.createElement('a');
+                                  const link =
+                                    window.document.createElement("a");
                                   link.href = url;
                                   link.download = documentName;
-                                  link.style.display = 'none';
+                                  link.style.display = "none";
                                   window.document.body.appendChild(link);
                                   link.click();
 
@@ -8044,13 +10061,17 @@ export const TicketDetailsPage = () => {
                                     window.URL.revokeObjectURL(url);
                                   }, 100);
 
-                                  toast.success('File downloaded successfully');
+                                  toast.success("File downloaded successfully");
                                 } else {
-                                  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                                  throw new Error(
+                                    `HTTP ${response.status}: ${response.statusText}`
+                                  );
                                 }
                               } catch (error) {
-                                console.error('Error downloading file:', error);
-                                toast.error(`Failed to download: ${error.message}`);
+                                console.error("Error downloading file:", error);
+                                toast.error(
+                                  `Failed to download: ${error.message}`
+                                );
                               }
                             }}
                           >
@@ -8068,15 +10089,17 @@ export const TicketDetailsPage = () => {
                         </div>
                       </div>
                       <div className="max-h-[70vh] overflow-auto">
-                        {selectedDoc.type === 'image' ? (
+                        {selectedDoc.type === "image" ? (
                           <img
                             src={selectedDoc.url}
-                            alt={selectedDoc.document_name || 'Document'}
+                            alt={selectedDoc.document_name || "Document"}
                             className="max-w-full h-auto rounded-md"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              (target.nextSibling as HTMLElement).style.display = 'block';
+                              target.style.display = "none";
+                              (
+                                target.nextSibling as HTMLElement
+                              ).style.display = "block";
                             }}
                           />
                         ) : (
@@ -8089,42 +10112,50 @@ export const TicketDetailsPage = () => {
                               onClick={async () => {
                                 // Same download logic as above
                                 if (!selectedDoc.id) {
-                                  toast.error('Unable to download: No document ID found');
+                                  toast.error(
+                                    "Unable to download: No document ID found"
+                                  );
                                   return;
                                 }
 
                                 try {
-                                  const { API_CONFIG } = await import('@/config/apiConfig');
+                                  const { API_CONFIG } =
+                                    await import("@/config/apiConfig");
                                   const baseUrl = API_CONFIG.BASE_URL;
-                                  const token = localStorage.getItem('token');
+                                  const token = localStorage.getItem("token");
 
                                   const cleanBaseUrl = baseUrl
-                                    .replace(/^https?:\/\//, '')
-                                    .replace(/\/$/, '');
+                                    .replace(/^https?:\/\//, "")
+                                    .replace(/\/$/, "");
                                   const downloadUrl = `https://${cleanBaseUrl}/attachfiles/${selectedDoc.id}?show_file=true`;
 
                                   const response = await fetch(downloadUrl, {
-                                    method: 'GET',
+                                    method: "GET",
                                     headers: {
                                       Authorization: `Bearer ${token}`,
-                                      Accept: '*/*',
+                                      Accept: "*/*",
                                     },
-                                    mode: 'cors',
+                                    mode: "cors",
                                   });
 
                                   if (response.ok) {
                                     const blob = await response.blob();
                                     const fileExtension =
-                                      selectedDoc.doctype?.split('/').pop() ||
-                                      selectedDoc.url?.split('.').pop()?.toLowerCase() ||
-                                      'file';
+                                      selectedDoc.doctype?.split("/").pop() ||
+                                      selectedDoc.url
+                                        ?.split(".")
+                                        .pop()
+                                        ?.toLowerCase() ||
+                                      "file";
                                     const documentName = `document_${selectedDoc.id}.${fileExtension}`;
 
-                                    const url = window.URL.createObjectURL(blob);
-                                    const link = window.document.createElement('a');
+                                    const url =
+                                      window.URL.createObjectURL(blob);
+                                    const link =
+                                      window.document.createElement("a");
                                     link.href = url;
                                     link.download = documentName;
-                                    link.style.display = 'none';
+                                    link.style.display = "none";
                                     window.document.body.appendChild(link);
                                     link.click();
 
@@ -8133,13 +10164,22 @@ export const TicketDetailsPage = () => {
                                       window.URL.revokeObjectURL(url);
                                     }, 100);
 
-                                    toast.success('File downloaded successfully');
+                                    toast.success(
+                                      "File downloaded successfully"
+                                    );
                                   } else {
-                                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                                    throw new Error(
+                                      `HTTP ${response.status}: ${response.statusText}`
+                                    );
                                   }
                                 } catch (error) {
-                                  console.error('Error downloading file:', error);
-                                  toast.error(`Failed to download: ${error.message}`);
+                                  console.error(
+                                    "Error downloading file:",
+                                    error
+                                  );
+                                  toast.error(
+                                    `Failed to download: ${error.message}`
+                                  );
                                 }
                               }}
                             >
@@ -8161,7 +10201,10 @@ export const TicketDetailsPage = () => {
                   <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                        <MessageSquare className="w-6 h-6" style={{ color: '#C72030' }} />
+                        <MessageSquare
+                          className="w-6 h-6"
+                          style={{ color: "#C72030" }}
+                        />
                       </div>
                       <h3 className="text-lg font-semibold uppercase text-black">
                         Comments
@@ -8175,13 +10218,19 @@ export const TicketDetailsPage = () => {
                       {/* Internal Comments Section */}
                       <div className="flex-1">
                         <div className="bg-white w-full text-center py-0.5 bg-[#fafafa] border-[#D9D9D9]">
-                          <h4 className="text-[18px] font-regular text-[#000000]">Internal</h4>
+                          <h4 className="text-[18px] font-regular text-[#000000]">
+                            Internal
+                          </h4>
                         </div>
 
                         <div className="mt-4 ml-2">
                           {/* Template Dropdown */}
                           <div className="mb-3">
-                            <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+                            <FormControl
+                              fullWidth
+                              variant="outlined"
+                              sx={fieldStyles}
+                            >
                               <InputLabel shrink>Template</InputLabel>
                               <MuiSelect
                                 label="Template"
@@ -8193,27 +10242,40 @@ export const TicketDetailsPage = () => {
                                   setSelectedInternalTemplate(templateId);
                                   // Auto-populate the textarea with the selected template's body
                                   if (templateId) {
-                                    const selectedTemplateData = communicationTemplates.find(t => t.id === templateId);
-                                    setInternalCommentText(selectedTemplateData?.body || '');
+                                    const selectedTemplateData =
+                                      communicationTemplates.find(
+                                        (t) => t.id === templateId
+                                      );
+                                    setInternalCommentText(
+                                      selectedTemplateData?.body || ""
+                                    );
                                   } else {
-                                    setInternalCommentText('');
+                                    setInternalCommentText("");
                                   }
                                 }}
                                 disabled={loadingTemplates}
                                 sx={{
-                                  fontSize: '11px',
-                                  height: '40px',
+                                  fontSize: "11px",
+                                  height: "40px",
                                 }}
                               >
                                 <MenuItem value="">
-                                  <span style={{ color: '#aaa' }}>
-                                    {loadingTemplates ? 'Loading templates...' : 'Select Template'}
+                                  <span style={{ color: "#aaa" }}>
+                                    {loadingTemplates
+                                      ? "Loading templates..."
+                                      : "Select Template"}
                                   </span>
                                 </MenuItem>
                                 {communicationTemplates
-                                  .filter(template => template.identifier === "helpdesk")
+                                  .filter(
+                                    (template) =>
+                                      template.identifier === "helpdesk"
+                                  )
                                   .map((template) => (
-                                    <MenuItem key={template.id} value={template.id}>
+                                    <MenuItem
+                                      key={template.id}
+                                      value={template.id}
+                                    >
                                       {template.identifier_action}
                                     </MenuItem>
                                   ))}
@@ -8227,7 +10289,9 @@ export const TicketDetailsPage = () => {
                               <textarea
                                 id="internal-comment"
                                 value={internalCommentText}
-                                onChange={(e) => setInternalCommentText(e.target.value)}
+                                onChange={(e) =>
+                                  setInternalCommentText(e.target.value)
+                                }
                                 rows={4}
                                 placeholder=" "
                                 className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent 
@@ -8258,7 +10322,10 @@ export const TicketDetailsPage = () => {
                             <strong>Selected files:</strong>
                             <ul className="list-disc pl-5">
                               {internalAttachments.map((file, idx) => (
-                                <li key={idx}>{file.name} ({(file.size / 1024).toFixed(2)} KB)</li>
+                                <li key={idx}>
+                                  {file.name} ({(file.size / 1024).toFixed(2)}{" "}
+                                  KB)
+                                </li>
                               ))}
                             </ul>
                           </div>
@@ -8270,24 +10337,24 @@ export const TicketDetailsPage = () => {
                           multiple
                           accept="image/*,.pdf,.doc,.docx"
                           onChange={handleInternalFileChange}
-                          style={{ display: 'none' }}
+                          style={{ display: "none" }}
                         />
                         <MuiButton
                           variant="outlined"
                           component="label"
                           htmlFor="internal-file-input"
                           sx={{
-                            marginLeft: '8px',
-                            borderColor: '#C72030',
-                            color: '#C72030',
-                            textTransform: 'none',
-                            fontFamily: 'Work Sans, sans-serif',
+                            marginLeft: "8px",
+                            borderColor: "#C72030",
+                            color: "#C72030",
+                            textTransform: "none",
+                            fontFamily: "Work Sans, sans-serif",
                             fontWeight: 500,
-                            borderRadius: '0',
-                            padding: '8px 16px',
-                            '&:hover': {
-                              borderColor: '#B8252F',
-                              backgroundColor: 'rgba(199, 32, 48, 0.04)',
+                            borderRadius: "0",
+                            padding: "8px 16px",
+                            "&:hover": {
+                              borderColor: "#B8252F",
+                              backgroundColor: "rgba(199, 32, 48, 0.04)",
                             },
                           }}
                         >
@@ -8298,15 +10365,19 @@ export const TicketDetailsPage = () => {
                       {/* Customer Comments Section */}
                       <div className="flex-1">
                         <div className="bg-white w-full text-center py-0.5 bg-[#fafafa] border-[#D9D9D9]">
-                          <h4 className="text-[18px] font-regular text-[#000000]">Customer</h4>
+                          <h4 className="text-[18px] font-regular text-[#000000]">
+                            Customer
+                          </h4>
                         </div>
 
                         <div className="mt-4 mr-2">
-
-
                           {/* Template Dropdown */}
                           <div className="mb-3">
-                            <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+                            <FormControl
+                              fullWidth
+                              variant="outlined"
+                              sx={fieldStyles}
+                            >
                               <InputLabel shrink>Template</InputLabel>
                               <MuiSelect
                                 label="Template"
@@ -8318,27 +10389,40 @@ export const TicketDetailsPage = () => {
                                   setSelectedCustomerTemplate(templateId);
                                   // Auto-populate the textarea with the selected template's body
                                   if (templateId) {
-                                    const selectedTemplateData = communicationTemplates.find(t => t.id === templateId);
-                                    setCommentText(selectedTemplateData?.body || '');
+                                    const selectedTemplateData =
+                                      communicationTemplates.find(
+                                        (t) => t.id === templateId
+                                      );
+                                    setCommentText(
+                                      selectedTemplateData?.body || ""
+                                    );
                                   } else {
-                                    setCommentText('');
+                                    setCommentText("");
                                   }
                                 }}
                                 disabled={loadingTemplates}
                                 sx={{
-                                  fontSize: '11px',
-                                  height: '40px',
+                                  fontSize: "11px",
+                                  height: "40px",
                                 }}
                               >
                                 <MenuItem value="">
-                                  <span style={{ color: '#aaa' }}>
-                                    {loadingTemplates ? 'Loading templates...' : 'Select Template'}
+                                  <span style={{ color: "#aaa" }}>
+                                    {loadingTemplates
+                                      ? "Loading templates..."
+                                      : "Select Template"}
                                   </span>
                                 </MenuItem>
                                 {communicationTemplates
-                                  .filter(template => template.identifier === "helpdesk")
+                                  .filter(
+                                    (template) =>
+                                      template.identifier === "helpdesk"
+                                  )
                                   .map((template) => (
-                                    <MenuItem key={template.id} value={template.id}>
+                                    <MenuItem
+                                      key={template.id}
+                                      value={template.id}
+                                    >
                                       {template.identifier_action}
                                     </MenuItem>
                                   ))}
@@ -8383,7 +10467,10 @@ export const TicketDetailsPage = () => {
                             <strong>Selected files:</strong>
                             <ul className="list-disc pl-5">
                               {customerAttachments.map((file, idx) => (
-                                <li key={idx}>{file.name} ({(file.size / 1024).toFixed(2)} KB)</li>
+                                <li key={idx}>
+                                  {file.name} ({(file.size / 1024).toFixed(2)}{" "}
+                                  KB)
+                                </li>
                               ))}
                             </ul>
                           </div>
@@ -8395,23 +10482,23 @@ export const TicketDetailsPage = () => {
                           multiple
                           accept="image/*,.pdf,.doc,.docx"
                           onChange={handleCustomerFileChange}
-                          style={{ display: 'none' }}
+                          style={{ display: "none" }}
                         />
                         <MuiButton
                           variant="outlined"
                           component="label"
                           htmlFor="customer-file-input"
                           sx={{
-                            borderColor: '#C72030',
-                            color: '#C72030',
-                            textTransform: 'none',
-                            fontFamily: 'Work Sans, sans-serif',
+                            borderColor: "#C72030",
+                            color: "#C72030",
+                            textTransform: "none",
+                            fontFamily: "Work Sans, sans-serif",
                             fontWeight: 500,
-                            borderRadius: '0',
-                            padding: '8px 16px',
-                            '&:hover': {
-                              borderColor: '#B8252F',
-                              backgroundColor: 'rgba(199, 32, 48, 0.04)',
+                            borderRadius: "0",
+                            padding: "8px 16px",
+                            "&:hover": {
+                              borderColor: "#B8252F",
+                              backgroundColor: "rgba(199, 32, 48, 0.04)",
                             },
                           }}
                         >
@@ -8426,12 +10513,13 @@ export const TicketDetailsPage = () => {
                         type="button"
                         onClick={handleSubmitComment}
                         disabled={submittingComment}
-                        className={`bg-[#C72030] text-white text-[12px] font-medium px-6 py-2 transition-colors ${submittingComment
-                          ? 'opacity-50 cursor-not-allowed'
-                          : 'hover:bg-[#A01828]'
-                          }`}
+                        className={`bg-[#C72030] text-white text-[12px] font-medium px-6 py-2 transition-colors ${
+                          submittingComment
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-[#A01828]"
+                        }`}
                       >
-                        {submittingComment ? 'Submitting...' : 'Submit Comment'}
+                        {submittingComment ? "Submitting..." : "Submit Comment"}
                       </button>
                     </div>
                   </div>
@@ -8444,10 +10532,33 @@ export const TicketDetailsPage = () => {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <div className="w-6 h-6">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 18 26" fill="none">
-                            <path d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908" stroke="#C72030" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908" stroke="#C72030" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M5 8.09082H13M5 13.0908H9" stroke="#C72030" stroke-width="2" stroke-linecap="round" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="100%"
+                            height="100%"
+                            viewBox="0 0 18 26"
+                            fill="none"
+                          >
+                            <path
+                              d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908"
+                              stroke="#C72030"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                            <path
+                              d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908"
+                              stroke="#C72030"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                            <path
+                              d="M5 8.09082H13M5 13.0908H9"
+                              stroke="#C72030"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                            />
                           </svg>
                         </div>
                       </div>
@@ -8460,11 +10571,15 @@ export const TicketDetailsPage = () => {
                   {/* Body */}
                   <div className="bg-[#FAFAF8] relative px-6 pt-6 pb-8 pl-8">
                     {complaintLogs.length === 0 ? (
-                      <div className="text-xs text-gray-400">No logs available</div>
+                      <div className="text-xs text-gray-400">
+                        No logs available
+                      </div>
                     ) : (
                       (() => {
                         const sorted = [...complaintLogs].sort(
-                          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                          (a, b) =>
+                            new Date(b.created_at).getTime() -
+                            new Date(a.created_at).getTime()
                         );
 
                         return (
@@ -8472,12 +10587,43 @@ export const TicketDetailsPage = () => {
                             <div className="pl-8 pt-2 relative">
                               {/* Vertical Progress Line */}
                               <div className="flex ml-1 mt-[-10px] mb-4 items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="26" viewBox="0 0 18 26" fill="none">
-                                  <path d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908" stroke="#C72030" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                  <path d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908" stroke="#C72030" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                  <path d="M5 8.09082H13M5 13.0908H9" stroke="#C72030" strokeWidth="1.5" strokeLinecap="round" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="18"
+                                  height="26"
+                                  viewBox="0 0 18 26"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908"
+                                    stroke="#C72030"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908"
+                                    stroke="#C72030"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M5 8.09082H13M5 13.0908H9"
+                                    stroke="#C72030"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                  />
                                 </svg>
-                                <h4 style={{ marginLeft: '8px', fontWeight: '500', color: '#C72030' }}>Logs</h4>
+                                <h4
+                                  style={{
+                                    marginLeft: "8px",
+                                    fontWeight: "500",
+                                    color: "#C72030",
+                                  }}
+                                >
+                                  Logs
+                                </h4>
                               </div>
 
                               {/* Container for dots and line */}
@@ -8487,7 +10633,7 @@ export const TicketDetailsPage = () => {
                                   <div
                                     className="absolute left-[13px] top-0 w-[2px] bg-[#C72030]"
                                     style={{
-                                      height: `calc(100% - 24px)`
+                                      height: `calc(100% - 24px)`,
                                     }}
                                   />
                                 )}
@@ -8495,12 +10641,23 @@ export const TicketDetailsPage = () => {
                                 <div className="space-y-6">
                                   {sorted.map((log, i) => {
                                     const isLast = i === sorted.length - 1;
-                                    const currentDate = formatLogCardDate(log.created_at);
-                                    const previousDate = i > 0 ? formatLogCardDate(sorted[i - 1].created_at) : null;
-                                    const showDate = currentDate !== previousDate;
+                                    const currentDate = formatLogCardDate(
+                                      log.created_at
+                                    );
+                                    const previousDate =
+                                      i > 0
+                                        ? formatLogCardDate(
+                                            sorted[i - 1].created_at
+                                          )
+                                        : null;
+                                    const showDate =
+                                      currentDate !== previousDate;
 
                                     return (
-                                      <div key={log.id || i} className="relative flex items-start gap-3">
+                                      <div
+                                        key={log.id || i}
+                                        className="relative flex items-start gap-3"
+                                      >
                                         {/* Dot aligned exactly on line */}
                                         <div className="relative">
                                           <span
@@ -8523,11 +10680,18 @@ export const TicketDetailsPage = () => {
                                               {formatLogTime(log.created_at)}
                                             </span>
                                             <span className="font-semibold text-[#1A1A1A] text-[16px]">
-                                              {log.log_status === null || log.log_status === undefined || log.log_status === '' ? 'Commented' : log.log_status}
+                                              {log.log_status === null ||
+                                              log.log_status === undefined ||
+                                              log.log_status === ""
+                                                ? "Commented"
+                                                : log.log_status}
                                             </span>
                                             {log.log_by && (
                                               <span className="text-[#1A1A1A] text-[16px]">
-                                                By <span className="text-[#1A1A1A]">{log.log_by}</span>
+                                                By{" "}
+                                                <span className="text-[#1A1A1A]">
+                                                  {log.log_by}
+                                                </span>
                                               </span>
                                             )}
                                           </div>
@@ -8556,31 +10720,34 @@ export const TicketDetailsPage = () => {
           </TabsContent>
 
           <TabsContent value="details" className="space-y-8 p-6">
-
             <div className="space-y-6">
               {/* Check if there's any ticket data to display */}
               {hasData(ticketData.heading) ||
-                hasData(ticketData.issue_status) ||
-                hasData(ticketData.sub_category_type) ||
-                hasData(ticketData.created_by_name) ||
-                hasData(ticketData.created_date) ||
-                hasData(ticketData.created_time) ||
-                hasData(ticketData.created_at) ||
-                hasData(ticketData.category_type) ||
-                hasData(ticketData.ticket_number) ||
-                hasData(ticketData.updated_by) ||
-                hasData(ticketData.complaint_mode) ||
-                hasData(ticketData.priority) ||
-                hasData(ticketData.external_priority) ||
-                hasData(ticketData.priority_status) ||
-                hasData(ticketData.effective_priority) ||
-                hasData(ticketData.assigned_to) ? (
-
-
+              hasData(ticketData.issue_status) ||
+              hasData(ticketData.sub_category_type) ||
+              hasData(ticketData.created_by_name) ||
+              hasData(ticketData.created_date) ||
+              hasData(ticketData.created_time) ||
+              hasData(ticketData.created_at) ||
+              hasData(ticketData.category_type) ||
+              hasData(ticketData.ticket_number) ||
+              hasData(ticketData.updated_by) ||
+              hasData(ticketData.complaint_mode) ||
+              hasData(ticketData.priority) ||
+              hasData(ticketData.external_priority) ||
+              hasData(ticketData.priority_status) ||
+              hasData(ticketData.effective_priority) ||
+              hasData(ticketData.assigned_to) ? (
                 <Card className="w-full">
                   <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
-                    <div style={{ width: '40px', height: '40px' }} className="rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                      <Ticket className="w-5 h-5" style={{ color: '#C72030' }} />
+                    <div
+                      style={{ width: "40px", height: "40px" }}
+                      className="rounded-full flex items-center justify-center bg-[#E5E0D3]"
+                    >
+                      <Ticket
+                        className="w-5 h-5"
+                        style={{ color: "#C72030" }}
+                      />
                     </div>
                     <h3 className="text-lg font-semibold uppercase text-black">
                       Ticket Details
@@ -8589,39 +10756,72 @@ export const TicketDetailsPage = () => {
                   </div>
                   <div className="px-6 bg-[#dfd9cb]">
                     <div className="flex justify-between py-4 border-b border-[#dfd9cb]">
-                      <div className='w-full '>
+                      <div className="w-full ">
                         <div className="">
                           <div className="flex items-start mb-4">
-                            <span className="text-gray-500 min-w-[110px]" style={{ fontSize: '14px' }}>Description</span>
-                            <span className="text-gray-900 font-medium break-words overflow-wrap-anywhere" style={{ fontSize: '14px', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                              {ticketData.heading || 'No description available'}
+                            <span
+                              className="text-gray-500 min-w-[110px]"
+                              style={{ fontSize: "14px" }}
+                            >
+                              Description
+                            </span>
+                            <span
+                              className="text-gray-900 font-medium break-words overflow-wrap-anywhere"
+                              style={{
+                                fontSize: "14px",
+                                wordBreak: "break-word",
+                                overflowWrap: "anywhere",
+                              }}
+                            >
+                              {ticketData.heading || "No description available"}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
                             <div className="">
                               <div className="flex items-start mb-4">
-                                <span className="text-gray-500 min-w-[110px]" style={{ fontSize: '14px' }}>Category</span>
-                                <span className="text-gray-900 font-medium" style={{ fontSize: '14px' }}>
-                                  {ticketData.category_type || '-'}
+                                <span
+                                  className="text-gray-500 min-w-[110px]"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  Category
+                                </span>
+                                <span
+                                  className="text-gray-900 font-medium"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  {ticketData.category_type || "-"}
                                 </span>
                               </div>
                               <div className="flex items-start mb-4">
-                                <span className="text-gray-500 min-w-[110px]" style={{ fontSize: '14px' }}>Sub Category</span>
-                                <span className="text-gray-900 font-medium" style={{ fontSize: '14px' }}>
-                                  {ticketData.sub_category_type || '-'}
+                                <span
+                                  className="text-gray-500 min-w-[110px]"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  Sub Category
+                                </span>
+                                <span
+                                  className="text-gray-900 font-medium"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  {ticketData.sub_category_type || "-"}
                                 </span>
                               </div>
                             </div>
-                            <div className="bg-white p-4" style={{ width: '75%', borderRadius: '4px' }}>
+                            <div
+                              className="bg-white p-4"
+                              style={{ width: "75%", borderRadius: "4px" }}
+                            >
                               <div className="grid grid-cols-3 w-full items-center gap-4">
                                 {tatGridRows.flat().map((cell, idx) => {
                                   // Determine column alignment - make escalation column left-aligned for consistency
                                   const colAlign =
                                     idx % 3 === 0
-                                      ? 'justify-start'
+                                      ? "justify-start"
                                       : idx % 3 === 1
-                                        ? ''
-                                        : cell.label.includes('Escalation') ? 'justify-start' : 'justify-end';
+                                        ? ""
+                                        : cell.label.includes("Escalation")
+                                          ? "justify-start"
+                                          : "justify-end";
 
                                   return (
                                     <div
@@ -8631,36 +10831,60 @@ export const TicketDetailsPage = () => {
                                       {/* Inner flex box for key-value pair with fixed key width and 20px gap */}
                                       <div className="flex items-center gap-[20px]">
                                         {/* Fixed width label to align values */}
-                                        <span className="text-[14px] text-gray-500 whitespace-nowrap" style={{ minWidth: cell.label === 'Response TAT' ? '90px' : '5px' }}>
+                                        <span
+                                          className="text-[14px] text-gray-500 whitespace-nowrap"
+                                          style={{
+                                            minWidth:
+                                              cell.label === "Response TAT"
+                                                ? "90px"
+                                                : "5px",
+                                          }}
+                                        >
                                           {cell.label}
                                         </span>
 
                                         {/* Dynamic value */}
                                         <span
                                           className={`text-[13px] md:text-[14px] font-semibold break-words text-gray-900`}
-                                          style={{ wordBreak: 'break-word', maxWidth: '120px', whiteSpace: 'pre-line' }}
+                                          style={{
+                                            wordBreak: "break-word",
+                                            maxWidth: "120px",
+                                            whiteSpace: "pre-line",
+                                          }}
                                         >
-                                          {cell.isExceeded && cell.label === 'Balance TAT'
-                                            ? 'Exceeded'
-                                            : cell.label.includes('Escalation') && cell.value && cell.value.includes('\n')
+                                          {cell.isExceeded &&
+                                          cell.label === "Balance TAT"
+                                            ? "Exceeded"
+                                            : cell.label.includes(
+                                                  "Escalation"
+                                                ) &&
+                                                cell.value &&
+                                                cell.value.includes("\n")
                                               ? (() => {
-                                                const lines = cell.value.split('\n').filter(line => line.trim());
-                                                if (lines.length > 1) {
-                                                  const firstLine = lines[0];
-                                                  const remainingLines = lines.slice(1);
-                                                  return (
-                                                    <div className="relative inline-block group">
-                                                      <span className="cursor-pointer hover:underline">
-                                                        {firstLine}...
-                                                      </span>
-                                                      <div className="invisible group-hover:visible absolute z-50 left-0 top-full mt-1 bg-white text-gray-800 text-xs py-2 px-3 rounded-xl shadow-lg whitespace-pre-line min-w-[150px] border-0">
-                                                        {remainingLines.join('\n')}
+                                                  const lines = cell.value
+                                                    .split("\n")
+                                                    .filter((line) =>
+                                                      line.trim()
+                                                    );
+                                                  if (lines.length > 1) {
+                                                    const firstLine = lines[0];
+                                                    const remainingLines =
+                                                      lines.slice(1);
+                                                    return (
+                                                      <div className="relative inline-block group">
+                                                        <span className="cursor-pointer hover:underline">
+                                                          {firstLine}...
+                                                        </span>
+                                                        <div className="invisible group-hover:visible absolute z-50 left-0 top-full mt-1 bg-white text-gray-800 text-xs py-2 px-3 rounded-xl shadow-lg whitespace-pre-line min-w-[150px] border-0">
+                                                          {remainingLines.join(
+                                                            "\n"
+                                                          )}
+                                                        </div>
                                                       </div>
-                                                    </div>
-                                                  );
-                                                }
-                                                return cell.value;
-                                              })()
+                                                    );
+                                                  }
+                                                  return cell.value;
+                                                })()
                                               : cell.value}
                                         </span>
                                       </div>
@@ -8672,65 +10896,175 @@ export const TicketDetailsPage = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-col justify-around" style={{ textAlign: 'center', marginLeft: '20px' }}>
-                        <button className='w-full py-1 bg-black rounded-full text-white mb-2 text-xs px-3'>
-                          {ticketData.issue_status || '-'}
+                      <div
+                        className="flex flex-col justify-around"
+                        style={{ textAlign: "center", marginLeft: "20px" }}
+                      >
+                        <button className="w-full py-1 bg-black rounded-full text-white mb-2 text-xs px-3">
+                          {ticketData.issue_status || "-"}
                         </button>
-                        <div className='mb-2'>
-                          <button className='w-full py-1 bg-[#FFCFCF] rounded-full text-[#C72030] text-xs px-3 font-semibold'>
+                        <div className="mb-2">
+                          <button className="w-full py-1 bg-[#FFCFCF] rounded-full text-[#C72030] text-xs px-3 font-semibold">
                             {getPriorityLabel(ticketData.priority)}
                           </button>
                         </div>
                         <div className="flex items-center mb-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <mask id="mask0_9118_15345" style={{ maskType: "luminance" }} maskUnits="userSpaceOnUse" x="2" y="0" width="20" height="23">
-                              <path d="M12 21.9995C16.6945 21.9995 20.5 18.194 20.5 13.4995C20.5 8.80501 16.6945 4.99951 12 4.99951C7.3055 4.99951 3.5 8.80501 3.5 13.4995C3.5 18.194 7.3055 21.9995 12 21.9995Z" fill="white" stroke="white" strokeWidth="2" strokeLinejoin="round" />
-                              <path d="M15.5 1.99951H8.5M19 4.99951L17.5 6.49951" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                              <path d="M12 9V13.5" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            <mask
+                              id="mask0_9118_15345"
+                              style={{ maskType: "luminance" }}
+                              maskUnits="userSpaceOnUse"
+                              x="2"
+                              y="0"
+                              width="20"
+                              height="23"
+                            >
+                              <path
+                                d="M12 21.9995C16.6945 21.9995 20.5 18.194 20.5 13.4995C20.5 8.80501 16.6945 4.99951 12 4.99951C7.3055 4.99951 3.5 8.80501 3.5 13.4995C3.5 18.194 7.3055 21.9995 12 21.9995Z"
+                                fill="white"
+                                stroke="white"
+                                strokeWidth="2"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M15.5 1.99951H8.5M19 4.99951L17.5 6.49951"
+                                stroke="white"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M12 9V13.5"
+                                stroke="black"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
                             </mask>
                             <g mask="url(#mask0_9118_15345)">
                               <path d="M0 0H24V24H0V0Z" fill="#434343" />
                             </g>
                           </svg>
-                          <span style={{ fontSize: '16px', fontWeight: 600 }} className="text-black ml-1">{formatTicketAgeing(currentAgeing)}</span>
+                          <span
+                            style={{ fontSize: "16px", fontWeight: 600 }}
+                            className="text-black ml-1"
+                          >
+                            {formatTicketAgeing(currentAgeing)}
+                          </span>
                         </div>
                         <div className="flex justify-center items-center gap-2 mb-2">
-                          {ticketData.is_executive_ecalation === true && (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="18" viewBox="0 0 16 18" fill="none">
-                            <path d="M12.36 9.76C14.31 10.42 16 11.5 16 13V18H0V13C0 11.5 1.69 10.42 3.65 9.76L4.27 11L4.5 11.5C3 11.96 1.9 12.62 1.9 13V16.1H6.12L7 11.03L6.06 9.15C6.68 9.08 7.33 9.03 8 9.03C8.67 9.03 9.32 9.08 9.94 9.15L9 11.03L9.88 16.1H14.1V13C14.1 12.62 13 11.96 11.5 11.5L11.73 11L12.36 9.76ZM8 2C6.9 2 6 2.9 6 4C6 5.1 6.9 6 8 6C9.1 6 10 5.1 10 4C10 2.9 9.1 2 8 2ZM8 8C5.79 8 4 6.21 4 4C4 1.79 5.79 0 8 0C10.21 0 12 1.79 12 4C12 6.21 10.21 8 8 8Z" fill="black" />
-                          </svg>)}
+                          {ticketData.is_executive_ecalation === true && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="18"
+                              viewBox="0 0 16 18"
+                              fill="none"
+                            >
+                              <path
+                                d="M12.36 9.76C14.31 10.42 16 11.5 16 13V18H0V13C0 11.5 1.69 10.42 3.65 9.76L4.27 11L4.5 11.5C3 11.96 1.9 12.62 1.9 13V16.1H6.12L7 11.03L6.06 9.15C6.68 9.08 7.33 9.03 8 9.03C8.67 9.03 9.32 9.08 9.94 9.15L9 11.03L9.88 16.1H14.1V13C14.1 12.62 13 11.96 11.5 11.5L11.73 11L12.36 9.76ZM8 2C6.9 2 6 2.9 6 4C6 5.1 6.9 6 8 6C9.1 6 10 5.1 10 4C10 2.9 9.1 2 8 2ZM8 8C5.79 8 4 6.21 4 4C4 1.79 5.79 0 8 0C10.21 0 12 1.79 12 4C12 6.21 10.21 8 8 8Z"
+                                fill="black"
+                              />
+                            </svg>
+                          )}
                           {ticketData.is_golden_ticket && (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="23" height="21" viewBox="0 0 23 21" fill="none">
-                              <path d="M17.6219 20.0977C17.5715 20.0977 17.5214 20.085 17.4765 20.0585L10.9967 16.2938L4.5084 20.0459C4.46385 20.0719 4.41384 20.0844 4.36383 20.0844C4.3057 20.0844 4.24792 20.0676 4.19919 20.0329C4.10788 19.9695 4.06564 19.8599 4.09105 19.7548L5.82438 12.6847L0.0968238 7.92979C0.011544 7.85906 -0.0211751 7.74629 0.013865 7.64365C0.0486731 7.54111 0.144281 7.4686 0.256711 7.45937L7.80786 6.85484L10.756 0.164147C10.7997 0.0643917 10.9014 0 11.0139 0C11.0141 0 11.0143 0 11.0143 0C11.127 0 11.2288 0.0649467 11.2721 0.164479L14.2058 6.86118L21.7552 7.48095C21.8678 7.49029 21.9631 7.56302 21.9981 7.66555C22.0328 7.7682 22 7.88108 21.9144 7.95136L16.1762 12.6948L17.8943 19.7686C17.9202 19.8736 17.8774 19.983 17.7858 20.0464C17.7373 20.0806 17.6793 20.0977 17.6219 20.0977Z" fill="url(#paint0_radial_9118_15308)" />
-                              <path d="M17.6229 19.896C17.6103 19.896 17.5977 19.8926 17.5864 19.8862L10.998 16.0584L4.40068 19.8732C4.38954 19.8795 4.37736 19.8826 4.36471 19.8826C4.35021 19.8826 4.3357 19.879 4.32352 19.8696C4.30055 19.8541 4.2901 19.8267 4.2966 19.8006L6.05905 12.6117L0.235078 7.77705C0.213845 7.75947 0.205725 7.73112 0.214311 7.7052C0.223361 7.67996 0.247029 7.66172 0.275107 7.65972L7.95284 7.04474L10.9502 0.241834C10.9614 0.216923 10.9866 0.200684 11.0147 0.200684C11.0147 0.200684 11.0147 0.200684 11.0149 0.200684C11.0432 0.200684 11.0685 0.217032 11.0794 0.241943L14.062 7.05063L21.7385 7.68085C21.7665 7.68307 21.7902 7.70121 21.7992 7.72701C21.8076 7.75281 21.7994 7.78105 21.7783 7.7984L15.9439 12.6213L17.6909 19.8137C17.6973 19.8397 17.6862 19.8674 17.6638 19.883C17.6512 19.8916 17.6371 19.896 17.6229 19.896Z" fill="url(#paint1_linear_9118_15308)" />
-                              <path d="M7.99743 7.10811L11.0112 0.268066L14.0103 7.11412L21.7291 7.7479L15.8627 12.5975L17.6192 19.8291L10.9944 15.9802L4.36114 19.8159L6.13322 12.5877L0.277344 7.72644L7.99743 7.10811Z" fill="url(#paint2_linear_9118_15308)" />
-                              <path d="M11.1891 11.551C11.1439 11.4959 11.0748 11.4633 11.0016 11.4633C11.0013 11.4633 11.0013 11.4633 11.0009 11.4633C10.928 11.4633 10.8587 11.4956 10.8138 11.5507L8.37693 14.534L10.5906 11.395C10.6317 11.3368 10.6425 11.2637 10.6201 11.197C10.5972 11.1303 10.5441 11.0772 10.4752 11.053L6.76172 9.75321L10.5606 10.8015C10.5824 10.8077 10.6044 10.8107 10.6263 10.8107C10.6762 10.8107 10.7253 10.7958 10.7663 10.7672C10.8257 10.7258 10.8619 10.6606 10.8644 10.5904L11.0063 6.80371L11.1405 10.5907C11.143 10.6611 11.179 10.7263 11.2382 10.7677C11.2793 10.7962 11.3287 10.8113 11.3782 10.8113C11.4 10.8113 11.4222 10.8084 11.4438 10.8026L15.245 9.76189L11.5286 11.054C11.4599 11.0783 11.4064 11.1311 11.3835 11.1977C11.3608 11.2647 11.3714 11.3376 11.4124 11.396L13.6195 14.5391L11.1891 11.551Z" fill="white" />
-                              <path d="M10.6435 10.0628L8.08027 6.91957L11.0111 0.267578L10.6435 10.0628ZM21.7289 7.74752H21.7291L14.2765 7.13554L11.9655 10.4201L21.7289 7.74752ZM9.90642 11.0964L0.277344 7.72606L5.98598 12.4647L9.90642 11.0964ZM11.961 11.7709L17.6192 19.8288L15.9261 12.8597L11.961 11.7709ZM4.36114 19.8153L10.7915 16.0971L10.6454 12.1225L4.36114 19.8153Z" fill="url(#paint3_linear_9118_15308)" />
-                              <path d="M11.3577 10.0658L11.0112 0.267578L13.9241 6.91623L11.3577 10.0658ZM7.72152 7.12998L0.277344 7.72606L10.0372 10.4191L7.72152 7.12998ZM21.7289 7.74752L12.0992 11.0962L16.0235 12.464L21.7289 7.74752ZM11.2154 16.1082L17.6191 19.8288L11.3594 12.1331L11.2154 16.1082ZM10.0325 11.7743L6.06523 12.8657L4.36126 19.8154V19.8152L10.0325 11.7743Z" fill="url(#paint4_linear_9118_15308)" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="23"
+                              height="21"
+                              viewBox="0 0 23 21"
+                              fill="none"
+                            >
+                              <path
+                                d="M17.6219 20.0977C17.5715 20.0977 17.5214 20.085 17.4765 20.0585L10.9967 16.2938L4.5084 20.0459C4.46385 20.0719 4.41384 20.0844 4.36383 20.0844C4.3057 20.0844 4.24792 20.0676 4.19919 20.0329C4.10788 19.9695 4.06564 19.8599 4.09105 19.7548L5.82438 12.6847L0.0968238 7.92979C0.011544 7.85906 -0.0211751 7.74629 0.013865 7.64365C0.0486731 7.54111 0.144281 7.4686 0.256711 7.45937L7.80786 6.85484L10.756 0.164147C10.7997 0.0643917 10.9014 0 11.0139 0C11.0141 0 11.0143 0 11.0143 0C11.127 0 11.2288 0.0649467 11.2721 0.164479L14.2058 6.86118L21.7552 7.48095C21.8678 7.49029 21.9631 7.56302 21.9981 7.66555C22.0328 7.7682 22 7.88108 21.9144 7.95136L16.1762 12.6948L17.8943 19.7686C17.9202 19.8736 17.8774 19.983 17.7858 20.0464C17.7373 20.0806 17.6793 20.0977 17.6219 20.0977Z"
+                                fill="url(#paint0_radial_9118_15308)"
+                              />
+                              <path
+                                d="M17.6229 19.896C17.6103 19.896 17.5977 19.8926 17.5864 19.8862L10.998 16.0584L4.40068 19.8732C4.38954 19.8795 4.37736 19.8826 4.36471 19.8826C4.35021 19.8826 4.3357 19.879 4.32352 19.8696C4.30055 19.8541 4.2901 19.8267 4.2966 19.8006L6.05905 12.6117L0.235078 7.77705C0.213845 7.75947 0.205725 7.73112 0.214311 7.7052C0.223361 7.67996 0.247029 7.66172 0.275107 7.65972L7.95284 7.04474L10.9502 0.241834C10.9614 0.216923 10.9866 0.200684 11.0147 0.200684C11.0147 0.200684 11.0147 0.200684 11.0149 0.200684C11.0432 0.200684 11.0685 0.217032 11.0794 0.241943L14.062 7.05063L21.7385 7.68085C21.7665 7.68307 21.7902 7.70121 21.7992 7.72701C21.8076 7.75281 21.7994 7.78105 21.7783 7.7984L15.9439 12.6213L17.6909 19.8137C17.6973 19.8397 17.6862 19.8674 17.6638 19.883C17.6512 19.8916 17.6371 19.896 17.6229 19.896Z"
+                                fill="url(#paint1_linear_9118_15308)"
+                              />
+                              <path
+                                d="M7.99743 7.10811L11.0112 0.268066L14.0103 7.11412L21.7291 7.7479L15.8627 12.5975L17.6192 19.8291L10.9944 15.9802L4.36114 19.8159L6.13322 12.5877L0.277344 7.72644L7.99743 7.10811Z"
+                                fill="url(#paint2_linear_9118_15308)"
+                              />
+                              <path
+                                d="M11.1891 11.551C11.1439 11.4959 11.0748 11.4633 11.0016 11.4633C11.0013 11.4633 11.0013 11.4633 11.0009 11.4633C10.928 11.4633 10.8587 11.4956 10.8138 11.5507L8.37693 14.534L10.5906 11.395C10.6317 11.3368 10.6425 11.2637 10.6201 11.197C10.5972 11.1303 10.5441 11.0772 10.4752 11.053L6.76172 9.75321L10.5606 10.8015C10.5824 10.8077 10.6044 10.8107 10.6263 10.8107C10.6762 10.8107 10.7253 10.7958 10.7663 10.7672C10.8257 10.7258 10.8619 10.6606 10.8644 10.5904L11.0063 6.80371L11.1405 10.5907C11.143 10.6611 11.179 10.7263 11.2382 10.7677C11.2793 10.7962 11.3287 10.8113 11.3782 10.8113C11.4 10.8113 11.4222 10.8084 11.4438 10.8026L15.245 9.76189L11.5286 11.054C11.4599 11.0783 11.4064 11.1311 11.3835 11.1977C11.3608 11.2647 11.3714 11.3376 11.4124 11.396L13.6195 14.5391L11.1891 11.551Z"
+                                fill="white"
+                              />
+                              <path
+                                d="M10.6435 10.0628L8.08027 6.91957L11.0111 0.267578L10.6435 10.0628ZM21.7289 7.74752H21.7291L14.2765 7.13554L11.9655 10.4201L21.7289 7.74752ZM9.90642 11.0964L0.277344 7.72606L5.98598 12.4647L9.90642 11.0964ZM11.961 11.7709L17.6192 19.8288L15.9261 12.8597L11.961 11.7709ZM4.36114 19.8153L10.7915 16.0971L10.6454 12.1225L4.36114 19.8153Z"
+                                fill="url(#paint3_linear_9118_15308)"
+                              />
+                              <path
+                                d="M11.3577 10.0658L11.0112 0.267578L13.9241 6.91623L11.3577 10.0658ZM7.72152 7.12998L0.277344 7.72606L10.0372 10.4191L7.72152 7.12998ZM21.7289 7.74752L12.0992 11.0962L16.0235 12.464L21.7289 7.74752ZM11.2154 16.1082L17.6191 19.8288L11.3594 12.1331L11.2154 16.1082ZM10.0325 11.7743L6.06523 12.8657L4.36126 19.8154V19.8152L10.0325 11.7743Z"
+                                fill="url(#paint4_linear_9118_15308)"
+                              />
                               <defs>
-                                <radialGradient id="paint0_radial_9118_15308" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11.0059 10.0489) scale(10.7481 10.3019)">
+                                <radialGradient
+                                  id="paint0_radial_9118_15308"
+                                  cx="0"
+                                  cy="0"
+                                  r="1"
+                                  gradientUnits="userSpaceOnUse"
+                                  gradientTransform="translate(11.0059 10.0489) scale(10.7481 10.3019)"
+                                >
                                   <stop stopColor="#D08B01" />
                                   <stop offset="0.5758" stopColor="#F2B145" />
                                   <stop offset="1" stopColor="#F8F3BC" />
                                 </radialGradient>
-                                <linearGradient id="paint1_linear_9118_15308" x1="0.211178" y1="10.0483" x2="21.8026" y2="10.0483" gradientUnits="userSpaceOnUse">
+                                <linearGradient
+                                  id="paint1_linear_9118_15308"
+                                  x1="0.211178"
+                                  y1="10.0483"
+                                  x2="21.8026"
+                                  y2="10.0483"
+                                  gradientUnits="userSpaceOnUse"
+                                >
                                   <stop stopColor="#F6DB89" />
                                   <stop offset="1" stopColor="#F8F7DA" />
                                 </linearGradient>
-                                <linearGradient id="paint2_linear_9118_15308" x1="0.277344" y1="10.0486" x2="21.7291" y2="10.0486" gradientUnits="userSpaceOnUse">
+                                <linearGradient
+                                  id="paint2_linear_9118_15308"
+                                  x1="0.277344"
+                                  y1="10.0486"
+                                  x2="21.7291"
+                                  y2="10.0486"
+                                  gradientUnits="userSpaceOnUse"
+                                >
                                   <stop stopColor="#ED9017" />
                                   <stop offset="0.1464" stopColor="#F09F23" />
                                   <stop offset="0.4262" stopColor="#F6C642" />
                                   <stop offset="0.4945" stopColor="#F8D04A" />
                                   <stop offset="1" stopColor="#F6E6B5" />
                                 </linearGradient>
-                                <linearGradient id="paint3_linear_9118_15308" x1="0.277344" y1="10.0482" x2="21.7291" y2="10.0482" gradientUnits="userSpaceOnUse">
+                                <linearGradient
+                                  id="paint3_linear_9118_15308"
+                                  x1="0.277344"
+                                  y1="10.0482"
+                                  x2="21.7291"
+                                  y2="10.0482"
+                                  gradientUnits="userSpaceOnUse"
+                                >
                                   <stop stopColor="#ED9017" />
                                   <stop offset="0.1464" stopColor="#F09F23" />
                                   <stop offset="0.4262" stopColor="#F6C642" />
                                   <stop offset="0.4945" stopColor="#F8D04A" />
                                   <stop offset="1" stopColor="#F6E6B5" />
                                 </linearGradient>
-                                <linearGradient id="paint4_linear_9118_15308" x1="0.277344" y1="10.0482" x2="21.7288" y2="10.0482" gradientUnits="userSpaceOnUse">
+                                <linearGradient
+                                  id="paint4_linear_9118_15308"
+                                  x1="0.277344"
+                                  y1="10.0482"
+                                  x2="21.7288"
+                                  y2="10.0482"
+                                  gradientUnits="userSpaceOnUse"
+                                >
                                   <stop stopColor="#DF8D00" />
                                   <stop offset="0.0848" stopColor="#FFD006" />
                                   <stop offset="0.2242" stopColor="#F4AD06" />
@@ -8745,8 +11079,18 @@ export const TicketDetailsPage = () => {
                             </svg>
                           )}
                           {ticketData.is_flagged && (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="19" viewBox="0 0 17 19" fill="none">
-                              <path d="M8.73145 0.5C8.85649 0.5 8.96486 0.537942 9.07324 0.630859C9.18052 0.722846 9.24902 0.836423 9.28125 0.990234V0.991211L9.54785 2.33301L9.62793 2.73535H14.9453C15.1136 2.73541 15.2354 2.78882 15.3438 2.90234C15.4533 3.01712 15.5121 3.1555 15.5117 3.35156V12.2939C15.5117 12.4916 15.4524 12.6312 15.3428 12.7461C15.2344 12.8596 15.1132 12.9125 14.9463 12.9121H9.4248C9.29987 12.9121 9.1923 12.8731 9.08398 12.7803C8.9758 12.6875 8.90589 12.5728 8.87402 12.417L8.6084 11.0791L8.52832 10.6768H1.64551V17.8828C1.64542 18.0801 1.58599 18.2192 1.47656 18.334C1.36825 18.4475 1.24682 18.5003 1.08008 18.5C0.911684 18.4996 0.788548 18.4457 0.679688 18.332C0.570877 18.2183 0.511811 18.08 0.511719 17.8828V1.11719C0.51181 0.919961 0.570878 0.781717 0.679688 0.667969C0.761428 0.582619 0.851184 0.531283 0.961914 0.510742L1.08008 0.5H8.73145Z" fill="#C72030" stroke="#C72030" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="17"
+                              height="19"
+                              viewBox="0 0 17 19"
+                              fill="none"
+                            >
+                              <path
+                                d="M8.73145 0.5C8.85649 0.5 8.96486 0.537942 9.07324 0.630859C9.18052 0.722846 9.24902 0.836423 9.28125 0.990234V0.991211L9.54785 2.33301L9.62793 2.73535H14.9453C15.1136 2.73541 15.2354 2.78882 15.3438 2.90234C15.4533 3.01712 15.5121 3.1555 15.5117 3.35156V12.2939C15.5117 12.4916 15.4524 12.6312 15.3428 12.7461C15.2344 12.8596 15.1132 12.9125 14.9463 12.9121H9.4248C9.29987 12.9121 9.1923 12.8731 9.08398 12.7803C8.9758 12.6875 8.90589 12.5728 8.87402 12.417L8.6084 11.0791L8.52832 10.6768H1.64551V17.8828C1.64542 18.0801 1.58599 18.2192 1.47656 18.334C1.36825 18.4475 1.24682 18.5003 1.08008 18.5C0.911684 18.4996 0.788548 18.4457 0.679688 18.332C0.570877 18.2183 0.511811 18.08 0.511719 17.8828V1.11719C0.51181 0.919961 0.570878 0.781717 0.679688 0.667969C0.761428 0.582619 0.851184 0.531283 0.961914 0.510742L1.08008 0.5H8.73145Z"
+                                fill="#C72030"
+                                stroke="#C72030"
+                              />
                             </svg>
                           )}
                         </div>
@@ -8757,18 +11101,50 @@ export const TicketDetailsPage = () => {
                     {isEditingTicketDetails && renderTicketDetailsEditForm()}
                     {[
                       [
-                        { label: 'Ticket Type', value: capitalizeWords(ticketData.complaint_type || ticketData.ticket_type) },
-                        { label: 'Related To', value: ticketData.issue_type || '-' },
-                        { label: 'Issue Related To', value: ticketData.issue_related_to || '-' },
-                        { label: 'Assigned To', value: ticketData.assigned_to || '-' },
-                        { label: 'Behalf Of', value: ticketData.on_behalf_of || '-' },
-                        { label: 'Source', value: ticketData.service_or_asset || '-' },
+                        {
+                          label: "Ticket Type",
+                          value: capitalizeWords(
+                            ticketData.complaint_type || ticketData.ticket_type
+                          ),
+                        },
+                        {
+                          label: "Related To",
+                          value: ticketData.issue_type || "-",
+                        },
+                        {
+                          label: "Issue Related To",
+                          value: ticketData.issue_related_to || "-",
+                        },
+                        {
+                          label: "Assigned To",
+                          value: ticketData.assigned_to || "-",
+                        },
+                        {
+                          label: "Behalf Of",
+                          value: ticketData.on_behalf_of || "-",
+                        },
+                        {
+                          label: "Source",
+                          value: ticketData.service_or_asset || "-",
+                        },
                       ],
                       [
-                        { label: 'Created By', value: ticketData.created_by_name || '-' },
-                        { label: 'Updated By', value: ticketData.updated_by || '-' },
-                        { label: 'Mode', value: ticketData.complaint_mode || '-' },
-                        { label: 'Identification', value: ticketData.proactive_reactive || '-' },
+                        {
+                          label: "Created By",
+                          value: ticketData.created_by_name || "-",
+                        },
+                        {
+                          label: "Updated By",
+                          value: ticketData.updated_by || "-",
+                        },
+                        {
+                          label: "Mode",
+                          value: ticketData.complaint_mode || "-",
+                        },
+                        {
+                          label: "Identification",
+                          value: ticketData.proactive_reactive || "-",
+                        },
                       ],
                     ].map((row, rIdx) => (
                       <div
@@ -8776,8 +11152,8 @@ export const TicketDetailsPage = () => {
                         className="grid grid-cols-2 md:grid-cols-4 gap-6"
                       >
                         {row
-                          .filter(f => hasData(f.value))
-                          .map(field => (
+                          .filter((f) => hasData(f.value))
+                          .map((field) => (
                             <div key={field.label} className="mb-4">
                               <div className="flex">
                                 <div className="w-[120px] text-[14px] leading-tight text-gray-500 tracking-wide pr-2">
@@ -8944,14 +11320,19 @@ export const TicketDetailsPage = () => {
               <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                    <FileText className="w-6 h-6" style={{ color: '#C72030' }} />
+                    <FileText
+                      className="w-6 h-6"
+                      style={{ color: "#C72030" }}
+                    />
                   </div>
                   <h3 className="text-lg font-semibold uppercase text-black">
                     Ticket Management
                   </h3>
-                  {ticketData.closure_date === null || ticketData.closure_date === undefined || ticketData.closure_date === '' && (
-                    <span className="w-2 h-2 rounded-full bg-[#4BE2B9]" />
-                  )}
+                  {ticketData.closure_date === null ||
+                    ticketData.closure_date === undefined ||
+                    (ticketData.closure_date === "" && (
+                      <span className="w-2 h-2 rounded-full bg-[#4BE2B9]" />
+                    ))}
                 </div>
                 <div className="flex items-center gap-2">
                   {ticketData.is_golden_ticket && (
@@ -8960,38 +11341,97 @@ export const TicketDetailsPage = () => {
                       className="w-8 h-8 flex items-center justify-center rounded hover:bg-[#EDEAE3]"
                       title="Favourite"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="23" height="21" viewBox="0 0 23 21" fill="none">
-                        <path d="M17.6219 20.0977C17.5715 20.0977 17.5214 20.085 17.4765 20.0585L10.9967 16.2938L4.5084 20.0459C4.46385 20.0719 4.41384 20.0844 4.36383 20.0844C4.3057 20.0844 4.24792 20.0676 4.19919 20.0329C4.10788 19.9695 4.06564 19.8599 4.09105 19.7548L5.82438 12.6847L0.0968238 7.92979C0.011544 7.85906 -0.0211751 7.74629 0.013865 7.64365C0.0486731 7.54111 0.144281 7.4686 0.256711 7.45937L7.80786 6.85484L10.756 0.164147C10.7997 0.0643917 10.9014 0 11.0139 0C11.0141 0 11.0143 0 11.0143 0C11.127 0 11.2288 0.0649467 11.2721 0.164479L14.2058 6.86118L21.7552 7.48095C21.8678 7.49029 21.9631 7.56302 21.9981 7.66555C22.0328 7.7682 22 7.88108 21.9144 7.95136L16.1762 12.6948L17.8943 19.7686C17.9202 19.8736 17.8774 19.983 17.7858 20.0464C17.7373 20.0806 17.6793 20.0977 17.6219 20.0977Z" fill="url(#paint0_radial_9118_15308)" />
-                        <path d="M17.6229 19.896C17.6103 19.896 17.5977 19.8926 17.5864 19.8862L10.998 16.0584L4.40068 19.8732C4.38954 19.8795 4.37736 19.8826 4.36471 19.8826C4.35021 19.8826 4.3357 19.879 4.32352 19.8696C4.30055 19.8541 4.2901 19.8267 4.2966 19.8006L6.05905 12.6117L0.235078 7.77705C0.213845 7.75947 0.205725 7.73112 0.214311 7.7052C0.223361 7.67996 0.247029 7.66172 0.275107 7.65972L7.95284 7.04474L10.9502 0.241834C10.9614 0.216923 10.9866 0.200684 11.0147 0.200684C11.0147 0.200684 11.0147 0.200684 11.0149 0.200684C11.0432 0.200684 11.0685 0.217032 11.0794 0.241943L14.062 7.05063L21.7385 7.68085C21.7665 7.68307 21.7902 7.70121 21.7992 7.72701C21.8076 7.75281 21.7994 7.78105 21.7783 7.7984L15.9439 12.6213L17.6909 19.8137C17.6973 19.8397 17.6862 19.8674 17.6638 19.883C17.6512 19.8916 17.6371 19.896 17.6229 19.896Z" fill="url(#paint1_linear_9118_15308)" />
-                        <path d="M7.99743 7.10811L11.0112 0.268066L14.0103 7.11412L21.7291 7.7479L15.8627 12.5975L17.6192 19.8291L10.9944 15.9802L4.36114 19.8159L6.13322 12.5877L0.277344 7.72644L7.99743 7.10811Z" fill="url(#paint2_linear_9118_15308)" />
-                        <path d="M11.1891 11.551C11.1439 11.4959 11.0748 11.4633 11.0016 11.4633C11.0013 11.4633 11.0013 11.4633 11.0009 11.4633C10.928 11.4633 10.8587 11.4956 10.8138 11.5507L8.37693 14.534L10.5906 11.395C10.6317 11.3368 10.6425 11.2637 10.6201 11.197C10.5972 11.1303 10.5441 11.0772 10.4752 11.053L6.76172 9.75321L10.5606 10.8015C10.5824 10.8077 10.6044 10.8107 10.6263 10.8107C10.6762 10.8107 10.7253 10.7958 10.7663 10.7672C10.8257 10.7258 10.8619 10.6606 10.8644 10.5904L11.0063 6.80371L11.1405 10.5907C11.143 10.6611 11.179 10.7263 11.2382 10.7677C11.2793 10.7962 11.3287 10.8113 11.3782 10.8113C11.4 10.8113 11.4222 10.8084 11.4438 10.8026L15.245 9.76189L11.5286 11.054C11.4599 11.0783 11.4064 11.1311 11.3835 11.1977C11.3608 11.2647 11.3714 11.3376 11.4124 11.396L13.6195 14.5391L11.1891 11.551Z" fill="white" />
-                        <path d="M10.6435 10.0628L8.08027 6.91957L11.0111 0.267578L10.6435 10.0628ZM21.7289 7.74752H21.7291L14.2765 7.13554L11.9655 10.4201L21.7289 7.74752ZM9.90642 11.0964L0.277344 7.72606L5.98598 12.4647L9.90642 11.0964ZM11.961 11.7709L17.6192 19.8288L15.9261 12.8597L11.961 11.7709ZM4.36114 19.8153L10.7915 16.0971L10.6454 12.1225L4.36114 19.8153Z" fill="url(#paint3_linear_9118_15308)" />
-                        <path d="M11.3577 10.0658L11.0112 0.267578L13.9241 6.91623L11.3577 10.0658ZM7.72152 7.12998L0.277344 7.72606L10.0372 10.4191L7.72152 7.12998ZM21.7289 7.74752L12.0992 11.0962L16.0235 12.464L21.7289 7.74752ZM11.2154 16.1082L17.6191 19.8288L11.3594 12.1331L11.2154 16.1082ZM10.0325 11.7743L6.06523 12.8657L4.36126 19.8154V19.8152L10.0325 11.7743Z" fill="url(#paint4_linear_9118_15308)" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="23"
+                        height="21"
+                        viewBox="0 0 23 21"
+                        fill="none"
+                      >
+                        <path
+                          d="M17.6219 20.0977C17.5715 20.0977 17.5214 20.085 17.4765 20.0585L10.9967 16.2938L4.5084 20.0459C4.46385 20.0719 4.41384 20.0844 4.36383 20.0844C4.3057 20.0844 4.24792 20.0676 4.19919 20.0329C4.10788 19.9695 4.06564 19.8599 4.09105 19.7548L5.82438 12.6847L0.0968238 7.92979C0.011544 7.85906 -0.0211751 7.74629 0.013865 7.64365C0.0486731 7.54111 0.144281 7.4686 0.256711 7.45937L7.80786 6.85484L10.756 0.164147C10.7997 0.0643917 10.9014 0 11.0139 0C11.0141 0 11.0143 0 11.0143 0C11.127 0 11.2288 0.0649467 11.2721 0.164479L14.2058 6.86118L21.7552 7.48095C21.8678 7.49029 21.9631 7.56302 21.9981 7.66555C22.0328 7.7682 22 7.88108 21.9144 7.95136L16.1762 12.6948L17.8943 19.7686C17.9202 19.8736 17.8774 19.983 17.7858 20.0464C17.7373 20.0806 17.6793 20.0977 17.6219 20.0977Z"
+                          fill="url(#paint0_radial_9118_15308)"
+                        />
+                        <path
+                          d="M17.6229 19.896C17.6103 19.896 17.5977 19.8926 17.5864 19.8862L10.998 16.0584L4.40068 19.8732C4.38954 19.8795 4.37736 19.8826 4.36471 19.8826C4.35021 19.8826 4.3357 19.879 4.32352 19.8696C4.30055 19.8541 4.2901 19.8267 4.2966 19.8006L6.05905 12.6117L0.235078 7.77705C0.213845 7.75947 0.205725 7.73112 0.214311 7.7052C0.223361 7.67996 0.247029 7.66172 0.275107 7.65972L7.95284 7.04474L10.9502 0.241834C10.9614 0.216923 10.9866 0.200684 11.0147 0.200684C11.0147 0.200684 11.0147 0.200684 11.0149 0.200684C11.0432 0.200684 11.0685 0.217032 11.0794 0.241943L14.062 7.05063L21.7385 7.68085C21.7665 7.68307 21.7902 7.70121 21.7992 7.72701C21.8076 7.75281 21.7994 7.78105 21.7783 7.7984L15.9439 12.6213L17.6909 19.8137C17.6973 19.8397 17.6862 19.8674 17.6638 19.883C17.6512 19.8916 17.6371 19.896 17.6229 19.896Z"
+                          fill="url(#paint1_linear_9118_15308)"
+                        />
+                        <path
+                          d="M7.99743 7.10811L11.0112 0.268066L14.0103 7.11412L21.7291 7.7479L15.8627 12.5975L17.6192 19.8291L10.9944 15.9802L4.36114 19.8159L6.13322 12.5877L0.277344 7.72644L7.99743 7.10811Z"
+                          fill="url(#paint2_linear_9118_15308)"
+                        />
+                        <path
+                          d="M11.1891 11.551C11.1439 11.4959 11.0748 11.4633 11.0016 11.4633C11.0013 11.4633 11.0013 11.4633 11.0009 11.4633C10.928 11.4633 10.8587 11.4956 10.8138 11.5507L8.37693 14.534L10.5906 11.395C10.6317 11.3368 10.6425 11.2637 10.6201 11.197C10.5972 11.1303 10.5441 11.0772 10.4752 11.053L6.76172 9.75321L10.5606 10.8015C10.5824 10.8077 10.6044 10.8107 10.6263 10.8107C10.6762 10.8107 10.7253 10.7958 10.7663 10.7672C10.8257 10.7258 10.8619 10.6606 10.8644 10.5904L11.0063 6.80371L11.1405 10.5907C11.143 10.6611 11.179 10.7263 11.2382 10.7677C11.2793 10.7962 11.3287 10.8113 11.3782 10.8113C11.4 10.8113 11.4222 10.8084 11.4438 10.8026L15.245 9.76189L11.5286 11.054C11.4599 11.0783 11.4064 11.1311 11.3835 11.1977C11.3608 11.2647 11.3714 11.3376 11.4124 11.396L13.6195 14.5391L11.1891 11.551Z"
+                          fill="white"
+                        />
+                        <path
+                          d="M10.6435 10.0628L8.08027 6.91957L11.0111 0.267578L10.6435 10.0628ZM21.7289 7.74752H21.7291L14.2765 7.13554L11.9655 10.4201L21.7289 7.74752ZM9.90642 11.0964L0.277344 7.72606L5.98598 12.4647L9.90642 11.0964ZM11.961 11.7709L17.6192 19.8288L15.9261 12.8597L11.961 11.7709ZM4.36114 19.8153L10.7915 16.0971L10.6454 12.1225L4.36114 19.8153Z"
+                          fill="url(#paint3_linear_9118_15308)"
+                        />
+                        <path
+                          d="M11.3577 10.0658L11.0112 0.267578L13.9241 6.91623L11.3577 10.0658ZM7.72152 7.12998L0.277344 7.72606L10.0372 10.4191L7.72152 7.12998ZM21.7289 7.74752L12.0992 11.0962L16.0235 12.464L21.7289 7.74752ZM11.2154 16.1082L17.6191 19.8288L11.3594 12.1331L11.2154 16.1082ZM10.0325 11.7743L6.06523 12.8657L4.36126 19.8154V19.8152L10.0325 11.7743Z"
+                          fill="url(#paint4_linear_9118_15308)"
+                        />
                         <defs>
-                          <radialGradient id="paint0_radial_9118_15308" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11.0059 10.0489) scale(10.7481 10.3019)">
+                          <radialGradient
+                            id="paint0_radial_9118_15308"
+                            cx="0"
+                            cy="0"
+                            r="1"
+                            gradientUnits="userSpaceOnUse"
+                            gradientTransform="translate(11.0059 10.0489) scale(10.7481 10.3019)"
+                          >
                             <stop stopColor="#D08B01" />
                             <stop offset="0.5758" stopColor="#F2B145" />
                             <stop offset="1" stopColor="#F8F3BC" />
                           </radialGradient>
-                          <linearGradient id="paint1_linear_9118_15308" x1="0.211178" y1="10.0483" x2="21.8026" y2="10.0483" gradientUnits="userSpaceOnUse">
+                          <linearGradient
+                            id="paint1_linear_9118_15308"
+                            x1="0.211178"
+                            y1="10.0483"
+                            x2="21.8026"
+                            y2="10.0483"
+                            gradientUnits="userSpaceOnUse"
+                          >
                             <stop stopColor="#F6DB89" />
                             <stop offset="1" stopColor="#F8F7DA" />
                           </linearGradient>
-                          <linearGradient id="paint2_linear_9118_15308" x1="0.277344" y1="10.0486" x2="21.7291" y2="10.0486" gradientUnits="userSpaceOnUse">
+                          <linearGradient
+                            id="paint2_linear_9118_15308"
+                            x1="0.277344"
+                            y1="10.0486"
+                            x2="21.7291"
+                            y2="10.0486"
+                            gradientUnits="userSpaceOnUse"
+                          >
                             <stop stopColor="#ED9017" />
                             <stop offset="0.1464" stopColor="#F09F23" />
                             <stop offset="0.4262" stopColor="#F6C642" />
                             <stop offset="0.4945" stopColor="#F8D04A" />
                             <stop offset="1" stopColor="#F6E6B5" />
                           </linearGradient>
-                          <linearGradient id="paint3_linear_9118_15308" x1="0.277344" y1="10.0482" x2="21.7291" y2="10.0482" gradientUnits="userSpaceOnUse">
+                          <linearGradient
+                            id="paint3_linear_9118_15308"
+                            x1="0.277344"
+                            y1="10.0482"
+                            x2="21.7291"
+                            y2="10.0482"
+                            gradientUnits="userSpaceOnUse"
+                          >
                             <stop stopColor="#ED9017" />
                             <stop offset="0.1464" stopColor="#F09F23" />
                             <stop offset="0.4262" stopColor="#F6C642" />
                             <stop offset="0.4945" stopColor="#F8D04A" />
                             <stop offset="1" stopColor="#F6E6B5" />
                           </linearGradient>
-                          <linearGradient id="paint4_linear_9118_15308" x1="0.277344" y1="10.0482" x2="21.7288" y2="10.0482" gradientUnits="userSpaceOnUse">
+                          <linearGradient
+                            id="paint4_linear_9118_15308"
+                            x1="0.277344"
+                            y1="10.0482"
+                            x2="21.7288"
+                            y2="10.0482"
+                            gradientUnits="userSpaceOnUse"
+                          >
                             <stop stopColor="#DF8D00" />
                             <stop offset="0.0848" stopColor="#FFD006" />
                             <stop offset="0.2242" stopColor="#F4AD06" />
@@ -9012,8 +11452,18 @@ export const TicketDetailsPage = () => {
                       className="w-8 h-8 flex items-center justify-center rounded hover:bg-[#EDEAE3]"
                       title="Flag"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="19" viewBox="0 0 17 19" fill="none">
-                        <path d="M8.73145 0.5C8.85649 0.5 8.96486 0.537942 9.07324 0.630859C9.18052 0.722846 9.24902 0.836423 9.28125 0.990234V0.991211L9.54785 2.33301L9.62793 2.73535H14.9453C15.1136 2.73541 15.2354 2.78882 15.3438 2.90234C15.4533 3.01712 15.5121 3.1555 15.5117 3.35156V12.2939C15.5117 12.4916 15.4524 12.6312 15.3428 12.7461C15.2344 12.8596 15.1132 12.9125 14.9463 12.9121H9.4248C9.29987 12.9121 9.1923 12.8731 9.08398 12.7803C8.9758 12.6875 8.90589 12.5728 8.87402 12.417L8.6084 11.0791L8.52832 10.6768H1.64551V17.8828C1.64542 18.0801 1.58599 18.2192 1.47656 18.334C1.36825 18.4475 1.24682 18.5003 1.08008 18.5C0.911684 18.4996 0.788548 18.4457 0.679688 18.332C0.570877 18.2183 0.511811 18.08 0.511719 17.8828V1.11719C0.51181 0.919961 0.570878 0.781717 0.679688 0.667969C0.761428 0.582619 0.851184 0.531283 0.961914 0.510742L1.08008 0.5H8.73145Z" fill="#C72030" stroke="#C72030" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="17"
+                        height="19"
+                        viewBox="0 0 17 19"
+                        fill="none"
+                      >
+                        <path
+                          d="M8.73145 0.5C8.85649 0.5 8.96486 0.537942 9.07324 0.630859C9.18052 0.722846 9.24902 0.836423 9.28125 0.990234V0.991211L9.54785 2.33301L9.62793 2.73535H14.9453C15.1136 2.73541 15.2354 2.78882 15.3438 2.90234C15.4533 3.01712 15.5121 3.1555 15.5117 3.35156V12.2939C15.5117 12.4916 15.4524 12.6312 15.3428 12.7461C15.2344 12.8596 15.1132 12.9125 14.9463 12.9121H9.4248C9.29987 12.9121 9.1923 12.8731 9.08398 12.7803C8.9758 12.6875 8.90589 12.5728 8.87402 12.417L8.6084 11.0791L8.52832 10.6768H1.64551V17.8828C1.64542 18.0801 1.58599 18.2192 1.47656 18.334C1.36825 18.4475 1.24682 18.5003 1.08008 18.5C0.911684 18.4996 0.788548 18.4457 0.679688 18.332C0.570877 18.2183 0.511811 18.08 0.511719 17.8828V1.11719C0.51181 0.919961 0.570878 0.781717 0.679688 0.667969C0.761428 0.582619 0.851184 0.531283 0.961914 0.510742L1.08008 0.5H8.73145Z"
+                          fill="#C72030"
+                          stroke="#C72030"
+                        />
                       </svg>
                     </button>
                   )}
@@ -9022,10 +11472,19 @@ export const TicketDetailsPage = () => {
                     size="sm"
                     className="h-8 px-3 text-[12px] border-[#D9D9D9] hover:bg-[#F6F4EE]"
                     onClick={handleTicketMgmtEdit}
-                    disabled={isEditingTicketMgmt || loadingComplaintStatus || loadingComplaintModes || loadingResponsiblePersons}
+                    disabled={
+                      isEditingTicketMgmt ||
+                      loadingComplaintStatus ||
+                      loadingComplaintModes ||
+                      loadingResponsiblePersons
+                    }
                   >
                     <Edit className="w-4 h-4 mr-1" />
-                    {(loadingComplaintStatus || loadingComplaintModes || loadingResponsiblePersons) ? 'Loading...' : 'Edit'}
+                    {loadingComplaintStatus ||
+                    loadingComplaintModes ||
+                    loadingResponsiblePersons
+                      ? "Loading..."
+                      : "Edit"}
                   </Button>
                 </div>
               </div>
@@ -9036,23 +11495,50 @@ export const TicketDetailsPage = () => {
                   // View Mode - Show current ticket data
                   (() => {
                     const mgmtFields = [
-                      { label: 'Update Status', value: ticketData.issue_status || '-' },
-                      { label: 'Severity', value: ticketData.severity || '-' },
                       {
-                        label: 'Select Vendor',
-                        value:
-                          ticketData.supplier_name
-                            ? ticketData.supplier_name
-                            : (ticketData.vendors && ticketData.vendors.length > 0
-                              ? ticketData.vendors.map(v => v.name || v).join(', ')
-                              : '-')
-                      }, { label: 'Assigned To', value: ticketData.assigned_to || '-' },
+                        label: "Update Status",
+                        value: ticketData.issue_status || "-",
+                      },
+                      { label: "Severity", value: ticketData.severity || "-" },
+                      {
+                        label: "Select Vendor",
+                        value: ticketData.supplier_name
+                          ? ticketData.supplier_name
+                          : ticketData.vendors && ticketData.vendors.length > 0
+                            ? ticketData.vendors
+                                .map((v) => v.name || v)
+                                .join(", ")
+                            : "-",
+                      },
+                      {
+                        label: "Assigned To",
+                        value: ticketData.assigned_to || "-",
+                      },
 
-                      { label: 'Expected Visit Date', value: ticketData.visit_date ? ticketData.visit_date : '-' },
-                      { label: 'Expected Completion Date', value: ticketData.expected_completion_date ? formatDate(ticketData.expected_completion_date) : '-' },
-                      { label: 'Scope', value: ticketData.issue_related_to || '-' },
-                      { label: 'Mode', value: ticketData.complaint_mode || '-' },
-                      { label: 'Identification', value: ticketData.proactive_reactive || '-' },
+                      {
+                        label: "Expected Visit Date",
+                        value: ticketData.visit_date
+                          ? ticketData.visit_date
+                          : "-",
+                      },
+                      {
+                        label: "Expected Completion Date",
+                        value: ticketData.expected_completion_date
+                          ? formatDate(ticketData.expected_completion_date)
+                          : "-",
+                      },
+                      {
+                        label: "Scope",
+                        value: ticketData.issue_related_to || "-",
+                      },
+                      {
+                        label: "Mode",
+                        value: ticketData.complaint_mode || "-",
+                      },
+                      {
+                        label: "Identification",
+                        value: ticketData.proactive_reactive || "-",
+                      },
                     ];
 
                     // Split into two vertical columns
@@ -9065,9 +11551,15 @@ export const TicketDetailsPage = () => {
                         {/* Left: two vertical columns of key/value pairs */}
                         <div className="flex-1 flex gap-16 min-w-0">
                           {[colA, colB].map((col, ci) => (
-                            <div key={ci} className="flex flex-col gap-4 min-w-[280px] flex-1">
+                            <div
+                              key={ci}
+                              className="flex flex-col gap-4 min-w-[280px] flex-1"
+                            >
                               {col.map((field) => (
-                                <div key={field.label} className="flex text-[14px] leading-snug min-w-0">
+                                <div
+                                  key={field.label}
+                                  className="flex text-[14px] leading-snug min-w-0"
+                                >
                                   <div className="w-[180px] flex-shrink-0 text-[#6B6B6B] font-medium">
                                     {field.label}
                                   </div>
@@ -9088,7 +11580,9 @@ export const TicketDetailsPage = () => {
                                 Root Cause Analysis
                               </div>
                               <div className="flex-1 text-[14px] font-semibold text-[#1A1A1A] break-words overflow-wrap-anywhere min-w-0">
-                                {ticketData.root_cause ? ticketData.root_cause : '-'}
+                                {ticketData.root_cause
+                                  ? ticketData.root_cause
+                                  : "-"}
                               </div>
                             </div>
                           </div>
@@ -9098,11 +11592,14 @@ export const TicketDetailsPage = () => {
                             </span>
                             <div
                               className="text-[14px] font-medium text-[#000000] leading-[20px] max-h-48 overflow-y-auto pr-1 break-words overflow-wrap-anywhere"
-                              style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                              style={{
+                                wordBreak: "break-word",
+                                overflowWrap: "anywhere",
+                              }}
                             >
                               {ticketData.notes ||
                                 ticketData.text ||
-                                'No additional notes available'}
+                                "No additional notes available"}
                             </div>
                           </div>
                         </div>
@@ -9125,27 +11622,40 @@ export const TicketDetailsPage = () => {
                         <FormControl
                           fullWidth
                           variant="outlined"
-                          sx={{ '& .MuiInputBase-root': fieldStyles }}
+                          sx={{ "& .MuiInputBase-root": fieldStyles }}
                         >
                           <InputLabel shrink>Status</InputLabel>
                           <MuiSelect
                             value={ticketMgmtFormData.selectedStatus}
-                            onChange={(e) => handleTicketMgmtInputChange("selectedStatus", e.target.value)}
+                            onChange={(e) =>
+                              handleTicketMgmtInputChange(
+                                "selectedStatus",
+                                e.target.value
+                              )
+                            }
                             label="Status"
                             notched
                             displayEmpty
-                            disabled={loadingComplaintStatus || complaintStatus.length === 0}
+                            disabled={
+                              loadingComplaintStatus ||
+                              complaintStatus.length === 0
+                            }
                           >
                             <MenuItem value="">
                               <span className="text-gray-500">
-                                {loadingComplaintStatus ? 'Loading statuses...' : 'Select status'}
+                                {loadingComplaintStatus
+                                  ? "Loading statuses..."
+                                  : "Select status"}
                               </span>
                             </MenuItem>
                             {complaintStatus.map((status) => (
-                                <MenuItem key={status.id} value={status.id.toString()}>
-                                  {status.name}
-                                </MenuItem>
-                              ))}
+                              <MenuItem
+                                key={status.id}
+                                value={status.id.toString()}
+                              >
+                                {status.name}
+                              </MenuItem>
+                            ))}
                           </MuiSelect>
                         </FormControl>
 
@@ -9153,11 +11663,18 @@ export const TicketDetailsPage = () => {
                           <InputLabel>Severity</InputLabel>
                           <MuiSelect
                             value={ticketMgmtFormData.severity}
-                            onChange={(e) => handleTicketMgmtInputChange('severity', e.target.value)}
+                            onChange={(e) =>
+                              handleTicketMgmtInputChange(
+                                "severity",
+                                e.target.value
+                              )
+                            }
                             label="Severity"
                           >
                             <MenuItem value="">
-                              <span className="text-gray-500">Select severity</span>
+                              <span className="text-gray-500">
+                                Select severity
+                              </span>
                             </MenuItem>
                             <MenuItem value="Major">Major</MenuItem>
                             <MenuItem value="Minor">Minor</MenuItem>
@@ -9167,19 +11684,32 @@ export const TicketDetailsPage = () => {
                         <FormControl fullWidth size="small">
                           <InputLabel>Vendor</InputLabel>
                           <MuiSelect
-                            value={ticketMgmtFormData.supplier_id || ''}
-                            onChange={(e) => handleTicketMgmtInputChange('supplier_id', e.target.value)}
+                            value={ticketMgmtFormData.supplier_id || ""}
+                            onChange={(e) =>
+                              handleTicketMgmtInputChange(
+                                "supplier_id",
+                                e.target.value
+                              )
+                            }
                             label="Vendor"
                             disabled={loadingSuppliers}
                           >
                             <MenuItem value="">
-                              <span className="text-gray-500">{loadingSuppliers ? 'Loading vendors...' : 'Select vendor'}</span>
+                              <span className="text-gray-500">
+                                {loadingSuppliers
+                                  ? "Loading vendors..."
+                                  : "Select vendor"}
+                              </span>
                             </MenuItem>
-                            {suppliers && suppliers.map((vendor) => (
-                              <MenuItem key={vendor.id} value={vendor.id.toString()}>
-                                {vendor.company_name}
-                              </MenuItem>
-                            ))}
+                            {suppliers &&
+                              suppliers.map((vendor) => (
+                                <MenuItem
+                                  key={vendor.id}
+                                  value={vendor.id.toString()}
+                                >
+                                  {vendor.company_name}
+                                </MenuItem>
+                              ))}
                           </MuiSelect>
                         </FormControl>
 
@@ -9187,14 +11717,24 @@ export const TicketDetailsPage = () => {
                           <InputLabel>Assigned To</InputLabel>
                           <MuiSelect
                             value={ticketMgmtFormData.assigned_to}
-                            onChange={(e) => handleTicketMgmtInputChange('assigned_to', e.target.value)}
+                            onChange={(e) =>
+                              handleTicketMgmtInputChange(
+                                "assigned_to",
+                                e.target.value
+                              )
+                            }
                             label="Assigned To"
                           >
                             <MenuItem value="">
-                              <span className="text-gray-500">Select engineer</span>
+                              <span className="text-gray-500">
+                                Select engineer
+                              </span>
                             </MenuItem>
                             {responsiblePersons.map((user) => (
-                              <MenuItem key={user.id} value={user.id.toString()}>
+                              <MenuItem
+                                key={user.id}
+                                value={user.id.toString()}
+                              >
                                 {user.full_name}
                               </MenuItem>
                             ))}
@@ -9263,7 +11803,6 @@ export const TicketDetailsPage = () => {
                             </FormControl>
                           )}
                         </div> */}
-
                       </div>
 
                       {/* 2️⃣ MIDDLE COLUMN */}
@@ -9274,9 +11813,16 @@ export const TicketDetailsPage = () => {
                           type="date"
                           label="Expected Visit Date"
                           value={ticketMgmtFormData.visit_date}
-                          onChange={(e) => handleTicketMgmtInputChange('visit_date', e.target.value)}
+                          onChange={(e) =>
+                            handleTicketMgmtInputChange(
+                              "visit_date",
+                              e.target.value
+                            )
+                          }
                           InputLabelProps={{ shrink: true }}
-                          inputProps={{ min: new Date().toISOString().split('T')[0] }}
+                          inputProps={{
+                            min: new Date().toISOString().split("T")[0],
+                          }}
                         />
 
                         <TextField
@@ -9285,20 +11831,34 @@ export const TicketDetailsPage = () => {
                           type="date"
                           label="Expected Completion Date"
                           value={ticketMgmtFormData.expected_completion_date}
-                          onChange={(e) => handleTicketMgmtInputChange('expected_completion_date', e.target.value)}
+                          onChange={(e) =>
+                            handleTicketMgmtInputChange(
+                              "expected_completion_date",
+                              e.target.value
+                            )
+                          }
                           InputLabelProps={{ shrink: true }}
-                          inputProps={{ min: new Date().toISOString().split('T')[0] }}
+                          inputProps={{
+                            min: new Date().toISOString().split("T")[0],
+                          }}
                         />
 
                         <FormControl fullWidth size="small">
                           <InputLabel>Scope</InputLabel>
                           <MuiSelect
                             value={ticketMgmtFormData.issue_related_to}
-                            onChange={(e) => handleTicketMgmtInputChange('issue_related_to', e.target.value)}
+                            onChange={(e) =>
+                              handleTicketMgmtInputChange(
+                                "issue_related_to",
+                                e.target.value
+                              )
+                            }
                             label="Scope"
                           >
                             <MenuItem value="">
-                              <span className="text-gray-500">Select scope</span>
+                              <span className="text-gray-500">
+                                Select scope
+                              </span>
                             </MenuItem>
                             <MenuItem value="Projects">Projects</MenuItem>
                             <MenuItem value="FM">FM</MenuItem>
@@ -9308,18 +11868,28 @@ export const TicketDetailsPage = () => {
                         <FormControl fullWidth size="small">
                           <InputLabel>Mode</InputLabel>
                           <MuiSelect
-                            value={ticketMgmtFormData.complaint_mode_id || ''}
-                            onChange={(e) => handleTicketMgmtInputChange('complaint_mode_id', e.target.value)}
+                            value={ticketMgmtFormData.complaint_mode_id || ""}
+                            onChange={(e) =>
+                              handleTicketMgmtInputChange(
+                                "complaint_mode_id",
+                                e.target.value
+                              )
+                            }
                             label="Mode"
                             disabled={loadingComplaintModes}
                           >
                             <MenuItem value="">
                               <span className="text-gray-500">
-                                {loadingComplaintModes ? 'Loading modes...' : 'Select mode'}
+                                {loadingComplaintModes
+                                  ? "Loading modes..."
+                                  : "Select mode"}
                               </span>
                             </MenuItem>
                             {complaintModes.map((mode) => (
-                              <MenuItem key={mode.id} value={mode.id.toString()}>
+                              <MenuItem
+                                key={mode.id}
+                                value={mode.id.toString()}
+                              >
                                 {mode.name}
                               </MenuItem>
                             ))}
@@ -9329,18 +11899,24 @@ export const TicketDetailsPage = () => {
                         <FormControl fullWidth size="small">
                           <InputLabel>Identification</InputLabel>
                           <MuiSelect
-                            value={ticketMgmtFormData.proactive_reactive || ''}
-                            onChange={(e) => handleTicketMgmtInputChange('proactive_reactive', e.target.value)}
+                            value={ticketMgmtFormData.proactive_reactive || ""}
+                            onChange={(e) =>
+                              handleTicketMgmtInputChange(
+                                "proactive_reactive",
+                                e.target.value
+                              )
+                            }
                             label="Identification"
                           >
                             <MenuItem value="">
-                              <span className="text-gray-500">Select identification</span>
+                              <span className="text-gray-500">
+                                Select identification
+                              </span>
                             </MenuItem>
                             <MenuItem value="Proactive">Proactive</MenuItem>
                             <MenuItem value="Reactive">Reactive</MenuItem>
                           </MuiSelect>
                         </FormControl>
-
                       </div>
 
                       {/* 3️⃣ RIGHT COLUMN - Template Fields */}
@@ -9350,7 +11926,12 @@ export const TicketDetailsPage = () => {
                           <textarea
                             id="ticket-rca-text-2"
                             value={ticketMgmtFormData.rca_text}
-                            onChange={e => handleTicketMgmtInputChange('rca_text', e.target.value)}
+                            onChange={(e) =>
+                              handleTicketMgmtInputChange(
+                                "rca_text",
+                                e.target.value
+                              )
+                            }
                             rows={4}
                             placeholder=" "
                             className="peer block w-full appearance-none rounded border border-[#DAD7D0] bg-[#F2F2F2] px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
@@ -9359,19 +11940,23 @@ export const TicketDetailsPage = () => {
                                   focus:border-[#1976d2]
                                   hover:border-[#C72030]
                                   resize-vertical"
-                            style={{ fontSize: '14px', height: '100px' }}
+                            style={{ fontSize: "14px", height: "100px" }}
                           />
                           <label
                             htmlFor="ticket-rca-text-2"
                             className={`absolute left-3 -top-[10px] px-1 text-sm text-gray-500 z-[1] transition-all duration-200
                               peer-focus:bg-white
-                              ${ticketMgmtFormData.rca_text ? 'bg-white' : ''}
+                              ${ticketMgmtFormData.rca_text ? "bg-white" : ""}
                               peer-placeholder-shown:top-4
                               peer-placeholder-shown:text-base
                               peer-placeholder-shown:text-gray-400
                               peer-focus:-top-[10px]
                               peer-focus:text-sm`}
-                            style={{ backgroundColor: ticketMgmtFormData.rca_text ? 'white' : undefined }}
+                            style={{
+                              backgroundColor: ticketMgmtFormData.rca_text
+                                ? "white"
+                                : undefined,
+                            }}
                           >
                             Root Cause Analysis
                           </label>
@@ -9382,7 +11967,12 @@ export const TicketDetailsPage = () => {
                           <textarea
                             id="ticket-additional-notes"
                             value={ticketMgmtFormData.additional_notes}
-                            onChange={e => handleTicketMgmtInputChange('additional_notes', e.target.value)}
+                            onChange={(e) =>
+                              handleTicketMgmtInputChange(
+                                "additional_notes",
+                                e.target.value
+                              )
+                            }
                             rows={6}
                             placeholder=" "
                             className="peer block w-full appearance-none rounded border border-[#DAD7D0] bg-[#F2F2F2] px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
@@ -9391,20 +11981,25 @@ export const TicketDetailsPage = () => {
                                   focus:border-[#1976d2]
                                   hover:border-[#C72030]
                                   resize-vertical"
-                            style={{ fontSize: '14px', height: '107px' }}
+                            style={{ fontSize: "14px", height: "107px" }}
                           />
 
                           <label
                             htmlFor="ticket-additional-notes"
                             className={`absolute left-3 -top-[10px] px-1 text-sm text-gray-500 z-[1] transition-all duration-200
                                   peer-focus:bg-white
-                                  ${ticketMgmtFormData.additional_notes ? 'bg-white' : ''}
+                                  ${ticketMgmtFormData.additional_notes ? "bg-white" : ""}
                                   peer-placeholder-shown:top-4
                                   peer-placeholder-shown:text-base
                                   peer-placeholder-shown:text-gray-400
                                   peer-focus:-top-[10px]
                                   peer-focus:text-sm`}
-                            style={{ backgroundColor: ticketMgmtFormData.additional_notes ? 'white' : undefined }}
+                            style={{
+                              backgroundColor:
+                                ticketMgmtFormData.additional_notes
+                                  ? "white"
+                                  : undefined,
+                            }}
                           >
                             Additional Notes
                           </label>
@@ -9428,7 +12023,6 @@ export const TicketDetailsPage = () => {
                         </div>
                         </div> */}
 
-
                     {/* Action Buttons */}
                     <div className="flex items-center gap-3 justify-end mt-6">
                       <Button
@@ -9445,7 +12039,7 @@ export const TicketDetailsPage = () => {
                         disabled={submittingTicketMgmt}
                         className="bg-[#C72030] hover:bg-[#A01825] text-white px-8"
                       >
-                        {submittingTicketMgmt ? 'Saving...' : 'Submit'}
+                        {submittingTicketMgmt ? "Saving..." : "Submit"}
                       </Button>
                     </div>
                   </form>
@@ -9912,12 +12506,14 @@ export const TicketDetailsPage = () => {
               <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                    <FileText className="w-6 h-6" style={{ color: '#C72030' }} />
+                    <FileText
+                      className="w-6 h-6"
+                      style={{ color: "#C72030" }}
+                    />
                   </div>
                   <h3 className="text-lg font-semibold uppercase text-black">
                     Ticket Closure
                   </h3>
-
                 </div>
                 <Button
                   variant="outline"
@@ -9927,7 +12523,7 @@ export const TicketDetailsPage = () => {
                   disabled={isEditingTicketClosure || loadingResponsiblePersons}
                 >
                   <Edit className="w-4 h-4 mr-1" />
-                  {loadingResponsiblePersons ? 'Loading...' : 'Edit'}
+                  {loadingResponsiblePersons ? "Loading..." : "Edit"}
                 </Button>
               </div>
 
@@ -9939,9 +12535,13 @@ export const TicketDetailsPage = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       {/* Preventive Action - View Only */}
                       <div className="bg-[#f2efea] border border-[#f2efea] p-4">
-                        <label className="block text-[12px] text-[#6B6B6B] font-medium mb-2">Preventive Action</label>
+                        <label className="block text-[12px] text-[#6B6B6B] font-medium mb-2">
+                          Preventive Action
+                        </label>
                         <div className="text-[14px] text-[#1A1A1A] break-words">
-                          {ticketData?.preventive_action ? ticketData.preventive_action : 'Not provided'}
+                          {ticketData?.preventive_action
+                            ? ticketData.preventive_action
+                            : "Not provided"}
                         </div>
                       </div>
 
@@ -9957,9 +12557,13 @@ export const TicketDetailsPage = () => {
 
                       {/* Corrective Action - View Only */}
                       <div className="bg-[#f2efea] border border-[#f2efea] p-4">
-                        <label className="block text-[12px] text-[#6B6B6B] font-medium mb-2">Corrective Action</label>
+                        <label className="block text-[12px] text-[#6B6B6B] font-medium mb-2">
+                          Corrective Action
+                        </label>
                         <div className="text-[14px] text-[#1A1A1A] break-words">
-                          {ticketData?.corrective_action ? ticketData.corrective_action : 'Not provided'}
+                          {ticketData?.corrective_action
+                            ? ticketData.corrective_action
+                            : "Not provided"}
                         </div>
                       </div>
 
@@ -9977,15 +12581,23 @@ export const TicketDetailsPage = () => {
                     {/* Bottom Row: Review Date & Responsible Person - View Only */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       <div className="flex items-center text-[14px]">
-                        <span className="w-[140px] flex-shrink-0 text-[#6B6B6B] font-medium">Review Date</span>
+                        <span className="w-[140px] flex-shrink-0 text-[#6B6B6B] font-medium">
+                          Review Date
+                        </span>
                         <span className="font-semibold text-[#1A1A1A]">
-                          {ticketData.review_tracking ? ticketData.review_tracking : '-'}
+                          {ticketData.review_tracking
+                            ? ticketData.review_tracking
+                            : "-"}
                         </span>
                       </div>
                       <div className="flex items-center text-[14px]">
-                        <span className="w-[140px] flex-shrink-0 text-[#6B6B6B] font-medium">Responsible Person</span>
+                        <span className="w-[140px] flex-shrink-0 text-[#6B6B6B] font-medium">
+                          Responsible Person
+                        </span>
                         <span className="font-semibold text-[#1A1A1A]">
-                          {ticketData.responsible_person ? ticketData.responsible_person : '-'}
+                          {ticketData.responsible_person
+                            ? ticketData.responsible_person
+                            : "-"}
                         </span>
                       </div>
                     </div>
@@ -10024,40 +12636,45 @@ export const TicketDetailsPage = () => {
                             fullWidth
                             size="small"
                             placeholder="Enter preventive action"
-                            value={ticketClosureFormData.preventive_action_text || ''}
+                            value={
+                              ticketClosureFormData.preventive_action_text || ""
+                            }
                             onChange={(e) => {
-                              handleTicketClosureInputChange('preventive_action_text', e.target.value);
+                              handleTicketClosureInputChange(
+                                "preventive_action_text",
+                                e.target.value
+                              );
                             }}
                             multiline
                             rows={3}
                             InputLabelProps={{
                               shrink: true,
-                              style: { display: 'none' }
+                              style: { display: "none" },
                             }}
                             inputProps={{
-                              style: { fontSize: '14px' }
+                              style: { fontSize: "14px" },
                             }}
                             sx={{
-                              '& .MuiInputBase-root': {
-                                backgroundColor: '#F2F2F2',
-                                borderRadius: '4px',
-                                fontSize: '14px',
+                              "& .MuiInputBase-root": {
+                                backgroundColor: "#F2F2F2",
+                                borderRadius: "4px",
+                                fontSize: "14px",
                               },
-                              '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                  borderColor: '#DAD7D0',
-                                  borderWidth: '1px',
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "#DAD7D0",
+                                  borderWidth: "1px",
                                 },
-                                '&:hover fieldset': {
-                                  borderColor: '#C72030',
+                                "&:hover fieldset": {
+                                  borderColor: "#C72030",
                                 },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: '#C72030',
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "#C72030",
                                 },
                               },
-                              '& .MuiInputBase-input': {
-                                fontSize: '14px',
-                                padding: '10px 12px',
+                              "& .MuiInputBase-input": {
+                                fontSize: "14px",
+                                padding: "10px 12px",
                               },
                             }}
                           />
@@ -10175,40 +12792,45 @@ export const TicketDetailsPage = () => {
                             fullWidth
                             size="small"
                             placeholder="Enter corrective action"
-                            value={ticketClosureFormData.corrective_action_text || ''}
+                            value={
+                              ticketClosureFormData.corrective_action_text || ""
+                            }
                             onChange={(e) => {
-                              handleTicketClosureInputChange('corrective_action_text', e.target.value);
+                              handleTicketClosureInputChange(
+                                "corrective_action_text",
+                                e.target.value
+                              );
                             }}
                             multiline
                             rows={3}
                             InputLabelProps={{
                               shrink: true,
-                              style: { display: 'none' }
+                              style: { display: "none" },
                             }}
                             inputProps={{
-                              style: { fontSize: '14px' }
+                              style: { fontSize: "14px" },
                             }}
                             sx={{
-                              '& .MuiInputBase-root': {
-                                backgroundColor: '#F2F2F2',
-                                borderRadius: '4px',
-                                fontSize: '14px',
+                              "& .MuiInputBase-root": {
+                                backgroundColor: "#F2F2F2",
+                                borderRadius: "4px",
+                                fontSize: "14px",
                               },
-                              '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                  borderColor: '#DAD7D0',
-                                  borderWidth: '1px',
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "#DAD7D0",
+                                  borderWidth: "1px",
                                 },
-                                '&:hover fieldset': {
-                                  borderColor: '#C72030',
+                                "&:hover fieldset": {
+                                  borderColor: "#C72030",
                                 },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: '#C72030',
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "#C72030",
                                 },
                               },
-                              '& .MuiInputBase-input': {
-                                fontSize: '14px',
-                                padding: '10px 12px',
+                              "& .MuiInputBase-input": {
+                                fontSize: "14px",
+                                padding: "10px 12px",
                               },
                             }}
                           />
@@ -10216,31 +12838,44 @@ export const TicketDetailsPage = () => {
 
                         <div className="mt-4 space-y-2 text-[14px] font-medium text-[#000000] leading-[16px] min-h-16 h-auto pr-1">
                           {(() => {
-                            if (!ticketData?.corrective_action_template_ids || ticketData.corrective_action_template_ids.length === 0) {
-                              return 'No corrective action description available';
+                            if (
+                              !ticketData?.corrective_action_template_ids ||
+                              ticketData.corrective_action_template_ids
+                                .length === 0
+                            ) {
+                              return "No corrective action description available";
                             }
 
-                            const uniqueIds = [...new Set(ticketData.corrective_action_template_ids)];
-                            const matchedTemplates = communicationTemplates.filter(
-                              template => uniqueIds.includes(template.id) &&
-                                template.identifier === "Corrective Action"
-                            );
+                            const uniqueIds = [
+                              ...new Set(
+                                ticketData.corrective_action_template_ids
+                              ),
+                            ];
+                            const matchedTemplates =
+                              communicationTemplates.filter(
+                                (template) =>
+                                  uniqueIds.includes(template.id) &&
+                                  template.identifier === "Corrective Action"
+                              );
 
                             if (matchedTemplates.length === 0) {
-                              return 'No corrective action description available';
+                              return "No corrective action description available";
                             }
 
                             return matchedTemplates.map((template, index) => (
                               <div key={`corrective-${template.id}`}>
-                                {index > 0 && <div className="my-2 border-t border-gray-300"></div>}
-                                <div>{template.body || template.identifier_action}</div>
+                                {index > 0 && (
+                                  <div className="my-2 border-t border-gray-300"></div>
+                                )}
+                                <div>
+                                  {template.body || template.identifier_action}
+                                </div>
                               </div>
                             ));
                           })()}
                         </div>
                       </div>
 
-                  
                       {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                         <div className="relative w-full">
                           <label
@@ -10349,47 +12984,53 @@ export const TicketDetailsPage = () => {
                           Review Date
                         </label>
 
-                        <div style={{ minWidth: '240px' }}>
+                        <div style={{ minWidth: "240px" }}>
                           <TextField
                             fullWidth
                             size="small"
                             type="date"
                             placeholder="Select review date"
-                            value={ticketClosureFormData.review_tracking || ''}
+                            value={ticketClosureFormData.review_tracking || ""}
                             onChange={(e) => {
-                              console.log('Review date changed:', e.target.value);
-                              handleTicketClosureInputChange('review_tracking', e.target.value);
+                              console.log(
+                                "Review date changed:",
+                                e.target.value
+                              );
+                              handleTicketClosureInputChange(
+                                "review_tracking",
+                                e.target.value
+                              );
                             }}
                             InputLabelProps={{
                               shrink: true,
-                              style: { display: 'none' } // Hide default label since we have floating label
+                              style: { display: "none" }, // Hide default label since we have floating label
                             }}
                             inputProps={{
-                              style: { fontSize: '14px' },
-                              min: new Date().toISOString().split('T')[0]
+                              style: { fontSize: "14px" },
+                              min: new Date().toISOString().split("T")[0],
                             }}
                             sx={{
-                              '& .MuiInputBase-root': {
-                                backgroundColor: '#F2F2F2',
-                                borderRadius: '4px',
-                                fontSize: '14px',
-                                minHeight: '40px',
+                              "& .MuiInputBase-root": {
+                                backgroundColor: "#F2F2F2",
+                                borderRadius: "4px",
+                                fontSize: "14px",
+                                minHeight: "40px",
                               },
-                              '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                  borderColor: '#DAD7D0',
-                                  borderWidth: '1px',
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "#DAD7D0",
+                                  borderWidth: "1px",
                                 },
-                                '&:hover fieldset': {
-                                  borderColor: '#C72030',
+                                "&:hover fieldset": {
+                                  borderColor: "#C72030",
                                 },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: '#C72030',
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "#C72030",
                                 },
                               },
-                              '& .MuiInputBase-input': {
-                                fontSize: '14px',
-                                padding: '10px 12px',
+                              "& .MuiInputBase-input": {
+                                fontSize: "14px",
+                                padding: "10px 12px",
                               },
                             }}
                           />
@@ -10417,26 +13058,36 @@ export const TicketDetailsPage = () => {
                           {/* React Select */}
                           <Select
                             value={(() => {
-                              const value = isEditingTicketClosure ? getResponsiblePersonFormValue() : getResponsiblePersonValue();
+                              const value = isEditingTicketClosure
+                                ? getResponsiblePersonFormValue()
+                                : getResponsiblePersonValue();
                               if (!value) return null;
                               const matchedPerson = responsiblePersons.find(
-                                p => p.id.toString() === value
+                                (p) => p.id.toString() === value
                               );
-                              return matchedPerson ? {
-                                value: matchedPerson.id,
-                                label: `${matchedPerson.full_name}${matchedPerson.employee_type ? ` (${matchedPerson.employee_type})` : ''}`
-                              } : null;
+                              return matchedPerson
+                                ? {
+                                    value: matchedPerson.id,
+                                    label: `${matchedPerson.full_name}${matchedPerson.employee_type ? ` (${matchedPerson.employee_type})` : ""}`,
+                                  }
+                                : null;
                             })()}
                             onChange={(selectedOption) => {
-                              if (selectedOption && 'value' in selectedOption) {
-                                handleResponsiblePersonFormChange(selectedOption.value.toString());
+                              if (selectedOption && "value" in selectedOption) {
+                                handleResponsiblePersonFormChange(
+                                  selectedOption.value.toString()
+                                );
                               }
                             }}
                             options={responsiblePersons.map((person) => ({
                               value: person.id,
-                              label: `${person.full_name}${person.employee_type ? ` (${person.employee_type})` : ''}`,
+                              label: `${person.full_name}${person.employee_type ? ` (${person.employee_type})` : ""}`,
                             }))}
-                            placeholder={loadingResponsiblePersons ? "Loading..." : "Select Responsible Person"}
+                            placeholder={
+                              loadingResponsiblePersons
+                                ? "Loading..."
+                                : "Select Responsible Person"
+                            }
                             styles={singleSelectStyles}
                             isDisabled={loadingResponsiblePersons}
                             isClearable
@@ -10445,7 +13096,9 @@ export const TicketDetailsPage = () => {
 
                         {/* Show current value if it doesn't match any option */}
                         {ticketData.responsible_person &&
-                          !responsiblePersons.find(p => p.full_name === ticketData.responsible_person) && (
+                          !responsiblePersons.find(
+                            (p) => p.full_name === ticketData.responsible_person
+                          ) && (
                             <div className="mt-1 text-[11px] text-[#6B6B6B] italic">
                               Current: {ticketData.responsible_person}
                             </div>
@@ -10469,14 +13122,13 @@ export const TicketDetailsPage = () => {
                         disabled={submittingTicketClosure}
                         className="bg-[#C72030] hover:bg-[#A01825] text-white px-8"
                       >
-                        {submittingTicketClosure ? 'Saving...' : 'Submit'}
+                        {submittingTicketClosure ? "Saving..." : "Submit"}
                       </Button>
                     </div>
                   </form>
                 )}
               </div>
             </Card>
-
 
             {/* Location Details */}
             {/* <div className="w-full bg-white rounded-lg shadow-sm border">
@@ -10708,7 +13360,10 @@ export const TicketDetailsPage = () => {
               <Card className="w-full bg-white rounded-lg shadow-sm border">
                 <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                    <Paperclip className="w-6 h-6" style={{ color: '#C72030' }} />
+                    <Paperclip
+                      className="w-6 h-6"
+                      style={{ color: "#C72030" }}
+                    />
                   </div>
                   <h3 className="text-lg font-semibold uppercase text-black">
                     Attachments
@@ -10716,112 +13371,140 @@ export const TicketDetailsPage = () => {
                 </div>
 
                 <CardContent className="pt-4 bg-[#FAFAF8] border border-t-0 border-[#D9D9D9]">
-                  {Array.isArray(ticketData.documents) && ticketData.documents.length > 0 ? (
+                  {Array.isArray(ticketData.documents) &&
+                  ticketData.documents.length > 0 ? (
                     <div className="flex items-center flex-wrap gap-4">
-                      {ticketData.documents.map((attachment: any, idx: number) => {
-                        const url = attachment.document || attachment.document_url || attachment.url || attachment.attachment_url || '';
-                        const isImage = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(url);
-                        const isPdf = /\.pdf$/i.test(url) || attachment.doctype === 'application/pdf';
-                        const isExcel = /\.(xls|xlsx|csv)$/i.test(url) ||
-                          attachment.doctype?.includes('spreadsheet') ||
-                          attachment.doctype?.includes('excel');
-                        const isWord = /\.(doc|docx)$/i.test(url) ||
-                          attachment.doctype?.includes('document') ||
-                          attachment.doctype?.includes('word');
-                        const isDownloadable = isPdf || isExcel || isWord;
+                      {ticketData.documents.map(
+                        (attachment: any, idx: number) => {
+                          const url =
+                            attachment.document ||
+                            attachment.document_url ||
+                            attachment.url ||
+                            attachment.attachment_url ||
+                            "";
+                          const isImage =
+                            /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(url);
+                          const isPdf =
+                            /\.pdf$/i.test(url) ||
+                            attachment.doctype === "application/pdf";
+                          const isExcel =
+                            /\.(xls|xlsx|csv)$/i.test(url) ||
+                            attachment.doctype?.includes("spreadsheet") ||
+                            attachment.doctype?.includes("excel");
+                          const isWord =
+                            /\.(doc|docx)$/i.test(url) ||
+                            attachment.doctype?.includes("document") ||
+                            attachment.doctype?.includes("word");
+                          const isDownloadable = isPdf || isExcel || isWord;
 
-                        return (
-                          <div
-                            key={attachment.id || idx}
-                            className="flex relative flex-col items-center border rounded-lg pt-8 px-3 pb-4 w-full max-w-[150px] bg-[#F6F4EE] shadow-md"
-                          >
-                            {isImage ? (
-                              <>
-                                <button
-                                  className="absolute top-2 right-2 z-10 p-1 text-gray-600 hover:text-black rounded-full"
-                                  title="View"
+                          return (
+                            <div
+                              key={attachment.id || idx}
+                              className="flex relative flex-col items-center border rounded-lg pt-8 px-3 pb-4 w-full max-w-[150px] bg-[#F6F4EE] shadow-md"
+                            >
+                              {isImage ? (
+                                <>
+                                  <button
+                                    className="absolute top-2 right-2 z-10 p-1 text-gray-600 hover:text-black rounded-full"
+                                    title="View"
+                                    onClick={() => {
+                                      setSelectedDoc({
+                                        id: attachment.id || 0,
+                                        document_name:
+                                          attachment.document_name ||
+                                          attachment.document_file_name ||
+                                          `Document_${attachment.id || idx + 1}`,
+                                        url: url,
+                                        document_url: url,
+                                        document: url,
+                                        type: "image",
+                                      });
+                                      setIsModalOpen(true);
+                                    }}
+                                    type="button"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
+                                  <img
+                                    src={url}
+                                    alt={
+                                      attachment.document_name ||
+                                      attachment.document_file_name ||
+                                      `Document_${attachment.id || idx + 1}`
+                                    }
+                                    className="w-14 h-14 object-cover rounded-md border mb-2 cursor-pointer"
+                                    onClick={() => {
+                                      setSelectedDoc({
+                                        id: attachment.id || 0,
+                                        document_name:
+                                          attachment.document_name ||
+                                          attachment.document_file_name ||
+                                          `Document_${attachment.id || idx + 1}`,
+                                        url: url,
+                                        document_url: url,
+                                        document: url,
+                                        type: "image",
+                                      });
+                                      setIsModalOpen(true);
+                                    }}
+                                    onError={(e) => {
+                                      (
+                                        e.target as HTMLImageElement
+                                      ).style.display = "none";
+                                    }}
+                                  />
+                                </>
+                              ) : isPdf ? (
+                                <div className="w-14 h-14 flex items-center justify-center border rounded-md text-red-600 bg-white mb-2">
+                                  <FileText className="w-6 h-6" />
+                                </div>
+                              ) : isExcel ? (
+                                <div className="w-14 h-14 flex items-center justify-center border rounded-md text-green-600 bg-white mb-2">
+                                  <FileSpreadsheet className="w-6 h-6" />
+                                </div>
+                              ) : isWord ? (
+                                <div className="w-14 h-14 flex items-center justify-center border rounded-md text-blue-600 bg-white mb-2">
+                                  <FileText className="w-6 h-6" />
+                                </div>
+                              ) : (
+                                <div className="w-14 h-14 flex items-center justify-center border rounded-md text-gray-600 bg-white mb-2">
+                                  <File className="w-6 h-6" />
+                                </div>
+                              )}
+                              <span className="text-xs text-center truncate max-w-[120px] mb-2 font-medium">
+                                {attachment.document_name ||
+                                  attachment.document_file_name ||
+                                  url.split("/").pop() ||
+                                  `Document_${attachment.id || idx + 1}`}
+                              </span>
+                              {isDownloadable && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="absolute top-2 right-2 h-5 w-5 p-0 text-gray-600 hover:text-black"
                                   onClick={() => {
                                     setSelectedDoc({
                                       id: attachment.id || 0,
-                                      document_name: attachment.document_name || attachment.document_file_name || `Document_${attachment.id || idx + 1}`,
+                                      document_name:
+                                        attachment.document_name ||
+                                        attachment.document_file_name ||
+                                        `Document_${attachment.id || idx + 1}`,
                                       url: url,
                                       document_url: url,
                                       document: url,
-                                      type: 'image'
+                                      doctype: attachment.doctype,
+                                      type: "document",
                                     });
                                     setIsModalOpen(true);
                                   }}
-                                  type="button"
                                 >
-                                  <Eye className="w-4 h-4" />
-                                </button>
-                                <img
-                                  src={url}
-                                  alt={attachment.document_name || attachment.document_file_name || `Document_${attachment.id || idx + 1}`}
-                                  className="w-14 h-14 object-cover rounded-md border mb-2 cursor-pointer"
-                                  onClick={() => {
-                                    setSelectedDoc({
-                                      id: attachment.id || 0,
-                                      document_name: attachment.document_name || attachment.document_file_name || `Document_${attachment.id || idx + 1}`,
-                                      url: url,
-                                      document_url: url,
-                                      document: url,
-                                      type: 'image'
-                                    });
-                                    setIsModalOpen(true);
-                                  }}
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                              </>
-                            ) : isPdf ? (
-                              <div className="w-14 h-14 flex items-center justify-center border rounded-md text-red-600 bg-white mb-2">
-                                <FileText className="w-6 h-6" />
-                              </div>
-                            ) : isExcel ? (
-                              <div className="w-14 h-14 flex items-center justify-center border rounded-md text-green-600 bg-white mb-2">
-                                <FileSpreadsheet className="w-6 h-6" />
-                              </div>
-                            ) : isWord ? (
-                              <div className="w-14 h-14 flex items-center justify-center border rounded-md text-blue-600 bg-white mb-2">
-                                <FileText className="w-6 h-6" />
-                              </div>
-                            ) : (
-                              <div className="w-14 h-14 flex items-center justify-center border rounded-md text-gray-600 bg-white mb-2">
-                                <File className="w-6 h-6" />
-                              </div>
-                            )}
-                            <span className="text-xs text-center truncate max-w-[120px] mb-2 font-medium">
-                              {attachment.document_name ||
-                                attachment.document_file_name ||
-                                url.split('/').pop() ||
-                                `Document_${attachment.id || idx + 1}`}
-                            </span>
-                            {isDownloadable && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="absolute top-2 right-2 h-5 w-5 p-0 text-gray-600 hover:text-black"
-                                onClick={() => {
-                                  setSelectedDoc({
-                                    id: attachment.id || 0,
-                                    document_name: attachment.document_name || attachment.document_file_name || `Document_${attachment.id || idx + 1}`,
-                                    url: url,
-                                    document_url: url,
-                                    document: url,
-                                    doctype: attachment.doctype,
-                                    type: 'document'
-                                  });
-                                  setIsModalOpen(true);
-                                }}
-                              >
-                                <Download className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </div>
-                        );
-                      })}
+                                  <Download className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        }
+                      )}
                     </div>
                   ) : (
                     <p className="text-xs text-gray-400">No attachments</p>
@@ -10837,7 +13520,9 @@ export const TicketDetailsPage = () => {
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                     <MapPin className="w-6 h-6 text-[#C72030]" />
                   </div>
-                  <h3 className="text-lg font-semibold text-black">LOCATION INFORMATION</h3>
+                  <h3 className="text-lg font-semibold text-black">
+                    LOCATION INFORMATION
+                  </h3>
                 </div>
                 <Button
                   variant="outline"
@@ -10847,7 +13532,7 @@ export const TicketDetailsPage = () => {
                   disabled={isEditingSocietyLocation || loadingSocietyLocations}
                 >
                   <Edit className="w-4 h-4 mr-1" />
-                  {loadingSocietyLocations ? 'Loading...' : 'Edit'}
+                  {loadingSocietyLocations ? "Loading..." : "Edit"}
                 </Button>
               </div>
 
@@ -10856,12 +13541,16 @@ export const TicketDetailsPage = () => {
                   /* View Mode */
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                     <div className="flex items-center">
-                      <span className="text-gray-500 min-w-[140px]">Society</span>
+                      <span className="text-gray-500 min-w-[140px]">
+                        Society
+                      </span>
                       <span className="text-gray-500 mx-2">:</span>
                       <span className="text-gray-900 font-medium">
                         {ticketData.society_location_id
-                          ? (societyLocations.find(s => s.id === ticketData.society_location_id)?.name || ticketData.society_location_id)
-                          : '-'}
+                          ? societyLocations.find(
+                              (s) => s.id === ticketData.society_location_id
+                            )?.name || ticketData.society_location_id
+                          : "-"}
                       </span>
                     </div>
                     <div className="flex items-center">
@@ -10869,8 +13558,12 @@ export const TicketDetailsPage = () => {
                       <span className="text-gray-500 mx-2">:</span>
                       <span className="text-gray-900 font-medium">
                         {ticketData.wing_id
-                          ? (societyWings.find(w => w.id === ticketData.wing_id)?.name || ticketData.wing_name || ticketData.wing_id)
-                          : (ticketData.wing_name || '-')}
+                          ? societyWings.find(
+                              (w) => w.id === ticketData.wing_id
+                            )?.name ||
+                            ticketData.wing_name ||
+                            ticketData.wing_id
+                          : ticketData.wing_name || "-"}
                       </span>
                     </div>
                     <div className="flex items-center">
@@ -10878,100 +13571,153 @@ export const TicketDetailsPage = () => {
                       <span className="text-gray-500 mx-2">:</span>
                       <span className="text-gray-900 font-medium">
                         {ticketData.area_id
-                          ? (societyAreas.find(a => a.id === ticketData.area_id)?.name || ticketData.area_name || ticketData.area_id)
-                          : (ticketData.area_name || '-')}
+                          ? societyAreas.find(
+                              (a) => a.id === ticketData.area_id
+                            )?.name ||
+                            ticketData.area_name ||
+                            ticketData.area_id
+                          : ticketData.area_name || "-"}
                       </span>
                     </div>
                     {hasData(ticketData.region) && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">Region</span>
+                        <span className="text-gray-500 min-w-[140px]">
+                          Region
+                        </span>
                         <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{ticketData.region}</span>
+                        <span className="text-gray-900 font-medium">
+                          {ticketData.region}
+                        </span>
                       </div>
                     )}
                     {hasData(ticketData.building_name) && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">Building</span>
+                        <span className="text-gray-500 min-w-[140px]">
+                          Building
+                        </span>
                         <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{ticketData.building_name}</span>
+                        <span className="text-gray-900 font-medium">
+                          {ticketData.building_name}
+                        </span>
                       </div>
                     )}
                     {hasData(ticketData.floor_name) && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">Floor</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{ticketData.floor_name}</span>
-                      </div>
-                    )}
-                    {hasData(ticketData.flat_number) && String(ticketData.flat_number).includes('-') && (
-                      <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">Tower</span>
+                        <span className="text-gray-500 min-w-[140px]">
+                          Floor
+                        </span>
                         <span className="text-gray-500 mx-2">:</span>
                         <span className="text-gray-900 font-medium">
-                          {String(ticketData.flat_number).split('-')[0]}
+                          {ticketData.floor_name}
                         </span>
                       </div>
                     )}
-                    {hasData(ticketData.flat_number || ticketData.unit_name) && (
+                    {hasData(ticketData.flat_number) &&
+                      String(ticketData.flat_number).includes("-") && (
+                        <div className="flex items-center">
+                          <span className="text-gray-500 min-w-[140px]">
+                            Tower
+                          </span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">
+                            {String(ticketData.flat_number).split("-")[0]}
+                          </span>
+                        </div>
+                      )}
+                    {hasData(
+                      ticketData.flat_number || ticketData.unit_name
+                    ) && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">Flat</span>
+                        <span className="text-gray-500 min-w-[140px]">
+                          Flat
+                        </span>
                         <span className="text-gray-500 mx-2">:</span>
                         <span className="text-gray-900 font-medium">
                           {/* API sends flat_number pre-combined as "Tower-FlatNo" (e.g. "T1-101"). */}
                           {ticketData.flat_number
-                            ? String(ticketData.flat_number).split('-').join(' - ')
+                            ? String(ticketData.flat_number)
+                                .split("-")
+                                .join(" - ")
                             : ticketData.unit_name}
                         </span>
                       </div>
                     )}
-                    
+
                     {hasData(ticketData.zone) && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">Zone</span>
+                        <span className="text-gray-500 min-w-[140px]">
+                          Zone
+                        </span>
                         <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{ticketData.zone}</span>
+                        <span className="text-gray-900 font-medium">
+                          {ticketData.zone}
+                        </span>
                       </div>
                     )}
                     {hasData(ticketData.district) && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">District</span>
+                        <span className="text-gray-500 min-w-[140px]">
+                          District
+                        </span>
                         <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{ticketData.district}</span>
+                        <span className="text-gray-900 font-medium">
+                          {ticketData.district}
+                        </span>
                       </div>
                     )}
                     {hasData(ticketData.room_name) && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">Room</span>
+                        <span className="text-gray-500 min-w-[140px]">
+                          Room
+                        </span>
                         <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{ticketData.room_name}</span>
+                        <span className="text-gray-900 font-medium">
+                          {ticketData.room_name}
+                        </span>
                       </div>
                     )}
                     {hasData(ticketData.site_name) && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">Site</span>
+                        <span className="text-gray-500 min-w-[140px]">
+                          Site
+                        </span>
                         <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{ticketData.site_name}</span>
+                        <span className="text-gray-900 font-medium">
+                          {ticketData.site_name}
+                        </span>
                       </div>
                     )}
                     {hasData(ticketData.city) && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">City</span>
+                        <span className="text-gray-500 min-w-[140px]">
+                          City
+                        </span>
                         <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{ticketData.city}</span>
+                        <span className="text-gray-900 font-medium">
+                          {ticketData.city}
+                        </span>
                       </div>
                     )}
                     {hasData(ticketData.state) && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">State</span>
+                        <span className="text-gray-500 min-w-[140px]">
+                          State
+                        </span>
                         <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{ticketData.state}</span>
+                        <span className="text-gray-900 font-medium">
+                          {ticketData.state}
+                        </span>
                       </div>
                     )}
                     {hasData(ticketData.address) && (
                       <div className="flex items-center">
-                        <span className="text-gray-500 min-w-[140px]">Address</span>
+                        <span className="text-gray-500 min-w-[140px]">
+                          Address
+                        </span>
                         <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{ticketData.address}</span>
+                        <span className="text-gray-900 font-medium">
+                          {ticketData.address}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -10986,7 +13732,11 @@ export const TicketDetailsPage = () => {
                   >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* Society Dropdown */}
-                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      >
                         <InputLabel shrink>Society</InputLabel>
                         <MuiSelect
                           value={societyLocationFormData.society_location_id}
@@ -10997,7 +13747,9 @@ export const TicketDetailsPage = () => {
                           disabled={loadingSocietyLocations}
                         >
                           <MenuItem value="">
-                            {loadingSocietyLocations ? 'Loading...' : 'Select Society'}
+                            {loadingSocietyLocations
+                              ? "Loading..."
+                              : "Select Society"}
                           </MenuItem>
                           {societyLocations.map((loc) => (
                             <MenuItem key={loc.id} value={loc.id.toString()}>
@@ -11008,18 +13760,31 @@ export const TicketDetailsPage = () => {
                       </FormControl>
 
                       {/* Wing Dropdown */}
-                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      >
                         <InputLabel shrink>Wing</InputLabel>
                         <MuiSelect
                           value={societyLocationFormData.wing_id}
-                          onChange={(e) => handleSocietyWingChange(e.target.value)}
+                          onChange={(e) =>
+                            handleSocietyWingChange(e.target.value)
+                          }
                           label="Wing"
                           notched
                           displayEmpty
-                          disabled={loadingSocietyWings || !societyLocationFormData.society_location_id}
+                          disabled={
+                            loadingSocietyWings ||
+                            !societyLocationFormData.society_location_id
+                          }
                         >
                           <MenuItem value="">
-                            {loadingSocietyWings ? 'Loading...' : !societyLocationFormData.society_location_id ? 'Select Society First' : 'Select Wing'}
+                            {loadingSocietyWings
+                              ? "Loading..."
+                              : !societyLocationFormData.society_location_id
+                                ? "Select Society First"
+                                : "Select Wing"}
                           </MenuItem>
                           {societyWings.map((wing) => (
                             <MenuItem key={wing.id} value={wing.id.toString()}>
@@ -11030,18 +13795,34 @@ export const TicketDetailsPage = () => {
                       </FormControl>
 
                       {/* Area Dropdown */}
-                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      >
                         <InputLabel shrink>Area</InputLabel>
                         <MuiSelect
                           value={societyLocationFormData.area_id}
-                          onChange={(e) => setSocietyLocationFormData(prev => ({ ...prev, area_id: e.target.value }))}
+                          onChange={(e) =>
+                            setSocietyLocationFormData((prev) => ({
+                              ...prev,
+                              area_id: e.target.value,
+                            }))
+                          }
                           label="Area"
                           notched
                           displayEmpty
-                          disabled={loadingSocietyAreas || !societyLocationFormData.wing_id}
+                          disabled={
+                            loadingSocietyAreas ||
+                            !societyLocationFormData.wing_id
+                          }
                         >
                           <MenuItem value="">
-                            {loadingSocietyAreas ? 'Loading...' : !societyLocationFormData.wing_id ? 'Select Wing First' : 'Select Area'}
+                            {loadingSocietyAreas
+                              ? "Loading..."
+                              : !societyLocationFormData.wing_id
+                                ? "Select Wing First"
+                                : "Select Area"}
                           </MenuItem>
                           {societyAreas.map((area) => (
                             <MenuItem key={area.id} value={area.id.toString()}>
@@ -11052,7 +13833,11 @@ export const TicketDetailsPage = () => {
                       </FormControl>
 
                       {/* Tower Dropdown (read-only — tower is not editable) */}
-                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      >
                         <InputLabel shrink>Tower</InputLabel>
                         <MuiSelect
                           value={societyLocationFormData.tower_id}
@@ -11062,10 +13847,15 @@ export const TicketDetailsPage = () => {
                           disabled
                         >
                           <MenuItem value="">
-                            {loadingSocietyBlocks ? 'Loading...' : 'Select Tower'}
+                            {loadingSocietyBlocks
+                              ? "Loading..."
+                              : "Select Tower"}
                           </MenuItem>
                           {societyBlocks.map((block) => (
-                            <MenuItem key={block.id} value={block.id.toString()}>
+                            <MenuItem
+                              key={block.id}
+                              value={block.id.toString()}
+                            >
                               {block.name}
                             </MenuItem>
                           ))}
@@ -11073,7 +13863,11 @@ export const TicketDetailsPage = () => {
                       </FormControl>
 
                       {/* Flat Dropdown (read-only — flat is not editable) */}
-                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      >
                         <InputLabel shrink>Flat</InputLabel>
                         <MuiSelect
                           value={societyLocationFormData.flat_id}
@@ -11083,13 +13877,22 @@ export const TicketDetailsPage = () => {
                           disabled
                         >
                           <MenuItem value="">
-                            {loadingSocietyFlatOptions ? 'Loading...' : !societyLocationFormData.tower_id ? 'Select Tower First' : 'Select Flat'}
+                            {loadingSocietyFlatOptions
+                              ? "Loading..."
+                              : !societyLocationFormData.tower_id
+                                ? "Select Tower First"
+                                : "Select Flat"}
                           </MenuItem>
-                          {societyFlatOptions.filter((flat) => flat.approve !== false).map((flat) => (
-                            <MenuItem key={flat.id} value={flat.id.toString()}>
-                              {flat.flat_no}
-                            </MenuItem>
-                          ))}
+                          {societyFlatOptions
+                            .filter((flat) => flat.approve !== false)
+                            .map((flat) => (
+                              <MenuItem
+                                key={flat.id}
+                                value={flat.id.toString()}
+                              >
+                                {flat.flat_no}
+                              </MenuItem>
+                            ))}
                         </MuiSelect>
                       </FormControl>
                     </div>
@@ -11109,7 +13912,7 @@ export const TicketDetailsPage = () => {
                         disabled={submittingSocietyLocation}
                         className="bg-[#C72030] hover:bg-[#A01825] text-white px-8"
                       >
-                        {submittingSocietyLocation ? 'Saving...' : 'Submit'}
+                        {submittingSocietyLocation ? "Saving..." : "Submit"}
                       </Button>
                     </div>
                   </form>
@@ -11122,7 +13925,10 @@ export const TicketDetailsPage = () => {
               <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                    <MessageSquare className="w-6 h-6" style={{ color: '#C72030' }} />
+                    <MessageSquare
+                      className="w-6 h-6"
+                      style={{ color: "#C72030" }}
+                    />
                   </div>
                   <h3 className="text-lg font-semibold uppercase text-black">
                     Comments
@@ -11136,13 +13942,19 @@ export const TicketDetailsPage = () => {
                   {/* Internal Comments Section */}
                   <div className="flex-1">
                     <div className="bg-white w-full text-center py-0.5 bg-[#fafafa] border-[#D9D9D9]">
-                      <h4 className="text-[18px] font-regular text-[#000000]">Internal</h4>
+                      <h4 className="text-[18px] font-regular text-[#000000]">
+                        Internal
+                      </h4>
                     </div>
 
                     <div className="mt-4 ml-2">
                       {/* Template Dropdown */}
                       <div className="mb-3">
-                        <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+                        <FormControl
+                          fullWidth
+                          variant="outlined"
+                          sx={fieldStyles}
+                        >
                           <InputLabel shrink>Template</InputLabel>
                           <MuiSelect
                             label="Template"
@@ -11154,25 +13966,34 @@ export const TicketDetailsPage = () => {
                               setSelectedInternalTemplate(templateId);
                               // Auto-populate the textarea with the selected template's body
                               if (templateId) {
-                                const selectedTemplateData = communicationTemplates.find(t => t.id === templateId);
-                                setInternalCommentText(selectedTemplateData?.body || '');
+                                const selectedTemplateData =
+                                  communicationTemplates.find(
+                                    (t) => t.id === templateId
+                                  );
+                                setInternalCommentText(
+                                  selectedTemplateData?.body || ""
+                                );
                               } else {
-                                setInternalCommentText('');
+                                setInternalCommentText("");
                               }
                             }}
                             disabled={loadingTemplates}
                             sx={{
-                              fontSize: '11px',
-                              height: '40px',
+                              fontSize: "11px",
+                              height: "40px",
                             }}
                           >
                             <MenuItem value="">
-                              <span style={{ color: '#aaa' }}>
-                                {loadingTemplates ? 'Loading templates...' : 'Select Template'}
+                              <span style={{ color: "#aaa" }}>
+                                {loadingTemplates
+                                  ? "Loading templates..."
+                                  : "Select Template"}
                               </span>
                             </MenuItem>
                             {communicationTemplates
-                              .filter(template => template.identifier === "helpdesk")
+                              .filter(
+                                (template) => template.identifier === "helpdesk"
+                              )
                               .map((template) => (
                                 <MenuItem key={template.id} value={template.id}>
                                   {template.identifier_action}
@@ -11188,7 +14009,9 @@ export const TicketDetailsPage = () => {
                           <textarea
                             id="internal-comment"
                             value={internalCommentText}
-                            onChange={(e) => setInternalCommentText(e.target.value)}
+                            onChange={(e) =>
+                              setInternalCommentText(e.target.value)
+                            }
                             rows={4}
                             placeholder=" "
                             className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent 
@@ -11219,7 +14042,9 @@ export const TicketDetailsPage = () => {
                         <strong>Selected files:</strong>
                         <ul className="list-disc pl-5">
                           {internalAttachments.map((file, idx) => (
-                            <li key={idx}>{file.name} ({(file.size / 1024).toFixed(2)} KB)</li>
+                            <li key={idx}>
+                              {file.name} ({(file.size / 1024).toFixed(2)} KB)
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -11231,24 +14056,24 @@ export const TicketDetailsPage = () => {
                       multiple
                       accept="image/*,.pdf,.doc,.docx"
                       onChange={handleInternalFileChange}
-                      style={{ display: 'none' }}
+                      style={{ display: "none" }}
                     />
                     <MuiButton
                       variant="outlined"
                       component="label"
                       htmlFor="internal-file-input"
                       sx={{
-                        marginLeft: '8px',
-                        borderColor: '#C72030',
-                        color: '#C72030',
-                        textTransform: 'none',
-                        fontFamily: 'Work Sans, sans-serif',
+                        marginLeft: "8px",
+                        borderColor: "#C72030",
+                        color: "#C72030",
+                        textTransform: "none",
+                        fontFamily: "Work Sans, sans-serif",
                         fontWeight: 500,
-                        borderRadius: '0',
-                        padding: '8px 16px',
-                        '&:hover': {
-                          borderColor: '#B8252F',
-                          backgroundColor: 'rgba(199, 32, 48, 0.04)',
+                        borderRadius: "0",
+                        padding: "8px 16px",
+                        "&:hover": {
+                          borderColor: "#B8252F",
+                          backgroundColor: "rgba(199, 32, 48, 0.04)",
                         },
                       }}
                     >
@@ -11259,15 +14084,19 @@ export const TicketDetailsPage = () => {
                   {/* Customer Comments Section */}
                   <div className="flex-1">
                     <div className="bg-white w-full text-center py-0.5 bg-[#fafafa] border-[#D9D9D9]">
-                      <h4 className="text-[18px] font-regular text-[#000000]">Customer</h4>
+                      <h4 className="text-[18px] font-regular text-[#000000]">
+                        Customer
+                      </h4>
                     </div>
 
                     <div className="mt-4 mr-2">
-
-
                       {/* Template Dropdown */}
                       <div className="mb-3">
-                        <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+                        <FormControl
+                          fullWidth
+                          variant="outlined"
+                          sx={fieldStyles}
+                        >
                           <InputLabel shrink>Template</InputLabel>
                           <MuiSelect
                             label="Template"
@@ -11279,25 +14108,34 @@ export const TicketDetailsPage = () => {
                               setSelectedCustomerTemplate(templateId);
                               // Auto-populate the textarea with the selected template's body
                               if (templateId) {
-                                const selectedTemplateData = communicationTemplates.find(t => t.id === templateId);
-                                setCommentText(selectedTemplateData?.body || '');
+                                const selectedTemplateData =
+                                  communicationTemplates.find(
+                                    (t) => t.id === templateId
+                                  );
+                                setCommentText(
+                                  selectedTemplateData?.body || ""
+                                );
                               } else {
-                                setCommentText('');
+                                setCommentText("");
                               }
                             }}
                             disabled={loadingTemplates}
                             sx={{
-                              fontSize: '11px',
-                              height: '40px',
+                              fontSize: "11px",
+                              height: "40px",
                             }}
                           >
                             <MenuItem value="">
-                              <span style={{ color: '#aaa' }}>
-                                {loadingTemplates ? 'Loading templates...' : 'Select Template'}
+                              <span style={{ color: "#aaa" }}>
+                                {loadingTemplates
+                                  ? "Loading templates..."
+                                  : "Select Template"}
                               </span>
                             </MenuItem>
                             {communicationTemplates
-                              .filter(template => template.identifier === "helpdesk")
+                              .filter(
+                                (template) => template.identifier === "helpdesk"
+                              )
                               .map((template) => (
                                 <MenuItem key={template.id} value={template.id}>
                                   {template.identifier_action}
@@ -11344,7 +14182,9 @@ export const TicketDetailsPage = () => {
                         <strong>Selected files:</strong>
                         <ul className="list-disc pl-5">
                           {customerAttachments.map((file, idx) => (
-                            <li key={idx}>{file.name} ({(file.size / 1024).toFixed(2)} KB)</li>
+                            <li key={idx}>
+                              {file.name} ({(file.size / 1024).toFixed(2)} KB)
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -11356,23 +14196,23 @@ export const TicketDetailsPage = () => {
                       multiple
                       accept="image/*,.pdf,.doc,.docx"
                       onChange={handleCustomerFileChange}
-                      style={{ display: 'none' }}
+                      style={{ display: "none" }}
                     />
                     <MuiButton
                       variant="outlined"
                       component="label"
                       htmlFor="customer-file-input"
                       sx={{
-                        borderColor: '#C72030',
-                        color: '#C72030',
-                        textTransform: 'none',
-                        fontFamily: 'Work Sans, sans-serif',
+                        borderColor: "#C72030",
+                        color: "#C72030",
+                        textTransform: "none",
+                        fontFamily: "Work Sans, sans-serif",
                         fontWeight: 500,
-                        borderRadius: '0',
-                        padding: '8px 16px',
-                        '&:hover': {
-                          borderColor: '#B8252F',
-                          backgroundColor: 'rgba(199, 32, 48, 0.04)',
+                        borderRadius: "0",
+                        padding: "8px 16px",
+                        "&:hover": {
+                          borderColor: "#B8252F",
+                          backgroundColor: "rgba(199, 32, 48, 0.04)",
                         },
                       }}
                     >
@@ -11387,12 +14227,13 @@ export const TicketDetailsPage = () => {
                     type="button"
                     onClick={handleSubmitComment}
                     disabled={submittingComment}
-                    className={`bg-[#C72030] text-white text-[12px] font-medium px-6 py-2 transition-colors ${submittingComment
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:bg-[#A01828]'
-                      }`}
+                    className={`bg-[#C72030] text-white text-[12px] font-medium px-6 py-2 transition-colors ${
+                      submittingComment
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:bg-[#A01828]"
+                    }`}
                   >
-                    {submittingComment ? 'Submitting...' : 'Submit Comment'}
+                    {submittingComment ? "Submitting..." : "Submit Comment"}
                   </button>
                 </div>
               </div>
@@ -11405,10 +14246,33 @@ export const TicketDetailsPage = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                     <div className="w-6 h-6">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 18 26" fill="none">
-                        <path d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908" stroke="#C72030" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        <path d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908" stroke="#C72030" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        <path d="M5 8.09082H13M5 13.0908H9" stroke="#C72030" stroke-width="2" stroke-linecap="round" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="100%"
+                        height="100%"
+                        viewBox="0 0 18 26"
+                        fill="none"
+                      >
+                        <path
+                          d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908"
+                          stroke="#C72030"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908"
+                          stroke="#C72030"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M5 8.09082H13M5 13.0908H9"
+                          stroke="#C72030"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                        />
                       </svg>
                     </div>
                   </div>
@@ -11425,7 +14289,9 @@ export const TicketDetailsPage = () => {
                 ) : (
                   (() => {
                     const sorted = [...complaintLogs].sort(
-                      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                      (a, b) =>
+                        new Date(b.created_at).getTime() -
+                        new Date(a.created_at).getTime()
                     );
 
                     return (
@@ -11433,12 +14299,43 @@ export const TicketDetailsPage = () => {
                         <div className="pl-8 pt-2 relative">
                           {/* Vertical Progress Line */}
                           <div className="flex ml-1 mt-[-10px] mb-4 items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="26" viewBox="0 0 18 26" fill="none">
-                              <path d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908" stroke="#C72030" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                              <path d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908" stroke="#C72030" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                              <path d="M5 8.09082H13M5 13.0908H9" stroke="#C72030" strokeWidth="1.5" strokeLinecap="round" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="18"
+                              height="26"
+                              viewBox="0 0 18 26"
+                              fill="none"
+                            >
+                              <path
+                                d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908"
+                                stroke="#C72030"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908"
+                                stroke="#C72030"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M5 8.09082H13M5 13.0908H9"
+                                stroke="#C72030"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              />
                             </svg>
-                            <h4 style={{ marginLeft: '8px', fontWeight: '500', color: '#C72030' }}>Logs</h4>
+                            <h4
+                              style={{
+                                marginLeft: "8px",
+                                fontWeight: "500",
+                                color: "#C72030",
+                              }}
+                            >
+                              Logs
+                            </h4>
                           </div>
 
                           {/* Container for dots and line */}
@@ -11448,7 +14345,7 @@ export const TicketDetailsPage = () => {
                               <div
                                 className="absolute left-[13px] top-0 w-[2px] bg-[#C72030]"
                                 style={{
-                                  height: `calc(100% - 24px)`
+                                  height: `calc(100% - 24px)`,
                                 }}
                               />
                             )}
@@ -11456,12 +14353,22 @@ export const TicketDetailsPage = () => {
                             <div className="space-y-6">
                               {sorted.map((log, i) => {
                                 const isLast = i === sorted.length - 1;
-                                const currentDate = formatLogCardDate(log.created_at);
-                                const previousDate = i > 0 ? formatLogCardDate(sorted[i - 1].created_at) : null;
+                                const currentDate = formatLogCardDate(
+                                  log.created_at
+                                );
+                                const previousDate =
+                                  i > 0
+                                    ? formatLogCardDate(
+                                        sorted[i - 1].created_at
+                                      )
+                                    : null;
                                 const showDate = currentDate !== previousDate;
 
                                 return (
-                                  <div key={log.id || i} className="relative flex items-start gap-3">
+                                  <div
+                                    key={log.id || i}
+                                    className="relative flex items-start gap-3"
+                                  >
                                     {/* Dot aligned exactly on line */}
                                     <div className="relative">
                                       <span
@@ -11484,11 +14391,18 @@ export const TicketDetailsPage = () => {
                                           {formatLogTime(log.created_at)}
                                         </span>
                                         <span className="font-semibold text-[#1A1A1A] text-[16px]">
-                                          {log.log_status === null || log.log_status === undefined || log.log_status === '' ? 'Commented' : log.log_status}
+                                          {log.log_status === null ||
+                                          log.log_status === undefined ||
+                                          log.log_status === ""
+                                            ? "Commented"
+                                            : log.log_status}
                                         </span>
                                         {log.log_by && (
                                           <span className="text-[#1A1A1A] text-[16px]">
-                                            By <span className="text-[#1A1A1A]">{log.log_by}</span>
+                                            By{" "}
+                                            <span className="text-[#1A1A1A]">
+                                              {log.log_by}
+                                            </span>
                                           </span>
                                         )}
                                       </div>
@@ -11637,16 +14551,12 @@ export const TicketDetailsPage = () => {
                 </Card> */}
 
             {/* Ticket Closure (Figma-aligned) */}
-
-
-
           </TabsContent>
 
           <TabsContent value="creator-info" className="p-4 sm:p-6">
             <div className="space-y-6">
-
               {hasData(ticketData.posted_by) ||
-                hasData(ticketData.id_society) ? (
+              hasData(ticketData.id_society) ? (
                 /* Creator Information Card */
                 <Card className="w-full">
                   <CardHeader className="pb-4 lg:pb-6">
@@ -11661,23 +14571,30 @@ export const TicketDetailsPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                       {hasData(ticketData.posted_by) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Posted By</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Posted By
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.posted_by}</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.posted_by}
+                          </span>
                         </div>
                       )}
                       {hasData(ticketData.id_society) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Society</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Society
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.id_society}</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.id_society}
+                          </span>
                         </div>
                       )}
                     </div>
                   </CardContent>
                 </Card>
               ) : (
-
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <User className="w-16 h-16 text-gray-300 mb-4" />
                   <h3 className="text-lg font-medium text-gray-500 mb-2">
@@ -11698,13 +14615,13 @@ export const TicketDetailsPage = () => {
             <div className="space-y-6">
               {/* Check if there's any survey data to display */}
               {hasData(ticketData.survey?.survey?.id) ||
-                hasData(ticketData.survey?.survey?.name) ||
-                hasData(ticketData.survey?.site_name) ||
-                hasData(ticketData.survey?.building_name) ||
-                hasData(ticketData.survey?.wing_name) ||
-                hasData(ticketData.survey?.area_name) ||
-                hasData(ticketData.survey?.floor_name) ||
-                hasData(ticketData.survey?.room_name) ? (
+              hasData(ticketData.survey?.survey?.name) ||
+              hasData(ticketData.survey?.site_name) ||
+              hasData(ticketData.survey?.building_name) ||
+              hasData(ticketData.survey?.wing_name) ||
+              hasData(ticketData.survey?.area_name) ||
+              hasData(ticketData.survey?.floor_name) ||
+              hasData(ticketData.survey?.room_name) ? (
                 /* Survey Information Card */
                 <Card className="w-full">
                   <CardHeader className="pb-4 lg:pb-6">
@@ -11719,30 +14636,61 @@ export const TicketDetailsPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                       {hasData(ticketData.survey?.survey?.id) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Survey ID</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Survey ID
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.survey.survey.id}</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.survey.survey.id}
+                          </span>
                         </div>
                       )}
                       {hasData(ticketData.survey?.survey?.name) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Survey Name</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Survey Name
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium break-words" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{ticketData.survey.survey.name}</span>
+                          <span
+                            className="text-gray-900 font-medium break-words"
+                            style={{
+                              wordBreak: "break-word",
+                              overflowWrap: "anywhere",
+                            }}
+                          >
+                            {ticketData.survey.survey.name}
+                          </span>
                         </div>
                       )}
-                      {(hasData(ticketData.survey?.site_name) || hasData(ticketData.survey?.building_name) || hasData(ticketData.survey?.wing_name) || hasData(ticketData.survey?.area_name) || hasData(ticketData.survey?.floor_name) || hasData(ticketData.survey?.room_name)) && (
+                      {(hasData(ticketData.survey?.site_name) ||
+                        hasData(ticketData.survey?.building_name) ||
+                        hasData(ticketData.survey?.wing_name) ||
+                        hasData(ticketData.survey?.area_name) ||
+                        hasData(ticketData.survey?.floor_name) ||
+                        hasData(ticketData.survey?.room_name)) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Survey Location</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Survey Location
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium break-words" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{[
-                            ticketData.survey.site_name,
-                            ticketData.survey.building_name,
-                            ticketData.survey.wing_name,
-                            ticketData.survey.area_name,
-                            ticketData.survey.floor_name,
-                            ticketData.survey.room_name
-                          ].filter(Boolean).join('/')}</span>
+                          <span
+                            className="text-gray-900 font-medium break-words"
+                            style={{
+                              wordBreak: "break-word",
+                              overflowWrap: "anywhere",
+                            }}
+                          >
+                            {[
+                              ticketData.survey.site_name,
+                              ticketData.survey.building_name,
+                              ticketData.survey.wing_name,
+                              ticketData.survey.area_name,
+                              ticketData.survey.floor_name,
+                              ticketData.survey.room_name,
+                            ]
+                              .filter(Boolean)
+                              .join("/")}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -11759,20 +14707,19 @@ export const TicketDetailsPage = () => {
           {/* Additional Info Tab */}
           <TabsContent value="additional-info" className="p-4 sm:p-6">
             <div className="space-y-6">
-
               {hasData(ticketData.corrective_action) ||
-                hasData(ticketData.preventive_action) ||
-                hasData(ticketData.root_cause) ||
-                hasData(ticketData.response_tat) ||
-                hasData(ticketData.ticket_urgency) ||
-                hasData(ticketData.responsible_person) ||
-                hasData(ticketData.asset_service) ||
-                hasData(ticketData.resolution_tat) ||
-                hasData(ticketData.task_id) ||
-                hasData(ticketData.asset_service_location) ||
-                hasData(ticketData.resolution_time) ||
-                hasData(ticketData.escalation_response_name) ||
-                hasData(ticketData.escalation_resolution_name) ? (
+              hasData(ticketData.preventive_action) ||
+              hasData(ticketData.root_cause) ||
+              hasData(ticketData.response_tat) ||
+              hasData(ticketData.ticket_urgency) ||
+              hasData(ticketData.responsible_person) ||
+              hasData(ticketData.asset_service) ||
+              hasData(ticketData.resolution_tat) ||
+              hasData(ticketData.task_id) ||
+              hasData(ticketData.asset_service_location) ||
+              hasData(ticketData.resolution_time) ||
+              hasData(ticketData.escalation_response_name) ||
+              hasData(ticketData.escalation_resolution_name) ? (
                 /* Additional Information Card */
                 <Card className="w-full">
                   <CardHeader className="pb-4 lg:pb-6">
@@ -11787,99 +14734,159 @@ export const TicketDetailsPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 text-sm">
                       {hasData(ticketData.corrective_action) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Corrective Action</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Corrective Action
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium" title={ticketData.corrective_action}>
-                            {truncateWithEllipsis(ticketData.corrective_action, 5)}
+                          <span
+                            className="text-gray-900 font-medium"
+                            title={ticketData.corrective_action}
+                          >
+                            {truncateWithEllipsis(
+                              ticketData.corrective_action,
+                              5
+                            )}
                           </span>
                         </div>
                       )}
                       {hasData(ticketData.preventive_action) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Preventive Action</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Preventive Action
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium" title={ticketData.preventive_action}>
-                            {truncateWithEllipsis(ticketData.preventive_action, 5)}
+                          <span
+                            className="text-gray-900 font-medium"
+                            title={ticketData.preventive_action}
+                          >
+                            {truncateWithEllipsis(
+                              ticketData.preventive_action,
+                              5
+                            )}
                           </span>
                         </div>
                       )}
                       {hasData(ticketData.root_cause) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Root Cause</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Root Cause
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium" title={ticketData.root_cause}>
+                          <span
+                            className="text-gray-900 font-medium"
+                            title={ticketData.root_cause}
+                          >
                             {truncateWithEllipsis(ticketData.root_cause, 5)}
                           </span>
                         </div>
                       )}
                       {hasData(ticketData.response_tat) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Response TAT</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Response TAT
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.response_tat}</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.response_tat}
+                          </span>
                         </div>
                       )}
                       {hasData(ticketData.ticket_urgency) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Ticket Urgency</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Ticket Urgency
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.ticket_urgency}</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.ticket_urgency}
+                          </span>
                         </div>
                       )}
                       {hasData(ticketData.responsible_person) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Responsible Person</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Responsible Person
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.responsible_person}</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.responsible_person}
+                          </span>
                         </div>
                       )}
                       {hasData(ticketData.asset_service) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Asset Service</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Asset Service
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.asset_service}</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.asset_service}
+                          </span>
                         </div>
                       )}
                       {hasData(ticketData.resolution_tat) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Resolution TAT</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Resolution TAT
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.resolution_tat}</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.resolution_tat}
+                          </span>
                         </div>
                       )}
                       {hasData(ticketData.task_id) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Task ID</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Task ID
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.task_id}</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.task_id}
+                          </span>
                         </div>
                       )}
                       {hasData(ticketData.asset_service_location) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Asset/Service Location</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Asset/Service Location
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.asset_service_location}</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.asset_service_location}
+                          </span>
                         </div>
                       )}
                       {hasData(ticketData.resolution_time) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Resolution Time</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Resolution Time
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{ticketData.resolution_time}</span>
+                          <span className="text-gray-900 font-medium">
+                            {ticketData.resolution_time}
+                          </span>
                         </div>
                       )}
-                      {(hasData(ticketData.escalation_response_name) || hasData(ticketData.escalation_resolution_name)) && (
+                      {(hasData(ticketData.escalation_response_name) ||
+                        hasData(ticketData.escalation_resolution_name)) && (
                         <div className="flex items-center">
-                          <span className="text-gray-500 min-w-[140px]">Escalation Tracking</span>
+                          <span className="text-gray-500 min-w-[140px]">
+                            Escalation Tracking
+                          </span>
                           <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{`${ticketData.escalation_response_name || ''}, ${ticketData.escalation_resolution_name || ''}`.replace(/^,\s*|,\s*$/g, '')}</span>
+                          <span className="text-gray-900 font-medium">
+                            {`${ticketData.escalation_response_name || ""}, ${ticketData.escalation_resolution_name || ""}`.replace(
+                              /^,\s*|,\s*$/g,
+                              ""
+                            )}
+                          </span>
                         </div>
                       )}
                     </div>
                   </CardContent>
                 </Card>
               ) : (
-
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <PlusCircle className="w-16 h-16 text-gray-300 mb-4" />
                   <h3 className="text-lg font-medium text-gray-500 mb-2">
@@ -11965,7 +14972,10 @@ export const TicketDetailsPage = () => {
                                 // Set selectedDoc for AttachmentPreviewModal
                                 setSelectedDoc({
                                   id: document.id || 0,
-                                  document_name: document.document_name || document.document_file_name || `Document ${index + 1}`,
+                                  document_name:
+                                    document.document_name ||
+                                    document.document_file_name ||
+                                    `Document ${index + 1}`,
                                   url: documentUrl,
                                 });
                                 setShowImagePreview(true);
@@ -12004,8 +15014,9 @@ export const TicketDetailsPage = () => {
 
                           {/* File Name */}
                           <p className="text-sm text-gray-700 text-center font-medium break-all mb-2">
-                            {`Document_${document.id || index + 1}.${fileExtension || "file"
-                              }`}
+                            {`Document_${document.id || index + 1}.${
+                              fileExtension || "file"
+                            }`}
                           </p>
 
                           {/* Download Button */}
@@ -12043,9 +15054,8 @@ export const TicketDetailsPage = () => {
                                 }
 
                                 // Import API_CONFIG to get the base URL
-                                const { API_CONFIG } = await import(
-                                  "@/config/apiConfig"
-                                );
+                                const { API_CONFIG } =
+                                  await import("@/config/apiConfig");
                                 const baseUrl = API_CONFIG.BASE_URL;
                                 const token = localStorage.getItem("token");
 
@@ -12139,8 +15149,8 @@ export const TicketDetailsPage = () => {
           {/* Cost Approval Tab */}
           <TabsContent value="cost-approval" className="p-4 sm:p-6">
             {ticketData.cost_approval_enabled &&
-              ticketData.requests &&
-              ticketData.requests.length > 0 ? (
+            ticketData.requests &&
+            ticketData.requests.length > 0 ? (
               <div className="bg-white rounded-lg border overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -12168,7 +15178,7 @@ export const TicketDetailsPage = () => {
                           {request.id || `REQ-${index + 1}`}
                         </TableCell>
                         <TableCell>
-                          ₹{parseFloat(request.amount || '0').toFixed(2)}
+                          ₹{parseFloat(request.amount || "0").toFixed(2)}
                         </TableCell>
                         <TableCell>
                           {request.comment || "No comments"}
@@ -12191,45 +15201,51 @@ export const TicketDetailsPage = () => {
                             {request.master_status || "Pending"}
                           </Badge>
                         </TableCell>
-                        <TableCell>{request.cancelled_by === "NA" ? "-" : (request.cancelled_by || "-")}</TableCell>
+                        <TableCell>
+                          {request.cancelled_by === "NA"
+                            ? "-"
+                            : request.cancelled_by || "-"}
+                        </TableCell>
                         <TableCell className="text-center">
-                          {request.attachments && request.attachments.length > 0 && (
-                            <div className="flex justify-center">
-                              <Button
-                                // variant="outline"
-                                size="sm"
-                                className="w-8 h-8 p-0 flex items-center justify-center"
-                                onClick={() => {
-                                  // Check if request has attachments
-                                  if (
-                                    request.attachments &&
-                                    request.attachments.length > 0
-                                  ) {
-                                    const attachment = request.attachments[0]; // Take first attachment
-                                    const imageUrl = attachment.document || attachment.url;
-                                    if (imageUrl) {
-                                      // Set selectedDoc for AttachmentPreviewModal
-                                      setSelectedDoc({
-                                        id: attachment.id || 0,
-                                        document_name: `Cost Approval Request ${request.id || index + 1}`,
-                                        url: imageUrl,
-                                        document_url: imageUrl,
-                                        document: imageUrl,
-                                      });
-                                      setShowImagePreview(true);
+                          {request.attachments &&
+                            request.attachments.length > 0 && (
+                              <div className="flex justify-center">
+                                <Button
+                                  // variant="outline"
+                                  size="sm"
+                                  className="w-8 h-8 p-0 flex items-center justify-center"
+                                  onClick={() => {
+                                    // Check if request has attachments
+                                    if (
+                                      request.attachments &&
+                                      request.attachments.length > 0
+                                    ) {
+                                      const attachment = request.attachments[0]; // Take first attachment
+                                      const imageUrl =
+                                        attachment.document || attachment.url;
+                                      if (imageUrl) {
+                                        // Set selectedDoc for AttachmentPreviewModal
+                                        setSelectedDoc({
+                                          id: attachment.id || 0,
+                                          document_name: `Cost Approval Request ${request.id || index + 1}`,
+                                          url: imageUrl,
+                                          document_url: imageUrl,
+                                          document: imageUrl,
+                                        });
+                                        setShowImagePreview(true);
+                                      }
+                                    } else {
+                                      toast.error(
+                                        "No attachments found for this request"
+                                      );
                                     }
-                                  } else {
-                                    toast.error(
-                                      "No attachments found for this request"
-                                    );
-                                  }
-                                }}
-                              >
-                                <Eye className="w-4 h-4 mr-1" />
-                                {/* View */}
-                              </Button>
-                            </div>
-                          )}
+                                  }}
+                                >
+                                  <Eye className="w-4 h-4 mr-1" />
+                                  {/* View */}
+                                </Button>
+                              </div>
+                            )}
                         </TableCell>
                         <TableCell className="text-center">
                           <Button
@@ -12259,109 +15275,170 @@ export const TicketDetailsPage = () => {
           <TabsContent value="action-logs" className="p-4 sm:p-6">
             {ticketFeedsData?.feeds && ticketFeedsData.feeds.length > 0 ? (
               <div className="space-y-6">
-                {[...ticketFeedsData.feeds].reverse().map((group: any, groupIdx: number) => (
-                  <div key={groupIdx}>
-                    {/* Date Header */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-sm font-semibold text-[#C72030]">{group.date}</span>
-                      <div className="flex-1 h-px bg-gray-200" />
-                    </div>
-                    {/* Entries */}
-                    <div className="space-y-3 pl-2">
-                      {[...group.entries].reverse().map((entry: any, entryIdx: number) => (
-                        <div key={entryIdx} className="flex gap-4">
-                          {/* Time column */}
-                          <div className="w-20 shrink-0 text-xs text-gray-500 pt-1 text-right">
-                            {entry.time}
-                          </div>
-                          {/* Timeline dot */}
-                          <div className="flex flex-col items-center">
-                            <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${(entry.type === 'Escalation' || entry.type === 'Executive Escalation') ? 'bg-[#C72030]' : 'bg-gray-400'}`} />
-                            {entryIdx < group.entries.length - 1 && (
-                              <div className="w-px flex-1 bg-gray-200 mt-1" style={{ minHeight: '20px' }} />
-                            )}
-                          </div>
-                          {/* Content card */}
-                          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-2">
-                            {(entry.type === 'Escalation' || entry.type === 'Executive Escalation') ? (
-                              <div>
-                                <p className="text-sm font-semibold text-gray-800 mb-1">{entry.label || entry.type}</p>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="inline-block bg-[#C72030] text-white text-xs font-bold px-2 py-0.5 rounded">
-                                    {entry.name}
-                                  </span>
-                                  {entry.escalated_to && entry.escalated_to.length > 0 && (
-                                    <span className="text-sm text-gray-600">
-                                      escalated to{' '}
-                                      <span className="font-medium text-gray-800">
-                                        {entry.escalated_to.join(', ')}
+                {[...ticketFeedsData.feeds]
+                  .reverse()
+                  .map((group: any, groupIdx: number) => (
+                    <div key={groupIdx}>
+                      {/* Date Header */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-sm font-semibold text-[#C72030]">
+                          {group.date}
+                        </span>
+                        <div className="flex-1 h-px bg-gray-200" />
+                      </div>
+                      {/* Entries */}
+                      <div className="space-y-3 pl-2">
+                        {[...group.entries]
+                          .reverse()
+                          .map((entry: any, entryIdx: number) => (
+                            <div key={entryIdx} className="flex gap-4">
+                              {/* Time column */}
+                              <div className="w-20 shrink-0 text-xs text-gray-500 pt-1 text-right">
+                                {entry.time}
+                              </div>
+                              {/* Timeline dot */}
+                              <div className="flex flex-col items-center">
+                                <div
+                                  className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${entry.type === "Escalation" || entry.type === "Executive Escalation" ? "bg-[#C72030]" : "bg-gray-400"}`}
+                                />
+                                {entryIdx < group.entries.length - 1 && (
+                                  <div
+                                    className="w-px flex-1 bg-gray-200 mt-1"
+                                    style={{ minHeight: "20px" }}
+                                  />
+                                )}
+                              </div>
+                              {/* Content card */}
+                              <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-2">
+                                {entry.type === "Escalation" ||
+                                entry.type === "Executive Escalation" ? (
+                                  <div>
+                                    <p className="text-sm font-semibold text-gray-800 mb-1">
+                                      {entry.label || entry.type}
+                                    </p>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="inline-block bg-[#C72030] text-white text-xs font-bold px-2 py-0.5 rounded">
+                                        {entry.name}
                                       </span>
-                                    </span>
-                                  )}
-                                </div>
-                                {entry.category && (
-                                  <p className="text-xs text-gray-400 mt-1">
-                                    {entry.category}{entry.issue_related_to ? ` · ${entry.issue_related_to}` : ''}{entry.worker_esc_type ? ` · ${entry.worker_esc_type}` : ''}
-                                  </p>
-                                )}
-                              </div>
-                            ) : (
-                              <div>
-                                {entry.user && (
-                                  <p className="text-sm font-semibold text-gray-800 mb-1">
-                                    {entry.user} <span className="font-normal text-gray-500">- made below changes</span>
-                                  </p>
-                                )}
-                                {entry.status && (
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-600">Status -</span>
-                                    <span className="inline-block bg-gray-100 text-gray-700 text-xs font-medium px-2 py-0.5 rounded border border-gray-300">
-                                      {entry.status}
-                                    </span>
-                                  </div>
-                                )}
-                                {entry.comments && entry.comments.length > 0 && entry.comments.map((c: any, ci: number) => (
-                                  <div key={ci} className="mt-1 text-sm text-gray-600 bg-white border border-gray-200 rounded px-3 py-1.5">
-                                    {c?.text ?? c}
-                                  </div>
-                                ))}
-                                {entry.internal_comments && entry.internal_comments.length > 0 && entry.internal_comments.map((c: any, ci: number) => (
-                                  <div key={ci} className="mt-1 text-sm text-gray-500 italic bg-white border border-gray-200 rounded px-3 py-1.5">
-                                    {c?.text ?? c}
-                                  </div>
-                                ))}
-                                {entry.changes && entry.changes.length > 0 && (
-                                  <div className="mt-1 space-y-1">
-                                    {entry.changes.map((change: { field: string; from?: string; to: string }, ci: number) => (
-                                      <div key={ci} className="flex items-center gap-1.5 text-xs text-gray-600">
-                                        <span className="font-medium">{change.field}:</span>
-                                        {change.from && (
-                                          <>
-                                            <span className="bg-red-50 text-red-600 border border-red-200 px-1.5 py-0.5 rounded">{change.from}</span>
-                                            <span className="text-gray-400">→</span>
-                                          </>
+                                      {entry.escalated_to &&
+                                        entry.escalated_to.length > 0 && (
+                                          <span className="text-sm text-gray-600">
+                                            escalated to{" "}
+                                            <span className="font-medium text-gray-800">
+                                              {entry.escalated_to.join(", ")}
+                                            </span>
+                                          </span>
                                         )}
-                                        <span className="bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded">{change.to}</span>
+                                    </div>
+                                    {entry.category && (
+                                      <p className="text-xs text-gray-400 mt-1">
+                                        {entry.category}
+                                        {entry.issue_related_to
+                                          ? ` · ${entry.issue_related_to}`
+                                          : ""}
+                                        {entry.worker_esc_type
+                                          ? ` · ${entry.worker_esc_type}`
+                                          : ""}
+                                      </p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div>
+                                    {entry.user && (
+                                      <p className="text-sm font-semibold text-gray-800 mb-1">
+                                        {entry.user}{" "}
+                                        <span className="font-normal text-gray-500">
+                                          - made below changes
+                                        </span>
+                                      </p>
+                                    )}
+                                    {entry.status && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm text-gray-600">
+                                          Status -
+                                        </span>
+                                        <span className="inline-block bg-gray-100 text-gray-700 text-xs font-medium px-2 py-0.5 rounded border border-gray-300">
+                                          {entry.status}
+                                        </span>
                                       </div>
-                                    ))}
+                                    )}
+                                    {entry.comments &&
+                                      entry.comments.length > 0 &&
+                                      entry.comments.map(
+                                        (c: any, ci: number) => (
+                                          <div
+                                            key={ci}
+                                            className="mt-1 text-sm text-gray-600 bg-white border border-gray-200 rounded px-3 py-1.5"
+                                          >
+                                            {c?.text ?? c}
+                                          </div>
+                                        )
+                                      )}
+                                    {entry.internal_comments &&
+                                      entry.internal_comments.length > 0 &&
+                                      entry.internal_comments.map(
+                                        (c: any, ci: number) => (
+                                          <div
+                                            key={ci}
+                                            className="mt-1 text-sm text-gray-500 italic bg-white border border-gray-200 rounded px-3 py-1.5"
+                                          >
+                                            {c?.text ?? c}
+                                          </div>
+                                        )
+                                      )}
+                                    {entry.changes &&
+                                      entry.changes.length > 0 && (
+                                        <div className="mt-1 space-y-1">
+                                          {entry.changes.map(
+                                            (
+                                              change: {
+                                                field: string;
+                                                from?: string;
+                                                to: string;
+                                              },
+                                              ci: number
+                                            ) => (
+                                              <div
+                                                key={ci}
+                                                className="flex items-center gap-1.5 text-xs text-gray-600"
+                                              >
+                                                <span className="font-medium">
+                                                  {change.field}:
+                                                </span>
+                                                {change.from && (
+                                                  <>
+                                                    <span className="bg-red-50 text-red-600 border border-red-200 px-1.5 py-0.5 rounded">
+                                                      {change.from}
+                                                    </span>
+                                                    <span className="text-gray-400">
+                                                      →
+                                                    </span>
+                                                  </>
+                                                )}
+                                                <span className="bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded">
+                                                  {change.to}
+                                                </span>
+                                              </div>
+                                            )
+                                          )}
+                                        </div>
+                                      )}
+                                    {entry.status_reason && (
+                                      <p className="text-xs text-gray-400 mt-1">
+                                        Reason: {entry.status_reason}
+                                      </p>
+                                    )}
                                   </div>
                                 )}
-                                {entry.status_reason && (
-                                  <p className="text-xs text-gray-400 mt-1">Reason: {entry.status_reason}</p>
-                                )}
                               </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                            </div>
+                          ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8">
-                No logs found
-              </p>
+              <p className="text-gray-500 text-center py-8">No logs found</p>
             )}
           </TabsContent>
 
@@ -12381,50 +15458,70 @@ export const TicketDetailsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {ticketData.feedbacks.map((feedback: any, index: number) => (
-                      <TableRow key={feedback.id || index}>
-                        <TableCell className="font-medium text-sm">
-                          {feedback.created_at ? formatLogTime(feedback.created_at) : '-'}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <svg
-                                key={i}
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill={i < (feedback.rating || 0) ? '#C72030' : 'none'}
-                                stroke="#C72030"
-                                strokeWidth="2"
-                              >
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                              </svg>
-                            ))}
-                            <span className="ml-1 text-gray-600">({feedback.rating || 0}/5)</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {feedback.comment && feedback.comment.trim() ? feedback.comment : '-'}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {feedback.status && feedback.status.trim() ? (
-                            <Badge className="bg-blue-100 text-blue-700 text-xs">{feedback.status}</Badge>
-                          ) : '-'}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {feedback.staff && feedback.staff.trim() ? feedback.staff : '-'}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {feedback.log_by || '-'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {ticketData.feedbacks.map(
+                      (feedback: any, index: number) => (
+                        <TableRow key={feedback.id || index}>
+                          <TableCell className="font-medium text-sm">
+                            {feedback.created_at
+                              ? formatLogTime(feedback.created_at)
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <svg
+                                  key={i}
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill={
+                                    i < (feedback.rating || 0)
+                                      ? "#C72030"
+                                      : "none"
+                                  }
+                                  stroke="#C72030"
+                                  strokeWidth="2"
+                                >
+                                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                              ))}
+                              <span className="ml-1 text-gray-600">
+                                ({feedback.rating || 0}/5)
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {feedback.comment && feedback.comment.trim()
+                              ? feedback.comment
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {feedback.status && feedback.status.trim() ? (
+                              <Badge className="bg-blue-100 text-blue-700 text-xs">
+                                {feedback.status}
+                              </Badge>
+                            ) : (
+                              "-"
+                            )}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {feedback.staff && feedback.staff.trim()
+                              ? feedback.staff
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {feedback.log_by || "-"}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )}
                   </TableBody>
                 </Table>
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8">No feedbacks found</p>
+              <p className="text-gray-500 text-center py-8">
+                No feedbacks found
+              </p>
             )}
           </TabsContent>
         </Tabs>
@@ -12445,8 +15542,18 @@ export const TicketDetailsPage = () => {
             <div className="text-center">
               <div className="mb-4">
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  <svg
+                    className="w-8 h-8 text-red-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -12469,13 +15576,12 @@ export const TicketDetailsPage = () => {
                   type="button"
                   onClick={() => {
                     setCancelModalOpen(false);
-                    setCancelRequestId('');
+                    setCancelRequestId("");
                   }}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium transition-colors"
                 >
                   No
                 </button>
-
               </div>
             </div>
           </div>
@@ -12486,12 +15592,11 @@ export const TicketDetailsPage = () => {
       <TicketJobSheetModal
         isOpen={isJobSheetModalOpen}
         onClose={() => setIsJobSheetModalOpen(false)}
-        ticketId={id || ''}
+        ticketId={id || ""}
         ticketData={ticketData}
         jobSheetData={ticketData}
         jobSheetLoading={jobSheetLoading}
       />
-
     </div>
   );
-}
+};
