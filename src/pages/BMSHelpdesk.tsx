@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { BulkUploadDialog } from "@/components/BulkUploadDialog";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { API_CONFIG } from "@/config/apiConfig";
 import { apiClient } from "@/utils/apiClient";
@@ -364,7 +364,6 @@ const BMSHelpdesk: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
 
       <BulkUploadDialog
         open={showImportModal}

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 
 const NoticeboardDetails = () => {
@@ -142,7 +141,6 @@ if (loading) {
 
   return (
     <>
-      <Toaster position="top-right" richColors closeButton />
       {/* Debug info */}
       <div style={{ display: 'none' }}>
         Debug: ID={noticeboardId}, Loading={loading.toString()}, HasData={!!noticeboardData}

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { ArrowLeft, Zap } from "lucide-react";
 import {
@@ -148,7 +147,6 @@ const ConnectivityTypeEdit: React.FC = () => {
   if (fetchingData) {
     return (
       <div className="p-6 bg-[#FDFDFB] min-h-screen">
-        <Toaster position="top-right" richColors closeButton />
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex justify-center items-center py-12">
             <div className="text-gray-500">Loading...</div>
@@ -160,7 +158,6 @@ const ConnectivityTypeEdit: React.FC = () => {
 
   return (
     <div className="p-6 bg-[#FDFDFB] min-h-screen">
-      <Toaster position="top-right" richColors closeButton />
       
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">

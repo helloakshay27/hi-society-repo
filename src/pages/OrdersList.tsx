@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { OrdersListFilterModal } from "@/components/OrdersListFilterModal";
 import {
@@ -583,7 +582,6 @@ const OrdersList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-gray-900">ORDERS ({pagination.total_count} total)</h1>
       </div>

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { Edit, Pencil, Plus } from "lucide-react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -373,7 +372,6 @@ const PressReleasesList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       {renderListTab()}
     </div>
   );

@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -271,7 +270,6 @@ variant="ghost"
 
   return (
     <div className="p-6 space-y-6">
-      <Toaster position="top-right" richColors closeButton />
       <h1 className="text-2xl font-bold text-gray-900">FAQ Categories</h1>
       <div className="w-full">
         {renderListTab()}

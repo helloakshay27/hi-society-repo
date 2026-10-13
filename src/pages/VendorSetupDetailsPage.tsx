@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Wrench } from 'lucide-react';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
-import { Toaster } from '@/components/ui/sonner';
 import {
   Dialog,
   DialogContent,
@@ -181,7 +180,6 @@ const VendorSetupDetailsPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6">
-      <Toaster position="top-right" richColors closeButton />
 
       {/* Back */}
       <button

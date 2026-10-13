@@ -23,7 +23,6 @@ import { AlertCircle, Bell, Eye, Pencil, Plus, Wallet } from "lucide-react";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField, InputAdornment } from '@mui/material';
 import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
@@ -468,7 +467,6 @@ variant="ghost"
   // ── Render ──────────────────────────────────────────────────
   return (
     <div className="p-6">
-      <Toaster position="top-right" richColors closeButton />
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">

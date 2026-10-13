@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Plus, Eye, Upload, X, Loader2 } from 'lucide-react';
 import { vendorService } from '@/services/vendorService';
 import { toast } from 'sonner';
-import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationEllipsis, PaginationNext } from '@/components/ui/pagination';
 import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
@@ -374,7 +373,6 @@ console.log("vendors:-",vendors);
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       <div className="w-full">
         {renderListTab()}
       </div>

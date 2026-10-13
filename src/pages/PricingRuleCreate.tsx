@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFullUrl, getAuthenticatedFetchOptions } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import {
   Box,
   Typography,
@@ -205,7 +204,6 @@ const PricingRuleCreate: React.FC = () => {
         minHeight: "100vh",
       }}
     >
-      <Toaster position="top-right" richColors closeButton />
 
       {/* Header */}
       <div className="mb-8">

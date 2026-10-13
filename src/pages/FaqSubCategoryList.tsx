@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Plus, Edit } from 'lucide-react';
 import { toast } from 'sonner';
-import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
@@ -282,7 +281,6 @@ variant="ghost"
 
   return (
     <div className="p-6 space-y-6">
-      <Toaster position="top-right" richColors closeButton />
       <h1 className="text-2xl font-bold text-gray-900">FAQ Sub Categories</h1>
       {renderListTab()}
     </div>

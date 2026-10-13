@@ -23,6 +23,7 @@ import {
 } from "@mui/material";
 import { X } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { Switch } from "@/components/ui/switch";
 import {
   Pagination,
   PaginationContent,
@@ -278,13 +279,25 @@ const CampaignsReferralSetup: React.FC = () => {
       case "active":
         return (
           <div className="flex items-center justify-center">
-            <Switch checked={!!(!!item.is_referral)} onCheckedChange={() => handleToggleReferralProgram(item.id, !!item.is_referral)} />
+            <Switch
+              checked={!!item.is_referral}
+              onCheckedChange={() =>
+                handleToggleReferralProgram(item.id, !!item.is_referral)
+              }
+              className="data-[state=checked]:!bg-[#1a1a18] data-[state=unchecked]:!bg-gray-300"
+            />
           </div>
         );
       case "bannerStatus":
         return (
           <div className="flex items-center justify-center">
-            <Switch checked={!!(item.active === 1)} onCheckedChange={() => handleToggleBannerStatus(item.id, item.active === 1)} />
+            <Switch
+              checked={item.active === 1}
+              onCheckedChange={() =>
+                handleToggleBannerStatus(item.id, item.active === 1)
+              }
+              className="data-[state=checked]:!bg-[#1a1a18] data-[state=unchecked]:!bg-gray-300"
+            />
           </div>
         );
       default:

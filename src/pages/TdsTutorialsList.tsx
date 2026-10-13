@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -318,7 +317,6 @@ const TdsTutorialList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       <div className="w-full">
         {renderListTab()}
       </div>

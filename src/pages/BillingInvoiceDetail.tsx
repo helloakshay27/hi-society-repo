@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Printer, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
@@ -220,7 +219,6 @@ export default function BillingInvoiceDetail() {
 
   return (
     <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
-      <Toaster position="top-right" richColors closeButton />
 
       {/* Back Button and Actions */}
       <div className="max-w-5xl mx-auto mb-6 no-print">

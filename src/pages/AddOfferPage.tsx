@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Settings, Edit } from '@mui/icons-material';
 import { ArrowLeft } from 'lucide-react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import axios from 'axios';
 import { getFullUrl } from '@/config/apiConfig';
 import { HI_SOCIETY_CONFIG } from '@/config/apiConfig';
@@ -1465,7 +1465,6 @@ export default function AddOfferPage() {
     return (
         <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', maxHeight: '90vh', overflowY: 'auto' }} className="add-offer-page">
             <style>{`.add-offer-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
-            <Toaster position="top-right" richColors closeButton />
 
             {/* Back Navigation */}
             <div className="mb-8">

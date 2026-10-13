@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Download, Upload, X, FileText, Clock, User, MessageSquare, Paperclip, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 import axios from 'axios';
@@ -306,7 +305,6 @@ const ViolationDetail: React.FC = () => {
   if (!deviation) {
     return (
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <Toaster position="top-right" richColors closeButton />
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading violation details...</p>
@@ -317,7 +315,6 @@ const ViolationDetail: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 min-h-screen bg-gray-50">
-      <Toaster position="top-right" richColors closeButton />
       
       {/* Header */}
       <div className="mb-6">

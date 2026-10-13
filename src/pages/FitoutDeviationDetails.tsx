@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Eye, ArrowLeft, Send, Upload, X, Pencil, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
@@ -409,7 +408,6 @@ const FitoutDeviationDetails: React.FC = () => {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <Toaster position="top-right" richColors closeButton />
       
       {/* Header with Back Button */}
       <div className="flex items-center gap-4 mb-6">

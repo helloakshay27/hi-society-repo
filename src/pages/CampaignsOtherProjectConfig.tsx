@@ -1263,7 +1263,7 @@ const CampaignsOtherProjectConfig: React.FC = () => {
             </div>
 
             {/* Submit Button */}
-            <div className="flex gap-3 justify-center pt-4">
+            <div className="flex gap-3 justify-end pt-4">
               <Button
                 type="submit"
                 disabled={isLoading}

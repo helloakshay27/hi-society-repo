@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import {
     Box,
     Typography,
@@ -180,7 +180,6 @@ export default function AddTemplatePage() {
 
     return (
         <div className="p-6 bg-[#FDFDFB] min-h-screen">
-            <Toaster position="top-right" richColors closeButton />
 
             {/* Header */}
             <div className="mb-8">
