@@ -5439,6 +5439,19 @@ html body:has(#root div.p-6.bg-brand-bg.min-h-screen)
   stroke: #ffffff !important;
 }
 
+html body #root div.p-6.bg-brand-bg.min-h-screen button.schedule-rules-save-action,
+html body #root div.p-6.bg-brand-bg.min-h-screen button.schedule-rules-save-action:hover {
+  background-color: #1a1a18 !important;
+  border-color: #1a1a18 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root div.p-6.bg-brand-bg.min-h-screen button.schedule-rules-save-action > span {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 /* Template list status toggle thumb. */
 html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
   .MuiSwitch-root .MuiSwitch-switchBase,

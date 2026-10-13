@@ -583,11 +583,8 @@ const CampaignsReferralSetupEdit: React.FC = () => {
               )}
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-dashed border-gray-300 my-6"></div>
-
             {/* Submit Button */}
-            <div className="flex justify-center">
+            <div className="mt-8 flex justify-end">
               <Button
                 type="submit"
                 disabled={isSubmitting}

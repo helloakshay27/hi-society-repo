@@ -32,6 +32,10 @@ import {
   X,
   SlidersHorizontal,
   Loader2,
+  Building2,
+  CheckCircle2,
+  Clock,
+  Calendar,
 } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
@@ -80,6 +84,7 @@ export const AppointmentzManageFlats: React.FC = () => {
   const [filterTower, setFilterTower] = useState<string>("all");
   const [filterFlat, setFilterFlat] = useState<string>("all");
   const [filterPaymentStatus, setFilterPaymentStatus] = useState<string>("all");
+  const [filterMasterStatus, setFilterMasterStatus] = useState<string>("all");
   const [filterRmAssigned, setFilterRmAssigned] = useState<string>("all");
 
   // Applied filter state
@@ -87,11 +92,13 @@ export const AppointmentzManageFlats: React.FC = () => {
     tower: string;
     flat: string;
     payment_status: string;
+    master_status: string;
     rm_assigned: string;
   }>({
     tower: "all",
     flat: "all",
     payment_status: "all",
+    master_status: "all",
     rm_assigned: "all",
   });
 
@@ -159,6 +166,9 @@ export const AppointmentzManageFlats: React.FC = () => {
         ...(appliedFilters.flat !== "all" ? { flat: appliedFilters.flat } : {}),
         ...(appliedFilters.payment_status !== "all"
           ? { payment_status: appliedFilters.payment_status }
+          : {}),
+        ...(appliedFilters.master_status !== "all"
+          ? { master_status: appliedFilters.master_status }
           : {}),
         ...(appliedFilters.rm_assigned !== "all"
           ? { rm_assigned: appliedFilters.rm_assigned }
@@ -241,12 +251,52 @@ export const AppointmentzManageFlats: React.FC = () => {
     return data;
   }, [data, isRMUser]);
 
+  // Surface only truly important aggregate metrics (avoids repeating filter-as-card pattern)
+  const metrics = useMemo(() => {
+    const totalFlats = totalCount || data.length;
+    const paidCount = data.filter((d) =>
+      (d.payment_status || "").toLowerCase().includes("paid") &&
+      !(d.payment_status || "").toLowerCase().includes("unpaid")
+    ).length;
+    const pendingPaymentCount = data.filter((d) =>
+      (d.payment_status || "").toLowerCase().includes("pending") ||
+      (d.payment_status || "").toLowerCase().includes("unpaid")
+    ).length;
+    const totalVisits = data.reduce(
+      (sum, item) => sum + (Number(item.site_visits) || 0),
+      0
+    );
+
+    return {
+      totalFlats,
+      paidCount,
+      pendingPaymentCount,
+      totalVisits,
+    };
+  }, [data, totalCount]);
+
+  // Chip Filter Handlers for quick single-click filtering
+  const handlePaymentChipClick = (status: string) => {
+    const nextVal = appliedFilters.payment_status === status ? "all" : status;
+    setFilterPaymentStatus(nextVal);
+    setAppliedFilters((prev) => ({ ...prev, payment_status: nextVal }));
+    setCurrentPage(1);
+  };
+
+  const handleMasterStatusChipClick = (status: string) => {
+    const nextVal = appliedFilters.master_status === status ? "all" : status;
+    setFilterMasterStatus(nextVal);
+    setAppliedFilters((prev) => ({ ...prev, master_status: nextVal }));
+    setCurrentPage(1);
+  };
+
   // Handle Apply Filter in Popup
   const handleApplyFilter = () => {
     setAppliedFilters({
       tower: filterTower,
       flat: filterFlat,
       payment_status: filterPaymentStatus,
+      master_status: filterMasterStatus,
       rm_assigned: filterRmAssigned,
     });
     setIsFilterModalOpen(false);
@@ -259,11 +309,13 @@ export const AppointmentzManageFlats: React.FC = () => {
     setFilterTower("all");
     setFilterFlat("all");
     setFilterPaymentStatus("all");
+    setFilterMasterStatus("all");
     setFilterRmAssigned("all");
     setAppliedFilters({
       tower: "all",
       flat: "all",
       payment_status: "all",
+      master_status: "all",
       rm_assigned: "all",
     });
     setSearchTerm("");
@@ -277,6 +329,7 @@ export const AppointmentzManageFlats: React.FC = () => {
     appliedFilters.tower !== "all" ||
     appliedFilters.flat !== "all" ||
     appliedFilters.payment_status !== "all" ||
+    appliedFilters.master_status !== "all" ||
     appliedFilters.rm_assigned !== "all";
 
   // Handle Send Invite directly when Mail icon is clicked
@@ -513,7 +566,119 @@ export const AppointmentzManageFlats: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 bg-[#fbfbfa] min-h-screen">
+    <div className="p-4 md:p-6 bg-[#fbfbfa] min-h-screen space-y-4">
+      {/* 1. Sleek Aggregate Metrics Bar (surfaces only truly important aggregates, avoiding filter-as-card duplication) */}
+      <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-xs">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[#DA7756]/10 flex items-center justify-center shrink-0">
+              <Building2 className="w-5 h-5 text-[#DA7756]" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 font-medium">Total Flats</p>
+              <p className="text-xl font-bold text-gray-900">{metrics.totalFlats}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 sm:pl-4 pt-3 sm:pt-0">
+            <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 font-medium">Payment Received</p>
+              <p className="text-xl font-bold text-gray-900">{metrics.paidCount}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 sm:pl-4 pt-3 sm:pt-0">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 font-medium">Pending Payments</p>
+              <p className="text-xl font-bold text-gray-900">{metrics.pendingPaymentCount}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 sm:pl-4 pt-3 sm:pt-0">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+              <Calendar className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 font-medium">Site Visits Recorded</p>
+              <p className="text-xl font-bold text-gray-900">{metrics.totalVisits}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Interactive Filter Chips (occupancy / payment / master-status chips for rapid filtering) */}
+      <div className="bg-white border border-[#E5E7EB] rounded-xl px-4 py-3 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">
+            Payment:
+          </span>
+          {[
+            { label: "All", value: "all" },
+            { label: "Paid", value: "Paid" },
+            { label: "Pending", value: "Pending" },
+            { label: "Unpaid", value: "Unpaid" },
+          ].map((chip) => {
+            const isActive = appliedFilters.payment_status === chip.value;
+            return (
+              <button
+                key={chip.value}
+                onClick={() => handlePaymentChipClick(chip.value)}
+                className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer ${
+                  isActive
+                    ? "bg-[#DA7756] text-white shadow-xs font-semibold"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {chip.label}
+              </button>
+            );
+          })}
+
+          <div className="h-4 w-[1px] bg-gray-200 mx-1 hidden sm:block" />
+
+          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">
+            Master Status:
+          </span>
+          {[
+            { label: "All Status", value: "all" },
+            { label: "Approved", value: "Approved" },
+            { label: "Pending", value: "Pending" },
+            { label: "Handover", value: "Handover" },
+          ].map((chip) => {
+            const isActive = appliedFilters.master_status === chip.value;
+            return (
+              <button
+                key={chip.value}
+                onClick={() => handleMasterStatusChipClick(chip.value)}
+                className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer ${
+                  isActive
+                    ? "bg-[#1A1A1A] text-white shadow-xs font-semibold"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {chip.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {hasActiveFilters && (
+          <button
+            onClick={handleResetFilter}
+            className="flex items-center gap-1.5 text-xs text-[#DA7756] bg-[#fbeeed] px-3 py-1.5 rounded-md hover:bg-[#DA7756]/20 transition-colors font-medium cursor-pointer"
+          >
+            <span>Reset Filters</span>
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
       {/* EnhancedTable with right-side filter icon & Column Selector */}
       <EnhancedTable
         data={displayedData}
@@ -525,7 +690,7 @@ export const AppointmentzManageFlats: React.FC = () => {
           setSearchTerm(term);
           setCurrentPage(1);
         }}
-        searchPlaceholder="Search"
+        searchPlaceholder="Search flats..."
         storageKey="appointmentz-manage-flats-table"
         hideColumnsButton={false}
         hideTableExport={true}
@@ -635,8 +800,24 @@ export const AppointmentzManageFlats: React.FC = () => {
                 </Select>
               </div>
 
-              {/* Select RM Assigned */}
+              {/* Select Master Status */}
               <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-[#1A1A1A]">Select Master Status</Label>
+                <Select value={filterMasterStatus} onValueChange={setFilterMasterStatus}>
+                  <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white focus:ring-[#DA7756]">
+                    <SelectValue placeholder="Select Master Status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50">
+                    <SelectItem value="all" className="text-xs">All Master Statuses</SelectItem>
+                    <SelectItem value="Approved" className="text-xs">Approved</SelectItem>
+                    <SelectItem value="Pending" className="text-xs">Pending</SelectItem>
+                    <SelectItem value="Handover" className="text-xs">Handover</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Select RM Assigned */}
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label className="text-xs font-semibold text-[#1A1A1A]">Select RM Assigned</Label>
                 <Select value={filterRmAssigned} onValueChange={setFilterRmAssigned}>
                   <SelectTrigger className="h-9 text-xs border-[#D5DbDB] bg-white focus:ring-[#DA7756]">

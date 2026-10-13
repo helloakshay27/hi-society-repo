@@ -1139,233 +1139,276 @@ export const AppointmentzRequest: React.FC = () => {
         />
       )}
 
-      {/* Schedule Visit Modal (5-Step API Integration) */}
+      {/* Schedule Visit Modal (Enhanced Step/Group Structure) */}
       <Dialog open={isScheduleVisitOpen} onOpenChange={setIsScheduleVisitOpen}>
-        <DialogContent className="sm:max-w-[560px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl bg-white rounded-xl">
+        <DialogContent className="sm:max-w-[780px] p-0 overflow-hidden border-[#D5DbDB] shadow-2xl bg-white rounded-xl">
           <DialogHeader className="bg-[#f6f4ee] px-6 py-4 border-b border-[#D5DbDB] flex flex-row items-center justify-between">
-            <DialogTitle className="text-base font-bold text-[#1A1A1A] flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#DA7756]" />
-              Schedule New Visit
-            </DialogTitle>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[#DA7756]/10 flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-[#DA7756]" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-bold text-[#1A1A1A]">
+                  Schedule New Visit
+                </DialogTitle>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Book an on-site inspection or walkthrough visit on behalf of a resident
+                </p>
+              </div>
+            </div>
           </DialogHeader>
 
-          <div className="space-y-4 p-6 bg-white">
+          <div className="p-6 bg-white space-y-5 max-h-[80vh] overflow-y-auto">
             {isLoadingBehalfData ? (
-              <div className="py-8 text-center space-y-2">
-                <Loader2 className="w-6 h-6 text-[#DA7756] animate-spin mx-auto" />
+              <div className="py-12 text-center space-y-2">
+                <Loader2 className="w-7 h-7 text-[#DA7756] animate-spin mx-auto" />
                 <p className="text-xs text-[#6B7280]">Loading visit setup configuration...</p>
               </div>
             ) : (
               <>
-                {/* Step 1 & Step 2: Tower and Flat Selectors */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Step 1: Select Tower */}
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-[#1A1A1A]">
-                      Select Tower *
-                    </Label>
-                    <Select
-                      value={selectedScheduleTowerId || undefined}
-                      onValueChange={handleScheduleTowerSelect}
-                    >
-                      <SelectTrigger className="border-[#D5DbDB] bg-white h-9 text-xs focus:ring-[#DA7756]">
-                        <SelectValue placeholder="Select Tower" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {(behalfTowers.length > 0 ? behalfTowers : (towerOptions.length > 0 ? towerOptions : allTowerOptions)).length === 0 ? (
-                          <SelectItem value="none" disabled className="text-xs text-gray-400">
-                            No towers available
-                          </SelectItem>
-                        ) : (
-                          (behalfTowers.length > 0 ? behalfTowers : (towerOptions.length > 0 ? towerOptions : allTowerOptions)).map((t) => {
-                            const val = String(t.id || t.name || "");
-                            if (!val) return null;
-                            return (
-                              <SelectItem
-                                key={val}
-                                value={val}
-                                className="text-xs"
-                              >
-                                {t.name || `Tower #${t.id}`}
-                              </SelectItem>
-                            );
-                          })
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Step 2: Select Flat */}
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-[#1A1A1A]">
-                      Select Flat *
-                    </Label>
-                    <Select
-                      value={selectedScheduleFlatId || undefined}
-                      onValueChange={handleScheduleFlatSelect}
-                      disabled={!selectedScheduleTowerId || isLoadingFlatsByTower}
-                    >
-                      <SelectTrigger className="border-[#D5DbDB] bg-white h-9 text-xs focus:ring-[#DA7756]">
-                        <SelectValue
-                          placeholder={
-                            !selectedScheduleTowerId
-                              ? "Select Tower first"
-                              : isLoadingFlatsByTower
-                              ? "Loading flats..."
-                              : scheduleFlatsList.length === 0
-                              ? "No flats available"
-                              : "Select Flat No."
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {scheduleFlatsList.length === 0 ? (
-                          <SelectItem value="none" disabled className="text-xs text-gray-400">
-                            {isLoadingFlatsByTower ? "Loading flats..." : "No flats available"}
-                          </SelectItem>
-                        ) : (
-                          scheduleFlatsList.map((f) => {
-                            const val = String(f.id || "");
-                            if (!val) return null;
-                            return (
-                              <SelectItem
-                                key={val}
-                                value={val}
-                                className="text-xs"
-                              >
-                                {f.flat_no || f.flat_new_str || f.name || `Flat #${f.id}`}
-                              </SelectItem>
-                            );
-                          })
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Step 3: Owner Name and Scheduled By (Auto-populated from flat details) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-[#1A1A1A]">
-                      Owner Name
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        placeholder="Owner Name"
-                        value={scheduleOwnerName}
-                        onChange={(e) => setScheduleOwnerName(e.target.value)}
-                        className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756]"
-                      />
-                      {isLoadingFlatDetails && (
-                        <Loader2 className="w-3.5 h-3.5 text-[#DA7756] animate-spin absolute right-2.5 top-3" />
-                      )}
+                {/* Section 1: Property & Person Information */}
+                <div className="border border-[#E5E7EB] rounded-lg p-4 bg-[#FDFCFB]">
+                  <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-[#EFEFEF]">
+                    <div className="w-6 h-6 rounded-md bg-[#DA7756]/15 flex items-center justify-center">
+                      <Building2 className="w-3.5 h-3.5 text-[#DA7756]" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider">
+                        1. Property & Resident Information
+                      </h4>
+                      <p className="text-[11px] text-gray-500">
+                        Identify unit location and primary contact
+                      </p>
                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-[#1A1A1A]">
-                      Scheduled By
-                    </Label>
-                    <Input
-                      placeholder="Relationship Manager"
-                      value={scheduleScheduledBy}
-                      onChange={(e) => setScheduleScheduledBy(e.target.value)}
-                      className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756]"
-                    />
-                  </div>
-                </div>
 
-                {/* Step 4: Scheduled Date & Available Slot Dropdown */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-[#1A1A1A]">
-                      Scheduled Date *
-                    </Label>
-                    <Input
-                      type="date"
-                      min={bookingWindow.minDate || undefined}
-                      max={bookingWindow.maxDate || undefined}
-                      value={scheduleVisitDate || ""}
-                      onChange={(e) => handleScheduleDateChange(e.target.value)}
-                      className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756] cursor-pointer"
-                    />
-                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Tower Selector */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#1A1A1A]">
+                        Select Tower <span className="text-[#C72030]">*</span>
+                      </Label>
+                      <Select
+                        value={selectedScheduleTowerId || undefined}
+                        onValueChange={handleScheduleTowerSelect}
+                      >
+                        <SelectTrigger className="border-[#D5DbDB] bg-white h-9 text-xs focus:ring-[#DA7756]">
+                          <SelectValue placeholder="Select Tower" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {(behalfTowers.length > 0 ? behalfTowers : (towerOptions.length > 0 ? towerOptions : allTowerOptions)).length === 0 ? (
+                            <SelectItem value="none" disabled className="text-xs text-gray-400">
+                              No towers available
+                            </SelectItem>
+                          ) : (
+                            (behalfTowers.length > 0 ? behalfTowers : (towerOptions.length > 0 ? towerOptions : allTowerOptions)).map((t) => {
+                              const val = String(t.id || t.name || "");
+                              if (!val) return null;
+                              return (
+                                <SelectItem
+                                  key={val}
+                                  value={val}
+                                  className="text-xs"
+                                >
+                                  {t.name || `Tower #${t.id}`}
+                                </SelectItem>
+                              );
+                            })
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-[#1A1A1A]">
-                      Select Time Slot *
-                    </Label>
-                    <Select
-                      value={selectedScheduleSlotId || undefined}
-                      onValueChange={(val) => {
-                        if (val !== "none") setSelectedScheduleSlotId(val);
-                      }}
-                      disabled={!scheduleVisitDate || isLoadingAvailableSlots}
-                    >
-                      <SelectTrigger className="border-[#D5DbDB] bg-white h-9 text-xs focus:ring-[#DA7756]">
-                        <SelectValue
-                          placeholder={
-                            !scheduleVisitDate
-                              ? "Pick date first"
-                              : isLoadingAvailableSlots
-                              ? "Loading slots..."
-                              : scheduleAvailableSlots.length === 0
-                              ? "No slots available"
-                              : "Select Time Slot"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {scheduleAvailableSlots.length === 0 ? (
-                          <SelectItem value="none" disabled className="text-xs text-gray-400">
-                            {isLoadingAvailableSlots ? "Loading slots..." : "No slots available for date"}
-                          </SelectItem>
-                        ) : (
-                          scheduleAvailableSlots.map((slot) => {
-                            const val = String(slot.id || "");
-                            if (!val) return null;
-                            const isDisabled = slot.slot_disabled === true;
-                            const color = (slot.slot_color_code || "").toLowerCase();
-                            let statusLabel = "Available";
-                            let badgeBg = "bg-emerald-100 text-emerald-800";
-                            if (color.includes("yellow") || color === "yellow") {
-                              statusLabel = "Fast Filling";
-                              badgeBg = "bg-amber-100 text-amber-800";
-                            } else if (color.includes("red") || color === "red" || isDisabled) {
-                              statusLabel = "Not Available";
-                              badgeBg = "bg-red-100 text-red-700";
+                    {/* Flat Selector */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#1A1A1A]">
+                        Select Flat <span className="text-[#C72030]">*</span>
+                      </Label>
+                      <Select
+                        value={selectedScheduleFlatId || undefined}
+                        onValueChange={handleScheduleFlatSelect}
+                        disabled={!selectedScheduleTowerId || isLoadingFlatsByTower}
+                      >
+                        <SelectTrigger className="border-[#D5DbDB] bg-white h-9 text-xs focus:ring-[#DA7756]">
+                          <SelectValue
+                            placeholder={
+                              !selectedScheduleTowerId
+                                ? "Select Tower first"
+                                : isLoadingFlatsByTower
+                                ? "Loading flats..."
+                                : scheduleFlatsList.length === 0
+                                ? "No flats available"
+                                : "Select Flat No."
                             }
+                          />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {scheduleFlatsList.length === 0 ? (
+                            <SelectItem value="none" disabled className="text-xs text-gray-400">
+                              {isLoadingFlatsByTower ? "Loading flats..." : "No flats available"}
+                            </SelectItem>
+                          ) : (
+                            scheduleFlatsList.map((f) => {
+                              const val = String(f.id || "");
+                              if (!val) return null;
+                              return (
+                                <SelectItem
+                                  key={val}
+                                  value={val}
+                                  className="text-xs"
+                                >
+                                  {f.flat_no || f.flat_new_str || f.name || `Flat #${f.id}`}
+                                </SelectItem>
+                              );
+                            })
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                            return (
-                              <SelectItem
-                                key={val}
-                                value={val}
-                                disabled={isDisabled}
-                                className="text-xs flex items-center justify-between"
-                              >
-                                <span>{slot.ampm_timing}</span>
-                                <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded font-medium ${badgeBg}`}>
-                                  {statusLabel}
-                                </span>
-                              </SelectItem>
-                            );
-                          })
+                    {/* Owner Name */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#1A1A1A]">
+                        Owner Name
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          placeholder="Auto-populated or enter owner name"
+                          value={scheduleOwnerName}
+                          onChange={(e) => setScheduleOwnerName(e.target.value)}
+                          className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756]"
+                        />
+                        {isLoadingFlatDetails && (
+                          <Loader2 className="w-3.5 h-3.5 text-[#DA7756] animate-spin absolute right-2.5 top-3" />
                         )}
-                      </SelectContent>
-                    </Select>
+                      </div>
+                    </div>
+
+                    {/* Scheduled By */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#1A1A1A]">
+                        Scheduled By
+                      </Label>
+                      <Input
+                        placeholder="Relationship Manager / Staff Name"
+                        value={scheduleScheduledBy}
+                        onChange={(e) => setScheduleScheduledBy(e.target.value)}
+                        className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756]"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Purpose / Reason */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-[#1A1A1A]">
-                    Purpose / Reason (Optional)
-                  </Label>
-                  <Input
-                    placeholder="Visit reason / notes..."
-                    value={scheduleReason}
-                    onChange={(e) => setScheduleReason(e.target.value)}
-                    className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756]"
-                  />
+                {/* Section 2: Visit & Schedule Details */}
+                <div className="border border-[#E5E7EB] rounded-lg p-4 bg-[#FDFCFB]">
+                  <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-[#EFEFEF]">
+                    <div className="w-6 h-6 rounded-md bg-[#DA7756]/15 flex items-center justify-center">
+                      <Clock className="w-3.5 h-3.5 text-[#DA7756]" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider">
+                        2. Schedule Date & Slot Selection
+                      </h4>
+                      <p className="text-[11px] text-gray-500">
+                        Pick inspection date and available RM time window
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Scheduled Date */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#1A1A1A]">
+                        Scheduled Date <span className="text-[#C72030]">*</span>
+                      </Label>
+                      <Input
+                        type="date"
+                        min={bookingWindow.minDate || undefined}
+                        max={bookingWindow.maxDate || undefined}
+                        value={scheduleVisitDate || ""}
+                        onChange={(e) => handleScheduleDateChange(e.target.value)}
+                        className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756] cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Selected Slot */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#1A1A1A]">
+                        Select Time Slot <span className="text-[#C72030]">*</span>
+                      </Label>
+                      <Select
+                        value={selectedScheduleSlotId || undefined}
+                        onValueChange={(val) => {
+                          if (val !== "none") setSelectedScheduleSlotId(val);
+                        }}
+                        disabled={!scheduleVisitDate || isLoadingAvailableSlots}
+                      >
+                        <SelectTrigger className="border-[#D5DbDB] bg-white h-9 text-xs focus:ring-[#DA7756]">
+                          <SelectValue
+                            placeholder={
+                              !scheduleVisitDate
+                                ? "Pick date first"
+                                : isLoadingAvailableSlots
+                                ? "Loading slots..."
+                                : scheduleAvailableSlots.length === 0
+                                ? "No slots available"
+                                : "Select Time Slot"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {scheduleAvailableSlots.length === 0 ? (
+                            <SelectItem value="none" disabled className="text-xs text-gray-400">
+                              {isLoadingAvailableSlots ? "Loading slots..." : "No slots available for date"}
+                            </SelectItem>
+                          ) : (
+                            scheduleAvailableSlots.map((slot) => {
+                              const val = String(slot.id || "");
+                              if (!val) return null;
+                              const isDisabled = slot.slot_disabled === true;
+                              const color = (slot.slot_color_code || "").toLowerCase();
+                              let statusLabel = "Available";
+                              let badgeBg = "bg-emerald-100 text-emerald-800";
+                              if (color.includes("yellow") || color === "yellow") {
+                                statusLabel = "Fast Filling";
+                                badgeBg = "bg-amber-100 text-amber-800";
+                              } else if (color.includes("red") || color === "red" || isDisabled) {
+                                statusLabel = "Not Available";
+                                badgeBg = "bg-red-100 text-red-700";
+                              }
+
+                              return (
+                                <SelectItem
+                                  key={val}
+                                  value={val}
+                                  disabled={isDisabled}
+                                  className="text-xs flex items-center justify-between"
+                                >
+                                  <span>{slot.ampm_timing}</span>
+                                  <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded font-medium ${badgeBg}`}>
+                                    {statusLabel}
+                                  </span>
+                                </SelectItem>
+                              );
+                            })
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Purpose / Reason */}
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label className="text-xs font-semibold text-[#1A1A1A]">
+                        Purpose / Visit Notes (Optional)
+                      </Label>
+                      <Input
+                        placeholder="E.g., Pre-possession inspection, snagging walkthrough, flooring verification..."
+                        value={scheduleReason}
+                        onChange={(e) => setScheduleReason(e.target.value)}
+                        className="border-[#D5DbDB] h-9 text-xs bg-white focus:ring-[#DA7756]"
+                      />
+                    </div>
+                  </div>
                 </div>
               </>
             )}

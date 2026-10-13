@@ -23,6 +23,7 @@ import {
 } from "@mui/material";
 import { X } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { Switch } from "@/components/ui/switch";
 import {
   Pagination,
   PaginationContent,
@@ -277,35 +278,25 @@ const CampaignsReferralSetup: React.FC = () => {
       case "active":
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleToggleReferralProgram(item.id, !!item.is_referral)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                !!item.is_referral ? "bg-[#C72030]" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  !!item.is_referral ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch
+              checked={!!item.is_referral}
+              onCheckedChange={() =>
+                handleToggleReferralProgram(item.id, !!item.is_referral)
+              }
+              className="data-[state=checked]:!bg-[#1a1a18] data-[state=unchecked]:!bg-gray-300"
+            />
           </div>
         );
       case "bannerStatus":
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleToggleBannerStatus(item.id, item.active === 1)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                item.active === 1 ? "bg-[#C72030]" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  item.active === 1 ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch
+              checked={item.active === 1}
+              onCheckedChange={() =>
+                handleToggleBannerStatus(item.id, item.active === 1)
+              }
+              className="data-[state=checked]:!bg-[#1a1a18] data-[state=unchecked]:!bg-gray-300"
+            />
           </div>
         );
       default:
