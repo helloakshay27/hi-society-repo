@@ -3,7 +3,6 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import {
   Dialog,
   DialogContent,
@@ -572,7 +571,6 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
 
       <EnhancedTable
         data={paginatedData}

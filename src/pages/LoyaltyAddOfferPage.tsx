@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Settings, Edit } from "@mui/icons-material";
 import { ArrowLeft, Smile } from "lucide-react";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { emojis } from "@/utils/emojies";
 import axios from "axios";
 import { getFullUrl } from "@/config/apiConfig";
@@ -2178,7 +2178,6 @@ export default function AddOfferPage() {
         position: "relative",
       }}
     >
-      <Toaster position="top-right" richColors closeButton />
 
       {/* Back Navigation */}
       <div className="mb-8">

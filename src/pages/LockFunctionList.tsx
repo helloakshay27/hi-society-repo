@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -288,7 +287,6 @@ const LockFunctionList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       {renderListTab()}
     </div>
   );

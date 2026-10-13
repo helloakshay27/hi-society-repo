@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Select from "react-select";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import PropertySelect from "../components/ui/property-select";
 import SelectBox from "../components/ui/select-box";
@@ -2899,7 +2898,6 @@ const ProjectDetailsEdit = () => {
   }
   return (
     <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28">
-      <Toaster position="top-right" richColors closeButton />
       {/* Header Section */}
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">

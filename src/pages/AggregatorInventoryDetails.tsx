@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Package, ShoppingCart, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Toaster } from "@/components/ui/sonner";
 import { StatsCard } from "@/components/StatsCard";
 import axios from "axios";
 import { toast } from "sonner";
@@ -112,7 +111,6 @@ export const AggregatorInventoryDetails = () => {
 
     return (
         <div className="p-6 bg-[#fafafa] min-h-screen">
-            <Toaster position="top-right" richColors closeButton />
 
             {/* Back Button */}
             <div className="mb-6">

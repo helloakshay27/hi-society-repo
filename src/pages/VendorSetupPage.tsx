@@ -6,7 +6,6 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
-import { Toaster } from '@/components/ui/sonner';
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   Dialog,
@@ -466,7 +465,6 @@ const VendorSetupPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6">
-      <Toaster position="top-right" richColors closeButton />
 
       {/* Breadcrumb + Title */}
       <div className="mb-6">

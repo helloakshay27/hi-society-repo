@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { API_CONFIG } from "@/config/apiConfig";
 import axios from "axios";
 import { Plus, Edit } from "lucide-react";
@@ -274,7 +273,6 @@ const LoanManagerList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       <div className="w-full">
         {renderListTab()}
       </div>

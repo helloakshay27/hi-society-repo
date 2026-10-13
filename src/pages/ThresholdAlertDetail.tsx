@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 
 // ────────────────────────────────────────────────────────────────
 // Types
@@ -275,7 +274,6 @@ const ThresholdAlertDetail: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 space-y-6">
-      <Toaster position="top-right" richColors closeButton />
 
       {/* Header */}
       <div className="flex items-center justify-between">

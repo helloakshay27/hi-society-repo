@@ -3,7 +3,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { Plus, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -386,7 +385,6 @@ variant="ghost"
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       {renderListTab()}
     </div>
   );

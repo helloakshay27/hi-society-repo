@@ -33,7 +33,6 @@ import {
   Eye
 } from "lucide-react";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { apiClient } from "@/utils/apiClient";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import {
@@ -2162,7 +2161,6 @@ const FitoutRequestDetails: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 min-h-screen bg-gray-50">
-      <Toaster position="top-right" richColors closeButton />
 
       {/* Header */}
       <div className="mb-6">

@@ -10,7 +10,6 @@ import {
 } from "@mui/material";
 import { X, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Toaster } from "sonner";
 import { Button } from "@/components/ui/button";
 
 // Styled Components (match AddTicketDashboard)
@@ -259,7 +258,6 @@ const AddMISPage: React.FC = () => {
         fontFamily: "Work Sans, sans-serif",
       }}
     >
-      <Toaster position="top-right" richColors closeButton />
       <Box sx={{ maxWidth: "1200px", margin: "0 auto" }}>
         {/* Header */}
         <Box

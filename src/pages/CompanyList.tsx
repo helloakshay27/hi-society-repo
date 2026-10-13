@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_CONFIG } from "@/config/apiConfig";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 import { ChevronRight, ArrowLeft, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -286,7 +286,6 @@ const CompanyList = () => {
 
   return (
     <>
-      <Toaster position="top-right" />
       {renderListTab()}
     </>
   );

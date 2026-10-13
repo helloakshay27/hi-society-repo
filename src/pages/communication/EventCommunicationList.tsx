@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -465,7 +464,6 @@ const EventCommunicationList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
       <div className="w-full">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
