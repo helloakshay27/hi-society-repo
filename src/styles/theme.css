@@ -6330,3 +6330,37 @@ html body [role="radio"] svg {
   fill: #1a1a18 !important;
   color: #1a1a18 !important;
 }
+
+
+/* ============================================================
+   RADIO BUTTONS — final global override (theme ink #1a1a18)
+   Wins over page-level sx, legacy #C72030 rules and the runtime
+   colorPatch.ts <style> tag. Covers color AND fill on the icon and
+   its paths, so neither the ring nor the dot can stay red/orange.
+   ============================================================ */
+html body #root .MuiRadio-root,
+html body #root .MuiRadio-root.Mui-checked,
+html body #root [class*="MuiRadio-root"],
+html body #root [class*="MuiRadio-root"].Mui-checked,
+html body .MuiRadio-root,
+html body .MuiRadio-root.Mui-checked {
+  color: #1a1a18 !important;
+}
+html body #root .MuiRadio-root svg,
+html body #root .MuiRadio-root svg path,
+html body #root .MuiRadio-root .MuiSvgIcon-root,
+html body .MuiRadio-root svg,
+html body .MuiRadio-root svg path {
+  color: #1a1a18 !important;
+  fill: #1a1a18 !important;
+}
+html body #root .MuiRadio-root:hover {
+  background-color: rgba(26, 26, 24, 0.04) !important;
+}
+html body #root .MuiRadio-root .MuiTouchRipple-root {
+  color: #1a1a18 !important;
+}
+html body #root input[type="radio"],
+html body input[type="radio"] {
+  accent-color: #1a1a18 !important;
+}

@@ -19,6 +19,7 @@
 const BRAND_PRIMARY = "#da7756";
 const BRAND_HOVER = "#c9664a";
 const BRAND_LIGHT = "rgba(218,119,86,0.08)";
+const RADIO_INK = "#1a1a18";
 
 // Legacy colours to replace (as they appear in inline style="" attributes)
 const OLD_HEX = ["#C72030", "#c72030", "#C62828", "#c62828", "#B71C1C", "#b71c1c", "#A01020", "#a01020"];
@@ -74,15 +75,18 @@ a[style*="${old}"] {
 }`);
     });
 
-    // MUI Checkbox / Radio checked state
+    // MUI Checkbox checked state
     rules.push(`
 .MuiCheckbox-colorPrimary.Mui-checked,
-.MuiRadio-colorPrimary.Mui-checked {
+.MuiCheckbox-colorSecondary.Mui-checked {
   color: ${BRAND_PRIMARY} !important;
-}
-.MuiCheckbox-colorSecondary.Mui-checked,
-.MuiRadio-colorSecondary.Mui-checked {
-  color: ${BRAND_PRIMARY} !important;
+}`);
+
+    // MUI Radio: always theme ink (matches the global radio rule in theme.css)
+    rules.push(`
+.MuiRadio-root,
+.MuiRadio-root.Mui-checked {
+  color: ${RADIO_INK} !important;
 }`);
 
     // MUI Button contained primary
