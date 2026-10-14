@@ -162,11 +162,15 @@ export const TicketsPieCard: React.FC<TicketsPieCardProps> = ({ metric, dateRang
   const hasSentimentDistribution = !!overview?.sentiment.distribution;
   const centerValue =
     metric === 'customer-sentiments'
-      ? (hasSentimentDistribution ? overview?.sentiment.distribution?.total : overview?.sentiment.total_ratings)
+      ? (hasSentimentDistribution
+          ? overview?.sentiment.distribution?.total
+          : overview?.sentiment.total_ratings)
       : undefined;
   const subtitle =
     metric === 'customer-sentiments' && overview && !hasSentimentDistribution
-      ? `Estimated from average rating (${overview.sentiment.average_rating.toFixed(1)}/5) — no per-rating breakdown available`
+      ? `${overview.sentiment.total_ratings} customer ratings · no per-rating breakdown available`
+      : metric === 'customer-sentiments' && overview
+        ? `${overview.sentiment.total_ratings} customer ratings`
       : meta.subtitle;
 
   return (
@@ -175,6 +179,21 @@ export const TicketsPieCard: React.FC<TicketsPieCardProps> = ({ metric, dateRang
       subtitle={subtitle}
       segments={segments}
       centerValue={centerValue}
+      centerLabel={metric === 'customer-sentiments' ? 'Ratings' : undefined}
+      summary={
+        metric === 'customer-sentiments' && overview ? (
+          <div className="w-full max-w-xs rounded-xl bg-[#F7F6F2] px-6 py-7 text-center sm:py-10">
+            <p className="text-xs font-medium uppercase tracking-wide text-brand-text-light">Average rating</p>
+            <p className="mt-2 text-3xl font-bold leading-none tabular-nums text-brand-text sm:text-4xl">
+              {overview.sentiment.average_rating.toFixed(2)}
+              <span className="ml-1 text-base font-semibold text-brand-text-light">/ 5</span>
+            </p>
+            <p className="mt-3 text-xs text-brand-text-light sm:text-sm">
+              From {overview.sentiment.total_ratings} customer {overview.sentiment.total_ratings === 1 ? 'rating' : 'ratings'}
+            </p>
+          </div>
+        ) : undefined
+      }
       loading={loading}
       emptyMessage={meta.emptyMessage}
       className={className}
