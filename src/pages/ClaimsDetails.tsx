@@ -174,7 +174,7 @@ const ClaimsDetails = () => {
 
     if (loading) {
         return (
-            <div className="p-4 sm:p-6 min-h-screen flex items-center justify-center">
+            <div className="p-4 sm:p-6 min-h-screen bg-white flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030]"></div>
                     <p className="text-gray-600">Loading claim details...</p>
@@ -185,7 +185,7 @@ const ClaimsDetails = () => {
 
     if (!claim) {
         return (
-            <div className="p-4 sm:p-6 min-h-screen">
+            <div className="p-4 sm:p-6 min-h-screen bg-white">
                 <div className="text-center py-12">
                     <p className="text-gray-600">Claim not found</p>
                     <Button onClick={() => navigate(-1)} className="mt-4">
@@ -197,7 +197,7 @@ const ClaimsDetails = () => {
     }
 
     return (
-        <div className="p-4 sm:p-6 min-h-screen">
+        <div className="p-4 sm:p-6 min-h-screen bg-white">
             {/* Header */}
             <div className="mb-6">
                 <button
@@ -271,7 +271,7 @@ const ClaimsDetails = () => {
                             <span className="text-gray-500 min-w-[140px]">User Type</span>
                             <span className="text-gray-500 mx-2">:</span>
                             <span className="text-gray-900 font-medium capitalize">
-                                {claim.user.user_type.replace(/_/g, ' ')}
+                                {claim.user.user_type ? claim.user.user_type.replace(/_/g, ' ') : '-'}
                             </span>
                         </div>
                         {claim.user.gender && (

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import {
     Pagination,
@@ -18,7 +19,7 @@ import {
     PaginationPrevious,
     PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { Switch as MuiSwitch, Dialog as MuiDialog, DialogTitle as MuiDialogTitle, DialogContent as MuiDialogContent, DialogActions as MuiDialogActions, TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { Dialog as MuiDialog, DialogTitle as MuiDialogTitle, DialogContent as MuiDialogContent, DialogActions as MuiDialogActions, TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
@@ -871,12 +872,12 @@ variant="ghost"
         <div className="p-6">
             {/* Category Tabs */}
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mb-6">
-                <TabsList className="grid w-full grid-cols-4 gap-4 bg-transparent">
+                <TabsList className="bg-white border border-gray-200">
                     {productCategories.map((category) => (
                         <TabsTrigger
                             key={category.value}
                             value={category.value}
-                            className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white data-[state=active]:!bg-[var(--color-primary,#da7756)] data-[state=inactive]:!bg-[var(--color-primary,#da7756)] data-[state=active]:!text-white data-[state=inactive]:!text-white !border-transparent  px-4 py-2"
+                            className="font-semibold"
                         >
                             {category.label}
                         </TabsTrigger>
@@ -1079,25 +1080,17 @@ variant="ghost"
                             <Label className="text-sm font-medium text-[#1A1A1A]">Status</Label>
                             <div className="flex items-center gap-3">
                                 <span
-                                    className={`text-xs px-3 py-1 rounded-md ${isActive
+                                    className={`text-xs px-3 py-1 rounded-full ${isActive
                                         ? "bg-[#D1FAE5] text-[#065F46]"
                                         : "bg-red-100 text-red-800"
                                         }`}
                                 >
                                     {isActive ? "Active" : "Inactive"}
                                 </span>
-                                <MuiSwitch
+                                <Switch
                                     checked={isActive}
-                                    onChange={(e) => setIsActive(e.target.checked)}
-                                    sx={{
-                                        "& .MuiSwitch-switchBase.Mui-checked": {
-                                            color: "#10b981",
-                                        },
-                                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                                            backgroundColor: "#10b981",
-                                        },
-                                    }}
-                                    size="small"
+                                    onCheckedChange={setIsActive}
+                                    aria-label="Toggle item status"
                                 />
                             </div>
                         </div>
@@ -1200,11 +1193,18 @@ variant="ghost"
                             InputProps={{ sx: fieldStyles }}
                         />
 
-                        {/* Submit Button */}
-                        <div className="flex justify-center pt-4">
+                        {/* Footer Buttons */}
+                        <div className="flex justify-end gap-2 pt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsAddItemModalOpen(false)}
+                                className="btn-cancel h-9 px-4 text-sm font-medium"
+                            >
+                                Cancel
+                            </Button>
                             <Button
                                 onClick={handleSubmitItem}
-                                className="bg-[#C72030] hover:bg-[#A01828] text-white px-12"
+                                className="btn-primary h-9 px-4 text-sm font-medium"
                             >
                                 Submit
                             </Button>
@@ -1295,13 +1295,13 @@ variant="ghost"
                     <Button
                         variant="outline"
                         onClick={handleClearFilters}
-                        className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                        className="btn-cancel h-9 px-4 text-sm font-medium"
                     >
                         Clear
                     </Button>
                     <Button
                         onClick={handleApplyFilters}
-                        className="bg-[#C72030] hover:bg-[#A01828] text-white"
+                        className="btn-primary h-9 px-4 text-sm font-medium"
                     >
                         Apply
                     </Button>

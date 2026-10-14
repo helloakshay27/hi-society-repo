@@ -6,8 +6,7 @@ import {
   Trophy,
   Gift,
   FileText,
-  Calendar,
-} from "lucide-react";
+  Calendar, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -158,21 +157,21 @@ export const ContestDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="h-12 w-12 rounded-full border-4 border-gray-300 border-t-[#C72030] animate-spin" />
+      <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden min-h-screen bg-white flex items-center justify-center">
+        <div className="h-12 w-12 rounded-full border-4 border-gray-300 border-t-[#1A1A18] animate-spin" />
       </div>
     );
   }
 
   if (error || !contest) {
     return (
-      <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error || "Contest not found"}</p>
           <Button
             onClick={handleBack}
             variant="outline"
-            className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
+            className="btn-cancel h-9 px-4 text-sm font-medium"
           >
             Go Back
           </Button>
@@ -182,33 +181,36 @@ export const ContestDetailsPage: React.FC = () => {
   }
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden min-h-screen bg-gray-50">
+    <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden min-h-screen bg-white">
       {/* Header */}
-      <div className="mb-6">
-        <button
-          onClick={handleBack}
-          className="flex items-center gap-1 text-gray-600 hover:text-gray-800 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Contest List
-        </button>
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Back to Contest List"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Contests</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold text-[#1A1A18]">Contest Details</span>
+        </div>
 
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a] uppercase">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-3">
+              <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
                 {contest.name}
               </h1>
               <span
-                className={`px-3 py-1 rounded-md text-sm font-medium ${contest.active
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
-                  }`}
+                className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium text-black ${contest.active ? "bg-[#C7EDDA]" : "bg-[#F2C8C4]"}`}
               >
                 {contest.active ? "Active" : "Inactive"}
               </span>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-[12.5px] font-medium text-[rgba(26,26,24,0.48)]">
               {contest.content_type.charAt(0).toUpperCase() +
                 contest.content_type.slice(1)}{" "}
               Contest
@@ -216,14 +218,14 @@ export const ContestDetailsPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button
+            <button
+              type="button"
               onClick={() => handleEdit("all")}
-              variant="outline"
-              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 px-4 py-2"
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[13px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.12)] rounded-[10px] hover:bg-[#F5F4F0] transition-colors"
             >
-              <Edit className="w-4 h-4 mr-2" />
+              <Edit className="w-3.5 h-3.5" />
               Edit Contest
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -231,13 +233,13 @@ export const ContestDetailsPage: React.FC = () => {
       {/* Main Content */}
       <div className="space-y-6">
         {/* Basic Contest Info */}
-        <Card className="w-full bg-transparent shadow-[0px_1px_8px_rgba(45,45,45,0.05)] border-none">
-          <div className="bg-[#F6F4EE] px-6 py-4 rounded-t-lg flex items-center justify-between">
+        <Card className="w-full bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl shadow-none">
+          <div className="px-6 pt-[22px] pb-1 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-[#C4B89D54] p-2 rounded-lg">
-                <Trophy className="w-5 h-5 text-[#C72030]" />
+              <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
               </div>
-              <h3 className="text-lg font-semibold text-[#1A1A1A]">
+              <h3 className="text-sm font-semibold text-[#1A1A18]">
                 Basic Contest Info
               </h3>
             </div>
@@ -251,26 +253,26 @@ export const ContestDetailsPage: React.FC = () => {
               Edit
             </Button> */}
           </div>
-          <CardContent className="bg-white p-6 rounded-b-lg">
+          <CardContent className="px-6 pt-4 pb-[22px]">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                   Contest Name
                 </p>
-                <p className="text-base text-[#1A1A1A]">{contest.name}</p>
+                <p className="text-[13.5px] font-medium text-[#1A1A18]">{contest.name}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                   Contest Type
                 </p>
-                <p className="text-base text-[#1A1A1A]">
+                <p className="text-[13.5px] font-medium text-[#1A1A18]">
                   {contest.content_type.charAt(0).toUpperCase() +
                     contest.content_type.slice(1)}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">Description</p>
-                <p className="text-base text-[#1A1A1A] break-words whitespace-pre-wrap">
+                <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Description</p>
+                <p className="text-[13.5px] font-medium text-[#1A1A18] break-words whitespace-pre-wrap">
                   {contest.description || "—"}
                 </p>
               </div>
@@ -279,22 +281,19 @@ export const ContestDetailsPage: React.FC = () => {
         </Card>
 
         {/* Validity & Status */}
-        <Card className="w-full bg-transparent shadow-[0px_1px_8px_rgba(45,45,45,0.05)] border-none">
-          <div className="bg-[#F6F4EE] px-6 py-4 rounded-t-lg flex items-center justify-between">
+        <Card className="w-full bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl shadow-none">
+          <div className="px-6 pt-[22px] pb-1 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-[#C4B89D54] p-2 rounded-lg">
-                <Calendar className="w-5 h-5 text-[#C72030]" />
+              <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                <Calendar className="w-3.5 h-3.5 text-[#1A1A18]" />
               </div>
-              <h3 className="text-lg font-semibold text-[#1A1A1A]">
+              <h3 className="text-sm font-semibold text-[#1A1A18]">
                 Validity & Status
               </h3>
             </div>
             <div className="flex items-center gap-3">
               <span
-                className={`px-3 py-1 rounded-md text-sm font-medium ${contest.active
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
-                  }`}
+                className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium text-black ${contest.active ? "bg-[#C7EDDA]" : "bg-[#F2C8C4]"}`}
               >
                 {contest.active ? "Active" : "Inactive"}
               </span>
@@ -309,58 +308,58 @@ export const ContestDetailsPage: React.FC = () => {
               </Button> */}
             </div>
           </div>
-          <CardContent className="bg-white p-6 rounded-b-lg">
+          <CardContent className="px-6 pt-4 pb-[22px]">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">Start Date</p>
-                <p className="text-base text-[#1A1A1A]">
+                <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Start Date</p>
+                <p className="text-[13.5px] font-medium text-[#1A1A18]">
                   {formatDate(contest.start_at)}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">Start Time</p>
-                <p className="text-base text-[#1A1A1A]">
+                <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Start Time</p>
+                <p className="text-[13.5px] font-medium text-[#1A1A18]">
                   {formatTime(contest.start_at)}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">End Date</p>
-                <p className="text-base text-[#1A1A1A]">
+                <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">End Date</p>
+                <p className="text-[13.5px] font-medium text-[#1A1A18]">
                   {formatDate(contest.end_at)}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">End Time</p>
-                <p className="text-base text-[#1A1A1A]">
+                <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">End Time</p>
+                <p className="text-[13.5px] font-medium text-[#1A1A18]">
                   {formatTime(contest.end_at)}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">Users Cap</p>
-                <p className="text-base text-[#1A1A1A]">
+                <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Users Cap</p>
+                <p className="text-[13.5px] font-medium text-[#1A1A18]">
                   {contest.user_caps ?? "—"}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                   Attempts Required
                 </p>
-                <p className="text-base text-[#1A1A1A]">
+                <p className="text-[13.5px] font-medium text-[#1A1A18]">
                   {contest.user_attemp_remaining ?? "—"}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">Access Type</p>
-                <p className="text-base text-[#1A1A1A] capitalize">
+                <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Access Type</p>
+                <p className="text-[13.5px] font-medium text-[#1A1A18] capitalize">
                   {contest.access_type ? contest.access_type.replace('_', ' ') : "—"}
                 </p>
               </div>
               {contest.access_type === 'multiple_sites' && contest.societies && (
                 <div className="space-y-1 md:col-span-3">
-                  <p className="text-sm font-medium text-gray-500">Societies</p>
+                  <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Societies</p>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {contest.societies.map((s) => (
-                      <span key={s.id} className="px-2 py-1 bg-[#E5E0D3] text-[#1a1a1a8a] text-xs font-medium rounded">
+                      <span key={s.id} className="inline-flex items-center px-3 py-0.5 bg-[#F5F4F0] text-[#1A1A18] text-xs font-medium rounded-full">
                         {s.name}
                       </span>
                     ))}
@@ -372,13 +371,13 @@ export const ContestDetailsPage: React.FC = () => {
         </Card>
 
         {/* Offers & Media (Prizes) */}
-        <Card className="w-full bg-transparent shadow-[0px_1px_8px_rgba(45,45,45,0.05)] border-none">
-          <div className="bg-[#F6F4EE] px-6 py-4 rounded-t-lg flex items-center justify-between">
+        <Card className="w-full bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl shadow-none">
+          <div className="px-6 pt-[22px] pb-1 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-[#C4B89D54] p-2 rounded-lg">
-                <Gift className="w-5 h-5 text-[#C72030]" />
+              <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                <Gift className="w-3.5 h-3.5 text-[#1A1A18]" />
               </div>
-              <h3 className="text-lg font-semibold text-[#1A1A1A]">
+              <h3 className="text-sm font-semibold text-[#1A1A18]">
                 Prizes / Offers
               </h3>
             </div>
@@ -392,39 +391,39 @@ export const ContestDetailsPage: React.FC = () => {
               Edit
             </Button> */}
           </div>
-          <CardContent className="bg-white p-6 rounded-b-lg">
+          <CardContent className="px-6 pt-4 pb-[22px]">
             {contest.prizes.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
+              <p className="text-[13px] text-[rgba(26,26,24,0.48)] text-center py-8">
                 No prizes defined yet
               </p>
             ) : (
               contest.prizes.map((prize, index) => (
                 <div
                   key={prize.id}
-                  className="mb-8 last:mb-0 border-b pb-6 last:border-b-0"
+                  className="mb-6 last:mb-0 border-b border-[rgba(26,26,24,0.08)] pb-6 last:border-b-0"
                 >
                   <div className="flex items-start gap-3 mb-4">
-                    <span className="text-[#C72030] font-semibold text-lg">
+                    <span className="text-sm font-semibold text-[rgba(26,26,24,0.48)]">
                       {index + 1}.
                     </span>
                     <div className="flex-1">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-5 gap-x-6">
                         {/* Row 1 */}
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">
+                          <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                             Prize Title
                           </p>
-                          <p className="text-sm font-medium text-[#1A1A1A]">
+                          <p className="text-[13.5px] font-medium text-[#1A1A18]">
                             {prize.title}
                           </p>
                         </div>
 
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">
+                          <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                             {" "}
                             Reward Type
                           </p>
-                          <p className="text-sm text-[#1A1A1A]">
+                          <p className="text-[13.5px] font-medium text-[#1A1A18]">
                             {prize.reward_type === "points"
                               ? "Points"
                               : prize.reward_type === "coupon"
@@ -438,7 +437,7 @@ export const ContestDetailsPage: React.FC = () => {
                         </div>
 
                         <div className="md:row-span-4 flex items-start justify-end">
-                          <div className="w-48 h-32 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center overflow-hidden">
+                          <div className="w-48 h-32 bg-[#FAF9F7] rounded-xl border border-[rgba(26,26,24,0.09)] flex items-center justify-center overflow-hidden">
                             {prize.image?.url || prize.icon_url ? (
                               <img
                                 src={prize.image?.url || prize.icon_url || ""}
@@ -456,7 +455,7 @@ export const ContestDetailsPage: React.FC = () => {
                         {/* Row 2 */}
                         {prize.reward_type !== "none" && (
                           <div className="space-y-1">
-                            <p className="text-xs font-medium text-gray-500">
+                            <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                               {prize.reward_type === "points"
                                 ? "Points Value"
                                 : prize.reward_type === "merchandise"
@@ -464,7 +463,7 @@ export const ContestDetailsPage: React.FC = () => {
                                   : "Coupon Code"}
                             </p>
 
-                            <p className="text-sm text-[#1A1A1A]">
+                            <p className="text-[13.5px] font-medium text-[#1A1A18]">
                               {prize.reward_type === "points"
                                 ? `${prize.points_value ?? 0} Points`
                                 : prize.reward_type === "merchandise"
@@ -475,56 +474,56 @@ export const ContestDetailsPage: React.FC = () => {
                         )}
 
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">
+                          <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                             Partner
                           </p>
-                          <p className="text-sm text-[#1A1A1A]">
+                          <p className="text-[13.5px] font-medium text-[#1A1A18]">
                             {prize.partner_name ?? "—"}
                           </p>
                         </div>
 
                         {/* Row 3 */}
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">
+                          <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                             Probability
                           </p>
-                          <p className="text-sm text-[#1A1A1A]">
+                          <p className="text-[13.5px] font-medium text-[#1A1A18]">
                             {getProbability(prize)}
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">
+                          <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                             Total Quantity
                           </p>
-                          <p className="text-sm text-[#1A1A1A]">
+                          <p className="text-[13.5px] font-medium text-[#1A1A18]">
                             {prize.total_quantity !== null ? prize.total_quantity : "—"}
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">
+                          <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                             Validity
                           </p>
-                          <p className="text-sm text-[#1A1A1A]">
+                          <p className="text-[13.5px] font-medium text-[#1A1A18]">
                             {prize.validity ?? "—"}
                           </p>
                         </div>
                         {prize.display_name && (
                           <div className="space-y-1">
-                            <p className="text-xs font-medium text-gray-500">
+                            <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                               Display Name
                             </p>
-                            <p className="text-sm text-[#1A1A1A]">
+                            <p className="text-[13.5px] font-medium text-[#1A1A18]">
                               {prize.display_name}
                             </p>
                           </div>
                         )}
                         {prize.terms_and_conditions && (
                           <div className="md:col-span-2 space-y-1">
-                            <p className="text-xs font-medium text-gray-500">
+                            <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                               Prize Terms & Conditions
                             </p>
                             <div
-                              className="text-sm text-[#1A1A1A] prose-sm max-w-none"
+                              className="text-[13.5px] font-medium text-[#1A1A18] prose-sm max-w-none"
                               dangerouslySetInnerHTML={{ __html: prize.terms_and_conditions }}
                             />
                           </div>
@@ -533,37 +532,37 @@ export const ContestDetailsPage: React.FC = () => {
 
                       {/* Product Details for Merchandise */}
                       {prize.reward_type === "merchandise" && prize.product && (
-                        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                          <h4 className="text-sm font-semibold text-[#1A1A1A] mb-3">Product Details</h4>
+                        <div className="mt-6 p-4 bg-white rounded-xl border border-[rgba(26,26,24,0.09)]">
+                          <h4 className="text-sm font-semibold text-[#1A1A18] mb-3">Product Details</h4>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-gray-500">Product Name</p>
-                              <p className="text-sm text-[#1A1A1A]">{prize.product.name}</p>
+                              <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Product Name</p>
+                              <p className="text-[13.5px] font-medium text-[#1A1A18]">{prize.product.name}</p>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-gray-500">SKU</p>
-                              <p className="text-sm text-[#1A1A1A]">{prize.product.sku}</p>
+                              <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">SKU</p>
+                              <p className="text-[13.5px] font-medium text-[#1A1A18]">{prize.product.sku}</p>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-gray-500">Brand</p>
-                              <p className="text-sm text-[#1A1A1A]">{prize.product.brand || "—"}</p>
+                              <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Brand</p>
+                              <p className="text-[13.5px] font-medium text-[#1A1A18]">{prize.product.brand || "—"}</p>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-gray-500">Price</p>
-                              <p className="text-sm text-[#1A1A1A]">₹{prize.product.final_price}</p>
+                              <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Price</p>
+                              <p className="text-[13.5px] font-medium text-[#1A1A18]">₹{prize.product.final_price}</p>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-gray-500">Stock Quantity</p>
-                              <p className="text-sm text-[#1A1A1A]">{prize.product.stock_quantity}</p>
+                              <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Stock Quantity</p>
+                              <p className="text-[13.5px] font-medium text-[#1A1A18]">{prize.product.stock_quantity}</p>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-gray-500">Status</p>
-                              <p className="text-sm text-[#1A1A1A] capitalize">{prize.product.status}</p>
+                              <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Status</p>
+                              <p className="text-[13.5px] font-medium text-[#1A1A18] capitalize">{prize.product.status}</p>
                             </div>
                             {prize.product.description && (
                               <div className="space-y-1 md:col-span-3">
-                                <p className="text-xs font-medium text-gray-500">Description</p>
-                                <p className="text-sm text-[#1A1A1A]">{prize.product.description}</p>
+                                <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">Description</p>
+                                <p className="text-[13.5px] font-medium text-[#1A1A18]">{prize.product.description}</p>
                               </div>
                             )}
                           </div>
@@ -578,18 +577,18 @@ export const ContestDetailsPage: React.FC = () => {
         </Card>
 
         {/* Terms & Conditions */}
-        <Card className="w-full bg-transparent shadow-[0px_1px_8px_rgba(45,45,45,0.05)] border-none">
-          <div className="bg-[#F6F4EE] px-6 py-4 rounded-t-lg flex items-center justify-between">
+        <Card className="w-full bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl shadow-none">
+          <div className="px-6 pt-[22px] pb-1 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-[#C4B89D54] p-2 rounded-lg">
-                <FileText className="w-5 h-5 text-[#C72030]" />
+              <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                <FileText className="w-3.5 h-3.5 text-[#1A1A18]" />
               </div>
-              <h3 className="text-lg font-semibold text-[#1A1A1A]">
+              <h3 className="text-sm font-semibold text-[#1A1A18]">
                 Terms & Conditions
               </h3>
             </div>
           </div>
-          <CardContent className="bg-white p-6 rounded-b-lg">
+          <CardContent className="px-6 pt-4 pb-[22px]">
             <div className="prose max-w-none text-sm quill-content">
               <div
                 dangerouslySetInnerHTML={{
@@ -604,18 +603,18 @@ export const ContestDetailsPage: React.FC = () => {
 
         {/* Redemption Guide */}
         {contest.content_type.toLowerCase() === "scratch" && (
-          <Card className="w-full bg-transparent shadow-[0px_1px_8px_rgba(45,45,45,0.05)] border-none">
-            <div className="bg-[#F6F4EE] px-6 py-4 rounded-t-lg flex items-center justify-between">
+          <Card className="w-full bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl shadow-none">
+            <div className="px-6 pt-[22px] pb-1 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-[#C4B89D54] p-2 rounded-lg">
-                  <Gift className="w-5 h-5 text-[#C72030]" />
+                <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                  <Gift className="w-3.5 h-3.5 text-[#1A1A18]" />
                 </div>
-                <h3 className="text-lg font-semibold text-[#1A1A1A]">
+                <h3 className="text-sm font-semibold text-[#1A1A18]">
                   Redemption Guide
                 </h3>
               </div>
             </div>
-            <CardContent className="bg-white p-6 rounded-b-lg">
+            <CardContent className="px-6 pt-4 pb-[22px]">
               <div className="prose max-w-none text-sm quill-content">
                 <div
                   dangerouslySetInnerHTML={{

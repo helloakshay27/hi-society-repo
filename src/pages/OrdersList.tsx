@@ -11,7 +11,13 @@ import {
   PaginationNext,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import SelectBox from "../components/ui/select-box";
+import { ChevronDown, Loader2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -404,13 +410,26 @@ const OrdersList = () => {
 
   const getPaymentStatusBadgeClass = (status: string) => {
     const statusClasses: Record<string, string> = {
-      pending: "bg-yellow-100 text-yellow-800",
-      paid: "bg-green-100 text-green-800",
-      partially_paid: "bg-blue-100 text-blue-800",
-      failed: "bg-red-100 text-red-800",
-      refunded: "bg-gray-100 text-gray-800",
+      pending: "bg-[#F2EBC9] border border-[#F2EBC9]",
+      paid: "bg-[#C7EDDA] border border-[#C7EDDA]",
+      partially_paid: "bg-[#F2EBC9] border border-[#F2EBC9]",
+      failed: "bg-[#F2C8C4] border border-[#F2C8C4]",
+      refunded: "bg-[#D5DbDB] border border-[#D5DbDB]",
     };
-    return statusClasses[status] || "bg-gray-100 text-gray-800";
+    return statusClasses[status] || "bg-[#D5DbDB] border border-[#D5DbDB]";
+  };
+
+  const getOrderStatusBadgeClass = (status: string) => {
+    const statusClasses: Record<string, string> = {
+      pending: "bg-[#F2EBC9] border border-[#F2EBC9]",
+      confirmed: "bg-[#C7EDDA] border border-[#C7EDDA]",
+      processing: "bg-[#F2EBC9] border border-[#F2EBC9]",
+      shipped: "bg-[#C7EDDA] border border-[#C7EDDA]",
+      delivered: "bg-[#C7EDDA] border border-[#C7EDDA]",
+      cancelled: "bg-[#F2C8C4] border border-[#F2C8C4]",
+      refunded: "bg-[#D5DbDB] border border-[#D5DbDB]",
+    };
+    return statusClasses[status] || "bg-[#D5DbDB] border border-[#D5DbDB]";
   };
 
   const columns = [
@@ -493,7 +512,7 @@ const OrdersList = () => {
       case "id":
         return (
           <span
-            className="font-medium text-[#C72030] cursor-pointer hover:underline"
+            className="font-medium text-[#1A1A18] cursor-pointer hover:underline"
             onClick={() => navigate(`/loyalty/orders/${item.id}`)}
           >
             {item.id}
@@ -518,20 +537,43 @@ const OrdersList = () => {
             </div>
           </div>
         );
-      case "status":
+      case "status": {
+        const currentStatus = item.status || "";
+        const statusLabel =
+          statusOptions.find((opt) => opt.value === currentStatus)?.label ||
+          currentStatus || "N/A";
+        const isUpdating = updatingStatus === item.id;
         return (
-          <div className="w-[170px]">
-            <SelectBox
-              label=""
-              options={statusOptions.filter((opt) => opt.value !== "")}
-              defaultValue={item.status}
-              onChange={(value) => handleStatusChange(item.id, value)}
-            />
-            {updatingStatus === item.id && (
-              <div className="mt-1 text-xs text-gray-500">Updating...</div>
-            )}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild disabled={isUpdating}>
+              <button
+                type="button"
+                disabled={isUpdating}
+                className={`inline-flex items-center justify-center gap-1 leading-none rounded-full disabled:opacity-60 disabled:cursor-not-allowed ${getOrderStatusBadgeClass(currentStatus)}`}
+              >
+                {statusLabel}
+                {isUpdating ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <ChevronDown className="w-3 h-3" />
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {statusOptions
+                .filter((opt) => opt.value !== "" && opt.value !== currentStatus)
+                .map((opt) => (
+                  <DropdownMenuItem
+                    key={opt.value}
+                    onClick={() => handleStatusChange(item.id, opt.value)}
+                  >
+                    {opt.label}
+                  </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         );
+      }
       case "payment_status":
         const paymentStatus = item.payment_status || "";
         const displayStatus =
@@ -539,7 +581,7 @@ const OrdersList = () => {
           paymentStatus.slice(1).replace("_", " ");
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusBadgeClass(paymentStatus)}`}
+            className={`inline-flex items-center justify-center leading-none rounded-full ${getPaymentStatusBadgeClass(paymentStatus)}`}
           >
             {displayStatus || "N/A"}
           </span>
@@ -552,7 +594,7 @@ const OrdersList = () => {
         );
       case "loyalty_points_redeemed":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+          <span className="font-medium">
             {parseFloat(item.total_amount?.toString() || "0").toFixed(2)} pts
           </span>
         );
@@ -582,8 +624,13 @@ const OrdersList = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">ORDERS ({pagination.total_count} total)</h1>
+      <div className="mb-[22px]">
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+          Orders
+        </h1>
+        <p className="text-[12.5px] font-medium text-[rgba(26,26,24,0.48)] mt-1">
+          {pagination.total_count} total
+        </p>
       </div>
       {renderListTab()}
 

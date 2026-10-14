@@ -11,8 +11,7 @@ import {
   Download,
   Mail,
   Eye,
-  Loader2,
-} from "lucide-react";
+  Loader2, ChevronRight } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,7 +78,7 @@ const ParticipantTable = ({
             variant="ghost"
             size="sm"
             onClick={() => onNavigate(item?.user?.id ?? item.id)}
-            className="text-[#C72030] hover:bg-red-50"
+            className="text-[#1A1A18] hover:bg-[#F5F4F0]"
           >
             <Eye className="w-4 h-4" />
           </Button>
@@ -135,7 +134,7 @@ const ParticipantTable = ({
                   type="checkbox"
                   checked={allSelected}
                   onChange={(e) => onSelectAll?.(e.target.checked)}
-                  className="accent-[#C72030] w-4 h-4 cursor-pointer"
+                  className="accent-[#1A1A18] w-4 h-4 cursor-pointer"
                 />
               </TableHead>
             )}
@@ -160,7 +159,7 @@ const ParticipantTable = ({
                 }
                 className="text-center py-12"
               >
-                <Loader2 className="w-7 h-7 animate-spin text-[#C72030] mx-auto" />
+                <Loader2 className="w-7 h-7 animate-spin text-[#1A1A18] mx-auto" />
               </TableCell>
             </TableRow>
           ) : data.length === 0 ? (
@@ -187,7 +186,7 @@ const ParticipantTable = ({
                       onChange={(e) =>
                         onSelectItem?.(String(item.id), e.target.checked)
                       }
-                      className="accent-[#C72030] w-4 h-4 cursor-pointer"
+                      className="accent-[#1A1A18] w-4 h-4 cursor-pointer"
                     />
                   </TableCell>
                 )}
@@ -237,12 +236,12 @@ const WaitingListTab = ({ eventId }: { eventId: string }) => {
   }, [eventId]);
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <div className="bg-[#F6F4EE] p-4 flex items-center gap-3 border-b border-gray-200">
-        <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center text-[#C72030]">
+    <div className="bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl overflow-hidden">
+      <div className="px-6 pt-[22px] pb-4 flex items-center gap-3">
+        <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center text-[#1A1A18]">
           <FileText size={16} />
         </div>
-        <span className="font-semibold text-lg text-gray-800">
+        <span className="text-sm font-semibold text-[#1A1A18]">
           Requestor Details
         </span>
       </div>
@@ -284,12 +283,12 @@ const ApprovedTab = ({ eventId }: { eventId: string }) => {
   }, [eventId]);
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <div className="bg-[#F6F4EE] p-4 flex items-center gap-3 border-b border-gray-200">
-        <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center text-[#C72030]">
+    <div className="bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl overflow-hidden">
+      <div className="px-6 pt-[22px] pb-4 flex items-center gap-3">
+        <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center text-[#1A1A18]">
           <FileText size={16} />
         </div>
-        <span className="font-semibold text-lg text-gray-800">
+        <span className="text-sm font-semibold text-[#1A1A18]">
           Requestor Details
         </span>
       </div>
@@ -374,13 +373,13 @@ const PendingTab = ({
   const atCapacity = totalRegistered >= eventCapacity && eventCapacity > 0;
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <div className="bg-[#F6F4EE] p-4 flex items-center justify-between border-b border-gray-200">
+    <div className="bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl overflow-hidden">
+      <div className="px-6 pt-[22px] pb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center text-[#C72030]">
+          <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center text-[#1A1A18]">
             <FileText size={16} />
           </div>
-          <span className="font-semibold text-lg text-gray-800">
+          <span className="text-sm font-semibold text-[#1A1A18]">
             Requestor Details
           </span>
         </div>
@@ -388,7 +387,7 @@ const PendingTab = ({
           <div className="flex gap-3">
             <Button
               variant="outline"
-              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white px-6 h-9 disabled:opacity-50"
+              className="btn-cancel h-9 px-4 text-sm font-medium disabled:opacity-50"
               onClick={() => handleStatusUpdate("rejected")}
               disabled={selectedItems.length === 0 || isUpdating || atCapacity}
             >
@@ -398,7 +397,7 @@ const PendingTab = ({
               Deny
             </Button>
             <Button
-              className="bg-[#00A651] hover:bg-[#008C44] text-white px-6 h-9 disabled:opacity-50"
+              className="btn-primary h-9 px-4 text-sm font-medium"
               onClick={() => handleStatusUpdate("approved")}
               disabled={selectedItems.length === 0 || isUpdating || atCapacity}
             >
@@ -486,12 +485,12 @@ const ParticipantsDetailsTab = ({
 
   return (
     <div className="space-y-4">
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <div className="bg-[#F6F4EE] p-4 flex items-center gap-3 border-b border-gray-200">
-          <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center text-[#C72030]">
+      <div className="bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl overflow-hidden">
+        <div className="px-6 pt-[22px] pb-4 flex items-center gap-3">
+          <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center text-[#1A1A18]">
             <Users size={16} />
           </div>
-          <span className="font-semibold text-lg text-gray-800">
+          <span className="text-sm font-semibold text-[#1A1A18]">
             Participants Details
           </span>
         </div>
@@ -644,7 +643,7 @@ const LoyaltyEventDetails = () => {
     return (
       <div className="p-6 bg-white min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1A1A18] mx-auto mb-4"></div>
           <p>Loading event details...</p>
         </div>
       </div>
@@ -666,67 +665,33 @@ const LoyaltyEventDetails = () => {
   ];
 
   return (
-    <div className="p-6">
-      {/* Back button */}
-      <div className="mb-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1 hover:text-gray-800 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Event List
-        </button>
+    <div className="p-6 bg-white min-h-screen">
+      {/* Header */}
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Back to Event List"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Events</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold text-[#1A1A18]">Details</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+          {eventData?.event_name || "Event Details"}
+        </h1>
       </div>
 
-      <div
-        className="rounded-lg border-r border-b border-gray-200 shadow-sm"
-        style={{
-          borderTop: "none",
-          borderLeft: "none",
-          backgroundColor: "rgba(250, 250, 250, 1)",
-        }}
-      >
-        <style>{`
-          .top-level-tabs button[data-state="active"] {
-            background-color: rgba(237, 234, 227, 1) !important;
-            color: rgba(199, 32, 48, 1) !important;
-          }
-        `}</style>
-
+      <div>
         <Tabs defaultValue="event-details" className="w-full">
-          {/* Top-level tab bar */}
-          <TabsList
-            className="top-level-tabs w-full flex flex-nowrap rounded-t-lg p-0 overflow-x-auto"
-            style={{
-              gap: 0,
-              padding: 0,
-              backgroundColor: "rgba(246, 247, 247, 1)",
-              height: "50px",
-              marginBottom: "0",
-            }}
-          >
+          {/* Top-level tab bar — segmented pill switcher (global theme style) */}
+          <TabsList className="bg-white border border-gray-200">
             {tabs.map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030]"
-                style={{
-                  width: "230px",
-                  paddingTop: "10px",
-                  paddingRight: "20px",
-                  paddingBottom: "10px",
-                  paddingLeft: "20px",
-                  borderRadius: "0",
-                  border: "none",
-                  margin: "0",
-                  fontFamily: "Work Sans",
-                  fontWeight: 500,
-                  fontSize: "14px",
-                  lineHeight: "100%",
-                  color: "rgba(26, 26, 26, 1)",
-                  backgroundColor: "rgba(246, 247, 247, 1)",
-                }}
-              >
+              <TabsTrigger key={tab.value} value={tab.value} className="font-semibold">
                 {tab.label}
               </TabsTrigger>
             ))}
@@ -735,100 +700,99 @@ const LoyaltyEventDetails = () => {
           {/* ── Event Details ── */}
           <TabsContent
             value="event-details"
-            className="p-6 space-y-6"
-            style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}
+            className="pt-6 space-y-6"
           >
             {/* Event Details Card */}
-            <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                  <FileText className="w-5 h-5 text-[#C72030]" />
+            <div className="w-full bg-white rounded-2xl border border-[rgba(26,26,24,0.09)]">
+              <div className="flex items-center gap-3 px-6 pt-[22px] pb-1">
+                <div className="w-8 h-8 flex-none rounded-full flex items-center justify-center bg-[#F5F4F0]">
+                  <FileText className="w-3.5 h-3.5 text-[#1A1A18]" />
                 </div>
-                <h3 className="text-lg font-semibold text-black">
+                <h3 className="text-sm font-semibold text-[#1A1A18]">
                   Event Details
                 </h3>
               </div>
-              <div className="bg-[#FBFBFA] px-6 py-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
-                  <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">
+              <div className="px-6 pt-5 pb-[22px]">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                       Event Name
                     </p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-[13.5px] font-medium text-[#1A1A18] break-words [overflow-wrap:anywhere] min-w-0">
                       {eventData?.event_name || "N/A"}
                     </p>
                   </div>
-                  {/* <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">
+                  {/* <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                       Event Shared
                     </p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-[13.5px] font-medium text-[#1A1A18] break-words [overflow-wrap:anywhere] min-w-0">
                       {eventData?.shared === "0" || eventData?.shared === 0
                         ? "All"
                         : "Individual"}
                     </p>
                   </div> */}
-                    <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">
+                    <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                       Event Venue
                     </p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-[13.5px] font-medium text-[#1A1A18] break-words [overflow-wrap:anywhere] min-w-0">
                       {eventData?.event_at || "-"}
                     </p>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                       Event Description
                     </p>
-                    <p className="text-base font-medium text-gray-900 flex-1 break-words">
+                    <p className="text-[13.5px] font-medium text-[#1A1A18] break-words [overflow-wrap:anywhere] min-w-0">
                       {eventData?.description || "-"}
                     </p>
                   </div>               
-                  <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                       Start Date
                     </p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-[13.5px] font-medium text-[#1A1A18] break-words [overflow-wrap:anywhere] min-w-0">
                       {eventData?.from_time
                         ? formatDate(eventData.from_time)
                         : "N/A"}
                     </p>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                       Start Time
                     </p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-[13.5px] font-medium text-[#1A1A18] break-words [overflow-wrap:anywhere] min-w-0">
                       {eventData?.from_time
                         ? `${formatTime(eventData.from_time)}`
                         : "N/A"}
                     </p>
                   </div>
-                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">
+                   <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                       End Date
                     </p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-[13.5px] font-medium text-[#1A1A18] break-words [overflow-wrap:anywhere] min-w-0">
                       {eventData?.to_time
                         ? formatDate(eventData.to_time)
                         : "N/A"}
                     </p>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                       End Time
                     </p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-[13.5px] font-medium text-[#1A1A18] break-words [overflow-wrap:anywhere] min-w-0">
                       {eventData?.to_time
                         ? `${formatTime(eventData.to_time)}`
                         : "N/A"}
                     </p>
                   </div>
-                    <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">
+                    <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                       Send Email
                     </p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-[13.5px] font-medium text-[#1A1A18] break-words [overflow-wrap:anywhere] min-w-0">
                       {eventData?.email_trigger_enabled === "1" ||
                       eventData?.email_trigger_enabled === 1 ||
                       eventData?.email_trigger_enabled === true
@@ -836,11 +800,11 @@ const LoyaltyEventDetails = () => {
                         : "No"}
                     </p>
                   </div>
-                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">
+                   <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                       RSVP Action
                     </p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-[13.5px] font-medium text-[#1A1A18] break-words [overflow-wrap:anywhere] min-w-0">
                       {eventData?.rsvp_action === "1" ||
                       eventData?.rsvp_action === 1 ||
                       eventData?.rsvp_action_int === 1
@@ -853,20 +817,20 @@ const LoyaltyEventDetails = () => {
             </div>
 
             {/* Visibility Card */}
-            <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                  <Settings className="w-5 h-5 text-[#C72030]" />
+            <div className="w-full bg-white rounded-2xl border border-[rgba(26,26,24,0.09)]">
+              <div className="flex items-center gap-3 px-6 pt-[22px] pb-1">
+                <div className="w-8 h-8 flex-none rounded-full flex items-center justify-center bg-[#F5F4F0]">
+                  <Settings className="w-3.5 h-3.5 text-[#1A1A18]" />
                 </div>
-                <h3 className="text-lg font-semibold text-black">Visibility</h3>
+                <h3 className="text-sm font-semibold text-[#1A1A18]">Visibility</h3>
               </div>
-              <div className="bg-[#FBFBFA] px-6 py-6">
+              <div className="px-6 pt-5 pb-[22px]">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
-                  <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,0.48)]">
                       Show on Home Page
                     </p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-[13.5px] font-medium text-[#1A1A18] break-words [overflow-wrap:anywhere] min-w-0">
                       {eventData?.show_on_home_page === "1" ||
                       eventData?.show_on_home === 1 ||
                       eventData?.show_on_home === true
@@ -882,22 +846,21 @@ const LoyaltyEventDetails = () => {
           {/* ── Events Related Images ── */}
           <TabsContent
             value="images"
-            className="p-6 space-y-6"
-            style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}
+            className="pt-6 space-y-6"
           >
-            <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                  <ImageIcon className="w-6 h-6 text-[#C72030]" />
+            <div className="w-full bg-white rounded-2xl border border-[rgba(26,26,24,0.09)]">
+              <div className="flex items-center gap-3 px-6 pt-[22px] pb-1">
+                <div className="w-8 h-8 flex-none rounded-full flex items-center justify-center bg-[#F5F4F0]">
+                  <ImageIcon className="w-6 h-6 text-[#1A1A18]" />
                 </div>
-                <h3 className="text-lg font-semibold text-black">
+                <h3 className="text-sm font-semibold text-[#1A1A18]">
                   Event Related Images
                 </h3>
               </div>
               <div className="bg-[#FBFBFA] px-6 py-6 space-y-6">
                 {/* Cover Images */}
                 <div>
-                  <h4 className="text-base font-semibold text-gray-900 mb-3">
+                  <h4 className="text-sm font-semibold text-[#1A1A18] mb-3">
                     Cover Images
                   </h4>
                   <div className="overflow-x-auto">
@@ -975,7 +938,7 @@ const LoyaltyEventDetails = () => {
 
                 {/* Event Gallery */}
                 <div>
-                  <h4 className="text-base font-semibold text-gray-900 mb-3">
+                  <h4 className="text-sm font-semibold text-[#1A1A18] mb-3">
                     Event Gallery
                   </h4>
                   <div className="overflow-x-auto">
@@ -1046,7 +1009,7 @@ const LoyaltyEventDetails = () => {
                 </div>
 
                  <div>
-                  <h4 className="text-base font-semibold text-gray-900 mb-3">
+                  <h4 className="text-sm font-semibold text-[#1A1A18] mb-3">
                     Event Thumbnail Image
                   </h4>
                   <div className="overflow-x-auto">
@@ -1128,8 +1091,7 @@ const LoyaltyEventDetails = () => {
           {/* ── Participants Details ── */}
           <TabsContent
             value="participants-details"
-            className="p-6 space-y-4"
-            style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}
+            className="pt-6 space-y-4"
           >
             <ParticipantsDetailsTab
               eventId={eventId}

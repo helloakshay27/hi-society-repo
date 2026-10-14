@@ -33,12 +33,12 @@ const renderStepCell = (item: EncashmentConfigStep, columnKey: string) => {
   switch (columnKey) {
     case "step":
       return (
-        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#C4B89D54] text-sm font-semibold text-[#C72030]">
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#F5F4F0] text-xs font-semibold text-[#1A1A18]">
           {item.step}
         </span>
       );
     case "title":
-      return <span className="font-medium text-[#1A1A1A]">{item.title}</span>;
+      return <span className="font-medium text-[#1A1A18]">{item.title}</span>;
     case "description":
       return <span className="text-sm text-gray-600">{item.description}</span>;
     default:
@@ -98,8 +98,11 @@ const EMPTY_FORM: SettingsFormState = {
   privacy_policy: "",
 };
 
-const fieldLabelClass = "text-xs font-semibold text-[#1A1A1A]";
-const inputClass = "h-9 text-sm border-[#D5DbDB] bg-white";
+const fieldLabelClass = "text-[12.5px] font-semibold text-[rgba(26,26,24,0.68)]";
+const inputClass =
+  "h-11 rounded-xl text-[13.5px] font-medium text-[#1A1A18] border-[rgba(26,26,24,0.08)] bg-white hover:border-[rgba(26,26,24,0.28)] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)]";
+const textareaClass =
+  "min-h-[90px] rounded-xl text-[13.5px] font-medium text-[#1A1A18] border-[rgba(26,26,24,0.08)] bg-white hover:border-[rgba(26,26,24,0.28)] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)]";
 
 export const EncashmentConfigPage: React.FC = () => {
   const [config, setConfig] = useState<EncashmentConfig | null>(null);
@@ -219,11 +222,18 @@ export const EncashmentConfigPage: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-[#1A1A1A]">Encashment Config</h1>
-        <Button onClick={handleOpenEdit} variant="ghost" className="btn-primary h-9 px-4 text-sm font-medium">
+      <div className="flex items-center justify-between gap-3 mb-[22px]">
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+          Encashment Config
+        </h1>
+        <button
+          type="button"
+          onClick={handleOpenEdit}
+          className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[13px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.12)] rounded-[10px] hover:bg-[#F5F4F0] transition-colors"
+        >
           <Pencil className="w-3.5 h-3.5" />
-        </Button>
+          Edit Settings
+        </button>
       </div>
 
       {/* Stat Cards */}
@@ -233,14 +243,19 @@ export const EncashmentConfigPage: React.FC = () => {
           return (
             <div
               key={i}
-              className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4"
+              className="bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl px-5 py-[18px] flex items-start justify-between gap-3 min-w-0"
             >
-              <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
-                <IconComponent className="w-6 h-6 text-[#C72030]" />
+              <div className="min-w-0">
+                <div className="text-[12.5px] font-medium text-[rgba(26,26,24,0.55)]">{item.label}</div>
+                <div
+                  className="mt-1.5 text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18] truncate"
+                  title={String(item.value)}
+                >
+                  {item.value}
+                </div>
               </div>
-              <div>
-                <div className="text-2xl font-semibold text-[#1A1A1A]">{item.value}</div>
-                <div className="text-sm font-medium text-[#1A1A1A]">{item.label}</div>
+              <div className="w-9 h-9 flex-none rounded-xl bg-[#F5F4F0] flex items-center justify-center">
+                <IconComponent className="w-4 h-4 text-[#1A1A18]" />
               </div>
             </div>
           );
@@ -268,21 +283,25 @@ export const EncashmentConfigPage: React.FC = () => {
 
       {/* Terms & Conditions / Privacy Policy */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        <div className="bg-white rounded-lg border border-[#D5DbDB] p-5">
-          <h2 className="text-sm font-semibold text-[#1A1A1A] flex items-center gap-2 mb-2">
-            <FileText className="w-4 h-4 text-[#C72030]" />
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] px-6 py-[22px]">
+          <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center gap-3 mb-4">
+            <span className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+              <FileText className="w-3.5 h-3.5 text-[#1A1A18]" />
+            </span>
             Terms &amp; Conditions
           </h2>
-          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+          <p className="text-[13.5px] text-[rgba(26,26,24,0.68)] whitespace-pre-wrap">
             {settings?.terms_and_conditions || "Not set"}
           </p>
         </div>
-        <div className="bg-white rounded-lg border border-[#D5DbDB] p-5">
-          <h2 className="text-sm font-semibold text-[#1A1A1A] flex items-center gap-2 mb-2">
-            <ShieldCheck className="w-4 h-4 text-[#C72030]" />
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] px-6 py-[22px]">
+          <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center gap-3 mb-4">
+            <span className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#1A1A18]" />
+            </span>
             Privacy Policy
           </h2>
-          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+          <p className="text-[13.5px] text-[rgba(26,26,24,0.68)] whitespace-pre-wrap">
             {settings?.privacy_policy || "Not set"}
           </p>
         </div>
@@ -290,10 +309,12 @@ export const EncashmentConfigPage: React.FC = () => {
 
       {/* Edit Settings Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[560px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl">
-          <DialogHeader className="bg-[#F6F4EE] px-6 py-4 border-b border-[#D5DbDB]">
-            <DialogTitle className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
-              <Settings className="w-5 h-5 text-[#C72030]" />
+        <DialogContent className="sm:max-w-[560px] p-0 overflow-hidden rounded-2xl border-[rgba(26,26,24,0.09)] shadow-xl">
+          <DialogHeader className="px-6 py-5 border-b border-[rgba(26,26,24,0.08)]">
+            <DialogTitle className="text-lg font-semibold text-[#1A1A18] flex items-center gap-3">
+              <span className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                <Settings className="w-3.5 h-3.5 text-[#1A1A18]" />
+              </span>
               Edit Encashment Settings
             </DialogTitle>
           </DialogHeader>
@@ -316,7 +337,7 @@ export const EncashmentConfigPage: React.FC = () => {
                   type="number"
                   step="0.01"
                   disabled
-                  className={`${inputClass} disabled:opacity-100 disabled:bg-gray-100`}
+                  className={`${inputClass} disabled:opacity-100 disabled:bg-[#F5F4F0] disabled:text-[rgba(26,26,24,0.55)]`}
                   value={form.points_to_rupee_ratio}
                   onChange={(e) => setForm((prev) => ({ ...prev, points_to_rupee_ratio: e.target.value }))}
                 />
@@ -367,7 +388,7 @@ export const EncashmentConfigPage: React.FC = () => {
               <div className="col-span-2 space-y-1.5">
                 <Label className={fieldLabelClass}>Terms &amp; Conditions</Label>
                 <Textarea
-                  className="min-h-[90px] text-sm border-[#D5DbDB] bg-white"
+                  className={textareaClass}
                   placeholder="Enter terms & conditions"
                   value={form.terms_and_conditions}
                   onChange={(e) => setForm((prev) => ({ ...prev, terms_and_conditions: e.target.value }))}
@@ -377,7 +398,7 @@ export const EncashmentConfigPage: React.FC = () => {
               <div className="col-span-2 space-y-1.5">
                 <Label className={fieldLabelClass}>Privacy Policy</Label>
                 <Textarea
-                  className="min-h-[90px] text-sm border-[#D5DbDB] bg-white"
+                  className={textareaClass}
                   placeholder="Enter privacy policy"
                   value={form.privacy_policy}
                   onChange={(e) => setForm((prev) => ({ ...prev, privacy_policy: e.target.value }))}
@@ -386,15 +407,16 @@ export const EncashmentConfigPage: React.FC = () => {
             </div>
           </div>
 
-          <DialogFooter className="bg-[#F6F4EE] px-6 py-3 border-t border-[#D5DbDB] flex gap-2 sm:justify-end">
+          <DialogFooter className="px-6 py-4 border-t border-[rgba(26,26,24,0.08)] flex gap-2 sm:justify-end">
             <Button
               variant="outline"
               onClick={() => setIsModalOpen(false)}
-              className="border-[#D5DbDB] text-[#1A1A1A] hover:bg-[#DBC2A9]"
+              disabled={isSaving}
+              className="btn-cancel h-9 px-4 text-sm font-medium"
             >
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={isSaving} variant="ghost" className="btn-primary">
+            <Button onClick={handleSave} disabled={isSaving} className="btn-primary h-9 px-4 text-sm font-medium">
               {isSaving && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
               Save
             </Button>

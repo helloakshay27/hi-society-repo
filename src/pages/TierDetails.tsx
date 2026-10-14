@@ -3,7 +3,36 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
-import { ArrowLeft, ChevronRight, Star, Trophy, Zap, Gift, Clock, Tag, FileText } from "lucide-react";
+import { ArrowLeft, ChevronRight, Trophy, Clock } from "lucide-react";
+
+// Card styling matched to the Facility Setup add / details pages
+const SECTION_CARD =
+  "w-full bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl px-6 py-[22px] space-y-5";
+const FIELD_LABEL = "text-[11px] font-medium text-[rgba(26,26,24,0.48)]";
+const FIELD_VALUE = "text-[13.5px] font-medium text-[#1A1A18]";
+
+const SectionHeader = ({ icon, title }: { icon: React.ReactElement; title: string }) => (
+  <div className="flex items-center gap-3">
+    <div className="w-8 h-8 flex-none rounded-full flex items-center justify-center bg-[#F5F4F0] text-[#1A1A18]">
+      {React.cloneElement(icon, { className: "w-3.5 h-3.5" })}
+    </div>
+    <h3 className="text-sm font-semibold text-[#1A1A18]">{title}</h3>
+  </div>
+);
+
+const Detail = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div className="flex flex-col gap-1 min-w-0">
+    <span className={FIELD_LABEL}>{label}</span>
+    <span className={`${FIELD_VALUE} break-words`}>{value}</span>
+  </div>
+);
+
+const SummaryRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div className="flex justify-between gap-3 text-[13px]">
+    <span className="text-[rgba(26,26,24,0.55)]">{label}</span>
+    <span className="font-semibold text-[#1A1A18]">{value}</span>
+  </div>
+);
 
 export default function TierDetails() {
   const { id } = useParams();
@@ -52,12 +81,51 @@ export default function TierDetails() {
     fetchMember();
   }, [id]);
 
+  const pageHeader = (
+    <div className="mb-[22px]">
+      <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <span>Tiers</span>
+        <ChevronRight className="w-3.5 h-3.5" />
+        <span className="font-semibold text-[#1A1A18]">Tier Details</span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+            {tierDetails?.display_name || tierDetails?.name || "Tier Details"}
+          </h1>
+          {tierDetails?.created_at && (
+            <p className={`${FIELD_LABEL} mt-1.5 text-[12.5px]`}>
+              Created {formatDate(tierDetails.created_at)}
+            </p>
+          )}
+        </div>
+        {tierDetails && (
+          <span
+            className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium text-black ${
+              tierDetails.point_type === "lifetime" ? "bg-[#C7EDDA]" : "bg-[#F2EBC9]"
+            }`}
+          >
+            {tierDetails.point_type === "lifetime" ? "Lifetime" : "Rolling Year"}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="p-6 bg-[#fafafa] min-h-screen flex items-center justify-center">
+      <div className="p-6 bg-[#FDFDFB] min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-[#C72030] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Loading tier details...</p>
+          <div className="w-8 h-8 border-4 border-[#1A1A18] border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-[rgba(26,26,24,0.55)]">Loading tier details...</p>
         </div>
       </div>
     );
@@ -65,219 +133,71 @@ export default function TierDetails() {
 
   if (error) {
     return (
-      <div className="p-6 bg-[#fafafa] min-h-screen">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back to Tiers</span>
-          </button>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
-            <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
+      <div className="p-6 bg-[#FDFDFB] min-h-screen">
+        {pageHeader}
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3">
+          <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-[#fafafa] min-h-screen">
-      {/* Header Card */}
-      <div className="mb-6 bg-white rounded-lg shadow-sm border p-6">
-        {/* Back Button */}
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back to Tiers</span>
-          </button>
-        </div>
-
-        {/* Breadcrumbs */}
-        <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-3">
-          <span>Setup Member</span>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span>Loyalty</span>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-[#C72030] font-medium">Tier Details</span>
-        </div>
-
-        {/* Tier Name and Point Type Badge */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            {tierDetails?.display_name || tierDetails?.name || "Tier Details"}
-          </h1>
-          <span
-            className={`px-3 py-1 rounded text-sm font-medium ${
-              tierDetails?.point_type === "lifetime"
-                ? "bg-green-100 text-green-800"
-                : "bg-blue-100 text-blue-800"
-            }`}
-          >
-            {tierDetails?.point_type === "lifetime" ? "Lifetime" : "Rolling Year"}
-          </span>
-        </div>
-
-        {/* Created Date */}
-        {tierDetails?.created_at && (
-          <p className="text-sm text-gray-500 mt-2">
-            Created: {formatDate(tierDetails.created_at)}
-          </p>
-        )}
-      </div>
+    <div className="p-6 bg-[#FDFDFB] min-h-screen">
+      {pageHeader}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Tier Configuration */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Tier Details Card */}
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="px-6 py-6">
-              <h2 className="text-lg font-semibold text-[#C72030] mb-6">Tier Configuration</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Tier Name */}
-                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 rounded-lg bg-[#C72030]/10 flex items-center justify-center flex-shrink-0">
-                    <Trophy className="w-5 h-5 text-[#C72030]" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Tier Name</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {tierDetails?.display_name || tierDetails?.name || "N/A"}
-                    </p>
-                  </div>
+        <div className="lg:col-span-2">
+          <div className={SECTION_CARD}>
+            <SectionHeader icon={<Trophy />} title="Tier Configuration" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-5 gap-x-6">
+              <Detail label="Tier Name" value={tierDetails?.display_name || tierDetails?.name || "N/A"} />
+              <Detail label="Title" value={tierDetails?.title || "N/A"} />
+              <Detail label="Exit Points" value={tierDetails?.exit_points ?? "N/A"} />
+              <Detail label="Welcome Bonus" value={`${tierDetails?.welcome_bonus ?? "N/A"} Points`} />
+              <Detail label="Multipliers" value={`${tierDetails?.multipliers ?? "N/A"}x`} />
+              {tierDetails?.description && (
+                <div className="md:col-span-2">
+                  <Detail label="Description" value={tierDetails.description} />
                 </div>
-
-                {/* Title */}
-                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Tag className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Title</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {tierDetails?.title || "N/A"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Exit Points */}
-                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                    <Star className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Exit Points</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {tierDetails?.exit_points ?? "N/A"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Welcome Bonus */}
-                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                    <Gift className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Welcome Bonus</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {tierDetails?.welcome_bonus ?? "N/A"} Points
-                    </p>
-                  </div>
-                </div>
-
-                {/* Multipliers */}
-                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                    <Zap className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Multipliers</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {tierDetails?.multipliers ?? "N/A"}x
-                    </p>
-                  </div>
-                </div>
-
-                {/* Description - full width */}
-                {tierDetails?.description && (
-                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg md:col-span-2">
-                    <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-gray-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Description</p>
-                      <p className="text-base text-gray-900">
-                        {tierDetails.description}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Right Column - Sidebar */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Point Type Info */}
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="px-6 py-6">
-              <h2 className="text-lg font-semibold text-[#C72030] mb-6">Point Accumulation</h2>
-
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Timeframe</p>
-                    <p className="font-semibold text-gray-900">
-                      {tierDetails?.point_type === "lifetime"
-                        ? "Lifetime"
-                        : "Rolling Year"}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {tierDetails?.point_type === "lifetime"
-                        ? "Points accumulate throughout member's lifetime."
-                        : "Points reset annually and tier status is re-evaluated."}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="border-t pt-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">Exit Points Threshold</span>
-                    <span className="font-semibold text-gray-900">{tierDetails?.exit_points ?? "-"}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">Points Multiplier</span>
-                    <span className="font-semibold text-gray-900">{tierDetails?.multipliers ?? "-"}x</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Welcome Bonus</span>
-                    <span className="font-semibold text-gray-900">{tierDetails?.welcome_bonus ?? "-"} pts</span>
-                  </div>
-                </div>
-
-                {tierDetails?.created_at && (
-                  <div className="border-t pt-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Created On</span>
-                      <span className="text-gray-900">{formatDate(tierDetails.created_at)}</span>
-                    </div>
-                  </div>
-                )}
+        <div className="lg:col-span-1">
+          <div className={SECTION_CARD}>
+            <SectionHeader icon={<Clock />} title="Point Accumulation" />
+            <div className="space-y-4">
+              <div className="flex flex-col gap-1">
+                <span className={FIELD_LABEL}>Timeframe</span>
+                <span className={FIELD_VALUE}>
+                  {tierDetails?.point_type === "lifetime" ? "Lifetime" : "Rolling Year"}
+                </span>
+                <span className="text-[12px] text-[rgba(26,26,24,0.48)]">
+                  {tierDetails?.point_type === "lifetime"
+                    ? "Points accumulate throughout member's lifetime."
+                    : "Points reset annually and tier status is re-evaluated."}
+                </span>
               </div>
+
+              <div className="border-t border-[rgba(26,26,24,0.08)] pt-4 space-y-2.5">
+                <SummaryRow label="Exit Points Threshold" value={tierDetails?.exit_points ?? "-"} />
+                <SummaryRow label="Points Multiplier" value={`${tierDetails?.multipliers ?? "-"}x`} />
+                <SummaryRow label="Welcome Bonus" value={`${tierDetails?.welcome_bonus ?? "-"} pts`} />
+              </div>
+
+              {tierDetails?.created_at && (
+                <div className="border-t border-[rgba(26,26,24,0.08)] pt-4">
+                  <SummaryRow label="Created On" value={formatDate(tierDetails.created_at)} />
+                </div>
+              )}
             </div>
           </div>
         </div>

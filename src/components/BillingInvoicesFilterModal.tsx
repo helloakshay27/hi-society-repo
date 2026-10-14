@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogActions, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { Dialog, DialogContent, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
@@ -35,8 +35,8 @@ export const BillingInvoicesFilterModal: React.FC<BillingInvoicesFilterModalProp
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="md">
-      <DialogContent className="p-6" sx={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+    <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="xs">
+      <DialogContent>
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-lg font-semibold">FILTER BY</h5>
           <Button
@@ -69,21 +69,21 @@ export const BillingInvoicesFilterModal: React.FC<BillingInvoicesFilterModalProp
           </FormControl>
         </div>
 
-        <DialogActions className="px-6 pb-6">
-          <Button
-            onClick={handleApply}
-            className="flex-1 !bg-white !text-brand !border !border-brand"
-          >
-            Apply
-          </Button>
+        <div className="flex justify-end gap-2 pt-4">
           <Button
             onClick={handleReset}
             variant="outline"
-            className="flex-1"
+            className="btn-cancel h-9 px-4 text-sm font-medium"
           >
             Reset
           </Button>
-        </DialogActions>
+          <Button
+            onClick={handleApply}
+            className="btn-primary h-9 px-4 text-sm font-medium"
+          >
+            Apply
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

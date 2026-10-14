@@ -504,22 +504,16 @@ export default function OffersList() {
 
       case 'status':
         return (
-          <div
-            className="inline-flex px-auto text-center text-xs font-medium"
-            style={{ width: 200, maxWidth: 200 }}
+          <span
+            className={`inline-flex items-center justify-center leading-none rounded-full ${item.status === 'Active'
+              ? 'bg-[#C7EDDA] border border-[#C7EDDA]'
+              : item.status === 'Inactive'
+                ? 'bg-[#F2C8C4] border border-[#F2C8C4]'
+                : 'bg-[#D5DbDB] border border-[#D5DbDB]'
+              }`}
           >
-            <div className={` py-2.5
-              ${item.status === 'Active'
-                ? 'bg-[#d5dbdb] w-full'
-                : item.status === 'Inactive'
-                  ? 'bg-[#e4626f] w-full'
-                  : 'bg-[#d5dbdb] w-full'}
-            `}>
-              <p className="text-center mx-auto">
-                {item.status === 'Active' ? 'Active' : item.status === 'Inactive' ? 'Inactive' : 'Expired'}
-              </p>
-            </div>
-          </div>
+            {item.status === 'Active' ? 'Active' : item.status === 'Inactive' ? 'Inactive' : 'Expired'}
+          </span>
         );
 
       case 'featured':
@@ -618,7 +612,7 @@ variant="ghost"
   console.log('Rendered OffersList with offers:', offers);
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+    <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden min-h-screen bg-white">
 
       {/* Draft Detection Modal */}
       <Dialog open={showDraftModal} onClose={() => setShowDraftModal(false)}>

@@ -43,9 +43,27 @@ import {
   MenuItem,
   Box,
   Avatar,
-  Switch,
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import { Switch as ShadcnSwitch } from "@/components/ui/switch";
+
+// shadcn toggle with the MUI Switch call signature used throughout this page
+const Switch = ({
+  checked,
+  onChange,
+  disabled,
+}: {
+  checked?: boolean;
+  onChange?: (e: { target: { checked: boolean } }, checked: boolean) => void;
+  disabled?: boolean;
+  [key: string]: unknown;
+}) => (
+  <ShadcnSwitch
+    checked={!!checked}
+    disabled={disabled}
+    onCheckedChange={(value) => onChange?.({ target: { checked: value } }, value)}
+  />
+);
 const EventCreate = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -251,24 +269,26 @@ const EventCreate = () => {
 
   // Field styles for Material-UI components
   const fieldStyles = {
-    height: "45px",
+    height: "44px",
     backgroundColor: "#fff",
-    borderRadius: "4px",
+    borderRadius: "12px",
     "& .MuiOutlinedInput-root": {
-      height: "45px",
+      height: "44px",
+      borderRadius: "12px",
       "& fieldset": {
-        borderColor: "#ddd",
+        borderColor: "rgba(26, 26, 24, 0.08)",
+        borderRadius: "12px",
       },
       "&:hover fieldset": {
-        borderColor: "#C72030",
+        borderColor: "#1A1A18",
       },
       "&.Mui-focused fieldset": {
-        borderColor: "#C72030",
+        borderColor: "#1A1A18",
       },
     },
     "& .MuiInputLabel-root": {
       "&.Mui-focused": {
-        color: "var(--color-primary, #da7756)",
+        color: "#1A1A18",
       },
     },
   };
@@ -345,12 +365,12 @@ const EventCreate = () => {
     control: (provided: any, state: any) => ({
       ...provided,
       minHeight: "44px",
-      borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
+      borderColor: state.isFocused ? "#1A1A18" : "#dcdcdc",
       boxShadow: "none",
       fontSize: "14px",
       paddingTop: "6px",
       backgroundColor: "transparent",
-      "&:hover": { borderColor: "#C72030" },
+      "&:hover": { borderColor: "#1A1A18" },
     }),
     valueContainer: (provided: any) => ({
       ...provided,
@@ -361,8 +381,8 @@ const EventCreate = () => {
     dropdownIndicator: (provided: any, state: any) => ({
       ...provided,
       padding: "4px 8px",
-      color: state.isFocused ? "#C72030" : "#666",
-      "&:hover": { color: "var(--color-primary, #da7756)" },
+      color: state.isFocused ? "#1A1A18" : "#666",
+      "&:hover": { color: "#1A1A18" },
     }),
     indicatorSeparator: () => ({ display: "none" }),
     placeholder: (provided: any) => ({
@@ -379,7 +399,7 @@ const EventCreate = () => {
     option: (provided: any, state: any) => ({
       ...provided,
       backgroundColor: state.isSelected
-        ? "#C72030"
+        ? "#1A1A18"
         : state.isFocused
           ? "#F6F4EE"
           : "#fff",
@@ -390,7 +410,7 @@ const EventCreate = () => {
     }),
     multiValue: (provided: any) => ({
       ...provided,
-      backgroundColor: "#E5E0D3",
+      backgroundColor: "#F5F4F0",
       borderRadius: "2px",
       margin: "2px 3px",
     }),
@@ -403,7 +423,7 @@ const EventCreate = () => {
     multiValueRemove: (provided: any) => ({
       ...provided,
       color: "#666",
-      "&:hover": { backgroundColor: "var(--color-primary, #da7756)", color: "#fff" },
+      "&:hover": { backgroundColor: "#1A1A18", color: "#fff" },
     }),
   };
 
@@ -1724,152 +1744,65 @@ const EventCreate = () => {
         : ["Event Details", "Event Related Images"];
 
     return (
-      <Box sx={{ mb: 4, width: "100%" }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-            width: "100%",
-            gap: 0,
-          }}
-        >
-          {steps.map((label, index) => (
-            <Box
-              key={`step-${index}`}
-              sx={{ display: "flex", alignItems: "center", flex: 1 }}
-            >
-              <Box
-                sx={{
-                  width: "100%",
-                  height: "50px",
-                  padding: "5px",
-                  borderRadius: "4px",
-                  boxShadow: "0px 4px 14.2px 0px rgba(0, 0, 0, 0.1)",
-                  backgroundColor: "rgba(255, 255, 255, 1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+      <div className="mb-6 flex items-center w-full">
+        {steps.map((label, index) => {
+          const isActive = index === currentStep;
+          const isDone = completedSteps.includes(index) && !isActive;
+          const isLocked = index > currentStep && !completedSteps.includes(index - 1);
+          return (
+            <div key={`step-${index}`} className="flex items-center flex-1">
+              <button
+                type="button"
+                onClick={() => handleStepClick(index)}
+                disabled={isLocked}
+                className={`relative w-full h-10 px-5 rounded-xl border text-[13px] font-semibold whitespace-nowrap transition-colors ${
+                  isActive
+                    ? "bg-[#1A1A18] border-[#1A1A18] text-white"
+                    : isDone
+                      ? "bg-white border-[#1A1A18] text-[#1A1A18]"
+                      : isLocked
+                        ? "bg-white border-[rgba(26,26,24,0.09)] text-[rgba(26,26,24,0.35)] cursor-not-allowed"
+                        : "bg-white border-[rgba(26,26,24,0.09)] text-[rgba(26,26,24,0.68)] hover:text-[#1A1A18]"
+                }`}
+                style={isActive ? { color: "#ffffff" } : undefined}
               >
-                <Box
-                  onClick={() => handleStepClick(index)}
-                  sx={{
-                    cursor:
-                      index > currentStep && !completedSteps.includes(index - 1)
-                        ? "not-allowed"
-                        : "pointer",
-                    width: "100%",
-                    height: "40px",
-                    backgroundColor:
-                      index === currentStep || completedSteps.includes(index)
-                        ? "var(--color-primary, #da7756)"
-                        : index > currentStep &&
-                          !completedSteps.includes(index - 1)
-                          ? "rgba(245, 245, 245, 1)"
-                          : "rgba(255, 255, 255, 1)",
-                    color:
-                      index === currentStep || completedSteps.includes(index)
-                        ? "white"
-                        : index > currentStep &&
-                          !completedSteps.includes(index - 1)
-                          ? "rgba(150, 150, 150, 1)"
-                          : "rgba(196, 184, 157, 1)",
-                    border:
-                      index === currentStep || completedSteps.includes(index)
-                        ? "2px solid var(--color-primary, #da7756)"
-                        : index > currentStep &&
-                          !completedSteps.includes(index - 1)
-                          ? "1px solid rgba(200, 200, 200, 1)"
-                          : "1px solid rgba(196, 184, 157, 1)",
-                    padding: "12px 20px",
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    textAlign: "center",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    boxShadow:
-                      index === currentStep
-                        ? "0 2px 4px rgba(218, 119, 86, 0.3)"
-                        : "none",
-                    transition: "all 0.2s ease",
-                    fontFamily: "Work Sans, sans-serif",
-                    position: "relative",
-                    borderRadius: "4px",
-                    "&:hover": {
-                      opacity:
-                        index > currentStep &&
-                          !completedSteps.includes(index - 1)
-                          ? 1
-                          : 0.9,
-                    },
-                    "&::before":
-                      completedSteps.includes(index) && index !== currentStep
-                        ? {
-                          content: '"✓"',
-                          position: "absolute",
-                          right: "8px",
-                          top: "50%",
-                          transform: "translateY(-50%)",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                        }
-                        : {},
-                  }}
-                >
-                  {label}
-                </Box>
-              </Box>
+                {label}
+                {isDone && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs">✓</span>}
+              </button>
               {index < steps.length - 1 && (
-                <Box
-                  sx={{
-                    width: "60px",
-                    minWidth: "60px",
-                    height: "0px",
-                    border: "1px dashed rgba(196, 184, 157, 1)",
-                    borderWidth: "1px",
-                    borderStyle: "dashed",
-                    borderColor: "rgba(196, 184, 157, 1)",
-                    opacity: 1,
-                    margin: "0",
-                    "@media (max-width: 1200px)": {
-                      width: "40px",
-                      minWidth: "40px",
-                    },
-                    "@media (max-width: 900px)": {
-                      width: "30px",
-                      minWidth: "30px",
-                    },
-                    "@media (max-width: 600px)": {
-                      width: "20px",
-                      minWidth: "20px",
-                    },
-                  }}
+                <div
+                  aria-hidden="true"
+                  className="w-5 sm:w-10 lg:w-14 flex-none"
+                  style={{ borderTop: "1.5px dashed rgba(26, 26, 24, 0.18)" }}
                 />
               )}
-            </Box>
-          ))}
-        </Box>
-      </Box>
+            </div>
+          );
+        })}
+      </div>
     );
   };
 
   return (
-    <div
-      className="p-6 bg-gray-50 min-h-screen"
-      style={{ backgroundColor: "#FAF9F7" }}
-    >
-      {/* Back Button */}
-      <div className="mb-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm font-medium">Back To Event List</span>
-        </button>
+    <div className="p-6 bg-white min-h-screen">
+      {/* Header */}
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Back To Event List"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Events</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold text-[#1A1A18]">Create</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+          Create Event
+        </h1>
       </div>
 
       {/* Stepper Component - Hide in preview mode */}
@@ -1884,28 +1817,27 @@ const EventCreate = () => {
       >
         {/* Step 1: Event Information */}
         {currentStep === 0 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
             <div
-              className="px-6 py-3 border-b border-gray-200"
-              style={{ backgroundColor: "#F6F4EE" }}
+              className="px-6 pt-[22px] pb-1"
             >
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                 <Avatar
                   sx={{
                     width: 32,
                     height: 32,
-                    backgroundColor: "#E5E0D3",
+                    backgroundColor: "#F5F4F0",
                     mr: 1.5,
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
+                    sx={{ fontSize: 16, color: "#1A1A18" }}
                   />
                 </Avatar>
                 Event Details
               </h2>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="px-6 pt-4 pb-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Project Select */}
                 {/* <FormControl
@@ -2105,7 +2037,7 @@ const EventCreate = () => {
       "
                     >
                       Event Description{" "}
-                      <span className="text-[var(--color-primary)]">*</span>
+                      <span className="text-[#1A1A18]">*</span>
                     </label>
 
                     <div className="relative p-4 pt-2">
@@ -2183,8 +2115,8 @@ const EventCreate = () => {
                           is_important: true,
                         }))
                       }
-                      className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                      style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                      className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                      style={{ accentColor: '#1A1A18' }}
                     />
                     <span className="ml-2 text-sm text-gray-700">Yes</span>
                   </label>
@@ -2199,8 +2131,8 @@ const EventCreate = () => {
                           is_important: false,
                         }))
                       }
-                      className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                      style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                      className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                      style={{ accentColor: '#1A1A18' }}
                     />
                     <span className="ml-2 text-sm text-gray-700">No</span>
                   </label>
@@ -2225,8 +2157,8 @@ const EventCreate = () => {
                             email_trigger_enabled: e.target.value,
                           }))
                         }
-                        className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                        style={{ accentColor: "var(--color-primary, #da7756)" }}
+                        className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                        style={{ accentColor: "#1A1A18" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">Yes</span>
                     </label>
@@ -2242,8 +2174,8 @@ const EventCreate = () => {
                             email_trigger_enabled: e.target.value,
                           }))
                         }
-                        className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                        style={{ accentColor: "var(--color-primary, #da7756)" }}
+                        className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                        style={{ accentColor: "#1A1A18" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">No</span>
                     </label>
@@ -2263,8 +2195,8 @@ const EventCreate = () => {
                         value="1"
                         checked={formData.rsvp_action === "1"}
                         onChange={handleChange}
-                        className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                        style={{ accentColor: "var(--color-primary, #da7756)" }}
+                        className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                        style={{ accentColor: "#1A1A18" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">Yes</span>
                     </label>
@@ -2275,8 +2207,8 @@ const EventCreate = () => {
                         value="0"
                         checked={formData.rsvp_action === "0"}
                         onChange={handleChange}
-                        className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                        style={{ accentColor: "var(--color-primary, #da7756)" }}
+                        className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                        style={{ accentColor: "#1A1A18" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">No</span>
                     </label>
@@ -2338,7 +2270,7 @@ const EventCreate = () => {
                   />
                   <button
                     type="button"
-                    className="px-6 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-hover)] transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed h-[45px]"
+                    className="btn-primary px-6 h-11 text-sm font-medium disabled:cursor-not-allowed"
                     onClick={handleAddReminder}
                     disabled={!reminderValue || !reminderUnit}
                   >
@@ -2405,11 +2337,11 @@ const EventCreate = () => {
 
         {/* Share Card */}
         {/* {currentStep === 0 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <Avatar sx={{ width: 32, height: 32, backgroundColor: '#E5E0D3', mr: 1.5 }}>
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+          <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
+            <div className="px-6 pt-[22px] pb-1">
+              <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
+                <Avatar sx={{ width: 32, height: 32, backgroundColor: '#F5F4F0', mr: 1.5 }}>
+                  <SettingsOutlinedIcon sx={{ fontSize: 16, color: "#1A1A18" }} />
                 </Avatar>
                 Share
               </h2>
@@ -2424,7 +2356,7 @@ const EventCreate = () => {
                     checked={shareWith === 'all'}
                     onChange={() => { setShareWith('all'); setSelectedSocieties([]); }}
                     className="w-4 h-4"
-                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                    style={{ accentColor: '#1A1A18' }}
                   />
                   <span className="text-sm text-gray-700 font-medium">All Society</span>
                 </label>
@@ -2436,7 +2368,7 @@ const EventCreate = () => {
                     checked={shareWith === 'individual'}
                     onChange={() => setShareWith('individual')}
                     className="w-4 h-4"
-                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                    style={{ accentColor: '#1A1A18' }}
                   />
                   <span className="text-sm text-gray-700 font-medium">Individual Society</span>
                 </label>
@@ -2472,22 +2404,21 @@ const EventCreate = () => {
 
         {/* Visibility Card */}
         {currentStep === 0 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
             <div
-              className="px-6 py-3 border-b border-gray-200"
-              style={{ backgroundColor: "#F6F4EE" }}
+              className="px-6 pt-[22px] pb-1"
             >
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                 <Avatar
                   sx={{
                     width: 32,
                     height: 32,
-                    backgroundColor: "#E5E0D3",
+                    backgroundColor: "#F5F4F0",
                     mr: 1.5,
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
+                    sx={{ fontSize: 16, color: "#1A1A18" }}
                   />
                 </Avatar>
                 Visibility
@@ -2516,10 +2447,10 @@ const EventCreate = () => {
                     size="small"
                     sx={{
                       "& .MuiSwitch-switchBase.Mui-checked": {
-                        color: "var(--color-primary, #da7756)",
+                        color: "#1A1A18",
                       },
                       "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                        backgroundColor: "var(--color-primary, #da7756)",
+                        backgroundColor: "#1A1A18",
                       },
                     }}
                   />
@@ -2530,7 +2461,7 @@ const EventCreate = () => {
                 {/* <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
                     <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                     <g filter="url(#filter0_dd_2611_3818)">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                      <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#1A1A18"/>
                       <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_2611_3818)" strokeWidth="0.255453"/>
                       <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_2611_3818)" strokeWidth="0.255453"/>
                     </g>
@@ -2573,10 +2504,10 @@ const EventCreate = () => {
                   onChange={(e) => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: e.target.checked }))}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: 'var(--color-primary, #da7756)',
+                      color: '#1A1A18',
                     },
                     '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: 'var(--color-primary, #da7756)',
+                      backgroundColor: '#1A1A18',
                     },
                   }}
                 />
@@ -2593,10 +2524,10 @@ const EventCreate = () => {
                   onChange={(e) => setVisibility(prev => ({ ...prev, showOnBookingPage: e.target.checked }))}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: 'var(--color-primary, #da7756)',
+                      color: '#1A1A18',
                     },
                     '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: 'var(--color-primary, #da7756)',
+                      backgroundColor: '#1A1A18',
                     },
                   }}
                 />
@@ -2613,10 +2544,10 @@ const EventCreate = () => {
                   onChange={(e) => setVisibility(prev => ({ ...prev, featuredEvent: e.target.checked }))}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: 'var(--color-primary, #da7756)',
+                      color: '#1A1A18',
                     },
                     '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: 'var(--color-primary, #da7756)',
+                      backgroundColor: '#1A1A18',
                     },
                   }}
                 />
@@ -2627,28 +2558,27 @@ const EventCreate = () => {
 
         {/* Step 3: Invite CPs */}
         {currentStep === 2 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
             <div
-              className="px-6 py-3 border-b border-gray-200"
-              style={{ backgroundColor: "#F6F4EE" }}
+              className="px-6 pt-[22px] pb-1"
             >
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                 <Avatar
                   sx={{
                     width: 32,
                     height: 32,
-                    backgroundColor: "#E5E0D3",
+                    backgroundColor: "#F5F4F0",
                     mr: 1.5,
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
+                    sx={{ fontSize: 16, color: "#1A1A18" }}
                   />
                 </Avatar>
                 Invite CPs
               </h2>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="px-6 pt-4 pb-6 space-y-6">
               {/* <div>
                 <FormControl
                   fullWidth
@@ -2707,8 +2637,8 @@ const EventCreate = () => {
                           group_id: [],
                         }))
                       }
-                      className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                      style={{ accentColor: "var(--color-primary, #da7756)" }}
+                      className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                      style={{ accentColor: "#1A1A18" }}
                     />
                     <span className="ml-2 text-sm text-gray-700">All</span>
                   </label>
@@ -2725,8 +2655,8 @@ const EventCreate = () => {
                           group_id: [],
                         }))
                       }
-                      className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                      style={{ accentColor: "var(--color-primary, #da7756)" }}
+                      className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                      style={{ accentColor: "#1A1A18" }}
                     />
                     <span className="ml-2 text-sm text-gray-700">
                       Individuals
@@ -2745,8 +2675,8 @@ const EventCreate = () => {
                           user_id: [],
                         }))
                       }
-                      className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                      style={{ accentColor: "var(--color-primary, #da7756)" }}
+                      className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                      style={{ accentColor: "#1A1A18" }}
                     />
                     <span className="ml-2 text-sm text-gray-700">Groups</span>
                   </label>
@@ -2917,11 +2847,11 @@ const EventCreate = () => {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full space-y-3">
-                      <div className="text-[var(--color-primary)]">
+                      <div className="text-[#1A1A18]">
                         <Upload className="w-12 h-12" />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-[var(--color-primary)] mb-1">
+                        <p className="text-sm font-semibold text-[#1A1A18] mb-1">
                           Choose CSV File
                         </p>
                         <p className="text-xs text-gray-500">
@@ -2936,7 +2866,7 @@ const EventCreate = () => {
                           onChange={handleCsvFileUpload}
                           className="hidden"
                         />
-                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-hover)] transition-colors text-sm font-medium">
+                        <span className="btn-primary inline-flex items-center gap-2 h-9 px-4 text-sm font-medium">
                           <Upload className="w-4 h-4" />
                           Upload Files
                         </span>
@@ -2954,7 +2884,7 @@ const EventCreate = () => {
                           onChange={handleCsvFileUpload}
                           className="hidden"
                         />
-                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-hover)] transition-colors text-sm font-medium">
+                        <span className="btn-primary inline-flex items-center gap-2 h-9 px-4 text-sm font-medium">
                           <Plus className="w-4 h-4" />
                           Add More Files
                         </span>
@@ -2972,28 +2902,27 @@ const EventCreate = () => {
 
         {/* Step 2: Event Related Images */}
         {currentStep === 1 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
             <div
-              className="px-6 py-3 border-b border-gray-200"
-              style={{ backgroundColor: "#F6F4EE" }}
+              className="px-6 pt-[22px] pb-1"
             >
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                 <Avatar
                   sx={{
                     width: 32,
                     height: 32,
-                    backgroundColor: "#E5E0D3",
+                    backgroundColor: "#F5F4F0",
                     mr: 1.5,
                   }}
                 >
                   <SettingsOutlinedIcon
-                    sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
+                    sx={{ fontSize: 16, color: "#1A1A18" }}
                   />
                 </Avatar>
                 Event Related Images
               </h2>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="px-6 pt-4 pb-6 space-y-6">
               {/* Event Cover Image */}
               <div>
                 <div className="flex justify-between items-center mb-4">
@@ -3015,7 +2944,7 @@ const EventCreate = () => {
                     </span>
                   </h5>
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[var(--color-primary)] rounded-lg hover:bg-[#C4B89D59] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#1A1A18] rounded-lg hover:bg-[#C4B89D59] transition-colors"
                     type="button"
                     onClick={() => setShowCoverUploader(true)}
                   >
@@ -3101,7 +3030,7 @@ const EventCreate = () => {
                                   handleImageRemoval(key, index, file.id)
                                 }
                               >
-                                <Trash2 className="w-4 h-4 text-[var(--color-primary)]" />
+                                <Trash2 className="w-4 h-4 text-[#1A1A18]" />
                               </button>
                             </TableCell>
                           </TableRow>
@@ -3132,7 +3061,7 @@ const EventCreate = () => {
                     </span>
                   </h5>
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[var(--color-primary)] rounded-lg hover:bg-[#C4B89D59] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#1A1A18] rounded-lg hover:bg-[#C4B89D59] transition-colors"
                     type="button"
                     onClick={() => setShowEventUploader(true)}
                   >
@@ -3227,7 +3156,7 @@ const EventCreate = () => {
                                       handleImageRemoval(key, index)
                                     }
                                   >
-                                    <Trash2 className="w-4 h-4 text-[var(--color-primary)]" />
+                                    <Trash2 className="w-4 h-4 text-[#1A1A18]" />
                                   </button>
                                 </TableCell>
                               </TableRow>
@@ -3259,7 +3188,7 @@ const EventCreate = () => {
                     </span>
                   </h5>
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[var(--color-primary)] rounded-lg hover:bg-[#C4B89D59] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#1A1A18] rounded-lg hover:bg-[#C4B89D59] transition-colors"
                     type="button"
                     onClick={() => setShowDetailsImageUploader(true)}
                   >
@@ -3297,7 +3226,7 @@ const EventCreate = () => {
                                   type="button"
                                   onClick={() => handleImageRemoval(key, index)}
                                 >
-                                  <Trash2 className="w-4 h-4 text-[var(--color-primary)]" />
+                                  <Trash2 className="w-4 h-4 text-[#1A1A18]" />
                                 </button>
                               </TableCell>
                             </TableRow>
@@ -3322,18 +3251,18 @@ const EventCreate = () => {
         {/* Navigation Buttons - Show on all steps except preview mode */}
         {!isPreviewMode && (
           <>
-            <div className="flex gap-4 justify-center pt-6">
+            <div className="flex gap-2 justify-end pt-6">
               <button
                 type="button"
                 onClick={handleProceedToSave}
-                className="bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] h-9 px-4 text-sm font-medium min-w-[120px]"
+                className="btn-primary h-9 px-4 text-sm font-medium min-w-[120px]"
               >
                 Proceed to save
               </button>
               {/* <button
                 type="button"
                 onClick={handleSaveToDraft}
-                className="bg-[#C4B89D59] text-[var(--color-primary)] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                className="bg-[#C4B89D59] text-[#1A1A18] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
               >
                 Save to draft
               </button> */}
@@ -3341,7 +3270,7 @@ const EventCreate = () => {
             {currentStep > 0 && (
               <>
                 <div
-                  className="w-full border-t border-[#C4B89D] my-4"
+                  className="w-full border-t border-[rgba(26,26,24,0.08)] my-4"
                   style={{ borderTopWidth: "0.5px" }}
                 ></div>
                 <div className="text-center text-sm text-gray-600">
@@ -3362,22 +3291,21 @@ const EventCreate = () => {
                 <div key={`completed-section-${stepIndex}`}>
                   {/* Step 1: Event Details - Completed */}
                   {stepIndex === 0 && (
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
                       <div
-                        className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
-                        style={{ backgroundColor: "#F6F4EE" }}
+                        className="px-6 pt-[22px] pb-1 flex items-center justify-between"
                       >
-                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                        <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                           <Avatar
                             sx={{
                               width: 32,
                               height: 32,
-                              backgroundColor: "#E5E0D3",
+                              backgroundColor: "#F5F4F0",
                               mr: 1.5,
                             }}
                           >
                             <SettingsOutlinedIcon
-                              sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
+                              sx={{ fontSize: 16, color: "#1A1A18" }}
                             />
                           </Avatar>
                           Event Details
@@ -3388,10 +3316,10 @@ const EventCreate = () => {
                             setCurrentStep(0);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          className="btn-cancel h-8 px-3 text-[12px] font-medium flex items-center gap-1"
                         >
-                          <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
-                          <span className="text-[var(--color-primary)]">Edit</span>
+                          <Edit className="w-4 h-4 text-[#1A1A18]" />{" "}
+                          <span className="text-[#1A1A18]">Edit</span>
                         </button>
                       </div>
                       <div className="p-6 space-y-6 opacity-75 pointer-events-none">
@@ -3525,7 +3453,7 @@ const EventCreate = () => {
       "
                               >
                                 Event Description{" "}
-                                <span className="text-[var(--color-primary)]">*</span>
+                                <span className="text-[#1A1A18]">*</span>
                               </label>
 
                               {/* Textarea */}
@@ -3565,8 +3493,8 @@ const EventCreate = () => {
                                     type="radio"
                                     checked={formData.is_important === true}
                                     disabled
-                                    className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                                    className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                    style={{ accentColor: '#1A1A18' }}
                                   />
                                   <span className="ml-2 text-sm text-gray-700">Yes</span>
                                 </label>
@@ -3575,8 +3503,8 @@ const EventCreate = () => {
                                     type="radio"
                                     checked={formData.is_important === false}
                                     disabled
-                                    className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                                    className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                    style={{ accentColor: '#1A1A18' }}
                                   />
                                   <span className="ml-2 text-sm text-gray-700">No</span>
                                 </label>
@@ -3596,8 +3524,8 @@ const EventCreate = () => {
                                     formData.email_trigger_enabled === "true"
                                   }
                                   disabled
-                                  className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                  style={{ accentColor: "var(--color-primary, #da7756)" }}
+                                  className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                  style={{ accentColor: "#1A1A18" }}
                                 />
                                 <span className="ml-2 text-sm text-gray-700">
                                   Yes
@@ -3610,8 +3538,8 @@ const EventCreate = () => {
                                     formData.email_trigger_enabled === "false"
                                   }
                                   disabled
-                                  className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                  style={{ accentColor: "var(--color-primary, #da7756)" }}
+                                  className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                  style={{ accentColor: "#1A1A18" }}
                                 />
                                 <span className="ml-2 text-sm text-gray-700">
                                   No
@@ -3631,8 +3559,8 @@ const EventCreate = () => {
                                   type="radio"
                                   checked={formData.rsvp_action === "1"}
                                   disabled
-                                  className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                  style={{ accentColor: "var(--color-primary, #da7756)" }}
+                                  className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                  style={{ accentColor: "#1A1A18" }}
                                 />
                                 <span className="ml-2 text-sm text-gray-700">
                                   Yes
@@ -3643,8 +3571,8 @@ const EventCreate = () => {
                                   type="radio"
                                   checked={formData.rsvp_action === "0"}
                                   disabled
-                                  className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                  style={{ accentColor: "var(--color-primary, #da7756)" }}
+                                  className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                  style={{ accentColor: "#1A1A18" }}
                                 />
                                 <span className="ml-2 text-sm text-gray-700">
                                   No
@@ -3664,8 +3592,8 @@ const EventCreate = () => {
                                     type="radio"
                                     checked={formData.shared === "all"}
                                     disabled
-                                    className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                                    className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                    style={{ accentColor: '#1A1A18' }}
                                   />
                                   <span className="ml-2 text-sm text-gray-700">All</span>
                                 </label>
@@ -3674,8 +3602,8 @@ const EventCreate = () => {
                                     type="radio"
                                     checked={formData.shared === "individual"}
                                     disabled
-                                    className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                                    className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                    style={{ accentColor: '#1A1A18' }}
                                   />
                                   <span className="ml-2 text-sm text-gray-700">Individuals</span>
                                 </label>
@@ -3684,8 +3612,8 @@ const EventCreate = () => {
                                     type="radio"
                                     checked={formData.shared === "group"}
                                     disabled
-                                    className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                    style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                                    className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                    style={{ accentColor: '#1A1A18' }}
                                   />
                                   <span className="ml-2 text-sm text-gray-700">Groups</span>
                                 </label>
@@ -3760,22 +3688,21 @@ const EventCreate = () => {
 
                   {/* Visibility Card - Completed */}
                   {stepIndex === 0 && (
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mt-6">
+                    <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden mt-6">
                       <div
-                        className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
-                        style={{ backgroundColor: "#F6F4EE" }}
+                        className="px-6 pt-[22px] pb-1 flex items-center justify-between"
                       >
-                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                        <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                           <Avatar
                             sx={{
                               width: 32,
                               height: 32,
-                              backgroundColor: "#E5E0D3",
+                              backgroundColor: "#F5F4F0",
                               mr: 1.5,
                             }}
                           >
                             <SettingsOutlinedIcon
-                              sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
+                              sx={{ fontSize: 16, color: "#1A1A18" }}
                             />
                           </Avatar>
                           Visibility
@@ -3786,10 +3713,10 @@ const EventCreate = () => {
                             setCurrentStep(0);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          className="btn-cancel h-8 px-3 text-[12px] font-medium flex items-center gap-1"
                         >
-                          <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
-                          <span className="text-[var(--color-primary)]">Edit</span>
+                          <Edit className="w-4 h-4 text-[#1A1A18]" />{" "}
+                          <span className="text-[#1A1A18]">Edit</span>
                         </button>
                       </div>
                       <div className="p-6 space-y-4 opacity-75 pointer-events-none">
@@ -3816,10 +3743,10 @@ const EventCreate = () => {
                               size="small"
                               sx={{
                                 "& .MuiSwitch-switchBase.Mui-checked": {
-                                  color: "var(--color-primary, #da7756)",
+                                  color: "#1A1A18",
                                 },
                                 "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                                  backgroundColor: "var(--color-primary, #da7756)",
+                                  backgroundColor: "#1A1A18",
                                 },
                               }}
                             />
@@ -3838,7 +3765,7 @@ const EventCreate = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(1)' : 'scaleX(-1)' }}>
                           <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                           <g filter="url(#filter0_completed_2)">
-                            <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                            <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#1A1A18"/>
                           </g>
                           <defs>
                             <filter id="filter0_completed_2" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
@@ -3868,7 +3795,7 @@ const EventCreate = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnBookingPage ? 'scaleX(1)' : 'scaleX(-1)' }}>
                           <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                           <g filter="url(#filter0_completed_3)">
-                            <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                            <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#1A1A18"/>
                           </g>
                           <defs>
                             <filter id="filter0_completed_3" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
@@ -3898,7 +3825,7 @@ const EventCreate = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.featuredEvent ? 'scaleX(1)' : 'scaleX(-1)' }}>
                           <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                           <g filter="url(#filter0_completed_4)">
-                            <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                            <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#1A1A18"/>
                           </g>
                           <defs>
                             <filter id="filter0_completed_4" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
@@ -3923,25 +3850,24 @@ const EventCreate = () => {
                   )}
 
                   {stepIndex === 1 && (
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
                       <div
-                        className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
-                        style={{ backgroundColor: "#F6F4EE" }}
+                        className="px-6 pt-[22px] pb-1 flex items-center justify-between"
                       >
                         {/* <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm mr-3 font-medium">
                         ✓
                       </span> */}
-                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                        <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                           <Avatar
                             sx={{
                               width: 32,
                               height: 32,
-                              backgroundColor: "#E5E0D3",
+                              backgroundColor: "#F5F4F0",
                               mr: 1.5,
                             }}
                           >
                             <SettingsOutlinedIcon
-                              sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
+                              sx={{ fontSize: 16, color: "#1A1A18" }}
                             />
                           </Avatar>
                           Event Related Images
@@ -3952,10 +3878,10 @@ const EventCreate = () => {
                             setCurrentStep(1);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          className="btn-cancel h-8 px-3 text-[12px] font-medium flex items-center gap-1"
                         >
-                          <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
-                          <span className="text-[var(--color-primary)]">Edit</span>
+                          <Edit className="w-4 h-4 text-[#1A1A18]" />{" "}
+                          <span className="text-[#1A1A18]">Edit</span>
                         </button>
                       </div>
                       <div className="p-6 opacity-75 pointer-events-none">
@@ -3967,22 +3893,21 @@ const EventCreate = () => {
                   )}
 
                   {stepIndex === 2 && (
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
                       <div
-                        className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
-                        style={{ backgroundColor: "#F6F4EE" }}
+                        className="px-6 pt-[22px] pb-1 flex items-center justify-between"
                       >
-                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                        <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                           <Avatar
                             sx={{
                               width: 32,
                               height: 32,
-                              backgroundColor: "#E5E0D3",
+                              backgroundColor: "#F5F4F0",
                               mr: 1.5,
                             }}
                           >
                             <SettingsOutlinedIcon
-                              sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
+                              sx={{ fontSize: 16, color: "#1A1A18" }}
                             />
                           </Avatar>
                           Invite CPs
@@ -3993,10 +3918,10 @@ const EventCreate = () => {
                             setCurrentStep(2);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          className="btn-cancel h-8 px-3 text-[12px] font-medium flex items-center gap-1"
                         >
-                          <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
-                          <span className="text-[var(--color-primary)]">Edit</span>
+                          <Edit className="w-4 h-4 text-[#1A1A18]" />{" "}
+                          <span className="text-[#1A1A18]">Edit</span>
                         </button>
                       </div>
                       <div className="p-6 space-y-6 opacity-75 pointer-events-none">
@@ -4043,8 +3968,8 @@ const EventCreate = () => {
                                 type="radio"
                                 checked={formData.shared === "all"}
                                 disabled
-                                className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                style={{ accentColor: "var(--color-primary, #da7756)" }}
+                                className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                style={{ accentColor: "#1A1A18" }}
                               />
                               <span className="ml-2 text-sm text-gray-700">
                                 All
@@ -4055,8 +3980,8 @@ const EventCreate = () => {
                                 type="radio"
                                 checked={formData.shared === "individual"}
                                 disabled
-                                className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                style={{ accentColor: "var(--color-primary, #da7756)" }}
+                                className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                style={{ accentColor: "#1A1A18" }}
                               />
                               <span className="ml-2 text-sm text-gray-700">
                                 Individuals
@@ -4067,8 +3992,8 @@ const EventCreate = () => {
                                 type="radio"
                                 checked={formData.shared === "group"}
                                 disabled
-                                className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                style={{ accentColor: "var(--color-primary, #da7756)" }}
+                                className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                                style={{ accentColor: "#1A1A18" }}
                               />
                               <span className="ml-2 text-sm text-gray-700">
                                 Groups
@@ -4203,22 +4128,21 @@ const EventCreate = () => {
 
               {/* Step 1: Event Details Preview */}
               <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
                   <div
-                    className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
-                    style={{ backgroundColor: "#F6F4EE" }}
+                    className="px-6 pt-[22px] pb-1 flex items-center justify-between"
                   >
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                    <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                       <Avatar
                         sx={{
                           width: 32,
                           height: 32,
-                          backgroundColor: "#E5E0D3",
+                          backgroundColor: "#F5F4F0",
                           mr: 1.5,
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
+                          sx={{ fontSize: 16, color: "#1A1A18" }}
                         />
                       </Avatar>
                       Event Details
@@ -4230,13 +4154,13 @@ const EventCreate = () => {
                         setCurrentStep(0);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
-                      className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      className="btn-cancel h-8 px-3 text-[12px] font-medium flex items-center gap-1"
                     >
-                      <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
-                      <span className="text-[var(--color-primary)]">Edit</span>
+                      <Edit className="w-4 h-4 text-[#1A1A18]" />{" "}
+                      <span className="text-[#1A1A18]">Edit</span>
                     </button>
                   </div>
-                  <div className="p-6 space-y-6">
+                  <div className="px-6 pt-4 pb-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {/* Project */}
                       {/* <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
@@ -4378,7 +4302,7 @@ const EventCreate = () => {
       "
                           >
                             Event Description{" "}
-                            <span className="text-[var(--color-primary)]">*</span>
+                            <span className="text-[#1A1A18]">*</span>
                           </label>
 
                           <textarea
@@ -4430,8 +4354,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.is_important === true}
                               disabled
-                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                              style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                              className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: '#1A1A18' }}
                             />
                             <span className="ml-2 text-sm text-gray-700">Yes</span>
                           </label>
@@ -4440,8 +4364,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.is_important === false}
                               disabled
-                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                              style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                              className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: '#1A1A18' }}
                             />
                             <span className="ml-2 text-sm text-gray-700">No</span>
                           </label>
@@ -4462,8 +4386,8 @@ const EventCreate = () => {
                                 formData.email_trigger_enabled === "true"
                               }
                               disabled
-                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                              style={{ accentColor: "var(--color-primary, #da7756)" }}
+                              className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: "#1A1A18" }}
                             />
                             <span className="ml-2 text-sm text-gray-700">
                               Yes
@@ -4476,8 +4400,8 @@ const EventCreate = () => {
                                 formData.email_trigger_enabled === "false"
                               }
                               disabled
-                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                              style={{ accentColor: "var(--color-primary, #da7756)" }}
+                              className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: "#1A1A18" }}
                             />
                             <span className="ml-2 text-sm text-gray-700">
                               No
@@ -4496,8 +4420,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.rsvp_action === "1"}
                               disabled
-                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                              style={{ accentColor: "var(--color-primary, #da7756)" }}
+                              className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: "#1A1A18" }}
                             />
                             <span className="ml-2 text-sm text-gray-700">
                               Yes
@@ -4508,8 +4432,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.rsvp_action === "0"}
                               disabled
-                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                              style={{ accentColor: "var(--color-primary, #da7756)" }}
+                              className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: "#1A1A18" }}
                             />
                             <span className="ml-2 text-sm text-gray-700">
                               No
@@ -4553,8 +4477,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.shared === "all"}
                               disabled
-                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                              style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                              className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: '#1A1A18' }}
                             />
                             <span className="ml-2 text-sm text-gray-700">All</span>
                           </label>
@@ -4563,8 +4487,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.shared === "individual"}
                               disabled
-                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                              style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                              className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: '#1A1A18' }}
                             />
                             <span className="ml-2 text-sm text-gray-700">Individuals</span>
                           </label>
@@ -4573,8 +4497,8 @@ const EventCreate = () => {
                               type="radio"
                               checked={formData.shared === "group"}
                               disabled
-                              className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                              style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                              className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                              style={{ accentColor: '#1A1A18' }}
                             />
                             <span className="ml-2 text-sm text-gray-700">Groups</span>
                           </label>
@@ -4648,22 +4572,21 @@ const EventCreate = () => {
 
               {/* Visibility Card Preview */}
               <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
                   <div
-                    className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
-                    style={{ backgroundColor: "#F6F4EE" }}
+                    className="px-6 pt-[22px] pb-1 flex items-center justify-between"
                   >
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                    <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                       <Avatar
                         sx={{
                           width: 32,
                           height: 32,
-                          backgroundColor: "#E5E0D3",
+                          backgroundColor: "#F5F4F0",
                           mr: 1.5,
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
+                          sx={{ fontSize: 16, color: "#1A1A18" }}
                         />
                       </Avatar>
                       Visibility
@@ -4675,10 +4598,10 @@ const EventCreate = () => {
                         setCurrentStep(0);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
-                      className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      className="btn-cancel h-8 px-3 text-[12px] font-medium flex items-center gap-1"
                     >
-                      <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
-                      <span className="text-[var(--color-primary)]">Edit</span>
+                      <Edit className="w-4 h-4 text-[#1A1A18]" />{" "}
+                      <span className="text-[#1A1A18]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-4">
@@ -4702,10 +4625,10 @@ const EventCreate = () => {
                           size="small"
                           sx={{
                             "& .MuiSwitch-switchBase.Mui-checked": {
-                              color: "var(--color-primary, #da7756)",
+                              color: "#1A1A18",
                             },
                             "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                              backgroundColor: "var(--color-primary, #da7756)",
+                              backgroundColor: "#1A1A18",
                             },
                           }}
                         />
@@ -4726,10 +4649,10 @@ const EventCreate = () => {
                         onChange={(e) => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: e.target.checked }))}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: 'var(--color-primary, #da7756)',
+                            color: '#1A1A18',
                           },
                           '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: 'var(--color-primary, #da7756)',
+                            backgroundColor: '#1A1A18',
                           },
                         }}
                       />
@@ -4746,10 +4669,10 @@ const EventCreate = () => {
                         onChange={(e) => setVisibility(prev => ({ ...prev, showOnBookingPage: e.target.checked }))}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: 'var(--color-primary, #da7756)',
+                            color: '#1A1A18',
                           },
                           '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: 'var(--color-primary, #da7756)',
+                            backgroundColor: '#1A1A18',
                           },
                         }}
                       />
@@ -4766,10 +4689,10 @@ const EventCreate = () => {
                         onChange={(e) => setVisibility(prev => ({ ...prev, featuredEvent: e.target.checked }))}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: 'var(--color-primary, #da7756)',
+                            color: '#1A1A18',
                           },
                           '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: 'var(--color-primary, #da7756)',
+                            backgroundColor: '#1A1A18',
                           },
                         }}
                       />
@@ -4780,11 +4703,11 @@ const EventCreate = () => {
 
               {/* Share Card Preview */}
               {/* <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                      <Avatar sx={{ width: 32, height: 32, backgroundColor: '#E5E0D3', mr: 1.5 }}>
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+                <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
+                  <div className="px-6 pt-[22px] pb-1 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
+                      <Avatar sx={{ width: 32, height: 32, backgroundColor: '#F5F4F0', mr: 1.5 }}>
+                        <SettingsOutlinedIcon sx={{ fontSize: 16, color: "#1A1A18" }} />
                       </Avatar>
                       Share
                     </h2>
@@ -4795,15 +4718,15 @@ const EventCreate = () => {
                         setCurrentStep(0);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      className="btn-cancel h-8 px-3 text-[12px] font-medium flex items-center gap-1"
                     >
-                      <Edit className="w-4 h-4 text-[var(--color-primary)]" /> <span className="text-[var(--color-primary)]">Edit</span>
+                      <Edit className="w-4 h-4 text-[#1A1A18]" /> <span className="text-[#1A1A18]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-sm text-gray-500 font-medium">Share With:</span>
-                      <span className="text-sm font-semibold" style={{ color: 'var(--color-primary, #da7756)' }}>
+                      <span className="text-sm font-semibold" style={{ color: '#1A1A18' }}>
                         {shareWith === 'all' ? 'All Society' : 'Individual Society'}
                       </span>
                     </div>
@@ -4815,7 +4738,7 @@ const EventCreate = () => {
                             <span
                               key={s.id}
                               className="px-3 py-1 text-xs font-medium rounded"
-                              style={{ backgroundColor: '#E5E0D3', color: '#333' }}
+                              style={{ backgroundColor: '#F5F4F0', color: '#333' }}
                             >
                               {s.name}
                             </span>
@@ -4831,18 +4754,18 @@ const EventCreate = () => {
 
               {/* Step 3: Invite CPs Preview */}
               {/* <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
+                  <div className="px-6 pt-[22px] pb-1 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                       <Avatar
                         sx={{
                           width: 32,
                           height: 32,
-                          backgroundColor: '#E5E0D3',
+                          backgroundColor: '#F5F4F0',
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 16, color: "#1A1A18" }} />
                       </Avatar>
                       Invite CPs
                     </h2>
@@ -4853,12 +4776,12 @@ const EventCreate = () => {
                         setCurrentStep(2);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      className="btn-cancel h-8 px-3 text-[12px] font-medium flex items-center gap-1"
                     >
-                      <Edit className="w-4 h-4 text-[var(--color-primary)]" /> <span className="text-[var(--color-primary)]">Edit</span>
+                      <Edit className="w-4 h-4 text-[#1A1A18]" /> <span className="text-[#1A1A18]">Edit</span>
                     </button>
                   </div>
-                  <div className="p-6 space-y-6">
+                  <div className="px-6 pt-4 pb-6 space-y-6">
                     <div>
                       <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
                         <InputLabel shrink>Selected Channel Partners</InputLabel>
@@ -4898,8 +4821,8 @@ const EventCreate = () => {
                             type="radio"
                             checked={formData.shared === "all"}
                             disabled
-                            className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                            style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                            className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                            style={{ accentColor: '#1A1A18' }}
                           />
                           <span className="ml-2 text-sm text-gray-700">All</span>
                         </label>
@@ -4908,8 +4831,8 @@ const EventCreate = () => {
                             type="radio"
                             checked={formData.shared === "individual"}
                             disabled
-                            className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                            style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                            className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                            style={{ accentColor: '#1A1A18' }}
                           />
                           <span className="ml-2 text-sm text-gray-700">Individuals</span>
                         </label>
@@ -4918,8 +4841,8 @@ const EventCreate = () => {
                             type="radio"
                             checked={formData.shared === "group"}
                             disabled
-                            className="w-4 h-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                            style={{ accentColor: 'var(--color-primary, #da7756)' }}
+                            className="w-4 h-4 text-[#1A1A18] focus:ring-[var(--color-primary)]"
+                            style={{ accentColor: '#1A1A18' }}
                           />
                           <span className="ml-2 text-sm text-gray-700">Groups</span>
                         </label>
@@ -5003,22 +4926,21 @@ const EventCreate = () => {
 
               {/* Step 2: Event Related Images Preview */}
               <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
                   <div
-                    className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
-                    style={{ backgroundColor: "#F6F4EE" }}
+                    className="px-6 pt-[22px] pb-1 flex items-center justify-between"
                   >
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                    <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                       <Avatar
                         sx={{
                           width: 32,
                           height: 32,
-                          backgroundColor: "#E5E0D3",
+                          backgroundColor: "#F5F4F0",
                           mr: 1.5,
                         }}
                       >
                         <SettingsOutlinedIcon
-                          sx={{ fontSize: 18, color: "var(--color-primary, #da7756)" }}
+                          sx={{ fontSize: 16, color: "#1A1A18" }}
                         />
                       </Avatar>
                       Event Related Images
@@ -5030,13 +4952,13 @@ const EventCreate = () => {
                         setCurrentStep(1);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
-                      className="h-8 px-3 text-[12px] border border-[var(--color-primary)] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      className="btn-cancel h-8 px-3 text-[12px] font-medium flex items-center gap-1"
                     >
-                      <Edit className="w-4 h-4 text-[var(--color-primary)]" />{" "}
-                      <span className="text-[var(--color-primary)]">Edit</span>
+                      <Edit className="w-4 h-4 text-[#1A1A18]" />{" "}
+                      <span className="text-[#1A1A18]">Edit</span>
                     </button>
                   </div>
-                  <div className="p-6 space-y-6">
+                  <div className="px-6 pt-4 pb-6 space-y-6">
                     {/* Cover Images */}
                     <div>
                       <h5 className="text-base font-semibold mb-4">
@@ -5250,18 +5172,18 @@ const EventCreate = () => {
 
               {/* QR Code Generation Preview - At the End */}
               {/* <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
+                  <div className="px-6 pt-[22px] pb-1 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[#1A1A18] flex items-center">
                       <Avatar
                         sx={{
                           width: 32,
                           height: 32,
-                          backgroundColor: '#E5E0D3',
+                          backgroundColor: '#F5F4F0',
                           mr: 1.5
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+                        <SettingsOutlinedIcon sx={{ fontSize: 16, color: "#1A1A18" }} />
                       </Avatar>
                       QR Code Generation
                     </h2>
@@ -5269,20 +5191,20 @@ const EventCreate = () => {
                       <button
                         type="button"
                         onClick={handleDownloadAllQRCodes}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
+                className="bg-[#1A1A18] hover:bg-[#12100E] text-white px-10 py-2"
               >
                 Download All QR Codes
               </button>
               <button
                 type="button"
                 onClick={handleSendAllQRCodesEmail}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
+                className="bg-[#1A1A18] hover:bg-[#12100E] text-white px-10 py-2"
                       >
                         Send QR Codes via Email
                       </button>
                     </div>
                   </div>
-                  <div className="p-6 space-y-6">
+                  <div className="px-6 pt-4 pb-6 space-y-6">
                   
                     <div className="bg-[#C4B89D59] border border-gray-200 rounded-lg p-6">
                       <div className="flex items-start gap-4">
@@ -5392,7 +5314,7 @@ const EventCreate = () => {
                                     <button
                                       type="button"
                                       onClick={() => handleDownloadQRCode(row.qrCodeId, row.cpName)}
-                                      className="p-1.5 text-[var(--color-primary)] hover:bg-[#FFF5F5] rounded transition-colors"
+                                      className="p-1.5 text-[#1A1A18] hover:bg-[#F5F4F0] rounded transition-colors"
                                       title="Download QR Code"
                                     >
                                       <Download className="w-4 h-4" />
@@ -5400,7 +5322,7 @@ const EventCreate = () => {
                                     <button
                                       type="button"
                                       onClick={() => handleSendQRCodeEmail(row.emailId, row.cpName)}
-                                      className="p-1.5 text-[var(--color-primary)] hover:bg-[#FFF5F5] rounded transition-colors"
+                                      className="p-1.5 text-[#1A1A18] hover:bg-[#F5F4F0] rounded transition-colors"
                                       title="Send via Email"
                                     >
                                       <Mail className="w-4 h-4" />
@@ -5434,18 +5356,18 @@ const EventCreate = () => {
             </div>
 
             {/* Final Submit Buttons in Preview Mode */}
-            <div className="flex gap-4 justify-center pt-6">
+            <div className="flex gap-2 justify-end pt-6">
               <button
                 type="button"
                 onClick={() => setIsPreviewMode(false)}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
+                className="btn-cancel h-9 px-4 text-sm font-medium"
               >
                 Back to Edit
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary h-9 px-4 text-sm font-medium disabled:cursor-not-allowed"
               >
                 {loading ? "Submitting..." : "Submit Event"}
               </button>

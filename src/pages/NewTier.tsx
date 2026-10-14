@@ -5,7 +5,18 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { ChevronRight, ArrowLeft, X } from "lucide-react";
+import { ChevronRight, ArrowLeft, X, Plus } from "lucide-react";
+
+// Form styling matched to the Facility Setup add / details pages
+const PAGE_CARD = "bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl px-6 py-[22px]";
+const CARD_TITLE = "text-sm font-semibold text-[#1A1A18]";
+const CARD_SUBTITLE = "text-[12.5px] text-[rgba(26,26,24,0.55)] mt-1";
+const FIELD_LABEL = "block text-[12.5px] font-semibold text-[rgba(26,26,24,0.68)]";
+const FIELD_INPUT =
+  "w-full h-11 px-3.5 text-[13.5px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.08)] rounded-xl outline-none transition-shadow placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus:border-[#1A1A18] focus:shadow-[0_0_0_4px_rgba(26,26,24,0.1)]";
+const FIELD_TEXTAREA =
+  "w-full px-3.5 py-2.5 text-[13.5px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.08)] rounded-xl outline-none transition-shadow resize-none placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus:border-[#1A1A18] focus:shadow-[0_0_0_4px_rgba(26,26,24,0.1)]";
+const FIELD_ERROR = "text-red-500 text-xs mt-1";
 
 const validationSchema = Yup.object().shape({
   name: Yup.string()
@@ -203,67 +214,67 @@ const NewTier = () => {
   };
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full bg-[#FDFDFB]">
       <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
         {step === 1 ? (
           <>
             {/* Header with Back Button and Breadcrumbs */}
-            <div className="mb-6">
-              <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+            <div className="mb-[22px]">
+              <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
                 <button
+                  type="button"
                   onClick={() => navigate(-1)}
-                  className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
+                  className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+                  aria-label="Go back"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-1" />
-                  Back
+                  <ArrowLeft className="w-4 h-4" />
                 </button>
-                <ChevronRight className="w-4 h-4" />
-                <span className="text-gray-400">Setup Member</span>
-                <ChevronRight className="w-4 h-4" />
-                <span className="text-gray-400">Loyalty</span>
-                <ChevronRight className="w-4 h-4" />
-                <span className="text-[#C72030] font-medium">Create</span>
+                <span>Tiers</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+                <span className="font-semibold text-[#1A1A18]">Tier Setting</span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">TIER SETTING</h1>
+              <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+                Tier Setting
+              </h1>
             </div>
 
             {/* Main Content */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-bold text-gray-900">
+            <div className={PAGE_CARD}>
+              <div className="mb-5">
+                <h3 className={CARD_TITLE}>
                   Point Accumulation Timeframe
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className={CARD_SUBTITLE}>
                   Establish how members enter into higher tiers on points
                   earning and time frame.
                 </p>
               </div>
-              <div className="p-6">
+              <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <button
                     type="button"
                     onClick={() => handleTimeframeChange("lifetime")}
-                    className={`p-6 rounded-lg border-2 transition-all ${timeframe === "lifetime"
-                        ? "border-[#c72030] bg-[#c7203008]"
-                        : "border-gray-200 hover:border-gray-300"
+                    className={`p-5 rounded-xl border transition-all ${timeframe === "lifetime"
+                        ? "border-[#1A1A18] bg-[#FAF9F7] shadow-[0_0_0_1px_#1A1A18]"
+                        : "border-[rgba(26,26,24,0.09)] hover:border-[rgba(26,26,24,0.28)]"
                       }`}
                   >
                     <div className="flex items-start gap-3">
                       <div
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${timeframe === "lifetime"
-                            ? "border-[#c72030]"
-                            : "border-gray-300"
+                        className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${timeframe === "lifetime"
+                            ? "border-[#1A1A18]"
+                            : "border-[rgba(26,26,24,0.25)]"
                           }`}
                       >
                         {timeframe === "lifetime" && (
-                          <div className="w-3 h-3 rounded-full bg-[#c72030]" />
+                          <div className="w-2 h-2 rounded-full bg-[#1A1A18]" />
                         )}
                       </div>
                       <div className="text-left">
-                        <h4 className="font-semibold text-gray-900 mb-1">
+                        <h4 className="text-sm font-semibold text-[#1A1A18] mb-1">
                           Lifetime
                         </h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-[12.5px] leading-relaxed text-[rgba(26,26,24,0.55)]">
                           Members accumulate points throughout their lifetime
                           and tier progression is permanent.
                         </p>
@@ -274,27 +285,27 @@ const NewTier = () => {
                   <button
                     type="button"
                     onClick={() => handleTimeframeChange("yearly")}
-                    className={`p-6 rounded-lg border-2 transition-all ${timeframe === "yearly"
-                        ? "border-[#c72030] bg-[#c7203008]"
-                        : "border-gray-200 hover:border-gray-300"
+                    className={`p-5 rounded-xl border transition-all ${timeframe === "yearly"
+                        ? "border-[#1A1A18] bg-[#FAF9F7] shadow-[0_0_0_1px_#1A1A18]"
+                        : "border-[rgba(26,26,24,0.09)] hover:border-[rgba(26,26,24,0.28)]"
                       }`}
                   >
                     <div className="flex items-start gap-3">
                       <div
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${timeframe === "yearly"
-                            ? "border-[#c72030]"
-                            : "border-gray-300"
+                        className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${timeframe === "yearly"
+                            ? "border-[#1A1A18]"
+                            : "border-[rgba(26,26,24,0.25)]"
                           }`}
                       >
                         {timeframe === "yearly" && (
-                          <div className="w-3 h-3 rounded-full bg-[#c72030]" />
+                          <div className="w-2 h-2 rounded-full bg-[#1A1A18]" />
                         )}
                       </div>
                       <div className="text-left">
-                        <h4 className="font-semibold text-gray-900 mb-1">
+                        <h4 className="text-sm font-semibold text-[#1A1A18] mb-1">
                           Rolling Year
                         </h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-[12.5px] leading-relaxed text-[rgba(26,26,24,0.55)]">
                           Points reset annually and tier status is re-evaluated
                           each year based on current points.
                         </p>
@@ -304,22 +315,24 @@ const NewTier = () => {
                 </div>
 
                 {timeframeError && (
-                  <p className="text-red-500 text-sm mb-4">{timeframeError}</p>
+                  <p className="text-red-500 text-xs -mt-3 mb-4">{timeframeError}</p>
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex items-center justify-center gap-4 pt-6 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={nextStep}
-           className="btn-primary h-9 px-4 text-sm font-medium"                  >
-                    Next
-                  </button>
+                <div className="flex items-center justify-end gap-2 pt-5 border-t border-[rgba(26,26,24,0.08)]">
                   <button
                     type="button"
                     onClick={() => navigate("/loyalty/loyalty-tiers-list")}
-  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"                  >
+                    className="btn-cancel h-9 px-4 text-sm font-medium"
+                  >
                     Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    className="btn-primary h-9 px-4 text-sm font-medium"
+                  >
+                    Next
                   </button>
                 </div>
               </div>
@@ -328,35 +341,33 @@ const NewTier = () => {
         ) : (
           <>
             {/* Header with Back Button and Breadcrumbs */}
-            <div className="mb-6">
-              <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+            <div className="mb-[22px]">
+              <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
                 <button
+                  type="button"
                   onClick={() => setStep(1)}
-                  className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
+                  className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+                  aria-label="Go back"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-1" />
-                  Back
+                  <ArrowLeft className="w-4 h-4" />
                 </button>
-                <ChevronRight className="w-4 h-4" />
-                <span className="text-gray-400">Setup Member</span>
-                <ChevronRight className="w-4 h-4" />
-                <span className="text-gray-400">Loyalty</span>
-                <ChevronRight className="w-4 h-4" />
-                <span className="text-[#C72030] font-medium">New Tier</span>
+                <span>Tiers</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+                <span className="font-semibold text-[#1A1A18]">New Tier</span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                CREATE NEW TIER
+              <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+                Create New Tier
               </h1>
             </div>
 
             {/* Main Content */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-bold text-gray-900">
+            <div className={PAGE_CARD}>
+              <div className="mb-5">
+                <h3 className={CARD_TITLE}>
                   Tier Details
                 </h3>
               </div>
-              <div className="p-6">
+              <div>
                 <Formik
                   initialValues={{
                     name: "",
@@ -376,43 +387,43 @@ const NewTier = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
                         {/* Tier Name */}
                         <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
+                          <label className={FIELD_LABEL}>
                             Tier Name
                             <span className="text-red-500 ml-1">*</span>
                           </label>
                           <Field
                             name="name"
                             placeholder="Enter tier name"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                            className={FIELD_INPUT}
                           />
                           <ErrorMessage
                             name="name"
                             component="div"
-                            className="text-red-500 text-xs mt-1"
+                            className={FIELD_ERROR}
                           />
                         </div>
 
                         {/* Title */}
                         <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
+                          <label className={FIELD_LABEL}>
                             Title
                             <span className="text-red-500 ml-1">*</span>
                           </label>
                           <Field
                             name="title"
                             placeholder="Enter title"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                            className={FIELD_INPUT}
                           />
                           <ErrorMessage
                             name="title"
                             component="div"
-                            className="text-red-500 text-xs mt-1"
+                            className={FIELD_ERROR}
                           />
                         </div>
 
                         {/* Exit Points */}
                         <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
+                          <label className={FIELD_LABEL}>
                             Exit Points
                             <span className="text-red-500 ml-1">*</span>
                           </label>
@@ -420,18 +431,18 @@ const NewTier = () => {
                             name="exit_points"
                             type="number"
                             placeholder="Enter exit points"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                            className={FIELD_INPUT}
                           />
                           <ErrorMessage
                             name="exit_points"
                             component="div"
-                            className="text-red-500 text-xs mt-1"
+                            className={FIELD_ERROR}
                           />
                         </div>
 
                         {/* Welcome Bonus */}
                         <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
+                          <label className={FIELD_LABEL}>
                             Welcome Bonus
                             <span className="text-red-500 ml-1">*</span>
                           </label>
@@ -439,19 +450,19 @@ const NewTier = () => {
                             name="welcome_bonus"
                             type="number"
                             placeholder="Enter welcome bonus"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                            className={FIELD_INPUT}
                           />
                           <ErrorMessage
                             name="welcome_bonus"
                             component="div"
-                            className="text-red-500 text-xs mt-1"
+                            className={FIELD_ERROR}
                           />
                         </div>
                       </div>
 
                       {/* Description - full width */}
                       <div className="space-y-2 mb-6">
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className={FIELD_LABEL}>
                           Description
                         </label>
                         <Field
@@ -459,12 +470,12 @@ const NewTier = () => {
                           name="description"
                           rows={3}
                           placeholder="Enter description"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none"
+                          className={FIELD_TEXTAREA}
                         />
                         <ErrorMessage
                           name="description"
                           component="div"
-                          className="text-red-500 text-xs mt-1"
+                          className={FIELD_ERROR}
                         />
                       </div>
 
@@ -473,19 +484,19 @@ const NewTier = () => {
                         {({ remove, push }) => (
                           <div className="space-y-4 mb-6">
                             {values.tiers.length > 0 && (
-                              <h4 className="text-md font-semibold text-gray-900 mb-4">
+                              <h4 className={`${CARD_TITLE} mb-4`}>
                                 Additional Tiers
                               </h4>
                             )}
                             {values.tiers.map((tier, index) => (
                               <div
                                 key={index}
-                                className="relative p-6 border border-gray-200 rounded-lg bg-gray-50"
+                                className="relative p-5 border border-[rgba(26,26,24,0.09)] rounded-xl bg-white"
                               >
                                 <button
                                   type="button"
                                   onClick={() => remove(index)}
-                                  className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                                  className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-lg text-[rgba(26,26,24,0.55)] hover:bg-[#F5F4F0] hover:text-[#1A1A18] transition-colors"
                                   title="Remove tier"
                                 >
                                   <X className="w-4 h-4" />
@@ -493,7 +504,7 @@ const NewTier = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
                                   <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-gray-700">
+                                    <label className={FIELD_LABEL}>
                                       Tier Name
                                       <span className="text-red-500 ml-1">
                                         *
@@ -502,16 +513,16 @@ const NewTier = () => {
                                     <Field
                                       name={`tiers[${index}].name`}
                                       placeholder="Enter tier name"
-                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                                      className={FIELD_INPUT}
                                     />
                                     <ErrorMessage
                                       name={`tiers[${index}].name`}
                                       component="div"
-                                      className="text-red-500 text-xs mt-1"
+                                      className={FIELD_ERROR}
                                     />
                                   </div>
                                   <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-gray-700">
+                                    <label className={FIELD_LABEL}>
                                       Title
                                       <span className="text-red-500 ml-1">
                                         *
@@ -520,16 +531,16 @@ const NewTier = () => {
                                     <Field
                                       name={`tiers[${index}].title`}
                                       placeholder="Enter title"
-                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                                      className={FIELD_INPUT}
                                     />
                                     <ErrorMessage
                                       name={`tiers[${index}].title`}
                                       component="div"
-                                      className="text-red-500 text-xs mt-1"
+                                      className={FIELD_ERROR}
                                     />
                                   </div>
                                   <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-gray-700">
+                                    <label className={FIELD_LABEL}>
                                       Exit Points
                                       <span className="text-red-500 ml-1">
                                         *
@@ -539,16 +550,16 @@ const NewTier = () => {
                                       name={`tiers[${index}].exit_points`}
                                       type="number"
                                       placeholder="Enter exit points"
-                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                                      className={FIELD_INPUT}
                                     />
                                     <ErrorMessage
                                       name={`tiers[${index}].exit_points`}
                                       component="div"
-                                      className="text-red-500 text-xs mt-1"
+                                      className={FIELD_ERROR}
                                     />
                                   </div>
                                   <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-gray-700">
+                                    <label className={FIELD_LABEL}>
                                       Welcome Bonus
                                       <span className="text-red-500 ml-1">
                                         *
@@ -558,18 +569,18 @@ const NewTier = () => {
                                       name={`tiers[${index}].welcome_bonus`}
                                       type="number"
                                       placeholder="Enter welcome bonus"
-                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                                      className={FIELD_INPUT}
                                     />
                                     <ErrorMessage
                                       name={`tiers[${index}].welcome_bonus`}
                                       component="div"
-                                      className="text-red-500 text-xs mt-1"
+                                      className={FIELD_ERROR}
                                     />
                                   </div>
                                 </div>
                                 {/* Description - full width */}
                                 <div className="space-y-2">
-                                  <label className="block text-sm font-medium text-gray-700">
+                                  <label className={FIELD_LABEL}>
                                     Description
                                   </label>
                                   <Field
@@ -577,12 +588,12 @@ const NewTier = () => {
                                     name={`tiers[${index}].description`}
                                     rows={2}
                                     placeholder="Enter description"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none"
+                                    className={FIELD_TEXTAREA}
                                   />
                                   <ErrorMessage
                                     name={`tiers[${index}].description`}
                                     component="div"
-                                    className="text-red-500 text-xs mt-1"
+                                    className={FIELD_ERROR}
                                   />
                                 </div>
                               </div>
@@ -599,17 +610,9 @@ const NewTier = () => {
                                   welcome_bonus: "",
                                 })
                               }
-                              className="flex items-center gap-2 px-4 py-2 text-[#c72030] border border-[#c72030] rounded-lg hover:bg-[#c7203008] transition-colors"
+                              className="btn-cancel h-9 px-4 text-sm font-medium inline-flex items-center gap-2"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width={20}
-                                height={20}
-                                fill="currentColor"
-                                viewBox="0 0 16 16"
-                              >
-                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                              </svg>
+                              <Plus className="w-4 h-4" />
                               Add New Tier
                             </button>
                           </div>
@@ -617,12 +620,21 @@ const NewTier = () => {
                       </FieldArray>
 
                       {/* Action Buttons */}
-                      <div className="flex items-center justify-center gap-4 pt-6 border-t border-gray-200">
+                      <div className="flex items-center justify-end gap-2 pt-5 border-t border-[rgba(26,26,24,0.08)]">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate("/loyalty/loyalty-tiers-list")
+                          }
+                          disabled={isSubmitting}
+                          className="btn-cancel h-9 px-4 text-sm font-medium"
+                        >
+                          Cancel
+                        </button>
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""
-                            }`}
+                          className="btn-primary h-9 px-4 text-sm font-medium disabled:cursor-not-allowed"
                         >
                           {isSubmitting ? (
                             <span className="flex items-center gap-2">
@@ -632,16 +644,6 @@ const NewTier = () => {
                           ) : (
                             "Submit"
                           )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate("/loyalty/loyalty-tiers-list")
-                          }
-                          disabled={isSubmitting}
-                          className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                        >
-                          Cancel
                         </button>
                       </div>
                     </Form>

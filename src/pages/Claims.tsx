@@ -300,7 +300,7 @@ const Claims = () => {
     }
 
     return (
-        <div className="p-6">
+        <div className="p-6 min-h-screen bg-white">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">Claims</h1>
                 <p className="text-sm text-gray-600 mt-1">
