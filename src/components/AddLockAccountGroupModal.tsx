@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -161,9 +161,11 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
     <Dialog open={open} modal={false} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg overflow-hidden p-0 [&>button]:hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">
-            {editingGroup ? "Edit Lock Account Group" : "New Lock Account Group"}
-          </h2>
+          <DialogTitle asChild>
+            <h2 className="text-lg font-medium text-gray-900">
+              {editingGroup ? "Edit Lock Account Group" : "New Lock Account Group"}
+            </h2>
+          </DialogTitle>
           <Button
             variant="ghost"
             size="sm"
@@ -252,7 +254,14 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
 
         </div>
 
-        <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+          <Button
+            onClick={handleClose}
+            disabled={submitting}
+            className="px-6 sm:px-8 w-full sm:w-auto h-10 !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
+          >
+            Cancel
+          </Button>
           <Button
             onClick={handleSubmit}
             disabled={submitting}
@@ -265,13 +274,6 @@ export const AddLockAccountGroupModal: React.FC<AddLockAccountGroupModalProps> =
               : editingGroup
               ? "Update"
               : "Submit"}
-          </Button>
-          <Button
-            onClick={handleClose}
-            disabled={submitting}
-            className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] h-10"
-          >
-            Cancel
           </Button>
         </div>
       </DialogContent>

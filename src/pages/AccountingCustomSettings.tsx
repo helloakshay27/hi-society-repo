@@ -205,6 +205,11 @@ const AccountingCustomSettings: React.FC = () => {
   const activeTab: SettingsTab = location.pathname.endsWith("/receipts") ? "receipts" : "invoices";
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'custom_settings', screen_name: 'AccountingCustomSettings' });
+  }, []);
+
   // Per-tab state, keyed by tab so Invoices and Receipts don't share data.
   const [logoFile, setLogoFile] = useState<Record<SettingsTab, File | null>>({
     invoices: null,
@@ -341,11 +346,6 @@ const AccountingCustomSettings: React.FC = () => {
   const handleLogoUploadClick = () => fileInputRef.current?.click();
 
   const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'custom_settings', screen_name: 'AccountingCustomSettings' });
-  }, []);
-
     const file = e.target.files?.[0] || null;
     setLogoFile((prev) => ({ ...prev, [activeTab]: file }));
   };
@@ -631,7 +631,17 @@ const AccountingCustomSettings: React.FC = () => {
   const setupLabel = activeTab === "invoices" ? "Invoice Setup" : "Receipt Setup";
 
   return (
-    <div className="min-h-screen bg-[#f6f4ee]">
+    <div className="accounting-custom-settings-page min-h-screen">
+      <style>{`
+        html body #root .accounting-custom-settings-page .address-action-row > button.address-action-button,
+        html body #root .accounting-custom-settings-page .address-action-row > button.address-action-button *,
+        html body #root .accounting-custom-settings-page .address-action-row > button.address-action-button svg,
+        html body #root .accounting-custom-settings-page .address-action-row > button.address-action-button svg * {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+        }
+      `}</style>
       <div className="space-y-6 p-6">
         <h1 className="text-2xl font-bold text-[#1a1a1a]">
           Custom Settings — {activeTab === "invoices" ? "Invoices" : "Receipts"}
@@ -749,20 +759,20 @@ const AccountingCustomSettings: React.FC = () => {
                     {address.gstNumber && <p>GST.No.{address.gstNumber}</p>}
                     {address.address && <p className="text-gray-500">{address.address}</p>}
                   </div>
-                  <div className="flex gap-2 border-t border-gray-200 px-4 py-2">
+                  <div className="address-action-row flex gap-2 border-t border-gray-200 px-4 py-2">
                     <Button
                       size="sm"
-                      className="h-7 px-3 text-xs !bg-[#C72030] "
+                      className="address-action-button h-7 px-3 text-xs !bg-[#C72030] !text-white"
                       onClick={() => handleOpenEditAddress(address)}
                     >
-                      <Pencil className="mr-1 h-3 w-3" /> Edit
+                      <Pencil className="mr-1 h-3 w-3 !text-white !stroke-white" /> Edit
                     </Button>
                     <Button
                       size="sm"
-                      className="h-7 px-3 text-xs !bg-[#C72030] "
+                      className="address-action-button h-7 px-3 text-xs !bg-[#C72030] !text-white"
                       onClick={() => setDeleteTargetId(address.id)}
                     >
-                      <Trash2 className="mr-1 h-3 w-3" /> Delete
+                      <Trash2 className="mr-1 h-3 w-3 !text-white" /> Delete
                     </Button>
                   </div>
                 </div>
@@ -840,7 +850,7 @@ const AccountingCustomSettings: React.FC = () => {
 
           <div className="max-h-[65vh] space-y-4 overflow-y-auto px-6 py-4">
             <TextField
-              label={<>Address Title <span style={{ color: "#C72030" }}>*</span></>}
+              label={<>Address Title <span >*</span></>}
               placeholder="Enter Address Title"
               value={addressForm.title}
               onChange={(e) => handleAddressFormChange("title", e.target.value)}
@@ -1072,15 +1082,15 @@ const AccountingCustomSettings: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-center gap-3 border-t border-gray-200 px-6 py-4">
-            <Button onClick={handleSubmitAddress} className="!bg-[#C72030] !text-white px-8">
-              Submit
-            </Button>
+          <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
             <Button
               onClick={() => setAddressDialogOpen(false)}
-              className="h-10 w-full !border !border-[#da7756] !bg-white hover:!bg-white active:!bg-white focus:!bg-white focus-visible:!bg-white !text-[#da7756] hover:!text-[#da7756] active:!text-[#da7756] focus:!text-[#da7756] focus-visible:!text-[#da7756] hover:!border-[#da7756] px-6 sm:w-auto sm:px-8"
+              className="h-10 w-full px-6 sm:w-auto sm:px-8 !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
             >
               Cancel
+            </Button>
+            <Button onClick={handleSubmitAddress} className="!bg-[#C72030] !text-white px-8">
+              Submit
             </Button>
           </div>
         </DialogContent>
@@ -1143,15 +1153,15 @@ const AccountingCustomSettings: React.FC = () => {
               />
             </div>
           </div>
-          <div className="flex justify-center gap-3 border-t border-gray-200 px-6 py-4">
-            <Button onClick={handleSubmitBreakupFile} className="!bg-[#C72030] !text-white px-8">
-              Submit
-            </Button>
+          <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
             <Button
               onClick={() => setBreakupDialogOpen(false)}
-              className="h-10 w-full !border !border-[#da7756] !bg-white hover:!bg-white active:!bg-white focus:!bg-white focus-visible:!bg-white !text-[#da7756] hover:!text-[#da7756] active:!text-[#da7756] focus:!text-[#da7756] focus-visible:!text-[#da7756] hover:!border-[#da7756] px-6 sm:w-auto sm:px-8"
+              className="h-10 w-full px-6 sm:w-auto sm:px-8 !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
             >
               Cancel
+            </Button>
+            <Button onClick={handleSubmitBreakupFile} className="!bg-[#C72030] !text-white px-8">
+              Submit
             </Button>
           </div>
         </DialogContent>

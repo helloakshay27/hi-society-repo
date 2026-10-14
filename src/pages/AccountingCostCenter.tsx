@@ -173,7 +173,9 @@ const AccountingCostCenter: React.FC = () => {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel className="!rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black">
+                      Cancel
+                    </AlertDialogCancel>
                     <AlertDialogAction
                       className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
                       onClick={() => handleDelete(item)}

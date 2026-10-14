@@ -205,12 +205,12 @@ const AccountingChartOfAccounts: React.FC = () => {
 
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
-  const authHeaders = () => {
   const { onAccountingViewed } = useAccountingEvents();
   React.useEffect(() => {
     onAccountingViewed({ accounting_id: 'chart_of_accounts', screen_name: 'AccountingChartOfAccounts' });
   }, []);
 
+  const authHeaders = () => {
     const token = API_CONFIG.TOKEN;
     return {
       Accept: "application/json",
@@ -542,7 +542,6 @@ const AccountingChartOfAccounts: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           <Button
-            variant="outline"
            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
             onClick={() => setViewType(viewType === "tree" ? "table" : "tree")}
           >
@@ -557,21 +556,18 @@ const AccountingChartOfAccounts: React.FC = () => {
             )}
           </Button>
           <Button
-            variant="outline"
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
             onClick={handleSyncUnitLedgers}
           >
             <UploadCloud className="mr-2 h-4 w-4" /> Sync Flat Ledgers
           </Button>
           <Button
-            variant="outline"
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
             onClick={handleSyncVendorLedgers}
           >
             <UploadCloud className="mr-2 h-4 w-4" /> Sync Vendor Ledgers
           </Button>
           <Button
-            variant="outline"
             className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
             onClick={handleRaiseToBuilder}
           >

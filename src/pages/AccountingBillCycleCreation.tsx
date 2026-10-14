@@ -88,28 +88,28 @@ const fieldStyles = {
       borderColor: "#ddd",
     },
     "&:hover fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#000000",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#000000",
     },
   },
   "& .MuiInputLabel-root": {
     "&.Mui-focused": {
-      color: "#C72030",
+      color: "#000000",
     },
   },
 };
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-    <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-      <h2 className="text-lg font-medium text-gray-900 flex items-center">
+  <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+    <div className="px-6 pt-[22px]">
+      <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
         <span
           className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-          style={{ backgroundColor: "#E5E0D3" }}
+          style={{ backgroundColor: "#F5F4F0" }}
         >
-          <CalendarClock size={16} color="var(--color-primary,#da7756)" />
+          <CalendarClock size={14} color="#1A1A18" />
         </span>
         {title}
       </h2>
@@ -260,7 +260,14 @@ const AccountingBillCycleCreation: React.FC = () => {
 
   return (
     <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden bill-cycle-form-page">
-      <style>{`.bill-cycle-form-page .MuiFormLabel-asterisk { color: #da7756 !important; }`}</style>
+      <style>{`
+        html body #root .bill-cycle-form-page .MuiFormControl-root .MuiFormLabel-asterisk { color: #000000 !important; }
+        html body #root .bill-cycle-form-page form button[role="checkbox"][data-state="checked"] svg,
+        html body #root .bill-cycle-form-page form button[role="checkbox"][data-state="checked"] svg * {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+      `}</style>
       <button
         onClick={() => navigate("/accounting/bill-cycles")}
         className="mb-6 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
@@ -462,23 +469,21 @@ const AccountingBillCycleCreation: React.FC = () => {
           </div>
         </SectionCard>
 
-        <div className="flex justify-center gap-3">
+        <div className="flex justify-end gap-3">
+          <Button
+            type="button"
+            disabled={submitting}
+            onClick={() => navigate("/accounting/bill-cycles")}
+            className="min-w-[100px] !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
+          >
+            Cancel
+          </Button>
           <Button
             type="submit"
             disabled={submitting}
             className="min-w-[140px] bg-[#C72030] text-white hover:bg-[#A01020]"
           >
             {submitting ? "Saving..." : "Save"}
-          </Button>
-         
-          <Button
-            type="button"
-            variant="outline"
-            disabled={submitting}
-            onClick={() => navigate("/accounting/bill-cycles")}
-            className="min-w-[100px]"
-          >
-            Cancel
           </Button>
         </div>
       </form>

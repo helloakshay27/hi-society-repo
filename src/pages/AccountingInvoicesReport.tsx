@@ -143,6 +143,11 @@ const formatOutstanding = (value: number | null) => (value === null || value ===
 const EMPTY_FILTERS: FilterState = { towerId: "", towerName: "", flatId: "", flatName: "", dueDate: undefined };
 
 const AccountingInvoicesReport: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'invoices_report', screen_name: 'AccountingInvoicesReport' });
+  }, []);
+
   const [rows, setRows] = useState<InvoiceReportRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
@@ -251,11 +256,6 @@ const AccountingInvoicesReport: React.FC = () => {
   const handleCloseFilter = () => setFilterDialogOpen(false);
 
   const handleApplyFilters = () => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'invoices_report', screen_name: 'AccountingInvoicesReport' });
-  }, []);
-
     const next = { ...filterValues };
     setAppliedFilters(next);
     fetchInvoiceReport(next);

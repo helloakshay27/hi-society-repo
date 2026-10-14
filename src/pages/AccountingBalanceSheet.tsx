@@ -53,11 +53,6 @@ const buildSideRows = (side: ApiSide | undefined): StatementRow[] => {
   const rows: StatementRow[] = [];
 
   const walkGroup = (group: ApiGroup, level: number) => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'balance_sheet', screen_name: 'AccountingBalanceSheet' });
-  }, []);
-
     rows.push({ level, label: group.group_name, amount: group.group_total, isHeader: level === 0 });
     group.children.forEach((child) => walkGroup(child, level + 1));
     group.ledgers.forEach((ledger) => {
@@ -82,6 +77,11 @@ const buildSideRows = (side: ApiSide | undefined): StatementRow[] => {
 const AccountingBalanceSheet: React.FC = () => {
   const lock_account_id = localStorage.getItem("lock_account_id") || "3";
 
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'balance_sheet', screen_name: 'AccountingBalanceSheet' });
+  }, []);
+
   const [balanceSheetData, setBalanceSheetData] = useState<BalanceSheetApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,7 +93,7 @@ const AccountingBalanceSheet: React.FC = () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
-      const response = await axios.get(`${baseUrl}/lock_account_transactions/balance_sheet`, {
+      const response = await axios.get(`${baseUrl}/lock_account_transactions/balance_sheet.json`, {
         headers: {
           Accept: "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -167,8 +167,10 @@ const AccountingBalanceSheet: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-[#f9f7f2] p-6" style={{ minHeight: "100vh", boxSizing: "border-box" }}>
-      <div className="bg-white rounded-lg border-2 p-6 mb-6">
+    <div className="w-full  p-6" 
+    style={{ minHeight: "100vh", boxSizing: "border-box" }}
+    >
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
             <NotepadText className="w-6 h-6" />
@@ -206,7 +208,7 @@ const AccountingBalanceSheet: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6">
         <div className="text-center mb-2">
           <h1 className="text-xl font-bold uppercase">Balance Sheet</h1>
           {/* {balanceSheetData?.lock_account?.name && (

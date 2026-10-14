@@ -31,10 +31,10 @@ export const AccountingSidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
-  const [accountantOpen, setAccountantOpen] = React.useState(true);
-  const [configurationOpen, setConfigurationOpen] = React.useState(true);
-  const [customSettingsOpen, setCustomSettingsOpen] = React.useState(true);
-  const [reportsOpen, setReportsOpen] = React.useState(true);
+  const [accountantOpen, setAccountantOpen] = React.useState(false);
+  const [configurationOpen, setConfigurationOpen] = React.useState(false);
+  const [customSettingsOpen, setCustomSettingsOpen] = React.useState(false);
+  const [reportsOpen, setReportsOpen] = React.useState(false);
 
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
@@ -183,9 +183,11 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
     <Dialog open={open} modal={false} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg overflow-hidden p-0 [&>button]:hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">
-            {editingLedger ? "Edit Account" : "New Account"}
-          </h2>
+          <DialogTitle asChild>
+            <h2 className="text-lg font-medium text-gray-900">
+              {editingLedger ? "Edit Account" : "New Account"}
+            </h2>
+          </DialogTitle>
           <Button
             variant="ghost"
             size="sm"
@@ -199,7 +201,7 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
         <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-4">
           <FormControl fullWidth variant="outlined">
             <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
-              Account Type <span style={{ color: "#C72030" }}>*</span>
+              Account Type <span className="text-black">*</span>
             </InputLabel>
             <MuiSelect
               value={accountTypeId}
@@ -246,7 +248,7 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
           </FormControl>
 
           <TextField
-            label={<>Account Name <span style={{ color: "#C72030" }}>*</span></>}
+            label={<>Account Name <span className="text-black">*</span></>}
             placeholder="Enter Account Name"
             value={accountName}
             onChange={(e) => setAccountName(e.target.value)}
@@ -322,20 +324,20 @@ export const AddChartOfAccountModal: React.FC<AddChartOfAccountModalProps> = ({
           </div>
         </div>
 
-        <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
-          >
-            {submitting ? "Submitting..." : "Submit"}
-          </Button>
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
           <Button
             onClick={handleClose}
             disabled={submitting}
-            className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] h-10"
+            className="px-6 sm:px-8 w-full sm:w-auto h-10 !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
           >
             Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="px-6 sm:px-8 w-full sm:w-auto h-10 !rounded-lg !border !border-[#1A1A18] !bg-[#1A1A18] !text-white hover:!bg-[#12100E] disabled:opacity-60"
+          >
+            {submitting ? "Submitting..." : "Submit"}
           </Button>
         </div>
       </DialogContent>

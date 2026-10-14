@@ -473,16 +473,16 @@ const AccountingInvoiceDetails: React.FC = () => {
 
       <div className="space-y-6">
         {/* Bill Details */}
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 px-6 py-3" style={{ backgroundColor: "#F6F4EE" }}>
+        <div className="overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white">
+          <div className="px-6 pt-[22px]">
             <div className="flex items-center gap-3">
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-full"
-                style={{ backgroundColor: "#E5E0D3" }}
+                style={{ backgroundColor: "#F5F4F0" }}
               >
-                <FileText size={16} color="var(--color-primary,#da7756)" />
+                <FileText size={14} color="#1A1A18" />
               </div>
-              <h2 className="text-lg font-medium text-gray-900">Bill Details</h2>
+              <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18]">Bill Details</h2>
             </div>
           </div>
           <div className="p-6">
@@ -510,19 +510,19 @@ const AccountingInvoiceDetails: React.FC = () => {
         </div>
 
         {/* Charges */}
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 px-6 py-3" style={{ backgroundColor: "#F6F4EE" }}>
+        <div className="overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white">
+          <div className="px-6 pt-[22px]">
             <div className="flex items-center gap-3">
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-full"
-                style={{ backgroundColor: "#E5E0D3" }}
+                style={{ backgroundColor: "#F5F4F0" }}
               >
-                <Receipt size={16} color="var(--color-primary,#da7756)" />
+                <Receipt size={14} color="#1A1A18" />
               </div>
-              <h2 className="text-lg font-medium text-gray-900">Charges</h2>
+              <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18]">Charges</h2>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto p-5">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-left text-xs text-gray-600">
@@ -587,20 +587,20 @@ const AccountingInvoiceDetails: React.FC = () => {
         </div>
 
         {/* Payment Details */}
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 px-6 py-3" style={{ backgroundColor: "#F6F4EE" }}>
+        <div className="overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white">
+          <div className="px-6 pt-[22px]">
             <div className="flex items-center gap-3">
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-full"
-                style={{ backgroundColor: "#E5E0D3" }}
+                style={{ backgroundColor: "#F5F4F0" }}
               >
-                <Wallet size={16} color="var(--color-primary,#da7756)" />
+                <Wallet size={14} color="#1A1A18" />
               </div>
-              <h2 className="text-lg font-medium text-gray-900">Payment Details</h2>
+              <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18]">Payment Details</h2>
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto p-5 ">
+            <table className="w-full text-sm ">
               <thead>
                 <tr className="bg-gray-50 text-left text-xs text-gray-600">
                   <th className="px-6 py-2 font-medium">ID</th>
@@ -674,7 +674,7 @@ const AccountingInvoiceDetails: React.FC = () => {
             />
 
             <TextField
-              label={<>Amount Paid <span style={{ color: "#C72030" }}>*</span></>}
+              label={<>Amount Paid <span style={{ color: "#000000" }}>*</span></>}
               type="number"
               placeholder="Enter Amount Paid"
               value={paymentAmount}
@@ -688,7 +688,7 @@ const AccountingInvoiceDetails: React.FC = () => {
 
             <FormControl fullWidth variant="outlined">
               <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
-                Payment Mode <span style={{ color: "#C72030" }}>*</span>
+                Payment Mode <span style={{ color: "#000000" }}>*</span>
               </InputLabel>
               <MuiSelect
                 value={paymentMode}
@@ -722,7 +722,7 @@ const AccountingInvoiceDetails: React.FC = () => {
             />
 
             <TextField
-              label={<>Payment Date <span style={{ color: "#C72030" }}>*</span></>}
+              label={<>Payment Date <span style={{ color: "#000000" }}>*</span></>}
               type="date"
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
@@ -752,20 +752,20 @@ const AccountingInvoiceDetails: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-center gap-3 border-t border-gray-200 px-6 py-4">
-            <Button
-              onClick={handleRecordPayment}
-              disabled={submittingPayment}
-              className="bg-[#C72030] hover:bg-[#B8252F] px-8 text-white"
-            >
-              {submittingPayment ? "Submitting..." : "Submit"}
-            </Button>
+          <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
             <Button
               onClick={() => setIsPaymentOpen(false)}
               disabled={submittingPayment}
-              className="h-10 w-full !border !border-[#da7756] !bg-white px-6 !text-[#da7756] sm:w-auto sm:px-8"
+              className="h-10 w-full px-6 sm:w-auto sm:px-8 !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
             >
               Cancel
+            </Button>
+            <Button
+              onClick={handleRecordPayment}
+              disabled={submittingPayment}
+              className="!rounded-lg bg-[#C72030] hover:bg-[#B8252F] px-8 text-white"
+            >
+              {submittingPayment ? "Submitting..." : "Submit"}
             </Button>
           </div>
         </DialogContent>

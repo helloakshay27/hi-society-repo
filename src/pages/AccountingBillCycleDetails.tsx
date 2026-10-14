@@ -94,14 +94,14 @@ const formatDate = (value?: string) => {
 const isPercentageType = (value?: string) => !!value && /percent/i.test(value);
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-    <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-      <h2 className="text-lg font-medium text-gray-900 flex items-center">
+  <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+    <div className="px-6 pt-[22px]">
+      <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
         <span
           className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-          style={{ backgroundColor: "#E5E0D3" }}
+          style={{ backgroundColor: "#F5F4F0" }}
         >
-          <CalendarClock size={16} color="var(--color-primary,#da7756)" />
+          <CalendarClock size={14} color="#1A1A18" />
         </span>
         {title}
       </h2>
@@ -112,7 +112,7 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ t
 
 const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
   <div className="flex items-start">
-    <span className="min-w-[180px] text-sm text-gray-500">{label}</span>
+    <span className="min-w-[160px] text-sm text-gray-500">{label}</span>
     <span className="mx-2 text-sm text-gray-500">:</span>
     <span className="text-sm font-medium text-gray-900">{value ?? "-"}</span>
   </div>
@@ -394,9 +394,17 @@ const AccountingBillCycleDetails: React.FC = () => {
             </div>
           </SectionCard>
 
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-              <h2 className="text-lg font-medium text-gray-900">Invoice Frequency</h2>
+          <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+            <div className="px-6 pt-[22px]">
+              <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+                <span
+                  className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                  style={{ backgroundColor: "#F5F4F0" }}
+                >
+                  <CalendarClock size={14} color="#1A1A18" />
+                </span>
+                Invoice Frequency
+              </h2>
             </div>
             <div className="overflow-x-auto p-6">
               <table className="w-full border-collapse text-sm">
@@ -428,7 +436,7 @@ const AccountingBillCycleDetails: React.FC = () => {
                         <td className="py-2 pr-4">{formatDate(row.endDate)}</td>
                         <td className="py-2 pr-4">{formatDate(row.billingDate)}</td>
                         <td className="py-2 pr-4">
-                          <span className={row.invoiceRaised ? "text-orange-500" : "text-gray-500"}>
+                          <span className={row.invoiceRaised ? "text-black-700" : "text-gray-500"}>
                             {row.invoiceRaised ? "Yes" : "No"}
                           </span>
                         </td>
@@ -526,7 +534,7 @@ const AccountingBillCycleDetails: React.FC = () => {
               </table>
             )}
           </div>
-          <div className="flex justify-center border-t border-gray-200 px-6 py-4">
+          <div className="flex justify-end border-t border-gray-200 px-6 py-4">
             <Button
               onClick={handleSubmitExpenseCharges}
               disabled={submittingExpenseCharges}

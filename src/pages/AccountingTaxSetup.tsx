@@ -20,7 +20,7 @@ import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 const muiTheme = createTheme({
   palette: {
     error: {
-      main: "#C72030",
+      main: "#000000",
     },
   },
   components: {
@@ -108,6 +108,12 @@ const defaultForm: GstForm = {
 
 const AccountingTaxSetup: React.FC = () => {
   const { shouldShow } = useDynamicPermissions();
+
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'tax_setup', screen_name: 'AccountingTaxSetup' });
+  }, []);
+
   // Validation state
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [form, setForm] = useState<GstForm>(defaultForm);
@@ -169,11 +175,6 @@ const AccountingTaxSetup: React.FC = () => {
 
   // ── Text / Select field change handler ────────────────────────────────────
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'tax_setup', screen_name: 'AccountingTaxSetup' });;
-  }, []);
-
     const { name, value, type } = e.target as HTMLInputElement;
     const checked = (e.target as HTMLInputElement).checked;
     setForm((prev) => ({
@@ -263,12 +264,19 @@ const AccountingTaxSetup: React.FC = () => {
   return (
     <ThemeProvider theme={muiTheme}>
       <form
-        className="w-full bg-white p-6"
+        className="accounting-tax-setup-page w-full bg-white p-6"
         style={{ minHeight: "100vh", boxSizing: "border-box" }}
         onSubmit={handleSubmit}
       >
+        <style>{`
+          html body #root form.accounting-tax-setup-page button[role="checkbox"][data-state="checked"] svg,
+          html body #root form.accounting-tax-setup-page button[role="checkbox"][data-state="checked"] svg * {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+          }
+        `}</style>
         {/* ── GST Info Section ──────────────────────────────────────────── */}
-        <div className="bg-white rounded-lg border-2 p-6 space-y-6 col-span-2 mb-6">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 space-y-6 col-span-2 mb-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
               <User className="w-6 h-6" />
@@ -280,7 +288,7 @@ const AccountingTaxSetup: React.FC = () => {
               <TextField
                 label={
                   <span>
-                    GSTIN <span className="text-red-600">*</span>{" "}
+                    GSTIN <span className="text-black">*</span>{" "}
                     <span className="text-xs text-gray-500">(Maximum 15 digits)</span>
                   </span>
                 }
@@ -289,20 +297,20 @@ const AccountingTaxSetup: React.FC = () => {
                 name="gstin"
                 value={form.gstin}
                 onChange={handleChange}
-                className={`w-full ${errors.gstin ? 'border-[#C72030]' : ''}`}
+                className={`w-full ${errors.gstin ? 'border-black' : ''}`}
                 placeholder="Enter GSTIN"
                 inputProps={{ maxLength: 15 }}
                 error={!!errors.gstin}
               />
               {errors.gstin && (
-                <div className="text-xs mt-1" style={{ color: "#C72030" }}>{errors.gstin}</div>
+                <div className="text-xs mt-1" style={{ color: "#000000" }}>{errors.gstin}</div>
               )}
             </div>
             <div>
               <TextField
                 label={
                   <span>
-                    GST Registered On <span className="text-red-600">*</span>
+                    GST Registered On <span className="text-black">*</span>
                   </span>
                 }
                 size="small"
@@ -311,19 +319,19 @@ const AccountingTaxSetup: React.FC = () => {
                 type="date"
                 value={form.gstRegisteredOn}
                 onChange={handleChange}
-                className={`w-full ${errors.gstRegisteredOn ? 'border-[#C72030]' : ''}`}
+                className={`w-full ${errors.gstRegisteredOn ? 'border-black' : ''}`}
                 InputLabelProps={{ shrink: true }}
                 error={!!errors.gstRegisteredOn}
               />
               {errors.gstRegisteredOn && (
-                <div className="text-xs mt-1" style={{ color: "#C72030" }}>{errors.gstRegisteredOn}</div>
+                <div className="text-xs mt-1" style={{ color: "#000000" }}>{errors.gstRegisteredOn}</div>
               )}
             </div>
           </div>
         </div>
 
         {/* ── GST Options Section ───────────────────────────────────────── */}
-        <div className="bg-white rounded-lg border-2 p-6 space-y-6 col-span-2 mb-6">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 space-y-6 col-span-2 mb-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
               <FileCog className="w-6 h-6" />
@@ -407,7 +415,7 @@ const AccountingTaxSetup: React.FC = () => {
         </div>
 
         {/* ── Direct Filing Settings Section ────────────────────────────── */}
-        <div className="bg-white rounded-lg border-2 p-6 space-y-6 col-span-2 mb-6">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 space-y-6 col-span-2 mb-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
               <NotepadText className="w-6 h-6" />
@@ -420,7 +428,7 @@ const AccountingTaxSetup: React.FC = () => {
               <TextField
                 label={
                   <span>
-                    GSTIN Username <span className="text-red-600">*</span>
+                    GSTIN Username <span className="text-black">*</span>
                   </span>
                 }
                 size="small"
@@ -428,12 +436,12 @@ const AccountingTaxSetup: React.FC = () => {
                 name="gstinUsername"
                 value={form.gstinUsername}
                 onChange={handleChange}
-                className={`w-full ${errors.gstinUsername ? 'border-[#C72030]' : ''}`}
+                className={`w-full ${errors.gstinUsername ? 'border-black' : ''}`}
                 placeholder="Enter GSTIN Username"
                 error={!!errors.gstinUsername}
               />
               {errors.gstinUsername && (
-                <div className="text-xs mt-1" style={{ color: "#C72030" }}>{errors.gstinUsername}</div>
+                <div className="text-xs mt-1" style={{ color: "#000000" }}>{errors.gstinUsername}</div>
               )}
             </div>
 
@@ -441,7 +449,7 @@ const AccountingTaxSetup: React.FC = () => {
             <div>
               <FormControl size="small" fullWidth sx={{ mt: 0 }} error={!!errors.reportingPeriod}>
                 <InputLabel id="reporting-period-label">
-                  Reporting Period <span style={{ color: "#C72030" }}>*</span>
+                  Reporting Period <span >*</span>
                 </InputLabel>
                 <Select
                   labelId="reporting-period-label"
@@ -450,14 +458,14 @@ const AccountingTaxSetup: React.FC = () => {
                   value={form.reportingPeriod}
                   label={
                     <span>
-                      Reporting Period <span style={{ color: "#C72030" }}>*</span>
+                      Reporting Period <span style={{ color: "#000000" }}>*</span>
                     </span>
                   }
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, reportingPeriod: e.target.value as string }))
                   }
                   displayEmpty
-                  className={errors.reportingPeriod ? 'border-[#C72030]' : ''}
+                  className={errors.reportingPeriod ? 'border-black' : ''}
                 >
                   <MenuItem value="">
                     <span style={{ color: "#888" }}>Select</span>
@@ -467,7 +475,7 @@ const AccountingTaxSetup: React.FC = () => {
                   <MenuItem value="Yearly">Yearly</MenuItem>
                 </Select>
                 {errors.reportingPeriod && (
-                  <div className="text-xs mt-1" style={{ color: "#C72030" }}>{errors.reportingPeriod}</div>
+                  <div className="text-xs mt-1" style={{ color: "#000000" }}>{errors.reportingPeriod}</div>
                 )}
               </FormControl>
             </div>
@@ -477,7 +485,7 @@ const AccountingTaxSetup: React.FC = () => {
               <TextField
                 label={
                   <span>
-                    Generate First Tax Return From <span className="text-red-600">*</span>
+                    Generate First Tax Return From <span className="text-black">*</span>
                   </span>
                 }
                 size="small"
@@ -486,19 +494,27 @@ const AccountingTaxSetup: React.FC = () => {
                 type="date"
                 value={form.generateFirstTaxReturnFrom}
                 onChange={handleChange}
-                className={`w-full ${errors.generateFirstTaxReturnFrom ? 'border-[#C72030]' : ''}`}
+                className={`w-full ${errors.generateFirstTaxReturnFrom ? 'border-black' : ''}`}
                 InputLabelProps={{ shrink: true }}
                 error={!!errors.generateFirstTaxReturnFrom}
               />
               {errors.generateFirstTaxReturnFrom && (
-                <div className="text-xs mt-1" style={{ color: "#C72030" }}>{errors.generateFirstTaxReturnFrom}</div>
+                <div className="text-xs mt-1" style={{ color: "#000000" }}>{errors.generateFirstTaxReturnFrom}</div>
               )}
             </div>
           </div>
         </div>
 
         {/* ── Action Buttons ────────────────────────────────────────────── */}
-        <div className="flex gap-3 pt-5 mt-5 mb-5 justify-center">
+        <div className="flex gap-3 pt-5 mt-5 mb-5 justify-end">
+          <Button
+            type="button"
+            onClick={() => window.history.back()}
+            className="min-w-[100px] !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
+            disabled={saving}
+          >
+            Cancel
+          </Button>
           {shouldShow("Tax Setup", "update") && (
             <Button
               type="submit"
@@ -508,15 +524,6 @@ const AccountingTaxSetup: React.FC = () => {
               {saving ? "Saving..." : "Save"}
             </Button>
           )}
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() => window.history.back()}
-            className="min-w-[100px]"
-            disabled={saving}
-          >
-            Cancel
-          </Button>
         </div>
       </form>
     </ThemeProvider>

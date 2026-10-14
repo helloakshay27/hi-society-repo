@@ -42,28 +42,28 @@ const fieldStyles = {
       borderColor: "#ddd",
     },
     "&:hover fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#000000",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#000000",
     },
   },
   "& .MuiInputLabel-root": {
     "&.Mui-focused": {
-      color: "#C72030",
+      color: "#000000",
     },
   },
 };
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-    <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-      <h2 className="text-lg font-medium text-gray-900 flex items-center">
+  <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+    <div className="px-6 pt-[22px]">
+      <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
         <span
           className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-          style={{ backgroundColor: "#E5E0D3" }}
+          style={{ backgroundColor: "#F5F4F0" }}
         >
-          <Receipt size={16} color="var(--color-primary,#da7756)" />
+          <Receipt size={14} color="#1A1A18" />
         </span>
         {title}
       </h2>
@@ -220,9 +220,12 @@ const FormTextArea: React.FC<{
   maxLength?: number;
 }> = ({ label, value, onChange, placeholder, rows = 3, maxLength }) => (
   <div>
-    <div className="relative">
+    <label className="mb-1 block text-sm font-medium text-gray-700">
+      {label}
+    </label>
+    <div>
       <textarea
-        className="peer w-full rounded-md border border-gray-300 p-3 focus:border-[#DA7756] focus:outline-none focus:ring-1 focus:ring-[#DA7756] resize-y"
+        className="w-full rounded-md border border-gray-300 p-3 focus:border-[#DA7756] focus:outline-none focus:ring-1 focus:ring-[#DA7756] resize-y"
         rows={rows}
         value={value}
         onChange={(e) => {
@@ -231,9 +234,6 @@ const FormTextArea: React.FC<{
         placeholder={placeholder}
         maxLength={maxLength}
       />
-      <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-normal text-black/60 peer-focus:text-[#DA7756]">
-        {label}
-      </label>
     </div>
     {maxLength ? (
       <div className="mt-1 text-right text-xs text-gray-400">
@@ -298,7 +298,7 @@ const FormSelect: React.FC<{
   if (!bordered) return select;
 
   return (
-    <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">{select}</div>
+    <div className="rounded border border-[#ddd] focus-within:border-black">{select}</div>
   );
 };
 
@@ -559,7 +559,7 @@ const AccountingInvoiceEdit: React.FC = () => {
       }
       case "description":
         return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
+          <div className="rounded border border-[#ddd] focus-within:border-black">
             <Input
               value={row.description}
               onChange={(e) => updateCharge(row.key, "description", e.target.value)}
@@ -572,7 +572,7 @@ const AccountingInvoiceEdit: React.FC = () => {
         return <Input readOnly value={charge.chargeType} className="bg-brand-bg" />;
       case "quantity":
         return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
+          <div className="rounded border border-[#ddd] focus-within:border-black">
             <Input
               type="number"
               min={0}
@@ -585,7 +585,7 @@ const AccountingInvoiceEdit: React.FC = () => {
         );
       case "rate":
         return (
-          <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
+          <div className="rounded border border-[#ddd] focus-within:border-black">
             <Input
               type="number"
               min={0}
@@ -719,7 +719,15 @@ const AccountingInvoiceEdit: React.FC = () => {
 
   return (
     <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden invoice-form-page">
-      <style>{`.invoice-form-page .MuiFormLabel-asterisk { color: #da7756 !important; }`}</style>
+      {/* <style>{`.invoice-form-page .MuiFormLabel-asterisk { color: #000000 !important; }`}</style> */}
+       <style>{`
+        html body #root .invoice-form-page .MuiFormControl-root .MuiFormLabel-asterisk { color: #000000 !important; }
+        html body #root .invoice-form-page form button[class*="bg-[#C72030]"] svg,
+        html body #root .invoice-form-page form button[class*="bg-[#C72030]"] svg * {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+      `}</style>
       <button
         onClick={() => navigate("/accounting/invoices")}
         className="mb-6 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
@@ -908,14 +916,14 @@ const AccountingInvoiceEdit: React.FC = () => {
             </div>
           </SectionCard>
 
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+          <div className="overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white">
+            <div className="px-6 pt-[22px]">
+              <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
                 <span
                   className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-                  style={{ backgroundColor: "#E5E0D3" }}
+                  style={{ backgroundColor: "#F5F4F0" }}
                 >
-                  <Receipt size={16} color="var(--color-primary,#da7756)" />
+                  <Receipt size={14} color="#1A1A18" />
                 </span>
                 Charges
               </h2>
@@ -973,22 +981,21 @@ const AccountingInvoiceEdit: React.FC = () => {
             />
           </SectionCard>
 
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              disabled={submitting}
+              onClick={() => navigate("/accounting/invoices")}
+              className="min-w-[100px] !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
+            >
+              Cancel
+            </Button>
             <Button
               type="submit"
               disabled={submitting}
-              className="min-w-[140px] bg-[#C72030] text-white hover:bg-[#A01020]"
+              className="min-w-[140px] !rounded-lg bg-[#C72030] text-white hover:bg-[#A01020]"
             >
               {submitting ? "Updating..." : "Update"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={submitting}
-              onClick={() => navigate("/accounting/invoices")}
-              className="min-w-[100px]"
-            >
-              Cancel
             </Button>
           </div>
         </form>

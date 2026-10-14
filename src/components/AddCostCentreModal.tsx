@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@mui/material";
 import { fieldStyles } from "@/components/ticket-management/fieldStyles";
@@ -151,9 +151,11 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
     <Dialog open={open} modal={false} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg overflow-hidden p-0 [&>button]:hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">
-            {readOnly ? "View Account" : editingCostCentre ? "Edit Account" : "New Account"}
-          </h2>
+          <DialogTitle asChild>
+            <h2 className="text-lg font-medium text-gray-900">
+              {readOnly ? "View Account" : editingCostCentre ? "Edit Account" : "New Account"}
+            </h2>
+          </DialogTitle>
           <Button
             variant="ghost"
             size="sm"
@@ -166,7 +168,7 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
 
         <div className="space-y-4 px-6 py-4">
           <TextField
-            label={<>Cost Centre Name <span style={{ color: "#C72030" }}>*</span></>}
+            label={<>Cost Centre Name <span className="text-black">*</span></>}
             placeholder="Enter Cost Centre Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -178,7 +180,7 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
           />
 
           <TextField
-            label={<>Budget <span style={{ color: "#C72030" }}>*</span></>}
+            label={<>Budget <span className="text-black">*</span></>}
             type="number"
             placeholder="Enter Budget"
             value={budget}
@@ -192,7 +194,7 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
           />
 
           <TextField
-            label={<>Budget Start <span style={{ color: "#C72030" }}>*</span></>}
+            label={<>Budget Start <span className="text-black">*</span></>}
             type="date"
             value={budgetStart}
             onChange={(e) => setBudgetStart(e.target.value)}
@@ -205,7 +207,7 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
           />
 
           <TextField
-            label={<>Budget End <span style={{ color: "#C72030" }}>*</span></>}
+            label={<>Budget End <span className="text-black">*</span></>}
             type="date"
             value={budgetEnd}
             onChange={(e) => setBudgetEnd(e.target.value)}
@@ -218,20 +220,27 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
           />
         </div>
 
-        <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
           {readOnly ? (
             <Button
               onClick={handleClose}
-              className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] h-10"
+              className="px-6 sm:px-8 w-full sm:w-auto h-10 !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
             >
               Close
             </Button>
           ) : (
             <>
               <Button
+                onClick={handleClose}
+                disabled={submitting}
+                className="px-6 sm:px-8 w-full sm:w-auto h-10 !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
+              >
+                Cancel
+              </Button>
+              <Button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
+                className="px-6 sm:px-8 w-full sm:w-auto h-10 !rounded-lg !border !border-[#1A1A18] !bg-[#1A1A18] !text-white hover:!bg-[#12100E] disabled:opacity-60"
               >
                 {submitting
                   ? editingCostCentre
@@ -240,13 +249,6 @@ export const AddCostCentreModal: React.FC<AddCostCentreModalProps> = ({
                   : editingCostCentre
                   ? "Update"
                   : "Submit"}
-              </Button>
-              <Button
-                onClick={handleClose}
-                disabled={submitting}
-                className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] h-10"
-              >
-                Cancel
               </Button>
             </>
           )}

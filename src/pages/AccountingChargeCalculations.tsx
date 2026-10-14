@@ -62,6 +62,11 @@ const AccountingChargeCalculations: React.FC = () => {
 
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'charge_calculations', screen_name: 'AccountingChargeCalculations' });
+  }, []);
+
   const fetchLookups = useCallback(async () => {
     setLoading(true);
     try {
@@ -93,11 +98,6 @@ const AccountingChargeCalculations: React.FC = () => {
   }, [fetchLookups]);
 
   const handleCalculate = () => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'charge_calculations', screen_name: 'AccountingChargeCalculations' });
-  }, []);
-
     if (!selectedCycleId) {
       toast.error("Please select a Bill Cycle first.");
       return;
