@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Eye, Edit, Trash2 } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
@@ -21,24 +21,26 @@ export const LoyaltyCustomers = () => {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
-    const ITEMS_PER_PAGE = 10;
-    const [currentPage, setCurrentPage] = useState(1);
+    // Current page lives in the URL (?page=N) so it survives refresh/back navigation
+    const [searchParams, setSearchParams] = useSearchParams();
+    const pageParam = parseInt(searchParams.get("page") || "1", 10);
+    const currentPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
     const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
 
-    // API data for customers
+    // API data for customers (current page only)
     const [customersData, setCustomersData] = useState<any[]>([]);
-    const [allCustomersData, setAllCustomersData] = useState<any[]>([]);
     useEffect(() => {
         const fetchCustomers = async () => {
             setLoading(true);
             try {
                 const token = API_CONFIG.TOKEN || "";
-                const url = getFullUrl(`/loyalty/members?token=${token}`);
+                const url = getFullUrl(`/loyalty/members?token=${token}&page=${currentPage}`);
                 const res = await fetch(url, { headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" } });
                 const data = await res.json();
+                const members = Array.isArray(data?.loyalty_members) ? data.loyalty_members : [];
                 // Map API data to table row format
-                const mappedData = (Array.isArray(data) ? data : []).map((item) => ({
+                const mappedData = members.map((item: any) => ({
                     id: item.id,
                     customerId: item.user_id,
                     customerName: `${item.firstname || ""} ${item.lasttname || ""}`.trim(),
@@ -47,23 +49,19 @@ export const LoyaltyCustomers = () => {
                     websites: item.email || "-",
                     dateJoined: item.joining_date || "-",
                 }));
-                setAllCustomersData(mappedData);
-                setTotalCount(mappedData.length);
-                setTotalPages(Math.ceil(mappedData.length / ITEMS_PER_PAGE) || 1);
-                setCurrentPage(1);
-                setCustomersData(mappedData.slice(0, ITEMS_PER_PAGE));
+                setCustomersData(mappedData);
+                setTotalCount(data?.pagination?.total_count ?? mappedData.length);
+                setTotalPages(data?.pagination?.total_pages || 1);
             } catch (e) {
-                setAllCustomersData([]);
                 setCustomersData([]);
                 setTotalCount(0);
                 setTotalPages(1);
-                setCurrentPage(1);
             } finally {
                 setLoading(false);
             }
         };
         fetchCustomers();
-    }, []);
+    }, [currentPage]);
 
     // Define columns for EnhancedTable
     const columns = [
@@ -146,70 +144,39 @@ export const LoyaltyCustomers = () => {
 
     const handlePageChange = (page: number) => {
         if (page < 1 || page > totalPages || page === currentPage || loading) return;
-        setCurrentPage(page);
-        const startIndex = (page - 1) * ITEMS_PER_PAGE;
-        setCustomersData(allCustomersData.slice(startIndex, startIndex + ITEMS_PER_PAGE));
+        setSearchParams((prev) => {
+            const params = new URLSearchParams(prev);
+            params.set("page", String(page));
+            return params;
+        });
     };
 
     const renderPaginationItems = () => {
         if (!totalPages || totalPages <= 0) return null;
-        const items = [];
-        const showEllipsis = totalPages > 5;
-        if (showEllipsis) {
+
+        // Build a unique, sorted list of pages: first, last, and a window around the current page
+        const pages = new Set<number>([1, totalPages]);
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) pages.add(i);
+        } else {
+            // Near the start show 1-5, near the end show the last 5, otherwise current ±1
+            const start = currentPage <= 4 ? 2 : currentPage >= totalPages - 3 ? totalPages - 4 : currentPage - 1;
+            const end = currentPage <= 4 ? 5 : currentPage >= totalPages - 3 ? totalPages - 1 : currentPage + 1;
+            for (let i = start; i <= end; i++) pages.add(i);
+        }
+        const sortedPages = Array.from(pages).filter((p) => p >= 1 && p <= totalPages).sort((x, y) => x - y);
+
+        const items: React.ReactNode[] = [];
+        sortedPages.forEach((page, idx) => {
+            if (idx > 0 && page - sortedPages[idx - 1] > 1) {
+                items.push(<PaginationItem key={`ellipsis-${page}`}><PaginationEllipsis /></PaginationItem>);
+            }
             items.push(
-                <PaginationItem key={1} className="cursor-pointer">
-                    <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1} className={loading ? "pointer-events-none opacity-50" : ""}>1</PaginationLink>
+                <PaginationItem key={page} className="cursor-pointer">
+                    <PaginationLink onClick={() => handlePageChange(page)} isActive={currentPage === page} className={loading ? "pointer-events-none opacity-50" : ""}>{page}</PaginationLink>
                 </PaginationItem>
             );
-            if (currentPage > 4) {
-                items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
-            } else {
-                for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
-                    items.push(
-                        <PaginationItem key={i} className="cursor-pointer">
-                            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i} className={loading ? "pointer-events-none opacity-50" : ""}>{i}</PaginationLink>
-                        </PaginationItem>
-                    );
-                }
-            }
-            if (currentPage > 3 && currentPage < totalPages - 2) {
-                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-                    items.push(
-                        <PaginationItem key={i} className="cursor-pointer">
-                            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i} className={loading ? "pointer-events-none opacity-50" : ""}>{i}</PaginationLink>
-                        </PaginationItem>
-                    );
-                }
-            }
-            if (currentPage < totalPages - 3) {
-                items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
-            } else {
-                for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
-                    if (!items.find((item) => item.key === i.toString())) {
-                        items.push(
-                            <PaginationItem key={i} className="cursor-pointer">
-                                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i} className={loading ? "pointer-events-none opacity-50" : ""}>{i}</PaginationLink>
-                            </PaginationItem>
-                        );
-                    }
-                }
-            }
-            if (totalPages > 1) {
-                items.push(
-                    <PaginationItem key={totalPages} className="cursor-pointer">
-                        <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages} className={loading ? "pointer-events-none opacity-50" : ""}>{totalPages}</PaginationLink>
-                    </PaginationItem>
-                );
-            }
-        } else {
-            for (let i = 1; i <= totalPages; i++) {
-                items.push(
-                    <PaginationItem key={i} className="cursor-pointer">
-                        <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i} className={loading ? "pointer-events-none opacity-50" : ""}>{i}</PaginationLink>
-                    </PaginationItem>
-                );
-            }
-        }
+        });
         return items;
     };
 
