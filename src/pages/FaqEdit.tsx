@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, ChevronRight, FileText } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -50,24 +50,25 @@ const FaqEdit = () => {
 
   // Field styles for Material-UI components
   const fieldStyles = {
-    height: '45px',
+    height: '44px',
     backgroundColor: '#fff',
-    borderRadius: '4px',
+    borderRadius: '12px',
     '& .MuiOutlinedInput-root': {
-      height: '45px',
+      height: '44px',
+      borderRadius: '12px',
       '& fieldset': {
-        borderColor: '#ddd',
+        borderColor: 'rgba(26, 26, 24, 0.08)',
       },
       '&:hover fieldset': {
-        borderColor: '#C72030',
+        borderColor: 'rgba(26, 26, 24, 0.28)',
       },
       '&.Mui-focused fieldset': {
-        borderColor: '#C72030',
+        borderColor: '#1A1A18',
       },
     },
     '& .MuiInputLabel-root': {
       '&.Mui-focused': {
-        color: '#C72030',
+        color: '#1A1A18',
       },
     },
   };
@@ -474,7 +475,7 @@ const FaqEdit = () => {
     return (
       <div className="h-full bg-gray-50 flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading FAQ details...</p>
         </div>
       </div>
@@ -482,38 +483,110 @@ const FaqEdit = () => {
   }
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full faq-edit-page">
+      <style>{`
+        /* ---- Reference design: canvas, card, fields ---- */
+        html body #root .faq-edit-page {
+          background-color: #FDFDFB !important;
+        }
+        html body #root .faq-edit-page .ref-card {
+          border: 1px solid rgba(26, 26, 24, 0.09) !important;
+          border-radius: 16px !important;
+          box-shadow: none !important;
+        }
+        html body #root .faq-edit-page .ref-card > div:first-child {
+          padding: 22px 24px 0 !important;
+          background: transparent !important;
+          border: none !important;
+        }
+        html body #root .faq-edit-page .ref-card > div:first-child h2 {
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          line-height: 1.4 !important;
+          color: #1A1A18 !important;
+        }
+        /* section icon chip — same as Settings module (32px, #F5F4F0, ink icon) */
+        html body #root .faq-edit-page .ref-card > div:first-child h2 > span:first-child {
+          width: 32px !important;
+          height: 32px !important;
+          margin-right: 12px !important;
+          flex: none;
+          background-color: #F5F4F0 !important;
+        }
+        html body #root .faq-edit-page .ref-card > div:first-child h2 > span:first-child svg {
+          width: 14px !important;
+          height: 14px !important;
+          color: #1A1A18 !important;
+          stroke: #1A1A18 !important;
+        }
+        html body #root .faq-edit-page .ref-card > div:nth-child(2) {
+          background-color: #FFFFFF !important;
+          padding: 16px 24px 22px !important;
+        }
+        html body #root .faq-edit-page .MuiOutlinedInput-root {
+          min-height: 44px;
+          border-radius: 12px !important;
+          background-color: #FFFFFF !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease;
+        }
+        html body #root .faq-edit-page .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+        }
+        html body #root .faq-edit-page .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .faq-edit-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: #1A1A18 !important;
+          border-width: 1px !important;
+        }
+        html body #root .faq-edit-page .MuiOutlinedInput-root.Mui-focused {
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .faq-edit-page .MuiOutlinedInput-input::placeholder {
+          color: rgba(26, 26, 24, 0.3) !important;
+          opacity: 1 !important;
+        }
+        html body #root .faq-edit-page .MuiInputLabel-root {
+          color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+      `}</style>
       <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+        <div className="mb-[22px]">
+          <div className="flex items-center gap-2 text-[13px] font-medium mb-3" style={{ color: "rgba(26, 26, 24, 0.48)" }}>
             <button
+              type="button"
               onClick={() => navigate(-1)}
-              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+              className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
               aria-label="Go back"
             >
-              <ArrowLeft className="w-4 h-4 text-gray-600" />
+              <ArrowLeft className="w-4 h-4" />
             </button>
             <span>FAQ List</span>
-            <span>{">"}</span>
-            <span className="text-gray-900 font-medium">Edit FAQ</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="font-semibold" style={{ color: "#1A1A18" }}>Edit FAQ</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">EDIT FAQ</h1>
+          <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>Edit FAQ</h1>
         </div>
 
         {/* Main Form Card */}
         <form id="faqEditForm" onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                  <FileText size={16} color="#C72030" />
+          <div className="ref-card bg-white overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200 bg-white">
+              <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                <span className="w-7 h-7 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: "#F6F4EE" }}>
+                  <FileText size={14} color="#2C2C2C" />
                 </span>
                 FAQ Information
               </h2>
             </div>
             
-            <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
+            <div className="p-6 space-y-6 bg-white">
               {/* Category and Subcategory Selection */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* FAQ Category */}
@@ -617,20 +690,21 @@ const FaqEdit = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 justify-center pt-6">
-            <button
-              type="submit"
-              disabled={loading || formData.faqs.length === 0}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Update' : 'Update'}
-            </button>
+          <div className="flex justify-end gap-4">
             <button
               type="button"
               onClick={() => navigate("/maintenance/faq-list")}
               disabled={loading}
-className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"            >
+              className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+            >
               Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading || formData.faqs.length === 0}
+              className="btn-primary h-9 px-4 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Update
             </button>
           </div>
         </form>

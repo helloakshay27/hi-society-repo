@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
 
 interface ActionButtonsProps {
   onSave: () => void;
@@ -10,19 +9,20 @@ interface ActionButtonsProps {
 export const ActionButtons: React.FC<ActionButtonsProps> = ({ onSave, onBack }) => {
   return (
     <div className="flex justify-end gap-4">
-      <Button 
-        onClick={onSave}
-        className="bg-[#C72030] hover:bg-[#A61B28] text-white px-8"
-      >
-        Save
-      </Button>
-      <Button 
+      <button
+        type="button"
         onClick={onBack}
-        variant="outline"
-        className="border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white px-8"
+        className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
       >
         Back
-      </Button>
+      </button>
+      <button
+        type="button"
+        onClick={onSave}
+        className="btn-primary h-9 px-4 text-sm font-medium"
+      >
+        Save
+      </button>
     </div>
   );
 };

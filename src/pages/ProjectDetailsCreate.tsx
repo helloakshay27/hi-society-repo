@@ -24,7 +24,7 @@ import {
   Chip,
   OutlinedInput,
 } from "@mui/material";
-import { Building2, FileText, Trash2, ArrowLeft, Delete, DeleteIcon, Info } from "lucide-react";
+import { Building2, FileText, Trash2, ArrowLeft, ChevronRight, Delete, DeleteIcon, Info, Settings, Upload } from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import "../styles/mor.css";
 import { DeleteForever, DeleteForeverOutlined, DeleteForeverRounded, DeleteForeverSharp, DeleteForeverTwoTone, DeleteOutlined, DeleteOutlineOutlined, DeleteOutlineRounded, DeleteSweepOutlined, DeleteSweepRounded, DeleteSweepSharp, DeleteSweepTwoTone, FileUpload, SettingsOutlined as SettingsOutlinedIcon } from "@mui/icons-material";
@@ -176,24 +176,25 @@ const customStyles = {
 
 // Field styles for Material-UI components
 const fieldStyles = {
-  height: "45px",
+  height: "44px",
   backgroundColor: "#fff",
-  borderRadius: "4px",
+  borderRadius: "12px",
   "& .MuiOutlinedInput-root": {
-    height: "45px",
+    height: "44px",
+    borderRadius: "12px",
     "& fieldset": {
-      borderColor: "#ddd",
+      borderColor: "rgba(26, 26, 24, 0.08)",
     },
     "&:hover fieldset": {
-      borderColor: "#C72030",
+      borderColor: "rgba(26, 26, 24, 0.28)",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#1A1A18",
     },
   },
   "& .MuiInputLabel-root": {
     "&.Mui-focused": {
-      color: "#C72030",
+      color: "#1A1A18",
     },
   },
 };
@@ -2251,28 +2252,127 @@ const ProjectDetailsCreate = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28 project-details-create-page">
-      <style>{`.project-details-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
+    <div className="p-6 h-screen overflow-y-auto scrollbar-thin pb-28 project-details-create-page">
+      <style>{`
+        .project-details-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }
+        /* Global "form svg" rule turns every icon black; keep icons on filled buttons white */
+        html body #root .project-details-create-page form button:is(.btn-primary, [class*="bg-[#C72030]"], [class*="bg-red-"]) svg {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+        /* Info badges: black disc with a white "i" instead of a solid black dot */
+        html body #root .project-details-create-page form svg.fill-black {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+
+        /* ---- Reference design: canvas, cards, fields ---- */
+        html body #root .project-details-create-page {
+          background-color: #FDFDFB !important;
+        }
+        html body #root .project-details-create-page .pdc-card {
+          border: 1px solid rgba(26, 26, 24, 0.09) !important;
+          border-radius: 16px !important;
+          box-shadow: none !important;
+        }
+        /* card title sits inside the card: no bar, no divider, no icon chip */
+        html body #root .project-details-create-page .pdc-card > div:first-child {
+          padding: 22px 24px 0 !important;
+          background: transparent !important;
+          border: none !important;
+        }
+        html body #root .project-details-create-page .pdc-card > div:first-child h2 {
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          line-height: 1.4 !important;
+          color: #1A1A18 !important;
+        }
+        /* section icon chip — same as Settings module (32px, #F5F4F0, ink icon) */
+        html body #root .project-details-create-page .pdc-card > div:first-child h2 > span:first-child {
+          width: 32px !important;
+          height: 32px !important;
+          margin-right: 12px !important;
+          flex: none;
+          background-color: #F5F4F0 !important;
+        }
+        html body #root .project-details-create-page .pdc-card > div:first-child h2 > span:first-child svg {
+          width: 14px !important;
+          height: 14px !important;
+          color: #1A1A18 !important;
+          stroke: #1A1A18 !important;
+        }
+        html body #root .project-details-create-page .pdc-card > div:nth-child(2) {
+          background-color: #FFFFFF !important;
+          padding: 16px 24px 22px !important;
+        }
+        /* inputs & selects: 44px, 12px radius, hairline border, ink focus ring */
+        html body #root .project-details-create-page .MuiOutlinedInput-root {
+          min-height: 44px;
+          border-radius: 12px !important;
+          background-color: #FFFFFF !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease;
+        }
+        html body #root .project-details-create-page .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+        }
+        html body #root .project-details-create-page .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .project-details-create-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: #1A1A18 !important;
+          border-width: 1px !important;
+        }
+        html body #root .project-details-create-page .MuiOutlinedInput-root.Mui-focused {
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .project-details-create-page .MuiOutlinedInput-input::placeholder {
+          color: rgba(26, 26, 24, 0.3) !important;
+          opacity: 1 !important;
+        }
+        html body #root .project-details-create-page .MuiInputLabel-root {
+          color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+        /* upload areas: reference dropzone */
+        html body #root .project-details-create-page .pdc-card .border.border-gray-300.rounded-md {
+          border: 2px dashed #EBE9E2 !important;
+          border-radius: 12px !important;
+          transition: border-color 0.16s ease, background-color 0.16s ease;
+        }
+        html body #root .project-details-create-page .pdc-dropzone-prompt {
+          cursor: pointer;
+          color: #1A1A18;
+        }
+        html body #root .project-details-create-page .pdc-card .border.border-gray-300.rounded-md:hover {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+          background-color: #FDFDFB !important;
+        }
+      `}</style>
       {/* Header Section */}
-      <div className="mb-8">
-             <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-               <button
-                 onClick={() => Navigate(-1)}
-                 className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
-                 aria-label="Go back"
-               >
-                 <ArrowLeft className="w-4 h-4 text-gray-600" />
-               </button>
-               <span>Back to Project List</span>
-               {/* <span>{">"}</span> */}
-               {/* <span className="text-gray-900 font-medium">Create New Project</span> */}
-             </div>
-             {/* <h1 className="text-2xl font-bold text-gray-900">CREATE PROJECT</h1> */}
-           </div>
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3" style={{ color: "rgba(26, 26, 24, 0.48)" }}>
+          <button
+            type="button"
+            onClick={() => Navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Project List</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold" style={{ color: "#1A1A18" }}>Create New Project</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>New Project</h1>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="pdc-card bg-white overflow-hidden">
           <div className="px-6 py-3">
             <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span
@@ -3037,7 +3137,7 @@ const ProjectDetailsCreate = () => {
         {/* {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
           baseURL !== "https://rustomjee-live.lockated.com/" && ( */}
             <>
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="pdc-card bg-white overflow-hidden">
                 <div className="px-6 py-3">
                   <h2 className="text-sm font-semibold text-gray-900 flex items-center">
                     <span
@@ -3147,7 +3247,7 @@ const ProjectDetailsCreate = () => {
                           Project QR Code Images
                         </label>
                         
-                        <div className="border border-gray-300 rounded-md p-4 min-h-[150px]">
+                        <div className="border border-gray-300 rounded-md p-[18px]">
                           {/* Hidden input */}
                           <input
                             type="file"
@@ -3194,31 +3294,16 @@ const ProjectDetailsCreate = () => {
                             );
                           })()}
 
-                          {/* Upload button centered at bottom */}
-                          <div className="flex">
-                            <button
-                              type="button"
-                              onClick={() => document.getElementById("qr-code-file-upload-0")?.click()}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition"
-                            >
-                              <span className="font-medium text-sm text-white">Upload Files</span>
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#FFFFFF"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="17 8 12 3 7 8" />
-                                <line x1="12" y1="3" x2="12" y2="15" />
-                              </svg>
-                            </button>
-                          </div>
+                          {/* Dropzone prompt (reference design) */}
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById("qr-code-file-upload-0")?.click()}
+                            className="pdc-dropzone-prompt w-full flex flex-col items-center gap-2 text-center bg-transparent border-0 p-0"
+                          >
+                            <Upload size={18} strokeWidth={1.8} />
+                            <span className="text-[12.5px] font-semibold" style={{ color: "#1A1A18" }}>Choose files to upload</span>
+                            <span className="text-[11px]" style={{ color: "rgba(26, 26, 24, 0.48)" }}>Images only · up to 50MB</span>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -3341,7 +3426,7 @@ const ProjectDetailsCreate = () => {
                                 Project QR Code Images
                               </label>
                               
-                              <div className="border border-gray-300 rounded-md p-4 min-h-[150px]">
+                              <div className="border border-gray-300 rounded-md p-[18px]">
                                 {/* Hidden input */}
                                 <input
                                   type="file"
@@ -3388,31 +3473,16 @@ const ProjectDetailsCreate = () => {
                                   );
                                 })()}
 
-                                {/* Upload button centered at bottom */}
-                                <div className="flex">
-                                  <button
-                                    type="button"
-                                    onClick={() => document.getElementById(`qr-code-file-upload-${entryIndex}`)?.click()}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition"
-                                  >
-                                    <span className="font-medium text-sm text-white">Upload Files</span>
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      width="16"
-                                      height="16"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      stroke="#FFFFFF"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    >
-                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                      <polyline points="17 8 12 3 7 8" />
-                                      <line x1="12" y1="3" x2="12" y2="15" />
-                                    </svg>
-                                  </button>
-                                </div>
+                                {/* Dropzone prompt (reference design) */}
+                                <button
+                                  type="button"
+                                  onClick={() => document.getElementById(`qr-code-file-upload-${entryIndex}`)?.click()}
+                                  className="pdc-dropzone-prompt w-full flex flex-col items-center gap-2 text-center bg-transparent border-0 p-0"
+                                >
+                                  <Upload size={18} strokeWidth={1.8} />
+                                  <span className="text-[12.5px] font-semibold" style={{ color: "#1A1A18" }}>Choose files to upload</span>
+                                  <span className="text-[11px]" style={{ color: "rgba(26, 26, 24, 0.48)" }}>Images only · up to 50MB</span>
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -3462,7 +3532,7 @@ const ProjectDetailsCreate = () => {
               </>
 
         {/* Amenities Section */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="pdc-card bg-white overflow-hidden">
           <div className="px-6 py-3">
             <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span
@@ -3520,7 +3590,7 @@ const ProjectDetailsCreate = () => {
         </div>
 
         {/* Connectivity Section */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="pdc-card bg-white overflow-hidden">
           <div className="px-6 py-3">
             <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span
@@ -3894,7 +3964,7 @@ const ProjectDetailsCreate = () => {
         </div>
 
         {/* Address Section */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="pdc-card bg-white overflow-hidden">
           <div className="px-6 py-3">
             <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span
@@ -4204,7 +4274,7 @@ const ProjectDetailsCreate = () => {
             </div>
           </div> */}
        
-         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+         <div className="pdc-card bg-white overflow-hidden">
           <div className="px-6 py-3">
             <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span
@@ -5691,7 +5761,7 @@ variant="ghost"
         </div>
        
             <>
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="pdc-card bg-white overflow-hidden">
           <div className="px-6 py-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span
@@ -5833,19 +5903,15 @@ variant="ghost"
          
 
         {/* Visibility Section */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="pdc-card bg-white overflow-hidden">
           <div className="px-6 py-3">
             <h2 className="text-sm font-semibold text-gray-900 flex items-center">
-              <Avatar
-                sx={{
-                  width: 28,
-                  height: 28,
-                  backgroundColor: '#F6F4EE',
-                  mr: 1.5
-                }}
+              <span
+                className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: "#F6F4EE" }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 14, color: '#2C2C2C' }} />
-              </Avatar>
+                <Settings size={14} color="#2C2C2C" />
+              </span>
               Visibility
             </h2>
           </div>

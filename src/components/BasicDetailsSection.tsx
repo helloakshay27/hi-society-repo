@@ -10,9 +10,8 @@ import {
 } from '@mui/material';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings } from 'lucide-react';
-import { Button, Box, Typography, IconButton } from '@mui/material';
-import { Upload, X } from 'lucide-react';
+import { Box, Typography, IconButton } from '@mui/material';
+import { Settings, Upload, X } from 'lucide-react';
 
 interface BasicDetailsSectionProps {
   category: string;
@@ -74,12 +73,18 @@ export const BasicDetailsSection: React.FC<BasicDetailsSectionProps> = ({
 
   const textareaStyle: React.CSSProperties = {
     width: '100%',
-    fontSize: '16px',
-    padding: '12px',
-    borderRadius: '4px',
-    border: '1px solid #ccc',
+    minHeight: '88px',
+    fontSize: '13.5px',
+    fontWeight: 500,
+    lineHeight: 1.6,
+    color: '#1A1A18',
+    padding: '12px 14px',
+    borderRadius: '12px',
+    border: '1px solid rgba(26, 26, 24, 0.08)',
+    backgroundColor: '#FFFFFF',
     fontFamily: 'inherit',
     resize: 'vertical' as const,
+    transition: 'border-color 0.16s ease, box-shadow 0.16s ease',
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,19 +101,19 @@ export const BasicDetailsSection: React.FC<BasicDetailsSectionProps> = ({
   };
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="flex flex-row items-center px-4 sm:px-6 md:px-[50px]">
-        <div className="flex items-center justify-center border border-[#C72030] w-10 h-10 rounded-full">
-          <Settings size={18} color="#C72030" />
-        </div>
-        <CardTitle className="pl-4 text-lg sm:text-xl md:text-2xl font-semibold uppercase text-black font-['Work_Sans']">
+    <Card className="mb-6 overflow-hidden rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none bg-white">
+      <CardHeader className="flex flex-row items-center gap-3 space-y-0 px-6 pt-[22px] pb-0 bg-white">
+        <span className="w-8 h-8 rounded-full flex items-center justify-center flex-none" style={{ backgroundColor: "#F5F4F0" }}>
+          <Settings size={14} color="#1A1A18" />
+        </span>
+        <CardTitle className="text-[14px] leading-[1.4] font-semibold" style={{ color: "#1A1A18" }}>
           Basic Details
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="px-4 sm:px-6 md:px-[50px]">
+      <CardContent className="px-6 pt-4 pb-[22px]">
         {/* Row 1 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <FormControl fullWidth variant="outlined">
             <InputLabel id="category-label" shrink>Category*</InputLabel>
             <MuiSelect
@@ -165,7 +170,7 @@ export const BasicDetailsSection: React.FC<BasicDetailsSectionProps> = ({
         </div>
 
         {/* Row 2 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <TextField
             label="Location"
             placeholder="Enter Location"
@@ -214,9 +219,9 @@ export const BasicDetailsSection: React.FC<BasicDetailsSectionProps> = ({
         </div>
 
         {/* Row 3 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700">Observation</label>
+            <label className="block mb-1.5 text-[12px] font-semibold" style={{ color: "rgba(26, 26, 24, 0.68)" }}>Observation</label>
             <TextareaAutosize
               minRows={4}
               placeholder="Enter Observation"
@@ -227,7 +232,7 @@ export const BasicDetailsSection: React.FC<BasicDetailsSectionProps> = ({
           </div>
 
           <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700">Recommendation</label>
+            <label className="block mb-1.5 text-[12px] font-semibold" style={{ color: "rgba(26, 26, 24, 0.68)" }}>Recommendation</label>
             <TextareaAutosize
               minRows={4}
               placeholder="Enter Recommendation"
@@ -239,50 +244,53 @@ export const BasicDetailsSection: React.FC<BasicDetailsSectionProps> = ({
         </div>
 
         {/* Checkbox */}
-        <div className="mt-4">
+        <div className="mb-6">
           <div className="flex items-center space-x-2">
             <Checkbox
               id="mustHave"
               checked={mustHave}
               onCheckedChange={handleMustHaveChange}
+              className="h-[18px] w-[18px] rounded-[5px] border-[1.5px]"
               style={{
-                borderColor: '#C72030',
-                backgroundColor: mustHave ? '#C72030' : 'transparent'
+                borderColor: mustHave ? '#1A1A18' : 'rgba(26, 26, 24, 0.22)',
+                backgroundColor: mustHave ? '#1A1A18' : 'transparent'
               }}
             />
-            <label htmlFor="mustHave" className="text-sm font-medium">
+            <label htmlFor="mustHave" className="text-[13px] cursor-pointer" style={{ color: "rgba(26, 26, 24, 0.68)" }}>
               Must Have
             </label>
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-[12px] font-semibold" style={{ color: "rgba(26, 26, 24, 0.68)" }}>
             Attachments
           </label>
           <Box
             sx={{
-              border: '2px dashed #dc2626',
-              borderRadius: '6px',
-              backgroundColor: '#f9fafb',
-              minHeight: '96px',
+              border: '2px dashed #EBE9E2',
+              borderRadius: '12px',
+              backgroundColor: 'transparent',
+              gap: '8px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: 2,
+              padding: '18px',
               cursor: 'pointer',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
               '&:hover': {
-                backgroundColor: '#f3f4f6',
+                backgroundColor: '#FDFDFB',
+                borderColor: 'rgba(26, 26, 24, 0.28)',
               },
             }}
             onClick={() => document.getElementById('file-upload-attachments')?.click()}
           >
-            <Upload className="w-8 h-8 text-gray-400 mb-2" />
-            <Typography variant="body2" sx={{ color: '#374151', textAlign: 'center' }}>
-              Click to upload files or drag and drop
+            <Upload size={18} strokeWidth={1.8} color="#1A1A18" />
+            <Typography sx={{ fontSize: '12.5px', fontWeight: 600, color: '#1A1A18', textAlign: 'center' }}>
+              Choose files to upload
             </Typography>
-            <Typography variant="caption" sx={{ color: '#9ca3af', textAlign: 'center' }}>
+            <Typography sx={{ fontSize: '11px', color: 'rgba(26, 26, 24, 0.48)', textAlign: 'center' }}>
               PNG, JPG, PDF up to 10MB
             </Typography>
             <input
@@ -293,21 +301,6 @@ export const BasicDetailsSection: React.FC<BasicDetailsSectionProps> = ({
               style={{ display: 'none' }}
               onChange={handleFileUpload}
             />
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{
-                mt: 1,
-                borderColor: '#dc2626',
-                color: '#dc2626',
-                '&:hover': {
-                  borderColor: '#b91c1c',
-                  backgroundColor: 'rgba(220, 38, 38, 0.04)',
-                },
-              }}
-            >
-              Choose Files
-            </Button>
           </Box>
 
           {/* Preview Section */}
@@ -359,10 +352,10 @@ export const BasicDetailsSection: React.FC<BasicDetailsSectionProps> = ({
                         position: 'absolute',
                         top: -8,
                         right: -8,
-                        backgroundColor: '#dc2626',
+                        backgroundColor: '#1a1a18',
                         color: 'white',
                         '&:hover': {
-                          backgroundColor: '#b91c1c',
+                          backgroundColor: '#12100e',
                         },
                       }}
                       onClick={() => handleRemoveFile(index)}

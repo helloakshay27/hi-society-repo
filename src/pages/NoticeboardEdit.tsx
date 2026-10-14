@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, FileText, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, FileText, Plus, Trash2 } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
@@ -493,7 +493,7 @@ const NoticeboardEdit = () => {
     return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading noticeboard details...</p>
         </div>
       </div>
@@ -501,7 +501,14 @@ const NoticeboardEdit = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto">
+    <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto noticeboard-edit-page">
+      <style>{`
+        /* Global "form svg" rule turns every icon black; keep icons on filled buttons white */
+        html body #root .noticeboard-edit-page form button.btn-primary svg {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+      `}</style>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
@@ -513,7 +520,7 @@ const NoticeboardEdit = () => {
             <ArrowLeft className="w-4 h-4 text-gray-600" />
           </button>
           <span>Broadcast List</span>
-          <span>{">"}</span>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
           <span className="text-gray-900 font-medium">Edit Broadcast</span>
         </div>
       </div>
@@ -521,10 +528,10 @@ const NoticeboardEdit = () => {
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
         {/* Section: Communication Information */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                <FileText size={16} color="#C72030" />
+          <div className="px-6 py-3 border-b border-gray-200 bg-white">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+              <span className="w-7 h-7 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: "#F6F4EE" }}>
+                <FileText size={14} color="#2C2C2C" />
               </span>
               Edit Broadcast
             </h2>
@@ -829,21 +836,21 @@ const NoticeboardEdit = () => {
         </div>
 
         {/* File Upload Section */}
-        <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                <FileText size={16} color="#C72030" />
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200 bg-white">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+              <span className="w-7 h-7 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: "#F6F4EE" }}>
+                <FileText size={14} color="#2C2C2C" />
               </span>
               Notice Attachments
             </h2>
           </div>
           
-          <div className="p-6" style={{ backgroundColor: "#AAB9C50D" }}>
+          <div className="p-6 bg-white">
             {/* Broadcast Cover Image */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-medium text-gray-900">
+                <h3 className="text-sm font-semibold text-gray-900">
                   Broadcast Cover Image
                 </h3>
                 <input
@@ -883,9 +890,10 @@ const NoticeboardEdit = () => {
                 <button
                   type="button"
                   onClick={() => document.getElementById('editCoverImageInput')?.click()}
-                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
+                  className="btn-primary inline-flex items-center gap-1.5 h-9 px-4 text-sm font-medium"
                 >
-                  + Upload
+                  <Plus className="w-4 h-4" />
+                  Upload
                 </button>
               </div>
 
@@ -929,7 +937,7 @@ const NoticeboardEdit = () => {
                     })}
                     {coverImageRatios.every(({ key }) => !formData[key] || formData[key].length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center text-gray-500">
+                        <TableCell colSpan={4} className="text-center text-gray-500 py-6">
                           No cover images uploaded
                         </TableCell>
                       </TableRow>
@@ -942,7 +950,7 @@ const NoticeboardEdit = () => {
             {/* Broadcast Attachment */}
             <div>
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-medium text-gray-900">
+                <h3 className="text-sm font-semibold text-gray-900">
                   Broadcast Attachment
                 </h3>
                 <input
@@ -995,9 +1003,10 @@ const NoticeboardEdit = () => {
                 <button
                   type="button"
                   onClick={() => document.getElementById('editBroadcastAttachmentInput')?.click()}
-                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white rounded-md flex items-center gap-2 h-10"
+                  className="btn-primary inline-flex items-center gap-1.5 h-9 px-4 text-sm font-medium"
                 >
-                  + Upload
+                  <Plus className="w-4 h-4" />
+                  Upload
                 </button>
               </div>
 
@@ -1055,7 +1064,7 @@ const NoticeboardEdit = () => {
                     })}
                     {broadcastImageRatios.every(({ key }) => !formData[key] || formData[key].length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center text-gray-500">
+                        <TableCell colSpan={4} className="text-center text-gray-500 py-6">
                           No broadcast attachments uploaded
                         </TableCell>
                       </TableRow>
@@ -1068,19 +1077,20 @@ const NoticeboardEdit = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 justify-center pt-6">
+        <div className="flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+          >
+            Cancel
+          </button>
           <button
             type="submit"
             disabled={loading}
-              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2 h-10"
-            >
-              Update
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"          >
-            Cancel
+            className="btn-primary h-9 px-4 text-sm font-medium"
+          >
+            Update
           </button>
         </div>
       </form>

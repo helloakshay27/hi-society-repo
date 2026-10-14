@@ -402,7 +402,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .modal-close-btn:hover {
-            color: #DA7756;
+            color: #1A1A18;
           }
 
           .project-banner-upload {
@@ -446,8 +446,8 @@ const ProjectImageVideoUpload = ({
           }
 
           .ratio-upload-area {
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
+            border: 2px dashed #EBE9E2;
+            border-radius: 12px;
             background: white;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -459,12 +459,12 @@ const ProjectImageVideoUpload = ({
           }
 
           .ratio-upload-area:hover {
-            border-color: #DA7756;
-            background: #f8faff;
+            border-color: rgba(26, 26, 24, 0.28);
+            background: #FDFDFB;
           }
 
           .upload-placeholder {
-            color: #9ca3af;
+            color: rgba(26, 26, 24, 0.48);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -474,7 +474,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .ratio-upload-area:hover .upload-placeholder {
-            color: #DA7756;
+            color: #1A1A18;
           }
 
           .ratio-upload-area.disabled {
@@ -531,7 +531,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .uploaded-image-card.invalid {
-            border: 2px solid #DA7756;
+            border: 2px solid #E5484D;
             background: #fef2f2;
           }
 
@@ -629,18 +629,20 @@ const ProjectImageVideoUpload = ({
           }
 
           .continue-btn {
-            background: #DA7756;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: 500;
+            background: #1A1A18;
+            color: #FFFFFF;
+            border: 1px solid #1A1A18;
+            min-height: 42px;
+            padding: 0 22px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s ease;
           }
 
           .continue-btn:hover {
-            background: #DA7756;
+            background: #12100E;
           }
 
           @media (max-width: 768px) {
@@ -714,8 +716,8 @@ const ProjectImageVideoUpload = ({
         }
 
         .ratio-upload-area {
-          border: 2px dashed #d1d5db;
-          border-radius: 8px;
+          border: 2px dashed #EBE9E2;
+          border-radius: 12px;
           background: white;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -727,12 +729,12 @@ const ProjectImageVideoUpload = ({
         }
 
         .ratio-upload-area:hover {
-          border-color: #DA7756;
-          background: #f8faff;
+          border-color: rgba(26, 26, 24, 0.28);
+          background: #FDFDFB;
         }
 
         .upload-placeholder {
-          color: #9ca3af;
+          color: rgba(26, 26, 24, 0.48);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -741,7 +743,7 @@ const ProjectImageVideoUpload = ({
         }
 
         .ratio-upload-area:hover .upload-placeholder {
-          color: #DA7756;
+          color: #1A1A18;
         }
 
         .ratio-upload-area.disabled {
@@ -896,18 +898,20 @@ const ProjectImageVideoUpload = ({
         }
 
         .continue-btn {
-          background: #DA7756;
-          color: white;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 6px;
-          font-weight: 500;
+          background: #1A1A18;
+          color: #FFFFFF;
+          border: 1px solid #1A1A18;
+          min-height: 42px;
+          padding: 0 22px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 600;
           cursor: pointer;
           transition: background-color 0.2s ease;
         }
 
         .continue-btn:hover {
-          background: #DA7756;
+          background: #12100E;
         }
 
         @media (max-width: 768px) {

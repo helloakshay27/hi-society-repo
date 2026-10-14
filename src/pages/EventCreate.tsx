@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, ArrowLeft, FileText, Calendar, Users, X, Plus, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
+import { ChevronRight, ArrowLeft, FileText, Calendar, Users, X, Plus, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info, Settings } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -204,24 +204,25 @@ const EventCreate = () => {
 
   // Field styles for Material-UI components
   const fieldStyles = {
-    height: '45px',
+    height: '44px',
     backgroundColor: '#fff',
-    borderRadius: '4px',
+    borderRadius: '12px',
     '& .MuiOutlinedInput-root': {
-      height: '45px',
+      height: '44px',
+      borderRadius: '12px',
       '& fieldset': {
-        borderColor: '#ddd',
+        borderColor: 'rgba(26, 26, 24, 0.08)',
       },
       '&:hover fieldset': {
-        borderColor: '#C72030',
+        borderColor: 'rgba(26, 26, 24, 0.28)',
       },
       '&.Mui-focused fieldset': {
-        borderColor: '#C72030',
+        borderColor: '#1A1A18',
       },
     },
     '& .MuiInputLabel-root': {
       '&.Mui-focused': {
-        color: '#C72030',
+        color: '#1A1A18',
       },
     },
   };
@@ -1382,8 +1383,8 @@ const EventCreate = () => {
                   width: '100%',
                   height: '50px',
                   padding: '5px',
-                  borderRadius: '4px',
-                  boxShadow: '0px 4px 14.2px 0px rgba(0, 0, 0, 0.1)',
+                  borderRadius: '8px',
+                  border: '1px solid #E5E7EB',
                   backgroundColor: 'rgba(255, 255, 255, 1)',
                   display: 'flex',
                   alignItems: 'center',
@@ -1396,11 +1397,11 @@ const EventCreate = () => {
                     cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
                     width: '100%',
                     height: '40px',
-                    backgroundColor: (index === currentStep || completedSteps.includes(index)) ? 'var(--color-primary, #da7756)' :
+                    backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#1A1A18' :
                       (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
                     color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
                       (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
-                    border: (index === currentStep || completedSteps.includes(index)) ? '2px solid var(--color-primary, #da7756)' :
+                    border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #1A1A18' :
                       (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
                     padding: '12px 20px',
                     fontSize: '13px',
@@ -1409,7 +1410,7 @@ const EventCreate = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: index === currentStep ? '0 2px 4px rgba(218, 119, 86, 0.3)' : 'none',
+                    boxShadow: 'none',
                     transition: 'all 0.2s ease',
                     fontFamily: 'Work Sans, sans-serif',
                     position: 'relative',
@@ -1466,17 +1467,110 @@ const EventCreate = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
+    <div className="p-6 min-h-screen event-create-page">
+      <style>{`
+        /* Global "form svg" rule turns every icon black; keep icons on filled buttons white */
+        html body #root .event-create-page form :is(button.btn-primary, [class*="bg-[#C72030]"], button[class*="bg-red-"]) svg {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+        /* Info badges: black disc with a white "i" instead of a solid black dot */
+        html body #root .event-create-page form svg.fill-black {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+
+        /* ---- Reference design: canvas, cards, fields ---- */
+        html body #root .event-create-page {
+          background-color: #FDFDFB !important;
+        }
+        html body #root .event-create-page .ref-card {
+          border: 1px solid rgba(26, 26, 24, 0.09) !important;
+          border-radius: 16px !important;
+          box-shadow: none !important;
+        }
+        html body #root .event-create-page .ref-card > div:first-child {
+          padding: 22px 24px 0 !important;
+          background: transparent !important;
+          border: none !important;
+        }
+        html body #root .event-create-page .ref-card > div:first-child h2 {
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          line-height: 1.4 !important;
+          color: #1A1A18 !important;
+        }
+        /* section icon chip — same as Settings module (32px, #F5F4F0, ink icon) */
+        html body #root .event-create-page .ref-card > div:first-child h2 > span:first-child {
+          width: 32px !important;
+          height: 32px !important;
+          margin-right: 12px !important;
+          flex: none;
+          background-color: #F5F4F0 !important;
+        }
+        html body #root .event-create-page .ref-card > div:first-child h2 > span:first-child svg {
+          width: 14px !important;
+          height: 14px !important;
+          color: #1A1A18 !important;
+          stroke: #1A1A18 !important;
+        }
+        html body #root .event-create-page .ref-card > div:nth-child(2) {
+          background-color: #FFFFFF !important;
+          padding: 16px 24px 22px !important;
+        }
+        html body #root .event-create-page .MuiOutlinedInput-root {
+          min-height: 44px;
+          border-radius: 12px !important;
+          background-color: #FFFFFF !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease;
+        }
+        html body #root .event-create-page .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+        }
+        html body #root .event-create-page .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .event-create-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: #1A1A18 !important;
+          border-width: 1px !important;
+        }
+        html body #root .event-create-page .MuiOutlinedInput-root.Mui-focused {
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .event-create-page .MuiOutlinedInput-input::placeholder {
+          color: rgba(26, 26, 24, 0.3) !important;
+          opacity: 1 !important;
+        }
+        html body #root .event-create-page .MuiInputLabel-root {
+          color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+        /* checked toggles: black thumb (was matched by a global rule keyed on bg-gray-50) */
+        html body #root .event-create-page .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb {
+          color: #000000 !important;
+          background-color: #000000 !important;
+        }
+      `}</style>
       {/* Back Button */}
-      <div className="mb-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm font-medium">Back To Event List</span>
-        </button>
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3" style={{ color: "rgba(26, 26, 24, 0.48)" }}>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Event List</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold" style={{ color: "#1A1A18" }}>Create New Event</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>New Event</h1>
       </div>
 
       {/* Stepper Component - Hide in preview mode */}
@@ -1485,19 +1579,15 @@ const EventCreate = () => {
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
         {/* Step 1: Event Information */}
         {currentStep === 0 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
-                  }}
+          <div className="ref-card bg-white overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200 bg-white">
+              <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                <span
+                  className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                  style={{ backgroundColor: "#F6F4EE" }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                </Avatar>
+                  <Settings size={14} color="#2C2C2C" />
+                </span>
                 Event Details
               </h2>
             </div>
@@ -1946,19 +2036,15 @@ const EventCreate = () => {
 
         {/* Visibility Card */}
         {currentStep === 0 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
-                  }}
+          <div className="ref-card bg-white overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200 bg-white">
+              <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                <span
+                  className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                  style={{ backgroundColor: "#F6F4EE" }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                </Avatar>
+                  <Settings size={14} color="#2C2C2C" />
+                </span>
                 Visibility
               </h2>
             </div>
@@ -2081,19 +2167,15 @@ const EventCreate = () => {
 
         {/* Step 3: Invite CPs */}
         {currentStep === 2 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
-                  }}
+          <div className="ref-card bg-white overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200 bg-white">
+              <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                <span
+                  className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                  style={{ backgroundColor: "#F6F4EE" }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                </Avatar>
+                  <Settings size={14} color="#2C2C2C" />
+                </span>
                 Invite CPs
               </h2>
             </div>
@@ -2393,19 +2475,15 @@ const EventCreate = () => {
 
         {/* Step 2: Event Related Images */}
         {currentStep === 1 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
-                  }}
+          <div className="ref-card bg-white overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200 bg-white">
+              <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                <span
+                  className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                  style={{ backgroundColor: "#F6F4EE" }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                </Avatar>
+                  <Settings size={14} color="#2C2C2C" />
+                </span>
                 Event Related Images
               </h2>
             </div>
@@ -2572,20 +2650,20 @@ const EventCreate = () => {
         {/* Navigation Buttons - Show on all steps except preview mode */}
         {!isPreviewMode && (
           <>
-            <div className="flex gap-4 justify-center pt-6">
-              <button
-                type="button"
-                onClick={handleProceedToSave}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
-              >
-                Proceed to save
-              </button>
+            <div className="flex justify-end gap-4">
               <button
                 type="button"
                 onClick={handleSaveToDraft}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
+                className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
               >
                 Save to draft
+              </button>
+              <button
+                type="button"
+                onClick={handleProceedToSave}
+                className="btn-primary h-9 px-4 text-sm font-medium"
+              >
+                Proceed to save
               </button>
             </div>
             {currentStep > 0 && (
@@ -2606,19 +2684,15 @@ const EventCreate = () => {
               <div key={`completed-section-${stepIndex}`}>
                 {/* Step 1: Event Details - Completed */}
                 {stepIndex === 0 && (
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            backgroundColor: '#E5E0D3',
-                            mr: 1.5
-                          }}
+                  <div className="ref-card bg-white overflow-hidden">
+                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
+                      <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                        <span
+                          className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                          style={{ backgroundColor: "#F6F4EE" }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                        </Avatar>
+                          <Settings size={14} color="#2C2C2C" />
+                        </span>
                         Event Details
                       </h2>
                       <button
@@ -2958,18 +3032,14 @@ const EventCreate = () => {
                 {/* Visibility Card - Completed */}
                 {stepIndex === 0 && (
                   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mt-6">
-                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            backgroundColor: '#E5E0D3',
-                            mr: 1.5
-                          }}
+                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
+                      <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                        <span
+                          className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                          style={{ backgroundColor: "#F6F4EE" }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                        </Avatar>
+                          <Settings size={14} color="#2C2C2C" />
+                        </span>
                         Visibility
                       </h2>
                       <button
@@ -3100,22 +3170,18 @@ const EventCreate = () => {
 
 
                 {stepIndex === 1 && (
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                  <div className="ref-card bg-white overflow-hidden">
+                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
                       {/* <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm mr-3 font-medium">
                         ✓
                       </span> */}
-                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            backgroundColor: '#E5E0D3',
-                            mr: 1.5
-                          }}
+                      <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                        <span
+                          className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                          style={{ backgroundColor: "#F6F4EE" }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                        </Avatar>
+                          <Settings size={14} color="#2C2C2C" />
+                        </span>
                         Event Related Images
                       </h2>
                       <button
@@ -3136,19 +3202,15 @@ const EventCreate = () => {
                 )}
 
                 {stepIndex === 2 && (
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            backgroundColor: '#E5E0D3',
-                            mr: 1.5
-                          }}
+                  <div className="ref-card bg-white overflow-hidden">
+                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
+                      <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                        <span
+                          className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                          style={{ backgroundColor: "#F6F4EE" }}
                         >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                        </Avatar>
+                          <Settings size={14} color="#2C2C2C" />
+                        </span>
                         Invite CPs
                       </h2>
                       <button
@@ -3322,19 +3384,15 @@ const EventCreate = () => {
 
               {/* Step 1: Event Details Preview */}
               <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          backgroundColor: '#E5E0D3',
-                          mr: 1.5
-                        }}
+                <div className="ref-card bg-white overflow-hidden">
+                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                      <span
+                        className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                        style={{ backgroundColor: "#F6F4EE" }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                      </Avatar>
+                        <Settings size={14} color="#2C2C2C" />
+                      </span>
                       Event Details
                     </h2>
                     <button
@@ -3650,19 +3708,15 @@ const EventCreate = () => {
 
               {/* Visibility Card Preview */}
               <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          backgroundColor: '#E5E0D3',
-                          mr: 1.5
-                        }}
+                <div className="ref-card bg-white overflow-hidden">
+                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                      <span
+                        className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                        style={{ backgroundColor: "#F6F4EE" }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                      </Avatar>
+                        <Settings size={14} color="#2C2C2C" />
+                      </span>
                       Visibility
                     </h2>
                     <button
@@ -3763,19 +3817,15 @@ const EventCreate = () => {
 
               {/* Step 3: Invite CPs Preview */}
               <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          backgroundColor: '#E5E0D3',
-                          mr: 1.5
-                        }}
+                <div className="ref-card bg-white overflow-hidden">
+                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                      <span
+                        className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                        style={{ backgroundColor: "#F6F4EE" }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                      </Avatar>
+                        <Settings size={14} color="#2C2C2C" />
+                      </span>
                       Invite CPs
                     </h2>
                     <button
@@ -3938,19 +3988,15 @@ const EventCreate = () => {
 
               {/* Step 2: Event Related Images Preview */}
               <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          backgroundColor: '#E5E0D3',
-                          mr: 1.5
-                        }}
+                <div className="ref-card bg-white overflow-hidden">
+                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                      <span
+                        className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                        style={{ backgroundColor: "#F6F4EE" }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                      </Avatar>
+                        <Settings size={14} color="#2C2C2C" />
+                      </span>
                       Event Related Images
                     </h2>
                     <button
@@ -4053,33 +4099,29 @@ const EventCreate = () => {
 
               {/* QR Code Generation Preview - At the End */}
               {/* <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          backgroundColor: '#E5E0D3',
-                          mr: 1.5
-                        }}
+                <div className="ref-card bg-white overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-white">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+                      <span
+                        className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                        style={{ backgroundColor: "#F6F4EE" }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                      </Avatar>
+                        <Settings size={14} color="#2C2C2C" />
+                      </span>
                       QR Code Generation
                     </h2>
                     <div className="flex gap-3">
                       <button
                         type="button"
                         onClick={handleDownloadAllQRCodes}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
-              >
-                Download All QR Codes
+                        className="btn-primary h-9 px-4 text-sm font-medium"
+                      >
+                        Download All QR Codes
               </button>
               <button
                 type="button"
                 onClick={handleSendAllQRCodesEmail}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
+                        className="btn-primary h-9 px-4 text-sm font-medium"
                       >
                         Send QR Codes via Email
                       </button>
@@ -4237,18 +4279,18 @@ const EventCreate = () => {
             </div>
 
             {/* Final Submit Buttons in Preview Mode */}
-            <div className="flex gap-4 justify-center pt-6">
+            <div className="flex justify-end gap-4">
               <button
                 type="button"
                 onClick={() => setIsPreviewMode(false)}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
+                className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
               >
                 Back to Edit
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary h-9 px-4 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Submitting...' : 'Submit Event'}
               </button>
