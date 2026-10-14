@@ -22,14 +22,14 @@ const LINE_COLUMNS: ColumnConfig[] = [
 ];
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-    <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-      <h2 className="text-lg font-medium text-gray-900 flex items-center">
+  <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+    <div className="px-6 pt-[22px]">
+      <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
         <span
           className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-          style={{ backgroundColor: "#E5E0D3" }}
+          style={{ backgroundColor: "#F5F4F0" }}
         >
-          <Receipt size={16} color="var(--color-primary,#da7756)" />
+          <Receipt size={14} color="#1A1A18" />
         </span>
         {title}
       </h2>
@@ -71,6 +71,11 @@ const AccountingTransactionForm: React.FC = () => {
     originTab && originTab !== "all" ? `?tab=${encodeURIComponent(originTab)}` : ""
   }`;
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
+
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'transaction_form', screen_name: 'AccountingTransactionForm' });
+  }, []);
 
   const [ledgerOptions, setLedgerOptions] = useState<LedgerOption[]>([]);
   const [date, setDate] = useState("");
@@ -123,11 +128,6 @@ const AccountingTransactionForm: React.FC = () => {
   };
 
   const addRow = (setRows: React.Dispatch<React.SetStateAction<LineItem[]>>) => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'transaction_form', screen_name: 'AccountingTransactionForm' });;
-  }, []);
-
     setRows((prev) => [...prev, emptyLine()]);
   };
 
@@ -284,7 +284,7 @@ const AccountingTransactionForm: React.FC = () => {
   ) => {
     if (columnKey === "ledger") {
       return (
-        <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
+        <div className="rounded border border-[#ddd] focus-within:border-black">
           <FormControl variant="standard" fullWidth>
             <Select
               value={row.ledgerId}
@@ -320,7 +320,7 @@ const AccountingTransactionForm: React.FC = () => {
     }
     if (columnKey === "amount") {
       return (
-        <div className="rounded border border-[#ddd] focus-within:border-[#da7756]">
+        <div className="rounded border border-[#ddd] focus-within:border-black">
           <Input
             type="number"
             min={0}
@@ -342,14 +342,14 @@ const AccountingTransactionForm: React.FC = () => {
     setRows: React.Dispatch<React.SetStateAction<LineItem[]>>,
     total: number
   ) => (
-    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+    <div className="overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white">
+      <div className="px-6 pt-[22px]">
+        <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
           <span
             className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-            style={{ backgroundColor: "#E5E0D3" }}
+            style={{ backgroundColor: "#F5F4F0" }}
           >
-            <Receipt size={16} color="var(--color-primary,#da7756)" />
+            <Receipt size={14} color="#1A1A18" />
           </span>
           {title}
         </h2>
@@ -397,7 +397,7 @@ const AccountingTransactionForm: React.FC = () => {
 
   return (
     <div className="bg-white p-6 max-w-full min-h-screen overflow-x-hidden transaction-form-page">
-      <style>{`.transaction-form-page .MuiFormLabel-asterisk { color: #da7756 !important; }`}</style>
+      <style>{`.transaction-form-page .MuiFormLabel-asterisk { color: #000000 !important; }`}</style>
       <button
         onClick={() => navigate(transactionsListUrl)}
         className="mb-6 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
@@ -416,26 +416,26 @@ const AccountingTransactionForm: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-              <legend className="px-1 text-gray-500 font-medium text-sm">
-                Date <span style={{ color: "#da7756" }}>*</span>
-              </legend>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Date <span className="text-black">*</span>
+              </label>
               <Input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
+                className="h-9 w-full rounded border border-[#ddd] px-3 focus-visible:border-black focus-visible:ring-0"
               />
-            </fieldset>
-            <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#da7756]">
-              <legend className="px-1 text-gray-500 font-medium text-sm">Reference#</legend>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Reference#</label>
               <Input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
                 placeholder="Enter Reference Number"
-                className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
+                className="h-9 w-full rounded border border-[#ddd] px-3 focus-visible:border-black focus-visible:ring-0"
               />
-            </fieldset>
+            </div>
           </div>
         </SectionCard>
 
@@ -443,7 +443,7 @@ const AccountingTransactionForm: React.FC = () => {
         {renderLineItemTable("Credit", creditRows, setCreditRows, totalCredit)}
 
         <div className="flex justify-end">
-          <div className="w-full max-w-xs rounded-lg border border-gray-200 bg-white p-4">
+          <div className="w-full max-w-xs rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-4">
             <div className="flex justify-between py-1 text-brand-body-4">
               <span className="text-brand-text-light">Difference</span>
               <span
@@ -457,17 +457,17 @@ const AccountingTransactionForm: React.FC = () => {
 
         <SectionCard title="Narration & Attachments">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="relative">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Narration
+              </label>
               <textarea
-                className="peer w-full rounded-md border border-gray-300 p-3 focus:border-[#DA7756] focus:outline-none focus:ring-1 focus:ring-[#DA7756] resize-y"
+                className="w-full rounded-md border border-gray-300 p-3 focus:border-black focus:outline-none focus:ring-1 focus:ring-black resize-y"
                 rows={4}
                 value={narration}
                 onChange={(e) => setNarration(e.target.value)}
                 placeholder="Enter Narration"
               />
-              <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-normal text-black/60 peer-focus:text-[#DA7756]">
-                Narration
-              </label>
             </div>
             <div>
               <label className="mb-1 block text-brand-body-4 font-medium text-brand-text">
@@ -475,7 +475,7 @@ const AccountingTransactionForm: React.FC = () => {
               </label>
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-gray-300 text-brand-text-light hover:border-brand"
+                className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-gray-300 text-brand-text-light hover:border-black/40"
               >
                 <Plus className="h-6 w-6" />
               </div>
@@ -505,31 +505,29 @@ const AccountingTransactionForm: React.FC = () => {
           </div>
         </SectionCard>
 
-        <div className="flex justify-center gap-3">
+        <div className="flex justify-end gap-3">
           <Button
             type="button"
-            onClick={() => handleSubmit(false)}
-            disabled={submitting}
-            className="min-w-[140px] bg-[#C72030] text-white hover:bg-[#A01020]"
+            onClick={() => navigate(transactionsListUrl)}
+            className="min-w-[100px] !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
           >
-            {submitting ? "Saving..." : "Create"}
+            Cancel
           </Button>
           <Button
             type="button"
-            variant="outline"
             onClick={() => handleSubmit(true)}
             disabled={submitting}
-            className="min-w-[160px]"
+            className="min-w-[160px] !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
           >
             Create &amp; Add New
           </Button>
           <Button
             type="button"
-            variant="outline"
-            onClick={() => navigate(transactionsListUrl)}
-            className="min-w-[100px]"
+            onClick={() => handleSubmit(false)}
+            disabled={submitting}
+            className="min-w-[140px] !rounded-lg bg-[#C72030] text-white hover:bg-[#A01020]"
           >
-            Cancel
+            {submitting ? "Saving..." : "Create"}
           </Button>
         </div>
       </div>

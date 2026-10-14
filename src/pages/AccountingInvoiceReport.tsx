@@ -145,6 +145,11 @@ const formatOutstanding = (value: number | null) => (value === null || value ===
 const EMPTY_FILTERS: FilterState = { towerId: "", towerName: "", flatId: "", flatName: "", dueDate: undefined };
 
 const AccountingInvoiceReport: React.FC = () => {
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'invoice_report', screen_name: 'AccountingInvoiceReport' });
+  }, []);
+
   const [towers, setTowers] = useState<OptionItem[]>([]);
   const [flats, setFlats] = useState<OptionItem[]>([]);
   const [flatsLoading, setFlatsLoading] = useState(false);
@@ -253,11 +258,6 @@ const AccountingInvoiceReport: React.FC = () => {
   }, []);
 
   const handleApply = () => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'invoice_report', screen_name: 'AccountingInvoiceReport' });
-  }, []);
-
     const towerName = towers.find((t) => String(t.id) === selectedTower)?.name ?? "";
     const flatName = flats.find((f) => String(f.id) === selectedFlat)?.name ?? "";
     const next: FilterState = { towerId: selectedTower, towerName, flatId: selectedFlat, flatName, dueDate };

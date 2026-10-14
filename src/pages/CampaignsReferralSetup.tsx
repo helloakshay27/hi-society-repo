@@ -34,6 +34,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
+import { Switch } from "@/components/ui/switch";
 const PAGE_SIZE = 10;
 
 const CampaignsReferralSetup: React.FC = () => {

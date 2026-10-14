@@ -105,7 +105,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
           {/* Action buttons */}
           <div className="flex items-center gap-8 px-4">
             {defaultActions.map((action, index) => {
-              const Icon = action.label.toLowerCase().includes("qr") ? Plus : action.icon;
+              const Icon = action.icon;
               return (
                 <Button
                   key={index}
@@ -175,7 +175,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({
         {/* Buttons row */}
         <div className="flex items-center gap-2 px-4 pb-4 overflow-x-auto no-scrollbar">
           {defaultActions.map((action, index) => {
-            const Icon = action.label.toLowerCase().includes("qr") ? Plus : action.icon;
+            const Icon = action.icon;
             return (
               <button
                 key={index}

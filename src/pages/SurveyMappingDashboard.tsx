@@ -1150,18 +1150,7 @@ export const SurveyMappingDashboard = () => {
 
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleStatusToggle(item)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isActive ? "bg-[#C72030]" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isActive ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch checked={!!(isActive)} onCheckedChange={() => handleStatusToggle(item)} />
           </div>
         );
       }

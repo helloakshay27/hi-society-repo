@@ -19,11 +19,6 @@ const columns: ColumnConfig[] = [
 ];
 
 const renderCell = (row: TaxSummaryRow, columnKey: string) => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'tax_summary', screen_name: 'AccountingTaxSummary' });;
-  }, []);
-
   switch (columnKey) {
     case "ledgerId":
       return row.ledgerId || "-";
@@ -42,6 +37,11 @@ const renderCell = (row: TaxSummaryRow, columnKey: string) => {
 
 const AccountingTaxSummary: React.FC = () => {
   const lock_account_id = localStorage.getItem("lock_account_id") || "3";
+
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'tax_summary', screen_name: 'AccountingTaxSummary' });
+  }, []);
 
   const [rows, setRows] = useState<TaxSummaryRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -90,8 +90,8 @@ const AccountingTaxSummary: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-[#f9f7f2] p-6" style={{ minHeight: "100vh", boxSizing: "border-box" }}>
-      <div className="bg-white rounded-lg border-2 p-6 mb-6">
+    <div className="w-full  p-6" style={{ minHeight: "100vh", boxSizing: "border-box" }}>
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
             <NotepadText className="w-6 h-6" />
@@ -129,7 +129,7 @@ const AccountingTaxSummary: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6">
         <div className="text-center mb-6">
           <h1 className="text-xl font-bold">Tax Summary</h1>
         </div>

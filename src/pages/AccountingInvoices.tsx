@@ -193,6 +193,11 @@ const downloadInvoicesXlsx = async (ids: number[], fileName: string) => {
 const AccountingInvoices: React.FC = () => {
   const { shouldShow } = useDynamicPermissions();
   const navigate = useNavigate();
+
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'invoices_list', screen_name: 'AccountingInvoices' });
+  }, []);
   const [bills, setBills] = useState<LockAccountBill[]>([]);
   const [summary, setSummary] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -336,11 +341,6 @@ const AccountingInvoices: React.FC = () => {
   ];
 
   const handleApplyFilters = (filters: AccountingInvoiceFilters) => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'invoices_list', screen_name: 'AccountingInvoices' });
-  }, []);
-
     setAppliedFilters(filters);
     setCurrentPage(1);
     setSelectedIds([]);
@@ -591,7 +591,12 @@ const AccountingInvoices: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
-     
+      <style>{`
+        html body #root button.accounting-raise-invoices-button:has(> svg.lucide-send) > svg.lucide-send {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+      `}</style>
 
       <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => {
@@ -599,16 +604,19 @@ const AccountingInvoices: React.FC = () => {
           return (
             <div
               key={card.label}
-              className="flex items-center gap-3 rounded-lg bg-brand-bg p-4 shadow-brand-card transition-shadow hover:shadow-system-md"
+              className="flex items-center gap-3 rounded-lg bg-[#F6F4EE] p-4 shadow-[0px_1px_8px_rgba(45,45,45,0.05)] transition-shadow hover:shadow-lg"
             >
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center bg-brand-light">
-                <Icon className="h-5 w-5 text-brand" />
+              <div
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center"
+                style={{ backgroundColor: "rgba(196, 184, 157, 0.33)" }}
+              >
+                <Icon className="h-5 w-5" style={{ color: "#C72030" }} />
               </div>
               <div className="min-w-0">
-                <div className="truncate text-xl font-semibold text-brand-text">
+                <div className="truncate text-xl font-semibold" style={{ color: "#1A1A1A" }}>
                   {card.value}
                 </div>
-                <div className="truncate text-xs font-medium text-brand-text">
+                <div className="truncate text-xs font-medium leading-tight" style={{ color: "#1A1A1A" }}>
                   {card.label}
                 </div>
               </div>
@@ -620,28 +628,28 @@ const AccountingInvoices: React.FC = () => {
       <div className="mb-4 flex flex-wrap gap-3">
 
         <Button
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          className="!rounded-lg bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
           onClick={() => handleSelectAll(!allSelected)}
           disabled={selectAllLoading}
         >
           <CheckSquare className="mr-2 h-4 w-4" /> {selectAllLoading ? "Selecting..." : "Select All"}
         </Button>
         <Button
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          className="!rounded-lg bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
           onClick={handleExport}
         >
           <Download className="mr-2 h-4 w-4" /> Export
         </Button>
         <Button
-          className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+          className="!rounded-lg bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
           onClick={handleExportAll}
         >
           <FileSpreadsheet className="mr-2 h-4 w-4" /> Export All
         </Button>
-        <Button className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium" onClick={handleRaiseInvoices}>
+        <Button className="accounting-raise-invoices-button !rounded-lg bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium" onClick={handleRaiseInvoices}>
           <Send className="mr-2 h-4 w-4" /> Raise Invoices
         </Button>
-        <Button className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium" onClick={handleRemind}>
+        <Button className="!rounded-lg bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium" onClick={handleRemind}>
           Remind
         </Button>
       </div>
@@ -671,7 +679,7 @@ const AccountingInvoices: React.FC = () => {
         leftActions={
           shouldShow("Invoices", "create") && (
             <Button
-              className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+              className="!rounded-lg bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
               onClick={() => navigate("/accounting/invoice-creation")}
             >
               <Plus className="mr-2 h-4 w-4" /> Add

@@ -429,7 +429,7 @@ export const FitoutCategoryRateTab: React.FC = () => {
   }, [categories, startIndex]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div>
       <EnhancedTable
         data={paginatedRates}
         columns={columns}

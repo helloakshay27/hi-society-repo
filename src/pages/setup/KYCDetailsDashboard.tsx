@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { TextField } from "@mui/material";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Eye, X } from "lucide-react";
+import { Plus, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -32,6 +32,31 @@ interface KYCDetail {
   userEmail: string;
   userMobile: string;
 }
+
+
+// Field styles for Material-UI components (same as AddTicketDashboard)
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
 
 export const KYCDetailsDashboard = () => {
   const { shouldShow } = useDynamicPermissions();
@@ -394,64 +419,53 @@ export const KYCDetailsDashboard = () => {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Add KYC Detail</DialogTitle>
-            <button
-              onClick={() => {
-                setShowAddDialog(false);
-                setFormData({ userName: "", userEmail: "", userMobile: "" });
-              }}
-              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </button>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#C72030]">
-              <legend className="px-1 text-gray-500 font-medium text-sm">
-                User Name <span className="text-red-500">*</span>
-              </legend>
-              <Input
-                id="userName"
-                placeholder="Enter User Name"
-                value={formData.userName}
-                onChange={(e) =>
-                  setFormData({ ...formData, userName: e.target.value })
-                }
-                className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-              />
-            </fieldset>
-            <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#C72030]">
-              <legend className="px-1 text-gray-500 font-medium text-sm">
-                User Email <span className="text-red-500">*</span>
-              </legend>
-              <Input
-                id="userEmail"
-                type="email"
-                placeholder="Enter User Email"
-                value={formData.userEmail}
-                onChange={(e) =>
-                  setFormData({ ...formData, userEmail: e.target.value })
-                }
-                className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-              />
-            </fieldset>
-            <fieldset className="border border-[#ddd] rounded px-3 pb-1 pt-0 focus-within:border-[#C72030]">
-              <legend className="px-1 text-gray-500 font-medium text-sm">
-                User Mobile <span className="text-red-500">*</span>
-              </legend>
-              <Input
-                id="userMobile"
-                type="tel"
-                placeholder="Enter User Mobile"
-                value={formData.userMobile}
-                maxLength={10}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  setFormData({ ...formData, userMobile: val });
-                }}
-                className="h-9 border-0 shadow-none px-0 focus-visible:ring-0 focus-visible:outline-none"
-              />
-            </fieldset>
+          <div className="space-y-5 py-4">
+            <TextField
+              id="userName"
+              label="User Name"
+              required
+              placeholder="Enter User Name"
+              value={formData.userName}
+              onChange={(e) =>
+                setFormData({ ...formData, userName: e.target.value })
+              }
+              fullWidth
+              variant="outlined"
+              slotProps={{ inputLabel: { shrink: true } }}
+              InputProps={{ sx: fieldStyles }}
+            />
+            <TextField
+              id="userEmail"
+              type="email"
+              label="User Email"
+              required
+              placeholder="Enter User Email"
+              value={formData.userEmail}
+              onChange={(e) =>
+                setFormData({ ...formData, userEmail: e.target.value })
+              }
+              fullWidth
+              variant="outlined"
+              slotProps={{ inputLabel: { shrink: true } }}
+              InputProps={{ sx: fieldStyles }}
+            />
+            <TextField
+              id="userMobile"
+              type="tel"
+              label="User Mobile"
+              required
+              placeholder="Enter User Mobile"
+              value={formData.userMobile}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                setFormData({ ...formData, userMobile: val });
+              }}
+              fullWidth
+              variant="outlined"
+              slotProps={{ inputLabel: { shrink: true }, htmlInput: { maxLength: 10 } }}
+              InputProps={{ sx: fieldStyles }}
+            />
           </div>
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button

@@ -9,6 +9,7 @@ import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
+import { Switch } from "@/components/ui/switch";
 interface Project {
   id: number;
   project_name: string;
@@ -354,35 +355,13 @@ const ProjectDetailsList = () => {
       case 'published':
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleTogglePublished(item.id, item.published)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                item.published ? "bg-[#C72030]" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  item.published ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch checked={!!(item.published)} onCheckedChange={() => handleTogglePublished(item.id, item.published)} />
           </div>
         );
       case 'show_on_home':
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleToggleShowOnHome(item.id, item.show_on_home)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                item.show_on_home ? "bg-[#C72030]" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  item.show_on_home ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch checked={!!(item.show_on_home)} onCheckedChange={() => handleToggleShowOnHome(item.id, item.show_on_home)} />
           </div>
         );
       case 'configurations':

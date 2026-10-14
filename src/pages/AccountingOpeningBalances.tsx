@@ -3,7 +3,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -32,6 +32,11 @@ const formatAmount = (value: number) =>
 const AccountingOpeningBalances: React.FC = () => {
   const { shouldShow } = useDynamicPermissions();
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
+
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'opening_balances', screen_name: 'AccountingOpeningBalances' });
+  }, []);
 
   const [date, setDate] = useState("");
   const [ledgers, setLedgers] = useState<LedgerOption[]>([]);
@@ -104,11 +109,6 @@ const AccountingOpeningBalances: React.FC = () => {
   );
 
   const handleValueChange = (ledgerId: number, field: "debit" | "credit", value: string) => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'opening_balances', screen_name: 'AccountingOpeningBalances' });
-  }, []);
-
     if (value.startsWith("-")) return;
     if (value !== "" && Number.isNaN(Number(value))) return;
     setValues((prev) => ({
@@ -207,7 +207,7 @@ const AccountingOpeningBalances: React.FC = () => {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Opening Balance</h1>
 
       {/* Opening Balance Date Section */}
-      <div className="bg-white rounded-lg border-2 p-6 space-y-6 mb-6">
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 space-y-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
             <CalendarDays className="w-6 h-6" />
@@ -217,7 +217,7 @@ const AccountingOpeningBalances: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Opening Balance Date <span className="text-[#da7756]">*</span>
+              Opening Balance Date <span className="text-black">*</span>
             </label>
             <Input
               type="date"
@@ -230,7 +230,7 @@ const AccountingOpeningBalances: React.FC = () => {
       </div>
 
       {/* Accounts Section */}
-      <div className="bg-white rounded-lg border-2 p-6 space-y-4 mb-6">
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 space-y-4 mb-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
             <Wallet className="w-6 h-6" />
@@ -283,7 +283,7 @@ const AccountingOpeningBalances: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsAddingAccount(true)}
-                className="flex items-center gap-1 text-sm text-[#C72030] hover:text-[#A01020] font-medium"
+                className="flex items-center gap-1  font-medium"
               >
                 <Plus className="h-3.5 w-3.5" /> New Account
               </button>
@@ -298,11 +298,11 @@ const AccountingOpeningBalances: React.FC = () => {
 
           <div className="py-2 px-3 border-b border-gray-200">
             <div className="flex items-center text-sm">
-              <div className="flex-1 text-[#da7756] font-medium">Opening Balance Adjustments</div>
-              <div className="w-40 text-right pr-2 text-[#da7756]">
+              <div className="flex-1 text-gray-900 font-medium">Opening Balance Adjustments</div>
+              <div className="w-40 text-right pr-2 text-gray-900">
                 {!adjustmentOnCreditSide ? formatAmount(adjustment) : ""}
               </div>
-              <div className="w-40 text-right text-[#da7756]">
+              <div className="w-40 text-right text-gray-900">
                 {adjustmentOnCreditSide ? formatAmount(adjustment) : ""}
               </div>
             </div>
@@ -323,22 +323,21 @@ const AccountingOpeningBalances: React.FC = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-5 mt-5 mb-5 justify-center">
+      <div className="flex gap-3 pt-5 mt-5 mb-5 justify-end">
+        <Button
+          onClick={handleCancel}
+          disabled={submitting}
+          className="min-w-[100px] !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
+        >
+          Cancel
+        </Button>
         <Button
           onClick={handleContinue}
           disabled={submitting || loading}
 variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"     
+           className="btn-primary h-9 px-4 text-sm font-medium"
               >
           {submitting ? "Submitting..." : "Continue"}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={handleCancel}
-          disabled={submitting}
-          className="min-w-[100px]"
-        >
-          Cancel
         </Button>
       </div>
 
@@ -353,7 +352,9 @@ variant="ghost"
       >
         <DialogContent className="sm:max-w-lg overflow-hidden p-0 [&>button]:hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">New Account</h2>
+            <DialogTitle asChild>
+              <h2 className="text-lg font-medium text-gray-900">New Account</h2>
+            </DialogTitle>
             <Button
               variant="ghost"
               size="sm"
@@ -385,22 +386,22 @@ variant="ghost"
             </div>
           </div>
 
-          <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
-            <Button
-              onClick={handleAddAccount}
-              disabled={!newAccountId}
-              className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
-            >
-              Add
-            </Button>
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
             <Button
               onClick={() => {
                 setIsAddingAccount(false);
                 setNewAccountId("");
               }}
-              className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] h-10"
+              className="px-6 sm:px-8 w-full sm:w-auto h-10 !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
             >
               Cancel
+            </Button>
+            <Button
+              onClick={handleAddAccount}
+              disabled={!newAccountId}
+              className="px-6 sm:px-8 w-full sm:w-auto h-10 !rounded-lg !border !border-[#1A1A18] !bg-[#1A1A18] !text-white hover:!bg-[#12100E] disabled:!opacity-100"
+            >
+              Add
             </Button>
           </div>
         </DialogContent>

@@ -282,7 +282,8 @@ variant="ghost"
   );
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">Pricing Rules</h1>
       <div className="space-y-6">
         <EnhancedTable
           storageKey="pricing-rule-list-table"

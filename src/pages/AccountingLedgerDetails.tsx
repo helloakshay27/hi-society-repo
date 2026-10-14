@@ -72,6 +72,11 @@ const AccountingLedgerDetails: React.FC = () => {
   const navigate = useNavigate();
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'ledger_details', screen_name: 'AccountingLedgerDetails' });
+  }, []);
+
   const [ledger, setLedger] = useState<LedgerDetailAPI | null>(null);
   const [records, setRecords] = useState<TransactionRecordAPI[]>([]);
   const [fromDate, setFromDate] = useState("");
@@ -119,11 +124,6 @@ const AccountingLedgerDetails: React.FC = () => {
   }, [ledgerId]);
 
   const handleSubmit = () => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'ledger_details', screen_name: 'AccountingLedgerDetails' });
-  }, []);
-
     fetchLedgerDetail(fromDate, toDate);
   };
 

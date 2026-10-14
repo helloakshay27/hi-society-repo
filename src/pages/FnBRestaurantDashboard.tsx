@@ -8,6 +8,7 @@ import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 
+import { Switch } from "@/components/ui/switch";
 interface DaySchedule {
   is_open: number;
   dayofweek: string;
@@ -195,12 +196,7 @@ export const FnBRestaurantDashboard = () => {
     if (columnKey === 'booking_allowed') {
       return (
         <div className="flex items-center justify-center">
-          <div
-            className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${item.booking_allowed ? "bg-green-500" : "bg-gray-300"}`}
-            onClick={() => toggleBookingAllowed(item.id)}
-          >
-            <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${item.booking_allowed ? "translate-x-6" : "translate-x-1"}`} />
-          </div>
+          <Switch checked={!!(item.booking_allowed)} onCheckedChange={() => toggleBookingAllowed(item.id)} />
         </div>
       );
     }
@@ -208,12 +204,7 @@ export const FnBRestaurantDashboard = () => {
     if (columnKey === 'can_order') {
       return (
         <div className="flex items-center justify-center">
-          <div
-            className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${item.can_order ? "bg-green-500" : "bg-gray-300"}`}
-            onClick={() => toggleOrderAllowed(item.id)}
-          >
-            <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${item.can_order ? "translate-x-6" : "translate-x-1"}`} />
-          </div>
+          <Switch checked={!!(item.can_order)} onCheckedChange={() => toggleOrderAllowed(item.id)} />
         </div>
       );
     }
@@ -221,12 +212,7 @@ export const FnBRestaurantDashboard = () => {
     if (columnKey === 'status') {
       return (
         <div className="flex items-center justify-center">
-          <div
-            className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${item.status ? "bg-green-500" : "bg-gray-300"}`}
-            onClick={() => toggleActive(item.id)}
-          >
-            <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${item.status ? "translate-x-6" : "translate-x-1"}`} />
-          </div>
+          <Switch checked={!!(item.status)} onCheckedChange={() => toggleActive(item.id)} />
         </div>
       );
     }

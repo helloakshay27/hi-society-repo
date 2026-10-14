@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { countries } from "country-data";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { User as UserIcon, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile, Upload, Video, Check, ShieldCheck, ShieldAlert } from "lucide-react";
+import { User as UserIcon, ArrowLeft, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile, Upload, Video, Check, ShieldCheck, ShieldAlert } from "lucide-react";
 import {
   Box,
   Paper,
@@ -28,8 +28,9 @@ import { toast } from "sonner";
 // Styled Components
 const SectionCard = styled(Paper)(({ theme }) => ({
   backgroundColor: 'white',
-  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-  borderRadius: 0,
+  boxShadow: 'none',
+  border: '1px solid rgba(26,26,24,.09)',
+  borderRadius: '16px',
   overflow: 'hidden',
   marginBottom: '24px',
 }));
@@ -38,52 +39,7 @@ const SectionHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: '12px',
-  padding: '16px 24px',
-  backgroundColor: '#f9fafb',
-  borderBottom: '1px solid #e5e7eb',
-}));
-
-const RedIcon = styled(Box)(({ theme }) => ({
-  color: 'white',
-  backgroundColor: '#da7756',
-  borderRadius: '50%',
-  padding: '8px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '32px',
-  height: '32px',
-}));
-
-const RedButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: '#DA7756 !important',
-  color: 'white !important',
-  borderRadius: 0,
-  textTransform: 'none',
-  padding: '8px 16px',
-  fontFamily: 'Work Sans, sans-serif',
-  fontWeight: 500,
-  boxShadow: 'none',
-  '&:hover': {
-    opacity: 1,
-  },
-  '&.Mui-disabled': {
-    backgroundColor: '#e3ae9f !important',
-    color: 'white !important',
-  }
-}));
-
-const DraftButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: '#e7e3d9',
-  color: '#C72030',
-  borderRadius: 0,
-  textTransform: 'none',
-  padding: '8px 16px',
-  fontFamily: 'Work Sans, sans-serif',
-  fontWeight: 500,
-  '&:hover': {
-    backgroundColor: '#d9d5c9',
-  },
+  padding: '22px 24px 0',
 }));
 
 const fieldStyles = {
@@ -94,42 +50,42 @@ const fieldStyles = {
       borderColor: '#ddd',
     },
     '&:hover fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#1A1A18',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#C72030',
+      borderColor: '#1A1A18',
     },
   },
   '& .MuiInputLabel-root': {
     fontSize: '14px',
     '&.Mui-focused': {
-      color: '#C72030',
+      color: '#1A1A18',
     },
   },
   '& .MuiFormLabel-asterisk': {
-    color: '#da7756',
+    color: '#1A1A18',
   },
 };
 
 const ProfileAvatar = styled(Avatar)(({ theme }) => ({
   width: 128,
   height: 128,
-  backgroundColor: '#fff',
+  backgroundColor: '#F5F4F0',
   fontSize: '48px',
-  color: '#da7756',
-  border: '2px solid #da7756',
+  color: '#1A1A18',
+  border: '1px solid rgba(26,26,24,.09)',
 }));
 
 const CameraButton = styled(IconButton)(({ theme }) => ({
   position: 'absolute',
   bottom: 0,
   right: 0,
-  backgroundColor: '#C72030',
+  backgroundColor: '#1A1A18',
   color: 'white',
   width: '32px',
   height: '32px',
   '&:hover': {
-    backgroundColor: '#a01828',
+    backgroundColor: '#12100E',
   },
 }));
 
@@ -700,47 +656,38 @@ export const AddUserPage = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        backgroundColor: '#fafafa',
+        backgroundColor: '#FDFDFB',
         padding: '24px',
-        fontFamily: 'Work Sans, sans-serif',
       }}
     >
-      <Box sx={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <Box>
         {/* Header */}
-        <Paper
-          sx={{
-            backgroundColor: 'white',
-            borderRadius: 0,
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-            marginBottom: '24px',
-            padding: '16px 24px',
-          }}
-        >
-          <h1
-            style={{
-              fontSize: '24px',
-              fontWeight: 600,
-              color: '#1A1A1A',
-              margin: 0,
-              fontFamily: 'Work Sans, sans-serif',
-            }}
+        <div className="mb-8 flex items-center">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
           >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900">
             {isEdit ? "Edit User" : "Add User"}
           </h1>
-        </Paper>
+        </div>
         {/* Primary Details Section */}
         <SectionCard>
           <SectionHeader>
-            <RedIcon>
-              <UserIcon size={16} />
-            </RedIcon>
+            <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+              <UserIcon size={14} color="#1A1A18" />
+            </span>
             <h2
               style={{
-                fontSize: '18px',
+                fontSize: '14px',
                 fontWeight: 600,
-                color: '#1A1A1A',
+                lineHeight: 1.4,
+                color: '#1A1A18',
                 margin: 0,
-                fontFamily: 'Work Sans, sans-serif',
               }}
             >
               Primary Details
@@ -778,12 +725,12 @@ export const AddUserPage = () => {
                         position: 'absolute',
                         top: '-8px',
                         left: '-8px',
-                        backgroundColor: '#C72030',
+                        backgroundColor: '#1A1A18',
                         color: 'white',
                         width: '24px',
                         height: '24px',
                         '&:hover': {
-                          backgroundColor: '#a01828',
+                          backgroundColor: '#12100E',
                         },
                       }}
                       onClick={() => {
@@ -804,11 +751,11 @@ export const AddUserPage = () => {
                     title="Capture from camera"
                     onClick={handleOpenCamera}
                     sx={{
-                      backgroundColor: '#da7756',
+                      backgroundColor: '#1A1A18',
                       color: 'white',
                       width: '36px',
                       height: '36px',
-                      '&:hover': { backgroundColor: '#c06548' },
+                      '&:hover': { backgroundColor: '#12100E' },
                     }}
                   >
                     <Video size={18} />
@@ -821,11 +768,11 @@ export const AddUserPage = () => {
                       input?.click();
                     }}
                     sx={{
-                      backgroundColor: '#da7756',
+                      backgroundColor: '#1A1A18',
                       color: 'white',
                       width: '36px',
                       height: '36px',
-                      '&:hover': { backgroundColor: '#c06548' },
+                      '&:hover': { backgroundColor: '#12100E' },
                     }}
                   >
                     <Upload size={18} />
@@ -898,10 +845,10 @@ export const AddUserPage = () => {
                       onClick={handleCapturePhoto}
                       disabled={!cameraStream || !isVideoReady}
                       sx={{
-                        backgroundColor: '#C72030',
-                        borderRadius: '20px',
+                        backgroundColor: '#1A1A18',
+                        borderRadius: '8px',
                         textTransform: 'none',
-                        '&:hover': { backgroundColor: '#a01828' },
+                        '&:hover': { backgroundColor: '#12100E' },
                         '&.Mui-disabled': { backgroundColor: '#e5e7eb' },
                       }}
                     >
@@ -911,7 +858,7 @@ export const AddUserPage = () => {
                       fullWidth
                       variant="outlined"
                       onClick={closeCameraModal}
-                      sx={{ borderRadius: '20px', textTransform: 'none' }}
+                      sx={{ borderRadius: '8px', textTransform: 'none', borderColor: 'rgba(26,26,24,.08)', color: 'rgba(26,26,24,.68)' }}
                     >
                       Close
                     </MuiButton>
@@ -1168,7 +1115,7 @@ export const AddUserPage = () => {
                     id="alternate-address"
                     value={formData.alternateAddress}
                     onChange={(e) => handleInputChange('alternateAddress', e.target.value)}
-                    className="w-full px-4 py-3 border border-[#D5DbDB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:border-transparent resize-vertical"
+                    className="w-full px-4 py-3 border border-[#D5DbDB] rounded-lg focus:outline-none focus:border-[#D97757] resize-vertical"
                     placeholder="Enter alternate address"
                     rows={3}
                   />
@@ -1500,16 +1447,16 @@ export const AddUserPage = () => {
         {/* Additional Info Section */}
         <SectionCard>
           <SectionHeader>
-            <RedIcon>
-              <Info size={16} />
-            </RedIcon>
+            <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+              <Info size={14} color="#1A1A18" />
+            </span>
             <h2
               style={{
-                fontSize: '18px',
+                fontSize: '14px',
                 fontWeight: 600,
-                color: '#1A1A1A',
+                lineHeight: 1.4,
+                color: '#1A1A18',
                 margin: 0,
-                fontFamily: 'Work Sans, sans-serif',
               }}
             >
               Additional Info
@@ -1691,25 +1638,27 @@ export const AddUserPage = () => {
             </Box>
           </Box>
 
-          {/* Submit Button */}
-          <Box
-            sx={{
-              borderTop: '1px solid #e5e7eb',
-              padding: '16px 24px',
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 2,
-            }}
-          >
-            <RedButton onClick={handleSubmit} disabled={loading}>
-              {loading ? (isEdit ? "Saving..." : "Submitting...") : (isEdit ? "Save" : "Submit")}
-            </RedButton>
-            <DraftButton
-             onClick={handleCancel}
-             variant="outlined"
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]  h-10"             disabled={loading}>Cancel</DraftButton>
-          </Box>
         </SectionCard>
+
+        {/* Submit Button */}
+        <div className="flex justify-end gap-3 pb-8">
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={loading}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+          >
+            {loading ? (isEdit ? "Saving..." : "Submitting...") : (isEdit ? "Save" : "Submit")}
+          </button>
+        </div>
       </Box>
     </Box>
   );

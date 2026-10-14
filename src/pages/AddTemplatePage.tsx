@@ -5,81 +5,14 @@ import {
     Box,
     Typography,
     TextField,
-    Paper,
-    Button as MuiButton,
     Select,
     MenuItem,
     FormControl,
     InputLabel,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import axios from 'axios';
 import { getFullUrl } from '@/config/apiConfig';
-
-const SectionCard = styled(Paper)(() => ({
-    backgroundColor: 'white',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-    borderRadius: '8px',
-    overflow: 'hidden',
-    marginBottom: '24px',
-    border: '1px solid #E5E5E5',
-}));
-
-const SectionBody = styled(Box)(() => ({
-    backgroundColor: '#FAFAF8',
-    padding: '24px',
-}));
-
-const SectionHeader = styled(Box)(() => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '12px',
-    backgroundColor: '#F6F4EE',
-    padding: '12px 16px',
-    border: '1px solid #D9D9D9',
-}));
-
-const IconWrapper = styled(Box)(() => ({
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E5E0D3',
-}));
-
-const RedButton = styled(MuiButton)(() => ({
-    backgroundColor: '#DA7756 !important',
-    color: 'white !important',
-    borderRadius: 0,
-    textTransform: 'none',
-    padding: '8px 16px',
-    fontFamily: 'Work Sans, sans-serif',
-    fontWeight: 500,
-    '&:hover': {
-      
-        opacity: 1,
-    },
-    '&.Mui-disabled': {
-        backgroundColor: '#e0a0a5 !important',
-        color: 'white !important',
-    },
-}));
-
-const CancelButton = styled(MuiButton)(() => ({
-    backgroundColor: '#e7e3d9',
-    color: '#C72030',
-    borderRadius: 0,
-    textTransform: 'none',
-    padding: '8px 16px',
-    fontFamily: 'Work Sans, sans-serif',
-    fontWeight: 500,
-    '&:hover': {
-        backgroundColor: '#e7e3d9',
-    },
-}));
+import { ArrowLeft, FileText } from 'lucide-react';
 
 const fieldStyles = {
     backgroundColor: '#fff',
@@ -90,20 +23,20 @@ const fieldStyles = {
             borderColor: '#ddd',
         },
         '&:hover fieldset': {
-            borderColor: '#C72030',
+            borderColor: '#1A1A18',
         },
         '&.Mui-focused fieldset': {
-            borderColor: '#C72030',
+            borderColor: '#1A1A18',
         },
     },
     '& .MuiInputLabel-root': {
         fontSize: '14px',
         '&.Mui-focused': {
-            color: '#C72030',
+            color: '#1A1A18',
         },
     },
     '& .MuiFormLabel-asterisk': {
-        color: '#da7756',
+        color: '#1A1A18',
     },
     '& .MuiInputBase-input': {
         fontSize: '14px',
@@ -246,98 +179,85 @@ export default function AddTemplatePage() {
     }
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+        <div className="p-6 bg-[#FDFDFB] min-h-screen">
 
-            {/* Breadcrumb */}
-            <Typography variant="body2" sx={{ mb: 3, color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
-                Template &gt; {isEditMode ? 'Edit' : 'Create'}
-            </Typography>
+            {/* Header */}
+            <div className="mb-8">
+                <div className="flex items-center text-sm text-gray-600 mb-2">
+                    <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+                        aria-label="Go back"
+                    >
+                        <ArrowLeft className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <span>Template</span>
+                    <span className="mx-2">{">"}</span>
+                    <span className="text-gray-900 font-medium">{isEditMode ? 'Edit' : 'Create'}</span>
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900">{isEditMode ? 'Edit Template' : 'Create Template'}</h1>
+            </div>
 
-            {/* Template Form */}
-            <SectionCard>
-                <SectionHeader>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <IconWrapper>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                                <line x1="16" y1="13" x2="8" y2="13" />
-                                <line x1="16" y1="17" x2="8" y2="17" />
-                                <polyline points="10 9 9 9 8 9" />
-                            </svg>
-                        </IconWrapper>
-                        <Typography variant="h6" sx={{ fontWeight: 600, fontFamily: 'Work Sans, sans-serif', textTransform: 'uppercase', fontSize: '18px' }}>
-                            Template
-                        </Typography>
-                    </Box>
-                </SectionHeader>
-                <SectionBody>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-                        <TextField
-                            label="Title"
-                            required
-                            value={formData.title}
-                            onChange={(e) => handleInputChange('title', e.target.value)}
-                            placeholder="Enter Title"
-                            sx={fieldStyles}
-                            fullWidth
-                        />
-                        <FormControl fullWidth sx={fieldStyles}>
-                            <InputLabel id="status-label">Status</InputLabel>
-                            <Select
-                                labelId="status-label"
-                                value={formData.status}
-                                label="Status"
-                                onChange={(e) => handleInputChange('status', e.target.value)}
+            <div className="space-y-6">
+                {/* Template Form */}
+                <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+                    <div className="px-6 pt-[22px]">
+                        <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+                            <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                                <FileText size={14} color="#1A1A18" />
+                            </span>
+                            Template Details
+                        </h2>
+                    </div>
+                    <div className="p-6 space-y-6">
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                            <TextField
+                                label="Title"
+                                required
+                                value={formData.title}
+                                onChange={(e) => handleInputChange('title', e.target.value)}
+                                placeholder="Enter Title"
+                                sx={fieldStyles}
+                                fullWidth
+                            />
+                            <FormControl fullWidth sx={fieldStyles}>
+                                <InputLabel id="status-label">Status</InputLabel>
+                                <Select
+                                    labelId="status-label"
+                                    value={formData.status}
+                                    label="Status"
+                                    onChange={(e) => handleInputChange('status', e.target.value)}
+                                >
+                                    <MenuItem value="Active">Active</MenuItem>
+                                    <MenuItem value="Inactive">Inactive</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Box>
+
+                        <div className="relative pt-2">
+                            <label
+                                htmlFor="template-description"
+                                className="absolute top-0 left-3 bg-white px-1 text-xs text-[rgba(0,0,0,0.6)]"
                             >
-                                <MenuItem value="Active">Active</MenuItem>
-                                <MenuItem value="Inactive">Inactive</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Box>
-                    <Box sx={{ mt: 3, width: "100%" }}>
-                          <TextField
-                           label="Description"
-                            required={!formData.externalUrl}
-                            value={formData.description}
-                            onChange={(e) =>
-                        handleInputChange("description", e.target.value)
-                    }
-                    placeholder="Enter Description"
-                    fullWidth
-                    multiline
-                    minRows={6}
-                    maxRows={12}
-                    sx={{
-                          ...fieldStyles,
+                                Description{!formData.externalUrl && <span className="text-[#1A1A18]"> *</span>}
+                            </label>
+                            <textarea
+                                id="template-description"
+                                placeholder="Enter Description"
+                                value={formData.description}
+                                onChange={(e) => handleInputChange('description', e.target.value)}
+                                rows={6}
+                                className="block w-full px-[14px] py-4 text-sm border border-[#ddd] rounded hover:border-[#1A1A18] focus:outline-none focus:border-[#1A1A18] resize-y"
+                            />
+                        </div>
 
-                        "& .MuiOutlinedInput-root": {
-                         alignItems: "flex-start", // 🔑 VERY IMPORTANT
+                        <div className="flex items-center gap-4">
+                            <div className="h-px flex-1 bg-[rgba(26,26,24,.09)]" />
+                            <span className="text-sm text-gray-500">Or</span>
+                            <div className="h-px flex-1 bg-[rgba(26,26,24,.09)]" />
+                        </div>
 
-                         "& textarea": {
-                         resize: "vertical",
-                         overflow: "hidden", // 🔑 remove middle scrollbar
-                         padding: "16.5px 14px",
-                      },
-
-                        "& fieldset": {
-                        borderColor: "#ddd",
-                     },
-                         "&.Mui-focused fieldset": {
-                        borderColor: "#C72030",
-                     },
-                   },
-                 }}
-                 />
-            </Box>
-
-                       
-                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        <Typography variant="body2" sx={{ color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
-                            Or
-                        </Typography>
-                    </Box>
-                    <Box sx={{ mt: 3 }}>
                         <TextField
                             label="External URL"
                             value={formData.externalUrl}
@@ -346,22 +266,29 @@ export default function AddTemplatePage() {
                             sx={fieldStyles}
                             fullWidth
                         />
-                    </Box>
-                </SectionBody>
-            </SectionCard>
+                    </div>
+                </div>
 
-            {/* Action Buttons */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
-                <RedButton onClick={handleSubmit} disabled={submitting}>
-                    {submitting ? 'Submitting...' : 'Submit'}
-                </RedButton>
-                <CancelButton 
-                variant="outlined"
-                 className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"
-                onClick={handleCancel} disabled={submitting}>
-                    Cancel
-                </CancelButton>
-            </Box>
-        </Box>
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 pb-8">
+                    <button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={submitting}
+                        className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                        className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+                    >
+                        {submitting ? 'Submitting...' : 'Submit'}
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Wallet, AlertCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowLeft, Wallet, AlertCircle, TrendingUp, TrendingDown, History } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
@@ -568,18 +568,18 @@ const WalletTopup: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f4ee] p-6">
+    <div className="min-h-screen bg-[#FDFDFB] p-6">
       <div className="mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             onClick={() => navigate(-1)}
-            className="hover:bg-[#DBC2A9]"
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors"
+            aria-label="Go back"
           >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
           <div>
             <h1 className="text-2xl font-bold text-[#1a1a1a]">
               Wallet Management
@@ -591,10 +591,12 @@ const WalletTopup: React.FC = () => {
         </div>
 
         {/* Organization Selection */}
-        <Card className="border-[#e5e1d8] mb-6">
-          <CardHeader className="bg-gradient-to-r from-[#f6f4ee] to-[#e5e1d8]">
-            <CardTitle className="flex items-center gap-2 text-[#1a1a1a]">
-              <Wallet className="h-5 w-5" />
+        <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none mb-6">
+          <CardHeader className="pt-[22px]">
+            <CardTitle className="flex items-center gap-3 text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                <Wallet size={14} color="#1A1A18" />
+              </span>
               Select Organization
             </CardTitle>
           </CardHeader>
@@ -656,15 +658,15 @@ const WalletTopup: React.FC = () => {
         {selectedOrgId && walletData && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {/* ...existing code... */}
-            <Card className="border-[#e5e1d8] bg-gradient-to-br from-green-50 to-green-100">
+            <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-green-200 flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-green-600" />
+                  <div className="w-12 h-12 rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-[#1A1A18]" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Total Credited</p>
-                    <p className="text-2xl font-bold text-green-700">
+                    <p className="text-2xl font-bold text-[#798c5e]">
                       ₹{new Intl.NumberFormat("en-IN", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -674,15 +676,15 @@ const WalletTopup: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-[#e5e1d8] bg-gradient-to-br from-red-50 to-red-100">
+            <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-red-200 flex items-center justify-center">
-                    <TrendingDown className="w-6 h-6 text-red-600" />
+                  <div className="w-12 h-12 rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                    <TrendingDown className="w-6 h-6 text-[#1A1A18]" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Total Debited</p>
-                    <p className="text-2xl font-bold text-red-700">
+                    <p className="text-2xl font-bold text-[#C4574F]">
                       ₹{new Intl.NumberFormat("en-IN", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -692,15 +694,15 @@ const WalletTopup: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-[#e5e1d8] bg-gradient-to-br from-blue-50 to-blue-100">
+            <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-blue-200 flex items-center justify-center">
-                    <Wallet className="w-6 h-6 text-blue-600" />
+                  <div className="w-12 h-12 rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                    <Wallet className="w-6 h-6 text-[#1A1A18]" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Available Balance</p>
-                    <p className="text-2xl font-bold text-blue-700">
+                    <p className="text-2xl font-bold text-[#1A1A18]">
                       ₹{new Intl.NumberFormat("en-IN", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -715,10 +717,13 @@ const WalletTopup: React.FC = () => {
 
         {/* Transactions Table */}
         {selectedOrgId && (
-          <Card className="border-[#e5e1d8] mb-6">
-            <CardHeader className="bg-gradient-to-r from-[#f6f4ee] to-[#e5e1d8] pb-0">
+          <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none mb-6">
+            <CardHeader className="pt-[22px] pb-0">
               <div className="flex items-center justify-between w-full">
-                <CardTitle className="flex items-center gap-2 text-[#1a1a1a]">
+                <CardTitle className="flex items-center gap-3 text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                    <History size={14} color="#1A1A18" />
+                  </span>
                   Transaction History
                 </CardTitle>
                 <MuiFormControl
@@ -791,10 +796,12 @@ const WalletTopup: React.FC = () => {
 
         {/* Top-up Form */}
         {selectedOrgId && (
-          <Card className="border-[#e5e1d8]">
-            <CardHeader className="bg-gradient-to-r from-[#f6f4ee] to-[#e5e1d8]">
-              <CardTitle className="flex items-center gap-2 text-[#1a1a1a]">
-                <Wallet className="h-5 w-5" />
+          <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
+            <CardHeader className="pt-[22px]">
+              <CardTitle className="flex items-center gap-3 text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                <Wallet size={14} color="#1A1A18" />
+              </span>
                 Add Wallet Credit
               </CardTitle>
             </CardHeader>
@@ -861,11 +868,11 @@ const WalletTopup: React.FC = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-4 pt-4">
-                  <Button
+                <div className="flex justify-end gap-3 pt-4">
+                  <button
                     type="submit"
                     disabled={loading}
-                    className="bg-[#C72030] hover:bg-[#A01828] text-white"
+                    className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                   >
                     {loading ? (
                       <>
@@ -875,7 +882,7 @@ const WalletTopup: React.FC = () => {
                     ) : (
                       "Top Up"
                     )}
-                  </Button>
+                  </button>
                 </div>
               </form>
             </CardContent>

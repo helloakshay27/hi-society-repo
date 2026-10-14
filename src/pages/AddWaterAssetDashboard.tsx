@@ -31,6 +31,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
+import { Switch } from "@/components/ui/switch";
 function AddWaterAssetDashboard() {
   // Asset Meter Type ID mapping based on database values (copied from AddAssetPage)
   const getAssetMeterTypeId = (meterCategory, subCategory = null, tertiaryCategory = null) => {
@@ -1610,21 +1611,7 @@ function AddWaterAssetDashboard() {
                       </span>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">If Applicable</span>
-                        <div className="relative inline-block w-12 h-6">
-                          <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            id="meter-details-toggle"
-                            checked={meterDetailsToggle}
-                            onChange={e => handleMeterDetailsToggleChange(e.target.checked)}
-                          />
-                          <label
-                            htmlFor="meter-details-toggle"
-                            className={`block w-12 h-6 rounded-full cursor-pointer transition-colors ${meterDetailsToggle ? 'bg-green-400' : 'bg-gray-300'}`}
-                          >
-                            <span className={`block w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${meterDetailsToggle ? 'translate-x-6' : 'translate-x-1'}`}></span>
-                          </label>
-                        </div>
+                        <Switch id="meter-details-toggle" checked={!!meterDetailsToggle} onCheckedChange={(checked) => handleMeterDetailsToggleChange(checked)} />
                         {meterCategoryOpen ? <ChevronUp /> : <ChevronDown />}
                       </div>
                     </CardTitle>

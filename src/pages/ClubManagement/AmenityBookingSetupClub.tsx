@@ -13,6 +13,7 @@ import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
+import { Switch } from "@/components/ui/switch";
 interface BookingSetup {
   id: string;
   name: string;
@@ -126,24 +127,60 @@ export const BookingSetupClubDashboard = () => {
     }
   };
 
+  // q[...] filters shared by the list and the export, so both always match
+  const buildFilterParams = (currentFilters = appliedFilters) => {
+    const params: Record<string, string> = {};
+
+    if (currentFilters.facilityType) {
+      params["q[fac_type_eq]"] = currentFilters.facilityType;
+    }
+    if (currentFilters.fromDate) {
+      params["q[created_at_gteq]"] = currentFilters.fromDate;
+    }
+    if (currentFilters.toDate) {
+      params["q[created_at_lteq]"] = currentFilters.toDate;
+    }
+
+    return params;
+  };
+
+  // GET /crm/admin/facility_setups/export.xlsx — every facility (active and
+  // inactive, no pagination) matching the current filters
+  const [isExporting, setIsExporting] = useState(false);
+  const handleExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const response = await apiClient.get("/crm/admin/facility_setups/export.xlsx", {
+        params: buildFilterParams(),
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "facility_setups.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("File downloaded successfully");
+    } catch (error) {
+      console.error("Error exporting facility setups:", error);
+      toast.error("Failed to export facility setups");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Fetch booking setup data from API
   const fetchBookingSetupData = async (page: number = 1, currentFilters = appliedFilters) => {
     try {
       setLoading(true);
-      const params: any = {
+      const params = {
         page,
         per_page: pageSize,
+        ...buildFilterParams(currentFilters),
       };
-
-      if (currentFilters.facilityType) {
-        params["q[fac_type_eq]"] = currentFilters.facilityType;
-      }
-      if (currentFilters.fromDate) {
-        params["q[created_at_gteq]"] = currentFilters.fromDate;
-      }
-      if (currentFilters.toDate) {
-        params["q[created_at_lteq]"] = currentFilters.toDate;
-      }
 
       const response = await apiClient.get("/crm/admin/facility_setups.json", {
         params
@@ -255,18 +292,7 @@ export const BookingSetupClubDashboard = () => {
       case 'status':
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleStatusToggle(item.id)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                item.status ? 'bg-[#C72030]' : 'bg-gray-300'
-              }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  item.status ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
+            <Switch checked={!!(item.status)} onCheckedChange={() => handleStatusToggle(item.id)} />
           </div>
         );
       default:
@@ -486,7 +512,8 @@ export const BookingSetupClubDashboard = () => {
           enableSearch={true}
           onFilterClick={() => setIsFilterOpen(true)}
           enableSelection={false}
-          hideTableExport={true}
+          enableExport={true}
+          onExport={handleExport}
         />
 
         <div className="flex justify-center mt-6">

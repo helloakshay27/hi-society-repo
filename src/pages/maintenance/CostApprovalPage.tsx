@@ -477,14 +477,14 @@ export const CostApprovalPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-center gap-4">
-              <Button 
-                type="submit" 
-                className="px-8 bg-[#C72030] hover:bg-[#C72030]/90"
+            <div className="flex justify-end gap-4">
+              <button
+                type="submit"
+                className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                 disabled={createLoading}
               >
                 {createLoading ? 'Creating...' : 'Submit'}
-              </Button>
+              </button>
               {/* <Button 
                 type="button" 
                 variant="outline"
@@ -557,22 +557,20 @@ export const CostApprovalPage: React.FC = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button 
-                      variant="default"
-                      size="sm" 
-                      className="bg-[#C72030] hover:bg-[#A61B29] text-white border-none font-semibold px-4"
+                    <button
+                      type="button"
+                      className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                       onClick={() => setSelectedCostFilter('all')}
                     >
                       Apply
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-4"
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
                       onClick={() => setSelectedCostFilter('all')}
                     >
                       Reset
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </CardHeader>
@@ -703,22 +701,20 @@ export const CostApprovalPage: React.FC = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button 
-                      variant="default"
-                      size="sm" 
-                      className="bg-[#C72030] hover:bg-[#A61B29] text-white border-none font-semibold px-4"
+                    <button
+                      type="button"
+                      className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                       onClick={() => setSelectedCostFilter('all')}
                     >
                       Apply
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-4"
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
                       onClick={() => setSelectedCostFilter('all')}
                     >
                       Reset
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </CardHeader>

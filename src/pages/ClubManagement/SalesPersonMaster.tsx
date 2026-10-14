@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { API_CONFIG } from '@/config/apiConfig';
 import { toast } from 'sonner';
 
+import { Switch } from "@/components/ui/switch";
 interface SalesPerson {
     id: number;
     name: string;
@@ -293,16 +294,7 @@ export const SalesPersonMaster: React.FC = () => {
 
         status: (
             <div className="flex items-center justify-center">
-                <div
-                    className={`relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors ${sp.active ? "bg-green-500" : "bg-gray-300"
-                        }`}
-                    onClick={() => handleToggleStatus(sp)}
-                >
-                    <span
-                        className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${sp.active ? "translate-x-6" : "translate-x-1"
-                            }`}
-                    />
-                </div>
+                <Switch checked={!!(sp.active)} onCheckedChange={() => handleToggleStatus(sp)} />
             </div>
         ),
     });

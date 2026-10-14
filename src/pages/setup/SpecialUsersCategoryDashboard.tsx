@@ -368,14 +368,16 @@ export const SpecialUsersCategoryDashboard = () => {
     <div className="min-h-screen bg-[#fafafa] p-6">
       <div className="max-w-full mx-auto">
         {/* Header */}
-        <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-semibold text-[#1A1A1A]">Special Users Category</h1>
+        <div className="mb-3">
+          <div className="py-4">
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Special Users Category
+            </h1>
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-[#fafafa] rounded-lg shadow-sm">
+        <div className="bg-[#fafafa] rounded-lg">
           <EnhancedTable
             storageKey="special-users-category-dashboard-table"
             columns={columns}
@@ -434,51 +436,56 @@ variant="ghost"
 
         {/* Add Category Dialog */}
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogContent className="max-w-md bg-white">
-            <DialogHeader className="border-b pb-4">
+          <DialogContent className="max-w-md bg-white rounded-2xl border border-[rgba(26,26,24,.09)] focus:outline-none focus-visible:outline-none">
+            <DialogHeader className="border-b border-[rgba(26,26,24,.09)] pb-4">
               <div className="flex items-center justify-between">
-                <DialogTitle className="text-lg font-semibold">Add Category</DialogTitle>
+                <DialogTitle className="text-lg font-semibold text-[#1A1A18]">Add Category</DialogTitle>
                 <button
                   onClick={() => setShowAddDialog(false)}
-                  className="text-red-500 hover:text-red-700 transition-colors"
+                  type="button"
+                  aria-label="Close"
+                  className="flex items-center justify-center w-8 h-8 rounded-md text-[rgba(26,26,24,.68)] hover:bg-[#F5F4F0] hover:text-[#1A1A18] transition-colors focus:outline-none"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </DialogHeader>
 
-            <div className="p-6 space-y-6">
+            <div className="pt-2 space-y-6">
               <div className="relative">
                 <Label
                   htmlFor="categoryName"
                   className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
                 >
-                  Category Name <span className="text-red-500">*</span>
+                  Category Name <span className="text-[#1A1A18]">*</span>
                 </Label>
                 <Input
                   id="categoryName"
                   placeholder="Enter Category Name"
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full h-12 rounded-md border-gray-300 focus-visible:border-[#C72030] focus-visible:ring-0"
+                  className="w-full h-12 rounded-md border-[#ddd] hover:border-[#1A1A18] focus-visible:border-[#1A1A18] focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
                   onClick={() => setShowAddDialog(false)}
-                  variant="outline"
-                  className="px-8"
+                
+                  className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
+                  type="button"
                   onClick={handleSubmitCategory}
                   disabled={isLoading}
-                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                
+                  className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                 >
                   {isLoading ? "Adding..." : "Add"}
-                </Button>
+                </button>
               </div>
             </div>
           </DialogContent>
@@ -486,59 +493,64 @@ variant="ghost"
 
         {/* Edit Category Dialog */}
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="max-w-md bg-white">
-            <DialogHeader className="border-b pb-4">
+          <DialogContent className="max-w-md bg-white rounded-2xl border border-[rgba(26,26,24,.09)] focus:outline-none focus-visible:outline-none">
+            <DialogHeader className="border-b border-[rgba(26,26,24,.09)] pb-4">
               <div className="flex items-center justify-between">
-                <DialogTitle className="text-lg font-semibold">Edit Category</DialogTitle>
+                <DialogTitle className="text-lg font-semibold text-[#1A1A18]">Edit Category</DialogTitle>
                 <button
                   onClick={() => {
                     setShowEditDialog(false);
                     setCategoryName("");
                     setEditingCategory(null);
                   }}
-                  className="text-red-500 hover:text-red-700 transition-colors"
+                  type="button"
+                  aria-label="Close"
+                  className="flex items-center justify-center w-8 h-8 rounded-md text-[rgba(26,26,24,.68)] hover:bg-[#F5F4F0] hover:text-[#1A1A18] transition-colors focus:outline-none"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </DialogHeader>
 
-            <div className="p-6 space-y-6">
+            <div className="pt-2 space-y-6">
               <div className="relative">
                 <Label
                   htmlFor="editCategoryName"
                   className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 z-10"
                 >
-                  Category Name <span className="text-red-500">*</span>
+                  Category Name <span className="text-[#1A1A18]">*</span>
                 </Label>
                 <Input
                   id="editCategoryName"
                   placeholder="Enter Category Name"
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full h-12 rounded-md border-gray-300 focus-visible:border-[#C72030] focus-visible:ring-0"
+                  className="w-full h-12 rounded-md border-[#ddd] hover:border-[#1A1A18] focus-visible:border-[#1A1A18] focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
                   onClick={() => {
                     setShowEditDialog(false);
                     setCategoryName("");
                     setEditingCategory(null);
                   }}
-                  variant="outline"
-                  className="px-6 py-2"
+                
+                  className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
+                  type="button"
                   onClick={handleSubmitEdit}
                   disabled={isLoading}
-                  className="px-6 py-2 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                
+                  className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                 >
                   {isLoading ? "Updating..." : "Update"}
-                </Button>
+                </button>
               </div>
             </div>
           </DialogContent>

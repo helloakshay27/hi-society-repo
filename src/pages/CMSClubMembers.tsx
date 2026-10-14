@@ -1,15 +1,25 @@
-import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable'
-import { Button } from '@/components/ui/button';
-import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
-import { ColumnConfig } from '@/hooks/useEnhancedTable'
-import { Switch } from '@mui/material';
-import axios from 'axios';
-import { Download, Edit, Eye, Plus, QrCode, Users, UserCheck, Clock, UserX } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CMSClubMembersFilterModal } from '@/components/CMSClubMembersFilterModal';
-import { StatsCard } from '@/components/StatsCard';
-import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { Button } from "@/components/ui/button";
+import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { Switch } from "@mui/material";
+import axios from "axios";
+import {
+  Edit,
+  Eye,
+  Plus,
+  QrCode,
+  Users,
+  UserCheck,
+  Clock,
+  UserX,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { CMSClubMembersFilterModal } from "@/components/CMSClubMembersFilterModal";
+import { StatsCard } from "@/components/StatsCard";
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   Pagination,
   PaginationContent,
@@ -18,79 +28,79 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
+} from "@/components/ui/pagination";
 
 const PAGE_SIZE = 10;
 
 const columns: ColumnConfig[] = [
   {
-    key: 'tower',
-    label: 'Tower',
+    key: "tower",
+    label: "Tower",
     sortable: true,
     draggable: true,
   },
   {
-    key: 'flat',
-    label: 'Flat',
+    key: "flat",
+    label: "Flat",
     sortable: true,
     draggable: true,
   },
   {
-    key: 'members',
-    label: 'Members',
+    key: "members",
+    label: "Members",
     sortable: true,
     draggable: true,
   },
   {
-    key: 'member_names',
-    label: 'Member Names',
+    key: "member_names",
+    label: "Member Names",
     sortable: true,
     draggable: true,
   },
   {
-    key: 'emails',
-    label: 'Emails',
+    key: "emails",
+    label: "Emails",
     sortable: true,
     draggable: true,
   },
   {
-    key: 'mobiles',
-    label: 'Mobiles',
+    key: "mobiles",
+    label: "Mobiles",
     sortable: true,
     draggable: true,
   },
   {
-    key: 'membership_plan',
-    label: 'Membership Plan',
+    key: "membership_plan",
+    label: "Membership Plan",
     sortable: true,
     draggable: true,
   },
 
   {
-    key: 'start_date',
-    label: 'Start Date',
+    key: "start_date",
+    label: "Start Date",
     sortable: true,
     draggable: true,
   },
   {
-    key: 'end_date',
-    label: 'End Date',
+    key: "end_date",
+    label: "End Date",
     sortable: true,
     draggable: true,
   },
   {
-    key: 'status',
-    label: 'Status',
+    key: "status",
+    label: "Status",
     sortable: true,
     draggable: true,
   },
   {
-    key: 'created_on',
-    label: 'Created On',
+    key: "created_on",
+    label: "Created On",
     sortable: true,
     draggable: true,
   },
-]
+];
 
 interface MemberFilters {
   search?: string;
@@ -112,8 +122,13 @@ const CMSClubMembers = () => {
   const [members, setMembers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [showActionPanel, setShowActionPanel] = useState(false);
-  const [isLoading, setIsLoading] = useState(false)
-  const [modalData, setModalData] = useState<{ isOpen: boolean, title: string, items: string[] }>({ isOpen: false, title: '', items: [] });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [modalData, setModalData] = useState<{
+    isOpen: boolean;
+    title: string;
+    items: string[];
+  }>({ isOpen: false, title: "", items: [] });
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<MemberFilters>({});
   const [summaryData, setSummaryData] = useState({
@@ -123,41 +138,49 @@ const CMSClubMembers = () => {
     total_pending: 0,
   });
 
+  // Shared by the list and the export so both always apply the same filters
+  const buildFilterParams = (filters: MemberFilters) => {
+    const params = new URLSearchParams();
+
+    if (filters.search) {
+      params.append(
+        "q[email_or_mobile_or_first_name_or_last_name_cont]",
+        filters.search
+      );
+    }
+    if (filters.towerId) {
+      params.append("q[society_flat_society_block_id_eq]", filters.towerId);
+    }
+    if (filters.flatId) {
+      params.append("q[society_flat_id_in]", filters.flatId);
+    }
+    if (filters.residentType) {
+      params.append("q[resident_type_in]", filters.residentType);
+    }
+    if (filters.status) {
+      params.append("q[club_member_check_eq]", filters.status);
+    }
+    if (filters.cardAllocated) {
+      params.append("q[access_card_check_eq]", filters.cardAllocated);
+    }
+    if (filters.expired) {
+      params.append("q[end_date]", filters.expired);
+    }
+
+    return params;
+  };
+
   const fetchMembers = async (filters: MemberFilters = appliedFilters) => {
     try {
-      setIsLoading(true)
-      const params = new URLSearchParams();
-
-      if (filters.search) {
-        params.append('q[email_or_mobile_or_first_name_or_last_name_cont]', filters.search);
-      }
-      if (filters.towerId) {
-        params.append('q[society_flat_society_block_id_eq]', filters.towerId);
-      }
-      if (filters.flatId) {
-        params.append('q[society_flat_id_in]', filters.flatId);
-      }
-      if (filters.residentType) {
-        params.append('q[resident_type_in]', filters.residentType);
-      }
-      if (filters.status) {
-        params.append('q[club_member_check_eq]', filters.status);
-      }
-      if (filters.cardAllocated) {
-        params.append('q[access_card_check_eq]', filters.cardAllocated);
-      }
-      if (filters.expired) {
-        params.append('q[end_date]', filters.expired);
-      }
-
-      const queryString = params.toString();
-      const url = `https://${baseUrl}/club_member_allocations.json${queryString ? `?${queryString}` : ''}`;
+      setIsLoading(true);
+      const queryString = buildFilterParams(filters).toString();
+      const url = `https://${baseUrl}/club_member_allocations.json${queryString ? `?${queryString}` : ""}`;
 
       const response = await axios.get(url, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       setMembers(response.data?.club_member_allocations);
       setCurrentPage(1);
@@ -165,11 +188,11 @@ const CMSClubMembers = () => {
         setSummaryData(response.data.summary);
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleFilterApply = (filters: any) => {
     setAppliedFilters(filters);
@@ -196,7 +219,10 @@ const CMSClubMembers = () => {
     if (showEllipsis) {
       items.push(
         <PaginationItem key={1} className="cursor-pointer">
-          <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+          >
             1
           </PaginationLink>
         </PaginationItem>
@@ -212,7 +238,10 @@ const CMSClubMembers = () => {
         for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
           items.push(
             <PaginationItem key={i} className="cursor-pointer">
-              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+              >
                 {i}
               </PaginationLink>
             </PaginationItem>
@@ -224,7 +253,10 @@ const CMSClubMembers = () => {
         for (let i = currentPage - 1; i <= currentPage + 1; i++) {
           items.push(
             <PaginationItem key={i} className="cursor-pointer">
-              <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+              >
                 {i}
               </PaginationLink>
             </PaginationItem>
@@ -243,7 +275,10 @@ const CMSClubMembers = () => {
           if (!items.find((item) => item.key === i.toString())) {
             items.push(
               <PaginationItem key={i} className="cursor-pointer">
-                <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+                <PaginationLink
+                  onClick={() => handlePageChange(i)}
+                  isActive={currentPage === i}
+                >
                   {i}
                 </PaginationLink>
               </PaginationItem>
@@ -255,7 +290,10 @@ const CMSClubMembers = () => {
       if (totalPages > 1) {
         items.push(
           <PaginationItem key={totalPages} className="cursor-pointer">
-            <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>
+            <PaginationLink
+              onClick={() => handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+            >
               {totalPages}
             </PaginationLink>
           </PaginationItem>
@@ -265,7 +303,10 @@ const CMSClubMembers = () => {
       for (let i = 1; i <= totalPages; i++) {
         items.push(
           <PaginationItem key={i} className="cursor-pointer">
-            <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+            >
               {i}
             </PaginationLink>
           </PaginationItem>
@@ -278,16 +319,24 @@ const CMSClubMembers = () => {
 
   useEffect(() => {
     fetchMembers();
-  }, [])
+  }, []);
 
+  // GET /club_member_allocations/export.xlsx — same filters as the list (no
+  // pagination), one row per club member
   const handleExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
     try {
-      const response = await axios.get(`https://${baseUrl}/export_club_member.xlsx`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        responseType: 'blob',
-      })
+      const queryString = buildFilterParams(appliedFilters).toString();
+      const response = await axios.get(
+        `https://${baseUrl}/club_member_allocations/export.xlsx${queryString ? `?${queryString}` : ""}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: "blob",
+        }
+      );
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -297,19 +346,26 @@ const CMSClubMembers = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      toast.success("Club members exported successfully");
     } catch (error) {
-      console.log(error)
+      console.log(error);
+      toast.error("Failed to export club members");
+    } finally {
+      setIsExporting(false);
     }
-  }
+  };
 
   const printSocietyQR = async () => {
     try {
-      const response = await axios.get(`https://${baseUrl}/crm/admin/club_members/print_society_qr_code.pdf`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        responseType: 'blob',
-      })
+      const response = await axios.get(
+        `https://${baseUrl}/crm/admin/club_members/print_society_qr_code.pdf`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: "blob",
+        }
+      );
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -320,53 +376,47 @@ const CMSClubMembers = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
 
   const renderActions = (item: any) => {
     return (
       <div className="flex gap-2">
-        {
-          shouldShow("Club Members", "show") && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="p-1"
-              onClick={() => navigate(`view/${item.id}`)}
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-          )
-        }
-        {
-          shouldShow("Club Members", "update") && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="p-1"
-              onClick={() => navigate(`edit/${item.id}`)}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
-          )
-        }
+        {shouldShow("Club Members", "show") && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="p-1"
+            onClick={() => navigate(`view/${item.id}`)}
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
+        )}
+        {shouldShow("Club Members", "update") && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="p-1"
+            onClick={() => navigate(`edit/${item.id}`)}
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+        )}
       </div>
-    )
+    );
   };
 
-  const leftActions = (
-    shouldShow("Club Members", "create") && (
-      <Button
-        onClick={() => setShowActionPanel(true)}
-        variant="ghost"
-        className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white [&_svg]:!text-white h-[36px] py-[10px] px-[20px]"
-      >
-        <Plus className="w-4 h-4" />
-        Actions
-      </Button>
-    )
-  )
+  const leftActions = shouldShow("Club Members", "create") && (
+    <Button
+      onClick={() => setShowActionPanel(true)}
+      variant="ghost"
+      className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white [&_svg]:!text-white h-[36px] py-[10px] px-[20px]"
+    >
+      <Plus className="w-4 h-4" />
+      Actions
+    </Button>
+  );
 
   const renderCell = (item: any, columnKey: string) => {
     switch (columnKey) {
@@ -374,22 +424,29 @@ const CMSClubMembers = () => {
         return item?.flat?.flat_no || "-";
       case "tower":
         return item?.tower?.name || "-";
-      case 'members':
+      case "members":
         return (
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-[#C72030]" />
-            <span className="font-medium">{item.club_members?.length || 0}</span>
+            <span className="font-medium">
+              {item.club_members?.length || 0}
+            </span>
           </div>
         );
 
       case "member_names":
-        const names = item.club_members?.map(m => m.first_name + " " + m.last_name).filter(Boolean);
-        if (!names || names.length === 0) return <span className="text-gray-400">-</span>;
+        const names = item.club_members
+          ?.map((m) => m.first_name + " " + m.last_name)
+          .filter(Boolean);
+        if (!names || names.length === 0)
+          return <span className="text-gray-400">-</span>;
 
         return (
           <div className="flex flex-col gap-1">
             {names.slice(0, 2).map((name, idx) => (
-              <span key={idx} className="text-sm">{name}</span>
+              <span key={idx} className="text-sm">
+                {name}
+              </span>
             ))}
             {names.length > 2 && (
               <span
@@ -397,8 +454,8 @@ const CMSClubMembers = () => {
                 onClick={() => {
                   setModalData({
                     isOpen: true,
-                    title: 'Member Names',
-                    items: names
+                    title: "Member Names",
+                    items: names,
                   });
                 }}
               >
@@ -409,13 +466,16 @@ const CMSClubMembers = () => {
         );
 
       case "emails":
-        const emails = item.club_members?.map(m => m.email).filter(Boolean);
-        if (!emails || emails.length === 0) return <span className="text-gray-400">-</span>;
+        const emails = item.club_members?.map((m) => m.email).filter(Boolean);
+        if (!emails || emails.length === 0)
+          return <span className="text-gray-400">-</span>;
 
         return (
           <div className="flex flex-col gap-1">
             {emails.slice(0, 2).map((email, idx) => (
-              <span key={idx} className="text-sm">{email}</span>
+              <span key={idx} className="text-sm">
+                {email}
+              </span>
             ))}
             {emails.length > 2 && (
               <span
@@ -423,8 +483,8 @@ const CMSClubMembers = () => {
                 onClick={() => {
                   setModalData({
                     isOpen: true,
-                    title: 'Member Emails',
-                    items: emails
+                    title: "Member Emails",
+                    items: emails,
                   });
                 }}
               >
@@ -435,13 +495,16 @@ const CMSClubMembers = () => {
         );
 
       case "mobiles":
-        const mobiles = item.club_members?.map(m => m.mobile).filter(Boolean);
-        if (!mobiles || mobiles.length === 0) return <span className="text-gray-400">-</span>;
+        const mobiles = item.club_members?.map((m) => m.mobile).filter(Boolean);
+        if (!mobiles || mobiles.length === 0)
+          return <span className="text-gray-400">-</span>;
 
         return (
           <div className="flex flex-col gap-1">
             {mobiles.slice(0, 2).map((mobile, idx) => (
-              <span key={idx} className="text-sm">{mobile}</span>
+              <span key={idx} className="text-sm">
+                {mobile}
+              </span>
             ))}
             {mobiles.length > 2 && (
               <span
@@ -449,8 +512,8 @@ const CMSClubMembers = () => {
                 onClick={() => {
                   setModalData({
                     isOpen: true,
-                    title: 'Member Mobiles',
-                    items: mobiles
+                    title: "Member Mobiles",
+                    items: mobiles,
                   });
                 }}
               >
@@ -469,7 +532,7 @@ const CMSClubMembers = () => {
           day: "numeric",
           month: "long",
           year: "numeric",
-        }).format(new Date(item.start_date))
+        }).format(new Date(item.start_date));
 
       case "end_date":
         if (!item?.end_date) return "-";
@@ -477,7 +540,7 @@ const CMSClubMembers = () => {
           day: "numeric",
           month: "long",
           year: "numeric",
-        }).format(new Date(item.end_date))
+        }).format(new Date(item.end_date));
 
       case "created_on":
         if (!item?.created_at) return "-";
@@ -485,31 +548,26 @@ const CMSClubMembers = () => {
           day: "numeric",
           month: "long",
           year: "numeric",
-        }).format(new Date(item.created_at))
+        }).format(new Date(item.created_at));
 
       default:
         return item[columnKey] || "-";
     }
-  }
+  };
 
   const actions = [
-    {
-      label: "Export",
-      onClick: handleExport,
-      icon: Download,
-    },
     {
       label: "Society QR",
       onClick: printSocietyQR,
       icon: QrCode,
-    }
-  ]
+    },
+  ];
 
   return (
-    <div className='p-6'>
+    <div className="p-6">
       {showActionPanel && (
         <SelectionPanel
-          onAdd={() => navigate('add')}
+          onAdd={() => navigate("add")}
           actions={actions}
           onClearSelection={() => setShowActionPanel(false)}
         />
@@ -552,6 +610,8 @@ const CMSClubMembers = () => {
         leftActions={leftActions}
         loading={isLoading}
         onFilterClick={() => setIsFilterModalOpen(true)}
+        enableExport={true}
+        onExport={handleExport}
       />
 
       {(members?.length || 0) > 0 && (
@@ -561,14 +621,22 @@ const CMSClubMembers = () => {
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() => handlePageChange(currentPage - 1)}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                 />
               </PaginationItem>
               {renderPaginationItems()}
               <PaginationItem>
                 <PaginationNext
                   onClick={() => handlePageChange(currentPage + 1)}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  className={
+                    currentPage === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                 />
               </PaginationItem>
             </PaginationContent>
@@ -582,7 +650,7 @@ const CMSClubMembers = () => {
         onApply={handleFilterApply}
       />
     </div>
-  )
-}
+  );
+};
 
-export default CMSClubMembers
+export default CMSClubMembers;

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { TextField, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent } from '@mui/material';
 import { RootState, AppDispatch } from '@/store/store';
 import { fetchEcoFriendlyList } from '@/store/slices/ecoFriendlyListSlice';
+import { Switch } from "@/components/ui/switch";
 const EcoFriendlyListPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -180,9 +181,7 @@ const EcoFriendlyListPage = () => {
         );
       case 'status':
         return <div className="flex items-center">
-            <div onClick={() => handleStatusToggle(item.id)} className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${item.status === 'Active' ? 'bg-green-500' : 'bg-gray-400'}`}>
-              <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${item.status === 'Active' ? 'translate-x-6' : 'translate-x-1'}`} />
-            </div>
+            <Switch checked={!!(item.status === 'Active')} onCheckedChange={() => handleStatusToggle(item.id)} />
             
           </div>;
       default:

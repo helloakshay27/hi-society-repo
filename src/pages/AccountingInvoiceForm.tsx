@@ -57,11 +57,6 @@ const INVOICE_FORMATS = ["Standard", "GST Invoice", "Simple Receipt"];
 const BILL_FREQUENCIES = ["Monthly", "Quarterly", "Half Yearly", "Yearly"];
 
 const computeChargeAmounts = (row: ChargeRow) => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'invoice_form', screen_name: 'AccountingInvoiceForm' });
-  }, []);
-
   const quantity = Number(row.quantity) || 0;
   const rate = Number(row.rate) || 0;
   const amount = quantity * rate;
@@ -77,6 +72,11 @@ const AccountingInvoiceForm: React.FC = () => {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("id");
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
+
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'invoice_form', screen_name: 'AccountingInvoiceForm' });
+  }, []);
 
   const [ledgerOptions, setLedgerOptions] = useState<LedgerOption[]>([]);
   const [billCycleOptions, setBillCycleOptions] = useState<BillCycleOption[]>([]);
@@ -557,21 +557,20 @@ const AccountingInvoiceForm: React.FC = () => {
         <Textarea placeholder="Enter note" value={note} onChange={(e) => setNote(e.target.value)} rows={3} />
       </div>
 
-      <div className="mt-6 flex justify-center gap-3 border-t border-gray-200 pt-6">
+      <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 pt-6">
+        <Button
+          type="button"
+          onClick={() => navigate("/accounting/invoices")}
+          className="min-w-[100px] !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
+        >
+          Cancel
+        </Button>
         <Button
           onClick={handleSubmit}
           disabled={submitting}
           className="min-w-[140px] bg-green-600 text-white hover:bg-green-700"
         >
           Submit
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => navigate("/accounting/invoices")}
-          className="min-w-[100px]"
-        >
-          Cancel
         </Button>
       </div>
     </div>

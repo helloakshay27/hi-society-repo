@@ -6,7 +6,6 @@ import {
   Typography,
   TextField,
   Paper,
-  Button as MuiButton,
   Select,
   MenuItem,
   FormControl,
@@ -15,20 +14,20 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { ArrowLeft } from "lucide-react";
 import { log } from "console";
 
 const SectionCard = styled(Paper)(() => ({
   backgroundColor: "white",
-  boxShadow:
-    "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
-  borderRadius: "8px",
+  boxShadow: "none",
+  borderRadius: "16px",
   overflow: "hidden",
   marginBottom: "24px",
-  border: "1px solid #E5E5E5",
+  border: "1px solid rgba(26,26,24,.09)",
 }));
 
 const SectionBody = styled(Box)(() => ({
-  backgroundColor: "#FAFAF8",
+  backgroundColor: "white",
   padding: "24px",
 }));
 
@@ -37,44 +36,18 @@ const SectionHeader = styled(Box)(() => ({
   alignItems: "center",
   justifyContent: "space-between",
   gap: "12px",
-  backgroundColor: "#F6F4EE",
-  padding: "12px 16px",
-  border: "1px solid #D9D9D9",
+  backgroundColor: "white",
+  padding: "22px 24px 0",
 }));
 
 const IconWrapper = styled(Box)(() => ({
-  width: "40px",
-  height: "40px",
+  width: "32px",
+  height: "32px",
   borderRadius: "50%",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  backgroundColor: "#E5E0D3",
-}));
-
-const RedButton = styled(MuiButton)(() => ({
-  backgroundColor: "#e7e3d9",
-  color: "#B8252F",
-  borderRadius: 0,
-  textTransform: "none",
-  padding: "8px 16px",
-  fontFamily: "Work Sans, sans-serif",
-  fontWeight: 500,
-  boxShadow: "0 2px 4px rgba(199, 32, 48, 0.2)",
-}));
-
-const CancelButton = styled(MuiButton)(() => ({
-  backgroundColor: "#ffffff",
-  color: "#da7756",
-  border: "1px solid #da7756",
-  borderRadius: 0,
-  textTransform: "none",
-  padding: "8px 16px",
-  fontFamily: "Work Sans, sans-serif",
-  fontWeight: 500,
-  "&:hover": {
-    backgroundColor: "#f5f5f5",
-  },
+  backgroundColor: "#F5F4F0",
 }));
 
 const fieldStyles = {
@@ -86,16 +59,16 @@ const fieldStyles = {
       borderColor: "#ddd",
     },
     "&:hover fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#D97757",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#C72030",
+      borderColor: "#D97757",
     },
   },
   "& .MuiInputLabel-root": {
     fontSize: "14px",
     "&.Mui-focused": {
-      color: "#C72030",
+      color: "#D97757",
     },
   },
   "& .MuiInputBase-input": {
@@ -108,7 +81,7 @@ const disabledFieldStyles = {
   ...fieldStyles,
   "& .MuiOutlinedInput-root": {
     ...fieldStyles["& .MuiOutlinedInput-root"],
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#FDFDFB",
   },
 };
 
@@ -270,19 +243,29 @@ export const PricingRuleEdit: React.FC = () => {
   return (
     <Box
       sx={{
-        p: { xs: 2, sm: 4, lg: 6 },
-        backgroundColor: "#f5f5f5",
+        p: 3,
+        backgroundColor: "#FDFDFB",
         minHeight: "100vh",
       }}
     >
 
-      {/* Breadcrumb */}
-      <Typography
-        variant="body2"
-        sx={{ mb: 3, color: "#666", fontFamily: "Work Sans, sans-serif" }}
-      >
-        Pricing Rules &gt; Edit
-      </Typography>
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center text-sm text-gray-600 mb-2">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Pricing Rules</span>
+          <span className="mx-2">{">"}</span>
+          <span className="text-gray-900 font-medium">Edit</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">Edit Pricing Rule</h1>
+      </div>
 
       {/* Pricing Rule Form */}
       <SectionCard>
@@ -290,11 +273,11 @@ export const PricingRuleEdit: React.FC = () => {
           <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <IconWrapper>
               <svg
-                width="24"
-                height="24"
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#C72030"
+                stroke="#1A1A18"
                 strokeWidth="2"
               >
                 <circle cx="12" cy="12" r="10" />
@@ -303,12 +286,7 @@ export const PricingRuleEdit: React.FC = () => {
             </IconWrapper>
             <Typography
               variant="h6"
-              sx={{
-                fontWeight: 600,
-                fontFamily: "Work Sans, sans-serif",
-                textTransform: "uppercase",
-                fontSize: "18px",
-              }}
+              sx={{ fontWeight: 600, fontSize: "14px", lineHeight: 1.4, color: "#1A1A18" }}
             >
               Edit Pricing Rule
             </Typography>
@@ -419,13 +397,21 @@ export const PricingRuleEdit: React.FC = () => {
       </SectionCard>
 
       {/* Action Buttons */}
-      <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 4 }}>
-        <RedButton onClick={handleSubmit} disabled={submitting} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2">
-          {submitting ? "Updating..." : "Update"}
-        </RedButton>
-        <CancelButton onClick={handleCancel} disabled={submitting} className="px-6 sm:px-8 w-full sm:w-auto h-10">
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5, mb: 4 }}>
+<button
+          type="button"
+          onClick={handleCancel} disabled={submitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
+        >
           Cancel
-        </CancelButton>
+        </button>
+<button
+          type="button"
+          onClick={handleSubmit} disabled={submitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+        >
+          {submitting ? "Updating..." : "Update"}
+        </button>
       </Box>
     </Box>
   );

@@ -860,34 +860,35 @@ export function EmailTemplatesPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "#F6F4EE" }}>
-      <div className="max-w-6xl mx-auto p-6">
+    <div className="flex-1">
+      <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-semibold text-[#2C2C2C] flex items-center gap-2">
-              <Mail size={22} style={{ color: CORAL }}/> Email Templates
-            </h2>
-            <p className="text-sm text-[#6B6B6B] mt-0.5">Design and manage reusable email templates with the visual builder.</p>
+            <h1 className="text-2xl font-semibold text-[#1A1A18] flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#F5F4F0" }}>
+                <Mail size={14} color="#1A1A18"/>
+              </span>
+              Email Templates
+            </h1>
+            <p className="text-sm text-[rgba(26,26,24,.68)] mt-1">Design and manage reusable email templates with the visual builder.</p>
           </div>
           <button
             onClick={openNew}
-            className="flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-md transition-colors shadow-sm"
-            style={{ background: CORAL }}
+            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E]"
           >
             <Plus size={15}/> New Template
           </button>
         </div>
 
         {/* Audience tab bar */}
-        <div className="flex items-center gap-1 mb-4 border-b border-[#E5E1D8] pb-0 overflow-x-auto">
+        <div className="inline-flex max-w-full items-center gap-[3px] mb-4 p-[3px] rounded-xl bg-[rgba(26,26,24,0.055)] overflow-x-auto">
           {[{ value: "", label: "All" }, ...MODULES.map(m => ({ value: m, label: MODULE_LABELS[m] || m }))].map(({ value, label }) => (
             <button
               key={value}
               onClick={() => setFilterMod(value)}
-              className={clsx("px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors",
-                filterMod === value ? "text-[#DA7756]" : "border-transparent text-[#6B6B6B] hover:text-[#2C2C2C]")}
-              style={filterMod === value ? { borderColor: CORAL } : undefined}
+              className={clsx("px-4 py-2 text-[12.5px] font-semibold whitespace-nowrap rounded-lg border-0 transition-all focus:outline-none focus-visible:outline-none",
+                filterMod === value ? "bg-white text-[#1A1A18] shadow-[0_1px_2px_rgba(26,26,24,0.1),0_0_0_1px_rgba(26,26,24,0.05)]" : "bg-transparent text-[rgba(26,26,24,0.55)] hover:text-[#1A1A18]")}
             >
               {label}
             </button>
@@ -902,7 +903,7 @@ export function EmailTemplatesPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search templates…"
-              className="w-full pl-8 pr-4 py-2 text-sm bg-white border border-[#C4B89D] rounded-md focus:outline-none focus:border-[#DA7756] text-[#2C2C2C] placeholder:text-[#9A968C]"
+              className="w-full pl-8 pr-4 py-2 text-sm bg-white border border-[rgba(26,26,24,.12)] rounded-lg focus:outline-none focus:border-[#1A1A18] text-[#1A1A18] placeholder:text-[rgba(26,26,24,.45)]"
             />
             {search && (
               <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B6B6B] hover:text-[#2C2C2C]">
@@ -914,7 +915,7 @@ export function EmailTemplatesPage() {
           <select
             value={filterCat}
             onChange={(e) => setFilterCat(e.target.value)}
-            className="text-sm bg-white border border-[#C4B89D] rounded-md px-3 py-2 text-[#2C2C2C] focus:outline-none focus:border-[#DA7756]"
+            className="text-sm bg-white border border-[rgba(26,26,24,.12)] rounded-lg px-3 py-2 text-[#1A1A18] focus:outline-none focus:border-[#1A1A18]"
           >
             <option value="">All Categories</option>
             {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -928,21 +929,21 @@ export function EmailTemplatesPage() {
         {/* Grid */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(6)].map((_,i) => <div key={i} className="h-44 rounded-lg bg-[#E5E1D8] animate-pulse"/>)}
+            {[...Array(6)].map((_,i) => <div key={i} className="h-44 rounded-2xl bg-[#F5F4F0] animate-pulse"/>)}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-[#E5E1D8]">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: "rgba(218,119,86,0.1)" }}>
-              <Mail size={22} style={{ color: CORAL }}/>
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-[rgba(26,26,24,.09)]">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: "#F5F4F0" }}>
+              <Mail size={20} color="#1A1A18"/>
             </div>
-            <h3 className="text-xl text-[#2C2C2C] mb-1 font-semibold">
+            <h3 className="text-lg text-[#1A1A18] mb-1 font-semibold">
               {search||filterCat||filterMod ? "No templates match" : "No email templates yet"}
             </h3>
             <p className="text-sm text-[#6B6B6B] max-w-xs mb-5">
               {search||filterCat||filterMod ? "Adjust filters or search." : "Create your first template to get started."}
             </p>
             {!search && !filterCat && !filterMod && (
-              <button onClick={openNew} className="flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-md transition-colors" style={{ background: CORAL }}>
+              <button onClick={openNew} className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E]">
                 <Plus size={15}/> New Template
               </button>
             )}
@@ -990,9 +991,9 @@ function TemplateCard({ template: t, onEdit, onPreview, onDuplicate, onDelete, o
   const created = t.created_at ? new Date(t.created_at).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }) : "";
 
   return (
-    <div className={clsx("bg-white border border-[#E5E1D8] rounded-lg overflow-hidden flex flex-col group transition-shadow hover:shadow-md", !t.is_active && "opacity-60")}>
+    <div className={clsx("bg-white border border-[rgba(26,26,24,.09)] rounded-2xl overflow-hidden flex flex-col group transition-colors hover:border-[rgba(26,26,24,.28)]", !t.is_active && "opacity-60")}>
       {/* Preview strip */}
-      <div className="h-28 bg-[#F6F4EE] border-b border-[#E5E1D8] relative cursor-pointer overflow-hidden" onClick={onEdit}>
+      <div className="h-28 bg-[#F5F4F0] border-b border-[rgba(26,26,24,.09)] relative cursor-pointer overflow-hidden" onClick={onEdit}>
         <div
           className="absolute inset-0 p-3 text-[8px] leading-tight text-[#6B6B6B] overflow-hidden select-none pointer-events-none"
           style={{ fontFamily:"monospace" }}
@@ -1002,7 +1003,7 @@ function TemplateCard({ template: t, onEdit, onPreview, onDuplicate, onDelete, o
           <button onClick={(e) => { e.stopPropagation(); onPreview(); }} className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-[#2C2C2C] text-xs font-medium rounded-md hover:bg-[#F6F4EE] transition-colors shadow">
             <Eye size={12}/> Preview
           </button>
-          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="flex items-center gap-1.5 px-3 py-1.5 text-white text-xs font-medium rounded-md transition-colors shadow" style={{ background: CORAL }}>
+          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1A1A18] text-white text-xs font-medium rounded-md transition-colors shadow hover:bg-[#12100E]">
             <Edit2 size={12}/> Edit
           </button>
         </div>
@@ -1011,11 +1012,11 @@ function TemplateCard({ template: t, onEdit, onPreview, onDuplicate, onDelete, o
       {/* Info */}
       <div className="p-3.5 flex flex-col gap-1.5 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-semibold text-[#2C2C2C] truncate cursor-pointer hover:text-[#DA7756] transition-colors" onClick={onEdit}>
+          <h3 className="text-sm font-semibold text-[#2C2C2C] truncate cursor-pointer hover:underline" onClick={onEdit}>
             {t.name}
           </h3>
           {t.category && (
-            <span className="shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full border" style={{ background: "#F6F4EE", color: CORAL, borderColor: "#C4B89D" }}>
+            <span className="shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full border" style={{ background: "#F5F4F0", color: "#1A1A18", borderColor: "rgba(26,26,24,.09)" }}>
               {t.category}
             </span>
           )}
@@ -1029,7 +1030,7 @@ function TemplateCard({ template: t, onEdit, onPreview, onDuplicate, onDelete, o
       </div>
 
       {/* Footer */}
-      <div className="px-3.5 pb-3 flex items-center justify-between border-t border-[#E5E1D8] pt-2.5 mt-auto">
+      <div className="px-3.5 pb-3 flex items-center justify-between border-t border-[rgba(26,26,24,.09)] pt-2.5 mt-auto">
         <span className="text-[10px] text-[#9A968C]">{created}</span>
         <div className="flex items-center gap-0.5">
           <button onClick={onToggle} title={t.is_active?"Active — click to deactivate":"Inactive"} className="p-1 rounded transition-colors">

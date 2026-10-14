@@ -51,7 +51,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Edit, Trash2, Plus, Filter, X } from "lucide-react";
+import { Edit, Trash2, Plus, Filter, X, TrendingUp } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   createResolutionEscalation,
@@ -70,9 +70,10 @@ import {
 import { apiClient } from "@/utils/apiClient";
 import { API_CONFIG } from "@/config/apiConfig";
 
-const FIELD_LABEL_CLASS = "text-[#C72030] font-medium text-sm";
+import { Switch } from "@/components/ui/switch";
+const FIELD_LABEL_CLASS = "text-[#1A1A18] font-medium text-sm";
 const FIELD_TRIGGER_CLASS =
-  "mt-1 w-full h-[45px] bg-white rounded border border-[#ddd] text-base font-normal text-black hover:border-[#C72030] focus:border-[#C72030] focus:ring-1 focus:ring-[#C72030] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C72030]";
+  "mt-1 w-full h-[45px] bg-white rounded border border-[#ddd] text-base font-normal text-black hover:border-[#1A1A18] focus:border-[#1A1A18] focus:ring-1 focus:ring-[#1A1A18] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1A1A18]";
 
 const resolutionEscalationSchema = z.object({
   categoryIds: z.array(z.number()).optional().default([]),
@@ -1212,7 +1213,7 @@ export const ResolutionEscalationTab: React.FC = () => {
           onClick={() => setActiveResolutionTab("assign-rule")}
           className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
             activeResolutionTab === "assign-rule"
-              ? "border-[#C72030] text-[#C72030]"
+              ? "border-[#1A1A18] text-[#1A1A18]"
               : "border-transparent text-gray-600 hover:text-gray-900"
           }`}
         >
@@ -1222,7 +1223,7 @@ export const ResolutionEscalationTab: React.FC = () => {
           onClick={() => setActiveResolutionTab("escalation-rule")}
           className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
             activeResolutionTab === "escalation-rule"
-              ? "border-[#C72030] text-[#C72030]"
+              ? "border-[#1A1A18] text-[#1A1A18]"
               : "border-transparent text-gray-600 hover:text-gray-900"
           }`}
         >
@@ -1237,24 +1238,13 @@ export const ResolutionEscalationTab: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span
-                className={`text-sm font-medium ${!isAutomatic ? "text-[#C72030]" : "text-gray-500"}`}
+                className={`text-sm font-medium ${!isAutomatic ? "text-[#1A1A18]" : "text-gray-500"}`}
               >
                 Manual
               </span>
-              <button
-                onClick={() => setIsAutomatic(!isAutomatic)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                  isAutomatic ? "bg-[#C72030]" : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                    isAutomatic ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
+              <Switch checked={!!(isAutomatic)} onCheckedChange={() => setIsAutomatic(!isAutomatic)} />
               <span
-                className={`text-sm font-medium ${isAutomatic ? "text-[#C72030]" : "text-gray-500"}`}
+                className={`text-sm font-medium ${isAutomatic ? "text-[#1A1A18]" : "text-gray-500"}`}
               >
                 Automatic
               </span>
@@ -1262,13 +1252,13 @@ export const ResolutionEscalationTab: React.FC = () => {
             {isAutomatic && <div className="flex gap-2">
               <Button
                 onClick={() => setIsAddAssignRuleOpen(true)}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] hover:text-white disabled:opacity-60"
               >
                 <Plus className="h-4 w-4" />
                 Add
               </Button>
               <Button
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] hover:text-white disabled:opacity-60"
                 onClick={() => {
                   setPendingFilterIssueTypeId(filterIssueTypeId);
                   setPendingFilterCategoryId(filterCategoryId);
@@ -1279,7 +1269,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                 <Filter className="h-4 w-4" />
                 Filter
                 {(filterIssueTypeId || filterCategoryId || filterAssignTo) && (
-                  <span className="ml-1 bg-[#C72030] text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                  <span className="ml-1 bg-[#1A1A18] text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
                     !
                   </span>
                 )}
@@ -1692,7 +1682,7 @@ export const ResolutionEscalationTab: React.FC = () => {
           <div className="flex justify-end gap-2 pt-4 border-t mt-2">
             <Button
               variant="outline"
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:bg-white hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] [&_svg]:!text-current"
               onClick={() => {
                 setPendingFilterIssueTypeId("");
                 setPendingFilterCategoryId("");
@@ -1707,7 +1697,7 @@ export const ResolutionEscalationTab: React.FC = () => {
               Reset
             </Button>
             <Button
-              className="bg-[#C72030] hover:bg-[#B01E2F] text-white px-8"
+              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] hover:text-white disabled:opacity-60"
               onClick={() => {
                 const it =
                   pendingFilterIssueTypeId === "all"
@@ -1741,7 +1731,7 @@ export const ResolutionEscalationTab: React.FC = () => {
               onClick={() => { if (activeFmProjectTab !== "fm") { clearEscalationFormState(); setActiveFmProjectTab("fm"); } }}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeFmProjectTab === "fm"
-                  ? "border-[#C72030] text-[#C72030]"
+                  ? "border-[#1A1A18] text-[#1A1A18]"
                   : "border-transparent text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -1751,7 +1741,7 @@ export const ResolutionEscalationTab: React.FC = () => {
               onClick={() => { if (activeFmProjectTab !== "project") { clearEscalationFormState(); setActiveFmProjectTab("project"); } }}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeFmProjectTab === "project"
-                  ? "border-[#C72030] text-[#C72030]"
+                  ? "border-[#1A1A18] text-[#1A1A18]"
                   : "border-transparent text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -1761,7 +1751,7 @@ export const ResolutionEscalationTab: React.FC = () => {
               onClick={() => { if (activeFmProjectTab !== "executive") { clearEscalationFormState(); setActiveFmProjectTab("executive"); } }}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeFmProjectTab === "executive"
-                  ? "border-[#C72030] text-[#C72030]"
+                  ? "border-[#1A1A18] text-[#1A1A18]"
                   : "border-transparent text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -1801,9 +1791,14 @@ export const ResolutionEscalationTab: React.FC = () => {
           ) : (
           <div className="p-6 space-y-6">
             {/* Create Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Resolution Escalation Configuration</CardTitle>
+            <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                <TrendingUp size={14} color="#1A1A18" />
+              </span>
+              Resolution Escalation Configuration
+              </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -1820,7 +1815,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                         sx={fieldStyles}
                         MenuProps={menuProps}
                       >
-                        <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                        <MenuItem value="" disabled><span className="text-gray-400">Select Issue Type</span></MenuItem>
                         {issueTypeOptions.map((it) => (
                           <MenuItem key={it.id} value={it.id.toString()}>
                             {it.name}
@@ -1841,7 +1836,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                         MenuProps={menuProps}
                       >
                         <MenuItem value="" disabled>
-                          <em>{escalationFormIssueTypeId ? "Loading categories..." : "Select Issue Type first"}</em>
+                          <span className="text-gray-400">{escalationFormIssueTypeId ? "Loading categories..." : "Select Issue Type first"}</span>
                         </MenuItem>
                         {escalationFormCategoryOptions.map((cat) => (
                           <MenuItem key={cat.id} value={cat.id.toString()}>
@@ -2120,7 +2115,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                     <Button
                       type="submit"
                       disabled={loading}
-                      className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] hover:text-white disabled:opacity-60"
                     >
                       {loading ? "Creating..." : "Submit"}
                     </Button>
@@ -2130,13 +2125,18 @@ export const ResolutionEscalationTab: React.FC = () => {
             </Card>
 
             {/* Escalation Rules Display */}
-            <Card>
+            <Card className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Escalation Rules</CardTitle>
+                <CardTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                    <TrendingUp size={14} color="#1A1A18" />
+                  </span>
+                  Escalation Rules
+                </CardTitle>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:bg-white hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] [&_svg]:!text-current"
                     onClick={() => {
                       setPendingEscalationFilterIssueTypeId(
                         escalationFilterIssueTypeId
@@ -2151,7 +2151,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                     Filter
                     {(escalationFilterIssueTypeId ||
                       escalationFilterCategoryId) && (
-                      <span className="ml-1 bg-[#C72030] text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                      <span className="ml-1 bg-[#1A1A18] text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
                         !
                       </span>
                     )}
@@ -2696,7 +2696,7 @@ export const ResolutionEscalationTab: React.FC = () => {
           <div className="flex justify-end gap-2 pt-4 border-t mt-2">
             <Button
               variant="outline"
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:bg-white hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] [&_svg]:!text-current"
               onClick={() => {
                 setPendingEscalationFilterIssueTypeId("");
                 setPendingEscalationFilterCategoryId("");
@@ -2709,7 +2709,7 @@ export const ResolutionEscalationTab: React.FC = () => {
               Reset
             </Button>
             <Button
-              className="bg-[#C72030] hover:bg-[#B01E2F] text-white px-8"
+              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] hover:text-white disabled:opacity-60"
               onClick={() => {
                 const it =
                   pendingEscalationFilterIssueTypeId === "all"
@@ -2755,7 +2755,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value="" disabled><em>select</em></MenuItem>
+                <MenuItem value="" disabled><span className="text-gray-400">select</span></MenuItem>
                 {issueTypeOptions.map((it) => (
                   <MenuItem key={it.id} value={it.id.toString()}>
                     {it.name}
@@ -2776,13 +2776,13 @@ export const ResolutionEscalationTab: React.FC = () => {
                 MenuProps={menuProps}
               >
                 <MenuItem value="" disabled>
-                  <em>
+                  <span className="text-gray-400">
                     {!assignRuleForm.issueType
                       ? "Select issue type first"
                       : addModalCategoriesLoading
                       ? "Loading..."
                       : "select"}
-                  </em>
+                  </span>
                 </MenuItem>
                 {addModalCategories.map((cat) => (
                   <MenuItem key={cat.id} value={cat.id.toString()}>
@@ -2803,7 +2803,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value="" disabled><em>select Engineer</em></MenuItem>
+                <MenuItem value="" disabled><span className="text-gray-400">select Engineer</span></MenuItem>
                 {serviceEngineerOptions.map((eng) => (
                   <MenuItem key={eng.id} value={eng.id.toString()}>
                     {eng.full_name}
@@ -2813,7 +2813,7 @@ export const ResolutionEscalationTab: React.FC = () => {
             </MuiFormControl>
             <div className="flex justify-end pt-2">
               <Button
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] hover:text-white disabled:opacity-60"
                 disabled={assignRuleSubmitting}
                 onClick={handleCreateAssignRule}
               >
@@ -2851,7 +2851,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value="" disabled><em>select</em></MenuItem>
+                <MenuItem value="" disabled><span className="text-gray-400">select</span></MenuItem>
                 {issueTypeOptions.map((it) => (
                   <MenuItem key={it.id} value={it.id.toString()}>
                     {it.name}
@@ -2872,13 +2872,13 @@ export const ResolutionEscalationTab: React.FC = () => {
                 MenuProps={menuProps}
               >
                 <MenuItem value="" disabled>
-                  <em>
+                  <span className="text-gray-400">
                     {!editAssignRuleForm.issueType
                       ? "Select issue type first"
                       : editModalCategoriesLoading
                       ? "Loading..."
                       : "select"}
-                  </em>
+                  </span>
                 </MenuItem>
                 {editModalCategories.map((cat) => (
                   <MenuItem key={cat.id} value={cat.id.toString()}>
@@ -2899,7 +2899,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value="" disabled><em>select Engineer</em></MenuItem>
+                <MenuItem value="" disabled><span className="text-gray-400">select Engineer</span></MenuItem>
                 {serviceEngineerOptions.map((eng) => (
                   <MenuItem key={eng.id} value={eng.id.toString()}>
                     {eng.full_name}
@@ -2945,7 +2945,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                  <MenuItem value="" disabled><span className="text-gray-400">Select Issue Type</span></MenuItem>
                   {issueTypeOptions.map((issue) => (
                     <MenuItem key={issue.id} value={issue.id.toString()}>
                       {issue.name}
@@ -2964,7 +2964,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                   MenuProps={menuProps}
                 >
                   <MenuItem value="" disabled>
-                    <em>{editEscalationIssueTypeId ? "Loading categories..." : "Select Issue Type first"}</em>
+                    <span className="text-gray-400">{editEscalationIssueTypeId ? "Loading categories..." : "Select Issue Type first"}</span>
                   </MenuItem>
                   {editEscalationCategoryOptions.map((cat) => (
                     <MenuItem key={cat.id} value={cat.id.toString()}>

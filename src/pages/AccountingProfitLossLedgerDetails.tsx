@@ -92,6 +92,11 @@ const AccountingProfitLossLedgerDetails: React.FC = () => {
   const navigate = useNavigate();
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
+  const { onAccountingViewed } = useAccountingEvents();
+  React.useEffect(() => {
+    onAccountingViewed({ accounting_id: 'profit_loss_ledger_details', screen_name: 'AccountingProfitLossLedgerDetails' });
+  }, []);
+
   const [ledgerName, setLedgerName] = useState("");
   const [statement, setStatement] = useState<LedgerStatementAPI | null>(null);
   const [fromDate, setFromDate] = useState("");
@@ -139,11 +144,6 @@ const AccountingProfitLossLedgerDetails: React.FC = () => {
   }, [ledgerId]);
 
   const handleSubmit = () => {
-  const { onAccountingViewed } = useAccountingEvents();
-  React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'profit_loss_ledger_details', screen_name: 'AccountingProfitLossLedgerDetails' });;
-  }, []);
-
     fetchLedgerDetail(fromDate, toDate);
   };
 

@@ -9,6 +9,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
+import { Switch } from "@/components/ui/switch";
 interface PropertyType {
   id: number;
   property_type: string;
@@ -250,18 +251,7 @@ const PropertyTypeList = () => {
       case 'status':
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleToggle(item.id, item.active)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                item.active ? "bg-[#C72030]" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  item.active ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch checked={!!(item.active)} onCheckedChange={() => handleToggle(item.id, item.active)} />
           </div>
         );
       default:

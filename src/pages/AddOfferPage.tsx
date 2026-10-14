@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Settings, Edit } from '@mui/icons-material';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Pencil, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getFullUrl } from '@/config/apiConfig';
@@ -37,7 +36,6 @@ import {
 } from '@mui/material';
 import { InfoOutlined, Close as CloseIcon } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { boxShadow } from 'html2canvas/dist/types/css/property-descriptors/box-shadow';
 
 
 // Styled Components
@@ -131,16 +129,16 @@ const DraftButton = styled(MuiButton)(({ theme }) => ({
 
 const SectionCard = styled(Paper)(({ theme }) => ({
     backgroundColor: 'white',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-    borderRadius: '8px',
+    boxShadow: 'none',
+    borderRadius: '16px',
     overflow: 'hidden',
     marginBottom: '24px',
-    border: '1px solid #E5E5E5',
+    border: '1px solid rgba(26, 26, 24, 0.09)',
 }));
 
 const SectionBody = styled(Box)(({ theme }) => ({
-    backgroundColor: '#FAFAF8',
-    padding: '24px',
+    backgroundColor: '#FFFFFF',
+    padding: '16px 24px 22px',
 }));
 
 const SectionHeader = styled(Box)(({ theme }) => ({
@@ -148,49 +146,48 @@ const SectionHeader = styled(Box)(({ theme }) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '12px',
-    backgroundColor: '#F6F4EE',
-    padding: '12px 16px',
-    border: '1px solid #D9D9D9',
+    backgroundColor: '#FFFFFF',
+    padding: '22px 24px 0',
 }));
 
+// Section icon chip — same as Settings module (32px, #F5F4F0, ink icon)
 const IconWrapper = styled(Box)(({ theme }) => ({
-    width: '40px',
-    height: '40px',
+    width: '32px',
+    height: '32px',
+    flex: 'none',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E5E0D3',
+    backgroundColor: '#F5F4F0',
 }));
 
-const RedIcon = styled(Settings)(({ theme }) => ({
-    color: 'var(--color-primary, #da7756)',
-    fontSize: '24px',
-}));
+const RedIcon = () => <Settings size={14} color="#1A1A18" />;
 
 const fieldStyles = {
     backgroundColor: '#fff',
+    borderRadius: '12px',
     '& .MuiOutlinedInput-root': {
-        fontSize: '14px',
+        fontSize: '13.5px',
+        borderRadius: '12px',
         '& fieldset': {
-            borderColor: '#ddd',
+            borderColor: 'rgba(26, 26, 24, 0.08)',
         },
         '&:hover fieldset': {
-            borderColor: '#C72030',
+            borderColor: 'rgba(26, 26, 24, 0.28)',
         },
         '&.Mui-focused fieldset': {
-            borderColor: '#C72030',
+            borderColor: '#1A1A18',
         },
     },
     '& .MuiInputLabel-root': {
         fontSize: '14px',
         '&.Mui-focused': {
-            color: '#C72030',
+            color: '#1A1A18',
         },
     },
     '& .MuiInputBase-input': {
-        fontSize: '14px',
-        fontFamily: 'Work Sans, sans-serif',
+        fontSize: '13.5px',
     },
 };
 
@@ -922,7 +919,7 @@ export default function AddOfferPage() {
                                 <IconWrapper>
                                     <RedIcon />
                                 </IconWrapper>
-                                <Typography variant="h6" sx={{ fontWeight: 600, fontFamily: 'Work Sans, sans-serif', textTransform: 'uppercase', fontSize: '18px' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '14px', lineHeight: 1.4, color: '#1A1A18' }}>
                                     Basic Info
                                 </Typography>
                             </Box>
@@ -994,7 +991,7 @@ export default function AddOfferPage() {
                                 <IconWrapper>
                                     <RedIcon />
                                 </IconWrapper>
-                                <Typography variant="h6" sx={{ fontWeight: 600, fontFamily: 'Work Sans, sans-serif', textTransform: 'uppercase', fontSize: '18px' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '14px', lineHeight: 1.4, color: '#1A1A18' }}>
                                     Media & Display
                                 </Typography>
                             </Box>
@@ -1252,7 +1249,7 @@ export default function AddOfferPage() {
                                 <IconWrapper>
                                     <RedIcon />
                                 </IconWrapper>
-                                <Typography variant="h6" sx={{ fontWeight: 500, fontFamily: 'Work Sans, sans-serif', textTransform: 'uppercase', fontSize: '13px' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '14px', lineHeight: 1.4, color: '#1A1A18' }}>
                                     Applicability
                                 </Typography>
                             </Box>
@@ -1334,7 +1331,7 @@ export default function AddOfferPage() {
                                 <IconWrapper>
                                     <RedIcon />
                                 </IconWrapper>
-                                <Typography variant="h6" sx={{ fontWeight: 600, fontFamily: 'Work Sans, sans-serif', textTransform: 'uppercase', fontSize: '18px' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '14px', lineHeight: 1.4, color: '#1A1A18' }}>
                                     Validity & Status
                                 </Typography>
                             </Box>
@@ -1389,7 +1386,7 @@ export default function AddOfferPage() {
                                 <IconWrapper>
                                     <RedIcon />
                                 </IconWrapper>
-                                <Typography variant="h6" sx={{ fontWeight: 600, fontFamily: 'Work Sans, sans-serif', textTransform: 'uppercase', fontSize: '18px' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '14px', lineHeight: 1.4, color: '#1A1A18' }}>
                                     Visibility
                                 </Typography>
                             </Box>
@@ -1463,21 +1460,63 @@ export default function AddOfferPage() {
     }
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', maxHeight: '90vh', overflowY: 'auto' }} className="add-offer-page">
-            <style>{`.add-offer-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
+        <Box sx={{ p: 3, pb: 14, height: '100vh', overflowY: 'auto' }} className="add-offer-page">
+            <style>{`
+                .add-offer-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }
+
+                /* ---- Reference design: canvas, fields ---- */
+                html body #root .add-offer-page {
+                    background-color: #FDFDFB !important;
+                }
+                html body #root .add-offer-page .MuiOutlinedInput-root {
+                    min-height: 44px;
+                    border-radius: 12px !important;
+                    background-color: #FFFFFF !important;
+                    font-size: 13.5px !important;
+                    font-weight: 500;
+                    color: #1A1A18;
+                    transition: box-shadow 0.16s ease;
+                }
+                html body #root .add-offer-page .MuiOutlinedInput-notchedOutline {
+                    border-color: rgba(26, 26, 24, 0.08) !important;
+                    border-radius: 12px !important;
+                }
+                html body #root .add-offer-page .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+                    border-color: rgba(26, 26, 24, 0.28) !important;
+                }
+                html body #root .add-offer-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+                    border-color: #1A1A18 !important;
+                    border-width: 1px !important;
+                }
+                html body #root .add-offer-page .MuiOutlinedInput-root.Mui-focused {
+                    box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+                }
+                html body #root .add-offer-page .MuiOutlinedInput-input::placeholder {
+                    color: rgba(26, 26, 24, 0.3) !important;
+                    opacity: 1 !important;
+                }
+                html body #root .add-offer-page .MuiInputLabel-root {
+                    color: rgba(26, 26, 24, 0.68) !important;
+                    font-weight: 600 !important;
+                }
+            `}</style>
 
             {/* Back Navigation */}
-            <div className="mb-8">
-                <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+            <div className="mb-[22px]">
+                <div className="flex items-center gap-2 text-[13px] font-medium mb-3" style={{ color: "rgba(26, 26, 24, 0.48)" }}>
                     <button
+                        type="button"
                         onClick={() => navigate(-1)}
-                        className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+                        className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
                         aria-label="Go back"
                     >
-                        <ArrowLeft className="w-4 h-4 text-gray-600" />
+                        <ArrowLeft className="w-4 h-4" />
                     </button>
-                    <span>Back to Offers List</span>
+                    <span>Offers List</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                    <span className="font-semibold" style={{ color: "#1A1A18" }}>Create New Offer</span>
                 </div>
+                <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>New Offer</h1>
             </div>
 
             {/* Draft Restoration Modal */}
@@ -1539,10 +1578,6 @@ export default function AddOfferPage() {
                 </Box>
             ) : null}
 
-            {/* Breadcrumb */}
-            <Typography variant="body2" sx={{ mb: 3, color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
-                Offers &gt; Create
-            </Typography>
 
             {/* Stepper */}
             <Box sx={{ mb: 3 }}>
@@ -1562,7 +1597,7 @@ export default function AddOfferPage() {
                         return (
                             <Step key={label}>
                                 <StepLabel StepIconComponent={() => null}>
-                                    <Box style={{ padding: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', backgroundColor: '#FFFFFF' }}>
+                                    <Box style={{ padding: '6px', border: '1px solid #E5E7EB', borderRadius: '8px', backgroundColor: '#FFFFFF' }}>
                                         <StepPill $active={active} $completed={completed}>
                                             {index + 1}. {label}
                                         </StepPill>
@@ -1578,17 +1613,24 @@ export default function AddOfferPage() {
             {renderStepContent(activeStep)}
 
             {/* Action Buttons */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
-                <DraftButton
+            <div className="flex justify-end gap-4 mb-8">
+                <button
+                    type="button"
+                    onClick={handleSaveDraft}
+                    disabled={isSubmitting}
+                    className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+                >
+                    Save to draft
+                </button>
+                <button
+                    type="button"
                     onClick={activeStep === steps.length - 1 ? handleSubmit : handleNext}
                     disabled={isSubmitting}
+                    className="btn-primary h-9 px-4 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {activeStep === steps.length - 1 ? (isSubmitting ? 'Submitting...' : 'Submit') : 'Proceed to save'}
-                </DraftButton>
-                <DraftButton onClick={handleSaveDraft} disabled={isSubmitting}>
-                    Save to draft
-                </DraftButton>
-            </Box>
+                </button>
+            </div>
 
             {/* Progress Indicator */}
             {completedSteps.length > 0 && (
@@ -1616,26 +1658,18 @@ export default function AddOfferPage() {
                                 <IconWrapper>
                                     <RedIcon />
                                 </IconWrapper>
-                                <Typography variant="h6" sx={{ fontWeight: 600, fontFamily: 'Work Sans, sans-serif', textTransform: 'uppercase', fontSize: '18px' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '14px', lineHeight: 1.4, color: '#1A1A18' }}>
                                     {steps[stepIndex]}
                                 </Typography>
                             </Box>
-                            <MuiButton
-                                variant="outlined"
-                                startIcon={<Edit />}
+                            <button
+                                type="button"
                                 onClick={() => handleEdit(stepIndex)}
-                                sx={{
-                                    color: '#C72030',
-                                    borderColor: '#C72030',
-                                    textTransform: 'none',
-                                    borderRadius: 0,
-                                    fontSize: '14px',
-                                    fontFamily: 'Work Sans, sans-serif',
-                                    '&:hover': { borderColor: '#B8252F', backgroundColor: '#FFF5F5' }
-                                }}
+                                className="btn-cancel inline-flex items-center gap-1.5 h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
                             >
+                                <Pencil className="w-4 h-4" />
                                 Edit
-                            </MuiButton>
+                            </button>
                         </SectionHeader>
                         {/* Show summary of completed step */}
                         <SectionBody>

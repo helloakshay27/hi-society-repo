@@ -29,6 +29,7 @@ import {
 } from '@mui/material';
 import apiClient from '@/utils/apiClient';
 
+import { Switch } from "@/components/ui/switch";
 function EditWaterAssetDashboard() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -1731,21 +1732,7 @@ function EditWaterAssetDashboard() {
                                             </span>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm text-gray-600">If Applicable</span>
-                                                <div className="relative inline-block w-12 h-6">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="sr-only peer"
-                                                        id="meter-details-toggle"
-                                                        checked={formData.meterApplicable}
-                                                        onChange={e => setFormData({ ...formData, meterApplicable: e.target.checked })}
-                                                    />
-                                                    <label
-                                                        htmlFor="meter-details-toggle"
-                                                        className={`block w-12 h-6 rounded-full cursor-pointer transition-colors ${formData.meterApplicable ? 'bg-green-400' : 'bg-gray-300'}`}
-                                                    >
-                                                        <span className={`block w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${formData.meterApplicable ? 'translate-x-6' : 'translate-x-1'}`}></span>
-                                                    </label>
-                                                </div>
+                                                <Switch id="meter-details-toggle" checked={!!formData.meterApplicable} onCheckedChange={(checked) => setFormData({ ...formData, meterApplicable: checked })} />
                                                 {meterOpen ? <ChevronUp /> : <ChevronDown />}
                                             </div>
                                         </CardTitle>

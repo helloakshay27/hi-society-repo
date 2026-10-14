@@ -23,6 +23,7 @@ import { fetchAssetTypes } from '@/services/assetTypesAPI';
 import { useNavigate } from 'react-router-dom';
 import { Cog } from 'lucide-react';
 
+import { Switch } from "@/components/ui/switch";
 // Define interfaces for better type safety
 interface AttachmentFile {
   id: string;
@@ -991,51 +992,19 @@ export const ChecklistMasterPage = () => {
 
             <div className="flex items-center gap-4">
               {/* <div className="flex items-center gap-1">
-                <label className={`flex items-center w-12 h-6 rounded-full cursor-pointer transition-colors ${createNew ? 'bg-[#C72030]' : 'bg-gray-300'}`}>
-                  <input
-                    type="checkbox"
-                    checked={createNew}
-                    onChange={(e) => setCreateNew(e.target.checked)}
-                    className="sr-only"
-                  />
-                  <span className={`block w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${createNew ? 'translate-x-6' : 'translate-x-1'}`}></span>
-                </label>
+                <Switch checked={!!(createNew)} onCheckedChange={(checked) => setCreateNew(checked)} />
                 <span className="text-sm text-gray-600 ml-2" style={{ fontFamily: 'Work Sans, sans-serif' }}>Create Template</span>
               </div> */}
               <div className="flex items-center gap-1">
-                <label className={`flex items-center w-12 h-6 rounded-full cursor-pointer transition-colors ${weightage ? 'bg-[#C72030]' : 'bg-gray-300'}`}>
-                  <input
-                    type="checkbox"
-                    checked={weightage}
-                    onChange={(e) => setWeightage(e.target.checked)}
-                    className="sr-only"
-                  />
-                  <span className={`block w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${weightage ? 'translate-x-6' : 'translate-x-1'}`}></span>
-                </label>
+                <Switch checked={!!(weightage)} onCheckedChange={(checked) => setWeightage(checked)} />
                 <span className="text-sm text-gray-600 ml-2" style={{ fontFamily: 'Work Sans, sans-serif' }}>Weightage</span>
               </div>
               <div className="flex items-center gap-1">
-                <label className={`flex items-center w-12 h-6 rounded-full cursor-pointer transition-colors ${autoTicket ? 'bg-[#C72030]' : 'bg-gray-300'}`}>
-                  <input
-                    type="checkbox"
-                    checked={autoTicket}
-                    onChange={(e) => setAutoTicket(e.target.checked)}
-                    className="sr-only"
-                  />
-                  <span className={`block w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${autoTicket ? 'translate-x-6' : 'translate-x-1'}`}></span>
-                </label>
+                <Switch checked={!!(autoTicket)} onCheckedChange={(checked) => setAutoTicket(checked)} />
                 <span className="text-sm text-gray-600 ml-2" style={{ fontFamily: 'Work Sans, sans-serif' }}>Auto Ticket</span>
               </div>
               {/* <div className="flex items-center gap-1">
-                <label className={`flex items-center w-12 h-6 rounded-full cursor-pointer transition-colors ${autoTicket ? 'bg-[#C72030]' : 'bg-gray-300'}`}>
-                  <input
-                    type="checkbox"
-                    checked={autoTicket}
-                    onChange={(e) => setAutoTicket(e.target.checked)}
-                    className="sr-only"
-                  />
-                  <span className={`block w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${autoTicket ? 'translate-x-6' : 'translate-x-1'}`}></span>
-                </label>
+                <Switch checked={!!(autoTicket)} onCheckedChange={(checked) => setAutoTicket(checked)} />
                 <span className="text-sm text-gray-600 ml-2" style={{ fontFamily: 'Work Sans, sans-serif' }}>Auto Ticket</span>
               </div> */}
             </div>

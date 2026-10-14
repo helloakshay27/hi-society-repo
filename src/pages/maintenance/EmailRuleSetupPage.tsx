@@ -10,6 +10,7 @@ import { EmailRule } from '@/types/emailRule';
 import { emailRuleService, mockEmailRules } from '@/services/emailRuleService';
 import { toast } from 'sonner';
 
+import { Switch } from "@/components/ui/switch";
 export const EmailRuleSetupPage: React.FC = () => {
   const [emailRules, setEmailRules] = useState<EmailRule[]>([]);
   const [selectedRules, setSelectedRules] = useState<string[]>([]);
@@ -183,15 +184,7 @@ export const EmailRuleSetupPage: React.FC = () => {
         return <span className="text-sm text-gray-600">{rule.createdBy}</span>;
       case 'active':
         return (
-          <div
-            className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${rule.active ? 'bg-green-500' : 'bg-gray-300'}`}
-            onClick={() => handleToggleActive(rule.id)}
-            aria-label={rule.active ? 'Deactivate email rule' : 'Activate email rule'}
-          >
-            <span
-              className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${rule.active ? 'translate-x-6' : 'translate-x-1'}`}
-            />
-          </div>
+          <Switch checked={!!(rule.active)} onCheckedChange={() => handleToggleActive(rule.id)} aria-label={rule.active ? 'Deactivate email rule' : 'Activate email rule'} />
         );
       default:
         return null;

@@ -134,6 +134,44 @@ interface SitesApiResponse {
   selected_site: Site;
 }
 
+
+interface IconDropzoneProps {
+  id: string;
+  file: File | null;
+  onFile: (file: File | null) => void;
+}
+
+const IconDropzone: React.FC<IconDropzoneProps> = ({ id, file, onFile }) => (
+  <div className="flex items-center gap-3">
+    <label
+      htmlFor={id}
+      className="inline-flex min-h-[42px] shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+    >
+      <Upload className="h-4 w-4" />
+      Upload Icon
+    </label>
+    {file ? (
+      <div className="flex min-w-0 items-center gap-1">
+        <span className="truncate text-sm text-[#1A1A18]">{file.name}</span>
+        <button
+          type="button"
+          onClick={() => {
+            onFile(null);
+            const input = document.getElementById(id) as HTMLInputElement | null;
+            if (input) input.value = '';
+          }}
+          aria-label="Remove icon"
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[rgba(26,26,24,.68)] hover:bg-[#F5F4F0] hover:text-[#1A1A18]"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    ) : (
+      <span className="text-sm text-gray-400">No file chosen</span>
+    )}
+  </div>
+);
+
 export const CategoryTypeTab: React.FC = () => {
   const { shouldShow } = useDynamicPermissions();
   const [categories, setCategories] = useState<CategoryApiResponse['helpdesk_categories']>([]);
@@ -882,7 +920,7 @@ export const CategoryTypeTab: React.FC = () => {
         }
         setAddDialogOpen(open);
       }}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto focus:outline-none focus-visible:outline-none">
           <DialogHeader>
             <DialogTitle>Add Category</DialogTitle>
           </DialogHeader>
@@ -1005,15 +1043,8 @@ export const CategoryTypeTab: React.FC = () => {
                   <label className="block text-sm font-medium">
                     Upload Icon
                   </label>
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="icon-upload" className="cursor-pointer flex-1">
-                      <Button type="button" variant="outline" size="sm" className="w-full justify-start" asChild>
-                        <span>Choose file</span>
-                      </Button>
-                    </label>
-                    <span className="text-sm text-gray-600">
-                      {iconFile ? iconFile.name : 'No file chosen'}
-                    </span>
+                  <IconDropzone id="icon-upload" file={iconFile} onFile={setIconFile} />
+                  <div>
                     <input
                       id="icon-upload"
                       type="file"
@@ -1027,25 +1058,27 @@ export const CategoryTypeTab: React.FC = () => {
             </div>
           </Form>
           <DialogFooter>
-            <Button
+            <button
               type="button"
               onClick={() => setAddDialogOpen(false)}
-              className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"            >
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+            >
               Cancel
-            </Button>
-            <Button
+            </button>
+            <button
+              type="button"
               onClick={handleCreateSubmit}
               disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {isSubmitting ? 'Submitting...' : 'Submit'}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Category Types Table */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div>
         <EnhancedTable
           data={transformedCategories}
           columns={columns}
@@ -1088,7 +1121,7 @@ export const CategoryTypeTab: React.FC = () => {
 
       {/* Edit Category Modal */}
       <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto focus:outline-none focus-visible:outline-none">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Edit Category</DialogTitle>
           </DialogHeader>
@@ -1204,17 +1237,8 @@ export const CategoryTypeTab: React.FC = () => {
                 {/* Upload Icon */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium">Upload Icon</label>
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="edit-icon-upload" className="cursor-pointer flex-1">
-                      <Button type="button" variant="outline" size="sm" className="w-full justify-start" asChild>
-                        <span>
-                          Choose file
-                        </span>
-                      </Button>
-                    </label>
-                    <span className="text-sm text-gray-600">
-                      {editIconFile ? editIconFile.name : 'No file chosen'}
-                    </span>
+                  <IconDropzone id="edit-icon-upload" file={editIconFile} onFile={setEditIconFile} />
+                  <div>
                     <input
                       id="edit-icon-upload"
                       type="file"
@@ -1421,23 +1445,24 @@ export const CategoryTypeTab: React.FC = () => {
 
 
               <div className="flex justify-end gap-3 pt-4">
-                <Button
+                <button
                   type="button"
                   onClick={() => {
                     setIsEditModalOpen(false);
                     setEditingCategory(null);
                   }}
-                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
+                  type="button"
                   onClick={() => handleEditSubmit()}
                   disabled={isSubmitting}
-                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                 >
                   {isSubmitting ? 'Updating...' : 'Submit'}
-                </Button>
+                </button>
               </div>
             </div>
           )}

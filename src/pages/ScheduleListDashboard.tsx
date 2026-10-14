@@ -28,6 +28,7 @@ import { Pagination, PaginationItem, PaginationContent, PaginationPrevious, Pagi
 import axios from 'axios';
 import { Loader2 } from 'lucide-react';
 
+import { Switch as UISwitch } from "@/components/ui/switch";
 export const ScheduleListDashboard = () => {
   const navigate = useNavigate();
   // State for deactivate modal (must be inside component)
@@ -496,15 +497,7 @@ export const ScheduleListDashboard = () => {
           );
       return (
         <div className="flex items-center justify-center">
-          <div
-            className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${isActive ? 'bg-green-500' : 'bg-gray-300'}`}
-            onClick={() => handleToggleActive(item.custom_form_code)}
-            aria-label={isActive ? 'Deactivate schedule' : 'Activate schedule'}
-          >
-            <span
-              className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`}
-            />
-          </div>
+          <UISwitch checked={!!(isActive)} onCheckedChange={() => handleToggleActive(item.custom_form_code)} aria-label={isActive ? 'Deactivate schedule' : 'Activate schedule'} />
         </div>
       );
     }

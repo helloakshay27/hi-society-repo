@@ -4,6 +4,7 @@ import { Eye, Plus, Download, Filter, Mail, ArrowUpDown, Search, RotateCcw } fro
 import { EnhancedTable } from "./enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 
+import { Switch } from "@/components/ui/switch";
 interface SupplierTableProps {
   onAddSupplier: () => void;
 }
@@ -111,9 +112,7 @@ export const SupplierTable = ({ onAddSupplier }: SupplierTableProps) => {
     signedOnContract: item.signedOnContract,
     status: (
       <div className="flex items-center">
-        <div className={`w-12 h-6 rounded-full ${item.status ? 'bg-orange-500' : 'bg-gray-300'} relative cursor-pointer transition-colors`}>
-          <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${item.status ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
-        </div>
+        <Switch checked={!!(item.status)} tabIndex={-1} className="pointer-events-none" />
       </div>
     ),
     kycEndInDays: item.kycEndInDays,

@@ -370,7 +370,8 @@ variant="ghost"
   );
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">Image Configuration</h1>
       {renderListTab()}
     </div>
   );

@@ -63,7 +63,7 @@ const AccountingDownloadReport: React.FC = () => {
       <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white py-16 px-6 text-center">
         <div
           className="mb-4 flex h-14 w-14 items-center justify-center rounded-full"
-          style={{ backgroundColor: "#E5E0D3" }}
+          style={{ backgroundColor: "#e1e1e1" }}
         >
           <Download size={24} color="var(--color-primary,#da7756)" />
         </div>

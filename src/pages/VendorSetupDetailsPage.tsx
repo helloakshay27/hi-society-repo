@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Wrench } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import {
@@ -15,11 +14,11 @@ import { TextField } from '@mui/material';
 const fieldStyles = {
   '& .MuiOutlinedInput-root': {
     '& fieldset': { borderColor: '#ddd' },
-    '&:hover fieldset': { borderColor: '#C72030' },
-    '&.Mui-focused fieldset': { borderColor: '#C72030' },
+    '&:hover fieldset': { borderColor: '#1A1A18' },
+    '&.Mui-focused fieldset': { borderColor: '#1A1A18' },
   },
   '& .MuiInputLabel-root': {
-    '&.Mui-focused': { color: '#C72030' },
+    '&.Mui-focused': { color: '#1A1A18' },
   },
 };
 
@@ -202,19 +201,19 @@ const VendorSetupDetailsPage: React.FC = () => {
           {/* Edit button top-right */}
           <button
             onClick={() => setEditDialogOpen(true)}
-            className="absolute top-4 right-4 p-2 border border-[#C72030] rounded-md hover:bg-red-50 transition-colors"
+            className="absolute top-4 right-4 p-2 border border-[rgba(26,26,24,.08)] rounded-lg bg-white hover:border-[rgba(26,26,24,.28)] transition-colors"
             title="Edit"
           >
-            <Edit className="w-4 h-4 text-[#C72030]" />
+            <Edit className="w-4 h-4 text-[#1A1A18]" />
           </button>
 
           {/* Section header */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
-              <Wrench className="w-4 h-4 text-orange-600" />
-            </div>
-            <h2 className="text-sm font-bold text-orange-600 uppercase tracking-wide">
-              VENDOR INFORMATION
+            <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+              <Wrench size={14} color="#1A1A18" />
+            </span>
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+              Vendor Information
             </h2>
           </div>
 
@@ -244,7 +243,7 @@ const VendorSetupDetailsPage: React.FC = () => {
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl border border-[rgba(26,26,24,.09)]">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold">Edit Vendor</DialogTitle>
           </DialogHeader>
@@ -349,24 +348,41 @@ const VendorSetupDetailsPage: React.FC = () => {
                 sx={fieldStyles}
               />
             </div>
-            <TextField
-              label="Address"
-              placeholder="Address"
-              value={form.address}
-              onChange={(e) => updateForm('address', e.target.value)}
-              fullWidth
-              multiline
-              rows={3}
-              variant="outlined"
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={fieldStyles}
-            />
+            <div className="relative pt-2">
+              <label
+                htmlFor="vendor-address"
+                className="absolute top-0 left-3 bg-white px-1 text-xs text-[rgba(0,0,0,0.6)]"
+              >
+                Address
+              </label>
+              <textarea
+                id="vendor-address"
+                placeholder="Address"
+                value={form.address}
+                onChange={(e) => updateForm('address', e.target.value)}
+                rows={3}
+                className="block w-full px-[14px] py-3 text-sm border border-[#ddd] rounded hover:border-[#1A1A18] focus:outline-none focus:border-[#1A1A18] resize-y"
+              />
+            </div>
           </div>
 
-          <div className="flex justify-end pt-3 border-t">
-            <Button onClick={handleEditSubmit} disabled={isSubmitting} className="bg-[#C72030] hover:bg-[#a01828] text-white px-8">
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setEditDialogOpen(false)}
+              disabled={isSubmitting}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleEditSubmit}
+              disabled={isSubmitting}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+            >
               {isSubmitting ? 'Submitting...' : 'Submit'}
-            </Button>
+            </button>
           </div>
         </DialogContent>
       </Dialog>

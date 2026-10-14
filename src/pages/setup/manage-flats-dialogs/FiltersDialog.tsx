@@ -1,6 +1,5 @@
 import React from "react";
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -50,18 +49,20 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
 
   return (
     <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white">
-        <DialogHeader className="p-4 flex flex-row items-center justify-between">
-          <DialogTitle className="text-lg font-bold">Advance Filter</DialogTitle>
+      <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white rounded-2xl border border-[rgba(26,26,24,.09)] focus:outline-none focus-visible:outline-none">
+        <DialogHeader className="py-4 px-6 flex flex-row items-center justify-between space-y-0 border-b border-[rgba(26,26,24,.09)]">
+          <DialogTitle className="text-lg font-semibold text-[#1A1A18]">Advance Filter</DialogTitle>
           <button
+            type="button"
             onClick={() => onOpenChange(false)}
-            className="text-red-500 hover:text-red-700 transition-colors"
+            aria-label="Close"
+            className="flex items-center justify-center w-8 h-8 rounded-md text-[rgba(26,26,24,.68)] hover:bg-[#F5F4F0] hover:text-[#1A1A18] transition-colors focus:outline-none"
           >
             <X className="h-5 w-5" />
           </button>
         </DialogHeader>
 
-        <div className="p-8 space-y-6">
+        <div className="p-6 space-y-6">
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             {/* Select Tower */}
             <MuiFormControl fullWidth variant="outlined">
@@ -77,7 +78,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                 renderValue={(selected: string[]) =>
                   selected.length
                     ? towerSelectOptions.filter(o => selected.includes(o.value)).map(o => o.label).join(', ')
-                    : <em>Select Tower</em>
+                    : <span className="text-gray-400">Select Tower</span>
                 }
               >
                 {towerSelectOptions.length === 0 ? (
@@ -108,7 +109,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                 renderValue={(selected: string[]) =>
                   selected.length
                     ? flatOptions.filter(o => selected.includes(o.value)).map(o => o.label).join(', ')
-                    : <em>Select Flat</em>
+                    : <span className="text-gray-400">Select Flat</span>
                 }
               >
                 {flatOptions.length === 0 ? (
@@ -139,7 +140,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                 renderValue={(selected: string[]) =>
                   selected.length
                     ? flatTypeSelectOptions.filter(o => selected.includes(o.value)).map(o => o.label).join(', ')
-                    : <em>Select Flat Type</em>
+                    : <span className="text-gray-400">Select Flat Type</span>
                 }
               >
                 {flatTypeSelectOptions.length === 0 ? (
@@ -170,7 +171,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                 renderValue={(selected: string[]) =>
                   selected.length
                     ? statusOptions.filter(o => selected.includes(o.value)).map(o => o.label).join(', ')
-                    : <em>Select Status</em>
+                    : <span className="text-gray-400">Select Status</span>
                 }
               >
                 {statusOptions.map((opt) => (
@@ -192,7 +193,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Occupancy</em></MenuItem>
+                <MenuItem value=""><span className="text-gray-400">Select Occupancy</span></MenuItem>
                 <MenuItem value="Yes">Yes</MenuItem>
                 <MenuItem value="No">No</MenuItem>
               </MuiSelect>
@@ -200,18 +201,21 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-center gap-4 pt-4">
-            <Button
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
               onClick={onReset}
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]   h-10"              >
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+            >
               Reset
-            </Button>
-            <Button
+            </button>
+            <button
+              type="button"
               onClick={onApply}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               Apply
-            </Button>
+            </button>
           </div>
         </div>
       </DialogContent>

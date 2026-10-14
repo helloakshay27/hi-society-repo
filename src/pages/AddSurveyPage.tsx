@@ -926,7 +926,7 @@ export const AddSurveyPage = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-[#FDFDFB] min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Add Question</h1>
@@ -934,14 +934,14 @@ export const AddSurveyPage = () => {
 
       <div className="space-y-6">
         {/* Section 1: Survey Details */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
               <span
                 className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-                style={{ backgroundColor: "#E5E0D3" }}
+                style={{ backgroundColor: "#F5F4F0" }}
               >
-                <ClipboardList size={16} color="#C72030" />
+                <ClipboardList size={14} color="#1A1A18" />
               </span>
               Question Setup
             </h2>
@@ -1093,7 +1093,7 @@ export const AddSurveyPage = () => {
               <label className="text-sm font-medium text-gray-700">
                 Upload Image
               </label>
-              <div className="flex items-center gap-4 grid grid-cols-3">
+              <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <input
                     type="file"
@@ -1115,10 +1115,10 @@ export const AddSurveyPage = () => {
                   />
                   <label
                     htmlFor="survey-image"
-                    className={`block w-full px-4 py-2 text-sm text-center border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                    className={`flex w-full flex-col items-center justify-center p-8 text-sm text-center border-2 border-dashed border-[#EBE9E2] rounded-xl transition-colors ${
                       isSubmitting
-                        ? "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
-                        : "border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-600 hover:text-gray-600"
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "cursor-pointer hover:border-[#1A1A18] text-gray-600"
                     }`}
                   >
                     {questions.length > 0 && questions[0].questionImage
@@ -1161,14 +1161,14 @@ export const AddSurveyPage = () => {
         </div>
 
         {/* Section 2: Questions */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px] flex justify-between items-center">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
               <span
                 className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-                style={{ backgroundColor: "#E5E0D3" }}
+                style={{ backgroundColor: "#F5F4F0" }}
               >
-                <HelpCircle size={16} color="#C72030" />
+                <HelpCircle size={14} color="#1A1A18" />
               </span>
               Questions
             </h2>
@@ -1190,7 +1190,7 @@ export const AddSurveyPage = () => {
               {questions.map((question, index) => (
                 <div
                   key={question.id}
-                  className="border border-gray-200 rounded-lg p-4 space-y-4 bg-gray-50/50"
+                  className="space-y-4"
                 >
                   <div className="flex items-center justify-between">
                     <h3 className="font-medium text-gray-800">
@@ -1683,32 +1683,35 @@ export const AddSurveyPage = () => {
             </div>
 
             <div className="flex justify-center mt-8">
-              <Button
+              <button
+                type="button"
                 onClick={handleAddQuestion}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
               >
                 <Plus className="w-4 h-4 mr-2" /> Add More Questions
-              </Button>
+              </button>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 justify-center pt-6">
-          <Button
-            onClick={handleCreateSurvey}
-            disabled={loading || isSubmitting}
-            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading || isSubmitting ? "Creating..." : "Create"}
-          </Button>
-          <Button
+        <div className="flex justify-end gap-3 pb-8">
+          <button
             type="button"
             onClick={() => navigate(-1)}
             disabled={loading || isSubmitting}
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10"          >
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+          >
             Cancel
-          </Button>
+          </button>
+          <button
+            type="button"
+            onClick={handleCreateSurvey}
+            disabled={loading || isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+          >
+            {loading || isSubmitting ? "Creating..." : "Create"}
+          </button>
         </div>
       </div>
     </div>

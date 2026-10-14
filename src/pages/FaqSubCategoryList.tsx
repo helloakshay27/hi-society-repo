@@ -8,6 +8,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, Pagi
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
+import { Switch } from "@/components/ui/switch";
 interface FaqSubCategory {
   id: number;
   srNo?: number;
@@ -201,18 +202,7 @@ const FaqSubCategoryList = () => {
       case 'active':
         return (
           <div className="flex items-center justify-center">
-            <button
-              onClick={() => handleToggle(item.id, item.active)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                item.active ? "bg-[#C72030]" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  item.active ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch checked={!!(item.active)} onCheckedChange={() => handleToggle(item.id, item.active)} />
           </div>
         );
       case 'faq_category_id':
@@ -290,7 +280,8 @@ variant="ghost"
   );
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">FAQ Sub Categories</h1>
       {renderListTab()}
     </div>
   );

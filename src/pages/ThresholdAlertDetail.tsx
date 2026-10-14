@@ -25,6 +25,7 @@ import {
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
 
+import { Switch } from "@/components/ui/switch";
 // ────────────────────────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────────────────────────
@@ -481,23 +482,8 @@ const ThresholdAlertDetail: React.FC = () => {
                       >
                         {editForm.alert_enabled ? "Active" : "Inactive"}
                       </span>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={editForm.alert_enabled ? "true" : "false"}
-                        onClick={() =>
-                          handleFormChange("alert_enabled", !editForm.alert_enabled)
-                        }
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                          editForm.alert_enabled ? "bg-[#C72030]" : "bg-gray-300"
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                            editForm.alert_enabled ? "translate-x-6" : "translate-x-1"
-                          }`}
-                        />
-                      </button>
+                      <Switch checked={!!(editForm.alert_enabled)} onCheckedChange={() =>
+                          handleFormChange("alert_enabled", !editForm.alert_enabled)} />
                     </div>
                   </div>
                 </CardContent>

@@ -5,8 +5,7 @@ import { toast } from 'sonner';
 import { BasicDetailsSection } from '@/components/BasicDetailsSection';
 import { AttachmentsSection } from '@/components/AttachmentsSection';
 import { ActionButtons } from '@/components/ActionButtons';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowLeft, ChevronRight } from 'lucide-react';
 
 
 export const AddDesignInsightDashboard = () => {
@@ -123,32 +122,72 @@ export const AddDesignInsightDashboard = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 bg-white min-h-screen">
+    <div className="p-4 sm:p-6 min-h-screen design-insight-add-page">
+      <style>{`
+        /* ---- Reference design: canvas, card, fields ---- */
+        html body #root .design-insight-add-page {
+          background-color: #FDFDFB !important;
+        }
+        html body #root .design-insight-add-page .MuiOutlinedInput-root {
+          min-height: 44px;
+          border-radius: 12px !important;
+          background-color: #FFFFFF !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease;
+        }
+        html body #root .design-insight-add-page .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+        }
+        html body #root .design-insight-add-page .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .design-insight-add-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: #1A1A18 !important;
+          border-width: 1px !important;
+        }
+        html body #root .design-insight-add-page .MuiOutlinedInput-root.Mui-focused {
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .design-insight-add-page .MuiOutlinedInput-input::placeholder,
+        html body #root .design-insight-add-page textarea::placeholder {
+          color: rgba(26, 26, 24, 0.3) !important;
+          opacity: 1 !important;
+        }
+        html body #root .design-insight-add-page .MuiInputLabel-root {
+          color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+        html body #root .design-insight-add-page textarea:focus {
+          border-color: #1A1A18 !important;
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+          outline: none;
+        }
+      `}</style>
       {/* Header */}
       {/* <div className="mb-6">
         <p className="text-gray-600 mb-2 text-sm">Design Insight &gt; NEW Design Insight</p>
         <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a] uppercase">NEW DESIGN INSIGHT</h1>
       </div> */}
       {/* Header */}
-<div className="mb-6 flex items-center gap-3">
-  <Button
-    variant="ghost"
-    size="icon"
-    onClick={handleBack}
-    className="hover:bg-gray-100"
-  >
-    <ArrowLeft className="h-5 w-5 text-gray-700" />
-  </Button>
-
-  <div>
-    <p className="text-gray-600 mb-1 text-sm">
-      Design Insight &gt; NEW Design Insight
-    </p>
-    <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a] uppercase">
-      NEW DESIGN INSIGHT
-    </h1>
-  </div>
-</div>
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3" style={{ color: "rgba(26, 26, 24, 0.48)" }}>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Design Insight List</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold" style={{ color: "#1A1A18" }}>Create New Design Insight</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>New Design Insight</h1>
+      </div>
 
 
       {/* Basic Details Section */}

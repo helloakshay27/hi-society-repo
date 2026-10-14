@@ -18,11 +18,11 @@ import { TextField } from '@mui/material';
 const fieldStyles = {
   '& .MuiOutlinedInput-root': {
     '& fieldset': { borderColor: '#ddd' },
-    '&:hover fieldset': { borderColor: '#C72030' },
-    '&.Mui-focused fieldset': { borderColor: '#C72030' },
+    '&:hover fieldset': { borderColor: '#1A1A18' },
+    '&.Mui-focused fieldset': { borderColor: '#1A1A18' },
   },
   '& .MuiInputLabel-root': {
-    '&.Mui-focused': { color: '#C72030' },
+    '&.Mui-focused': { color: '#1A1A18' },
   },
 };
 
@@ -520,9 +520,9 @@ variant="ghost"
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl border border-[rgba(26,26,24,.09)]">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold">
+            <DialogTitle className="text-base font-semibold text-[#1A1A18]">
               {editingVendor ? 'Edit Vendor' : 'Add Vendor'}
             </DialogTitle>
           </DialogHeader>
@@ -636,29 +636,42 @@ variant="ghost"
             </div>
 
             {/* Row 5: Address */}
-            <TextField
-              label="Address"
-              placeholder="Address"
-              value={form.address}
-              onChange={(e) => updateForm('address', e.target.value)}
-              fullWidth
-              multiline
-              rows={3}
-              variant="outlined"
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={fieldStyles}
-            />
+            <div className="relative pt-2">
+              <label
+                htmlFor="vendor-address"
+                className="absolute top-0 left-3 bg-white px-1 text-xs text-[rgba(0,0,0,0.6)]"
+              >
+                Address
+              </label>
+              <textarea
+                id="vendor-address"
+                placeholder="Address"
+                value={form.address}
+                onChange={(e) => updateForm('address', e.target.value)}
+                rows={3}
+                className="block w-full px-[14px] py-3 text-sm border border-[#ddd] rounded hover:border-[#1A1A18] focus:outline-none focus:border-[#1A1A18] resize-y"
+              />
+            </div>
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end pt-3 border-t">
-            <Button
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setDialogOpen(false)}
+              disabled={isSubmitting}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#a01828] text-white px-8"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {isSubmitting ? 'Submitting...' : 'Submit'}
-            </Button>
+            </button>
           </div>
         </DialogContent>
       </Dialog>

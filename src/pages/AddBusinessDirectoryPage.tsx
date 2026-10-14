@@ -518,7 +518,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                   <label htmlFor="gallery-upload">
                     <Button
                       variant="outline"
-                      className="cursor-pointer border-dashed border-gray-300 hover:border-[#da7756] hover:text-[#da7756] [&_svg]:text-[#da7756] transition-colors"
+                      className="cursor-pointer border-dashed border-gray-300 hover:border-[#1A1A18] hover:text-[#1A1A18] [&_svg]:text-[#1A1A18] transition-colors"
                       asChild
                     >
                       <span className="flex items-center gap-2">

@@ -8,6 +8,7 @@ import { apiClient } from '@/utils/apiClient';
 import { toast } from 'sonner';
 import { SelectionPanel } from './water-asset-details/PannelTab';
 
+import { Switch } from "@/components/ui/switch";
 interface Group {
   id: number;
   srNo: number;
@@ -355,15 +356,7 @@ export const GroupsPageTemplate = ({
                       <TableCell className="text-center">{group.srNo}</TableCell>
                       <TableCell>{group.groupName}</TableCell>
                       <TableCell className="text-center">
-                        <div
-                          className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${group.status ? 'bg-green-500' : 'bg-gray-300'}`}
-                          onClick={() => toggleGroupStatus(group.id)}
-                          aria-label={group.status ? 'Deactivate group' : 'Activate group'}
-                        >
-                          <span
-                            className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${group.status ? 'translate-x-6' : 'translate-x-1'}`}
-                          />
-                        </div>
+                        <Switch checked={!!(group.status)} onCheckedChange={() => toggleGroupStatus(group.id)} aria-label={group.status ? 'Deactivate group' : 'Activate group'} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -394,15 +387,7 @@ export const GroupsPageTemplate = ({
                       <TableCell>{subGroup.groupName}</TableCell>
                       <TableCell>{subGroup.subGroupName}</TableCell>
                       <TableCell className="text-center">
-                        <div
-                          className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors ${subGroup.status ? 'bg-green-500' : 'bg-gray-300'}`}
-                          onClick={() => toggleSubGroupStatus(subGroup.id)}
-                          aria-label={subGroup.status ? 'Deactivate sub group' : 'Activate sub group'}
-                        >
-                          <span
-                            className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${subGroup.status ? 'translate-x-6' : 'translate-x-1'}`}
-                          />
-                        </div>
+                        <Switch checked={!!(subGroup.status)} onCheckedChange={() => toggleSubGroupStatus(subGroup.id)} aria-label={subGroup.status ? 'Deactivate sub group' : 'Activate sub group'} />
                       </TableCell>
                     </TableRow>
                   ))}

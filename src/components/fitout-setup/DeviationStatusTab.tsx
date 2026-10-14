@@ -477,7 +477,7 @@ export const DeviationStatusTab: React.FC = () => {
   );
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div>
       <EnhancedTable
         data={paginatedStatuses}
         columns={columns}

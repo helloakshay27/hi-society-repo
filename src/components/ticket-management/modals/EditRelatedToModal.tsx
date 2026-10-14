@@ -144,22 +144,13 @@ export const EditRelatedToModal: React.FC<EditRelatedToModalProps> = ({
               )}
             />
 
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={isSubmitting}
-              >
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={onClose} disabled={isSubmitting} className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60">
                 Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-[#C72030] hover:bg-[#A01828] text-white"
-              >
+              </button>
+              <button type="submit" disabled={isSubmitting} className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60">
                 {isSubmitting ? 'Updating...' : 'Update'}
-              </Button>
+              </button>
             </div>
           </form>
         </Form>

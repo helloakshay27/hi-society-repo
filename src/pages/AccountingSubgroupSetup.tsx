@@ -84,12 +84,12 @@ const AccountingSubgroupSetup: React.FC = () => {
 
   const lockAccountId = localStorage.getItem("lock_account_id") || "3";
 
-  const authHeaders = () => {
   const { onAccountingViewed } = useAccountingEvents();
   React.useEffect(() => {
-    onAccountingViewed({ accounting_id: 'subgroup_setup', screen_name: 'AccountingSubgroupSetup' });;
+    onAccountingViewed({ accounting_id: 'subgroup_setup', screen_name: 'AccountingSubgroupSetup' });
   }, []);
 
+  const authHeaders = () => {
     const token = API_CONFIG.TOKEN;
     return {
       Accept: "application/json",

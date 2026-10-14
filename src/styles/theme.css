@@ -6233,3 +6233,134 @@ html body .MuiDialog-paper,
 html body .MuiCard-root {
   border-radius: 16px !important;
 }
+
+
+/* ============================================================
+   FORM ACTION BUTTONS — match the helpdesk "New Ticket" footer
+   (src/pages/BMS/AddHelpdeskTicket.tsx). Overrides the black-outlined
+   cancel rule above: secondary/cancel buttons get a hairline border and
+   muted ink that darkens on hover; primary keeps solid ink. Colour,
+   border, weight and radius only — sizes stay per-component so 36px
+   toolbar buttons still line up with the search box.
+   ============================================================ */
+html body button.btn-cancel,
+html body .btn-cancel,
+html body button.cancel-btn,
+html body button[class*="bg-white" i][class*="text-[#C72030]" i],
+html body button[class*="bg-white" i][class*="text-[#DA7756]" i],
+html body button[class*="bg-white" i][class*="text-[#d97757]" i],
+html body button[class*="border-[#da7756]" i],
+html body button[class*="border-[#d97757]" i] {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(26, 26, 24, 0.08) !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+  -webkit-text-fill-color: rgba(26, 26, 24, 0.68) !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-button, 8px) !important;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+html body button.btn-cancel:hover,
+html body .btn-cancel:hover,
+html body button.cancel-btn:hover,
+html body button[class*="bg-white" i][class*="text-[#C72030]" i]:hover,
+html body button[class*="bg-white" i][class*="text-[#DA7756]" i]:hover,
+html body button[class*="bg-white" i][class*="text-[#d97757]" i]:hover,
+html body button[class*="border-[#da7756]" i]:hover,
+html body button[class*="border-[#d97757]" i]:hover {
+  background-color: #ffffff !important;
+  border-color: rgba(26, 26, 24, 0.28) !important;
+  color: #1a1a18 !important;
+  -webkit-text-fill-color: #1a1a18 !important;
+}
+html body :is(button.btn-cancel, .btn-cancel, button.cancel-btn, button[class*="border-[#da7756]" i]) svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+html body button[type="submit"]:not([role="switch"]),
+html body button.btn-primary {
+  font-weight: 600 !important;
+  border-radius: var(--radius-button, 8px) !important;
+}
+html body button[type="submit"]:not([role="switch"]):hover,
+html body button.btn-primary:hover {
+  background-color: #12100e !important;
+  border-color: #12100e !important;
+}
+html body button[type="submit"]:disabled,
+html body button.btn-primary:disabled {
+  opacity: 0.6;
+}
+
+/* ============================================================
+   RADIO BUTTONS — neutral ink everywhere (global)
+   Overrides the older brand-colored radio rules above so MUI,
+   Radix and native radios all match the form radio style.
+   ============================================================ */
+html body .MuiRadio-root,
+html body .MuiRadio-root.Mui-checked,
+html body [class*="MuiRadio-root"],
+html body [class*="MuiRadio-root"].Mui-checked {
+  color: #1a1a18 !important;
+}
+html body .MuiRadio-root svg {
+  color: inherit !important;
+}
+html body .MuiFormControlLabel-root:has(.MuiRadio-root) .MuiFormControlLabel-label {
+  color: #1a1a18 !important;
+}
+html body .MuiFormLabel-root.Mui-focused:has(+ .MuiRadioGroup-root),
+html body .MuiFormControl-root:has(.MuiRadioGroup-root) > .MuiFormLabel-root.Mui-focused {
+  color: rgba(26, 26, 24, 0.6) !important;
+}
+html body input[type="radio"] {
+  accent-color: #1a1a18 !important;
+}
+html body [role="radio"],
+html body [role="radio"][data-state="checked"] {
+  border-color: #1a1a18 !important;
+  color: #1a1a18 !important;
+}
+html body [role="radio"] span,
+html body [role="radio"] > span,
+html body [role="radio"] div {
+  background-color: #1a1a18 !important;
+}
+html body [role="radio"] svg {
+  fill: #1a1a18 !important;
+  color: #1a1a18 !important;
+}
+
+
+/* ============================================================
+   RADIO BUTTONS — final global override (theme ink #1a1a18)
+   Wins over page-level sx, legacy #C72030 rules and the runtime
+   colorPatch.ts <style> tag. Covers color AND fill on the icon and
+   its paths, so neither the ring nor the dot can stay red/orange.
+   ============================================================ */
+html body #root .MuiRadio-root,
+html body #root .MuiRadio-root.Mui-checked,
+html body #root [class*="MuiRadio-root"],
+html body #root [class*="MuiRadio-root"].Mui-checked,
+html body .MuiRadio-root,
+html body .MuiRadio-root.Mui-checked {
+  color: #1a1a18 !important;
+}
+html body #root .MuiRadio-root svg,
+html body #root .MuiRadio-root svg path,
+html body #root .MuiRadio-root .MuiSvgIcon-root,
+html body .MuiRadio-root svg,
+html body .MuiRadio-root svg path {
+  color: #1a1a18 !important;
+  fill: #1a1a18 !important;
+}
+html body #root .MuiRadio-root:hover {
+  background-color: rgba(26, 26, 24, 0.04) !important;
+}
+html body #root .MuiRadio-root .MuiTouchRipple-root {
+  color: #1a1a18 !important;
+}
+html body #root input[type="radio"],
+html body input[type="radio"] {
+  accent-color: #1a1a18 !important;
+}
