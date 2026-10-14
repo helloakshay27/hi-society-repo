@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronRight, CreditCard, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { TextField, MenuItem } from '@mui/material';
@@ -10,30 +10,6 @@ interface PaymentSchedule {
     month_number: number;
     percentage: string;
 }
-
-// Field styles for Material-UI components (matches BMS/AddHelpdeskTicket.tsx)
-const fieldStyles = {
-    height: '45px',
-    backgroundColor: '#fff',
-    borderRadius: '4px',
-    '& .MuiOutlinedInput-root': {
-        height: '45px',
-        '& fieldset': {
-            borderColor: '#ddd',
-        },
-        '&:hover fieldset': {
-            borderColor: '#C72030',
-        },
-        '&.Mui-focused fieldset': {
-            borderColor: '#C72030',
-        },
-    },
-    '& .MuiInputLabel-root': {
-        '&.Mui-focused': {
-            color: '#C72030',
-        },
-    },
-};
 
 const FREQUENCY_OPTIONS = [
     { value: 'monthly', label: 'Monthly', months: 12 },
@@ -209,34 +185,176 @@ const CMSPaymentPlanSetupAdd = () => {
 
     const totalPercentage = calculateTotalPercentage();
 
-    return (
-        <div className="p-[30px] min-h-screen bg-transparent cms-payment-plan-setup-add-page">
-            <style>{`.cms-payment-plan-setup-add-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
-            {/* Header */}
-            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2 cursor-pointer">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-1 hover:text-gray-800 transition-colors"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span>Back</span>
-                </button>
-            </div>
+    const totalTone =
+        totalPercentage === 100 ? 'is-success' : totalPercentage > 100 ? 'is-danger' : 'is-warning';
 
-            <div className="flex items-center gap-4 mb-6">
-                <h1 className="text-[24px] font-semibold text-[#1a1a1a]">
-                    {isEditMode ? 'Edit Payment Plan' : 'Add Payment Plan'}
+    return (
+        <div className="p-6 min-h-screen cms-payment-plan-setup-add-page">
+            <style>{`
+                html body #root .cms-payment-plan-setup-add-page {
+                    background-color: #FDFDFB !important;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-card {
+                    background: #FFFFFF;
+                    border: 1px solid rgba(26, 26, 24, 0.09);
+                    border-radius: 16px;
+                    overflow: hidden;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-card + .ref-card {
+                    margin-top: 16px;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-card-head {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 22px 24px 0;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-card-head h2 {
+                    flex: 1;
+                    margin: 0;
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #1A1A18;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-chip {
+                    width: 32px;
+                    height: 32px;
+                    flex: none;
+                    border-radius: 9999px;
+                    background: #F5F4F0;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-chip svg {
+                    width: 14px;
+                    height: 14px;
+                    color: #1A1A18 !important;
+                    stroke: #1A1A18 !important;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-card-body {
+                    padding: 20px 24px 22px;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-pill {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 4px 10px;
+                    border-radius: 9999px;
+                    font-size: 12px;
+                    font-weight: 600;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-pill.is-success {
+                    background: rgba(121, 140, 94, 0.18);
+                    color: #56683F;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-pill.is-danger {
+                    background: rgba(231, 132, 142, 0.18);
+                    color: #A63D49;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-pill.is-warning {
+                    background: rgba(237, 196, 136, 0.3);
+                    color: #85621F;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-table {
+                    width: 100%;
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    border: 1px solid rgba(26, 26, 24, 0.09);
+                    border-radius: 12px;
+                    overflow: hidden;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-table th {
+                    background: #F5F4F0 !important;
+                    color: rgba(26, 26, 24, 0.68) !important;
+                    font-size: 12px;
+                    font-weight: 600;
+                    text-align: left;
+                    padding: 10px 16px;
+                    border-bottom: 1px solid rgba(26, 26, 24, 0.09);
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-table td {
+                    padding: 8px 16px;
+                    font-size: 13.5px;
+                    font-weight: 500;
+                    color: #1A1A18;
+                    border-bottom: 1px solid rgba(26, 26, 24, 0.06);
+                    background: #FFFFFF;
+                }
+                html body #root .cms-payment-plan-setup-add-page .ref-table tr:last-child td {
+                    border-bottom: none;
+                }
+                html body #root .cms-payment-plan-setup-add-page .MuiOutlinedInput-root {
+                    min-height: 44px;
+                    border-radius: 12px !important;
+                    background-color: #FFFFFF !important;
+                    font-size: 13.5px !important;
+                    font-weight: 500;
+                    color: #1A1A18;
+                    transition: box-shadow 0.16s ease;
+                }
+                html body #root .cms-payment-plan-setup-add-page .MuiOutlinedInput-notchedOutline {
+                    border-color: rgba(26, 26, 24, 0.08) !important;
+                    border-radius: 12px !important;
+                }
+                html body #root .cms-payment-plan-setup-add-page .MuiOutlinedInput-root:not(.Mui-disabled):hover .MuiOutlinedInput-notchedOutline {
+                    border-color: rgba(26, 26, 24, 0.28) !important;
+                }
+                html body #root .cms-payment-plan-setup-add-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+                    border-color: #1A1A18 !important;
+                    border-width: 1px !important;
+                }
+                html body #root .cms-payment-plan-setup-add-page .MuiOutlinedInput-root.Mui-focused {
+                    box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+                }
+                html body #root .cms-payment-plan-setup-add-page .MuiInputLabel-root {
+                    color: rgba(26, 26, 24, 0.68) !important;
+                    -webkit-text-fill-color: rgba(26, 26, 24, 0.68) !important;
+                    font-weight: 600 !important;
+                }
+                html body #root .cms-payment-plan-setup-add-page .MuiFormLabel-asterisk {
+                    color: #ef4444 !important;
+                    -webkit-text-fill-color: #ef4444 !important;
+                }
+                html body #root .cms-payment-plan-setup-add-page input::placeholder {
+                    color: rgba(26, 26, 24, 0.3) !important;
+                    opacity: 1;
+                }
+            `}</style>
+
+            {/* Header */}
+            <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-[#1A1A18] hover:bg-[#F5F4F0] transition-colors"
+                        aria-label="Back"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                    </button>
+                    <span className="text-[13px] text-[rgba(26,26,24,0.55)]">Payment Plan Setup</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-[rgba(26,26,24,0.4)]" />
+                    <span className="text-[13px] font-semibold text-[#1A1A18]">
+                        {isEditMode ? 'Edit Payment Plan' : 'Add Payment Plan'}
+                    </span>
+                </div>
+                <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+                    {isEditMode ? 'Edit Payment Plan' : 'New Payment Plan'}
                 </h1>
             </div>
 
-            {/* Form */}
-            <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
-                {/* Plan Name */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Plan Details */}
+            <div className="ref-card">
+                <div className="ref-card-head">
+                    <span className="ref-chip">
+                        <CreditCard />
+                    </span>
+                    <h2>Plan Details</h2>
+                </div>
+                <div className="ref-card-body grid grid-cols-1 md:grid-cols-2 gap-4">
                     <TextField
-                        label={<>Plan Name 
-                        {/* <span style={{ color: 'red' }}>*</span> */}
-                        </>}
+                        label="Plan Name"
                         placeholder="Enter plan name"
                         value={planName}
                         onChange={(e) => setPlanName(e.target.value)}
@@ -245,14 +363,10 @@ const CMSPaymentPlanSetupAdd = () => {
                         variant="outlined"
                         disabled={loading}
                         slotProps={{ inputLabel: { shrink: true } }}
-                        InputProps={{ sx: fieldStyles }}
                     />
 
                     <TextField
-                        label={<>Frequency 
-                        {/* <span style={{ color: 'red' }}>*</span> */}
-                        </>}
-                        placeholder="Select Frequency"
+                        label="Frequency"
                         select
                         value={frequency}
                         onChange={(e) => handleFrequencyChange(e.target.value)}
@@ -261,15 +375,16 @@ const CMSPaymentPlanSetupAdd = () => {
                         variant="outlined"
                         disabled={loading}
                         slotProps={{ inputLabel: { shrink: true } }}
-                        InputProps={{ sx: fieldStyles }}
                         SelectProps={{
                             displayEmpty: true,
                             renderValue: (selected) =>
-                                selected ? FREQUENCY_OPTIONS.find(opt => opt.value === selected)?.label : <span style={{ color: '#888' }}>Select Frequency</span>
+                                selected
+                                    ? FREQUENCY_OPTIONS.find((opt) => opt.value === selected)?.label
+                                    : <span style={{ color: 'rgba(26,26,24,0.3)' }}>Select frequency</span>,
                         }}
                     >
                         <MenuItem value="">
-                            <span style={{ color: '#888' }}>Select Frequency</span>
+                            <span style={{ color: 'rgba(26,26,24,0.3)' }}>Select frequency</span>
                         </MenuItem>
                         {FREQUENCY_OPTIONS.map((option) => (
                             <MenuItem key={option.value} value={option.value}>
@@ -278,77 +393,48 @@ const CMSPaymentPlanSetupAdd = () => {
                         ))}
                     </TextField>
                 </div>
+            </div>
 
-                {/* Duration */}
-                {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Duration (Months) <span className="text-red-500">*</span>
-            </label>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
-              value={durationInMonths}
-              onChange={(e) => setDurationInMonths(parseInt(e.target.value) || 12)}
-              disabled={loading}
-            />
-          </div>
-        </div> */}
-
-                {/* Payment Schedules Table */}
-                {schedules.length > 0 && (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-gray-900">Payment Schedule</h3>
-                            <div className="text-sm">
-                                Total:{' '}
-                                <span
-                                    className={`font-bold ${totalPercentage === 100
-                                        ? 'text-green-600'
-                                        : totalPercentage > 100
-                                            ? 'text-red-600'
-                                            : 'text-yellow-600'
-                                        }`}
-                                >
-                                    {totalPercentage.toFixed(2)}%
-                                </span>
-                                {totalPercentage !== 100 && (
-                                    <span className="ml-2 text-xs text-gray-500">
-                                        (Must equal 100%)
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-
+            {/* Payment Schedule */}
+            {schedules.length > 0 && (
+                <div className="ref-card">
+                    <div className="ref-card-head">
+                        <span className="ref-chip">
+                            <CalendarDays />
+                        </span>
+                        <h2>Payment Schedule</h2>
+                        <span className={`ref-pill ${totalTone}`}>
+                            Total {totalPercentage.toFixed(2)}%
+                        </span>
+                    </div>
+                    <div className="ref-card-body">
+                        {totalPercentage !== 100 && (
+                            <p className="mb-3 text-[12px] text-[rgba(26,26,24,0.55)]">
+                                Percentages must add up to 100%.
+                            </p>
+                        )}
                         <div className="overflow-x-auto">
-                            <table className="w-full border-collapse">
+                            <table className="ref-table">
                                 <thead>
-                                    <tr className="bg-[#E5E0D3]">
-                                        <th className="border border-gray-300 px-4 py-3 text-left font-semibold">
-                                            Month Number
-                                        </th>
-                                        <th className="border border-gray-300 px-4 py-3 text-left font-semibold">
-                                            Percentage (%)
-                                        </th>
+                                    <tr>
+                                        <th className="w-1/3">Month</th>
+                                        <th>Percentage (%)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {schedules.map((schedule, index) => (
-                                        <tr key={index} className="border-b hover:bg-gray-50">
-                                            <td className="border border-gray-300 px-4 py-3">
-                                                Month {schedule.month_number}
-                                            </td>
-                                            <td className="border border-gray-300 px-4 py-3">
+                                        <tr key={index}>
+                                            <td>Month {schedule.month_number}</td>
+                                            <td>
                                                 <TextField
                                                     fullWidth
                                                     type="number"
+                                                    placeholder="0"
                                                     value={schedule.percentage}
                                                     onChange={(e) => handlePercentageChange(index, e.target.value)}
                                                     inputProps={{ min: 0, max: 100, step: 0.01 }}
                                                     disabled={loading}
                                                     variant="outlined"
-                                                    InputProps={{ sx: fieldStyles }}
                                                 />
                                             </td>
                                         </tr>
@@ -357,25 +443,28 @@ const CMSPaymentPlanSetupAdd = () => {
                             </table>
                         </div>
                     </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 justify-center pt-4">
-                    <Button
-                        variant="outline"
-                        onClick={() => navigate('/settings/payment-plan/setup')}
-                        disabled={loading}
-className="px-6 sm:px-8 w-full sm:w-auto !bg-white !border-[#da7756] !text-[#da7756] hover:!bg-gray-100  h-10">
-                            Cancel
-                    </Button>
-                    <Button
-                        className="bg-[#C72030] hover:bg-[#A01828] !text-white disabled:opacity-60"
-                        onClick={handleSubmit}
-                        disabled={loading}
-                    >
-                        {isEditMode ? 'Update Plan' : 'Create Plan'}
-                    </Button>
                 </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-4 mt-6">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate('/settings/payment-plan/setup')}
+                    disabled={loading}
+                    className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+                >
+                    Cancel
+                </Button>
+                <Button
+                    type="button"
+                    className="btn-primary h-9 px-4 text-sm font-medium disabled:opacity-60"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                >
+                    {isEditMode ? 'Update Plan' : 'Create Plan'}
+                </Button>
             </div>
         </div>
     );

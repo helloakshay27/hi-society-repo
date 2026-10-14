@@ -44,6 +44,7 @@ export const MemberFilterPanel = ({
   const baseURL = API_CONFIG.BASE_URL;
 
   const [open, setOpen]           = useState(false);
+  const [draft, setDraft]         = useState<MemberFilterState>(value);
   const [towers, setTowers]       = useState<Tower[]>([]);
   const [towerSearch, setTowerSearch] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
@@ -77,6 +78,37 @@ export const MemberFilterPanel = ({
     if (open) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
+
+  // ── draft (applied on "Apply") ───────────────────────────────────────────
+  useEffect(() => {
+    if (open) setDraft(value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const toggleDraftRole = (role: string) => {
+    setDraft((d) => ({
+      ...d,
+      roles: d.roles.includes(role) ? d.roles.filter((r) => r !== role) : [...d.roles, role],
+    }));
+  };
+
+  const toggleDraftTower = (id: string) => {
+    setDraft((d) => ({
+      ...d,
+      towers: d.towers.includes(id) ? d.towers.filter((t) => t !== id) : [...d.towers, id],
+    }));
+  };
+
+  const handleApply = () => {
+    onChange(draft);
+    setOpen(false);
+  };
+
+  const handleReset = () => {
+    setDraft({ roles: [], towers: [] });
+    clearAll();
+    setOpen(false);
+  };
 
   // ── helpers ───────────────────────────────────────────────────────────────
   const toggleRole = (role: string) => {
@@ -170,75 +202,67 @@ export const MemberFilterPanel = ({
 
       {/* ── Dropdown panel ── */}
       {open && (
-        <div
-          className="absolute right-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden"
-          style={{ minWidth: "220px" }}
-        >
+        <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 p-5">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-gray-50">
-            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-              Filters
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-base font-semibold text-gray-900 uppercase tracking-wide">
+              Filter By
             </span>
-            {activeCount > 0 && (
-              <button
-                type="button"
-                onClick={clearAll}
-                className="text-xs text-[#C72030] hover:underline font-medium"
-              >
-                Clear all
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close"
+              className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-gray-100"
+            >
+              <X className="w-4 h-4 text-gray-500" />
+            </button>
           </div>
 
           {/* Role section */}
-          <div className="px-3 py-2 border-b border-gray-100">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">
-              Role
-            </p>
-            {ROLE_OPTIONS.map((opt) => {
-              const active = value.roles.includes(opt.value);
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggleRole(opt.value)}
-                  className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-gray-50 transition-colors text-left"
-                >
-                  {/* color dot */}
-                  <span
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: opt.color }}
-                  />
-                  <span className="text-sm text-gray-700 flex-1">{opt.label}</span>
-                  {active && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 mb-2">Role</p>
+            <div className="space-y-0.5">
+              {ROLE_OPTIONS.map((opt) => {
+                const active = draft.roles.includes(opt.value);
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => toggleDraftRole(opt.value)}
+                    className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-gray-50 transition-colors text-left"
+                  >
                     <span
-                      className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: opt.color }}
-                    >
-                      ✓
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                    />
+                    <span className="text-sm text-gray-700 flex-1">{opt.label}</span>
+                    {active && (
+                      <span
+                        className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                        style={{ backgroundColor: opt.color }}
+                      >
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Tower (block) section */}
-          <div className="px-3 py-2">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">
-              Filter by Tower
-            </p>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 mb-2">Tower</p>
 
-            {/* Tower search */}
             {towers.length > 4 && (
               <div className="relative mb-2">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="Search Filter..."
+                  placeholder="Search tower..."
                   value={towerSearch}
                   onChange={(e) => setTowerSearch(e.target.value)}
-                  className="w-full pl-7 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[#C72030] focus:ring-1 focus:ring-[#C72030]"
+                  className="w-full h-9 pl-8 pr-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#C72030] focus:ring-1 focus:ring-[#C72030]"
                 />
               </div>
             )}
@@ -251,12 +275,12 @@ export const MemberFilterPanel = ({
               <div className="max-h-40 overflow-y-auto space-y-0.5">
                 {filteredTowers.map((tower) => {
                   const tid = tower.id.toString();
-                  const active = value.towers.includes(tid);
+                  const active = draft.towers.includes(tid);
                   return (
                     <button
                       key={tower.id}
                       type="button"
-                      onClick={() => toggleTower(tid)}
+                      onClick={() => toggleDraftTower(tid)}
                       className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-gray-50 transition-colors text-left"
                     >
                       <span
@@ -274,6 +298,24 @@ export const MemberFilterPanel = ({
                 })}
               </div>
             )}
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end gap-3 pt-5">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="h-9 px-5 rounded-md text-sm font-medium bg-white border border-[#C72030] text-[#C72030]"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={handleApply}
+              className="h-9 px-5 rounded-md text-sm font-medium bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              Apply
+            </button>
           </div>
         </div>
       )}

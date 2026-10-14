@@ -4,35 +4,15 @@ import { fetchBookingDetails } from '@/store/slices/facilityBookingsSlice';
 import { fetchActiveFacilities } from '@/store/slices/facilitySetupsSlice';
 import { MenuItem, TextField } from '@mui/material';
 import axios from 'axios';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronRight, Receipt } from 'lucide-react';
 import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from '@/components/ui/select';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner';
+import { FACILITY_BOOKING_STYLES, PILL_BASE, PILL_DANGER, PILL_SUCCESS, PILL_WARNING } from '@/pages/facilityBookingStyles';
 
 const fieldStyles = {
-    '& .MuiOutlinedInput-root': {
-        borderRadius: '0.375rem',
-        backgroundColor: 'white',
-        height: {
-            xs: '36px',
-            sm: '45px'
-        },
-        '& fieldset': {
-            borderColor: '#d1d5db',
-        },
-        '&:hover fieldset': {
-            borderColor: '#9ca3af',
-        },
-        '&.Mui-focused fieldset': {
-            borderColor: '#3b82f6',
-        },
-    },
-    '& .MuiInputLabel-root': {
-        '&.Mui-focused': {
-            color: '#3b82f6',
-        },
-    },
+    backgroundColor: 'white',
 };
 
 const EditFacilityBookingPage = () => {
@@ -189,22 +169,31 @@ const EditFacilityBookingPage = () => {
     };
 
     return (
-        <div className="p-6 mx-auto">
+        <div className="p-6 min-h-screen booking-ref-page">
+            <style>{FACILITY_BOOKING_STYLES}</style>
             <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="flex items-center gap-1 hover:text-gray-800 transition-colors"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span>Back</span>
-                        </button>
+                <div className="flex items-end justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-2 mb-3">
+                            <button
+                                type="button"
+                                onClick={() => navigate(-1)}
+                                className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-[#1A1A18] hover:bg-[#F5F4F0] transition-colors"
+                                aria-label="Back"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                            </button>
+                            <span className="text-[13px] text-[rgba(26,26,24,0.55)]">Facility Bookings</span>
+                            <ChevronRight className="w-3.5 h-3.5 text-[rgba(26,26,24,0.4)]" />
+                            <span className="text-[13px] font-semibold text-[#1A1A18]">Edit Booking</span>
+                        </div>
+                        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+                            Edit Facility Booking
+                        </h1>
                     </div>
                     {currentStatus && (
-                        <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-lg border border-gray-200">
-                            <span className="text-sm text-gray-600">Status</span>
-                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                        <div className="flex items-center gap-3 h-10 px-3 bg-white rounded-xl border border-[rgba(26,26,24,0.09)]">
+                            <span className="text-[12px] font-semibold text-[rgba(26,26,24,0.6)]">Status</span>
                             <Select
                                 value={currentStatus}
                                 onValueChange={(newStatus) => handleStatusChange(newStatus)}
@@ -212,22 +201,14 @@ const EditFacilityBookingPage = () => {
                             >
                                 <SelectTrigger className="border-none bg-transparent p-0 h-auto [&>svg]:hidden">
                                     <div
-                                        className={`text-sm px-2 py-[2px] flex items-center gap-2 cursor-pointer font-medium ${currentStatus === "Cancelled"
-                                            ? "text-red-600 bg-red-50"
+                                        className={`${PILL_BASE} inline-flex items-center gap-1.5 cursor-pointer ${currentStatus === "Cancelled"
+                                            ? PILL_DANGER
                                             : currentStatus === "Confirmed"
-                                                ? "text-green-600 bg-green-50"
-                                                : "text-yellow-600 bg-yellow-50"
+                                                ? PILL_SUCCESS
+                                                : PILL_WARNING
                                             }`}
-                                        style={{ borderRadius: "4px" }}
                                     >
-                                        <span
-                                            className={`rounded-full w-2 h-2 inline-block ${currentStatus === "Cancelled"
-                                                ? "bg-[#D92E14]"
-                                                : currentStatus === "Confirmed"
-                                                    ? "bg-[#16B364]"
-                                                    : "bg-[#D9CA20]"
-                                                }`}
-                                        ></span>
+                                        <span className="rounded-full w-1.5 h-1.5 inline-block bg-current"></span>
                                         {currentStatus}
                                     </div>
                                 </SelectTrigger>
@@ -248,8 +229,14 @@ const EditFacilityBookingPage = () => {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="ref-card">
+                <div className="ref-card-head">
+                    <span className="ref-chip"><CalendarDays /></span>
+                    <h2>Booking Info</h2>
+                </div>
+                <div className="ref-card-body space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                         <TextField
                             select
@@ -380,28 +367,33 @@ const EditFacilityBookingPage = () => {
                         error={comment.length > 255}
                     />
                 </div>
+                </div>
+                </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <h2 className="text-lg font-semibold mb-4">Cost Summary</h2>
-                    <div className="space-y-3">
+                <div className="ref-card">
+                    <div className="ref-card-head">
+                        <span className="ref-chip"><Receipt /></span>
+                        <h2>Cost Summary</h2>
+                    </div>
+                    <div className="ref-card-body space-y-1">
 
                         {/* Subtotal Before Discount */}
-                        <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                            <span className="text-gray-700 font-medium">Subtotal</span>
-                            <span className="font-medium">
+                        <div className="flex justify-between items-center py-3 border-b border-[rgba(26,26,24,0.08)]">
+                            <span className="text-[13.5px] text-[rgba(26,26,24,0.7)] font-medium">Subtotal</span>
+                            <span className="text-[13.5px] font-semibold text-[#1A1A18]">
                                 ₹ <input
                                     type="number"
                                     value={subTotal}
                                     onChange={(e) => setSubTotal(e.target.value)}
-                                    className='w-20 text-right border border-gray-300 rounded-md px-2 py-1'
+                                    className='ref-num-input w-24 text-right'
                                 />
                             </span>
                         </div>
 
                         {/* GST */}
-                        <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                        <div className="flex justify-between items-center py-3 border-b border-[rgba(26,26,24,0.08)]">
                             <div className="flex items-center gap-2">
-                                <span className="text-gray-700">GST</span>
+                                <span className="text-[13.5px] text-[rgba(26,26,24,0.7)] font-medium">GST</span>
                             </div>
                             <div className="flex items-center gap-6">
                                 <span className="text-sm text-gray-500">
@@ -409,17 +401,17 @@ const EditFacilityBookingPage = () => {
                                         type="number"
                                         value={gstPercentage}
                                         onChange={(e) => setGstPercentage(e.target.value)}
-                                        className='w-16 text-right border border-gray-300 rounded-md px-2 py-1 ml-2'
+                                        className='ref-num-input w-20 text-right ml-2'
                                     /> %
                                 </span>
-                                <span className="font-medium">₹{gstAmount.toFixed(2)}</span>
+                                <span className="text-[13.5px] font-semibold text-[#1A1A18]">₹{gstAmount.toFixed(2)}</span>
                             </div>
                         </div>
 
                         {/* SGST */}
-                        <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                        <div className="flex justify-between items-center py-3 border-b border-[rgba(26,26,24,0.08)]">
                             <div className="flex items-center gap-2">
-                                <span className="text-gray-700">SGST</span>
+                                <span className="text-[13.5px] text-[rgba(26,26,24,0.7)] font-medium">SGST</span>
                             </div>
                             <div className="flex items-center gap-6">
                                 <span className="text-sm text-gray-500">
@@ -427,32 +419,34 @@ const EditFacilityBookingPage = () => {
                                         type="number"
                                         value={sgstPercentage}
                                         onChange={(e) => setSgstPercentage(e.target.value)}
-                                        className='w-16 text-right border border-gray-300 rounded-md px-2 py-1 ml-2'
+                                        className='ref-num-input w-20 text-right ml-2'
                                     /> %
                                 </span>
-                                <span className="font-medium">₹{sgstAmount.toFixed(2)}</span>
+                                <span className="text-[13.5px] font-semibold text-[#1A1A18]">₹{sgstAmount.toFixed(2)}</span>
                             </div>
                         </div>
 
                         {/* Grand Total */}
-                        <div className="flex justify-between items-center py-3 bg-[#8B4B8C] bg-opacity-10 px-4 rounded-lg mt-2">
-                            <span className="text-lg font-bold" style={{ color: '#8B4B8C' }}>Grand Total</span>
-                            <span className="text-lg font-bold" style={{ color: '#8B4B8C' }}>₹{grandTotal.toFixed(2)}</span>
+                        <div className="ref-summary flex justify-between items-center py-3 px-4 mt-3">
+                            <span className="text-[15px] font-semibold text-[#1A1A18]">Grand Total</span>
+                            <span className="text-[18px] font-semibold text-[#1A1A18]">₹{grandTotal.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-4 pt-4">
+                <div className="flex justify-end gap-4 pt-2">
                     <Button
                         type="button"
                         onClick={() => navigate(-1)}
                         variant="outline"
+                        className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
                     >
                         Cancel
                     </Button>
                     <Button
                         type="submit"
                         disabled={isSubmitting}
+                        className="btn-primary h-9 px-4 text-sm font-medium disabled:opacity-60"
                     >
                         {isSubmitting ? 'Updating...' : 'Update Booking'}
                     </Button>

@@ -360,34 +360,26 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
 
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium text-gray-700">
+            <div className="flex items-start justify-between gap-3">
+              <Label className="text-sm font-medium text-gray-700 pt-2.5">
                 Add Members
               </Label>
+              <MemberFilterPanel
+                value={filters}
+                onChange={handleFilterChange}
+                className="text-right"
+              />
             </div>
 
-            <div className="flex items-start gap-2 mt-1">
-              <div className="flex-1">
-                <TextField
-                  label="Search..."
-                  name="searchTerm"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  placeholder="Search..."
-                  fullWidth
-                  variant="outlined"
-                  InputLabelProps={{ shrink: true }}
-                  InputProps={{ sx: fieldStyles }}
-                />
-              </div>
-
-              <div className="pt-1">
-                <MemberFilterPanel
-                  value={filters}
-                  onChange={handleFilterChange}
-                />
-              </div>
-            </div>
+            <TextField
+              name="searchTerm"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              placeholder="Search members..."
+              fullWidth
+              variant="outlined"
+              InputProps={{ sx: fieldStyles }}
+            />
 
             {filteredMembers.length > 0 && (
               <div

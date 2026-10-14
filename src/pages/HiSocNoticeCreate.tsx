@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Trash2, Search } from "lucide-react";
+import { ArrowLeft, ChevronRight, FileText, Paperclip, Trash2, Search } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -460,34 +460,130 @@ const HiSocNoticeCreate = () => {
   }, [formData.shared]);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto hi-soc-notice-create-page">
-      <style>{`.hi-soc-notice-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
+    <div className="p-6 min-h-screen overflow-y-auto hi-soc-notice-form-page">
+      <style>{`
+        /* Global "form svg" rule turns every icon black; keep icons on filled buttons white */
+        html body #root .hi-soc-notice-form-page form :is(button.btn-primary, [class*="bg-[#C72030]"]) svg {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+
+        /* ---- Reference design: canvas, cards, fields ---- */
+        html body #root .hi-soc-notice-form-page {
+          background-color: #FDFDFB !important;
+        }
+        html body #root .hi-soc-notice-form-page .ref-card {
+          border: 1px solid rgba(26, 26, 24, 0.09) !important;
+          border-radius: 16px !important;
+          box-shadow: none !important;
+        }
+        html body #root .hi-soc-notice-form-page .ref-card > div:first-child {
+          padding: 22px 24px 0 !important;
+          background: transparent !important;
+          border: none !important;
+        }
+        html body #root .hi-soc-notice-form-page .ref-card > div:first-child h2 {
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          line-height: 1.4 !important;
+          color: #1A1A18 !important;
+        }
+        html body #root .hi-soc-notice-form-page .ref-card > div:first-child h2 > span:first-child {
+          width: 32px !important;
+          height: 32px !important;
+          margin-right: 12px !important;
+          flex: none;
+          background-color: #F5F4F0 !important;
+        }
+        html body #root .hi-soc-notice-form-page .ref-card > div:first-child h2 > span:first-child svg {
+          width: 14px !important;
+          height: 14px !important;
+          color: #1A1A18 !important;
+          stroke: #1A1A18 !important;
+        }
+        html body #root .hi-soc-notice-form-page .ref-card > div:nth-child(2) {
+          background-color: #FFFFFF !important;
+          padding: 16px 24px 22px !important;
+        }
+        html body #root .hi-soc-notice-form-page .MuiOutlinedInput-root {
+          min-height: 44px;
+          border-radius: 12px !important;
+          background-color: #FFFFFF !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease;
+        }
+        html body #root .hi-soc-notice-form-page .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+        }
+        html body #root .hi-soc-notice-form-page .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .hi-soc-notice-form-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: #1A1A18 !important;
+          border-width: 1px !important;
+        }
+        html body #root .hi-soc-notice-form-page .MuiOutlinedInput-root.Mui-focused {
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .hi-soc-notice-form-page .MuiOutlinedInput-input::placeholder {
+          color: rgba(26, 26, 24, 0.3) !important;
+          opacity: 1 !important;
+        }
+        html body #root .hi-soc-notice-form-page .MuiInputLabel-root {
+          color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+        /* Description textarea mirrors the MUI outlined fields */
+        html body #root .hi-soc-notice-form-page textarea#notice_text {
+          border: 1px solid rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease, border-color 0.16s ease;
+        }
+        html body #root .hi-soc-notice-form-page textarea#notice_text:hover {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .hi-soc-notice-form-page textarea#notice_text:focus {
+          border-color: #1A1A18 !important;
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .hi-soc-notice-form-page label[for="notice_text"] {
+          color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+      `}</style>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3" style={{ color: "rgba(26, 26, 24, 0.48)" }}>
           <button
+            type="button"
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
             aria-label="Go back"
           >
-            <ArrowLeft className="w-4 h-4 text-gray-600" />
+            <ArrowLeft className="w-4 h-4" />
           </button>
-          <span>Notice</span>
-          <span>{">"}</span>
-          <span className="text-gray-900 font-medium">Notice Create</span>
+          <span>Notice List</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold" style={{ color: "#1A1A18" }}>Create Notice</span>
         </div>
-        {/* <h1 className="text-2xl font-bold text-gray-900">CREATE BROADCAST</h1> */}
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>New Notice</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section: Communication Information */}
-        <div className="bg-white rounded-lg border border-gray-200">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                <FileText size={16} color="#C72030" />
+        <div className="ref-card bg-white overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200 bg-white">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+              <span className="w-7 h-7 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: "#F6F4EE" }}>
+                <FileText size={14} color="#2C2C2C" />
               </span>
-              Create Hi Soc Notice
+              Notice Details
             </h2>
           </div>
           <div className="p-6 space-y-6">
@@ -562,7 +658,7 @@ const HiSocNoticeCreate = () => {
                 </MuiSelect>
               </FormControl>
               <TextField
-                label={<span>Expire Date<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
+                label={<span>Expire Date<span className="text-red-500">*</span></span>}
                 type="date"
                 value={formData.expire_date}
                 onChange={handleChange}
@@ -591,28 +687,22 @@ const HiSocNoticeCreate = () => {
                   name="notice_text"
                   rows={3}
                   placeholder=" "
-                  className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent 
-      focus:outline-none 
-      focus:border-[2px] 
-      focus:border-[rgb(25,118,210)] 
-      resize-vertical"
+                  className="peer block w-full appearance-none bg-white px-3 pt-6 pb-2 placeholder-transparent focus:outline-none resize-vertical"
                 />
 
                 <label
                   htmlFor="notice_text"
-                  className="absolute left-3 -top-[10px] bg-white px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+                  className="absolute left-3 -top-[10px] bg-white px-1 text-xs z-[1] transition-all duration-200
       peer-placeholder-shown:top-4
-      peer-placeholder-shown:text-base
-      peer-placeholder-shown:text-gray-400
+      peer-placeholder-shown:text-sm
       peer-focus:-top-[10px]
-      peer-focus:text-sm
-      peer-focus:text-[rgb(25,118,210)]"
+      peer-focus:text-xs"
                 >
-                  Notice Description <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
+                  Notice Description <span className="text-red-500">*</span>
                 </label>
               </div>
                <TextField
-                label={<span>Expire Time<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
+                label={<span>Expire Time<span className="text-red-500">*</span></span>}
                 type="time"
                 value={formData.expire_time}
                 onChange={handleChange}
@@ -640,7 +730,7 @@ const HiSocNoticeCreate = () => {
 
               {/* Mark Important */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important <span className="text-red-500">*</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -679,7 +769,7 @@ const HiSocNoticeCreate = () => {
 
               {/* Send Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email <span className="text-red-500">*</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -761,7 +851,7 @@ const HiSocNoticeCreate = () => {
             {/* Share With */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Share With <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Share With <span className="text-red-500">*</span></label>
                 <div className="flex gap-6 mb-4">
                   <label className="flex items-center">
                     <input
@@ -989,17 +1079,17 @@ const HiSocNoticeCreate = () => {
         </div>
 
         {/* File Upload Section */}
-        <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                <FileText size={16} color="#C72030" />
+        <div className="ref-card bg-white overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200 bg-white">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center">
+              <span className="w-7 h-7 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: "#F6F4EE" }}>
+                <Paperclip size={14} color="#2C2C2C" />
               </span>
               Notice Attachments
             </h2>
           </div>
-          
-          <div className="p-6" style={{ backgroundColor: "#AAB9C50D" }}>
+
+          <div className="p-6">
             {/* Broadcast Cover Image */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-4">
@@ -1054,7 +1144,7 @@ const HiSocNoticeCreate = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C72030] hover:bg-[#A01828] text-white h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                   type="button"
                   onClick={() => document.getElementById('coverImageInput')?.click()}
                 >
@@ -1175,7 +1265,7 @@ const HiSocNoticeCreate = () => {
                   }}
                 />
                 <button
-                  className="bg-[#C72030] hover:bg-[#A01828] text-white h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                   type="button"
                   onClick={() => document.getElementById('broadcastAttachmentInput')?.click()}
                 >
@@ -1246,11 +1336,19 @@ const HiSocNoticeCreate = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 justify-center pt-6">
+        <div className="flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+          >
+            Cancel
+          </button>
           <button
             type="submit"
             disabled={loading}
-           className="btn-primary h-9 px-4 text-sm font-medium"           >
+            className="btn-primary h-9 px-4 text-sm font-medium flex items-center gap-2"
+          >
             {loading ? (
               <>
                 <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1260,12 +1358,6 @@ const HiSocNoticeCreate = () => {
                 Submitting...
               </>
             ) : 'Submit'}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"          >
-            Cancel
           </button>
         </div>
       </form>

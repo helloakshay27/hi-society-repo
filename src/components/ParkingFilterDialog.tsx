@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
@@ -151,18 +151,28 @@ export const ParkingFilterDialog: React.FC<Props> = ({
 
   return (
     <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">
-        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
-          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
-            FILTER BY
+      <DialogContent
+        className="sm:max-w-xl bg-white rounded-2xl p-6 gap-0 [&>button]:hidden"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <DialogTitle className="text-base font-semibold tracking-wide uppercase text-[hsl(var(--analytics-text))]">
+            Filter By
           </DialogTitle>
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
-            <X className="w-4 h-4" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-7 w-7 p-0 rounded-md hover:bg-gray-100"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4 text-gray-500" />
           </Button>
-        </DialogHeader>
+        </div>
 
-        <div className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-5">
             <FormControl fullWidth variant="outlined" disabled={loadingBlocks}>
               <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
                 Tower / Block
@@ -257,6 +267,7 @@ export const ParkingFilterDialog: React.FC<Props> = ({
             />
 
             <TextField
+              className="col-span-2"
               label="Vehicle Number"
               placeholder="Enter vehicle number..."
               value={vehicleNumberInput}
@@ -269,26 +280,21 @@ export const ParkingFilterDialog: React.FC<Props> = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t">
+        <div className="flex justify-end gap-3 pt-6">
           <Button
+            type="button"
             variant="outline"
             onClick={handleClear}
-            className="!bg-white !text-[#C72030] !border !border-[#C72030]"
+            className="h-9 px-5 text-sm !bg-white !text-[#C72030] !border !border-[#C72030]"
           >
             Reset
           </Button>
           <Button
-            variant="outline"
-            onClick={onClose}
-            className="!bg-white !text-[#C72030] !border !border-[#C72030]"
-          >
-            Cancel
-          </Button>
-          <Button
+            type="button"
             onClick={handleApply}
-            className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white"
+            className="h-9 px-5 text-sm !bg-[#C72030] hover:!bg-[#C72030]/90 !text-white"
           >
-            Apply Filters
+            Apply
           </Button>
         </div>
       </DialogContent>

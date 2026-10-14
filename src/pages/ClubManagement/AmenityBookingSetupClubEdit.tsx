@@ -3,30 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import {
-    ArrowLeft,
-    CalendarDays,
-    CalendarIcon,
-    CreditCard,
-    DollarSign,
-    FileImage,
-    Image,
-    Loader,
-    NotepadText,
-    ReceiptText,
-    Settings,
-    Upload,
-    User,
-    X,
-} from "lucide-react";
+import { ArrowLeft, CalendarDays, CalendarIcon, CreditCard, DollarSign, FileImage, Image, Loader, NotepadText, ReceiptText, Settings, Upload, User, X, ChevronRight } from "lucide-react";
 import {
     TextField,
     Select,
     MenuItem,
     FormControl,
     InputLabel,
-    Switch,
 } from "@mui/material";
+import { Switch } from "@/components/ui/switch";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { toast } from "sonner";
 import axios from "axios";
@@ -35,6 +20,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import TailwindMultiSelect from "@/components/TailwindMultiSelect";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { FACILITY_SETUP_STYLES } from "./facilitySetupStyles";
 
 const WEEKDAY_OPTIONS = [
     { label: "Monday", value: "Monday" },
@@ -1628,22 +1614,29 @@ export const EditBookingSetupClubPage = () => {
 
     return (
         <ThemeProvider theme={muiTheme}>
-            <div className="p-6 bg-white">
-                <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-2">
+            <div className="p-6 min-h-screen facility-setup-page">
+                <style>{FACILITY_SETUP_STYLES}</style>
+                <div className="mb-[22px]">
+                    <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
                         <button
+                            type="button"
                             onClick={() => navigate(-1)}
-                            className="text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-2"
+                            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
                             aria-label="Go back"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            <p className="text-gray-600 text-sm">Back</p>
                         </button>
+                        <span>Facility Setup</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                        <span className="font-semibold text-[#1A1A18]">Edit Facility</span>
                     </div>
+                    <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+                        Edit Facility
+                    </h1>
                 </div>
 
                 <div className="space-y-6">
-                    <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                    <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center gap-3">
                             <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                 <User className="w-4 h-4" />
@@ -1758,7 +1751,7 @@ export const EditBookingSetupClubPage = () => {
                                         <TextField
                                             label={
                                                 <span>
-                                                    Price <span className="text-[#C72030]">*</span>
+                                                    Price <span className="text-red-500">*</span>
                                                 </span>
                                             }
                                             placeholder="Price"
@@ -1792,7 +1785,7 @@ export const EditBookingSetupClubPage = () => {
                                                 isRequest: false,
                                             })
                                         }
-                                        className="text-blue-600"
+                                        className="accent-[#1A1A18]"
                                     />
                                     <label htmlFor="bookable">Bookable</label>
                                 </div>
@@ -1809,7 +1802,7 @@ export const EditBookingSetupClubPage = () => {
                                                 isRequest: true,
                                             })
                                         }
-                                        className="text-blue-600"
+                                        className="accent-[#1A1A18]"
                                     />
                                     <label htmlFor="request">Request</label>
                                 </div>
@@ -1818,9 +1811,9 @@ export const EditBookingSetupClubPage = () => {
                                     <div className="flex items-center gap-2">
                                         <Switch
                                             checked={formData.addSubFacility}
-                                            onChange={(e) => {
+                                            onCheckedChange={(checked) => {
                                                 if (
-                                                    e.target.checked &&
+                                                    checked &&
                                                     formData.subFacilities.length === 0
                                                 ) {
                                                     // Create one default sub-facility when toggled on
@@ -1846,31 +1839,17 @@ export const EditBookingSetupClubPage = () => {
                                                     };
                                                     setFormData({
                                                         ...formData,
-                                                        addSubFacility: e.target.checked,
+                                                        addSubFacility: checked,
                                                         subFacilities: [newSubFacility],
                                                     });
                                                 } else {
                                                     setFormData({
                                                         ...formData,
-                                                        addSubFacility: e.target.checked,
+                                                        addSubFacility: checked,
                                                     });
                                                 }
                                             }}
                                             // disabled={updatingStatus}
-                                            sx={{
-                                                "& .MuiSwitch-switchBase": {
-                                                    color: "#9ca3af",
-                                                    "&.Mui-checked": {
-                                                        color: "#22c55e",
-                                                    },
-                                                    "&.Mui-checked + .MuiSwitch-track": {
-                                                        backgroundColor: "#22c55e",
-                                                    },
-                                                },
-                                                "& .MuiSwitch-track": {
-                                                    backgroundColor: "#d1d5db",
-                                                },
-                                            }}
                                         />
                                         <span className="text-sm font-medium text-gray-700">
                                             Add Sub-Facility
@@ -1882,7 +1861,7 @@ export const EditBookingSetupClubPage = () => {
                     </div>
 
                     {formData.addSubFacility ? (
-                        <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                        <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
@@ -2550,7 +2529,7 @@ export const EditBookingSetupClubPage = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                        <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
                             <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                     <DollarSign className="w-4 h-4" />
@@ -3143,7 +3122,7 @@ export const EditBookingSetupClubPage = () => {
                         </div>
                     )}
 
-                    <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                    <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
@@ -3477,28 +3456,14 @@ export const EditBookingSetupClubPage = () => {
 
                                         <Switch
                                             checked={formData.slots.consecutiveSlotsAllowed}
-                                            onChange={(e) => {
+                                            onCheckedChange={(checked) => {
                                                 setFormData({
                                                     ...formData,
                                                     slots: {
                                                         ...formData.slots,
-                                                        consecutiveSlotsAllowed: e.target.checked,
+                                                        consecutiveSlotsAllowed: checked,
                                                     },
                                                 });
-                                            }}
-                                            sx={{
-                                                "& .MuiSwitch-switchBase": {
-                                                    color: "#9ca3af",
-                                                    "&.Mui-checked": {
-                                                        color: "#22c55e",
-                                                    },
-                                                    "&.Mui-checked + .MuiSwitch-track": {
-                                                        backgroundColor: "#22c55e",
-                                                    },
-                                                },
-                                                "& .MuiSwitch-track": {
-                                                    backgroundColor: "#d1d5db",
-                                                },
                                             }}
                                         />
                                     </div>
@@ -3926,7 +3891,7 @@ export const EditBookingSetupClubPage = () => {
                     </div>
 
                     {/* Block Days Section */}
-                    <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                    <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
@@ -4121,7 +4086,7 @@ export const EditBookingSetupClubPage = () => {
                                                                 blockDays: newBlockDays,
                                                             });
                                                         }}
-                                                        className="text-blue-600"
+                                                        className="accent-[#1A1A18]"
                                                     />
                                                     <label htmlFor={`entireDay-${blockIndex}`}>
                                                         Entire Day
@@ -4150,7 +4115,7 @@ export const EditBookingSetupClubPage = () => {
                                                                 );
                                                             }
                                                         }}
-                                                        className="text-blue-600"
+                                                        className="accent-[#1A1A18]"
                                                     />
                                                     <label htmlFor={`selectedSlots-${blockIndex}`}>
                                                         Selected Slots
@@ -4223,7 +4188,7 @@ export const EditBookingSetupClubPage = () => {
                                                                                         blockDays: newBlockDays,
                                                                                     });
                                                                                 }}
-                                                                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                                                                className="w-4 h-4 accent-[#1A1A18] bg-gray-100 border-gray-300 rounded focus:ring-[rgba(26,26,24,0.2)]"
                                                                             />
                                                                             <label
                                                                                 htmlFor={`slot-${blockIndex}-${slot.id}`}
@@ -4266,7 +4231,7 @@ export const EditBookingSetupClubPage = () => {
                         />
                     </div>
 
-                    <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                    <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center gap-3">
                             <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                 <CreditCard className="w-4 h-4" />
@@ -4359,7 +4324,7 @@ export const EditBookingSetupClubPage = () => {
                     </div>
 
                     <div className="flex items-start justify-between gap-4">
-                        <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
+                        <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6 w-full">
                             <div className="flex items-center gap-3">
                                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                     <FileImage className="w-4 h-4" />
@@ -4369,17 +4334,17 @@ export const EditBookingSetupClubPage = () => {
                                 </h3>
                             </div>
 
-                            <div className="p-6" style={{ border: "1px dashed #C72030" }}>
+                            <div className="ref-upload p-6">
                                 <div
                                     className="rounded-lg text-center p-6"
                                     onClick={triggerFileSelect}
                                 >
-                                    <div className="text-[#C72030] mb-2">
+                                    <div className="ref-upload-icon mb-2">
                                         <Upload className="h-8 w-8 mx-auto" />
                                     </div>
                                     <p className="text-sm text-gray-600">
                                         Drag & Drop or{" "}
-                                        <span className="text-[#C72030] cursor-pointer">
+                                        <span className="font-semibold text-[#1A1A18] underline underline-offset-2 cursor-pointer">
                                             Choose File
                                         </span>{" "}
                                         No file chosen
@@ -4443,7 +4408,7 @@ export const EditBookingSetupClubPage = () => {
                             )}
                         </div>
 
-                        <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
+                        <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6 w-full">
                             <div className="flex items-center gap-3">
                                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                     <Image className="w-4 h-4" />
@@ -4453,17 +4418,17 @@ export const EditBookingSetupClubPage = () => {
                                 </h3>
                             </div>
 
-                            <div className="p-6" style={{ border: "1px dashed #C72030" }}>
+                            <div className="ref-upload p-6">
                                 <div
                                     className="rounded-lg text-center p-6"
                                     onClick={triggerBookingImgSelect}
                                 >
-                                    <div className="text-[#C72030] mb-2">
+                                    <div className="ref-upload-icon mb-2">
                                         <Upload className="h-8 w-8 mx-auto" />
                                     </div>
                                     <p className="text-sm text-gray-600">
                                         Drag & Drop or{" "}
-                                        <span className="text-[#C72030] cursor-pointer">
+                                        <span className="font-semibold text-[#1A1A18] underline underline-offset-2 cursor-pointer">
                                             Choose File
                                         </span>{" "}
                                         No file chosen
@@ -4535,7 +4500,7 @@ export const EditBookingSetupClubPage = () => {
                     </div>
 
                     {/* Gallery Images Card */}
-                    {/* <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                    {/* <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
@@ -4625,7 +4590,7 @@ export const EditBookingSetupClubPage = () => {
             )}
           </div> */}
 
-                    <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                    <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center gap-3">
                             <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                 <NotepadText className="w-4 h-4" />
@@ -4649,7 +4614,7 @@ export const EditBookingSetupClubPage = () => {
 
                     {/* Terms & Conditions and Cancellation Text */}
                     <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-                        <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                        <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
                             <div className="flex items-center gap-3">
                                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                     <ReceiptText className="w-4 h-4" />
@@ -4675,7 +4640,7 @@ export const EditBookingSetupClubPage = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                    <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
                         <div className="flex items-center gap-3">
                             <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                                 <Settings className="w-4 h-4" />
@@ -4806,16 +4771,20 @@ export const EditBookingSetupClubPage = () => {
                         </div>
                     </div>
 
-                    <div className="flex gap-4 justify-center">
-                        <Button variant="outline" onClick={handleClose}>
+                    <div className="flex justify-end gap-4">
+                        <Button
+                            variant="outline"
+                            onClick={handleClose}
+                            className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+                        >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleSave}
                             disabled={isSubmitting}
-                            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                            className="btn-primary h-9 px-4 text-sm font-medium flex items-center gap-2"
                         >
-                            {isSubmitting ? <Loader size={20} className="animate-spin" /> : "Update"}
+                            {isSubmitting ? <Loader size={18} className="animate-spin" /> : "Update"}
                         </Button>
                     </div>
                 </div>

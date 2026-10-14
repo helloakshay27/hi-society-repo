@@ -5,34 +5,16 @@ import {
   Select as MuiSelect,
   TextField,
 } from "@mui/material";
-import { ArrowLeft, Loader, Star } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronRight, Loader, Star, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { FACILITY_BOOKING_STYLES } from "@/pages/facilityBookingStyles";
 
 const fieldStyles = {
-  height: "45px",
   backgroundColor: "#fff",
-  borderRadius: "4px",
-  "& .MuiOutlinedInput-root": {
-    height: "45px",
-    "& fieldset": {
-      borderColor: "#ddd",
-    },
-    "&:hover fieldset": {
-      borderColor: "#C72030",
-    },
-    "&.Mui-focused fieldset": {
-      borderColor: "#C72030",
-    },
-  },
-  "& .MuiInputLabel-root": {
-    "&.Mui-focused": {
-      color: "#C72030",
-    },
-  },
 };
 
 const AddFacilityBookingPage = () => {
@@ -677,30 +659,41 @@ const AddFacilityBookingPage = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 min-h-screen booking-ref-page">
+      <style>{FACILITY_BOOKING_STYLES}</style>
       <div className="mb-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1 hover:text-gray-800 mb-4 text-gray-600"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </button>
+        <div className="flex items-center gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-[#1A1A18] hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span className="text-[13px] text-[rgba(26,26,24,0.55)]">Facility Bookings</span>
+          <ChevronRight className="w-3.5 h-3.5 text-[rgba(26,26,24,0.4)]" />
+          <span className="text-[13px] font-semibold text-[#1A1A18]">Add Booking</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+          New Facility Booking
+        </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <h2 className="font-medium text-gray-900">User Selection</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="ref-card">
+          <div className="ref-card-head">
+            <span className="ref-chip"><UserRound /></span>
+            <h2>User Selection</h2>
           </div>
-          <div className="p-6 space-y-6">
+          <div className="ref-card-body space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormControl fullWidth>
-                <InputLabel shrink>Tower <span className="text-[#C72030]">*</span></InputLabel>
+                <InputLabel shrink>Tower <span className="text-red-500">*</span></InputLabel>
                 <MuiSelect
                   value={selectedTowerId}
                   onChange={(e) => setSelectedTowerId(e.target.value)}
-                  label={<span>Tower <span className="text-[#C72030]">*</span></span>}
+                  label={<span>Tower <span className="text-red-500">*</span></span>}
                   displayEmpty
                   sx={fieldStyles}
                 >
@@ -716,11 +709,11 @@ const AddFacilityBookingPage = () => {
               </FormControl>
 
               <FormControl fullWidth>
-                <InputLabel shrink>Flat <span className="text-[#C72030]">*</span></InputLabel>
+                <InputLabel shrink>Flat <span className="text-red-500">*</span></InputLabel>
                 <MuiSelect
                   value={selectedFlatId}
                   onChange={(e) => setSelectedFlatId(e.target.value)}
-                  label={<span>Flat <span className="text-[#C72030]">*</span></span>}
+                  label={<span>Flat <span className="text-red-500">*</span></span>}
                   displayEmpty
                   disabled={!selectedTowerId}
                   sx={fieldStyles}
@@ -737,11 +730,11 @@ const AddFacilityBookingPage = () => {
               </FormControl>
 
               <FormControl fullWidth>
-                <InputLabel shrink>User <span className="text-[#C72030]">*</span></InputLabel>
+                <InputLabel shrink>User <span className="text-red-500">*</span></InputLabel>
                 <MuiSelect
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
-                  label={<span>User <span className="text-[#C72030]">*</span></span>}
+                  label={<span>User <span className="text-red-500">*</span></span>}
                   displayEmpty
                   disabled={!selectedFlatId}
                   sx={fieldStyles}
@@ -764,18 +757,19 @@ const AddFacilityBookingPage = () => {
         </div>
 
         {/* Facility Info Card */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <h2 className="font-medium text-gray-900">Facility Info</h2>
+        <div className="ref-card">
+          <div className="ref-card-head">
+            <span className="ref-chip"><CalendarDays /></span>
+            <h2>Facility Info</h2>
           </div>
-          <div className="p-6 space-y-6">
+          <div className="ref-card-body space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormControl fullWidth>
-                <InputLabel shrink>Facility <span className="text-[#C72030]">*</span></InputLabel>
+                <InputLabel shrink>Facility <span className="text-red-500">*</span></InputLabel>
                 <MuiSelect
                   value={selectedFacilitySetup}
                   onChange={(e) => setSelectedFacilitySetup(e.target.value)}
-                  label={<span>Facility <span className="text-[#C72030]">*</span></span>}
+                  label={<span>Facility <span className="text-red-500">*</span></span>}
                   displayEmpty
                   sx={fieldStyles}
                 >
@@ -792,7 +786,7 @@ const AddFacilityBookingPage = () => {
 
               {facilityDetails?.sub_facility_enabled && (
                 <FormControl fullWidth>
-                  <InputLabel shrink>Sub-Facility <span className="text-[#C72030]">*</span></InputLabel>
+                  <InputLabel shrink>Sub-Facility <span className="text-red-500">*</span></InputLabel>
                   <MuiSelect
                     value={selectedSubFacility}
                     onChange={(e) => {
@@ -801,7 +795,7 @@ const AddFacilityBookingPage = () => {
                       if (val) fetchSubFacilityDetails(val);
                       else setSubFacilityDetails(null);
                     }}
-                    label={<span>Sub-Facility <span className="text-[#C72030]">*</span></span>}
+                    label={<span>Sub-Facility <span className="text-red-500">*</span></span>}
                     displayEmpty
                     sx={fieldStyles}
                   >
@@ -821,7 +815,7 @@ const AddFacilityBookingPage = () => {
               )}
 
               <TextField
-                label={<span>Date <span className="text-[#C72030]">*</span></span>}
+                label={<span>Date <span className="text-red-500">*</span></span>}
                 type="date"
                 value={bookingDate}
                 onChange={(e) => setBookingDate(e.target.value)}
@@ -838,17 +832,17 @@ const AddFacilityBookingPage = () => {
             {(facilityDetails?.fac_type === "bookable" ||
               facilityDetails?.fac_type === "request") &&
               bookingDate && (
-                <div className="mt-8 space-y-6 animate-in fade-in duration-500 border-t border-gray-100 pt-6">
+                <div className="mt-8 space-y-6 animate-in fade-in duration-500 border-t border-[rgba(26,26,24,0.08)] pt-6">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      Select Slot <span className="text-[#C72030]">*</span>
+                    <h3 className="ref-subhead mb-4 flex items-center gap-2">
+                      Select Slot <span className="text-red-500">*</span>
                       {loadingSlots && (
                         <span className="text-xs font-normal text-gray-500 animate-pulse">
                           (Loading...)
                         </span>
                       )}
                       {facilityDetails?.fac_type === "bookable" && !facilityDetails?.consecutive_slot && (
-                        <span className="ml-2 px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-md">
+                        <span className="ml-2 px-2.5 py-0.5 text-[11.5px] font-semibold bg-[rgba(237,196,136,0.3)] text-[#85621F] rounded-full">
                           Consecutive slots not allowed
                         </span>
                       )}
@@ -866,13 +860,8 @@ const AddFacilityBookingPage = () => {
                           return (
                             <div
                               key={slot.id}
-                              className={`flex items-center space-x-3 p-4 border rounded-lg transition-all ${isEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
-                                } ${isSelected
-                                  ? "border-[#C72030] bg-[#C72030]/5 shadow-sm"
-                                  : isEnabled
-                                    ? "border-gray-100 bg-white hover:border-gray-200"
-                                    : "border-gray-100 bg-gray-50"
-                                }`}
+                              className={`ref-option flex items-center space-x-3 p-4 ${isEnabled ? 'cursor-pointer' : 'cursor-not-allowed is-disabled'
+                                } ${isSelected ? "is-selected" : ""}`}
                               onClick={() => {
                                 if (!isEnabled) return;
 
@@ -891,17 +880,17 @@ const AddFacilityBookingPage = () => {
                                 checked={isSelected}
                                 disabled={!isEnabled}
                                 onChange={() => { }} // Handled by div click
-                                className="w-4 h-4 text-[#C72030] rounded border-gray-300 focus:ring-[#C72030] disabled:opacity-50"
+                                className="w-4 h-4 rounded disabled:opacity-50"
                               />
-                              <span className={`text-sm font-medium flex-1 ${isEnabled ? 'text-gray-800' : 'text-gray-400'
+                              <span className={`text-[13.5px] font-medium flex-1 ${isEnabled ? 'text-[#1A1A18]' : 'text-[rgba(26,26,24,0.4)]'
                                 }`}>
                                 {slot.ampm ||
                                   `${slot.start_time} to ${slot.end_time}`}
                               </span>
                               {isPremium && (
                                 <div className="flex items-center gap-1">
-                                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                                  <span className="text-xs font-semibold text-amber-600">
+                                  <Star className="w-3.5 h-3.5 text-[#C9A15B] fill-[#EDC488]" />
+                                  <span className="text-xs font-semibold text-[#85621F]">
                                     +{premiumPercent}%
                                   </span>
                                 </div>
@@ -928,12 +917,12 @@ const AddFacilityBookingPage = () => {
               (facilityDetails?.facility_charge ||
                 subFacilityDetails?.facility_charge) && (
                 <div className="mt-8 space-y-6 animate-in fade-in duration-500">
-                  <div className="border-t border-gray-100 pt-6">
+                  <div className="border-t border-[rgba(26,26,24,0.08)] pt-6">
                     <div className="flex justify-between items-end mb-6">
-                      <h3 className="text-[18px] font-semibold text-gray-900">
+                      <h3 className="ref-subhead">
                         Members Details
                       </h3>
-                      <div className="text-[14px] text-gray-500">
+                      <div className="text-[13px] text-[rgba(26,26,24,0.55)]">
                         Total:{" "}
                         <span className="font-bold text-gray-900">
                           {getTotalPeople()}
@@ -945,22 +934,22 @@ const AddFacilityBookingPage = () => {
                       </div>
                     </div>
 
-                    <div className="overflow-hidden rounded-lg border border-gray-100">
+                    <div className="ref-table">
                       <table className="w-full text-sm text-left">
-                        <thead className="text-[11px] text-gray-500 uppercase bg-[#F8F9FA] border-b border-gray-100">
+                        <thead className="border-b border-[rgba(26,26,24,0.08)]">
                           <tr>
-                            <th className="px-6 py-4 font-bold tracking-wider w-1/3">
-                              CATEGORY
+                            <th className="px-6 py-4 font-semibold w-1/3">
+                              Category
                             </th>
-                            <th className="px-16 py-4 font-bold tracking-wider w-1/3">
-                              ADULT
+                            <th className="px-16 py-4 font-semibold w-1/3">
+                              Adult
                             </th>
-                            <th className="px-16 py-4 font-bold tracking-wider w-1/3">
-                              CHILD
+                            <th className="px-16 py-4 font-semibold w-1/3">
+                              Child
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-50">
+                        <tbody className="bg-white divide-y divide-[rgba(26,26,24,0.06)]">
                           {(() => {
                             const activeCharge =
                               selectedSubFacility && subFacilityDetails
@@ -1012,9 +1001,9 @@ const AddFacilityBookingPage = () => {
                                 row.visible && (
                                   <tr
                                     key={row.key}
-                                    className="hover:bg-gray-50/50 transition-colors"
+                                    className="hover:bg-[#FAF9F7] transition-colors"
                                   >
-                                    <td className="px-6 py-5 font-semibold text-gray-900">
+                                    <td className="px-6 py-4 font-semibold text-[#1A1A18]">
                                       {row.label}
                                     </td>
                                     <td className="px-6 py-5 text-center">
@@ -1028,13 +1017,13 @@ const AddFacilityBookingPage = () => {
                                                 -1
                                               )
                                             }
-                                            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-[#E53E3E] hover:bg-red-50 hover:border-red-200 transition-all active:scale-95"
+                                            className="ref-counter active:scale-95"
                                           >
                                             <span className="text-xl leading-none mb-1">
                                               -
                                             </span>
                                           </button>
-                                          <span className="text-[16px] font-bold text-gray-900 w-4">
+                                          <span className="text-[15px] font-semibold text-[#1A1A18] w-5">
                                             {
                                               memberCounts[
                                               `adult${row.key}` as keyof typeof memberCounts
@@ -1049,14 +1038,14 @@ const AddFacilityBookingPage = () => {
                                                 1
                                               )
                                             }
-                                            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-[#38A169] hover:bg-green-50 hover:border-green-200 transition-all active:scale-95"
+                                            className="ref-counter active:scale-95"
                                           >
                                             <span className="text-xl leading-none">
                                               +
                                             </span>
                                           </button>
                                         </div>
-                                        <div className="text-[10px] font-medium text-gray-500">
+                                        <div className="text-[11px] font-medium text-[rgba(26,26,24,0.5)]">
                                           Charge: ₹ {row.adultCharge || 0}
                                         </div>
                                       </div>
@@ -1072,13 +1061,13 @@ const AddFacilityBookingPage = () => {
                                                 -1
                                               )
                                             }
-                                            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-[#E53E3E] hover:bg-red-50 hover:border-red-200 transition-all active:scale-95"
+                                            className="ref-counter active:scale-95"
                                           >
                                             <span className="text-xl leading-none mb-1">
                                               -
                                             </span>
                                           </button>
-                                          <span className="text-[16px] font-bold text-gray-900 w-4">
+                                          <span className="text-[15px] font-semibold text-[#1A1A18] w-5">
                                             {
                                               memberCounts[
                                               `child${row.key}` as keyof typeof memberCounts
@@ -1093,14 +1082,14 @@ const AddFacilityBookingPage = () => {
                                                 1
                                               )
                                             }
-                                            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-[#38A169] hover:bg-green-50 hover:border-green-200 transition-all active:scale-95"
+                                            className="ref-counter active:scale-95"
                                           >
                                             <span className="text-xl leading-none">
                                               +
                                             </span>
                                           </button>
                                         </div>
-                                        <div className="text-[10px] font-medium text-gray-500">
+                                        <div className="text-[11px] font-medium text-[rgba(26,26,24,0.5)]">
                                           Charge: ₹ {row.childCharge || 0}
                                         </div>
                                       </div>
@@ -1115,14 +1104,14 @@ const AddFacilityBookingPage = () => {
                   </div>
 
                   {/* Cost Summary Card */}
-                  <div className="bg-[#F8F9FA] p-8 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                  <div className="ref-summary p-6 space-y-3">
                     {(() => {
                       const costs = calculateCosts();
                       return (
                         <>
                           {/* Slot-wise Breakdown with Premium */}
                           {costs.slotPremiumDetails && costs.slotPremiumDetails.length > 0 && (
-                            <div className="space-y-2 pb-4 border-b border-gray-200">
+                            <div className="space-y-2 pb-4 border-b border-[rgba(26,26,24,0.1)]">
                               <h4 className="text-sm font-semibold text-gray-900 mb-3">
                                 Slot Breakdown:
                               </h4>
@@ -1131,7 +1120,7 @@ const AddFacilityBookingPage = () => {
                                   <div className="flex justify-between items-center text-gray-600">
                                     <span className="font-medium">{slot.slotLabel}</span>
                                     {slot.slotPremiumPercent > 0 && (
-                                      <span className="text-amber-600 font-semibold">
+                                      <span className="text-[#85621F] font-semibold">
                                         Premium: +{slot.slotPremiumPercent}%
                                       </span>
                                     )}
@@ -1220,7 +1209,7 @@ const AddFacilityBookingPage = () => {
                               </div>
                             )}
 
-                          <div className="flex justify-between items-center text-gray-600 border-b border-gray-200 pb-5">
+                          <div className="flex justify-between items-center text-gray-600 border-b border-[rgba(26,26,24,0.1)] pb-4">
                             <span className="text-sm font-medium">
                               Convenience Charge
                             </span>
@@ -1232,10 +1221,10 @@ const AddFacilityBookingPage = () => {
                             </span>
                           </div>
                           <div className="flex justify-between items-center pt-2">
-                            <span className="text-[18px] font-bold text-gray-900">
+                            <span className="text-[15px] font-semibold text-[#1A1A18]">
                               Grand Total
                             </span>
-                            <span className="text-[20px] font-extrabold text-[#C72030]">
+                            <span className="text-[18px] font-semibold text-[#1A1A18]">
                               ₹{" "}
                               {costs.grandTotal.toLocaleString("en-IN", {
                                 minimumFractionDigits: 2,
@@ -1251,10 +1240,10 @@ const AddFacilityBookingPage = () => {
 
             {/* Request Type Section */}
             {facilityDetails?.fac_type === "request" && (
-              <div className="mt-8 space-y-6 animate-in fade-in duration-500 border-t border-gray-100 pt-6">
+              <div className="mt-8 space-y-6 animate-in fade-in duration-500 border-t border-[rgba(26,26,24,0.08)] pt-6">
                 <div className="flex items-center gap-6">
                   <div className="flex-1 flex items-center gap-4">
-                    <label className="text-sm font-medium text-gray-700 min-w-[140px]">
+                    <label className="text-[13px] font-semibold text-[rgba(26,26,24,0.68)] min-w-[140px]">
                       Number of Persons
                     </label>
                     <TextField
@@ -1270,10 +1259,10 @@ const AddFacilityBookingPage = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-[14px] font-medium text-gray-700 min-w-[140px]">
+                  <span className="text-[13px] font-semibold text-[rgba(26,26,24,0.68)] min-w-[140px]">
                     Refundable Deposit
                   </span>
-                  <span className="text-[20px] font-bold text-blue-600">
+                  <span className="text-[18px] font-semibold text-[#1A1A18]">
                     ₹ {facilityDetails.deposit || 0}
                   </span>
                 </div>
@@ -1282,12 +1271,12 @@ const AddFacilityBookingPage = () => {
 
             {/* Payment Summary Section (Merged) */}
             {facilityDetails && (
-              <div className="mt-8 space-y-8 animate-in fade-in duration-500 border-t border-gray-100 pt-8">
+              <div className="mt-8 space-y-8 animate-in fade-in duration-500 border-t border-[rgba(26,26,24,0.08)] pt-6">
                 <div>
-                  <label className="text-[18px] font-bold text-gray-900 mb-4 block">
-                    Payment Method <span className="text-[#C72030]">*</span>
+                  <label className="ref-subhead mb-4 block">
+                    Payment Method <span className="text-red-500">*</span>
                   </label>
-                  <div className="space-y-4">
+                  <div className="flex flex-wrap gap-3">
                     {[
                       { key: "postpaid", label: "Postpaid" },
                       { key: "prepaid", label: "Prepaid" },
@@ -1302,25 +1291,11 @@ const AddFacilityBookingPage = () => {
                       return (
                         <div
                           key={method.key}
-                          className="flex items-center gap-3 cursor-pointer group"
+                          className={`ref-option flex items-center gap-3 cursor-pointer px-4 py-3 ${paymentMethod === method.key ? "is-selected" : ""}`}
                           onClick={() => setPaymentMethod(method.key)}
                         >
-                          <div
-                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === method.key
-                              ? "border-[#C72030]"
-                              : "border-gray-300 group-hover:border-gray-400"
-                              }`}
-                          >
-                            {paymentMethod === method.key && (
-                              <div className="w-2 h-2 rounded-full bg-[#C72030]" />
-                            )}
-                          </div>
-                          <span
-                            className={`text-[16px] transition-all ${paymentMethod === method.key
-                              ? "text-gray-900"
-                              : "text-gray-900"
-                              }`}
-                          >
+                          <span className={`ref-radio ${paymentMethod === method.key ? "is-checked" : ""}`} />
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">
                             {method.label}
                           </span>
                         </div>
@@ -1332,9 +1307,22 @@ const AddFacilityBookingPage = () => {
             )}
           </div>
         </div>
-        <div className="flex justify-center pt-4">
-          <Button type="submit" disabled={isSubmitting} className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
-            {isSubmitting ? <Loader size={20} className="animate-spin" /> : "Submit"}
+        <div className="flex justify-end gap-4 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate(-1)}
+            disabled={isSubmitting}
+            className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="btn-primary h-9 px-4 text-sm font-medium min-w-[90px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? <Loader className="w-4 h-4 animate-spin" /> : "Submit"}
           </Button>
         </div>
       </form>

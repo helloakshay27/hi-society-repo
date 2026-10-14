@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -432,20 +431,30 @@ export const TicketsFilterDialog = ({
 
   return (
     <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white">
-        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
-          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
-            FILTER BY
+      <DialogContent
+        className="max-w-2xl max-h-[85vh] bg-white rounded-2xl p-0 gap-0 flex flex-col overflow-hidden"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
+          <DialogTitle className="text-base font-semibold tracking-wide uppercase text-[hsl(var(--analytics-text))]">
+            Filter By
           </DialogTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="w-4 h-4" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-7 w-7 p-0 rounded-md hover:bg-gray-100"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4 text-gray-500" />
           </Button>
-        </DialogHeader>
+        </div>
 
-        <div className="space-y-6 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-1 pb-5 space-y-6">
           {/* Date Range Section */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-[hsl(var(--analytics-text))]">
+            <h3 className="text-sm font-semibold text-[hsl(var(--analytics-text))]">
               Date Range
             </h3>
             <div className="grid grid-cols-2 gap-4">
@@ -474,7 +483,7 @@ export const TicketsFilterDialog = ({
 
           {/* Filter Options Section */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-[hsl(var(--analytics-text))]">
+            <h3 className="text-sm font-semibold text-[hsl(var(--analytics-text))]">
               Filter Options
             </h3>
             <div className="grid grid-cols-2 gap-4">
@@ -793,22 +802,25 @@ export const TicketsFilterDialog = ({
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={handleReset}
-              className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
-            >
-              {filtersCleared ? "Go to List" : "Reset"}
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Apply Filters
-            </Button>
-          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 px-6 py-4 border-t shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleReset}
+            className="h-9 px-5 text-sm text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
+          >
+            {filtersCleared ? "Go to List" : "Reset"}
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            className="h-9 px-5 text-sm bg-[#C72030] hover:bg-[#B01C29] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Apply
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -214,19 +214,20 @@ const filterTree = (nodes: DocumentNode[], query: string): DocumentNode[] => {
 // ─── File Type Icon ───────────────────────────────────────────────────────────
 
 const FileIcon = ({ fileType }: { fileType?: string }) => {
+  const cls = "w-[18px] h-[18px] shrink-0";
   switch (fileType) {
     case "video":
-      return <FileVideo className="w-5 h-5 text-purple-500" />;
+      return <FileVideo className={`${cls} text-[rgba(26,26,24,0.55)]`} />;
     case "pdf":
-      return <FileText className="w-5 h-5 text-red-500" />;
+      return <FileText className={`${cls} text-[rgba(26,26,24,0.55)]`} />;
     case "image":
-      return <ImageIcon className="w-5 h-5 text-green-500" />;
+      return <ImageIcon className={`${cls} text-[rgba(26,26,24,0.55)]`} />;
     case "spreadsheet":
-      return <FileSpreadsheet className="w-5 h-5 text-emerald-600" />;
+      return <FileSpreadsheet className={`${cls} text-[rgba(26,26,24,0.55)]`} />;
     case "doc":
-      return <FileText className="w-5 h-5 text-blue-500" />;
+      return <FileText className={`${cls} text-[rgba(26,26,24,0.55)]`} />;
     default:
-      return <File className="w-5 h-5 text-gray-400" />;
+      return <File className={`${cls} text-[rgba(26,26,24,0.55)]`} />;
   }
 };
 
@@ -342,23 +343,25 @@ const BMSDocumentsFlatRelated: React.FC = () => {
       return (
         <div key={node.id}>
           <div
-            className="flex items-center gap-2 py-2 px-3 hover:bg-gray-50 cursor-pointer rounded"
+            className="flex items-center gap-2.5 py-2 px-3 hover:bg-[#FAF9F7] cursor-pointer rounded-lg transition-colors"
             style={{ paddingLeft: `${level * 24 + 12}px` }}
             onClick={() => toggleFolder(node.id)}
           >
             {isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-gray-500" />
+              <ChevronDown className="w-4 h-4 text-[rgba(26,26,24,0.48)]" />
             ) : (
-              <ChevronRight className="w-4 h-4 text-gray-500" />
+              <ChevronRight className="w-4 h-4 text-[rgba(26,26,24,0.48)]" />
             )}
             {isExpanded ? (
-              <FolderOpen className="w-5 h-5 text-yellow-500" />
+              <FolderOpen className="w-[18px] h-[18px] text-[#B5A27A]" />
             ) : (
-              <Folder className="w-5 h-5 text-yellow-500" />
+              <Folder className="w-[18px] h-[18px] text-[#B5A27A]" />
             )}
-            <span className="text-sm font-medium text-gray-700">{node.name}</span>
+            <span className="text-[13.5px] font-medium text-[#1A1A18]">{node.name}</span>
             {childCount > 0 && (
-              <span className="ml-auto text-xs text-gray-400">{childCount}</span>
+              <span className="ml-auto min-w-[22px] h-[20px] px-1.5 inline-flex items-center justify-center rounded-full bg-[#F5F4F0] text-[11px] font-semibold text-[rgba(26,26,24,0.55)]">
+                {childCount}
+              </span>
             )}
           </div>
           {isExpanded && (
@@ -367,7 +370,7 @@ const BMSDocumentsFlatRelated: React.FC = () => {
                 node.children!.map((child) => renderNode(child, level + 1))
               ) : (
                 <p
-                  className="py-2 text-xs text-gray-400 italic"
+                  className="py-2 text-xs text-[rgba(26,26,24,0.4)] italic"
                   style={{ paddingLeft: `${(level + 1) * 24 + 36}px` }}
                 >
                   No documents in this flat
@@ -381,16 +384,17 @@ const BMSDocumentsFlatRelated: React.FC = () => {
       return (
         <div
           key={node.id}
-          className="flex items-center gap-2 py-2 px-3 hover:bg-gray-50 rounded group"
+          className="flex items-center gap-2.5 py-2 px-3 hover:bg-[#FAF9F7] rounded-lg group transition-colors"
           style={{ paddingLeft: `${level * 24 + 36}px` }}
         >
           <FileIcon fileType={node.fileType} />
-          <span className="text-sm text-gray-600 flex-1 truncate">{node.name}</span>
+          <span className="text-[13px] text-[rgba(26,26,24,0.75)] flex-1 truncate">{node.name}</span>
           {shouldShow("Flat Related", "show") && (
             <Button
               size="sm"
               variant="ghost"
-              className="opacity-0 group-hover:opacity-100 transition-opacity h-7 px-2"
+              className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 rounded-lg text-[#1A1A18] hover:bg-[#F5F4F0]"
+              aria-label={`Download ${node.name}`}
               onClick={() => handleDownload(node.id, node.name)}
             >
               <Download className="w-4 h-4" />
@@ -403,76 +407,111 @@ const BMSDocumentsFlatRelated: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+      <div className="p-6 bg-[#FDFDFB] min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
-          <p>Loading documents...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-[rgba(26,26,24,0.12)] border-t-[#1A1A18] mx-auto mb-4"></div>
+          <p className="text-[13px] text-[rgba(26,26,24,0.55)]">Loading documents...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 min-h-screen bg-[#FDFDFB] flat-docs-page">
+      <style>{`
+        html body #root .flat-docs-page .btn-primary svg {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+        html body #root .flat-docs-page .ref-search {
+          height: 44px;
+          padding-left: 40px;
+          font-size: 13.5px;
+          border: 1px solid rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+          background: #ffffff;
+          box-shadow: none !important;
+        }
+        html body #root .flat-docs-page .ref-search:hover {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .flat-docs-page .ref-search:focus,
+        html body #root .flat-docs-page .ref-search:focus-visible {
+          border-color: #1A1A18 !important;
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .flat-docs-page .ref-search::placeholder {
+          color: rgba(26, 26, 24, 0.3);
+        }
+      `}</style>
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#1a1a1a]">Flat Related Documents</h1>
-        <div className="flex gap-2">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+            Flat Related Documents
+          </h1>
+          <p className="mt-1 text-[13px] text-[rgba(26,26,24,0.55)]">
+            Browse and download documents shared with each flat
+          </p>
+        </div>
+        <div className="flex gap-3">
           <Button
             variant="outline"
-            size="sm"
             onClick={handleRefresh}
             disabled={isLoading}
-            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Refresh"
+            aria-label="Refresh"
+            className="btn-cancel h-9 w-9 p-0 bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            Refresh
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
           {shouldShow("Flat Related", "create") && (
             <Button
               onClick={handleUpload}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Upload Document"
+              aria-label="Upload Document"
+              className="btn-primary h-9 w-9 p-0"
             >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Document
+              <Upload className="w-4 h-4" />
             </Button>
           )}
         </div>
       </div>
 
       {/* Tree Card */}
-      <div className="bg-white rounded-lg border border-gray-200">
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-hidden">
         {/* Search */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="px-5 pt-5 pb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgba(26,26,24,0.4)] z-10" />
             <Input
               type="text"
               placeholder="Search documents..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="ref-search"
             />
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-4 max-h-[600px] overflow-y-auto">
+        <div className="px-3 pb-4 max-h-[600px] overflow-y-auto">
           {isError ? (
             <div className="text-center py-12">
-              <p className="text-red-600 font-medium">Error loading documents</p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-[14px] font-semibold text-[#A63D49]">Error loading documents</p>
+              <p className="text-[13px] text-[rgba(26,26,24,0.55)] mt-1">
                 {(error as Error)?.message || "Please try again"}
               </p>
-              <Button onClick={() => refetch()} size="sm" className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4">
+              <Button onClick={() => refetch()} className="btn-primary h-9 px-4 text-sm font-medium mt-4">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Retry
               </Button>
             </div>
           ) : documents.length === 0 ? (
             <div className="text-center py-12">
-              <Folder className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">
+              <Folder className="w-10 h-10 text-[rgba(26,26,24,0.2)] mx-auto mb-3" />
+              <p className="text-[13.5px] text-[rgba(26,26,24,0.55)]">
                 {searchQuery ? "No documents match your search" : "No documents found"}
               </p>
             </div>

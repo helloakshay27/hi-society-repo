@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
@@ -108,7 +109,7 @@ const HiSocNoticeDetails = () => {
           <p className="text-gray-600">No broadcast data found</p>
           <button
             onClick={() => navigate("/bms/hisoc-notice-list")}
-            className="mt-4 px-4 py-2 bg-[#C72030] text-white rounded hover:bg-[#A01828]"
+            className="btn-primary mt-4 h-9 px-4 text-sm font-medium"
           >
             Back to List
           </button>
@@ -118,101 +119,155 @@ const HiSocNoticeDetails = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28">
-      
-      {/* Breadcrumb + Back Button */}
-      <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
-          aria-label="Go back"
-        >
-          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <span>Notice</span>
-        <span>{">"}  </span>
-        <span className="text-gray-900 font-medium">Notice Details</span>
-      </div>
-      
+    <div className="p-6 min-h-screen overflow-y-auto scrollbar-thin pb-28 hi-soc-notice-details-page">
       <style>
         {`
+          /* ---- Reference design ---- */
+          html body #root .hi-soc-notice-details-page {
+            background-color: #FDFDFB !important;
+          }
+          html body #root .hi-soc-notice-details-page .ref-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            background: transparent;
+            padding: 0;
+            color: rgba(26, 26, 24, 0.48);
+            font-size: 12.5px;
+            font-weight: 600;
+            transition: color 0.16s ease;
+          }
+          html body #root .hi-soc-notice-details-page .ref-back:hover {
+            color: #1A1A18;
+          }
+          html body #root .hi-soc-notice-details-page .ref-card {
+            border: 1px solid rgba(26, 26, 24, 0.09) !important;
+            border-radius: 16px !important;
+            box-shadow: none !important;
+            background-color: #FFFFFF !important;
+            overflow: hidden;
+          }
+          html body #root .hi-soc-notice-details-page .ref-card h3 {
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            line-height: 1.4 !important;
+            color: #1A1A18 !important;
+          }
+          html body #root .hi-soc-notice-details-page .ref-kv-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(26, 26, 24, 0.48);
+          }
+          html body #root .hi-soc-notice-details-page .ref-kv-value {
+            font-size: 13.5px;
+            font-weight: 500;
+            color: #1A1A18;
+          }
+
           .tbl-container {
             overflow-x: auto;
+            border: 1px solid rgba(26, 26, 24, 0.09);
+            border-radius: 12px;
           }
-          
+
           .tbl-container table {
             width: 100%;
             border-collapse: collapse;
             background: white;
           }
-          
+
           .tbl-container th {
             background-color: #E6E2D8;
             padding: 12px 16px;
             text-align: left;
             font-weight: 600;
-            font-size: 14px;
-            color: #111827;
+            font-size: 13px;
+            color: #1A1A18;
             border-right: 1px solid white;
           }
-          
+
           .tbl-container th:last-child {
             border-right: none;
           }
-          
+
           .tbl-container td {
             padding: 12px 16px;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid rgba(26, 26, 24, 0.06);
             font-size: 13px;
-            color: #1f2937;
+            color: #1A1A18;
           }
-          
+
           .tbl-container tbody tr:hover {
-            background-color: #f9fafb;
+            background-color: #FAF9F7;
           }
-          
+
           .tbl-container tbody tr:last-child td {
             border-bottom: none;
           }
+
+          html body #root .hi-soc-notice-details-page .ref-file-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background-color: #F5F4F0;
+            color: #1A1A18;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background-color 0.16s ease;
+          }
+          html body #root .hi-soc-notice-details-page .ref-file-link:hover {
+            background-color: #EDEAE3;
+          }
+          html body #root .hi-soc-notice-details-page .ref-file-link svg {
+            color: #1A1A18 !important;
+            fill: currentColor;
+          }
         `}
       </style>
-      
-      <div>
+
+      <div className="mb-[22px]">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="ref-back"
+        >
+          <ArrowLeft className="w-[18px] h-[18px]" />
+          Back to Notice List
+        </button>
+        <h1 className="mt-[14px] text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>
+          {broadcastData.notice_heading || "Notice Details"}
+        </h1>
+      </div>
+
+      <div className="space-y-5">
         {/* Broadcast Details Section */}
-        <div className="w-full bg-white rounded-lg shadow-sm border mt-3">
-          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                <svg className="w-6 h-6 text-[#C72030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold uppercase text-black">
-                Details
-              </h3>
-            </div>
+        <div className="ref-card w-full">
+          <div className="px-6 pt-[22px]">
+            <h3>Notice Details</h3>
           </div>
-          
-          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-4 gap-x-8 mx-6">
+
+          <div className="px-6 pt-4 pb-[22px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-[18px] gap-x-6">
               {/* Notice Heading */}
-              <div className="flex items-start gap-6">
-                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+              <div className="flex flex-col gap-1">
+                <div className="ref-kv-label">
                   Notice Heading
                 </div>
-                <div className="text-[14px] font-semibold text-gray-900 flex-1 break-words">
+                <div className="ref-kv-value break-words">
                   {broadcastData.notice_heading || "-"}
                 </div>
               </div>
 
               {/* Notice Type */}
-              <div className="flex items-start gap-6">
-                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+              <div className="flex flex-col gap-1">
+                <div className="ref-kv-label">
                   Notice Type
                 </div>
-                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                <div className="ref-kv-value">
                   {broadcastData.notice_type
                     ? broadcastData.notice_type.charAt(0).toUpperCase() + broadcastData.notice_type.slice(1).toLowerCase()
                     : "General"}
@@ -220,51 +275,51 @@ const HiSocNoticeDetails = () => {
               </div>
 
               {/* Status */}
-              <div className="flex items-start gap-6">
-                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+              <div className="flex flex-col gap-1">
+                <div className="ref-kv-label">
                   Status
                 </div>
-                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                <div className="ref-kv-value">
                   {broadcastData.active ? "Active" : "Inactive"}
                 </div>
               </div>
 
               {/* Mark Important */}
-              <div className="flex items-start gap-6">
-                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+              <div className="flex flex-col gap-1">
+                <div className="ref-kv-label">
                   Mark Important
                 </div>
-                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                <div className="ref-kv-value">
                   {broadcastData.is_important ? "Yes" : "No"}
                 </div>
               </div>
 
               {/* Send Email */}
-              <div className="flex items-start gap-6">
-                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+              <div className="flex flex-col gap-1">
+                <div className="ref-kv-label">
                   Send Email
                 </div>
-                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                <div className="ref-kv-value">
                   {broadcastData.email_trigger_enabled ? "Yes" : "No"}
                 </div>
               </div>
 
               {/* Expiry Date & Time */}
-              <div className="flex items-start gap-6">
-                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+              <div className="flex flex-col gap-1">
+                <div className="ref-kv-label">
                   Expiry Date & Time
                 </div>
-                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                <div className="ref-kv-value">
                   {formatDate(broadcastData.expire_time)}
                 </div>
               </div>
 
               {/* Share With */}
               {/* <div className="flex items-start col-span-1 md:col-span-2 gap-6">
-                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+                <div className="ref-kv-label">
                   Share With
                 </div>
-                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                <div className="ref-kv-value">
                   {(() => {
                     const shared = broadcastData.shared;
                     // Determine selected option
@@ -345,11 +400,11 @@ const HiSocNoticeDetails = () => {
               </div> */}
 
               {/* Notice Text - Full Width */}
-              <div className="flex items-start col-span-1 md:col-span-2 gap-6">
-                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+              <div className="flex flex-col gap-1 md:col-span-2 lg:col-span-3">
+                <div className="ref-kv-label">
                   Notice Text
                 </div>
-                <div className="text-[14px] font-semibold text-gray-900 flex-1 whitespace-pre-wrap">
+                <div className="ref-kv-value whitespace-pre-wrap">
                   {broadcastData.notice_text || "-"}
                 </div>
               </div>
@@ -358,24 +413,15 @@ const HiSocNoticeDetails = () => {
         </div>
 
         {/* Notice Attachments Section */}
-        <div className="w-full bg-white rounded-lg shadow-sm border mt-4">
-          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#E5E0D3] flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#C72030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-              </div>
-              <h3 className="text-[16px] font-bold text-gray-900 tracking-wide">
-                Notice Attachments
-              </h3>
-            </div>
+        <div className="ref-card w-full">
+          <div className="px-6 pt-[22px]">
+            <h3>Notice Attachments</h3>
           </div>
-          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+          <div className="px-6 pt-4 pb-[22px]">
             <div className="space-y-6">
               {/* Broadcast Cover Image */}
-              <div className="mt-4">
-                <h5 className="text-[15px] font-semibold text-gray-900 mb-3">Notice Cover Image</h5>
+              <div>
+                <h5 className="text-[13px] font-semibold text-[#1A1A18] mb-3">Notice Cover Image</h5>
                 <div className="tbl-container">
                   <table>
                     <thead>
@@ -423,8 +469,8 @@ const HiSocNoticeDetails = () => {
               </div>
 
               {/* File Upload */}
-              <div className="mt-4">
-                <h5 className="text-[15px] font-semibold text-gray-900 mb-3">Notice Attachment</h5>
+              <div>
+                <h5 className="text-[13px] font-semibold text-[#1A1A18] mb-3">Notice Attachment</h5>
                 <div className="tbl-container">
                   <table>
                     <thead>
@@ -466,20 +512,7 @@ const HiSocNoticeDetails = () => {
                                     href={fileUrl} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
-                                    style={{
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: '8px',
-                                      padding: '8px 12px',
-                                      backgroundColor: '#fef2f2',
-                                      color: '#dc2626',
-                                      borderRadius: '4px',
-                                      textDecoration: 'none',
-                                      fontSize: '13px',
-                                      fontWeight: '500',
-                                    }}
-                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
-                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                    className="ref-file-link"
                                   >
                                     <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 20 20">
                                       <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
@@ -525,20 +558,7 @@ const HiSocNoticeDetails = () => {
                                     href={fileUrl} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
-                                    style={{
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: '8px',
-                                      padding: '8px 12px',
-                                      backgroundColor: '#eff6ff',
-                                      color: '#2563eb',
-                                      borderRadius: '4px',
-                                      textDecoration: 'none',
-                                      fontSize: '13px',
-                                      fontWeight: '500',
-                                    }}
-                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
-                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#eff6ff'}
+                                    className="ref-file-link"
                                   >
                                     <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 20 20">
                                       <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />

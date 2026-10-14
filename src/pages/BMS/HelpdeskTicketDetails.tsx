@@ -5830,13 +5830,165 @@ export const TicketDetailsPage = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 min-h-screen">
+    <div className="p-4 sm:p-6 min-h-screen helpdesk-ticket-details-page">
+      <style>{`
+        html body #root .helpdesk-ticket-details-page {
+          background: #FDFDFB;
+        }
+        html body #root .helpdesk-ticket-details-page .ref-back {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 14px;
+          font-size: 13px;
+          font-weight: 500;
+          color: rgba(26, 26, 24, 0.55);
+          transition: color 0.16s;
+        }
+        html body #root .helpdesk-ticket-details-page .ref-back:hover {
+          color: #1A1A18;
+        }
+        html body #root .helpdesk-ticket-details-page [role="tabpanel"] {
+          padding: 20px 0 0 !important;
+        }
+
+        /* Section cards (Ticket Details, Assignment, Cost, Location, Attachments, ...) */
+        html body #root .helpdesk-ticket-details-page div:has(> .hd-section-head) {
+          background: #ffffff !important;
+          border: 1px solid rgba(26, 26, 24, 0.09) !important;
+          border-radius: 16px !important;
+          box-shadow: none !important;
+          overflow: hidden;
+        }
+        html body #root .helpdesk-ticket-details-page div:has(> .hd-section-head) > :not(.hd-section-head) {
+          background-color: #ffffff !important;
+          border: none !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-section-head {
+          background: transparent !important;
+          border: none !important;
+          border-radius: 0 !important;
+          padding: 20px 24px 8px !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-section-head h3 {
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          text-transform: none !important;
+          letter-spacing: 0 !important;
+          color: #1A1A18 !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-section-head .rounded-full[class*="bg-[#E5E0D3]"] {
+          width: 32px !important;
+          height: 32px !important;
+          min-width: 32px;
+          background: #F5F4F0 !important;
+          border-radius: 9999px !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-section-head .rounded-full[class*="bg-[#E5E0D3]"] > *,
+        html body #root .helpdesk-ticket-details-page .hd-section-head .rounded-full[class*="bg-[#E5E0D3]"] svg {
+          width: 16px !important;
+          height: 16px !important;
+          color: #1A1A18 !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-section-head [stroke="#C72030"],
+        html body #root .helpdesk-ticket-details-page .hd-stat-tile [stroke="#C72030"] {
+          stroke: #1A1A18 !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-section-head [fill="#C72030"],
+        html body #root .helpdesk-ticket-details-page .hd-stat-tile [fill="#C72030"] {
+          fill: #1A1A18 !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-section-head button[class*="border-[#D9D9D9]"] {
+          height: 32px;
+          border: 1px solid rgba(26, 26, 24, 0.12) !important;
+          border-radius: 8px !important;
+          background: #ffffff !important;
+          color: #1A1A18 !important;
+          font-weight: 500;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-section-head button:hover {
+          background: #F5F4F0 !important;
+        }
+
+        /* Inner beige panels inside section cards */
+        html body #root .helpdesk-ticket-details-page [class*="bg-[#f2efea]"],
+        html body #root .helpdesk-ticket-details-page .bg-white.p-4[style*="75%"] {
+          background: #FAF9F7 !important;
+          border: 1px solid rgba(26, 26, 24, 0.06) !important;
+          border-radius: 12px !important;
+        }
+        html body #root .helpdesk-ticket-details-page [class*="border-[#dfd9cb]"] {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+        }
+        html body #root .helpdesk-ticket-details-page [class*="max-w-[150px]"][class*="bg-[#F6F4EE]"] {
+          background: #FAF9F7 !important;
+          border: 1px solid rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+          box-shadow: none !important;
+        }
+
+        /* Analytics: Assignee / TAT / Red Flag ... table */
+        html body #root .helpdesk-ticket-details-page table.border-gray-300 {
+          border-color: rgba(26, 26, 24, 0.09) !important;
+        }
+        html body #root .helpdesk-ticket-details-page table.border-gray-300 th,
+        html body #root .helpdesk-ticket-details-page table.border-gray-300 td {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+        }
+        html body #root .helpdesk-ticket-details-page table.border-gray-300 th {
+          background: #FAF9F7 !important;
+          border-radius: 0 !important;
+          padding: 12px 16px !important;
+        }
+        html body #root .helpdesk-ticket-details-page table.border-gray-300 th > div {
+          font-size: 11.5px !important;
+          font-weight: 600 !important;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          color: rgba(26, 26, 24, 0.55) !important;
+        }
+
+        /* Analytics: Ticket Ageing / TAT / Escalation tiles */
+        html body #root .helpdesk-ticket-details-page .hd-stat-tile {
+          height: auto !important;
+          min-height: 104px;
+          padding: 18px 20px !important;
+          background: #ffffff !important;
+          border: 1px solid rgba(26, 26, 24, 0.09) !important;
+          border-radius: 16px !important;
+          box-shadow: none !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-stat-tile > div:first-child {
+          width: 44px !important;
+          height: 44px !important;
+          min-width: 44px;
+          margin-right: 14px !important;
+          background: #F5F4F0 !important;
+          border-radius: 12px !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-stat-tile > div:first-child svg {
+          width: 20px !important;
+          height: 20px !important;
+          color: #1A1A18 !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-stat-tile > div:first-child svg :is(path, circle, rect, line, polyline) {
+          stroke: #1A1A18 !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-stat-tile span[style*="font-size: 24px"] {
+          font-size: 20px !important;
+          letter-spacing: -0.01em;
+          color: #1A1A18 !important;
+        }
+        html body #root .helpdesk-ticket-details-page .hd-stat-tile span[style*="font-size: 16px"] {
+          margin-top: 2px;
+          font-size: 12.5px !important;
+          font-weight: 500;
+          color: rgba(26, 26, 24, 0.55) !important;
+        }
+      `}</style>
       {/* Header */}
       <div className="mb-6">
-        <button
-          onClick={handleBackToList}
-          className="flex items-center gap-1 hover:text-gray-800 mb-4"
-        >
+        <button onClick={handleBackToList} className="ref-back">
           <ArrowLeft className="w-4 h-4" />
           Back to Ticket List
         </button>
@@ -5844,13 +5996,13 @@ export const TicketDetailsPage = () => {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex flex-col gap-2">
             <h1
-              className="text-xl sm:text-2xl font-bold text-[#1a1a1a] break-words overflow-wrap-anywhere"
+              className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18] break-words overflow-wrap-anywhere"
               style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
             >
               {ticketData.heading || "Ticket Summary"}
             </h1>
 
-            <div className="text-sm text-gray-600">
+            <div className="text-[13px] text-[rgba(26,26,24,0.55)]">
               Ticket #{ticketData.ticket_number || "-"} • Created by{" "}
               {ticketData.created_by_name || "Unknown"} •{" "}
               {hasData(ticketData.flat_number || ticketData.unit_name) && (
@@ -5887,7 +6039,7 @@ export const TicketDetailsPage = () => {
               // Show Job Sheet button when on Details tab OR when on Analytics > Ticket Details sub-tab
               <Button
                 onClick={handleJobSheet}
-                className="bg-[#1e40af] hover:bg-[#1e40af]/90 text-white px-4 py-2"
+                className="btn-primary h-9 px-4 text-sm font-medium"
               >
                 Job Sheet
               </Button>
@@ -5939,68 +6091,68 @@ export const TicketDetailsPage = () => {
           <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-auto p-0 text-sm justify-stretch">
             <TabsTrigger
               value="analytics"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-white px-3 py-2 data-[state=active]:text-[#1A1A18] border-r border-gray-200 last:border-r-0"
             >
               Analytics
             </TabsTrigger>
             <TabsTrigger
               value="details"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-white px-3 py-2 data-[state=active]:text-[#1A1A18] border-r border-gray-200 last:border-r-0"
             >
               Details
             </TabsTrigger>
 
             {/* <TabsTrigger
               value="creator-info"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-white px-3 py-2 data-[state=active]:text-[#1A1A18] border-r border-gray-200 last:border-r-0"
             >
               Creator Info
             </TabsTrigger> */}
 
             {/* <TabsTrigger
               value="location-info"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-white px-3 py-2 data-[state=active]:text-[#1A1A18] border-r border-gray-200 last:border-r-0"
             >
               Location
             </TabsTrigger> */}
 
             {/* <TabsTrigger
               value="survey-info"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-white px-3 py-2 data-[state=active]:text-[#1A1A18] border-r border-gray-200 last:border-r-0"
             >
               Survey Info
             </TabsTrigger> */}
 
             {/* <TabsTrigger
               value="additional-info"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-white px-3 py-2 data-[state=active]:text-[#1A1A18] border-r border-gray-200 last:border-r-0"
             >
               Additional
             </TabsTrigger> */}
 
             {/* <TabsTrigger
               value="attachments"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-white px-3 py-2 data-[state=active]:text-[#1A1A18] border-r border-gray-200 last:border-r-0"
             >
               Attachments
             </TabsTrigger> */}
 
             {/* <TabsTrigger
               value="cost-approval"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-white px-3 py-2 data-[state=active]:text-[#1A1A18] border-r border-gray-200 last:border-r-0"
             >
               Cost Approval
             </TabsTrigger> */}
 
             <TabsTrigger
               value="action-logs"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-white px-3 py-2 data-[state=active]:text-[#1A1A18] border-r border-gray-200 last:border-r-0"
             >
               Feeds
             </TabsTrigger>
             <TabsTrigger
               value="feedbacks"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="flex-1 min-w-0 bg-white data-[state=active]:bg-white px-3 py-2 data-[state=active]:text-[#1A1A18] border-r border-gray-200 last:border-r-0"
             >
               Feedbacks
             </TabsTrigger>
@@ -6018,7 +6170,7 @@ export const TicketDetailsPage = () => {
               <TabsList className="w-full mb-6">
                 <TabsTrigger
                   value="analytics"
-                  className="w-full data-[state=active]:bg-[#EDEAE3] bg-[#FFFFFF] data-[state=active]:text-[#C72030] text-black"
+                  className="w-full data-[state=active]:bg-white bg-[#FFFFFF] data-[state=active]:text-[#1A1A18] text-black"
                 >
                   <svg
                     width="16"
@@ -6037,7 +6189,7 @@ export const TicketDetailsPage = () => {
                 </TabsTrigger>
                 <TabsTrigger
                   value="details"
-                  className="w-full data-[state=active]:bg-[#EDEAE3] bg-[#FFFFFF] data-[state=active]:text-[#C72030] text-black"
+                  className="w-full data-[state=active]:bg-white bg-[#FFFFFF] data-[state=active]:text-[#1A1A18] text-black"
                 >
                   <svg
                     width="18"
@@ -6188,7 +6340,7 @@ export const TicketDetailsPage = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Ticket Ageing */}
                     <div
-                      className="border bg-[#F6F4EE] flex items-center p-4"
+                      className="hd-stat-tile border bg-[#F6F4EE] flex items-center p-4"
                       style={{ height: "132px", width: "auto" }}
                     >
                       <div
@@ -6226,7 +6378,7 @@ export const TicketDetailsPage = () => {
                     </div>
 
                     <div
-                      className="border bg-[#F6F4EE] flex items-center p-4"
+                      className="hd-stat-tile border bg-[#F6F4EE] flex items-center p-4"
                       style={{ height: "132px", width: "auto" }}
                     >
                       <div
@@ -6296,7 +6448,7 @@ export const TicketDetailsPage = () => {
 
                     {/* Resolution TAT */}
                     <div
-                      className="border bg-[#F6F4EE] flex items-center p-4"
+                      className="hd-stat-tile border bg-[#F6F4EE] flex items-center p-4"
                       style={{ height: "132px", width: "auto" }}
                     >
                       <div
@@ -6358,7 +6510,7 @@ export const TicketDetailsPage = () => {
 
                     {/* Response Escalation */}
                     <div
-                      className="border bg-[#F6F4EE] flex items-center p-4"
+                      className="hd-stat-tile border bg-[#F6F4EE] flex items-center p-4"
                       style={{ height: "132px", width: "auto" }}
                     >
                       <div
@@ -6488,7 +6640,7 @@ export const TicketDetailsPage = () => {
 
                     {/* Resolution Escalation */}
                     <div
-                      className="border bg-[#F6F4EE] flex items-center p-4"
+                      className="hd-stat-tile border bg-[#F6F4EE] flex items-center p-4"
                       style={{ height: "132px", width: "auto" }}
                     >
                       <div
@@ -6634,7 +6786,7 @@ export const TicketDetailsPage = () => {
 
                     {/* Golden Ticket Escalation */}
                     <div
-                      className="border bg-[#F6F4EE] flex items-center p-4"
+                      className="hd-stat-tile border bg-[#F6F4EE] flex items-center p-4"
                       style={{ height: "132px", width: "auto" }}
                     >
                       <div
@@ -6752,7 +6904,7 @@ export const TicketDetailsPage = () => {
                   hasData(ticketData.effective_priority) ||
                   hasData(ticketData.assigned_to) ? (
                     <Card className="w-full">
-                      <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                      <div className="hd-section-head flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                         <div
                           style={{ width: "40px", height: "40px" }}
                           className="rounded-full flex items-center justify-center bg-[#E5E0D3]"
@@ -7238,7 +7390,7 @@ export const TicketDetailsPage = () => {
                 </div>
 
                 {/* <div className="w-full bg-white rounded-lg shadow-sm border">
-                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                  <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <ClipboardList className="w-6 h-6 text-[#C72030]" />
@@ -7373,7 +7525,7 @@ export const TicketDetailsPage = () => {
 
                 <Card className="w-full bg-white rounded-lg shadow-sm border">
                   {/* Header (consistent) */}
-                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                  <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <FileText
@@ -8114,7 +8266,7 @@ export const TicketDetailsPage = () => {
 
                 {/* Cost Involve */}
                 {/* <Card className="w-full bg-white rounded-lg shadow-sm border">
-                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9] rounded-t-lg">
+                  <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9] rounded-t-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <DollarSign className="w-6 h-6 text-[#C72030]" />
@@ -8579,7 +8731,7 @@ export const TicketDetailsPage = () => {
                 {/* Ticket Closure (Figma-aligned) */}
                 <Card className="w-full bg-white rounded-lg shadow-sm border">
                   {/* Header */}
-                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                  <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <FileText
@@ -9185,7 +9337,7 @@ export const TicketDetailsPage = () => {
                 </Card>
 
                 {/* <div className="w-full bg-white rounded-lg shadow-sm border">
-                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                  <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <MapPin className="w-6 h-6" style={{ color: "#C72030" }} />
@@ -9411,7 +9563,7 @@ export const TicketDetailsPage = () => {
 
                 {ticketData.documents && (
                   <Card className="w-full bg-white rounded-lg shadow-sm border">
-                    <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                    <div className="hd-section-head flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <Paperclip
                           className="w-6 h-6"
@@ -9564,7 +9716,7 @@ export const TicketDetailsPage = () => {
 
                 {/* Society / Wing / Area Card (editable) */}
                 <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
-                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
+                  <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <MapPin className="w-6 h-6 text-[#C72030]" />
@@ -10198,7 +10350,7 @@ export const TicketDetailsPage = () => {
 
                 <Card className="w-full bg-white rounded-lg shadow-sm border">
                   {/* Header */}
-                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                  <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <MessageSquare
@@ -10528,7 +10680,7 @@ export const TicketDetailsPage = () => {
                 {/* Logs Card – Adjusted Alignment */}
                 <Card className="w-full bg-white rounded-lg shadow-sm border">
                   {/* Header */}
-                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                  <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <div className="w-6 h-6">
@@ -10541,21 +10693,21 @@ export const TicketDetailsPage = () => {
                           >
                             <path
                               d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908"
-                              stroke="#C72030"
+                              stroke="#1A1A18"
                               stroke-width="2"
                               stroke-linecap="round"
                               stroke-linejoin="round"
                             />
                             <path
                               d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908"
-                              stroke="#C72030"
+                              stroke="#1A1A18"
                               stroke-width="2"
                               stroke-linecap="round"
                               stroke-linejoin="round"
                             />
                             <path
                               d="M5 8.09082H13M5 13.0908H9"
-                              stroke="#C72030"
+                              stroke="#1A1A18"
                               stroke-width="2"
                               stroke-linecap="round"
                             />
@@ -10596,21 +10748,21 @@ export const TicketDetailsPage = () => {
                                 >
                                   <path
                                     d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908"
-                                    stroke="#C72030"
+                                    stroke="#1A1A18"
                                     strokeWidth="1.5"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                   />
                                   <path
                                     d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908"
-                                    stroke="#C72030"
+                                    stroke="#1A1A18"
                                     strokeWidth="1.5"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                   />
                                   <path
                                     d="M5 8.09082H13M5 13.0908H9"
-                                    stroke="#C72030"
+                                    stroke="#1A1A18"
                                     strokeWidth="1.5"
                                     strokeLinecap="round"
                                   />
@@ -10619,7 +10771,7 @@ export const TicketDetailsPage = () => {
                                   style={{
                                     marginLeft: "8px",
                                     fontWeight: "500",
-                                    color: "#C72030",
+                                    color: "#1A1A18",
                                   }}
                                 >
                                   Logs
@@ -10631,7 +10783,7 @@ export const TicketDetailsPage = () => {
                                 {/* Vertical line - extends to connect all dots */}
                                 {sorted.length > 1 && (
                                   <div
-                                    className="absolute left-[13px] top-0 w-[2px] bg-[#C72030]"
+                                    className="absolute left-[13px] top-0 w-[2px] bg-[rgba(26,26,24,0.15)]"
                                     style={{
                                       height: `calc(100% - 24px)`,
                                     }}
@@ -10661,7 +10813,7 @@ export const TicketDetailsPage = () => {
                                         {/* Dot aligned exactly on line */}
                                         <div className="relative">
                                           <span
-                                            className={`block w-3 h-3 rounded-full border-2 ml-2 bg-[#C72030] border-[#C72030]`}
+                                            className={`block w-3 h-3 rounded-full border-2 ml-2 bg-[#1A1A18] border-[#1A1A18]`}
                                           />
                                         </div>
 
@@ -10719,7 +10871,7 @@ export const TicketDetailsPage = () => {
             </Tabs>
           </TabsContent>
 
-          <TabsContent value="details" className="space-y-8 p-6">
+          <TabsContent value="details" className="space-y-8">
             <div className="space-y-6">
               {/* Check if there's any ticket data to display */}
               {hasData(ticketData.heading) ||
@@ -10739,7 +10891,7 @@ export const TicketDetailsPage = () => {
               hasData(ticketData.effective_priority) ||
               hasData(ticketData.assigned_to) ? (
                 <Card className="w-full">
-                  <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                  <div className="hd-section-head flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div
                       style={{ width: "40px", height: "40px" }}
                       className="rounded-full flex items-center justify-center bg-[#E5E0D3]"
@@ -11185,7 +11337,7 @@ export const TicketDetailsPage = () => {
             </div>
 
             {/* <div className="w-full bg-white rounded-lg shadow-sm border">
-                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                  <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <ClipboardList className="w-6 h-6 text-[#C72030]" />
@@ -11317,7 +11469,7 @@ export const TicketDetailsPage = () => {
 
             <Card className="w-full bg-white rounded-lg shadow-sm border">
               {/* Header (consistent) */}
-              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+              <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                     <FileText
@@ -12049,7 +12201,7 @@ export const TicketDetailsPage = () => {
 
             {/* Cost Involve */}
             {/* <Card className="w-full bg-white rounded-lg shadow-sm border">
-              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9] rounded-t-lg">
+              <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9] rounded-t-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                     <DollarSign className="w-6 h-6 text-[#C72030]" />
@@ -12503,7 +12655,7 @@ export const TicketDetailsPage = () => {
             {/* Ticket Closure (Figma-aligned) */}
             <Card className="w-full bg-white rounded-lg shadow-sm border">
               {/* Header */}
-              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+              <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                     <FileText
@@ -13132,7 +13284,7 @@ export const TicketDetailsPage = () => {
 
             {/* Location Details */}
             {/* <div className="w-full bg-white rounded-lg shadow-sm border">
-              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+              <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                     <MapPin className="w-6 h-6" style={{ color: "#C72030" }} />
@@ -13358,7 +13510,7 @@ export const TicketDetailsPage = () => {
             {/* Attachments */}
             {ticketData.documents && (
               <Card className="w-full bg-white rounded-lg shadow-sm border">
-                <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                <div className="hd-section-head flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                     <Paperclip
                       className="w-6 h-6"
@@ -13515,7 +13667,7 @@ export const TicketDetailsPage = () => {
 
             {/* Society / Wing / Area Card (editable) */}
             <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
+              <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                     <MapPin className="w-6 h-6 text-[#C72030]" />
@@ -13922,7 +14074,7 @@ export const TicketDetailsPage = () => {
 
             <Card className="w-full bg-white rounded-lg shadow-sm border">
               {/* Header */}
-              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+              <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                     <MessageSquare
@@ -14242,7 +14394,7 @@ export const TicketDetailsPage = () => {
             {/* Logs Card – Adjusted Alignment */}
             <Card className="w-full bg-white rounded-lg shadow-sm border">
               {/* Header */}
-              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+              <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                     <div className="w-6 h-6">
@@ -14255,21 +14407,21 @@ export const TicketDetailsPage = () => {
                       >
                         <path
                           d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908"
-                          stroke="#C72030"
+                          stroke="#1A1A18"
                           stroke-width="2"
                           stroke-linecap="round"
                           stroke-linejoin="round"
                         />
                         <path
                           d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908"
-                          stroke="#C72030"
+                          stroke="#1A1A18"
                           stroke-width="2"
                           stroke-linecap="round"
                           stroke-linejoin="round"
                         />
                         <path
                           d="M5 8.09082H13M5 13.0908H9"
-                          stroke="#C72030"
+                          stroke="#1A1A18"
                           stroke-width="2"
                           stroke-linecap="round"
                         />
@@ -14308,21 +14460,21 @@ export const TicketDetailsPage = () => {
                             >
                               <path
                                 d="M9 25.0908H2C1.73478 25.0908 1.48043 24.9644 1.29289 24.7394C1.10536 24.5143 1 24.2091 1 23.8908V2.29082C1 1.97256 1.10536 1.66734 1.29289 1.44229C1.48043 1.21725 1.73478 1.09082 2 1.09082H16C16.2652 1.09082 16.5196 1.21725 16.7071 1.44229C16.8946 1.66734 17 1.97256 17 2.29082V13.0908M14.75 25.0908V17.2908"
-                                stroke="#C72030"
+                                stroke="#1A1A18"
                                 strokeWidth="1.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
                               <path
                                 d="M12 19.0908L12.8333 18.4242L14.5 17.0908L16.1667 18.4242L17 19.0908"
-                                stroke="#C72030"
+                                stroke="#1A1A18"
                                 strokeWidth="1.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
                               <path
                                 d="M5 8.09082H13M5 13.0908H9"
-                                stroke="#C72030"
+                                stroke="#1A1A18"
                                 strokeWidth="1.5"
                                 strokeLinecap="round"
                               />
@@ -14331,7 +14483,7 @@ export const TicketDetailsPage = () => {
                               style={{
                                 marginLeft: "8px",
                                 fontWeight: "500",
-                                color: "#C72030",
+                                color: "#1A1A18",
                               }}
                             >
                               Logs
@@ -14343,7 +14495,7 @@ export const TicketDetailsPage = () => {
                             {/* Vertical line - extends to connect all dots */}
                             {sorted.length > 1 && (
                               <div
-                                className="absolute left-[13px] top-0 w-[2px] bg-[#C72030]"
+                                className="absolute left-[13px] top-0 w-[2px] bg-[rgba(26,26,24,0.15)]"
                                 style={{
                                   height: `calc(100% - 24px)`,
                                 }}
@@ -14372,7 +14524,7 @@ export const TicketDetailsPage = () => {
                                     {/* Dot aligned exactly on line */}
                                     <div className="relative">
                                       <span
-                                        className={`block w-3 h-3 rounded-full border-2 ml-2 bg-[#C72030] border-[#C72030]`}
+                                        className={`block w-3 h-3 rounded-full border-2 ml-2 bg-[#1A1A18] border-[#1A1A18]`}
                                       />
                                     </div>
 
@@ -14430,7 +14582,7 @@ export const TicketDetailsPage = () => {
             {/* Dynamic Association Selection Component */}
             {/* <Card className="w-full bg-white rounded-lg shadow-sm border">
                 
-                  <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                  <div className="hd-section-head flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                         <FileText className="w-6 h-6" style={{ color: '#C72030' }} />
@@ -15281,10 +15433,10 @@ export const TicketDetailsPage = () => {
                     <div key={groupIdx}>
                       {/* Date Header */}
                       <div className="flex items-center gap-3 mb-4">
-                        <span className="text-sm font-semibold text-[#C72030]">
+                        <span className="text-[13px] font-semibold text-[#1A1A18]">
                           {group.date}
                         </span>
-                        <div className="flex-1 h-px bg-gray-200" />
+                        <div className="flex-1 h-px bg-[rgba(26,26,24,0.08)]" />
                       </div>
                       {/* Entries */}
                       <div className="space-y-3 pl-2">
@@ -15299,17 +15451,17 @@ export const TicketDetailsPage = () => {
                               {/* Timeline dot */}
                               <div className="flex flex-col items-center">
                                 <div
-                                  className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${entry.type === "Escalation" || entry.type === "Executive Escalation" ? "bg-[#C72030]" : "bg-gray-400"}`}
+                                  className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${entry.type === "Escalation" || entry.type === "Executive Escalation" ? "bg-[#E7848E]" : "bg-[rgba(26,26,24,0.28)]"}`}
                                 />
                                 {entryIdx < group.entries.length - 1 && (
                                   <div
-                                    className="w-px flex-1 bg-gray-200 mt-1"
+                                    className="w-px flex-1 bg-[rgba(26,26,24,0.08)] mt-1"
                                     style={{ minHeight: "20px" }}
                                   />
                                 )}
                               </div>
                               {/* Content card */}
-                              <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-2">
+                              <div className="flex-1 bg-white border border-[rgba(26,26,24,0.09)] rounded-xl px-4 py-3 mb-2">
                                 {entry.type === "Escalation" ||
                                 entry.type === "Executive Escalation" ? (
                                   <div>
@@ -15317,7 +15469,7 @@ export const TicketDetailsPage = () => {
                                       {entry.label || entry.type}
                                     </p>
                                     <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="inline-block bg-[#C72030] text-white text-xs font-bold px-2 py-0.5 rounded">
+                                      <span className="inline-block bg-[#1A1A18] text-white text-xs font-semibold px-2 py-0.5 rounded-md">
                                         {entry.name}
                                       </span>
                                       {entry.escalated_to &&
@@ -15357,7 +15509,7 @@ export const TicketDetailsPage = () => {
                                         <span className="text-sm text-gray-600">
                                           Status -
                                         </span>
-                                        <span className="inline-block bg-gray-100 text-gray-700 text-xs font-medium px-2 py-0.5 rounded border border-gray-300">
+                                        <span className="inline-block bg-[#F5F4F0] text-[#1A1A18] text-xs font-medium px-2 py-0.5 rounded-md border border-[rgba(26,26,24,0.08)]">
                                           {entry.status}
                                         </span>
                                       </div>
@@ -15445,7 +15597,7 @@ export const TicketDetailsPage = () => {
           {/* Feedbacks Tab */}
           <TabsContent value="feedbacks" className="p-4 sm:p-6">
             {ticketData?.feedbacks && ticketData.feedbacks.length > 0 ? (
-              <div className="bg-white rounded-lg border overflow-x-auto">
+              <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -15476,10 +15628,10 @@ export const TicketDetailsPage = () => {
                                   viewBox="0 0 24 24"
                                   fill={
                                     i < (feedback.rating || 0)
-                                      ? "#C72030"
+                                      ? "#1A1A18"
                                       : "none"
                                   }
-                                  stroke="#C72030"
+                                  stroke="#1A1A18"
                                   strokeWidth="2"
                                 >
                                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -15497,7 +15649,7 @@ export const TicketDetailsPage = () => {
                           </TableCell>
                           <TableCell className="text-sm">
                             {feedback.status && feedback.status.trim() ? (
-                              <Badge className="bg-blue-100 text-blue-700 text-xs">
+                              <Badge className="bg-[#F5F4F0] text-[#1A1A18] border border-[rgba(26,26,24,0.08)] text-xs font-medium hover:bg-[#F5F4F0]">
                                 {feedback.status}
                               </Badge>
                             ) : (

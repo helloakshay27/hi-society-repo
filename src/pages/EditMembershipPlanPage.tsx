@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, User, DollarSign } from "lucide-react";
+import { ArrowLeft, ChevronRight, ClipboardList, Dumbbell } from "lucide-react";
 import { TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, ThemeProvider, createTheme } from "@mui/material";
 import { toast } from "sonner";
 import axios from "axios";
 import { EnhancedTaskTable } from "@/components/enhanced-table/EnhancedTaskTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { MEMBERSHIP_PLAN_STYLES } from "@/pages/membershipPlanStyles";
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
@@ -340,10 +341,10 @@ export const EditMembershipPlanPage = () => {
 
   if (loading) {
     return (
-      <div className="bg-gray-50 h-screen flex items-center justify-center">
+      <div className="bg-[#FDFDFB] h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading membership plan...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-[rgba(26,26,24,0.12)] border-t-[#1A1A18] mx-auto mb-4"></div>
+          <p className="text-[13px] text-[rgba(26,26,24,0.55)]">Loading membership plan...</p>
         </div>
       </div>
     );
@@ -351,33 +352,41 @@ export const EditMembershipPlanPage = () => {
 
   return (
     <ThemeProvider theme={muiTheme}>
-      <div className="p-6 bg-white">
+      <div className="p-6 min-h-screen membership-plan-page">
+        <style>{MEMBERSHIP_PLAN_STYLES}</style>
         <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={handleClose}
-            className="p-0"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Membership Plan List
-          </Button>
+          <div className="flex items-center gap-2 mb-3">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-[#1A1A18] hover:bg-[#F5F4F0] transition-colors"
+              aria-label="Back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <span className="text-[13px] text-[rgba(26,26,24,0.55)]">Membership Plans</span>
+            <ChevronRight className="w-3.5 h-3.5 text-[rgba(26,26,24,0.4)]" />
+            <span className="text-[13px] font-semibold text-[#1A1A18]">Edit Membership Plan</span>
+          </div>
+          <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+            Edit Membership Plan
+          </h1>
         </div>
 
         <div className="space-y-6">
           {/* Basic Info */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
-                <User className="w-4 h-4" />
-              </div>
-              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-                BASIC INFO
-              </h3>
+          <div className="ref-card">
+            <div className="ref-card-head">
+              <span className="ref-chip">
+                <ClipboardList />
+              </span>
+              <h2>Basic Info</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="ref-card-body grid grid-cols-1 md:grid-cols-2 gap-4">
               <TextField
-                label="Plan Name*"
+                label="Plan Name"
+                required
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -386,7 +395,8 @@ export const EditMembershipPlanPage = () => {
               />
 
               <TextField
-                label="Price*"
+                label="Price"
+                required
                 type="number"
                 value={formData.price}
                 onChange={(e) =>
@@ -406,13 +416,13 @@ export const EditMembershipPlanPage = () => {
               /> */}
 
               <FormControl variant="outlined">
-                <InputLabel>Membership Type*</InputLabel>
+                <InputLabel required>Membership Type</InputLabel>
                 <Select
                   value={formData.renewalTerms}
                   onChange={(e) =>
                     setFormData({ ...formData, renewalTerms: e.target.value })
                   }
-                  label="Membership Type*"
+                  label="Membership Type *"
                 >
                   <MenuItem value="">
                     <em>Select Membership Type</em>
@@ -462,16 +472,16 @@ export const EditMembershipPlanPage = () => {
           </div>
 
           {/* Amenities */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
-                <DollarSign className="w-4 h-4" />
-              </div>
-              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-                AMENITIES
-              </h3>
+          <div className="ref-card">
+            <div className="ref-card-head">
+              <span className="ref-chip">
+                <Dumbbell />
+              </span>
+              <h2>Amenities</h2>
+              <span className="ref-count">{formData.amenities.length} selected</span>
             </div>
 
+            <div className="ref-card-body">
             <EnhancedTaskTable
               storageKey="edit-membership-plan-page-table"
               data={amenities}
@@ -516,7 +526,7 @@ export const EditMembershipPlanPage = () => {
                           },
                         }));
                       }}
-                      className="px-2 py-1 border border-gray-300 rounded text-sm"
+                      className="ref-cell-field min-w-[200px]"
                     >
                       <option value="">Select Frequency</option>
                       <option value="per_month">Per Month</option>
@@ -543,7 +553,7 @@ export const EditMembershipPlanPage = () => {
                           },
                         }));
                       }}
-                      className="px-2 py-1 border border-gray-300 rounded text-sm w-20"
+                      className="ref-cell-field w-24"
                       placeholder="0"
                     />
                   );
@@ -568,7 +578,7 @@ export const EditMembershipPlanPage = () => {
                           },
                         }));
                       }}
-                      className="px-2 py-1 border border-gray-300 rounded text-sm w-24"
+                      className="ref-cell-field w-24"
                       placeholder="0.00"
                     />
                   );
@@ -591,7 +601,7 @@ export const EditMembershipPlanPage = () => {
                           },
                         }));
                       }}
-                      className="cursor-pointer"
+                      className="ref-check"
                     />
                   );
                 }
@@ -614,7 +624,7 @@ export const EditMembershipPlanPage = () => {
                           },
                         }));
                       }}
-                      className="cursor-pointer"
+                      className="ref-check"
                     />
                   );
                 }
@@ -638,7 +648,7 @@ export const EditMembershipPlanPage = () => {
                         }));
                       }}
                       disabled={!details.allowMultipleSlots}
-                      className={`px-2 py-1 border border-gray-300 rounded text-sm w-24 ${!details.allowMultipleSlots ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                      className="ref-cell-field w-24"
                       placeholder="0"
                     />
                   );
@@ -734,21 +744,25 @@ export const EditMembershipPlanPage = () => {
               emptyMessage="Select amenities to configure"
               className="w-full"
             />
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-end gap-4">
             <Button
+              type="button"
               variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}
+              className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
             >
               Cancel
             </Button>
             <Button
+              type="button"
               onClick={handleSave}
               disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+              className="btn-primary h-9 px-4 text-sm font-medium min-w-[80px] disabled:opacity-60"
             >
               {isSubmitting ? "Updating..." : "Update"}
             </Button>

@@ -490,7 +490,10 @@ export const BookingSetupClubDashboard = () => {
   };
 
   return (
-    <div className="p-6 bg-white">
+    <div className="p-6 min-h-screen bg-[#FDFDFB]">
+      <h1 className="mb-6 text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+        Facility Setup
+      </h1>
       {showActionPanel && (
         <SelectionPanel
           // actions={selectionActions}
@@ -498,7 +501,7 @@ export const BookingSetupClubDashboard = () => {
           onClearSelection={() => setShowActionPanel(false)}
         />
       )}
-      <div className="rounded-lg shadow-sm p-1 bg-transparent">
+      <div>
         <EnhancedTable
           data={bookingSetupData}
           columns={columns}

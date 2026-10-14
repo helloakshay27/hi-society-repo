@@ -8,6 +8,7 @@ import {
 } from "@/store/slices/facilityBookingsSlice";
 import { ArrowLeft, Logs, Pencil, Download, Loader } from "lucide-react";
 import { CustomTabs } from "@/components/CustomTabs";
+import { FACILITY_BOOKING_STYLES, PILL_BASE, PILL_DANGER, PILL_SUCCESS, PILL_WARNING } from "@/pages/facilityBookingStyles";
 import { LogsTimeline } from "@/components/LogTimeline";
 import {
   Select,
@@ -381,23 +382,23 @@ const BookingDetailsPage = () => {
       value: "details",
       label: "Details",
       content: (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-gray-900">
+        <div className="ref-card">
+          <div className="ref-card-bar">
+            <h2 className="text-[15px] font-semibold text-[#1A1A18]">
               {bookings?.facility_name}
             </h2>
-            <div className="flex gap-3">
+            <div className="flex items-center gap-2">
               {(bookings?.pg_state === "Pending" || bookings?.pg_state === "NA") && (
                 <Button
                   onClick={() => setIsCaptureDialogOpen(true)}
-                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                  className="btn-primary h-9 px-4 text-sm font-medium flex items-center gap-2"
                 >
                   Capture Payment
                 </Button>
               )}
               {bookings?.current_status === "Confirmed" &&
                 bookings?.pg_state === "Pending" && (
-                  <Button onClick={sendPaymentRequest} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2">
+                  <Button onClick={sendPaymentRequest} className="btn-primary h-9 px-4 text-sm font-medium flex items-center gap-2">
                     Payment Request
                   </Button>
                 )}
@@ -414,7 +415,7 @@ const BookingDetailsPage = () => {
                     }));
                     setIsRefundDialogOpen(true);
                   }}
-                  className="bg-[#D92E14] hover:bg-[#b02510] text-white text-xs font-semibold px-4 py-2 h-auto"
+                  className="ref-danger-btn h-9 px-4 text-sm font-medium"
                 >
                   Refund
                 </Button>
@@ -423,6 +424,8 @@ const BookingDetailsPage = () => {
                 bookings?.fac_type === "Request" && (
                   <Button
                     variant="outline"
+                    className="ref-edit-btn w-9 px-0 justify-center"
+                    aria-label="Edit status"
                     onClick={() => {
                       setEditStatusFormData({
                         status: bookings?.current_status || "",
@@ -438,13 +441,13 @@ const BookingDetailsPage = () => {
             </div>
           </div>
 
-          <div className="p-8">
+          <div className="p-6 ref-kv">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-4">
               {/* Left Column */}
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-32 shrink-0">
-                    Sub Facility:
+                    Sub Facility
                   </span>
                   <span className="text-gray-900 font-medium">
                     {bookings?.sub_facility_name || "-"}
@@ -452,14 +455,14 @@ const BookingDetailsPage = () => {
                 </div>
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-32 shrink-0">
-                    Booking ID:
+                    Booking ID
                   </span>
                   <span className="text-gray-900 font-medium">
                     {bookings?.id}
                   </span>
                 </div>
                 <div className="flex items-start text-sm">
-                  <span className="text-gray-500 w-32 shrink-0">Status:</span>
+                  <span className="text-gray-500 w-32 shrink-0">Status</span>
                   <div className="flex items-center">
                     <Select
                       value={bookings?.current_status}
@@ -470,12 +473,12 @@ const BookingDetailsPage = () => {
                       <SelectTrigger className="border-none bg-transparent p-0 h-auto [&>svg]:hidden">
                         <Badge
                           className={cn(
-                            "px-2 py-0.5 text-[11px] font-semibold rounded",
+                            PILL_BASE,
                             bookings?.current_status === "Confirmed"
-                              ? "bg-[#16B364] text-white hover:bg-[#16B364]"
+                              ? PILL_SUCCESS
                               : bookings?.current_status === "Cancelled"
-                                ? "bg-[#D92E14] text-white hover:bg-[#D92E14]"
-                                : "bg-[#F7941D] text-white hover:bg-[#F7941D]"
+                                ? PILL_DANGER
+                                : PILL_WARNING
                           )}
                         >
                           {bookings?.current_status}
@@ -493,7 +496,7 @@ const BookingDetailsPage = () => {
                 </div>
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-32 shrink-0">
-                    Scheduled Date:
+                    Scheduled Date
                   </span>
                   <span className="text-gray-900 font-medium">
                     {bookings?.startdate
@@ -507,7 +510,7 @@ const BookingDetailsPage = () => {
                 </div>
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-32 shrink-0">
-                    Selected Slot:
+                    Selected Slot
                   </span>
                   <span className="text-gray-900 font-medium">
                     {bookings?.show_schedule_24_hour}
@@ -515,7 +518,7 @@ const BookingDetailsPage = () => {
                 </div>
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-32 shrink-0">
-                    Booked On:
+                    Booked On
                   </span>
                   <span className="text-gray-900 font-medium">
                     {bookings?.created_at
@@ -531,14 +534,14 @@ const BookingDetailsPage = () => {
                 </div>
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-32 shrink-0">
-                    Booked By:
+                    Booked By
                   </span>
                   <span className="text-gray-900 font-medium">
                     {bookings?.booked_by_name || bookings?.created_by_name}
                   </span>
                 </div>
                 {/* <div className="flex items-start text-sm">
-                  <span className="text-gray-500 w-32 shrink-0">Notes:</span>
+                  <span className="text-gray-500 w-32 shrink-0">Notes</span>
                   <span className="text-gray-900 font-medium">
                     {bookings?.comment || "None"}
                   </span>
@@ -546,7 +549,7 @@ const BookingDetailsPage = () => {
               </div>
 
               {/* Right Column */}
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-36 shrink-0">GST</span>
                   <span className="text-gray-900 font-medium">
@@ -563,7 +566,7 @@ const BookingDetailsPage = () => {
                 </div>
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-36 shrink-0">
-                    Transaction ID:
+                    Transaction ID
                   </span>
                   <span className="text-gray-900 font-medium">
                     {bookings?.lock_payment?.pg_transaction_id || "-"}
@@ -571,16 +574,16 @@ const BookingDetailsPage = () => {
                 </div>
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-36 shrink-0">
-                    Payment Status:
+                    Payment Status
                   </span>
                   <Badge
                     className={cn(
-                      "px-2 py-0.5 text-[11px] font-semibold rounded",
+                      PILL_BASE,
                       bookings?.pg_state === "Success"
-                        ? "bg-[#16B364] text-white hover:bg-[#16B364]"
+                        ? PILL_SUCCESS
                         : bookings?.pg_state === "Failed"
-                          ? "bg-[#D92E14] text-white hover:bg-[#D92E14]"
-                          : "bg-[#F7941D] text-white hover:bg-[#F7941D]"
+                          ? PILL_DANGER
+                          : PILL_WARNING
                     )}
                   >
                     {bookings?.pg_state || "Pending"}
@@ -588,7 +591,7 @@ const BookingDetailsPage = () => {
                 </div>
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-36 shrink-0">
-                    Payment Method:
+                    Payment Method
                   </span>
                   <span className="text-gray-900 font-medium">
                     {bookings?.payment_method
@@ -598,7 +601,7 @@ const BookingDetailsPage = () => {
                 </div>
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-36 shrink-0">
-                    Amount Paid:
+                    Amount Paid
                   </span>
                   <span className="text-gray-900 font-medium">
                     ₹ {bookings?.amount_paid || "0.0"}
@@ -606,7 +609,7 @@ const BookingDetailsPage = () => {
                 </div>
                 <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-36 shrink-0">
-                    Payment Mode:
+                    Payment Mode
                   </span>
                   <span className="text-gray-900 font-medium">
                     {bookings?.payment_mode
@@ -619,11 +622,11 @@ const BookingDetailsPage = () => {
 
             {/* Refundable Amount Section */}
             {bookings?.can_refund && bookings?.amount_paid && (
-              <div className="mt-10">
-                <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-4">
+              <div className="mt-8">
+                <h3 className="text-[14px] font-semibold text-[#1A1A18] border-b border-[rgba(26,26,24,0.08)] pb-3 mb-4">
                   Refundable Amount
                 </h3>
-                <div className="bg-gray-50 rounded-lg p-6 space-y-3">
+                <div className="bg-[#FAF9F7] rounded-xl border border-[rgba(26,26,24,0.08)] p-5 space-y-3">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-600">Total Paid</span>
                     <span className="text-gray-900 font-medium">
@@ -638,7 +641,7 @@ const BookingDetailsPage = () => {
                     </span>
                   </div>
                   {/* )} */}
-                  <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
+                  <div className="border-t border-[rgba(26,26,24,0.1)] pt-3 flex justify-between items-center">
                     <span className="text-gray-900 font-bold">Total Refundable Amount</span>
                     <span className="text-gray-900 font-bold text-lg">
                       INR {(
@@ -655,21 +658,21 @@ const BookingDetailsPage = () => {
 
             {/* Members Details Table */}
             {bookings?.fac_type === "Bookable" && (
-              <div className="mt-10">
-                <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-4">
+              <div className="mt-8">
+                <h3 className="text-[14px] font-semibold text-[#1A1A18] border-b border-[rgba(26,26,24,0.08)] pb-3 mb-4">
                   Members Details
                 </h3>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto ref-table">
                   <table className="w-full text-sm text-left">
-                    <thead className="text-gray-500 font-medium border-b border-gray-100">
+                    <thead className="border-b border-[rgba(26,26,24,0.08)]">
                       <tr>
-                        <th className="py-2">Type</th>
-                        <th className="py-2 text-center">Count</th>
-                        <th className="py-2 text-center">Charge</th>
-                        <th className="py-2 text-right">Total Charge</th>
+                        <th className="py-3 px-4 px-4">Type</th>
+                        <th className="py-3 px-4 px-4 text-center">Count</th>
+                        <th className="py-3 px-4 px-4 text-center">Charge</th>
+                        <th className="py-3 px-4 px-4 text-right">Total Charge</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-[rgba(26,26,24,0.06)]">
                       {bookings?.booked_members &&
                         bookings?.booked_members.length > 0 ? (
                         bookings?.booked_members.map(
@@ -677,16 +680,16 @@ const BookingDetailsPage = () => {
                             const member = memberData.booked_member;
                             return (
                               <tr key={index}>
-                                <td className="py-3 text-gray-900 capitalize">
+                                <td className="py-3 px-4 text-gray-900 capitalize">
                                   {member?.oftype?.replace(/_/g, " ")}
                                 </td>
-                                <td className="py-3 text-center text-gray-900">
+                                <td className="py-3 px-4 text-center text-gray-900">
                                   {member?.total || 0}
                                 </td>
-                                <td className="py-3 text-center text-gray-900">
+                                <td className="py-3 px-4 text-center text-gray-900">
                                   ₹ {member?.charge || "0.0"}
                                 </td>
-                                <td className="py-3 text-right text-gray-900">
+                                <td className="py-3 px-4 text-right text-gray-900">
                                   ₹ {member?.total_charge || "0.0"}
                                 </td>
                               </tr>
@@ -696,33 +699,33 @@ const BookingDetailsPage = () => {
                       ) : (
                         <>
                           <tr>
-                            <td className="py-3 text-gray-900 font-medium">
+                            <td className="py-3 px-4 text-gray-900 font-medium">
                               Member
                             </td>
-                            <td className="py-3 text-center text-gray-900">
+                            <td className="py-3 px-4 text-center text-gray-900">
                               -
                             </td>
-                            <td className="py-3 text-center text-gray-900">-</td>
-                            <td className="py-3 text-right text-gray-900">-</td>
+                            <td className="py-3 px-4 text-center text-gray-900">-</td>
+                            <td className="py-3 px-4 text-right text-gray-900">-</td>
                           </tr>
                           <tr>
-                            <td className="py-3 text-gray-900 font-medium">
+                            <td className="py-3 px-4 text-gray-900 font-medium">
                               Guest
                             </td>
-                            <td className="py-3 text-center text-gray-900">
+                            <td className="py-3 px-4 text-center text-gray-900">
                               -
                             </td>
-                            <td className="py-3 text-center text-gray-900">-</td>
-                            <td className="py-3 text-right text-gray-900">-</td>
+                            <td className="py-3 px-4 text-center text-gray-900">-</td>
+                            <td className="py-3 px-4 text-right text-gray-900">-</td>
                           </tr>
                         </>
                       )}
-                      <tr className="border-t-2 border-gray-100 bg-gray-50/30">
-                        <td className="py-3 font-bold text-gray-900 uppercase" colSpan={3}>
+                      <tr className="border-t border-[rgba(26,26,24,0.12)] bg-[#FAF9F7]">
+                        <td className="py-3 px-4 font-bold text-gray-900 uppercase" colSpan={3}>
                           Sub Total
                         </td>
                         <td
-                          className="py-3 text-right font-bold text-gray-900"
+                          className="py-3 px-4 text-right font-bold text-gray-900"
                         >
                           ₹ {bookings?.amount_full || "0.0"}
                         </td>
@@ -735,11 +738,11 @@ const BookingDetailsPage = () => {
 
             {/* Payment Details Card */}
             {bookings?.lock_payment && (
-              <div className="mt-10">
-                <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-4">
+              <div className="mt-8">
+                <h3 className="text-[14px] font-semibold text-[#1A1A18] border-b border-[rgba(26,26,24,0.08)] pb-3 mb-4">
                   Payment Details
                 </h3>
-                <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                <div className="bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl p-5">
                   {/* Header with Payment ID and Status */}
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -750,12 +753,12 @@ const BookingDetailsPage = () => {
                     </div>
                     <Badge
                       className={cn(
-                        "px-3 py-1 text-xs font-semibold rounded-full border capitalize",
+                        PILL_BASE, "capitalize",
                         bookings.lock_payment.payment_status?.toLowerCase() === 'success'
-                          ? 'bg-green-100 text-green-800 border-green-200'
+                          ? PILL_SUCCESS
                           : bookings.lock_payment.payment_status?.toLowerCase() === 'pending'
-                            ? 'bg-orange-100 text-orange-800 border-orange-200'
-                            : 'bg-red-100 text-red-800 border-red-200'
+                            ? PILL_WARNING
+                            : PILL_DANGER
                       )}
                     >
                       {bookings.lock_payment.payment_status || 'Pending'}
@@ -774,7 +777,7 @@ const BookingDetailsPage = () => {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Paid Amount</span>
-                      <span className="text-lg font-bold text-[#C72030]">
+                      <span className="text-lg font-semibold text-[#1A1A18]">
                         ₹{(bookings.lock_payment.paid_amount || 0).toLocaleString('en-IN', {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2
@@ -794,7 +797,7 @@ const BookingDetailsPage = () => {
                     disabled={downloadingReceipt}
                     onClick={() => handleDownloadReceipt(bookings.lock_payment.id || bookings.lock_payment.pg_transaction_id)}
                     variant="outline"
-                    className="w-full"
+                    className="ref-edit-btn w-full justify-center"
                     size="sm"
                   >
                     {
@@ -808,11 +811,11 @@ const BookingDetailsPage = () => {
 
             {/* Refund Details Card */}
             {bookings?.lock_payment && bookings.lock_payment.refunded_amount && bookings.lock_payment.refunded_amount > 0 && (
-              <div className="mt-10">
-                <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-4">
+              <div className="mt-8">
+                <h3 className="text-[14px] font-semibold text-[#1A1A18] border-b border-[rgba(26,26,24,0.08)] pb-3 mb-4">
                   Refund Details
                 </h3>
-                <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                <div className="bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl p-5">
                   {/* Header with Refund ID and Status */}
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -822,7 +825,7 @@ const BookingDetailsPage = () => {
                       <p className="text-xs text-gray-500">Status: Refunded</p>
                     </div>
                     <Badge
-                      className="px-3 py-1 text-xs font-semibold rounded-full border capitalize bg-green-100 text-green-800 border-green-200"
+                      className={cn(PILL_BASE, PILL_SUCCESS, "capitalize")}
                     >
                       Completed
                     </Badge>
@@ -832,7 +835,7 @@ const BookingDetailsPage = () => {
                   <div className="space-y-3 mb-4">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Refund Amount</span>
-                      <span className="text-lg font-bold text-[#16B364]">
+                      <span className="text-lg font-semibold text-[#56683F]">
                         ₹{(bookings.lock_payment.refunded_amount || 0).toLocaleString('en-IN', {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2
@@ -883,13 +886,11 @@ const BookingDetailsPage = () => {
       value: "logs",
       label: "Logs",
       content: (
-        <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
-              <Logs className="w-4 h-4" />
-            </div>
-            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-              LOGS
+        <div className="ref-card p-6 space-y-6">
+          <div className="flex items-center gap-2.5">
+            <span className="ref-chip"><Logs /></span>
+            <h3 className="text-[14px] font-semibold text-[#1A1A18]">
+              Logs
             </h3>
           </div>
           <div className="overflow-x-auto px-3">
@@ -903,8 +904,8 @@ const BookingDetailsPage = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[300px] p-10">
-        <div className="text-center bg-red-50 border border-red-200 rounded-lg p-6 max-w-md w-full">
-          <h2 className="text-lg font-semibold text-red-600">
+        <div className="text-center bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl p-6 max-w-md w-full">
+          <h2 className="text-[15px] font-semibold text-[#A63D49]">
             Something went wrong
           </h2>
           <p className="text-sm text-gray-600 mt-2">
@@ -914,7 +915,7 @@ const BookingDetailsPage = () => {
           <Button
             variant="outline"
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+            className="btn-primary mt-4 h-9 px-4 text-sm font-medium"
           >
             Try Again
           </Button>
@@ -925,35 +926,35 @@ const BookingDetailsPage = () => {
 
   if (!bookings) {
     return (
-      <div className="bg-gray-50 h-screen flex items-center justify-center">
+      <div className="bg-[#FDFDFB] h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading booking details...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-[rgba(26,26,24,0.12)] border-t-[#1A1A18] mx-auto mb-4"></div>
+          <p className="text-[13px] text-[rgba(26,26,24,0.55)]">Loading booking details...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-[30px] min-h-screen bg-transparent">
-      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2 cursor-pointer">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1 hover:text-gray-800 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
-        </button>
-      </div>
+    <div className="p-6 min-h-screen booking-ref-page">
+      <style>{FACILITY_BOOKING_STYLES}</style>
+      <button type="button" onClick={() => navigate(-1)} className="ref-back">
+        <ArrowLeft className="w-4 h-4" />
+        Back to Bookings
+      </button>
       <>
         <div className="flex items-center justify-between gap-4 mb-6">
-          <h1 className="text-[24px] font-semibold text-[#1a1a1a]">
-            {bookings.facility_name}
-          </h1>
+          <div>
+            <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+              {bookings.facility_name}
+            </h1>
+            <p className="mt-1 text-[13px] text-[rgba(26,26,24,0.55)]">Booking #{bookings.id}</p>
+          </div>
           {
             bookings.can_cancel && (
               <Button
                 variant="outline"
+                className="ref-edit-btn"
                 onClick={() => setIsCancelDialogOpen(true)}
               >
                 Cancel Booking
@@ -962,7 +963,7 @@ const BookingDetailsPage = () => {
           }
         </div>
 
-        <div className="bg-white rounded-lg border-2 border-gray-200">
+        <div className="ref-tabs-card">
           <CustomTabs
             tabs={tabs}
             defaultValue="details"
@@ -978,7 +979,7 @@ const BookingDetailsPage = () => {
         fullWidth
         PaperProps={{
           style: {
-            borderRadius: "8px",
+            borderRadius: "16px",
           },
         }}
       >
@@ -989,11 +990,12 @@ const BookingDetailsPage = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            bgcolor: "#f5f5f5",
+            bgcolor: "#FFFFFF",
+            borderBottom: "1px solid rgba(26, 26, 24, 0.08)",
             position: "relative",
           }}
         >
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="h6" sx={{ fontSize: 16, fontWeight: 600, color: "#1A1A18" }}>
             Capture Payment
           </Typography>
           <IconButton
@@ -1003,7 +1005,7 @@ const BookingDetailsPage = () => {
               position: "absolute",
               right: 8,
               top: 8,
-              color: "red",
+              color: "rgba(26, 26, 24, 0.6)",
             }}
           >
             <X size={20} />
@@ -1102,7 +1104,7 @@ const BookingDetailsPage = () => {
           <Button
             onClick={handleCaptureSubmit}
             disabled={isSubmitting}
-            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+            className="btn-primary h-9 px-4 text-sm font-medium flex items-center gap-2"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
@@ -1116,7 +1118,7 @@ const BookingDetailsPage = () => {
         fullWidth
         PaperProps={{
           style: {
-            borderRadius: "8px",
+            borderRadius: "16px",
           },
         }}
       >
@@ -1127,11 +1129,12 @@ const BookingDetailsPage = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            bgcolor: "#f5f5f5",
+            bgcolor: "#FFFFFF",
+            borderBottom: "1px solid rgba(26, 26, 24, 0.08)",
             position: "relative",
           }}
         >
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="h6" sx={{ fontSize: 16, fontWeight: 600, color: "#1A1A18" }}>
             Cancel Booking
           </Typography>
           <IconButton
@@ -1141,7 +1144,7 @@ const BookingDetailsPage = () => {
               position: "absolute",
               right: 8,
               top: 8,
-              color: "red",
+              color: "rgba(26, 26, 24, 0.6)",
             }}
           >
             <X size={20} />
@@ -1174,7 +1177,7 @@ const BookingDetailsPage = () => {
           <Button
             onClick={handleCancelSubmit}
             disabled={isSubmitting}
-            className="bg-[#D92E14] hover:bg-[#b02510] text-white px-8 py-2 font-semibold"
+            className="bg-[#A63D49] hover:bg-[#8E3440] text-white h-9 px-4 text-sm font-medium"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
@@ -1188,7 +1191,7 @@ const BookingDetailsPage = () => {
         fullWidth
         PaperProps={{
           style: {
-            borderRadius: "8px",
+            borderRadius: "16px",
           },
         }}
       >
@@ -1199,11 +1202,12 @@ const BookingDetailsPage = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            bgcolor: "#f5f5f5",
+            bgcolor: "#FFFFFF",
+            borderBottom: "1px solid rgba(26, 26, 24, 0.08)",
             position: "relative",
           }}
         >
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="h6" sx={{ fontSize: 16, fontWeight: 600, color: "#1A1A18" }}>
             Refund Payment
           </Typography>
           <IconButton
@@ -1213,7 +1217,7 @@ const BookingDetailsPage = () => {
               position: "absolute",
               right: 8,
               top: 8,
-              color: "red",
+              color: "rgba(26, 26, 24, 0.6)",
             }}
           >
             <X size={20} />
@@ -1293,7 +1297,7 @@ const BookingDetailsPage = () => {
           <Button
             onClick={handleRefundSubmit}
             disabled={isSubmitting}
-            className="bg-[#00A65A] hover:bg-[#008d4c] text-white px-8 py-2 font-semibold"
+            className="btn-primary h-9 px-4 text-sm font-medium"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
@@ -1307,7 +1311,7 @@ const BookingDetailsPage = () => {
         fullWidth
         PaperProps={{
           style: {
-            borderRadius: "8px",
+            borderRadius: "16px",
           },
         }}
       >
@@ -1318,11 +1322,12 @@ const BookingDetailsPage = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            bgcolor: "#f5f5f5",
+            bgcolor: "#FFFFFF",
+            borderBottom: "1px solid rgba(26, 26, 24, 0.08)",
             position: "relative",
           }}
         >
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="h6" sx={{ fontSize: 16, fontWeight: 600, color: "#1A1A18" }}>
             Edit Status
           </Typography>
           <IconButton
@@ -1332,7 +1337,7 @@ const BookingDetailsPage = () => {
               position: "absolute",
               right: 8,
               top: 8,
-              color: "red",
+              color: "rgba(26, 26, 24, 0.6)",
             }}
           >
             <X size={20} />
@@ -1383,7 +1388,7 @@ const BookingDetailsPage = () => {
           <Button
             onClick={handleStatusSubmit}
             disabled={isSubmitting}
-            className="bg-[#00A65A] hover:bg-[#008d4c] text-white px-8 py-2 font-semibold"
+            className="btn-primary h-9 px-4 text-sm font-medium"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>

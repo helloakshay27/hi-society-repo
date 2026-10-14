@@ -1,124 +1,40 @@
 import React, { useState } from "react";
 import {
-  Box,
-  Paper,
-  Typography,
   TextField,
-  Button as MuiButton,
-  styled,
-  TextareaAutosize,
-  InputAdornment,
-  IconButton,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   SelectChangeEvent,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import { X, Calendar, Info } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, ChevronRight, Info } from "lucide-react";
+import { QUARANTINE_MOCK_RECORDS } from "./quarantineTrackerData";
 
-// Styled Components
-const SectionCard = styled(Paper)({
-  backgroundColor: "white",
-  boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
-  borderRadius: 0,
-  overflow: "hidden",
-  marginBottom: "24px",
-});
+const TOWER_OPTIONS = ["A", "B", "C"];
+const FLAT_OPTIONS = ["101", "102", "103"];
 
-const SectionHeader = styled(Box)({
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  padding: "16px 24px",
-  backgroundColor: "#f9fafb",
-  borderBottom: "1px solid #e5e7eb",
-});
-
-const SectionIcon = styled(Box)({
-  color: "white",
-  backgroundColor: "var(--color-primary, #da7756)",
-  borderRadius: "50%",
-  padding: "8px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "32px",
-  height: "32px",
-});
-
-const RedButton = styled(MuiButton)({
-  backgroundColor: "var(--color-primary, #da7756)",
-  color: "#ffffff !important",
-  textTransform: "none",
-  padding: "8px 16px",
-  borderRadius: 0,
-  fontFamily: "Work Sans, sans-serif",
-  fontWeight: 500,
-  fontSize: "0.875rem",
-  lineHeight: "1.5",
-  boxShadow: "none",
-  "& .MuiButton-startIcon, & .MuiButton-startIcon svg": {
-    color: "#ffffff !important",
-    stroke: "#ffffff !important",
-  },
-  "&:hover": {
-    backgroundColor: "var(--color-primary-hover, rgba(218,119,86,0.85))",
-    boxShadow: "0 4px 8px rgba(218, 119, 86, 0.3)",
-  },
-});
-
-const DraftButton = styled(MuiButton)({
-  backgroundColor: "#ffffff",
-  color: "var(--color-primary, #da7756) !important",
-  borderRadius: 0,
-  textTransform: "none",
-  padding: "8px 40px",
-  border: "1px solid var(--color-primary, #da7756)",
-  fontFamily: "Work Sans, sans-serif",
-  fontWeight: 500,
-  "& .MuiButton-startIcon, & .MuiButton-startIcon svg": {
-    color: "var(--color-primary, #da7756) !important",
-    stroke: "var(--color-primary, #da7756) !important",
-  },
-  "&:hover": {
-    backgroundColor: "rgba(218, 119, 86, 0.1)",
-  },
-  "&.Mui-disabled": {
-    opacity: 0.5,
-    cursor: "not-allowed",
-  },
-});
-
-const fieldStyles = {
-  "& .MuiOutlinedInput-root": {
-    fontSize: "14px",
-    backgroundColor: "#fff",
-    "& fieldset": {
-      borderColor: "#ddd",
-    },
-    "&:hover fieldset": {
-      borderColor: "#da7756",
-    },
-    "&.Mui-focused fieldset": {
-      borderColor: "#da7756",
-    },
-  },
-  "& .MuiInputLabel-root": {
-    fontSize: "14px",
-    "&.Mui-focused": {
-      color: "#da7756",
-    },
-  },
+// Records store dates as dd/mm/yyyy; date inputs need yyyy-mm-dd
+const toInputDate = (value?: string) => {
+  const [dd, mm, yyyy] = (value || "").split("/");
+  return dd && mm && yyyy ? `${yyyy}-${mm}-${dd}` : "";
 };
+
+const withCurrent = (options: string[], current: string) =>
+  current && !options.includes(current) ? [...options, current] : options;
 
 const AddQuarantinePage: React.FC = () => {
   const navigate = useNavigate();
-  const [tower, setTower] = useState("");
-  const [flat, setFlat] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const { id } = useParams<{ id: string }>();
+  const isEditMode = Boolean(id);
+  const existingRecord = isEditMode
+    ? QUARANTINE_MOCK_RECORDS.find((r) => r.id === id)
+    : undefined;
+
+  const [tower, setTower] = useState(existingRecord?.tower ?? "");
+  const [flat, setFlat] = useState(existingRecord?.flat ?? "");
+  const [startDate, setStartDate] = useState(toInputDate(existingRecord?.startDate));
+  const [endDate, setEndDate] = useState(toInputDate(existingRecord?.endDate));
 
   const handleTowerChange = (event: SelectChangeEvent) => {
     setTower(event.target.value as string);
@@ -140,123 +56,180 @@ const AddQuarantinePage: React.FC = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        backgroundColor: "#fafafa",
-        padding: "24px",
-        fontFamily: "Work Sans, sans-serif",
-      }}
-    >
-      <Box sx={{ width: "100%" }}>
-        {/* Header */}
-        <Paper
-          sx={{
-            backgroundColor: "#f6f4ee",
-            borderRadius: 0,
-            boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
-            marginBottom: "24px",
-            padding: "16px 24px",
-          }}
+    <div className="p-6 min-h-screen add-quarantine-page">
+      <style>{`
+        html body #root .add-quarantine-page {
+          background-color: #FDFDFB !important;
+        }
+        html body #root .add-quarantine-page .ref-card {
+          background: #FFFFFF;
+          border: 1px solid rgba(26, 26, 24, 0.09) !important;
+          border-radius: 16px !important;
+          box-shadow: none !important;
+          overflow: hidden;
+        }
+        html body #root .add-quarantine-page .ref-card-head {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 22px 24px 0;
+        }
+        html body #root .add-quarantine-page .ref-card-head h2 {
+          margin: 0;
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          color: #1A1A18 !important;
+        }
+        html body #root .add-quarantine-page .ref-chip {
+          width: 32px;
+          height: 32px;
+          border-radius: 9999px;
+          background: #F5F4F0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        html body #root .add-quarantine-page .ref-chip svg {
+          width: 14px;
+          height: 14px;
+          color: #1A1A18 !important;
+          stroke: #1A1A18 !important;
+        }
+        html body #root .add-quarantine-page .ref-card-body {
+          padding: 20px 24px 22px;
+        }
+        html body #root .add-quarantine-page .MuiOutlinedInput-root {
+          min-height: 44px;
+          border-radius: 12px !important;
+          background-color: #FFFFFF !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease;
+        }
+        html body #root .add-quarantine-page .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+        }
+        html body #root .add-quarantine-page .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .add-quarantine-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: #1A1A18 !important;
+          border-width: 1px !important;
+        }
+        html body #root .add-quarantine-page .MuiOutlinedInput-root.Mui-focused {
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .add-quarantine-page .MuiInputLabel-root {
+          color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+      `}</style>
+
+      <div className="mb-[22px]">
+        <div
+          className="flex items-center gap-2 text-[13px] font-medium mb-3"
+          style={{ color: "rgba(26, 26, 24, 0.48)" }}
         >
-          <Typography variant="h5" sx={{ fontWeight: 600, color: "#1A1A1A" }}>
-            Add Quarantine Record
-          </Typography>
-        </Paper>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Quarantine Tracker</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold" style={{ color: "#1A1A18" }}>
+            {isEditMode ? "Edit Record" : "Add Record"}
+          </span>
+        </div>
+        <h1
+          className="text-[22px] font-semibold leading-tight tracking-[-0.015em]"
+          style={{ color: "#1A1A18" }}
+        >
+          {isEditMode ? "Edit Quarantine Record" : "New Quarantine Record"}
+        </h1>
+      </div>
 
-        {/* Quarantine Details Section */}
-        <SectionCard>
-          <SectionHeader>
-            <SectionIcon>
-              <Info size={16} />
-            </SectionIcon>
-            <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600, color: "#1A1A1A" }}>
-              Quarantine Details
-            </Typography>
-          </SectionHeader>
+      <form onSubmit={handleSubmit}>
+        <div className="ref-card">
+          <div className="ref-card-head">
+            <span className="ref-chip">
+              <Info />
+            </span>
+            <h2>Quarantine Details</h2>
+          </div>
 
-          <Box sx={{ padding: "24px" }}>
-            <form onSubmit={handleSubmit}>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: {
-                    xs: "1fr",
-                    md: "repeat(2, 1fr)",
-                  },
-                  gap: "16px",
-                  mb: 3,
-                }}
+          <div className="ref-card-body grid grid-cols-1 md:grid-cols-2 gap-5">
+            <FormControl fullWidth>
+              <InputLabel id="tower-label">Select Tower</InputLabel>
+              <Select
+                labelId="tower-label"
+                value={tower}
+                label="Select Tower"
+                onChange={handleTowerChange}
               >
-                <FormControl fullWidth sx={fieldStyles}>
-                  <InputLabel id="tower-label">Select Tower</InputLabel>
-                  <Select
-                    labelId="tower-label"
-                    value={tower}
-                    label="Select Tower"
-                    onChange={handleTowerChange}
-                  >
-                    <MenuItem value="A">Tower A</MenuItem>
-                    <MenuItem value="B">Tower B</MenuItem>
-                    <MenuItem value="C">Tower C</MenuItem>
-                  </Select>
-                </FormControl>
+                {withCurrent(TOWER_OPTIONS, tower).map((option) => (
+                  <MenuItem key={option} value={option}>
+                    Tower {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-                <FormControl fullWidth sx={fieldStyles}>
-                  <InputLabel id="flat-label">Select Flat</InputLabel>
-                  <Select
-                    labelId="flat-label"
-                    value={flat}
-                    label="Select Flat"
-                    onChange={handleFlatChange}
-                  >
-                    <MenuItem value="101">101</MenuItem>
-                    <MenuItem value="102">102</MenuItem>
-                    <MenuItem value="103">103</MenuItem>
-                  </Select>
-                </FormControl>
+            <FormControl fullWidth>
+              <InputLabel id="flat-label">Select Flat</InputLabel>
+              <Select
+                labelId="flat-label"
+                value={flat}
+                label="Select Flat"
+                onChange={handleFlatChange}
+              >
+                {withCurrent(FLAT_OPTIONS, flat).map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-                <TextField
-                  label="Start Date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  sx={fieldStyles}
-                  fullWidth
-                />
+            <TextField
+              label="Start Date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
 
-                <TextField
-                  label="End Date"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  sx={fieldStyles}
-                  fullWidth
-                />
-              </Box>
+            <TextField
+              label="End Date"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+          </div>
+        </div>
 
-              <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
-                <DraftButton
-                  
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </DraftButton>
-                <RedButton
-                  type="submit"
-                  variant="contained"
-                  startIcon={<Info size={16} />}
-                >
-                  Save
-                </RedButton>
-              </Box>
-            </form>
-          </Box>
-        </SectionCard>
-      </Box>
-    </Box>
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button type="submit" className="btn-primary h-9 px-4 text-sm font-medium">
+            {isEditMode ? "Update" : "Save"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 
