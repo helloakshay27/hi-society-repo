@@ -3,13 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CalendarIcon, Download, ChevronsRight, ChevronRight, ChevronLeft, ChevronsLeft, ChevronDown, Check } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -20,7 +13,7 @@ import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
 type ExportType = "all" | "open" | "completed" | "updated";
 
 interface TowerOption { id: number; name: string; }
-interface FlatOption { id: number; flat_no: string; }
+interface FlatOption { id: number; flat_no: string; society_block_id: number; }
 interface CategoryOption { id: number; name: string; }
 interface StatusOption { id: number; name: string; color_code: string; }
 
@@ -182,8 +175,8 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
   // Advanced filter state — status & category are multi-select
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterCategory, setFilterCategory] = useState<string[]>([]);
-  const [filterTower, setFilterTower] = useState("");
-  const [filterFlat, setFilterFlat] = useState("");  // stores flat_no
+  const [filterTower, setFilterTower] = useState<string[]>([]); // tower (society_block) ids
+  const [filterFlat, setFilterFlat] = useState<string[]>([]);   // flat (society_flat) ids
 
   // API data
   const [towers, setTowers] = useState<TowerOption[]>([]);
@@ -241,35 +234,50 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
     fetchFilters();
   }, [isOpen]);
 
-  // Fetch flats when tower changes
+  // Fetch flats for every selected tower; drop selected flats whose tower was deselected
   useEffect(() => {
-    if (!filterTower) {
+    if (filterTower.length === 0) {
       setFlats([]);
-      setFilterFlat("");
+      setFilterFlat([]);
       return;
     }
+    let cancelled = false;
     const fetchFlats = async () => {
       setLoadingFlats(true);
-      setFilterFlat("");
       try {
         const token = localStorage.getItem("token") || "";
         const societyId = localStorage.getItem("selectedSocietyId") || "";
-        const res = await fetch(
-          getFullUrl(`/get_society_flats.json?token=${token}&society_id=${societyId}&society_block_id=${filterTower}`),
-          { headers: { Authorization: getAuthHeader() } }
+        const results = await Promise.all(
+          filterTower.map(async (towerId) => {
+            const res = await fetch(
+              getFullUrl(`/get_society_flats.json?token=${token}&society_id=${societyId}&society_block_id=${towerId}`),
+              { headers: { Authorization: getAuthHeader() } }
+            );
+            if (!res.ok) return [];
+            const data = await res.json();
+            return ((data.society_flats || []) as FlatOption[]).map((f) => ({
+              ...f,
+              society_block_id: Number(towerId),
+            }));
+          })
         );
-        if (res.ok) {
-          const data = await res.json();
-          setFlats(data.society_flats || []);
-        }
+        if (cancelled) return;
+        const allFlats = results.flat();
+        setFlats(allFlats);
+        const validIds = new Set(allFlats.map((f) => String(f.id)));
+        setFilterFlat((prev) => prev.filter((id) => validIds.has(id)));
       } catch (err) {
+        if (cancelled) return;
         console.error("Error fetching flats:", err);
         toast.error("Failed to load flats");
       } finally {
-        setLoadingFlats(false);
+        if (!cancelled) setLoadingFlats(false);
       }
     };
     fetchFlats();
+    return () => {
+      cancelled = true;
+    };
   }, [filterTower]);
 
   const moveAllToSelected = () => {
@@ -315,8 +323,26 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
       if (showAdvancedFilter) {
         if (filterStatus.length > 0) q.issue_status_in = filterStatus;
         if (filterCategory.length > 0) q.category_type_id_in = filterCategory;
-        if (filterTower) q.user_society_user_flat_society_flat_society_block_id_eq = filterTower;
-        if (filterFlat) q.user_society_user_flat_society_flat_flat_no_eq = filterFlat;
+
+        // Tower/flat can be linked either on the ticket itself or via the user's flat, so OR both paths
+        const g: Record<string, unknown>[] = [];
+        if (filterTower.length > 0) {
+          const towerIds = filterTower.map(Number);
+          g.push({
+            m: "or",
+            society_flat_society_block_id_in: towerIds,
+            user_society_user_flat_society_flat_society_block_id_in: towerIds,
+          });
+        }
+        if (filterFlat.length > 0) {
+          const flatIds = filterFlat.map(Number);
+          g.push({
+            m: "or",
+            society_flat_id_in: flatIds,
+            user_society_user_flat_society_flat_id_in: flatIds,
+          });
+        }
+        if (g.length > 0) q.g = g;
       }
 
       const response = await fetch(getFullUrl("/stream_reports.csv"), {
@@ -429,45 +455,35 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
                   disabled={loadingFilters}
                 />
 
-                {/* Tower */}
-                <Select value={filterTower} onValueChange={setFilterTower} disabled={loadingFilters}>
-                  <SelectTrigger className="h-[40px] text-sm">
-                    <SelectValue placeholder={loadingFilters ? "Loading..." : "All Tower"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {towers.map((t) => (
-                      <SelectItem key={t.id} value={String(t.id)}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {/* Tower — multi-select */}
+                <MultiSelectDropdown
+                  options={towers.map((t) => ({ label: t.name, value: String(t.id) }))}
+                  selected={filterTower}
+                  onChange={setFilterTower}
+                  placeholder={loadingFilters ? "Loading..." : "All Tower"}
+                  disabled={loadingFilters}
+                />
 
-                {/* Flat — stores flat_no */}
-                <Select
-                  value={filterFlat}
-                  onValueChange={setFilterFlat}
-                  disabled={!filterTower || loadingFlats}
-                >
-                  <SelectTrigger className="h-[40px] text-sm">
-                    <SelectValue
-                      placeholder={
-                        !filterTower
-                          ? "Select Tower first"
-                          : loadingFlats
-                            ? "Loading..."
-                            : "Select Flat"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {flats.map((f) => (
-                      <SelectItem key={f.id} value={f.flat_no}>
-                        {f.flat_no}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {/* Flat — multi-select, options come from all selected towers */}
+                <MultiSelectDropdown
+                  options={flats.map((f) => ({
+                    label:
+                      filterTower.length > 1
+                        ? `${towers.find((t) => t.id === f.society_block_id)?.name ?? ""} - ${f.flat_no}`
+                        : f.flat_no,
+                    value: String(f.id),
+                  }))}
+                  selected={filterFlat}
+                  onChange={setFilterFlat}
+                  placeholder={
+                    filterTower.length === 0
+                      ? "Select Tower first"
+                      : loadingFlats
+                        ? "Loading..."
+                        : "Select Flat"
+                  }
+                  disabled={filterTower.length === 0 || loadingFlats}
+                />
               </div>
             </div>
           )}
