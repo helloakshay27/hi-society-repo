@@ -482,12 +482,12 @@ const AggregatorInventorySection = () => {
                 setActiveTab(value);
                 setCurrentPage(1);
             }} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 gap-4 bg-transparent">
+                <TabsList className="bg-white border border-gray-200">
                     {categories.map((category) => (
                         <TabsTrigger
                             key={category.value}
                             value={category.value}
-                            className="!bg-[var(--color-primary,#da7756)] hover:!bg-[var(--color-primary-hover,rgba(218,119,86,0.85))] !text-white data-[state=active]:!bg-[var(--color-primary,#da7756)] data-[state=inactive]:!bg-[var(--color-primary,#da7756)] data-[state=active]:!text-white data-[state=inactive]:!text-white !border-transparent  px-4 py-2"
+                            className="font-semibold"
                         >
                             {category.label}
                         </TabsTrigger>

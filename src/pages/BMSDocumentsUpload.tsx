@@ -3,12 +3,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
+  ChevronRight,
   Upload,
   File,
   X,
-  Plus,
   FileText,
   FileSpreadsheet,
+  FolderUp,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -17,10 +19,7 @@ import {
   InputLabel,
   Select as MuiSelect,
   MenuItem,
-  Avatar,
-  Box,
 } from "@mui/material";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import axios from "axios";
 import {
   ENDPOINTS,
@@ -206,28 +205,8 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
     );
   }, [allFlatIds]);
 
-  // Field styles for Material-UI components
   const fieldStyles = {
-    height: "45px",
     backgroundColor: "#fff",
-    borderRadius: "4px",
-    "& .MuiOutlinedInput-root": {
-      height: "45px",
-      "& fieldset": {
-        borderColor: "#ddd",
-      },
-      "&:hover fieldset": {
-        borderColor: "#C72030",
-      },
-      "&.Mui-focused fieldset": {
-        borderColor: "#C72030",
-      },
-    },
-    "& .MuiInputLabel-root": {
-      "&.Mui-focused": {
-        color: "#C72030",
-      },
-    },
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -403,89 +382,279 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
     navigate(finalReturnPath);
   };
 
+  const uploadHeading = pageTitle || (uploadType === "folder" ? "Upload Folder" : "Upload Files");
+
   return (
-    <div
-      className="p-6 bg-gray-50 min-h-screen"
-      style={{ backgroundColor: "#FAF9F7" }}
-    >
-      {/* Back Button */}
-      <div className="mb-6 flex items-center justify-between">
-        <button
-          onClick={handleCancel}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm font-medium">Back</span>
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-[#1a1a1a]">{pageTitle}</h1>
+    <div className="p-6 min-h-screen docs-upload-page">
+      <style>{`
+        html body #root .docs-upload-page {
+          background-color: #FDFDFB !important;
+        }
+        html body #root .docs-upload-page .ref-card {
+          background: #FFFFFF;
+          border: 1px solid rgba(26, 26, 24, 0.09);
+          border-radius: 16px;
+          overflow: hidden;
+        }
+        html body #root .docs-upload-page .ref-card + .ref-card {
+          margin-top: 16px;
+        }
+        html body #root .docs-upload-page .ref-card-head {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 22px 24px 0;
+        }
+        html body #root .docs-upload-page .ref-card-head h2 {
+          flex: 1;
+          margin: 0;
+          font-size: 14px;
+          font-weight: 600;
+          color: #1A1A18;
+        }
+        html body #root .docs-upload-page .ref-chip {
+          width: 32px;
+          height: 32px;
+          flex: none;
+          border-radius: 9999px;
+          background: #F5F4F0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        html body #root .docs-upload-page .ref-chip svg {
+          width: 14px;
+          height: 14px;
+          color: #1A1A18 !important;
+          stroke: #1A1A18 !important;
+        }
+        html body #root .docs-upload-page .ref-card-body {
+          padding: 20px 24px 22px;
+        }
+        html body #root .docs-upload-page .ref-label {
+          display: block;
+          margin-bottom: 8px;
+          font-size: 12px;
+          font-weight: 600;
+          color: rgba(26, 26, 24, 0.68);
+        }
+        html body #root .docs-upload-page .ref-label .req {
+          color: #ef4444;
+          margin-left: 2px;
+        }
+        html body #root .docs-upload-page .ref-subhead {
+          font-size: 13px;
+          font-weight: 600;
+          color: #1A1A18;
+          margin-bottom: 12px;
+        }
+        html body #root .docs-upload-page .ref-choice {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13.5px;
+          font-weight: 500;
+          color: #1A1A18;
+          cursor: pointer;
+        }
+        html body #root .docs-upload-page .ref-choice input {
+          width: 16px;
+          height: 16px;
+          accent-color: #1A1A18 !important;
+          cursor: pointer;
+        }
+        html body #root .docs-upload-page .ref-upload {
+          border: 1.5px dashed rgba(26, 26, 24, 0.18) !important;
+          border-radius: 14px;
+          background: #FAF9F7 !important;
+          outline: none !important;
+          box-shadow: none !important;
+          cursor: pointer;
+          transition: border-color 0.16s ease, background-color 0.16s ease;
+        }
+        html body #root .docs-upload-page .ref-upload:hover {
+          border-color: rgba(26, 26, 24, 0.35) !important;
+          background: #F5F4F0 !important;
+        }
+        html body #root .docs-upload-page .ref-upload:focus-visible {
+          border-color: #1A1A18 !important;
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .docs-upload-page .ref-upload-chip {
+          width: 40px;
+          height: 40px;
+          border-radius: 9999px;
+          background: #FFFFFF;
+          border: 1px solid rgba(26, 26, 24, 0.09);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        html body #root .docs-upload-page .ref-upload-chip svg {
+          width: 18px;
+          height: 18px;
+          color: rgba(26, 26, 24, 0.55) !important;
+          stroke: rgba(26, 26, 24, 0.55) !important;
+        }
+        html body #root .docs-upload-page .ref-file {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 130px;
+          height: 130px;
+          padding: 20px 8px 8px;
+          border: 1px solid rgba(26, 26, 24, 0.09);
+          border-radius: 12px;
+          background: #FFFFFF;
+        }
+        html body #root .docs-upload-page .ref-flat {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          border: 1px solid rgba(26, 26, 24, 0.09);
+          border-radius: 10px;
+          background: #FFFFFF;
+          font-size: 13px;
+          font-weight: 500;
+          color: #1A1A18;
+          cursor: pointer;
+          transition: border-color 0.16s ease, background-color 0.16s ease;
+        }
+        html body #root .docs-upload-page .ref-flat:hover {
+          border-color: rgba(26, 26, 24, 0.28);
+        }
+        html body #root .docs-upload-page .ref-flat.is-selected {
+          border-color: #1A1A18;
+          background: #FAF9F7;
+        }
+        html body #root .docs-upload-page .ref-flat input {
+          width: 15px;
+          height: 15px;
+          accent-color: #1A1A18 !important;
+        }
+        html body #root .docs-upload-page .ref-ghost-btn {
+          display: inline-flex;
+          align-items: center;
+          height: 32px;
+          padding: 0 12px;
+          border: 1px solid rgba(26, 26, 24, 0.12);
+          border-radius: 8px;
+          background: #FFFFFF;
+          font-size: 12px;
+          font-weight: 600;
+          color: rgba(26, 26, 24, 0.68);
+          transition: border-color 0.16s ease, color 0.16s ease;
+        }
+        html body #root .docs-upload-page .ref-ghost-btn:hover:not(:disabled) {
+          border-color: rgba(26, 26, 24, 0.28);
+          color: #1A1A18;
+        }
+        html body #root .docs-upload-page .ref-ghost-btn:disabled {
+          opacity: 0.5;
+        }
+        html body #root .docs-upload-page .MuiOutlinedInput-root {
+          min-height: 44px;
+          border-radius: 12px !important;
+          background-color: #FFFFFF !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease;
+        }
+        html body #root .docs-upload-page .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+        }
+        html body #root .docs-upload-page .MuiOutlinedInput-root:not(.Mui-disabled):hover .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .docs-upload-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: #1A1A18 !important;
+          border-width: 1px !important;
+        }
+        html body #root .docs-upload-page .MuiOutlinedInput-root.Mui-focused {
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .docs-upload-page .MuiInputLabel-root {
+          color: rgba(26, 26, 24, 0.68) !important;
+          -webkit-text-fill-color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+        html body #root .docs-upload-page input::placeholder,
+        html body #root .docs-upload-page textarea::placeholder {
+          color: rgba(26, 26, 24, 0.3) !important;
+          opacity: 1;
+        }
+      `}</style>
+
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-[#1A1A18] hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span className="text-[13px] text-[rgba(26,26,24,0.55)]">
+            {cameFromFlat ? "Flat Related" : "Common Files"}
+          </span>
+          <ChevronRight className="w-3.5 h-3.5 text-[rgba(26,26,24,0.4)]" />
+          <span className="text-[13px] font-semibold text-[#1A1A18]">Upload</span>
         </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+          {uploadHeading}
+        </h1>
       </div>
 
-      <form onSubmit={handleSubmitUpload} className="space-y-6">
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div
-            className="px-6 py-3 border-b border-gray-200"
-            style={{ backgroundColor: "#F6F4EE" }}
-          >
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <Avatar
-                sx={{
-                  width: 32,
-                  height: 32,
-                  backgroundColor: "#E5E0D3",
-                  mr: 1.5,
-                }}
-              >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: "#da7756" }} />
-              </Avatar>
-              Upload Information
-            </h2>
+      <form onSubmit={handleSubmitUpload}>
+        {/* Upload Information */}
+        <div className="ref-card">
+          <div className="ref-card-head">
+            <span className="ref-chip">
+              <FolderUp />
+            </span>
+            <h2>Upload Information</h2>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="ref-card-body space-y-6">
             {/* Type Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Type <span style={{ color: "#C72030" }}>*</span>
-              </label>
-              <div className="flex gap-6 mb-2">
-                <label className="flex items-center">
+              <span className="ref-label">
+                Select Type<span className="req">*</span>
+              </span>
+              <div className="flex gap-6">
+                <label className="ref-choice">
                   <input
                     type="radio"
                     name="uploadType"
                     value="folder"
                     checked={uploadType === "folder"}
                     onChange={() => setUploadType("folder")}
-                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                    style={{ accentColor: "#C72030" }}
                   />
-                  <span className="ml-2 text-sm text-gray-700">Folder</span>
+                  Folder
                 </label>
-                <label className="flex items-center">
+                <label className="ref-choice">
                   <input
                     type="radio"
                     name="uploadType"
                     value="files"
                     checked={uploadType === "files"}
                     onChange={() => setUploadType("files")}
-                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                    style={{ accentColor: "#C72030" }}
                   />
-                  <span className="ml-2 text-sm text-gray-700">Files</span>
+                  Files
                 </label>
               </div>
             </div>
 
             {uploadType === "folder" && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TextField
-                  label={
-                    <span>
-                      Folder Name <span style={{ color: "#C72030" }}>*</span>
-                    </span>
-                  }
+                  label={<>Folder Name<span className="text-[#ef4444] ml-0.5">*</span></>}
                   placeholder="Enter folder name"
                   value={folderName}
                   onChange={(e) => setFolderName(e.target.value)}
@@ -503,11 +672,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                 />
 
                 <TextField
-                  label={
-                    <span>
-                      Date <span style={{ color: "#C72030" }}>*</span>
-                    </span>
-                  }
+                  label={<>Date<span className="text-[#ef4444] ml-0.5">*</span></>}
                   type="date"
                   value={uploadDate}
                   onChange={(e) => setUploadDate(e.target.value)}
@@ -524,7 +689,7 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                   }}
                 />
 
-                <div className="md:col-span-3">
+                <div className="md:col-span-2">
                   <TextField
                     label="Description"
                     placeholder="Enter description (optional)"
@@ -540,123 +705,105 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                         shrink: true,
                       },
                     }}
-                    sx={{
-                      backgroundColor: "#fff",
-                      borderRadius: "4px",
-                      "& .MuiOutlinedInput-root": {
-                        "& fieldset": {
-                          borderColor: "#ddd",
-                        },
-                        "&:hover fieldset": {
-                          borderColor: "#C72030",
-                        },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "#C72030",
-                        },
-                      },
-                      "& .MuiInputLabel-root": {
-                        "&.Mui-focused": {
-                          color: "#C72030",
-                        },
-                      },
-                    }}
+                    sx={fieldStyles}
                   />
                 </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
               {/* Share Access */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Share<span style={{ color: "#C72030" }}>*</span>
-                </label>
-                <div className="flex gap-4">
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="shareAccess"
-                      checked={shareAccess === "true"}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setShareAccess("true");
-                          if (cameFromFlat) {
-                            setShareOption("Flats");
-                          }
-                        } else {
-                          setShareAccess("false");
-                          setShareOption("All");
-                          setSelectedFlats([]);
-                          setFlatSearchQuery("");
+                <span className="ref-label">
+                  Share<span className="req">*</span>
+                </span>
+                <label className="ref-choice">
+                  <input
+                    type="checkbox"
+                    name="shareAccess"
+                    checked={shareAccess === "true"}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setShareAccess("true");
+                        if (cameFromFlat) {
+                          setShareOption("Flats");
                         }
-                      }}
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300"
-                      style={{ accentColor: "#C72030" }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Yes</span>
-                  </label>
-                </div>
+                      } else {
+                        setShareAccess("false");
+                        setShareOption("All");
+                        setSelectedFlats([]);
+                        setFlatSearchQuery("");
+                      }
+                    }}
+                  />
+                  Yes
+                </label>
               </div>
 
               {/* Share Option - Only show if Share Access is Yes */}
               {shareAccess === "true" && (
-                <div>
-                  <FormControl
-                    fullWidth
-                    variant="outlined"
-                    sx={{ "& .MuiInputBase-root": fieldStyles }}
-                  >
-                    <InputLabel shrink>Share With</InputLabel>
-                    <MuiSelect
-                      value={shareOption}
-                      onChange={(e) => {
-                        const nextShareOption = e.target.value;
-                        setShareOption(nextShareOption);
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink>Share With</InputLabel>
+                  <MuiSelect
+                    value={shareOption}
+                    onChange={(e) => {
+                      const nextShareOption = e.target.value;
+                      setShareOption(nextShareOption);
 
-                        if (nextShareOption === "All") {
-                          setSelectedFlats([]);
-                        }
-                      }}
-                      label="Share With"
-                      notched
-                      displayEmpty
-                    >
-                      {!cameFromFlat && <MenuItem value="All">All</MenuItem>}
-                      <MenuItem value="Flats">Flats</MenuItem>
-                    </MuiSelect>
-                  </FormControl>
-                </div>
+                      if (nextShareOption === "All") {
+                        setSelectedFlats([]);
+                      }
+                    }}
+                    label="Share With"
+                    notched
+                    displayEmpty
+                    sx={fieldStyles}
+                  >
+                    {!cameFromFlat && <MenuItem value="All">All</MenuItem>}
+                    <MenuItem value="Flats">Flats</MenuItem>
+                  </MuiSelect>
+                </FormControl>
               )}
             </div>
 
             {/* Select Files */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Files{" "}
-                {uploadType === "files" && (
-                  <span style={{ color: "#C72030" }}>*</span>
-                )}
-              </label>
+              <span className="ref-label">
+                Select Files
+                {uploadType === "files" && <span className="req">*</span>}
+              </span>
 
-              <div className="flex flex-wrap gap-4 items-start">
-                {/* Always-visible small upload button box */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#C72030] bg-[#C72030] text-white hover:bg-[#A01828] transition shrink-0"
-                >
-                  <span className="font-medium text-sm text-white">Upload Files</span>
-                  <Upload className="w-4 h-4 text-white" />
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="ref-upload w-full flex flex-col items-center justify-center gap-2 px-6 py-7 text-center"
+              >
+                <span className="ref-upload-chip">
+                  <Upload />
+                </span>
+                <span className="text-[13px] text-[rgba(26,26,24,0.68)]">
+                  <span className="font-semibold text-[#1A1A18] underline underline-offset-2">
+                    Choose Files
+                  </span>{" "}
+                  to upload
+                </span>
+                <span className="text-[11.5px] text-[rgba(26,26,24,0.48)]">
+                  {selectedFiles.length > 0
+                    ? `${selectedFiles.length} file${selectedFiles.length === 1 ? "" : "s"} selected`
+                    : "You can select multiple files"}
+                </span>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+              />
 
-                {/* Display uploaded files */}
+              {selectedFiles.length > 0 && (
+              <div className="flex flex-wrap gap-4 items-start mt-4">
+
                 {selectedFiles.length > 0 &&
                   selectedFiles.map((file, index) => {
                     const isExcel =
@@ -665,12 +812,9 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                     const isImage = file.type.startsWith("image/");
 
                     return (
-                      <div
-                        key={`${file.name}-${index}`}
-                        className="relative flex flex-col items-center border rounded-md pt-5 px-2 pb-2 w-[130px] h-[130px] bg-[#F6F4EE] shadow-sm shrink-0"
-                      >
+                      <div key={`${file.name}-${index}`} className="ref-file shrink-0">
                         {isImage ? (
-                          <div className="w-14 h-14 flex flex-shrink-0 items-center justify-center bg-white border rounded mb-1.5 overflow-hidden">
+                          <div className="w-14 h-14 flex flex-shrink-0 items-center justify-center bg-white border border-[rgba(26,26,24,0.09)] rounded-lg mb-1.5 overflow-hidden">
                             <img
                               src={URL.createObjectURL(file)}
                               alt=""
@@ -678,32 +822,33 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                             />
                           </div>
                         ) : isExcel ? (
-                          <div className="w-14 h-14 flex flex-shrink-0 items-center justify-center border rounded text-green-600 bg-white mb-1.5">
+                          <div className="w-14 h-14 flex flex-shrink-0 items-center justify-center rounded-lg text-[#56683F] bg-[rgba(121,140,94,0.15)] mb-1.5">
                             <FileSpreadsheet className="w-6 h-6" />
                           </div>
                         ) : isCsv ? (
-                          <div className="w-14 h-14 flex flex-shrink-0 items-center justify-center border rounded text-blue-600 bg-white mb-1.5">
+                          <div className="w-14 h-14 flex flex-shrink-0 items-center justify-center rounded-lg text-[#56683F] bg-[rgba(121,140,94,0.15)] mb-1.5">
                             <FileText className="w-6 h-6" />
                           </div>
                         ) : (
-                          <div className="w-14 h-14 flex flex-shrink-0 items-center justify-center bg-white border rounded text-gray-500 mb-1.5">
+                          <div className="w-14 h-14 flex flex-shrink-0 items-center justify-center rounded-lg text-[rgba(26,26,24,0.55)] bg-[#F5F4F0] mb-1.5">
                             <File className="w-6 h-6" />
                           </div>
                         )}
                         <span
-                          className="text-[10px] text-center font-medium truncate w-full px-1 mb-0.5"
+                          className="text-[11px] text-center font-medium text-[#1A1A18] truncate w-full px-1 mb-0.5"
                           title={file.name}
                         >
                           {file.name}
                         </span>
-                        <span className="text-[9px] text-gray-500">
+                        <span className="text-[10px] text-[rgba(26,26,24,0.48)]">
                           {(file.size / 1024 / 1024).toFixed(2)} MB
                         </span>
                         <button
                           type="button"
-                          className="absolute top-1 right-1 h-5 w-5 p-0 text-gray-600 bg-white rounded-full border border-gray-300 flex items-center justify-center hover:bg-red-100 hover:text-red-600"
+                          className="absolute top-1.5 right-1.5 h-5 w-5 p-0 text-[rgba(26,26,24,0.55)] bg-white rounded-full border border-[rgba(26,26,24,0.12)] flex items-center justify-center hover:bg-[rgba(231,132,142,0.18)] hover:text-[#A63D49]"
                           onClick={() => removeFile(index)}
                           disabled={loading}
+                          aria-label="Remove file"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -711,269 +856,235 @@ const BMSDocumentsUpload: React.FC<BMSDocumentsUploadProps> = ({
                     );
                   })}
               </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Share Settings */}
+        {shareAccess === "true" && shareOption === "Flats" && (
+          <div className="ref-card">
+            <div className="ref-card-head">
+              <span className="ref-chip">
+                <Users />
+              </span>
+              <h2>Share Settings</h2>
+              {selectedFlats.length > 0 && (
+                <span className="text-[12px] font-semibold text-[rgba(26,26,24,0.55)]">
+                  {selectedFlats.length} flat{selectedFlats.length === 1 ? "" : "s"} selected
+                </span>
+              )}
             </div>
 
-            {/* Share Settings */}
-            {shareAccess === "true" && shareOption === "Flats" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-gray-100 mt-2 pt-6">
-                {/* Left Column */}
+            <div className="ref-card-body grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Left Column */}
+              <div className="space-y-5">
                 <div>
-                  <h3 className="text-lg font-normal text-gray-700 border-b border-gray-200 pb-2 mb-4">
-                    Share with
-                  </h3>
-
-                  {/* Share Group Checkboxes */}
-                  <div className="flex gap-6 mb-6">
-                    <label className="flex items-center cursor-pointer">
+                  <p className="ref-subhead">Share with</p>
+                  <div className="flex flex-wrap gap-6">
+                    <label className="ref-choice">
                       <input
                         type="checkbox"
                         checked={isOwner}
                         onChange={(e) => setIsOwner(e.target.checked)}
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300"
-                        style={{ accentColor: "#C72030" }}
                       />
-                      <span className="ml-2 text-sm text-gray-700 font-medium">
-                        Owner
-                      </span>
+                      Owner
                     </label>
-                    <label className="flex items-center cursor-pointer">
+                    <label className="ref-choice">
                       <input
                         type="checkbox"
                         checked={isTenant}
                         onChange={(e) => setIsTenant(e.target.checked)}
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300"
-                        style={{ accentColor: "#C72030" }}
                       />
-                      <span className="ml-2 text-sm text-gray-700 font-medium">
-                        Tenant
-                      </span>
+                      Tenant
                     </label>
-                    <label className="flex items-center cursor-pointer">
+                    <label className="ref-choice">
                       <input
                         type="checkbox"
                         checked={isBuilder}
                         onChange={(e) => setIsBuilder(e.target.checked)}
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300"
-                        style={{ accentColor: "#C72030" }}
                       />
-                      <span className="ml-2 text-sm text-gray-700 font-medium">
-                        Builder
-                      </span>
+                      Builder
                     </label>
                   </div>
+                </div>
 
-                  {/* Primary / Secondary / All */}
-                  <div className="flex gap-6 mb-6">
-                    <label className="flex items-center cursor-pointer">
+                <div>
+                  <span className="ref-label">Occupancy</span>
+                  <div className="flex flex-wrap gap-6">
+                    <label className="ref-choice">
                       <input
                         type="radio"
                         value="primary"
                         checked={occupancyType === "primary"}
                         onChange={(e) => setOccupancyType(e.target.value)}
                         name="occupancyType"
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
-                        style={{ accentColor: "#C72030" }}
                       />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Primary
-                      </span>
+                      Primary
                     </label>
-                    <label className="flex items-center cursor-pointer">
+                    <label className="ref-choice">
                       <input
                         type="radio"
                         value="secondary"
                         checked={occupancyType === "secondary"}
                         onChange={(e) => setOccupancyType(e.target.value)}
                         name="occupancyType"
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
-                        style={{ accentColor: "#C72030" }}
                       />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Secondary
-                      </span>
+                      Secondary
                     </label>
-                    <label className="flex items-center cursor-pointer">
+                    <label className="ref-choice">
                       <input
                         type="radio"
                         value="all"
                         checked={occupancyType === "all"}
                         onChange={(e) => setOccupancyType(e.target.value)}
                         name="occupancyType"
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
-                        style={{ accentColor: "#C72030" }}
                       />
-                      <span className="ml-2 text-sm text-gray-700">All</span>
+                      All
                     </label>
                   </div>
+                </div>
 
-                  {/* Living Status */}
-                  <div className="flex gap-6">
-                    <label className="flex items-center cursor-pointer">
+                <div>
+                  <span className="ref-label">Living Status</span>
+                  <div className="flex flex-wrap gap-6">
+                    <label className="ref-choice">
                       <input
                         type="radio"
                         value="living_here"
                         checked={livingStatus === "living_here"}
                         onChange={(e) => setLivingStatus(e.target.value)}
                         name="livingStatus"
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
-                        style={{ accentColor: "#C72030" }}
                       />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Living Here
-                      </span>
+                      Living Here
                     </label>
-                    <label className="flex items-center cursor-pointer">
+                    <label className="ref-choice">
                       <input
                         type="radio"
                         value="not_living_here"
                         checked={livingStatus === "not_living_here"}
                         onChange={(e) => setLivingStatus(e.target.value)}
                         name="livingStatus"
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
-                        style={{ accentColor: "#C72030" }}
                       />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Not Living Here
-                      </span>
+                      Not Living Here
                     </label>
-                    <label className="flex items-center cursor-pointer">
+                    <label className="ref-choice">
                       <input
                         type="radio"
                         value="all"
                         checked={livingStatus === "all"}
                         onChange={(e) => setLivingStatus(e.target.value)}
                         name="livingStatus"
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] border-gray-300"
-                        style={{ accentColor: "#C72030" }}
                       />
-                      <span className="ml-2 text-sm text-gray-700">All</span>
+                      All
                     </label>
                   </div>
                 </div>
-
-                {/* Right Column */}
-                {shareOption === "Flats" && (
-                  <div>
-                    <h3 className="text-lg font-normal text-gray-700 border-b border-gray-200 pb-2 mb-4">
-                      Select Flats
-                    </h3>
-
-                    <TextField
-                      placeholder="Search"
-                      value={flatSearchQuery}
-                      onChange={(e) => setFlatSearchQuery(e.target.value)}
-                      fullWidth
-                      variant="outlined"
-                      size="small"
-                      sx={{
-                        mb: 2,
-                        backgroundColor: "#fff",
-                        "& .MuiOutlinedInput-root": {
-                          height: "35px",
-                          fontSize: "14px",
-                          "& fieldset": {
-                            borderColor: "#ddd",
-                          },
-                          "&:hover fieldset": {
-                            borderColor: "#C72030",
-                          },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "#C72030",
-                          },
-                        },
-                      }}
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (allFlatsSelected) {
-                          setSelectedFlats([]);
-                        } else {
-                          setSelectedFlats(allFlatIds);
-                        }
-                      }}
-                      disabled={isFlatListLoading || flatsList.length === 0}
-                      className="text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 bg-white shadow-sm mb-4"
-                    >
-                      {allFlatsSelected
-                        ? "Deselect All Flats"
-                        : "Select All Flats"}
-                    </button>
-
-                    <div className="max-h-[300px] overflow-y-auto pr-2">
-                      {isFlatListLoading ? (
-                        <p className="text-xs text-gray-500">
-                          Loading flats...
-                        </p>
-                      ) : isFlatListError ? (
-                        <div className="text-xs text-gray-500">
-                          <p className="mb-2 text-red-600">
-                            Unable to load flats.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => refetchFlatList()}
-                            className="border border-gray-300 bg-white px-3 py-1.5 text-xs hover:bg-gray-50"
-                          >
-                            Retry
-                          </button>
-                        </div>
-                      ) : filteredFlats.length === 0 ? (
-                        <p className="text-xs text-gray-500">
-                          {flatSearchQuery
-                            ? "No flats match your search"
-                            : "No flats available"}
-                        </p>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-2">
-                          {filteredFlats.map((flat) => (
-                            <label
-                              key={flat.id}
-                              className="flex items-center cursor-pointer border-b border-gray-100 border-dashed pb-2"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedFlats.includes(flat.id)}
-                                onChange={(e) => {
-                                  if (e.target.checked)
-                                    setSelectedFlats((p) => [...p, flat.id]);
-                                  else
-                                    setSelectedFlats((p) =>
-                                      p.filter((id) => id !== flat.id)
-                                    );
-                                }}
-                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] rounded border-gray-300"
-                                style={{ accentColor: "#C72030" }}
-                              />
-                              <span className="ml-2 text-xs text-gray-600">
-                                {flat.name}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
-            )}
+
+              {/* Right Column */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="ref-subhead !mb-0">Select Flats</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (allFlatsSelected) {
+                        setSelectedFlats([]);
+                      } else {
+                        setSelectedFlats(allFlatIds);
+                      }
+                    }}
+                    disabled={isFlatListLoading || flatsList.length === 0}
+                    className="ref-ghost-btn"
+                  >
+                    {allFlatsSelected ? "Deselect All" : "Select All"}
+                  </button>
+                </div>
+
+                <TextField
+                  placeholder="Search flats..."
+                  value={flatSearchQuery}
+                  onChange={(e) => setFlatSearchQuery(e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  sx={{ mb: 2, ...fieldStyles }}
+                />
+
+                <div className="max-h-[300px] overflow-y-auto pr-1">
+                  {isFlatListLoading ? (
+                    <p className="text-xs text-[rgba(26,26,24,0.55)]">
+                      Loading flats...
+                    </p>
+                  ) : isFlatListError ? (
+                    <div className="text-xs text-[rgba(26,26,24,0.55)]">
+                      <p className="mb-2 text-[#A63D49]">
+                        Unable to load flats.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => refetchFlatList()}
+                        className="ref-ghost-btn"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  ) : filteredFlats.length === 0 ? (
+                    <p className="text-xs text-[rgba(26,26,24,0.55)]">
+                      {flatSearchQuery
+                        ? "No flats match your search"
+                        : "No flats available"}
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {filteredFlats.map((flat) => {
+                        const isSelected = selectedFlats.includes(flat.id);
+                        return (
+                          <label
+                            key={flat.id}
+                            className={`ref-flat ${isSelected ? "is-selected" : ""}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked)
+                                  setSelectedFlats((p) => [...p, flat.id]);
+                                else
+                                  setSelectedFlats((p) =>
+                                    p.filter((id) => id !== flat.id)
+                                  );
+                              }}
+                            />
+                            <span className="truncate" title={flat.name}>
+                              {flat.name}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Action Buttons */}
-        <div className="flex gap-4 justify-center pt-6">
+        <div className="flex justify-end gap-4 mt-6">
           <button
             type="button"
             onClick={handleCancel}
-className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"         
-           >
+            className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+          >
             Cancel
           </button>
           <button
             type="submit"
-           className="btn-primary h-9 px-4 text-sm font-medium"  >
-            Submit
+            disabled={loading}
+            className="btn-primary h-9 px-4 text-sm font-medium"
+          >
+            {loading ? "Submitting..." : "Submit"}
           </button>
         </div>
       </form>

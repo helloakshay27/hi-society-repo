@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Plus, Eye, Edit, Trash2, X, Loader2 } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Loader2, ArrowLeft, ChevronRight, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import {
@@ -419,75 +416,127 @@ const BMSCommunicationTemplate: React.FC = () => {
 
   // Add Template Form
   const renderAddTemplateForm = () => (
-    <div>
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-800">
-            {isEditMode ? 'Edit Communication Template' : 'Add Communication Template'}
-          </h2>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleCancel}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+    <div className="comm-template-form">
+      <style>{`
+        html body #root .comm-template-form .ref-card {
+          background: #ffffff !important;
+          border: 1px solid rgba(26, 26, 24, 0.09) !important;
+          border-radius: 16px !important;
+          box-shadow: none !important;
+          overflow: hidden;
+        }
+        html body #root .comm-template-form .ref-card-head {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 22px 24px 0;
+        }
+        html body #root .comm-template-form .ref-card-head h2 {
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          color: #1A1A18 !important;
+          margin: 0;
+        }
+        html body #root .comm-template-form .ref-chip {
+          width: 32px;
+          height: 32px;
+          border-radius: 9999px;
+          background: #F5F4F0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: #1A1A18;
+        }
+        html body #root .comm-template-form .ref-chip svg {
+          width: 14px;
+          height: 14px;
+          color: #1A1A18 !important;
+          stroke: #1A1A18 !important;
+        }
+        html body #root .comm-template-form .ref-card-body {
+          padding: 16px 24px 22px;
+        }
+        html body #root .comm-template-form .ref-label {
+          display: block;
+          margin-bottom: 6px;
+          font-size: 12px;
+          font-weight: 600;
+          color: rgba(26, 26, 24, 0.68);
+        }
+        html body #root .comm-template-form .ref-input {
+          width: 100%;
+          min-height: 44px;
+          padding: 10px 14px !important;
+          font-size: 13.5px !important;
+          color: #1A1A18 !important;
+          background: #ffffff !important;
+          border: 1px solid rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+          box-shadow: none !important;
+          outline: none !important;
+          transition: border-color 0.16s, box-shadow 0.16s;
+        }
+        html body #root .comm-template-form .ref-input:hover {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .comm-template-form .ref-input:focus,
+        html body #root .comm-template-form .ref-input:focus-visible {
+          border-color: #1A1A18 !important;
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .comm-template-form .ref-input::placeholder {
+          color: rgba(26, 26, 24, 0.3) !important;
+        }
+        html body #root .comm-template-form textarea.ref-input {
+          min-height: 140px;
+          resize: vertical;
+        }
+      `}</style>
+
+      <div className="ref-card">
+        <div className="ref-card-head">
+          <span className="ref-chip">
+            <FileText />
+          </span>
+          <h2>Template Details</h2>
         </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Identifier Field - Hidden, set to 'helpdesk' by default */}
+
+        <form onSubmit={handleSubmit} className="ref-card-body space-y-5">
           <input type="hidden" name="identifier" value="helpdesk" />
-          
-          {/* Title Field (previously Identifier Action) */}
-          <div className="relative border border-gray-300 rounded-md mt-6">
-            <div className="absolute -top-3 left-3 bg-white px-1">
-              <label 
-                htmlFor="identifier_action" 
-                className="text-xs text-gray-500 bg-white px-1"
-              >
-                Title <span className="text-red-500">*</span>
-              </label>
-            </div>
-            <Input
+
+          <div>
+            <label htmlFor="identifier_action" className="ref-label">
+              Title <span className="text-red-500">*</span>
+            </label>
+            <input
               id="identifier_action"
               name="identifier_action"
               value={formData.identifier_action}
               onChange={handleFormChange}
               placeholder="Enter title here..."
-              className="w-full border-0 focus:ring-0 focus:ring-offset-0 h-12 px-3"
+              className="ref-input"
               required
             />
           </div>
-          
-          {/* Body Field */}
-          <div className="relative border border-gray-300 rounded-md mt-6">
-            <div className="absolute -top-3 left-3 bg-white px-1">
-              <label 
-                htmlFor="body" 
-                className="text-xs text-gray-500 bg-white px-1"
-              >
-                Description <span className="text-red-500">*</span>
-              </label>
-            </div>
-            <Textarea
+
+          <div>
+            <label htmlFor="body" className="ref-label">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
               id="body"
               name="body"
               value={formData.body}
               onChange={handleFormChange}
               placeholder="Enter description here..."
-              className="min-h-[120px] w-full border-0 focus:ring-0 focus:ring-offset-0 pt-3 pb-2 px-3"
+              className="ref-input"
               required
             />
-            {/* <p className="text-xs text-gray-500 mt-2 px-3 pb-2">
-              Use {'{{variable}}'} for dynamic values (e.g., {'{{name}}'}, {'{{email}}'})
-            </p> */}
           </div>
         </form>
       </div>
-      
-      {/* Buttons - Moved outside the form div */}
-      <div className="flex justify-center space-x-4 mt-6">
+
+      <div className="flex justify-end gap-4 mt-6">
         <Button
           type="button"
           variant="outline"
@@ -516,7 +565,31 @@ variant="ghost"
   );
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
+    <div className={`p-2 sm:p-4 lg:p-6 ${showForm ? "min-h-screen bg-[#FDFDFB]" : ""}`}>
+      {showForm ? (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 text-[13px] text-[rgba(26,26,24,0.48)] mb-3">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[#F5F4F0] transition-colors"
+              aria-label="Back to Communication Template"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={handleCancel} className="hover:text-[#1A1A18] transition-colors">
+              Communication Template
+            </button>
+            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="text-[#1A1A18] font-semibold">
+              {isEditMode ? "Edit Template" : "Add Template"}
+            </span>
+          </div>
+          <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+            {isEditMode ? "Edit Template" : "New Template"}
+          </h1>
+        </div>
+      ) : (
       <div className="mb-4 sm:mb-6 flex items-center justify-between">
         <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">Communication Template</h1>
         {/* {!showForm && (
@@ -528,6 +601,7 @@ variant="ghost"
           </Button>
         )} */}
       </div>
+      )}
       
       {showForm ? (
         renderAddTemplateForm()

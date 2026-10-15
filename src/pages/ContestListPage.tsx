@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/pagination";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { TextField, InputAdornment, Switch } from "@mui/material";
+import { TextField, InputAdornment } from "@mui/material";
+import { Switch } from "@/components/ui/switch";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { startTransition, useRef } from "react";
@@ -534,17 +535,9 @@ export const ContestListPage: React.FC = () => {
                 {shouldShow("Contest", "update") && (
                 <Switch
                   checked={contest.isActive}
-                  onChange={() => handleToggleActive(contest.id, contest.isActive)}
+                  onCheckedChange={() => handleToggleActive(contest.id, contest.isActive)}
                   disabled={togglingId === contest.id || contest.status === "Expired"}
-                  size="small"
-                  sx={{
-                    "& .MuiSwitch-switchBase.Mui-checked": {
-                      color: "#22c55e",
-                    },
-                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                      backgroundColor: "#22c55e",
-                    },
-                  }}
+                  aria-label="Toggle contest status"
                 />
                 )}
                 <span className="text-sm font-medium">

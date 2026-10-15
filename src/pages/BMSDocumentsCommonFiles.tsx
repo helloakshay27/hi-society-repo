@@ -78,17 +78,17 @@ const inferFileType = (name: string | null | undefined): string => {
 const FileIcon = ({ fileType }: { fileType?: string }) => {
   switch (fileType) {
     case "video":
-      return <FileVideo className="h-5 w-5 shrink-0 text-purple-500" />;
+      return <FileVideo className="h-5 w-5 shrink-0 text-[rgba(26,26,24,0.55)]" />;
     case "pdf":
-      return <FileText className="h-5 w-5 shrink-0 text-red-500" />;
+      return <FileText className="h-5 w-5 shrink-0 text-[rgba(26,26,24,0.55)]" />;
     case "image":
-      return <ImageIcon className="h-5 w-5 shrink-0 text-green-500" />;
+      return <ImageIcon className="h-5 w-5 shrink-0 text-[rgba(26,26,24,0.55)]" />;
     case "spreadsheet":
-      return <FileSpreadsheet className="h-5 w-5 shrink-0 text-emerald-600" />;
+      return <FileSpreadsheet className="h-5 w-5 shrink-0 text-[rgba(26,26,24,0.55)]" />;
     case "doc":
-      return <FileText className="h-5 w-5 shrink-0 text-blue-500" />;
+      return <FileText className="h-5 w-5 shrink-0 text-[rgba(26,26,24,0.55)]" />;
     default:
-      return <File className="h-5 w-5 shrink-0 text-gray-400" />;
+      return <File className="h-5 w-5 shrink-0 text-[rgba(26,26,24,0.55)]" />;
   }
 };
 
@@ -312,9 +312,9 @@ const BMSDocumentsCommonFiles: React.FC = () => {
           <span className="relative z-[1] flex h-full items-center gap-[5px]">
             <TreeToggle isExpanded={isExpanded} visible={children.length > 0} />
             {isExpanded ? (
-              <FolderOpen className="h-5 w-5 shrink-0 text-yellow-500" />
+              <FolderOpen className="h-5 w-5 shrink-0 text-[#B5A27A]" />
             ) : (
-              <Folder className="h-5 w-5 shrink-0 text-yellow-500" />
+              <Folder className="h-5 w-5 shrink-0 text-[#B5A27A]" />
             )}
             <span>{node.text ?? ""}</span>
           </span>
@@ -353,20 +353,22 @@ const BMSDocumentsCommonFiles: React.FC = () => {
             size="sm"
             onClick={handleRefresh}
             disabled={isLoading}
-            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+            title="Refresh"
+            aria-label="Refresh"
+            className="btn-cancel h-9 w-9 p-0 bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw
-              className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
             />
-            Refresh
           </Button>
           {shouldShow("Common Files", "create") && (
             <Button
               onClick={handleUpload}
-              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+              title="Upload Document"
+              aria-label="Upload Document"
+              className="btn-primary h-9 w-9 p-0"
             >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Document
+              <Upload className="w-4 h-4" />
             </Button>
           )}
         </div>

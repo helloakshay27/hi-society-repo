@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Settings, Edit } from "@mui/icons-material";
-import { ArrowLeft, Smile } from "lucide-react";
+import { ArrowLeft, Smile, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { emojis } from "@/utils/emojies";
 import axios from "axios";
 import { getFullUrl } from "@/config/apiConfig";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import ProjectBannerUpload from "@/components/reusable/ProjectBannerUpload";
-import { saveDraftItem, loadDraftItem, clearAllDraftItems } from "@/utils/draftStorage";
+import {
+  saveDraftItem,
+  loadDraftItem,
+  clearAllDraftItems,
+} from "@/utils/draftStorage";
 // removed react-select import in favor of MUI Select
 import {
   Box,
@@ -40,31 +44,36 @@ import { InfoOutlined, Close as CloseIcon } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 import { boxShadow } from "html2canvas/dist/types/css/property-descriptors/box-shadow";
 
-
 // Styled Components
 const CustomStepConnector = styled(StepConnector)(() => ({
   top: 20,
   "& .MuiStepConnector-line": {
-    borderTop: "2px dotted #E6E6E6",
+    borderTop: "1.5px dashed rgba(26, 26, 24, 0.18)",
   },
 }));
 
 const StepPill = styled(Box)<{ $active?: boolean; $completed?: boolean }>(
   ({ $active, $completed }) => ({
-    height: 40,
-    padding: "0 20px",
-    borderRadius: 0,
+    height: 36,
+    padding: "0 16px",
+    borderRadius: 12,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: 14,
-    fontWeight: 500,
-    fontFamily: "Work Sans, sans-serif",
+    fontSize: 13,
+    fontWeight: 600,
     whiteSpace: "nowrap",
     cursor: "pointer",
-    backgroundColor: $active || $completed ? "var(--color-primary, #da7756)" : "#FFFFFF",
-    color: $active ? "#FFFFFF" : $completed ? "#fff" : "#333",
-    border: $active || $completed ? "2px solid var(--color-primary, #da7756)" : "2px solid #E6E6E6",
+    backgroundColor: $active ? "#1A1A18" : "#FFFFFF",
+    color: $active
+      ? "#FFFFFF"
+      : $completed
+        ? "#1A1A18"
+        : "rgba(26, 26, 24, 0.68)",
+    border:
+      $active || $completed
+        ? "1px solid #1A1A18"
+        : "1px solid rgba(26, 26, 24, 0.09)",
   })
 );
 
@@ -80,15 +89,15 @@ const CustomStepLabel = styled(StepLabel)(({ theme }) => ({
   },
 
   "&.Mui-active .MuiStepLabel-label": {
-    backgroundColor: "#C72030",
+    backgroundColor: "#1A1A18",
     color: "#fff",
-    borderColor: "#C72030",
+    borderColor: "#1A1A18",
   },
 
   "&.Mui-completed .MuiStepLabel-label": {
     backgroundColor: "#fff",
-    color: "#C72030",
-    borderColor: "#C72030",
+    color: "#1A1A18",
+    borderColor: "#1A1A18",
   },
 }));
 
@@ -98,48 +107,62 @@ const CustomStep = styled(Step)(() => ({
   },
 }));
 
+// Primary action (matches .btn-primary)
 const RedButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "var(--color-primary, #da7756)",
+  backgroundColor: "#1A1A18",
   color: "white !important",
-  borderRadius: 0,
+  borderRadius: 8,
   textTransform: "none",
-  padding: "8px 16px",
-  fontFamily: "Work Sans, sans-serif",
-  fontWeight: 500,
-  boxShadow: "0 2px 4px rgba(218, 119, 86, 0.2)",
+  height: 36,
+  padding: "0 16px",
+  fontSize: 14,
+  fontWeight: 600,
+  boxShadow: "none",
   "&:hover": {
-    backgroundColor: "var(--color-primary-hover, rgba(218, 119, 86, 0.85))",
+    backgroundColor: "#12100E",
     color: "white !important",
-    boxShadow: "0 4px 8px rgba(218, 119, 86, 0.3)",
+    boxShadow: "none",
+  },
+  "&.Mui-disabled": {
+    backgroundColor: "#1A1A18",
+    color: "white !important",
+    opacity: 0.6,
   },
 }));
 
+// Secondary action (matches .btn-cancel)
 const DraftButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "var(--color-primary, #da7756)",
-  color: "white !important",
-  borderRadius: 0,
+  backgroundColor: "#FFFFFF",
+  color: "#1A1A18 !important",
+  border: "1px solid #1A1A18",
+  borderRadius: 8,
   textTransform: "none",
-  padding: "8px 16px",
-  fontFamily: "Work Sans, sans-serif",
+  height: 36,
+  padding: "0 16px",
+  fontSize: 14,
   fontWeight: 500,
   "&:hover": {
-    backgroundColor: "var(--color-primary-hover, rgba(218, 119, 86, 0.85))",
-    color: "white !important",
+    backgroundColor: "#FFFFFF",
+    color: "#1A1A18 !important",
+  },
+  "&.Mui-disabled": {
+    opacity: 0.6,
   },
 }));
 
 const SectionCard = styled(Paper)(({ theme }) => ({
   backgroundColor: "white",
-  boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
-  borderRadius: "8px",
+  boxShadow: "none",
+  borderRadius: "16px",
   overflow: "visible", // allow dropdowns/popovers to escape
   marginBottom: "24px",
-  border: "1px solid #E5E5E5",
+  border: "1px solid rgba(26, 26, 24, 0.09)",
 }));
 
 const SectionBody = styled(Box)(({ theme }) => ({
-  backgroundColor: "#FAFAF8",
-  padding: "24px",
+  backgroundColor: "white",
+  padding: "20px 24px 22px",
+  borderRadius: "0 0 16px 16px",
 }));
 
 const SectionHeader = styled(Box)(({ theme }) => ({
@@ -147,52 +170,53 @@ const SectionHeader = styled(Box)(({ theme }) => ({
   alignItems: "center",
   justifyContent: "space-between",
   gap: "12px",
-  backgroundColor: "#F6F4EE",
-  padding: "12px 16px",
-  border: "1px solid #D9D9D9",
+  padding: "22px 24px 0",
 }));
 
 const IconWrapper = styled(Box)(({ theme }) => ({
-  width: "40px",
-  height: "40px",
+  width: "32px",
+  height: "32px",
+  flex: "none",
   borderRadius: "50%",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  backgroundColor: "#E5E0D3",
+  backgroundColor: "#F5F4F0",
 }));
 
 const RedIcon = styled(Settings)(({ theme }) => ({
-  color: "var(--color-primary, #da7756)",
-  fontSize: "24px",
+  color: "#1A1A18",
+  fontSize: "16px",
 }));
 
 const fieldStyles = {
-  height: '40px',
-  backgroundColor: '#fff',
-  borderRadius: '4px',
-  '& .MuiOutlinedInput-root': {
-    height: '40px',
-    fontSize: '14px',
-    '& fieldset': {
-      borderColor: '#ddd',
+  height: "44px",
+  backgroundColor: "#fff",
+  borderRadius: "12px",
+  "& .MuiOutlinedInput-root": {
+    height: "44px",
+    fontSize: "14px",
+    borderRadius: "12px",
+    "& fieldset": {
+      borderColor: "rgba(26, 26, 24, 0.08)",
+      borderRadius: "12px",
     },
-    '&:hover fieldset': {
-      borderColor: '#C72030',
+    "&:hover fieldset": {
+      borderColor: "#1A1A18",
     },
-    '&.Mui-focused fieldset': {
-      borderColor: '#C72030',
+    "&.Mui-focused fieldset": {
+      borderColor: "#1A1A18",
     },
   },
-  '& .MuiInputLabel-root': {
-    fontSize: '14px',
+  "& .MuiInputLabel-root": {
+    fontSize: "14px",
     "&.Mui-focused": {
-      color: "#C72030",
+      color: "#1A1A18",
     },
   },
   // color the required asterisk red for all labels
-  '& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk': {
-    color: 'red',
+  "& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk": {
+    color: "red",
   },
   "& .MuiInputBase-input": {
     fontSize: "14px",
@@ -304,15 +328,19 @@ export default function AddOfferPage() {
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
-  const [userApprovedSocieties, setUserApprovedSocieties] = useState<HiSocietySociety[]>([]);
-  const [loadingUserApprovedSocieties, setLoadingUserApprovedSocieties] = useState(false);
+  const [userApprovedSocieties, setUserApprovedSocieties] = useState<
+    HiSocietySociety[]
+  >([]);
+  const [loadingUserApprovedSocieties, setLoadingUserApprovedSocieties] =
+    useState(false);
   const [isEditMode, setIsEditMode] = useState(!!offerId);
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [showBannerModal, setShowBannerModal] = useState(false);
   const [showTooltipBanner, setShowTooltipBanner] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showDescriptionEmojiPicker, setShowDescriptionEmojiPicker] = useState(false);
+  const [showDescriptionEmojiPicker, setShowDescriptionEmojiPicker] =
+    useState(false);
   const descriptionEmojiPickerRef = useRef(null);
 
   // Draft keys (used in IndexedDB)
@@ -449,7 +477,7 @@ export default function AddOfferPage() {
   useEffect(() => {
     if (!offerId) {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('skipDraftModal')) {
+      if (params.get("skipDraftModal")) {
         handleContinueWithDraft();
         return;
       }
@@ -553,7 +581,10 @@ export default function AddOfferPage() {
   // Close emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (descriptionEmojiPickerRef.current && !descriptionEmojiPickerRef.current.contains(event.target as Node)) {
+      if (
+        descriptionEmojiPickerRef.current &&
+        !descriptionEmojiPickerRef.current.contains(event.target as Node)
+      ) {
         setShowDescriptionEmojiPicker(false);
       }
     };
@@ -641,7 +672,9 @@ export default function AddOfferPage() {
       } else {
         // Fallback to API if not in localStorage
         const token = HI_SOCIETY_CONFIG.TOKEN;
-        const response = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
+        const response = await fetch(
+          `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`
+        );
         if (response.ok) {
           const data = await response.json();
           const societies = data.user_societies || [];
@@ -672,10 +705,10 @@ export default function AddOfferPage() {
       // Map offer_applicable_projects to get project IDs
       const projectIds =
         offer.offer_applicable_sites &&
-          Array.isArray(offer.offer_applicable_sites)
+        Array.isArray(offer.offer_applicable_sites)
           ? offer.offer_applicable_sites.map((oap: any) =>
-            oap.resource_id.toString()
-          )
+              oap.resource_id.toString()
+            )
           : [];
 
       // Format dates to YYYY-MM-DD for HTML date inputs
@@ -917,17 +950,21 @@ export default function AddOfferPage() {
         if (Array.isArray(value)) {
           return Promise.all(value.map(processValue));
         }
-        if (value && typeof value === 'object') {
+        if (value && typeof value === "object") {
           const obj: any = { ...value };
           if (obj.file instanceof File || obj.file instanceof Blob) {
             // only convert file to base64 if preview is missing or is a blob: URL
-            if (!obj.preview || typeof obj.preview !== 'string' || obj.preview.startsWith('blob:')) {
+            if (
+              !obj.preview ||
+              typeof obj.preview !== "string" ||
+              obj.preview.startsWith("blob:")
+            ) {
               obj.preview = await fileToBase64(obj.file as File);
             }
             obj.file = null;
           }
           for (const k of Object.keys(obj)) {
-            if (k === 'file') continue; // already handled above
+            if (k === "file") continue; // already handled above
             obj[k] = await processValue(obj[k]);
           }
           return obj;
@@ -1033,7 +1070,10 @@ export default function AddOfferPage() {
         formData.featuredOffer ? "1" : "0"
       );
       formDataPayload.append("offer[coupon_code]", formData.couponCode || "");
-      formDataPayload.append("offer[coupon_code_description]", formData.couponCodeDescription || "");
+      formDataPayload.append(
+        "offer[coupon_code_description]",
+        formData.couponCodeDescription || ""
+      );
 
       // Add template ID if selected
       if (formData.legalPoliciesTemplate) {
@@ -1179,8 +1219,9 @@ export default function AddOfferPage() {
                   sx={{
                     fontWeight: 600,
                     fontFamily: "Work Sans, sans-serif",
-                    textTransform: "uppercase",
-                    fontSize: "18px",
+                    textTransform: "none",
+                    fontSize: "14px",
+                    color: "#1A1A18",
                   }}
                 >
                   Basic Info
@@ -1212,34 +1253,43 @@ export default function AddOfferPage() {
                   fullWidth
                   InputProps={{
                     endAdornment: (
-                      <div ref={descriptionEmojiPickerRef as any} style={{ position: "relative" }}>
+                      <div
+                        ref={descriptionEmojiPickerRef as any}
+                        style={{ position: "relative" }}
+                      >
                         <Smile
                           className="text-gray-500 cursor-pointer hover:text-gray-700"
                           size={18}
                           onClick={() =>
-                            setShowDescriptionEmojiPicker(!showDescriptionEmojiPicker)
+                            setShowDescriptionEmojiPicker(
+                              !showDescriptionEmojiPicker
+                            )
                           }
                         />
                         {showDescriptionEmojiPicker && (
-                          <div style={{
-                            position: "absolute",
-                            top: "32px",
-                            right: "0",
-                            backgroundColor: "white",
-                            border: "1px solid #ddd",
-                            borderRadius: "8px",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                            padding: "12px",
-                            width: "256px",
-                            height: "192px",
-                            overflowY: "auto",
-                            zIndex: 50,
-                          }}>
-                            <div style={{
-                              display: "grid",
-                              gridTemplateColumns: "repeat(8, 1fr)",
-                              gap: "4px",
-                            }}>
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "32px",
+                              right: "0",
+                              backgroundColor: "white",
+                              border: "1px solid #ddd",
+                              borderRadius: "8px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                              padding: "12px",
+                              width: "256px",
+                              height: "192px",
+                              overflowY: "auto",
+                              zIndex: 50,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(8, 1fr)",
+                                gap: "4px",
+                              }}
+                            >
                               {emojis.map((emoji, index) => (
                                 <button
                                   key={index}
@@ -1252,8 +1302,14 @@ export default function AddOfferPage() {
                                     padding: "4px",
                                     backgroundColor: "transparent",
                                   }}
-                                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
-                                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                                  onMouseEnter={(e) =>
+                                    (e.currentTarget.style.backgroundColor =
+                                      "#f0f0f0")
+                                  }
+                                  onMouseLeave={(e) =>
+                                    (e.currentTarget.style.backgroundColor =
+                                      "transparent")
+                                  }
                                   onClick={() => {
                                     handleDescriptionEmojiClick(emoji);
                                   }}
@@ -1320,8 +1376,9 @@ export default function AddOfferPage() {
                   sx={{
                     fontWeight: 600,
                     fontFamily: "Work Sans, sans-serif",
-                    textTransform: "uppercase",
-                    fontSize: "18px",
+                    textTransform: "none",
+                    fontSize: "14px",
+                    color: "#1A1A18",
                   }}
                 >
                   Media & Display
@@ -1350,7 +1407,7 @@ export default function AddOfferPage() {
                     Offer Banner Image
                   </Typography>
                   <button
-                    className="px-4 py-2 bg-[transparent] text-[#C72030] border border-[#C72030] transition-colors"
+                    className="btn-cancel h-9 px-4 text-sm font-medium"
                     type="button"
                     onClick={() => setShowBannerModal(true)}
                     style={{
@@ -1502,13 +1559,13 @@ export default function AddOfferPage() {
                               <MuiButton
                                 onClick={() => discardImage(img.ratioKey, img)}
                                 sx={{
-                                  color: "#C72030",
+                                  color: "#1A1A18",
                                   textTransform: "none",
                                   fontSize: "13px",
                                   fontFamily: "Work Sans, sans-serif",
                                   p: 0,
                                   minWidth: "auto",
-                                  "&:hover": { backgroundColor: "#FFF5F5" },
+                                  "&:hover": { backgroundColor: "#F5F4F0" },
                                 }}
                               >
                                 Delete
@@ -1559,15 +1616,15 @@ export default function AddOfferPage() {
                     variant="outlined"
                     component="label"
                     sx={{
-                      color: "#C72030",
-                      borderColor: "#C72030",
+                      color: "#1A1A18",
+                      borderColor: "#1A1A18",
                       textTransform: "none",
                       borderRadius: 0,
                       fontSize: "14px",
                       fontFamily: "Work Sans, sans-serif",
                       "&:hover": {
-                        borderColor: "#B8252F",
-                        backgroundColor: "#FFF5F5",
+                        borderColor: "#12100E",
+                        backgroundColor: "#F5F4F0",
                       },
                     }}
                   >
@@ -1672,7 +1729,7 @@ export default function AddOfferPage() {
                     </TableHead>
                     <TableBody>
                       {!formData.offer_pdf ||
-                        formData.offer_pdf.length === 0 ? (
+                      formData.offer_pdf.length === 0 ? (
                         <TableRow>
                           <TableCell
                             colSpan={3}
@@ -1709,7 +1766,9 @@ export default function AddOfferPage() {
                                   }}
                                 />
                               ) : (
-                                <Typography sx={{ fontSize: "13px", color: "#999" }}>
+                                <Typography
+                                  sx={{ fontSize: "13px", color: "#999" }}
+                                >
                                   -
                                 </Typography>
                               )}
@@ -1726,13 +1785,13 @@ export default function AddOfferPage() {
                                   toast.success("PDF removed successfully");
                                 }}
                                 sx={{
-                                  color: "#C72030",
+                                  color: "#1A1A18",
                                   textTransform: "none",
                                   fontSize: "13px",
                                   fontFamily: "Work Sans, sans-serif",
                                   p: 0,
                                   minWidth: "auto",
-                                  "&:hover": { backgroundColor: "#FFF5F5" },
+                                  "&:hover": { backgroundColor: "#F5F4F0" },
                                 }}
                               >
                                 Delete
@@ -1769,8 +1828,9 @@ export default function AddOfferPage() {
                   sx={{
                     fontWeight: 500,
                     fontFamily: "Work Sans, sans-serif",
-                    textTransform: "uppercase",
-                    fontSize: "13px",
+                    textTransform: "none",
+                    fontSize: "14px",
+                    color: "#1A1A18",
                   }}
                 >
                   Applicability
@@ -1864,18 +1924,20 @@ export default function AddOfferPage() {
                 </FormControl>
               </Box> */}
 
-              <Box sx={{ minWidth: 0, overflow: 'visible', position: 'relative' }}>
+              <Box
+                sx={{ minWidth: 0, overflow: "visible", position: "relative" }}
+              >
                 <FormControl
                   fullWidth
                   variant="outlined"
                   sx={{
-                    '& .MuiInputBase-root': fieldStyles,
+                    "& .MuiInputBase-root": fieldStyles,
                     minWidth: 0,
-                    maxWidth: '100%',
+                    maxWidth: "100%",
                   }}
                 >
                   <InputLabel shrink>
-                    Applicable Societies <span style={{ color: 'red' }}>*</span>
+                    Applicable Societies <span style={{ color: "red" }}>*</span>
                   </InputLabel>
                   {/* use MUI Select (MuiSelect) instead of react-select component */}
                   <MuiSelect
@@ -1886,63 +1948,84 @@ export default function AddOfferPage() {
                     value={formData.applicableProjects}
                     onChange={(e: SelectChangeEvent<any>) => {
                       const vals = e.target.value as string[];
-                      handleInputChange('applicableProjects', vals);
+                      handleInputChange("applicableProjects", vals);
                     }}
                     renderValue={(selected) => {
                       const sel = selected as string[];
                       if (!sel || sel.length === 0) {
-                        return <span style={{ color: '#aaa' }}>Select Societies</span>;
+                        return (
+                          <span style={{ color: "#aaa" }}>
+                            Select Societies
+                          </span>
+                        );
                       }
                       const names = userApprovedSocieties
                         .filter((s) => sel.includes(s.id_society.toString()))
                         .map((s) => s.society.building_name)
-                        .join(', ');
+                        .join(", ");
                       return (
                         <span
                           title={names}
                           style={{
-                            display: 'inline-block',
-                            maxWidth: '100%',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
+                            display: "inline-block",
+                            maxWidth: "100%",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
                           }}
                         >
                           {names}
                         </span>
                       );
                     }}
-                    disabled={(step < activeStep && editingStep !== step) || loadingUserApprovedSocieties}
+                    disabled={
+                      (step < activeStep && editingStep !== step) ||
+                      loadingUserApprovedSocieties
+                    }
                     sx={{
                       minWidth: 0,
-                      maxWidth: '100%',
-                      width: '100%',
-                      '& .MuiSelect-select': {
-                        display: 'block',
+                      maxWidth: "100%",
+                      width: "100%",
+                      "& .MuiSelect-select": {
+                        display: "block",
                         minWidth: 0,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                       },
                     }}
-                    MenuProps={{
-                      // ensure the menu is positioned above other elements
-                      anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
-                      transformOrigin: { vertical: 'top', horizontal: 'left' },
-                      // @ts-ignore: MUI MenuProps type doesn't expose PopperProps but we use it for positioning
-                      PopperProps: {
-                        container: document.body,
-                        modifiers: [
-                          { name: 'preventOverflow', options: { boundary: 'viewport' } },
-                        ],
-                        style: { zIndex: 99999 },
-                      },
-                    } as any}
+                    MenuProps={
+                      {
+                        // ensure the menu is positioned above other elements
+                        anchorOrigin: {
+                          vertical: "bottom",
+                          horizontal: "left",
+                        },
+                        transformOrigin: {
+                          vertical: "top",
+                          horizontal: "left",
+                        },
+                        // @ts-ignore: MUI MenuProps type doesn't expose PopperProps but we use it for positioning
+                        PopperProps: {
+                          container: document.body,
+                          modifiers: [
+                            {
+                              name: "preventOverflow",
+                              options: { boundary: "viewport" },
+                            },
+                          ],
+                          style: { zIndex: 99999 },
+                        },
+                      } as any
+                    }
                   >
                     <MenuItem value="">Select Societies</MenuItem>
                     {userApprovedSocieties &&
                       userApprovedSocieties.map((option) => (
-                        <MenuItem key={option.id} value={option.id_society.toString()}>
+                        <MenuItem
+                          key={option.id}
+                          value={option.id_society.toString()}
+                        >
                           {option.society.building_name}
                         </MenuItem>
                       ))}
@@ -1966,8 +2049,9 @@ export default function AddOfferPage() {
                   sx={{
                     fontWeight: 600,
                     fontFamily: "Work Sans, sans-serif",
-                    textTransform: "uppercase",
-                    fontSize: "18px",
+                    textTransform: "none",
+                    fontSize: "14px",
+                    color: "#1A1A18",
                   }}
                 >
                   Coupon
@@ -1975,11 +2059,19 @@ export default function AddOfferPage() {
               </Box>
             </SectionHeader>
             <SectionBody>
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                  gap: 3,
+                }}
+              >
                 <TextField
                   label="Coupon Code"
                   value={formData.couponCode}
-                  onChange={(e) => handleInputChange("couponCode", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("couponCode", e.target.value)
+                  }
                   placeholder="Enter Coupon Code"
                   sx={fieldStyles}
                   fullWidth
@@ -1987,7 +2079,9 @@ export default function AddOfferPage() {
                 <TextField
                   label="Coupon Code Description"
                   value={formData.couponCodeDescription}
-                  onChange={(e) => handleInputChange("couponCodeDescription", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("couponCodeDescription", e.target.value)
+                  }
                   placeholder="Enter Coupon Code Description"
                   sx={fieldStyles}
                   fullWidth
@@ -2010,8 +2104,9 @@ export default function AddOfferPage() {
                   sx={{
                     fontWeight: 600,
                     fontFamily: "Work Sans, sans-serif",
-                    textTransform: "uppercase",
-                    fontSize: "18px",
+                    textTransform: "none",
+                    fontSize: "14px",
+                    color: "#1A1A18",
                   }}
                 >
                   Validity & Status
@@ -2036,7 +2131,9 @@ export default function AddOfferPage() {
                   }
                   InputLabelProps={{ shrink: true }}
                   placeholder="DD/MM/YYYY"
-                  inputProps={{ min: isEditMode ? undefined : getTodayDateString() }}
+                  inputProps={{
+                    min: isEditMode ? undefined : getTodayDateString(),
+                  }}
                   sx={{ ...fieldStyles, width: "50%" }}
                   fullWidth
                 />
@@ -2085,8 +2182,9 @@ export default function AddOfferPage() {
                   sx={{
                     fontWeight: 600,
                     fontFamily: "Work Sans, sans-serif",
-                    textTransform: "uppercase",
-                    fontSize: "18px",
+                    textTransform: "none",
+                    fontSize: "14px",
+                    color: "#1A1A18",
                   }}
                 >
                   Visibility
@@ -2126,12 +2224,12 @@ export default function AddOfferPage() {
                     }
                     sx={{
                       "& .MuiSwitch-switchBase.Mui-checked": {
-                        color: "#C72030",
+                        color: "#1A1A18",
                       },
                       "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                      {
-                        backgroundColor: "#C72030",
-                      },
+                        {
+                          backgroundColor: "#1A1A18",
+                        },
                     }}
                   />
                 </Box>
@@ -2149,10 +2247,10 @@ export default function AddOfferPage() {
                                         onChange={(e) => handleInputChange('featuredOffer', e.target.checked)}
                                         sx={{
                                             '& .MuiSwitch-switchBase.Mui-checked': {
-                                                color: '#C72030',
+                                                color: '#1A1A18',
                                             },
                                             '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                                backgroundColor: '#C72030',
+                                                backgroundColor: '#1A1A18',
                                             },
                                         }}
                                     />
@@ -2170,27 +2268,34 @@ export default function AddOfferPage() {
   return (
     <Box
       sx={{
-        p: { xs: 2, sm: 4, lg: 6 },
-        backgroundColor: "#f5f5f5",
+        p: { xs: 2, sm: 4 },
+        backgroundColor: "#FFFFFF",
         maxHeight: "90vh",
         overflowY: "auto",
         overflow: "visible",
         position: "relative",
       }}
     >
-
-      {/* Back Navigation */}
-      <div className="mb-8">
-        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+      {/* Header */}
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
           <button
+            type="button"
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
-            aria-label="Go back"
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Back to Offers List"
           >
-            <ArrowLeft className="w-4 h-4 text-gray-600" />
+            <ArrowLeft className="w-4 h-4" />
           </button>
-          <span>Back to Offers List</span>
+          <span>Offers</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold text-[#1A1A18]">
+            {isEditMode ? "Edit" : "Create"}
+          </span>
         </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+          {isEditMode ? "Edit Offer" : "Create Offer"}
+        </h1>
       </div>
 
       {/* Draft Restoration Modal */}
@@ -2251,14 +2356,6 @@ export default function AddOfferPage() {
         </Box>
       ) : null}
 
-      {/* Breadcrumb */}
-      <Typography
-        variant="body2"
-        sx={{ mb: 3, color: "#666", fontFamily: "Work Sans, sans-serif" }}
-      >
-        Offers &gt; Create
-      </Typography>
-
       {/* Stepper */}
       <Box sx={{ mb: 3 }}>
         <Stepper
@@ -2277,13 +2374,7 @@ export default function AddOfferPage() {
             return (
               <Step key={label}>
                 <StepLabel StepIconComponent={() => null}>
-                  <Box
-                    style={{
-                      padding: "8px",
-                      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-                      backgroundColor: "#FFFFFF",
-                    }}
-                  >
+                  <Box>
                     <StepPill $active={active} $completed={completed}>
                       {index + 1}. {label}
                     </StepPill>
@@ -2299,21 +2390,23 @@ export default function AddOfferPage() {
       {renderStepContent(activeStep)}
 
       {/* Action Buttons */}
-      <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mb: 4 }}>
         {activeStep === steps.length - 1 ? (
           // final visibility step: only submit & cancel
           <>
-            <DraftButton onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit"}
+            <DraftButton onClick={handleCancel} disabled={isSubmitting}>
+              Cancel
             </DraftButton>
-            <DraftButton onClick={handleCancel}>Cancel</DraftButton>
+            <RedButton onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </RedButton>
           </>
         ) : (
           // intermediate steps
           <>
-            <DraftButton onClick={handleNext} disabled={isSubmitting}>
+            <RedButton onClick={handleNext} disabled={isSubmitting}>
               Proceed to save
-            </DraftButton>
+            </RedButton>
             {/* {!isEditMode && (
               <DraftButton onClick={handleSaveDraft} disabled={isSubmitting}>
                 Save to draft
@@ -2355,8 +2448,9 @@ export default function AddOfferPage() {
                   sx={{
                     fontWeight: 600,
                     fontFamily: "Work Sans, sans-serif",
-                    textTransform: "uppercase",
-                    fontSize: "18px",
+                    textTransform: "none",
+                    fontSize: "14px",
+                    color: "#1A1A18",
                   }}
                 >
                   {steps[stepIndex]}
@@ -2367,15 +2461,15 @@ export default function AddOfferPage() {
                 startIcon={<Edit />}
                 onClick={() => handleEdit(stepIndex)}
                 sx={{
-                  color: "#C72030",
-                  borderColor: "#C72030",
+                  color: "#1A1A18",
+                  borderColor: "#1A1A18",
                   textTransform: "none",
-                  borderRadius: 0,
+                  borderRadius: "8px",
                   fontSize: "14px",
                   fontFamily: "Work Sans, sans-serif",
                   "&:hover": {
-                    borderColor: "#B8252F",
-                    backgroundColor: "#FFF5F5",
+                    borderColor: "#12100E",
+                    backgroundColor: "#F5F4F0",
                   },
                 }}
               >
@@ -2561,7 +2655,11 @@ export default function AddOfferPage() {
                                 <TableCell
                                   colSpan={3}
                                   align="center"
-                                  sx={{ py: 4, color: "#999", fontSize: "14px" }}
+                                  sx={{
+                                    py: 4,
+                                    color: "#999",
+                                    fontSize: "14px",
+                                  }}
                                 >
                                   No images uploaded yet
                                 </TableCell>
@@ -2578,17 +2676,23 @@ export default function AddOfferPage() {
                                   fontFamily: "Work Sans, sans-serif",
                                 }}
                               >
-                                {img.file_name || img.document_file_name || "Banner Image"}
+                                {img.file_name ||
+                                  img.document_file_name ||
+                                  "Banner Image"}
                               </TableCell>
                               <TableCell>
                                 <img
                                   src={
                                     img.preview ||
                                     img.document_url ||
-                                    (img.file ? URL.createObjectURL(img.file) : "")
+                                    (img.file
+                                      ? URL.createObjectURL(img.file)
+                                      : "")
                                   }
                                   alt={
-                                    img.file_name || img.document_file_name || "Banner"
+                                    img.file_name ||
+                                    img.document_file_name ||
+                                    "Banner"
                                   }
                                   style={{
                                     width: "80px",
@@ -2739,13 +2843,22 @@ export default function AddOfferPage() {
                   <Box>
                     <Typography
                       variant="body2"
-                      sx={{ color: "#999", fontSize: "12px", fontFamily: "Work Sans, sans-serif" }}
+                      sx={{
+                        color: "#999",
+                        fontSize: "12px",
+                        fontFamily: "Work Sans, sans-serif",
+                      }}
                     >
                       Coupon Code
                     </Typography>
                     <Typography
                       variant="body2"
-                      sx={{ color: "#333", fontSize: "14px", fontFamily: "Work Sans, sans-serif", mt: 0.5 }}
+                      sx={{
+                        color: "#333",
+                        fontSize: "14px",
+                        fontFamily: "Work Sans, sans-serif",
+                        mt: 0.5,
+                      }}
                     >
                       {formData.couponCode || "-"}
                     </Typography>
@@ -2753,13 +2866,22 @@ export default function AddOfferPage() {
                   <Box>
                     <Typography
                       variant="body2"
-                      sx={{ color: "#999", fontSize: "12px", fontFamily: "Work Sans, sans-serif" }}
+                      sx={{
+                        color: "#999",
+                        fontSize: "12px",
+                        fontFamily: "Work Sans, sans-serif",
+                      }}
                     >
                       Coupon Code Description
                     </Typography>
                     <Typography
                       variant="body2"
-                      sx={{ color: "#333", fontSize: "14px", fontFamily: "Work Sans, sans-serif", mt: 0.5 }}
+                      sx={{
+                        color: "#333",
+                        fontSize: "14px",
+                        fontFamily: "Work Sans, sans-serif",
+                        mt: 0.5,
+                      }}
                     >
                       {formData.couponCodeDescription || "-"}
                     </Typography>

@@ -23,6 +23,8 @@ interface PieChartCardProps {
   maxVisibleSegments?: number;
   /** Header-right slot, e.g. a `CardDownloadButton`. */
   rightSlot?: React.ReactNode;
+  /** Optional summary displayed beside the chart and legend. */
+  summary?: React.ReactNode;
 }
 
 const OTHERS_COLOR = '#D3D1C7';
@@ -54,6 +56,7 @@ export const PieChartCard: React.FC<PieChartCardProps> = ({
   centerLabel = 'Total',
   maxVisibleSegments,
   rightSlot,
+  summary,
 }) => {
   const displaySegments = useMemo(
     () => (maxVisibleSegments ? collapsePieSegments(segments, maxVisibleSegments) : segments),
@@ -114,6 +117,11 @@ export const PieChartCard: React.FC<PieChartCardProps> = ({
               </div>
             ))}
           </div>
+          {summary && (
+            <div className="flex w-full flex-1 items-center justify-center sm:min-w-[180px]">
+              {summary}
+            </div>
+          )}
         </div>
       )}
     </ChartCardShell>

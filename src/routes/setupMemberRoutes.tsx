@@ -85,6 +85,7 @@ const AddPricingRulePage = lazy(() => import("@/pages/PricingRuleCreate"));
 const PricingRuleEdit = lazy(() => import("@/pages/PricingRuleEdit"));
 const AddUserPage = lazy(() => import("@/pages/AddUserPage"));
 const AddQuarantinePage = lazy(() => import("@/pages/AddQuarantinePage"));
+const QuarantineDetailsPage = lazy(() => import("@/pages/QuarantineDetailsPage"));
 const AddOfferPage = lazy(() => import("@/pages/AddOfferPage"));
 const AddOffersPage = lazy(() => import("@/pages/AddOffersPage"));
 const EditOffersPage = lazy(() => import("@/pages/EditOffersPage"));
@@ -321,6 +322,7 @@ const AddFacilityBookingPage = lazy(
   () => import("@/pages/AddFacilityBookingPage")
 );
 const BookingDetailsPage = lazy(() => import("@/pages/BookingDetailsPage"));
+const EditFacilityBookingPage = lazy(() => import("@/pages/EditFacilityBookingPage"));
 const CMSMembershipPlanSetup = lazy(
   () => import("@/pages/ClubManagement/CMSMembershipPlanSetup")
 );
@@ -720,6 +722,14 @@ export const setupMemberRoutes = (
     <Route path="/settings/add-user" Component={withSuspense(AddUserPage)} />
     <Route
       path="/quarantine-tracker/add"
+      Component={withSuspense(AddQuarantinePage)}
+    />
+    <Route
+      path="/quarantine-tracker/view/:id"
+      Component={withSuspense(QuarantineDetailsPage)}
+    />
+    <Route
+      path="/quarantine-tracker/edit/:id"
       Component={withSuspense(AddQuarantinePage)}
     />
     {/* Bank Details Routes */}
@@ -1512,6 +1522,10 @@ export const setupMemberRoutes = (
     <Route
       path="/cms/facility-bookings/add"
       Component={withSuspense(AddFacilityBookingPage)}
+    />
+    <Route
+      path="/cms/facility-bookings/edit/:id"
+      Component={withSuspense(EditFacilityBookingPage)}
     />
     <Route path="/cms/payments" Component={withSuspense(CMSPayments)} />
 

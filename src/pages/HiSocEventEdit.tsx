@@ -8,7 +8,7 @@ import { ImageUploadingButton } from "../components/reusable/ImageUploadingButto
 import { ImageCropper } from "../components/reusable/ImageCropper";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
-import { ArrowLeft, FileText, Calendar, Users, Plus, X, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
+import { ArrowLeft, ChevronRight, FileText, Calendar, Users, Plus, X, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
 import {
   TextField,
   FormControl,
@@ -1633,7 +1633,7 @@ const HiSocEventEdit = () => {
                        height: '50px',
                        padding: '5px',
                        borderRadius: '4px',
-                       boxShadow: '0px 4px 14.2px 0px rgba(0, 0, 0, 0.1)',
+                       border: '1px solid #E5E7EB',
                        backgroundColor: 'rgba(255, 255, 255, 1)',
                        display: 'flex',
                        alignItems: 'center',
@@ -1646,11 +1646,11 @@ const HiSocEventEdit = () => {
                          cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
                          width: '100%',
                          height: '40px',
-backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#da7756' :
+backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#1A1A18' :
                             (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
                           color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
                             (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
-                          border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #da7756' :
+                          border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #1A1A18' :
                             (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
                           padding: '12px 20px',
                           fontSize: '13px',
@@ -1659,7 +1659,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          boxShadow: index === currentStep ? '0 2px 4px rgba(218, 119, 86, 0.3)' : 'none',
+                          boxShadow: 'none',
                          transition: 'all 0.2s ease',
                          fontFamily: 'Work Sans, sans-serif',
                          position: 'relative',
@@ -1727,13 +1727,156 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
+    <div className="p-6 min-h-screen hi-soc-event-form-page">
+      <style>{`
+        /* Global "form svg" rule turns every icon black; keep icons on filled buttons white */
+        html body #root .hi-soc-event-form-page form :is(button.btn-primary, [class*="bg-[#C72030]"]) svg {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+        /* Info badges: black disc with a white "i" instead of a solid black dot */
+        html body #root .hi-soc-event-form-page form svg.fill-black {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+
+        /* ---- Reference design: canvas, cards, fields ---- */
+        html body #root .hi-soc-event-form-page {
+          background-color: #FDFDFB !important;
+        }
+        html body #root .hi-soc-event-form-page .ref-card {
+          border: 1px solid rgba(26, 26, 24, 0.09) !important;
+          border-radius: 16px !important;
+          box-shadow: none !important;
+        }
+        html body #root .hi-soc-event-form-page .ref-card > div:first-child {
+          padding: 22px 24px 0 !important;
+          background: transparent !important;
+          border: none !important;
+        }
+        html body #root .hi-soc-event-form-page .ref-card > div:first-child h2 {
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          line-height: 1.4 !important;
+          color: #1A1A18 !important;
+        }
+        /* section icon chip — same as Settings module (32px, #F5F4F0, ink icon) */
+        html body #root .hi-soc-event-form-page .ref-card > div:first-child h2 .MuiAvatar-root {
+          width: 32px !important;
+          height: 32px !important;
+          margin-right: 12px !important;
+          background-color: #F5F4F0 !important;
+        }
+        html body #root .hi-soc-event-form-page .ref-card > div:first-child h2 .MuiAvatar-root svg {
+          font-size: 16px !important;
+          color: #1A1A18 !important;
+        }
+        html body #root .hi-soc-event-form-page .ref-card > div:nth-child(2) {
+          background-color: #FFFFFF !important;
+          padding: 16px 24px 22px !important;
+        }
+        html body #root .hi-soc-event-form-page .ref-edit-btn {
+          height: 32px;
+          padding: 0 12px;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #1A1A18 !important;
+          background-color: #FFFFFF !important;
+          border: 1px solid rgba(26, 26, 24, 0.12) !important;
+          border-radius: 8px !important;
+          transition: background-color 0.16s ease;
+        }
+        html body #root .hi-soc-event-form-page .ref-edit-btn:hover {
+          background-color: #F5F4F0 !important;
+        }
+        html body #root .hi-soc-event-form-page .ref-edit-btn svg {
+          color: #1A1A18 !important;
+          stroke: #1A1A18 !important;
+        }
+        html body #root .hi-soc-event-form-page .MuiOutlinedInput-root {
+          min-height: 44px;
+          border-radius: 12px !important;
+          background-color: #FFFFFF !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease;
+        }
+        html body #root .hi-soc-event-form-page .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+        }
+        html body #root .hi-soc-event-form-page .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .hi-soc-event-form-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: #1A1A18 !important;
+          border-width: 1px !important;
+        }
+        html body #root .hi-soc-event-form-page .MuiOutlinedInput-root.Mui-focused {
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .hi-soc-event-form-page .MuiOutlinedInput-input::placeholder {
+          color: rgba(26, 26, 24, 0.3) !important;
+          opacity: 1 !important;
+        }
+        html body #root .hi-soc-event-form-page .MuiInputLabel-root {
+          color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+        /* Description textarea mirrors the MUI outlined fields */
+        html body #root .hi-soc-event-form-page textarea#description {
+          border: 1px solid rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease, border-color 0.16s ease;
+        }
+        html body #root .hi-soc-event-form-page textarea#description:hover {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .hi-soc-event-form-page textarea#description:focus {
+          border-color: #1A1A18 !important;
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .hi-soc-event-form-page label[for="description"] {
+          color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+        /* checked toggles: black thumb */
+        html body #root .hi-soc-event-form-page .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb {
+          color: #000000 !important;
+          background-color: #000000 !important;
+        }
+      `}</style>
+      {/* Back Button */}
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3" style={{ color: "rgba(26, 26, 24, 0.48)" }}>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Event List</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold" style={{ color: "#1A1A18" }}>Edit Event</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>Edit Event</h1>
+      </div>
+
       {!isPreviewMode && <StepperComponent />}
       
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
         {/* Step 1: Event Information */}
         {currentStep === 0 && !isPreviewMode && (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="ref-card bg-white overflow-hidden">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <Avatar
@@ -1875,21 +2018,11 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                   name="description"
                   rows={3}
                   placeholder=" "
-                  className="peer block w-full appearance-none rounded border border-gray-300 bg-white px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent 
-      focus:outline-none 
-      focus:border-[2px] 
-      focus:border-[rgb(25,118,210)] 
-      resize-vertical"
+                  className="peer block w-full appearance-none bg-white px-3 pt-6 pb-2 placeholder-transparent focus:outline-none resize-vertical"
                 />
                 <label
                   htmlFor="description"
-                  className="absolute left-3 -top-[10px] bg-white px-1 text-sm text-gray-500 z-[1] transition-all duration-200
-      peer-placeholder-shown:top-4
-      peer-placeholder-shown:text-base
-      peer-placeholder-shown:text-gray-400
-      peer-focus:-top-[10px]
-      peer-focus:text-sm
-      peer-focus:text-[rgb(25,118,210)]"
+                  className="absolute left-3 -top-[10px] bg-white px-1 text-xs z-[1] transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:-top-[10px] peer-focus:text-xs"
                 >
                   Event Description <span className="text-red-500">*</span>
                 </label>
@@ -2158,7 +2291,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
 
         {/* Visibility Card */}
         {currentStep === 0 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="ref-card bg-white overflow-hidden">
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <Avatar
@@ -2260,7 +2393,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
 
         {/* Step 3: Invite Member / User */}
         {currentStep === 2 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="ref-card bg-white overflow-hidden">
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <Avatar
@@ -2633,7 +2766,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
 
         {/* Step 2: Event Related Images */}
         {currentStep === 1 && !isPreviewMode && (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="ref-card bg-white overflow-hidden">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <Avatar
@@ -2997,20 +3130,20 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
         {/* Navigation Buttons - Show on all steps except preview mode */}
         {!isPreviewMode && (
           <>
-            <div className="flex gap-4 justify-center pt-6">
-              <button
-                type="button"
-                onClick={handleProceedToSave}
-                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2 h-11"
-              >
-                Proceed to save
-              </button>
+            <div className="flex justify-end gap-4">
               <button
                 type="button"
                 onClick={handleSaveToDraft}
-                className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2 h-11"
+                className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
               >
                 Save to draft
+              </button>
+              <button
+                type="button"
+                onClick={handleProceedToSave}
+                className="btn-primary h-9 px-4 text-sm font-medium"
+              >
+                Proceed to save
               </button>
             </div>
             {currentStep > 0 && (
@@ -3032,7 +3165,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                 {/* Step 0: Event Details - Completed */}
                 {stepIndex === 0 && (
                   <>
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="ref-card bg-white overflow-hidden">
                       <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                         <h2 className="text-lg font-medium text-gray-900 flex items-center">
                           <Avatar
@@ -3053,9 +3186,9 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                             setCurrentStep(0);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
-                          className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          className="ref-edit-btn"
                         >
-                          <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                          <Edit className="w-4 h-4" /> <span>Edit</span> 
                         </button>
                       </div>
                       <div className="p-6 space-y-6 opacity-75 pointer-events-none">
@@ -3210,7 +3343,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                     </div>
                     
                     {/* Visibility Card - Completed */}
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mt-6">
+                    <div className="ref-card bg-white overflow-hidden mt-6">
                       <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                         <h2 className="text-lg font-medium text-gray-900 flex items-center">
                           <Avatar
@@ -3231,9 +3364,9 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                             setCurrentStep(0);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
-                          className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          className="ref-edit-btn"
                         >
-                          <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                          <Edit className="w-4 h-4" /> <span>Edit</span> 
                         </button>
                       </div>
                       <div className="p-6 space-y-4 opacity-75 pointer-events-none">
@@ -3316,7 +3449,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
 
                 {/* Step 1: Event Related Images - Completed */}
                 {stepIndex === 1 && (
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="ref-card bg-white overflow-hidden">
                     <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                       <h2 className="text-lg font-medium text-gray-900 flex items-center">
                         <Avatar
@@ -3337,9 +3470,9 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                           setCurrentStep(1);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                        className="ref-edit-btn"
                       >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                        <Edit className="w-4 h-4" /> <span>Edit</span> 
                       </button>
                     </div>
                     <div className="p-6 space-y-6 opacity-75 pointer-events-none">
@@ -3455,7 +3588,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
 
                 {/* Step 2: Invite Member / User - Completed */}
                 {stepIndex === 2 && (
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="ref-card bg-white overflow-hidden">
                     <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                       <h2 className="text-lg font-medium text-gray-900 flex items-center">
                         <Avatar
@@ -3476,9 +3609,9 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                           setCurrentStep(2);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                        className="ref-edit-btn"
                       >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                        <Edit className="w-4 h-4" /> <span>Edit</span> 
                       </button>
                     </div>
                     <div className="p-6 space-y-6 opacity-75 pointer-events-none">
@@ -3571,7 +3704,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
             <div className="px-4 md:px-6 py-4">
               {/* Step 1: Event Details Preview */}
               <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="ref-card bg-white overflow-hidden">
                   <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
                       <Avatar
@@ -3593,9 +3726,9 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                         setCurrentStep(0);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      className="ref-edit-btn"
                     >
-                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                      <Edit className="w-4 h-4" /> <span>Edit</span> 
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
@@ -3752,7 +3885,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
 
               {/* Visibility Card Preview */}
               <div className="mb-6">
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="ref-card bg-white overflow-hidden">
                 <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
                     <Avatar
@@ -3774,9 +3907,9 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                       setCurrentStep(0);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                    className="ref-edit-btn"
                   >
-                    <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                    <Edit className="w-4 h-4" /> <span>Edit</span> 
                   </button>
                 </div>
                 <div className="p-6 space-y-4">
@@ -3865,7 +3998,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
 
             {/* Step 2: Event Related Images Preview */}
             <div className="mb-6">
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="ref-card bg-white overflow-hidden">
                 <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
                     <Avatar
@@ -3887,9 +4020,9 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                       setCurrentStep(1);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                    className="ref-edit-btn"
                   >
-                  <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                  <Edit className="w-4 h-4" /> <span>Edit</span> 
                 </button>
               </div>
               <div className="p-6 space-y-6">
@@ -4003,7 +4136,7 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
             </div>
             </div>            {/* Step 3: Invite Member / User Preview */}
             <div className="mb-6">
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="ref-card bg-white overflow-hidden">
                 <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
                     <Avatar
@@ -4025,9 +4158,9 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
                       setCurrentStep(2);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                    className="ref-edit-btn"
                   >
-                    <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                    <Edit className="w-4 h-4" /> <span>Edit</span> 
                   </button>
                 </div>
                 <div className="p-6 space-y-6">
@@ -4110,21 +4243,21 @@ backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#d
               </div>
             </div>
 
-              <div className="flex gap-4 justify-center pt-6">
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
                 <button
                   type="submit"
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary h-9 px-4 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Submitting...' : 'Submit Event'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2"
-                >
-                  Cancel
                 </button>
               </div>
             </div>

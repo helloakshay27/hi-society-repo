@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, User, DollarSign, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, ClipboardList, Dumbbell } from "lucide-react";
 import { TextField, FormControl, InputLabel, Select, MenuItem, ThemeProvider, createTheme } from "@mui/material";
 import { toast } from "sonner";
 import axios from "axios";
 import { EnhancedTaskTable } from "@/components/enhanced-table/EnhancedTaskTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { MEMBERSHIP_PLAN_STYLES } from "@/pages/membershipPlanStyles";
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
@@ -260,35 +261,41 @@ export const AddMembershipPlanPage = () => {
 
   return (
     <ThemeProvider theme={muiTheme}>
-      <div className="p-6 bg-white add-membership-plan-page">
-        <style>{`.add-membership-plan-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
+      <div className="p-6 min-h-screen membership-plan-page">
+        <style>{MEMBERSHIP_PLAN_STYLES}</style>
         <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={handleClose}
-            className="p-0"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Membership Plan List
-          </Button>
+          <div className="flex items-center gap-2 mb-3">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-[#1A1A18] hover:bg-[#F5F4F0] transition-colors"
+              aria-label="Back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <span className="text-[13px] text-[rgba(26,26,24,0.55)]">Membership Plans</span>
+            <ChevronRight className="w-3.5 h-3.5 text-[rgba(26,26,24,0.4)]" />
+            <span className="text-[13px] font-semibold text-[#1A1A18]">Add Membership Plan</span>
+          </div>
+          <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+            New Membership Plan
+          </h1>
         </div>
 
         <div className="space-y-6">
           {/* Basic Info */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
-                <User className="w-4 h-4" />
-              </div>
-              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-                BASIC INFO
-              </h3>
+          <div className="ref-card">
+            <div className="ref-card-head">
+              <span className="ref-chip">
+                <ClipboardList />
+              </span>
+              <h2>Basic Info</h2>
             </div>
 
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="ref-card-body grid grid-cols-1 md:grid-cols-2 gap-4">
               <TextField
-                label={<span>Plan Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
+                label="Plan Name"
+                required
                 value={formData.name}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -301,7 +308,8 @@ export const AddMembershipPlanPage = () => {
               />
 
               <TextField
-                label={<span>Price<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
+                label="Price"
+                required
                 type="text"
                 value={formData.price}
                 onChange={(e) => {
@@ -333,13 +341,13 @@ export const AddMembershipPlanPage = () => {
 
 
               <FormControl variant="outlined">
-                <InputLabel><span>Membership Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
+                <InputLabel required>Membership Type</InputLabel>
                 <Select
                   value={formData.renewalTerms}
                   onChange={(e) =>
                     setFormData({ ...formData, renewalTerms: e.target.value })
                   }
-                  label={<span>Membership Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
+                  label="Membership Type *"
                 >
                   <MenuItem value="">
                     <em>Select Membership Type</em>
@@ -352,13 +360,13 @@ export const AddMembershipPlanPage = () => {
               </FormControl>
 
               <FormControl variant="outlined">
-                <InputLabel><span>Payment Plan<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span></InputLabel>
+                <InputLabel required>Payment Plan</InputLabel>
                 <Select
                   value={formData.payment_plan_id}
                   onChange={(e) =>
                     setFormData({ ...formData, payment_plan_id: e.target.value })
                   }
-                  label="Payment Plan"
+                  label="Payment Plan *"
                 >
                   <MenuItem value="">
                     <em>Select Payment Plan</em>
@@ -389,16 +397,16 @@ export const AddMembershipPlanPage = () => {
           </div>
 
           {/* Amenities */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
-                <DollarSign className="w-4 h-4" />
-              </div>
-              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-                AMENITIES
-              </h3>
+          <div className="ref-card">
+            <div className="ref-card-head">
+              <span className="ref-chip">
+                <Dumbbell />
+              </span>
+              <h2>Amenities</h2>
+              <span className="ref-count">{formData.amenities.length} selected</span>
             </div>
 
+            <div className="ref-card-body">
             <EnhancedTaskTable
               storageKey="add-membership-plan-page-table"
               data={amenities}
@@ -441,7 +449,7 @@ export const AddMembershipPlanPage = () => {
                           },
                         }));
                       }}
-                      className="px-2 py-1 border border-gray-300 rounded text-sm"
+                      className="ref-cell-field min-w-[200px]"
                     >
                       <option value="">Select Frequency</option>
                       <option value="per_month">Per Month</option>
@@ -472,7 +480,7 @@ export const AddMembershipPlanPage = () => {
                           }));
                         }
                       }}
-                      className="px-2 py-1 border border-gray-300 rounded text-sm w-20"
+                      className="ref-cell-field w-24"
                       placeholder="0"
                     />
                   );
@@ -502,8 +510,7 @@ export const AddMembershipPlanPage = () => {
                         }
                       }}
                       disabled={!details.canBookAfterSlotLimit}
-                      className={`px-2 py-1 border border-gray-300 rounded text-sm w-24 ${!details.canBookAfterSlotLimit ? "bg-gray-100 cursor-not-allowed" : ""
-                        }`}
+                      className="ref-cell-field w-24"
                       placeholder="0.00"
                     />
                   );
@@ -526,7 +533,7 @@ export const AddMembershipPlanPage = () => {
                           },
                         }));
                       }}
-                      className="cursor-pointer"
+                      className="ref-check"
                     />
                   );
                 }
@@ -549,7 +556,7 @@ export const AddMembershipPlanPage = () => {
                           },
                         }));
                       }}
-                      className="cursor-pointer"
+                      className="ref-check"
                     />
                   );
                 }
@@ -577,8 +584,7 @@ export const AddMembershipPlanPage = () => {
                         }
                       }}
                       disabled={!details.allowMultipleSlots}
-                      className={`px-2 py-1 border border-gray-300 rounded text-sm w-24 ${!details.allowMultipleSlots ? "bg-gray-100 cursor-not-allowed" : ""
-                        }`}
+                      className="ref-cell-field w-24"
                       placeholder="0"
                     />
                   );
@@ -647,21 +653,25 @@ export const AddMembershipPlanPage = () => {
               emptyMessage="Select amenities to configure"
               className="w-full"
             />
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-end gap-4">
             <Button
+              type="button"
               variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}
+              className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
             >
               Cancel
             </Button>
             <Button
+              type="button"
               onClick={handleSave}
               disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white min-w-[80px]"
+              className="btn-primary h-9 px-4 text-sm font-medium min-w-[80px] disabled:opacity-60"
             >
               {isSubmitting ? "Saving..." : "Save"}
             </Button>

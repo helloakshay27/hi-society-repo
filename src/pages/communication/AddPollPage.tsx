@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Calendar, Clock, Plus, Trash2, ArrowLeft, Search, X } from 'lucide-react';
+import { Trash2, ArrowLeft, ChevronRight, Search, X, FileText, ListChecks, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
   TextField,
   Paper,
-  Container,
   InputAdornment,
-  Card,
   IconButton,
   Stack,
   Alert,
@@ -20,7 +18,6 @@ import {
   ListItemText,
   Chip,
 } from '@mui/material';
-import { Button } from '@/components/ui/button';
 import { useAppDispatch } from '@/store/hooks';
 import { fetchFMUsers } from '@/store/slices/fmUserSlice';
 import { fetchUserGroups } from '@/store/slices/userGroupSlice';
@@ -387,22 +384,143 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
-      <div className='px-6 pt-6 mx-auto'>
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/communication/polls")}
-          className='p-0'
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        <h1 className="text-2xl font-bold mb-6">NEW POLL</h1>
+    <div className="p-6 min-h-screen add-poll-page">
+      <style>{`
+        /* Global "form svg" rule turns every icon black; keep icons on filled buttons white */
+        html body #root .add-poll-page form button.btn-primary svg {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
+        }
+
+        /* ---- Reference design: canvas, cards, fields ---- */
+        html body #root .add-poll-page {
+          background-color: #FDFDFB !important;
+        }
+        html body #root .add-poll-page .ref-card {
+          background-color: #FFFFFF !important;
+          border: 1px solid rgba(26, 26, 24, 0.09) !important;
+          border-radius: 16px !important;
+          box-shadow: none !important;
+          overflow: hidden;
+        }
+        html body #root .add-poll-page .ref-card > div:first-child {
+          padding: 22px 24px 0 !important;
+        }
+        html body #root .add-poll-page .ref-card > div:first-child h2 {
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          line-height: 1.4 !important;
+          color: #1A1A18 !important;
+        }
+        /* section icon chip — same as Settings module (32px, #F5F4F0, ink icon) */
+        html body #root .add-poll-page .ref-card > div:first-child h2 > span:first-child {
+          width: 32px !important;
+          height: 32px !important;
+          margin-right: 12px !important;
+          flex: none;
+          background-color: #F5F4F0 !important;
+        }
+        html body #root .add-poll-page .ref-card > div:first-child h2 > span:first-child svg {
+          width: 14px !important;
+          height: 14px !important;
+          color: #1A1A18 !important;
+          stroke: #1A1A18 !important;
+        }
+        html body #root .add-poll-page .ref-card > div:nth-child(2) {
+          padding: 16px 24px 22px !important;
+        }
+        html body #root .add-poll-page .MuiOutlinedInput-root {
+          min-height: 44px;
+          border-radius: 12px !important;
+          background-color: #FFFFFF !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease;
+        }
+        html body #root .add-poll-page .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+        }
+        html body #root .add-poll-page .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .add-poll-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: #1A1A18 !important;
+          border-width: 1px !important;
+        }
+        html body #root .add-poll-page .MuiOutlinedInput-root.Mui-focused {
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .add-poll-page .MuiOutlinedInput-input::placeholder {
+          color: rgba(26, 26, 24, 0.3) !important;
+          opacity: 1 !important;
+        }
+        html body #root .add-poll-page .MuiInputLabel-root {
+          color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+        html body #root .add-poll-page .ref-list {
+          border: 1px solid rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+          box-shadow: none !important;
+        }
+        html body #root .add-poll-page .ref-list .MuiListItemButton-root:hover {
+          background-color: #FAF9F7 !important;
+        }
+        html body #root .add-poll-page .MuiCheckbox-root.Mui-checked {
+          color: #1A1A18 !important;
+        }
+        html body #root .add-poll-page .ref-chip {
+          background-color: #F5F4F0 !important;
+          color: #1A1A18 !important;
+          font-weight: 500;
+        }
+        html body #root .add-poll-page .ref-chip .MuiChip-deleteIcon {
+          color: rgba(26, 26, 24, 0.48) !important;
+        }
+        html body #root .add-poll-page .ref-chip .MuiChip-deleteIcon:hover {
+          color: #1A1A18 !important;
+        }
+        html body #root .add-poll-page .ref-note {
+          background-color: #F5F4F0 !important;
+          color: #1A1A18 !important;
+          border-radius: 12px !important;
+          font-size: 13px !important;
+        }
+        html body #root .add-poll-page .ref-note .MuiAlert-icon {
+          color: rgba(26, 26, 24, 0.68) !important;
+        }
+      `}</style>
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3" style={{ color: "rgba(26, 26, 24, 0.48)" }}>
+          <button
+            type="button"
+            onClick={() => navigate("/communication/polls")}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Poll List</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold" style={{ color: "#1A1A18" }}>Create New Poll</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>New Poll</h1>
       </div>
-      <Container maxWidth="lg">
-        <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
-          <Box component="form" onSubmit={handleSubmit}>
-            <Stack spacing={4}>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="ref-card">
+          <div>
+            <h2 className="flex items-center">
+              <span className="rounded-full flex items-center justify-center">
+                <FileText />
+              </span>
+              Poll Details
+            </h2>
+          </div>
+          <div>
+            <Stack spacing={3}>
               <TextField
                 label="Subject"
                 type="text"
@@ -516,10 +634,20 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                   }}
                 />
               </Box>
-              <Card variant="outlined" sx={{ p: 3 }}>
-                <Typography variant="h6" component="h3" sx={{ mb: 3, fontWeight: 600 }}>
-                  Poll Options
-                </Typography>
+            </Stack>
+          </div>
+        </div>
+
+        <div className="ref-card">
+          <div>
+            <h2 className="flex items-center">
+              <span className="rounded-full flex items-center justify-center">
+                <ListChecks />
+              </span>
+              Poll Options
+            </h2>
+          </div>
+          <div>
                 <Stack spacing={2}>
                   {formData.options.map((option, index) => (
                     <Stack key={index} direction="row" alignItems="center" spacing={2}>
@@ -541,8 +669,9 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                       {formData.options.length > 2 && (
                         <IconButton
                           onClick={() => removeOption(index)}
-                          sx={{ color: '#C72030' }}
+                          sx={{ color: '#1A1A18' }}
                           size="small"
+                          aria-label={`Remove option ${index + 1}`}
                         >
                           <Trash2 size={18} />
                         </IconButton>
@@ -550,36 +679,27 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                     </Stack>
                   ))}
                 </Stack>
-                <Button
-                  type='button'
-                  size="lg"
-                  className="bg-[#C72030] hover:bg-[#C72030] text-white mt-4"
+                <button
+                  type="button"
+                  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100 mt-4"
                   onClick={addOption}
                 >
                   Add Option
-                </Button>
-              </Card>
-              <Card
-                variant="outlined"
-                sx={{
-                  p: 3,
-                  bgcolor: 'rgba(199, 32, 48, 0.04)',
-                  borderColor: 'rgba(199, 32, 48, 0.12)'
-                }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    mb: 2,
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                    color: 'text.secondary'
-                  }}
-                >
-                  Share With
-                </Typography>
-                <div className="flex gap-6 mb-6">
+                </button>
+          </div>
+        </div>
+
+        <div className="ref-card">
+          <div>
+            <h2 className="flex items-center">
+              <span className="rounded-full flex items-center justify-center">
+                <Users />
+              </span>
+              Share With
+            </h2>
+          </div>
+          <div>
+                <div className="flex gap-6">
                     <label className="flex items-center">
                       <input
                         type="radio"
@@ -587,7 +707,6 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                         checked={selectedShareWith === 'all'}
                         onChange={() => handleShareWithChange('all')}
                         className="w-4 h-4"
-                        style={{ accentColor: '#C72030' }}
                       />
                       <span className="ml-2 text-sm text-gray-700">All</span>
                     </label>
@@ -598,7 +717,6 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                         checked={selectedShareWith === 'individual'}
                         onChange={() => handleShareWithChange('individual')}
                         className="w-4 h-4"
-                        style={{ accentColor: '#C72030' }}
                       />
                       <span className="ml-2 text-sm text-gray-700">Individual</span>
                     </label>
@@ -609,7 +727,6 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                         checked={selectedShareWith === 'group'}
                         onChange={() => handleShareWithChange('group')}
                         className="w-4 h-4"
-                        style={{ accentColor: '#C72030' }}
                       />
                       <span className="ml-2 text-sm text-gray-700">Group</span>
                     </label>
@@ -667,10 +784,10 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
       display: "flex",
       alignItems: "center",
       p: 1.5,
-      border: "1px solid #e0e0e0",
-      borderRadius: 1,
+      border: "1px solid rgba(26, 26, 24, 0.08)",
+      borderRadius: "12px",
       mb: 1,
-      bgcolor: "#fafafa",
+      bgcolor: "#FAF9F7",
     }}
   >
     <Checkbox
@@ -685,11 +802,6 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
           setSelectedUsers([]);
         }
       }}
-      sx={{
-        "&.Mui-checked": {
-          color: "#C72030",
-        },
-      }}
     />
 
     <Typography variant="body2" fontWeight={500}>
@@ -699,6 +811,7 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
 )}
                     <Paper
                       variant="outlined"
+                      className="ref-list"
                       sx={{
                         maxHeight: 200,
                         overflow: 'auto',
@@ -716,19 +829,11 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                           <ListItem key={user.id} disablePadding>
                             <ListItemButton
                               onClick={() => handleUserSelection(user.id)}
-                              sx={{
-                                '&:hover': { bgcolor: 'rgba(199, 32, 48, 0.08)' }
-                              }}
                             >
                               <ListItemIcon>
                                 <Checkbox
                                   edge="start"
                                   checked={selectedUsers.includes(user.id)}
-                                  sx={{
-                                    '&.Mui-checked': {
-                                      color: '#C72030'
-                                    }
-                                  }}
                                 />
                               </ListItemIcon>
 
@@ -767,13 +872,7 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                                 label={fullName || selectedUser.user.email}
                                 size="small"
                                 onDelete={() => handleUserSelection(userId)}
-                                sx={{
-                                  bgcolor: "rgba(199, 32, 48, 0.1)",
-                                  color: "#C72030",
-                                  "& .MuiChip-deleteIcon": {
-                                    color: "#C72030"
-                                  }
-                                }}
+                                className="ref-chip"
                               />
                             );
                           })}
@@ -832,6 +931,7 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                     />
                     <Paper
                       variant="outlined"
+                      className="ref-list"
                       sx={{
                         maxHeight: 200,
                         overflow: 'auto',
@@ -846,19 +946,11 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                           <ListItem key={group.id} disablePadding>
                             <ListItemButton
                               onClick={() => handleGroupSelection(group.id)}
-                              sx={{
-                                '&:hover': { bgcolor: 'rgba(199, 32, 48, 0.08)' }
-                              }}
                             >
                               <ListItemIcon>
                                 <Checkbox
                                   edge="start"
                                   checked={selectedGroups.includes(group.id)}
-                                  sx={{
-                                    '&.Mui-checked': {
-                                      color: '#C72030'
-                                    }
-                                  }}
                                 />
                               </ListItemIcon>
                               <ListItemText
@@ -884,13 +976,7 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                                 label={`${group.name} (${group.members_count} members)`}
                                 size="small"
                                 onDelete={() => handleGroupSelection(groupId)}
-                                sx={{
-                                  bgcolor: 'rgba(199, 32, 48, 0.1)',
-                                  color: '#C72030',
-                                  '& .MuiChip-deleteIcon': {
-                                    color: '#C72030'
-                                  }
-                                }}
+                                className="ref-chip"
                               />
                             ) : null;
                           })}
@@ -902,49 +988,37 @@ const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
                 {selectedShareWith === 'all' && (
                   <Alert
                     severity="info"
-                    sx={{
-                      mt: 2,
-                      bgcolor: 'rgba(199, 32, 48, 0.08)',
-                      borderColor: 'rgba(199, 32, 48, 0.2)',
-                      '& .MuiAlert-icon': {
-                        color: '#C72030'
-                      }
-                    }}
+                    className="ref-note"
+                    sx={{ mt: 2 }}
                   >
                     This poll will be shared with all users in the system.
                   </Alert>
                 )}
-              </Card>
-              {/* <div className='flex items-center justify-center'>
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="bg-[#C72030] hover:bg-[#C72030] text-white"
-                >
-                  Submit Poll
-                </Button>
-              </div> */}
+          </div>
+        </div>
 
-              <div className="flex items-center justify-center">
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={loading}
-                  className="bg-[#C72030] hover:bg-[#C72030] text-white min-w-[160px]"
-                >
-                  {loading ? (
-                    <CircularProgress size={18} sx={{ color: "#fff" }} />
-                  ) : (
-                    "Submit Poll"
-                  )}
-                </Button>
-              </div>
-
-            </Stack>
-          </Box>
-        </Paper>
-      </Container>
-    </Box>
+        <div className="flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={() => navigate("/communication/polls")}
+            className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary h-9 px-4 text-sm font-medium min-w-[120px] justify-center disabled:opacity-60"
+          >
+            {loading ? (
+              <CircularProgress size={16} sx={{ color: "#fff" }} />
+            ) : (
+              "Submit Poll"
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

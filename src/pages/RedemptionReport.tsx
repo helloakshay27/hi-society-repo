@@ -3,7 +3,6 @@ import { StatsCard } from "@/components/StatsCard";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { RedemptionReportFilterModal } from "@/components/RedemptionReportFilterModal";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import axios from "axios";
 import { Eye } from "lucide-react";
@@ -98,23 +97,22 @@ const RedemptionReport = () => {
     switch (columnKey) {
       case "transaction_type": {
         const type = item.transaction_type || "";
-        let bgColor = "";
-        let textColor = "text-black";
+        let bgColor = "bg-gray-100";
 
         if (type === "DR" || type === "debit" || type.toLowerCase() === "failed") {
-          bgColor = "bg-[#F8B4B4]";
+          bgColor = "bg-[#efcac4]";
         } else if (type === "CR" || type === "credit") {
-          bgColor = "bg-[#B4E4CE]";
+          bgColor = "bg-[#c6e9d7]";
         } else if (type.toLowerCase() === "pending") {
-          bgColor = "bg-[#F5E6B3]";
+          bgColor = "bg-[#F2EBC9]";
         }
 
         const displayText = type === "CR" ? "Credit" : type === "DR" ? "Debit" : type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 
         return (
-          <Badge className={`${bgColor} ${textColor} px-2 rounded-none border-0 min-w-[100px] !justify-center !text-center hover:${bgColor}`}>
+          <span className={`inline-flex items-center px-3 py-0.5 text-xs font-medium text-black rounded-full ${bgColor}`}>
             {displayText}
-          </Badge>
+          </span>
         );
       }
       case "created_at":

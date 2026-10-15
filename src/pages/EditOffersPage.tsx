@@ -1,84 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button as MuiButton,
-  IconButton,
-  CircularProgress,
-  styled,
-} from "@mui/material";
+import { TextField } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { Info, ImagePlus, X, ArrowLeft } from "lucide-react";
+import { Info, ImagePlus, X, ArrowLeft, ChevronRight, Loader2 } from "lucide-react";
 import axios from "axios";
-
-const SectionCard = styled(Paper)(() => ({
-  backgroundColor: "white",
-  boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
-  borderRadius: 0,
-  overflow: "hidden",
-  marginBottom: "24px",
-}));
-
-const SectionHeader = styled(Box)(() => ({
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  padding: "16px 24px",
-  backgroundColor: "#f9fafb",
-  borderBottom: "1px solid #e5e7eb",
-}));
-
-const RedIcon = styled(Box)(() => ({
-  color: "white",
-  backgroundColor: "#C72030",
-  borderRadius: "50%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "32px",
-  height: "32px",
-  flexShrink: 0,
-}));
-
-const RedButton = styled(MuiButton)(() => ({
-  backgroundColor: "#C72030",
-  color: "white",
-  borderRadius: 0,
-  textTransform: "none",
-  padding: "8px 24px",
-  fontFamily: "Work Sans, sans-serif",
-  fontWeight: 500,
-  minWidth: "100px",
-  "&:hover": { backgroundColor: "#a01828" },
-  "&.Mui-disabled": { backgroundColor: "#e57373", color: "white" },
-}));
-
-const DraftButton = styled(MuiButton)(() => ({
-  backgroundColor: "#e7e3d9",
-  color: "#C72030",
-  borderRadius: 0,
-  textTransform: "none",
-  padding: "8px 24px",
-  fontFamily: "Work Sans, sans-serif",
-  fontWeight: 500,
-  "&:hover": { backgroundColor: "#d9d5c9" },
-}));
-
-const fieldStyles = {
-  "& .MuiOutlinedInput-root": {
-    fontSize: "14px",
-    backgroundColor: "#fff",
-    "& fieldset": { borderColor: "#ddd" },
-    "&:hover fieldset": { borderColor: "#C72030" },
-    "&.Mui-focused fieldset": { borderColor: "#C72030" },
-  },
-  "& .MuiInputLabel-root": {
-    fontSize: "14px",
-    "&.Mui-focused": { color: "#C72030" },
-  },
-};
+import { OFFER_PAGE_STYLES } from "./offerPageStyles";
 
 const MAX_CHARS = 500;
 
@@ -195,410 +120,192 @@ const EditOffersPage: React.FC = () => {
   const isNearLimit = charCount > MAX_CHARS * 0.85;
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        backgroundColor: "#fafafa",
-        padding: "24px",
-        fontFamily: "Work Sans, sans-serif",
-      }}
-    >
-      <Box sx={{ maxWidth: "1400px", margin: "0 auto" }}>
-        {/* Page Header */}
-        <Paper
-          sx={{
-            backgroundColor: "#f6f4ee",
-            borderRadius: 0,
-            boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
-            marginBottom: "24px",
-            padding: "12px 24px",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <IconButton
-              onClick={() => navigate(-1)}
-              size="small"
-              sx={{ color: "#C72030", "&:hover": { backgroundColor: "#f6eaea" } }}
-            >
-              <ArrowLeft size={20} />
-            </IconButton>
-            <Typography
-              sx={{
-                fontSize: "20px",
-                fontWeight: 600,
-                color: "#1A1A1A",
-                fontFamily: "Work Sans, sans-serif",
-              }}
-            >
-              Edit Offer
-            </Typography>
-          </Box>
-        </Paper>
+    <div className="p-6 min-h-screen offer-ref-page">
+      <style>{OFFER_PAGE_STYLES}</style>
 
-        {/* Offer Details Section */}
-        <SectionCard>
-          <SectionHeader>
-            <RedIcon>
-              <Info size={16} />
-            </RedIcon>
-            <Typography
-              sx={{
-                fontSize: "16px",
-                fontWeight: 600,
-                color: "#1A1A1A",
-                fontFamily: "Work Sans, sans-serif",
-              }}
-            >
-              Offer Details
-            </Typography>
-          </SectionHeader>
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Offers</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold text-[#1A1A18]">Edit Offer</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+          Edit Offer
+        </h1>
+      </div>
 
-          <Box sx={{ padding: "24px" }}>
-            {isFetching ? (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-                <CircularProgress size={32} sx={{ color: "#C72030" }} />
-              </Box>
-            ) : (
-              <form onSubmit={handleSubmit}>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" },
-                    gap: "16px",
-                    mb: 3,
-                  }}
+      <form onSubmit={handleSubmit}>
+        <div className="ref-card">
+          <div className="ref-card-head">
+            <span className="ref-chip">
+              <Info />
+            </span>
+            <h2>Offer Details</h2>
+          </div>
+
+          {isFetching ? (
+            <div className="ref-card-body flex justify-center py-12">
+              <Loader2 className="w-7 h-7 animate-spin text-[rgba(26,26,24,0.48)]" />
+            </div>
+          ) : (
+          <div className="ref-card-body grid grid-cols-1 md:grid-cols-2 gap-5">
+            <TextField
+              label="Start Date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+
+            <TextField
+              label="End Date"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+
+            <TextField
+              label="URL"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://example.com"
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+
+            <div className="md:col-span-2">
+              <label htmlFor="offer-description" className="ref-label">
+                Description
+              </label>
+              <textarea
+                id="offer-description"
+                value={description}
+                onChange={(e) => {
+                  if (e.target.value.length <= MAX_CHARS) setDescription(e.target.value);
+                }}
+                placeholder="Provide a brief description of the offer..."
+                maxLength={MAX_CHARS}
+                rows={4}
+                className="ref-textarea"
+              />
+              <div className="flex justify-between mt-1.5 text-[11px]">
+                <span className="text-[rgba(26,26,24,0.48)]">Keep it concise and informative</span>
+                <span
+                  className={
+                    isNearLimit ? "font-semibold text-[#A63D49]" : "text-[rgba(26,26,24,0.4)]"
+                  }
                 >
-                  {/* Start Date */}
-                  <TextField
-                    label="Start Date"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    sx={fieldStyles}
-                    size="small"
-                    fullWidth
-                  />
+                  {charCount}/{MAX_CHARS}
+                </span>
+              </div>
+            </div>
 
-                  {/* End Date */}
-                  <TextField
-                    label="End Date"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    sx={fieldStyles}
-                    size="small"
-                    fullWidth
-                  />
+            <div className="md:col-span-2">
+              <span className="ref-label">Offer Image</span>
 
-                  {/* URL */}
-                  <TextField
-                    label="URL"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://example.com"
-                    sx={fieldStyles}
-                    size="small"
-                    fullWidth
-                  />
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                style={{ display: "none" }}
+              />
 
-                  {/* Description */}
-                  <Box sx={{ marginTop: 1, gridColumn: { md: "span 2" } }}>
-                    <TextField
-                      label="Description"
-                      value={description}
-                      onChange={(e) => {
-                        if (e.target.value.length <= MAX_CHARS)
-                          setDescription(e.target.value);
-                      }}
-                      placeholder="Provide a brief description of the offer..."
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          height: "auto !important",
-                          padding: "2px !important",
-                          display: "flex",
-                        },
-                        "& .MuiInputBase-input[aria-hidden='true']": {
-                          flex: 0,
-                          width: 0,
-                          height: 0,
-                          padding: "0 !important",
-                          margin: 0,
-                          display: "none",
-                        },
-                        "& .MuiInputBase-input": {
-                          resize: "none !important",
-                        },
-                      }}
-                      size="small"
-                      fullWidth
-                      multiline
-                      rows={4}
-                      inputProps={{ maxLength: MAX_CHARS }}
-                      helperText={
-                        <Box
-                          component="span"
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            pt: "2px",
-                          }}
-                        >
-                          <Typography
-                            component="span"
-                            sx={{
-                              fontSize: "11px",
-                              color: "rgba(0,0,0,0.45)",
-                              fontFamily: "Work Sans, sans-serif",
-                            }}
-                          >
-                            Keep it concise and informative
-                          </Typography>
-                          <Typography
-                            component="span"
-                            sx={{
-                              fontSize: "11px",
-                              fontFamily: "Work Sans, sans-serif",
-                              color: isNearLimit ? "#C72030" : "rgba(0,0,0,0.38)",
-                              fontWeight: isNearLimit ? 600 : 400,
-                            }}
-                          >
-                            {charCount}/{MAX_CHARS}
-                          </Typography>
-                        </Box>
-                      }
-                      FormHelperTextProps={{ sx: { mx: 0 } }}
-                    />
-                  </Box>
-
-                  {/* Image Picker */}
-                  <Box sx={{ gridColumn: { md: "span 2" } }}>
-                    <Typography
-                      sx={{
-                        fontSize: "13px",
-                        fontWeight: 500,
-                        color: "rgba(0,0,0,0.6)",
-                        mb: 1,
-                        fontFamily: "Work Sans, sans-serif",
-                      }}
-                    >
-                      Offer Image
-                    </Typography>
-
-                    <input
-                      ref={imageInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      style={{ display: "none" }}
-                    />
-
-                    <Box
-                      onClick={() => imageInputRef.current?.click()}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setIsDragOver(true);
-                      }}
-                      onDragLeave={() => setIsDragOver(false)}
-                      onDrop={handleDrop}
-                      sx={{
-                        border: `2px dashed ${isDragOver ? "#C72030" : "#ddd"}`,
-                        borderRadius: "6px",
-                        padding: "28px 24px",
-                        textAlign: "center",
-                        cursor: "pointer",
-                        backgroundColor: isDragOver ? "#fff5f5" : "#fafafa",
-                        transition: "border-color 0.2s, background-color 0.2s",
-                        minHeight: "160px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        "&:hover": {
-                          borderColor: "#C72030",
-                          backgroundColor: "#fff5f5",
-                        },
-                      }}
-                    >
-                      {imagePreview ? (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                          <Box sx={{ position: "relative", flexShrink: 0 }}>
-                            <img
-                              src={imagePreview}
-                              alt="Preview"
-                              style={{
-                                width: "110px",
-                                height: "110px",
-                                objectFit: "cover",
-                                borderRadius: "6px",
-                                border: "1px solid #e5e7eb",
-                                display: "block",
-                              }}
-                            />
-                            <IconButton
-                              size="small"
-                              onClick={handleImageRemove}
-                              sx={{
-                                position: "absolute",
-                                top: -10,
-                                right: -10,
-                                backgroundColor: "#C72030",
-                                color: "white",
-                                width: "22px",
-                                height: "22px",
-                                "&:hover": { backgroundColor: "#a01828" },
-                              }}
-                            >
-                              <X size={12} />
-                            </IconButton>
-                          </Box>
-                          <Box sx={{ textAlign: "left" }}>
-                            <Typography
-                              sx={{
-                                fontSize: "13px",
-                                fontWeight: 600,
-                                color: "#1A1A1A",
-                                fontFamily: "Work Sans, sans-serif",
-                                mb: 0.5,
-                                wordBreak: "break-word",
-                              }}
-                            >
-                              {image?.name}
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: "12px",
-                                color: "rgba(0,0,0,0.45)",
-                                fontFamily: "Work Sans, sans-serif",
-                                mb: 1,
-                              }}
-                            >
-                              {image ? (image.size / 1024).toFixed(1) + " KB" : ""}
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: "12px",
-                                color: "#C72030",
-                                fontFamily: "Work Sans, sans-serif",
-                                textDecoration: "underline",
-                              }}
-                            >
-                              Click to replace
-                            </Typography>
-                          </Box>
-                        </Box>
-                      ) : (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            gap: 1,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              width: 52,
-                              height: 52,
-                              borderRadius: "50%",
-                              backgroundColor: "#f6f4ee",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              mb: 0.5,
-                            }}
-                          >
-                            <ImagePlus size={24} color="#C72030" />
-                          </Box>
-                          <Typography
-                            sx={{
-                              fontSize: "14px",
-                              fontWeight: 500,
-                              color: "#1A1A1A",
-                              fontFamily: "Work Sans, sans-serif",
-                            }}
-                          >
-                            Drag & drop image here
-                          </Typography>
-                          <Typography
-                            sx={{
-                              fontSize: "12px",
-                              color: "rgba(0,0,0,0.45)",
-                              fontFamily: "Work Sans, sans-serif",
-                            }}
-                          >
-                            or{" "}
-                            <span
-                              style={{
-                                color: "#C72030",
-                                textDecoration: "underline",
-                              }}
-                            >
-                              browse to upload
-                            </span>
-                          </Typography>
-                          <Typography
-                            sx={{
-                              fontSize: "11px",
-                              color: "rgba(0,0,0,0.3)",
-                              fontFamily: "Work Sans, sans-serif",
-                              mt: 0.5,
-                            }}
-                          >
-                            PNG, JPG, GIF · Max 10 MB
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  </Box>
-                </Box>
-
-                {/* Error message */}
-                {error && (
-                  <Typography
-                    sx={{
-                      fontSize: "13px",
-                      color: "#C72030",
-                      fontFamily: "Work Sans, sans-serif",
-                      textAlign: "center",
-                      mb: 2,
-                    }}
-                  >
-                    {error}
-                  </Typography>
+              <div
+                onClick={() => imageInputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(true);
+                }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={handleDrop}
+                className={`ref-dropzone ${isDragOver ? "is-over" : ""}`}
+              >
+                {imagePreview ? (
+                  <div className="flex items-center gap-6">
+                    <div className="relative shrink-0">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-[110px] h-[110px] object-cover rounded-xl border border-[rgba(26,26,24,0.08)] block"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleImageRemove}
+                        className="ref-remove"
+                        aria-label="Remove image"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[13px] font-semibold text-[#1A1A18] mb-1 break-words">
+                        {image?.name}
+                      </p>
+                      <p className="text-xs text-[rgba(26,26,24,0.48)] mb-2">
+                        {image ? (image.size / 1024).toFixed(1) + " KB" : ""}
+                      </p>
+                      <p className="text-xs font-medium text-[#1A1A18] underline underline-offset-2">
+                        Click to replace
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-1.5">
+                    <span className="ref-dropzone-icon mb-1">
+                      <ImagePlus size={20} />
+                    </span>
+                    <p className="text-[13.5px] font-medium text-[#1A1A18]">Drag & drop image here</p>
+                    <p className="text-xs text-[rgba(26,26,24,0.48)]">
+                      or{" "}
+                      <span className="font-medium text-[#1A1A18] underline underline-offset-2">
+                        browse to upload
+                      </span>
+                    </p>
+                    <p className="text-[11px] text-[rgba(26,26,24,0.32)] mt-0.5">
+                      PNG, JPG, GIF · Max 10 MB
+                    </p>
+                  </div>
                 )}
+              </div>
+            </div>
+          </div>
+          )}
+        </div>
 
-                {/* Action Buttons */}
-                <Box
-                  sx={{
-                    borderTop: "1px solid #e5e7eb",
-                    pt: 2,
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: 2,
-                  }}
-                >
-                  <RedButton type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <CircularProgress size={16} sx={{ color: "white" }} />
-                    ) : (
-                      "Update"
-                    )}
-                  </RedButton>
-                  <DraftButton
-                    type="button"
-                    onClick={() => navigate(-1)}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </DraftButton>
-                </Box>
-              </form>
-            )}
-          </Box>
-        </SectionCard>
-      </Box>
-    </Box>
+        {error && <p className="mt-4 text-[13px] text-right text-[#A63D49]">{error}</p>}
+
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            disabled={isSubmitting}
+            className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting || isFetching}
+            className="btn-primary h-9 px-4 text-sm font-medium inline-flex items-center gap-2"
+          >
+            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isSubmitting ? "Updating..." : "Update"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

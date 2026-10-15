@@ -42,6 +42,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { format } from "date-fns";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { FACILITY_SETUP_STYLES } from "./facilitySetupStyles";
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
@@ -680,28 +681,35 @@ export const BookingSetupDetailClubPage = () => {
 
   return (
     <ThemeProvider theme={muiTheme}>
-      <div className="p-6 bg-white">
-        {/* <div className="bg-white rounded-lg max-w-6xl mx-auto pt-3"> */}
+      <div className="p-6 min-h-screen facility-setup-page">
+        <style>{FACILITY_SETUP_STYLES}</style>
+        <button
+          type="button"
+          onClick={() => location.pathname.includes("/club-management/") ?
+            navigate("/club-management/vas/booking/setup") : navigate("/cms/facility-setup")
+          }
+          className="ref-back"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Facility Setup
+        </button>
         <div className="mb-6">
-          <div className="flex items-end justify-between gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => location.pathname.includes("/club-management/") ?
-                navigate("/club-management/vas/booking/setup") : navigate("/cms/facility-setup")
-              }
-              className="p-0"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Booking List
-            </Button>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+              {formData.facilityName || "Facility Details"}
+            </h1>
             <div className="flex items-center gap-2">
               {
-                shouldShow("Facility Setup", "update") && <Button
-                  onClick={() => handleEditClick(id)}
-                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
-                >
-                  <Pencil className="w-4 h-4 text-white" />
-                </Button>
+                shouldShow("Facility Setup", "update") && (
+                  <button
+                    type="button"
+                    onClick={() => handleEditClick(id)}
+                    className="ref-edit-btn"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Edit
+                  </button>
+                )
               }
 
               {/* <Button
@@ -726,7 +734,7 @@ export const BookingSetupDetailClubPage = () => {
           </div>
         </div>
         <div className="space-y-6">
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+          <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <User className="w-4 h-4" />
@@ -791,7 +799,7 @@ export const BookingSetupDetailClubPage = () => {
 
           {/* Facility Booking Rules Section */}
           {formData.facilityBookings && formData.facilityBookings.length > 0 && (
-            <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+            <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <Settings className="w-4 h-4" />
@@ -832,7 +840,7 @@ export const BookingSetupDetailClubPage = () => {
 
           {/* Sub-Facilities Section */}
           {formData.addSubFacility && formData.subFacilities && formData.subFacilities.length > 0 && (
-            <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+            <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <FileCog className="w-4 h-4" />
@@ -954,7 +962,7 @@ export const BookingSetupDetailClubPage = () => {
           )}
 
           {/* Charge Setup Card */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+          <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <DollarSign className="w-4 h-4" />
@@ -1064,7 +1072,7 @@ export const BookingSetupDetailClubPage = () => {
           </div>
 
           {/* Configure Slot */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+          <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CalendarDays className="w-4 h-4" />
@@ -1202,7 +1210,7 @@ export const BookingSetupDetailClubPage = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+          <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3 -mb-3">
               <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CalendarDays className="w-4 h-4" />
@@ -1253,7 +1261,7 @@ export const BookingSetupDetailClubPage = () => {
                               setPopoverOpen(prev => ({ ...prev, [slotKey]: true }));
                             }
                           }}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                          className="w-4 h-4 accent-[#1A1A18] bg-gray-100 border-gray-300 rounded focus:ring-[rgba(26,26,24,0.2)] cursor-pointer"
                         />
                         <Label
                           className="cursor-pointer text-sm font-medium"
@@ -1337,7 +1345,7 @@ export const BookingSetupDetailClubPage = () => {
           </div>
 
           {/* Block Days Section */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-3">
+          <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CalendarDays className="w-4 h-4" />
@@ -1358,7 +1366,7 @@ export const BookingSetupDetailClubPage = () => {
           </div>
 
           {/* Configure Payment */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+          <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <CreditCard className="w-4 h-4" />
@@ -1458,7 +1466,7 @@ export const BookingSetupDetailClubPage = () => {
 
           {/* Cover Image and Booking Summary Image */}
           <div className="flex items-start justify-between gap-4">
-            <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
+            <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6 w-full">
               <div className="flex items-center gap-3">
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <FileImage className="w-4 h-4" />
@@ -1481,7 +1489,7 @@ export const BookingSetupDetailClubPage = () => {
                 )}
               </div>
             </div>
-            <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
+            <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6 w-full">
               <div className="flex items-center gap-3">
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <Image className="w-4 h-4" />
@@ -1510,7 +1518,7 @@ export const BookingSetupDetailClubPage = () => {
           </div>
 
           {/* Description */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+          <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <NotepadText className="w-4 h-4" />
@@ -1528,7 +1536,7 @@ export const BookingSetupDetailClubPage = () => {
 
           {/* Terms & Conditions and Cancellation Text */}
           <div className="grid  gap-6">
-            <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+            <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
               <div className="flex items-center gap-3">
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                   <ReceiptText className="w-4 h-4" />
@@ -1546,7 +1554,7 @@ export const BookingSetupDetailClubPage = () => {
           </div>
 
           {/* Rule Setup */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+          <div className="ref-section bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#C72030] text-white">
                 <Settings className="w-4 h-4" />

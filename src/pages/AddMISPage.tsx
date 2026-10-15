@@ -1,151 +1,8 @@
 import React, { useState } from "react";
-import {
-  Box,
-  Paper,
-  TextField,
-  Button as MuiButton,
-  styled,
-  IconButton,
-  Typography,
-} from "@mui/material";
-import { X, FileText } from "lucide-react";
+import { TextField } from "@mui/material";
+import { X, FileText, Plus, ArrowLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-
-// Styled Components (match AddTicketDashboard)
-const SectionCard = styled(Paper)(({ theme }) => ({
-  backgroundColor: "white",
-  borderRadius: "8px",
-  border: "1px solid #e5e7eb",
-  overflow: "hidden",
-  marginBottom: "24px",
-}));
-
-const SectionHeader = styled(Box)(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  padding: "12px 24px",
-  backgroundColor: "#F6F4EE",
-  borderBottom: "1px solid #e5e7eb",
-}));
-
-const IconWrapper = styled(Box)(({ theme }) => ({
-  color: "var(--color-primary, #da7756)",
-  backgroundColor: "#E5E0D3",
-  borderRadius: "50%",
-  padding: "8px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "32px",
-  height: "32px",
-}));
-
-const RedButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "#C72030",
-  color: "#fff",
-  borderRadius: "4px",
-  textTransform: "none",
-  padding: "10px 24px",
-  fontFamily: "Work Sans, sans-serif",
-  fontWeight: 500,
-  fontSize: "14px",
-  boxShadow: "none",
-  "&:hover": {
-    backgroundColor: "#a01828",
-    boxShadow: "none",
-  },
-  "&:disabled": {
-    backgroundColor: "#e5e7eb",
-    color: "#9ca3af",
-  },
-}));
-
-const CancelButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "#fff",
-  color: "#374151",
-  border: "1px solid #d1d5db",
-  borderRadius: "4px",
-  textTransform: "none",
-  padding: "10px 24px",
-  fontFamily: "Work Sans, sans-serif",
-  fontWeight: 500,
-  fontSize: "14px",
-  boxShadow: "none",
-  "&:hover": {
-    backgroundColor: "#f9fafb",
-    boxShadow: "none",
-  },
-}));
-
-const AddButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "#C72030",
-  color: "#fff",
-  borderRadius: "4px",
-  textTransform: "none",
-  padding: "8px 16px",
-  fontFamily: "Work Sans, sans-serif",
-  fontWeight: 500,
-  fontSize: "14px",
-  boxShadow: "none",
-  "&:hover": {
-    backgroundColor: "#A01828",
-    boxShadow: "none",
-  },
-}));
-
-const RemoveButton = styled(IconButton)(({ theme }) => ({
-  color: "#DA7756",
-  padding: "4px",
-  "&:hover": {
-    backgroundColor: "#fef2f2",
-  },
-}));
-
-const fieldStyles = {
-  height: '45px',
-  backgroundColor: '#fff',
-  borderRadius: '4px',
-  '& .MuiOutlinedInput-root': {
-    height: '45px',
-    '& fieldset': {
-      borderColor: '#ddd',
-    },
-    '&:hover fieldset': {
-      borderColor: '#da7756',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: '#da7756',
-    },
-  },
-  '& .MuiInputLabel-root': {
-    '&.Mui-focused': {
-      color: '#da7756',
-    },
-  },
-};
-
-const multilineFieldStyles = {
-  backgroundColor: '#fff',
-  borderRadius: '4px',
-  '& .MuiOutlinedInput-root': {
-    '& fieldset': {
-      borderColor: '#ddd',
-    },
-    '&:hover fieldset': {
-      borderColor: '#da7756',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: '#da7756',
-    },
-  },
-  '& .MuiInputLabel-root': {
-    '&.Mui-focused': {
-      color: '#da7756',
-    },
-  },
-};
 
 type MISItem = {
   item?: string;
@@ -174,7 +31,7 @@ const defaultItem = {
 
 const AddMISPage: React.FC = () => {
   const navigate = useNavigate();
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [sections, setSections] = useState<MISSection[]>([
     { section: "", items: [{ ...defaultItem }] },
   ]);
@@ -250,297 +107,328 @@ const AddMISPage: React.FC = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        backgroundColor: "#f9fafb",
-        padding: "24px",
-        fontFamily: "Work Sans, sans-serif",
-      }}
-    >
-      <Box sx={{ maxWidth: "1200px", margin: "0 auto" }}>
-        {/* Header */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "24px",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "28px",
-              fontWeight: 600,
-              color: "#111827",
-              margin: 0,
-              fontFamily: "Work Sans, sans-serif",
-            }}
-          >
-            Add MIS
-          </h1>
-        </Box>
+    <div className="p-6 min-h-screen add-mis-page">
+      <style>{`
+        html body #root .add-mis-page {
+          background-color: #FDFDFB !important;
+        }
+        html body #root .add-mis-page .ref-card {
+          background: #FFFFFF;
+          border: 1px solid rgba(26, 26, 24, 0.09);
+          border-radius: 16px;
+          overflow: hidden;
+        }
+        html body #root .add-mis-page .ref-card-head {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 22px 24px 0;
+        }
+        html body #root .add-mis-page .ref-card-head h2 {
+          flex: 1;
+          margin: 0;
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          color: #1A1A18 !important;
+        }
+        html body #root .add-mis-page .ref-chip {
+          width: 32px;
+          height: 32px;
+          flex: none;
+          border-radius: 9999px;
+          background: #F5F4F0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        html body #root .add-mis-page .ref-chip svg {
+          width: 14px;
+          height: 14px;
+          color: #1A1A18 !important;
+          stroke: #1A1A18 !important;
+        }
+        html body #root .add-mis-page .ref-card-body {
+          padding: 20px 24px 22px;
+        }
+        html body #root .add-mis-page .ref-item {
+          position: relative;
+          padding: 16px;
+          background: #FFFFFF !important;
+          border: 1px solid rgba(26, 26, 24, 0.09);
+          border-radius: 12px;
+        }
+        html body #root .add-mis-page .ref-item-title {
+          margin-bottom: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          color: rgba(26, 26, 24, 0.55);
+        }
+        html body #root .add-mis-page .ref-icon-btn {
+          width: 28px;
+          height: 28px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          color: rgba(26, 26, 24, 0.55);
+          transition: background-color 0.16s, color 0.16s;
+        }
+        html body #root .add-mis-page .ref-icon-btn:hover {
+          background: #F5F4F0;
+          color: #1A1A18;
+        }
+        html body #root .add-mis-page .ref-label {
+          display: block;
+          margin-bottom: 8px;
+          font-size: 12px;
+          font-weight: 600;
+          color: rgba(26, 26, 24, 0.68);
+        }
+        html body #root .add-mis-page .MuiOutlinedInput-root {
+          min-height: 44px;
+          border-radius: 12px !important;
+          background-color: #FFFFFF !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          color: #1A1A18;
+          transition: box-shadow 0.16s ease;
+        }
+        html body #root .add-mis-page .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+        }
+        html body #root .add-mis-page .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .add-mis-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: #1A1A18 !important;
+          border-width: 1px !important;
+        }
+        html body #root .add-mis-page .MuiOutlinedInput-root.Mui-focused {
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+        html body #root .add-mis-page .MuiInputLabel-root {
+          color: rgba(26, 26, 24, 0.68) !important;
+          font-weight: 600 !important;
+        }
+        html body #root .add-mis-page .ref-textarea {
+          display: block;
+          width: 100%;
+          min-height: 96px;
+          padding: 12px 14px !important;
+          font-size: 13.5px !important;
+          font-weight: 500;
+          line-height: 1.5;
+          color: #1A1A18;
+          background: #FFFFFF;
+          border: 1px solid rgba(26, 26, 24, 0.08) !important;
+          border-radius: 12px !important;
+          box-shadow: none;
+          outline: none;
+          resize: vertical;
+          transition: border-color 0.16s, box-shadow 0.16s;
+        }
+        html body #root .add-mis-page .ref-textarea:hover {
+          border-color: rgba(26, 26, 24, 0.28) !important;
+        }
+        html body #root .add-mis-page .ref-textarea:focus {
+          border-color: #1A1A18 !important;
+          box-shadow: 0 0 0 4px rgba(26, 26, 24, 0.1) !important;
+        }
+      `}</style>
 
-        {/* MIS Section */}
-        {sections.map((section, sectionIdx) => (
-          <SectionCard key={sectionIdx} sx={{ mb: 3 }}>
-            <SectionHeader>
-              <IconWrapper>
-                <FileText size={16} />
-              </IconWrapper>
-              <h2
-                style={{
-                  fontSize: "18px",
-                  fontWeight: 600,
-                  color: "#111827",
-                  margin: 0,
-                  fontFamily: "Work Sans, sans-serif",
-                  flex: 1,
-                }}
-              >
-                Section {sectionIdx + 1}
-              </h2>
-                 <Box sx={{ display: "flex", justifyContent: "center" }}>
-          <AddButton
-            variant="contained"
-            onClick={handleAddSection}
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
+          <button
             type="button"
+            onClick={handleCancel}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Go back"
           >
-            + Add Section
-          </AddButton>
-        </Box>
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>MIS</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold text-[#1A1A18]">Add MIS</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+          New MIS
+        </h1>
+      </div>
+
+      <div className="space-y-6">
+        {sections.map((section, sectionIdx) => (
+          <div key={sectionIdx} className="ref-card">
+            <div className="ref-card-head">
+              <span className="ref-chip">
+                <FileText />
+              </span>
+              <h2>Section {sectionIdx + 1}</h2>
               {sections.length > 1 && (
-                <RemoveButton onClick={() => handleRemoveSection(sectionIdx)}>
-                  <X size={20} />
-                </RemoveButton>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSection(sectionIdx)}
+                  className="ref-icon-btn"
+                  aria-label={`Remove section ${sectionIdx + 1}`}
+                >
+                  <X size={16} />
+                </button>
               )}
-            
-            </SectionHeader>
-            <Box sx={{ padding: "24px", backgroundColor: "#AAB9C50D" }}>
+            </div>
+
+            <div className="ref-card-body space-y-5">
               <TextField
                 label="Section Name"
                 value={section.section}
-                onChange={(e) =>
-                  handleSectionChange(sectionIdx, e.target.value)
-                }
-                sx={{ ...fieldStyles, mb: 3 }}
+                onChange={(e) => handleSectionChange(sectionIdx, e.target.value)}
                 fullWidth
                 variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
+                slotProps={{ inputLabel: { shrink: true } }}
               />
+
               {section.items.map((item, itemIdx) => (
-                <Box
-                  key={itemIdx}
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
-                    gap: "16px",
-                    mb: 3,
-                    alignItems: "flex-start",
-                    position: "relative",
-                    padding: "16px",
-                    backgroundColor: "#fff",
-                    borderRadius: "8px",
-                    border: "1px solid #e5e7eb",
-                  }}
-                >
-                  {section.items.length > 1 && (
-                    <RemoveButton
-                      sx={{
-                        position: "absolute",
-                        top: 8,
-                        right: 8,
-                        zIndex: 1,
-                      }}
-                      onClick={() => handleRemoveItem(sectionIdx, itemIdx)}
-                    >
-                      <X size={18} />
-                    </RemoveButton>
-                  )}
-                  <TextField
-                    label="Item"
-                    value={item.item}
-                    onChange={(e) =>
-                      handleItemChange(
-                        sectionIdx,
-                        itemIdx,
-                        "item",
-                        e.target.value
-                      )
-                    }
-                    sx={fieldStyles}
-                    fullWidth
-                    variant="outlined"
-                    slotProps={{
-                      inputLabel: {
-                        shrink: true,
-                      },
-                    }}
-                  />
-                  <TextField
-                    label="Snagging Status"
-                    value={item.snaggingStatus}
-                    onChange={(e) =>
-                      handleItemChange(
-                        sectionIdx,
-                        itemIdx,
-                        "snaggingStatus",
-                        e.target.value
-                      )
-                    }
-                    sx={fieldStyles}
-                    fullWidth
-                    variant="outlined"
-                    slotProps={{
-                      inputLabel: {
-                        shrink: true,
-                      },
-                    }}
-                  />
-                  <TextField
-                    label="Desnagging Status"
-                    value={item.desnaggingStatus}
-                    onChange={(e) =>
-                      handleItemChange(
-                        sectionIdx,
-                        itemIdx,
-                        "desnaggingStatus",
-                        e.target.value
-                      )
-                    }
-                    sx={fieldStyles}
-                    fullWidth
-                    variant="outlined"
-                    slotProps={{
-                      inputLabel: {
-                        shrink: true,
-                      },
-                    }}
-                  />
-                  <TextField
-                    label="Completion Date"
-                    type="date"
-                    value={item.completionDate}
-                    onChange={(e) =>
-                      handleItemChange(
-                        sectionIdx,
-                        itemIdx,
-                        "completionDate",
-                        e.target.value
-                      )
-                    }
-                    sx={fieldStyles}
-                    fullWidth
-                    variant="outlined"
-                    slotProps={{
-                      inputLabel: {
-                        shrink: true,
-                      },
-                    }}
-                  />
-                  <TextField
-                    label="Handing Over To"
-                    value={item.handingOverTo}
-                    onChange={(e) =>
-                      handleItemChange(
-                        sectionIdx,
-                        itemIdx,
-                        "handingOverTo",
-                        e.target.value
-                      )
-                    }
-                    sx={fieldStyles}
-                    fullWidth
-                    variant="outlined"
-                    slotProps={{
-                      inputLabel: {
-                        shrink: true,
-                      },
-                    }}
-                  />
-                  <TextField
-                    label="Completion Remarks"
-                    value={item.completionRemarks}
-                    onChange={(e) =>
-                      handleItemChange(
-                        sectionIdx,
-                        itemIdx,
-                        "completionRemarks",
-                        e.target.value
-                      )
-                    }
-                    sx={{
-                      ...multilineFieldStyles,
-                      gridColumn: "1 / -1",
-                    }}
-                    fullWidth
-                    multiline
-                    minRows={3}
-                    variant="outlined"
-                    slotProps={{
-                      inputLabel: {
-                        shrink: true,
-                      },
-                    }}
-                  />
-                </Box>
+                <div key={itemIdx} className="ref-item">
+                  <div className="flex items-center justify-between">
+                    <div className="ref-item-title">Item {itemIdx + 1}</div>
+                    {section.items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveItem(sectionIdx, itemIdx)}
+                        className="ref-icon-btn -mt-3"
+                        aria-label={`Remove item ${itemIdx + 1}`}
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <TextField
+                      label="Item"
+                      value={item.item}
+                      onChange={(e) =>
+                        handleItemChange(sectionIdx, itemIdx, "item", e.target.value)
+                      }
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{ inputLabel: { shrink: true } }}
+                    />
+                    <TextField
+                      label="Snagging Status"
+                      value={item.snaggingStatus}
+                      onChange={(e) =>
+                        handleItemChange(sectionIdx, itemIdx, "snaggingStatus", e.target.value)
+                      }
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{ inputLabel: { shrink: true } }}
+                    />
+                    <TextField
+                      label="Desnagging Status"
+                      value={item.desnaggingStatus}
+                      onChange={(e) =>
+                        handleItemChange(sectionIdx, itemIdx, "desnaggingStatus", e.target.value)
+                      }
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{ inputLabel: { shrink: true } }}
+                    />
+                    <TextField
+                      label="Completion Date"
+                      type="date"
+                      value={item.completionDate}
+                      onChange={(e) =>
+                        handleItemChange(sectionIdx, itemIdx, "completionDate", e.target.value)
+                      }
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{ inputLabel: { shrink: true } }}
+                    />
+                    <TextField
+                      label="Handing Over To"
+                      value={item.handingOverTo}
+                      onChange={(e) =>
+                        handleItemChange(sectionIdx, itemIdx, "handingOverTo", e.target.value)
+                      }
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{ inputLabel: { shrink: true } }}
+                    />
+                    <div className="md:col-span-3">
+                      <label
+                        htmlFor={`mis-completion-remarks-${sectionIdx}-${itemIdx}`}
+                        className="ref-label"
+                      >
+                        Completion Remarks
+                      </label>
+                      <textarea
+                        id={`mis-completion-remarks-${sectionIdx}-${itemIdx}`}
+                        value={item.completionRemarks}
+                        onChange={(e) =>
+                          handleItemChange(sectionIdx, itemIdx, "completionRemarks", e.target.value)
+                        }
+                        rows={3}
+                        className="ref-textarea"
+                      />
+                    </div>
+                  </div>
+                </div>
               ))}
-              <TextField
-                label="Remarks"
-                value={section.items[0]?.remarks || ""}
-                onChange={(e) =>
-                  handleItemChange(sectionIdx, 0, "remarks", e.target.value)
-                }
-                sx={{
-                  ...multilineFieldStyles,
-                  mb: 3,
-                }}
-                multiline
-                minRows={3}
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-              />
-              <AddButton
-                variant="contained"
-                onClick={() => handleAddItem(sectionIdx)}
+
+              <div>
+                <label htmlFor={`mis-remarks-${sectionIdx}`} className="ref-label">
+                  Remarks
+                </label>
+                <textarea
+                  id={`mis-remarks-${sectionIdx}`}
+                  value={section.items[0]?.remarks || ""}
+                  onChange={(e) => handleItemChange(sectionIdx, 0, "remarks", e.target.value)}
+                  rows={3}
+                  className="ref-textarea"
+                />
+              </div>
+
+              <button
                 type="button"
+                onClick={() => handleAddItem(sectionIdx)}
+                className="btn-cancel h-9 px-4 text-sm font-medium inline-flex items-center gap-1.5 bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
               >
-                + Add Item
-              </AddButton>
-            </Box>
-          </SectionCard>
+                <Plus className="w-4 h-4" />
+                Add Item
+              </button>
+            </div>
+          </div>
         ))}
-       
-       <div className="flex gap-4 justify-center pt-6">
-  <Button
-    type="submit"
-    disabled={isSubmitting}
-    onClick={handleSubmit}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"  >
-    {isSubmitting ? "Submitting..." : "Submit"}
-  </Button>
 
-  <Button
-    type="button"
-    variant="outline"
-    onClick={handleCancel}
-  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100">
-    Cancel
-  </Button>
-</div>
+        <button
+          type="button"
+          onClick={handleAddSection}
+          className="btn-cancel h-9 px-4 text-sm font-medium inline-flex items-center gap-1.5 bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+        >
+          <Plus className="w-4 h-4" />
+          Add Section
+        </button>
+      </div>
 
-      </Box>
-    </Box>
+      <div className="flex justify-end gap-4 mt-6">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleCancel}
+          className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          onClick={handleSubmit}
+          variant="ghost"
+          className="btn-primary h-9 px-4 text-sm font-medium"
+        >
+          {isSubmitting ? "Submitting..." : "Submit"}
+        </Button>
+      </div>
+    </div>
   );
 };
 

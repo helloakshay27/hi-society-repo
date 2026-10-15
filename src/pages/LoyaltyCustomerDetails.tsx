@@ -12,6 +12,8 @@ import {
     Banknote,
     Plus,
     Download,
+    ArrowLeft,
+    ChevronRight,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
@@ -25,6 +27,42 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { StatusBadge } from "@/components/ui/status-badge";
+
+// Section card styling, matched to the Facility Setup add / details pages
+const SECTION_CARD =
+    "w-full bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl px-6 py-[22px] space-y-5";
+const FIELD_LABEL = "text-[11px] font-medium text-[rgba(26,26,24,0.48)]";
+const FIELD_VALUE = "text-[13.5px] font-medium text-[#1A1A18]";
+
+const SectionHeader = ({
+    icon,
+    title,
+    action,
+}: {
+    icon: React.ReactElement;
+    title: string;
+    action?: React.ReactNode;
+}) => (
+    <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+            <div className="w-8 h-8 flex-none rounded-full flex items-center justify-center bg-[#F5F4F0] text-[#1A1A18]">
+                {React.cloneElement(icon, { className: "w-3.5 h-3.5" })}
+            </div>
+            <h3 className="text-sm font-semibold text-[#1A1A18]">{title}</h3>
+        </div>
+        {action}
+    </div>
+);
+
+const renderStatusValue = (value?: string) =>
+    value ? (
+        <StatusBadge status={value} className="rounded-full w-fit">
+            {value}
+        </StatusBadge>
+    ) : (
+        <span className={FIELD_VALUE}>-</span>
+    );
 
 const LoyaltyCustomerDetails = () => {
     const { id } = useParams();
@@ -305,12 +343,10 @@ const LoyaltyCustomerDetails = () => {
         const hasLongValue = value && value.length > 20;
 
         return (
-            <div className="flex items-start gap-2 min-w-0">
-                <div className="w-[120px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                    {label}
-                </div>
+            <div className="flex flex-col gap-1 min-w-0">
+                <div className={FIELD_LABEL}>{label}</div>
                 <div
-                    className={`text-[14px] font-semibold text-gray-900 flex-1 min-w-0 ${!isExpanded && hasLongValue
+                    className={`${FIELD_VALUE} min-w-0 ${!isExpanded && hasLongValue
                         ? "truncate"
                         : "break-all whitespace-normal"
                         } ${hasLongValue ? "cursor-pointer hover:text-[#C72030] transition-colors" : ""}`}
@@ -472,10 +508,25 @@ const LoyaltyCustomerDetails = () => {
     };
 
     return (
-        <div className="p-6 space-y-6 bg-[#fafafa] min-h-screen">
+        <div className="p-6 space-y-6 bg-[#FDFDFB] min-h-screen">
             {/* Breadcrumb */}
-            <div className="text-sm text-gray-600 mb-4">
-                Loyalty &gt; Customers &gt; Details
+            <div>
+                <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+                        aria-label="Go back"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                    </button>
+                    <span>Customers</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                    <span className="font-semibold text-[#1A1A18]">Details</span>
+                </div>
+                <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+                    {customerData?.fullName || "Customer Details"}
+                </h1>
             </div>
 
             {/* Stats Cards */}
@@ -578,167 +629,106 @@ const LoyaltyCustomerDetails = () => {
             <div className="flex justify-end">
                 <Button
                     onClick={() => setCreditDialogOpen(true)}
-                    className="flex items-center gap-2 bg-[#00A651] hover:bg-[#008C44] text-white"
+                    className="btn-primary h-9 px-4 text-sm font-medium flex items-center gap-2"
                 >
-                    <Plus className="w-4 h-4 text-[#C72030]" />
+                    <Plus className="w-4 h-4" />
                     Credit Wallet
                 </Button>
             </div>
 
             {/* Personal Details Card (Always visible) */}
-            <div className="w-full bg-white rounded-lg shadow-sm border mb-4">
-                <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                            <User className="w-5 h-5 text-[#C72030]" />
-                        </div>
-                        <h3 className="text-lg font-semibold uppercase text-black">
-                            Personal Details
-                        </h3>
-                    </div>
-                </div>
-                <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-6">
-                        {renderField("Full Name", customerData?.fullName, "fullName")}
-                        {renderField("Email", customerData?.email, "email")}
-                        {renderField("Phone No", customerData?.phoneNo, "phoneNo")}
-                        {renderField("Gender", customerData?.gender, "gender")}
-                        {renderField(
-                            "Joining Date",
-                            customerData?.joiningDate,
-                            "joiningDate"
+            <div className={SECTION_CARD}>
+                <SectionHeader icon={<User />} title="Personal Details" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-5 gap-x-6">
+                    {renderField("Full Name", customerData?.fullName, "fullName")}
+                    {renderField("Email", customerData?.email, "email")}
+                    {renderField("Phone No", customerData?.phoneNo, "phoneNo")}
+                    {renderField("Gender", customerData?.gender, "gender")}
+                    {renderField(
+                        "Joining Date",
+                        customerData?.joiningDate,
+                        "joiningDate"
+                    )}
+                    {/* Hide Last Sign In if not present */}
+                    {customerData?.lastSignIn &&
+                        renderField(
+                            "Last Sign In",
+                            customerData.lastSignIn,
+                            "lastSignIn"
                         )}
-                        {/* Hide Last Sign In if not present */}
-                        {customerData?.lastSignIn &&
-                            renderField(
-                                "Last Sign In",
-                                customerData.lastSignIn,
-                                "lastSignIn"
-                            )}
-                        {renderField("Duration", customerData?.duration, "duration")}
-                        {renderField("Status", customerData?.active, "active")}
+                    {renderField("Duration", customerData?.duration, "duration")}
+                    <div className="flex flex-col gap-1 min-w-0">
+                        <span className={FIELD_LABEL}>Status</span>
+                        {renderStatusValue(customerData?.active)}
                     </div>
                 </div>
             </div>
 
             {/* Tabs UI */}
-            <Tabs defaultValue="tier-status" className="w-full mt-6">
-                <TabsList className="bg-[#f6f4ee] p-1 h-auto w-full flex justify-between">
+            <Tabs defaultValue="tier-status" className="w-full">
+                <TabsList className="bg-white border border-gray-200">
                     <TabsTrigger
                         value="tier-status"
-                        className="flex-1 text-center data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                        className="font-semibold"
                     >
                         Tier Status
                     </TabsTrigger>
                     <TabsTrigger
                         value="transactions"
-                        className="flex-1 text-center data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                        className="font-semibold"
                     >
                         Transactions
                     </TabsTrigger>
                     <TabsTrigger
                         value="orders"
-                        className="flex-1 text-center data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                        className="font-semibold"
                     >
                         Orders
                     </TabsTrigger>
-                    {/* <TabsTrigger
-            value="vouchers"
-            className="flex-1 text-center data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
-          >
-            Vouchers
-          </TabsTrigger>
-          <TabsTrigger
-            value="encashment"
-            className="flex-1 text-center data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
-          >
-            Encashment
-          </TabsTrigger> */}
                 </TabsList>
 
                 {/* Tier Status Tab */}
-                <TabsContent value="tier-status" className="space-y-6 mt-6">
-                    <div className="w-full bg-white rounded-lg shadow-sm border">
-                        <div className="flex items-center justify-between gap-3 bg-[#FAF7F1] py-3 px-4 border border-[#ECE9E2]">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F3EBDD]">
-                                    <IdCard className="w-5 h-5 text-[#C72030]" />
-                                </div>
-                                <h3 className="text-lg font-semibold text-black">
-                                    Tier Status
-                                </h3>
+                <TabsContent value="tier-status" className="mt-6">
+                    <div className={SECTION_CARD}>
+                        <SectionHeader icon={<IdCard />} title="Tier Status" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-5 gap-x-6">
+                            <div className="flex flex-col gap-1">
+                                <span className={FIELD_LABEL}>Enrolled Date</span>
+                                <span className={FIELD_VALUE}>
+                                    {customerData?.joiningDate ?? "-"}
+                                </span>
                             </div>
-                        </div>
-                        <div className="bg-[#FBFBFA] border border-t-0 border-[#ECE9E2] px-5 py-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-8">
-                                {/* Currently Loyalty Points */}
-                                {/* <div className="flex flex-col">
-                                    <span className="text-gray-500 text-[14px]">
-                                        Currently Loyalty Points
-                                    </span>
-                                    <span className="font-semibold text-[15px] text-gray-900">
-                                        {customerData?.currentLoyaltyPoints ?? "-"}
-                                    </span>
-                                </div> */}
-                                {/* Enrolled Date */}
-                                <div className="flex flex-col">
-                                    <span className="text-gray-500 text-[14px]">
-                                        Enrolled Date
-                                    </span>
-                                    <span className="font-semibold text-[15px] text-gray-900">
-                                        {customerData?.joiningDate ?? "-"}
-                                    </span>
-                                </div>
-                                {/* Tier Progress */}
-                                {/* <div className="flex flex-col">
-                                    <span className="text-gray-500 text-[14px]">
-                                        Tier Progress
-                                    </span>
-                                    <span className="font-semibold text-[15px] text-gray-900">
-                                        {customerData?.tierProgress ?? "-"}
-                                    </span>
-                                </div> */}
-                                {/* Tier Level */}
-                                <div className="flex flex-col">
-                                    <span className="text-gray-500 text-[14px]">Tier Level</span>
-                                    <span className="font-semibold text-[15px] text-gray-900 flex items-center gap-1">
-                                        {customerData?.tierLevel ?? "-"}
-                                        {customerData?.tierLevel?.toLowerCase() === "gold" && (
-                                            <span title="Gold">
-                                                <svg
-                                                    width="18"
-                                                    height="18"
-                                                    viewBox="0 0 20 20"
-                                                    fill="none"
-                                                >
-                                                    <circle cx="10" cy="10" r="10" fill="#FFD700" />
-                                                    <path
-                                                        d="M10 5l1.902 3.854 4.264.62-3.083 3.006.728 4.247L10 14.02l-3.811 2.007.728-4.247-3.083-3.006 4.264-.62L10 5z"
-                                                        fill="#FFF7B2"
-                                                    />
-                                                </svg>
-                                            </span>
-                                        )}
-                                    </span>
-                                </div>
-                                {/* Membership Duration */}
-                                <div className="flex flex-col">
-                                    <span className="text-gray-500 text-[14px]">
-                                        Membership Duration
-                                    </span>
-                                    <span className="font-semibold text-[15px] text-gray-900">
-                                        {customerData?.duration ?? "-"}
-                                    </span>
-                                </div>
-                                {/* Account Status */}
-                                <div className="flex flex-col">
-                                    <span className="text-gray-500 text-[14px]">
-                                        Account Status
-                                    </span>
-                                    <span className="font-semibold text-[15px] text-gray-900">
-                                        {customerData?.active ?? "-"}
-                                    </span>
-                                </div>
+                            <div className="flex flex-col gap-1">
+                                <span className={FIELD_LABEL}>Tier Level</span>
+                                <span className={`${FIELD_VALUE} flex items-center gap-1`}>
+                                    {customerData?.tierLevel ?? "-"}
+                                    {customerData?.tierLevel?.toLowerCase() === "gold" && (
+                                        <span title="Gold">
+                                            <svg
+                                                width="16"
+                                                height="16"
+                                                viewBox="0 0 20 20"
+                                                fill="none"
+                                            >
+                                                <circle cx="10" cy="10" r="10" fill="#FFD700" />
+                                                <path
+                                                    d="M10 5l1.902 3.854 4.264.62-3.083 3.006.728 4.247L10 14.02l-3.811 2.007.728-4.247-3.083-3.006 4.264-.62L10 5z"
+                                                    fill="#FFF7B2"
+                                                />
+                                            </svg>
+                                        </span>
+                                    )}
+                                </span>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className={FIELD_LABEL}>Membership Duration</span>
+                                <span className={FIELD_VALUE}>
+                                    {customerData?.duration ?? "-"}
+                                </span>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className={FIELD_LABEL}>Account Status</span>
+                                {renderStatusValue(customerData?.active)}
                             </div>
                         </div>
                     </div>
@@ -746,137 +736,98 @@ const LoyaltyCustomerDetails = () => {
 
                 {/* Transactions Tab */}
                 <TabsContent value="transactions" className="mt-6">
-                    <div className="w-full bg-white rounded-lg shadow-sm border">
-                        <div className="flex items-center justify-between gap-3 bg-[#FAF7F1] py-3 px-4 border border-[#ECE9E2]">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F3EBDD]">
-                                    <Settings className="w-5 h-5 text-[#C72030]" />
-                                </div>
-                                <h3 className="text-lg font-semibold text-black">
-                                    Wallet Transactions
-                                </h3>
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleExportTransactions}
-                                disabled={exportLoading}
-                                className="gap-2"
-                            >
-                                <Download className="w-4 h-4" />
-                                {exportLoading ? "Exporting..." : "Export"}
-                            </Button>
-                        </div>
-                        <div className="bg-[#FBFBFA]">
-                            <EnhancedTable
-                                storageKey="loyalty-customer-details-table"
-                                data={walletTransactions}
-                                columns={walletTransactionColumns}
-                                renderCell={renderWalletTransactionCell}
-                                enableExport={false}
-                                enableGlobalSearch={false}
-                                hideTableSearch={true}
-                                hideTableExport={true}
-                                hideColumnsButton={true}
-                                loading={loading}
-                                loadingMessage="Loading transactions..."
-                                emptyMessage="No transactions found"
-                            />
-                        </div>
+                    <div className={SECTION_CARD}>
+                        <SectionHeader
+                            icon={<Settings />}
+                            title="Wallet Transactions"
+                            action={
+                                <button
+                                    type="button"
+                                    onClick={handleExportTransactions}
+                                    disabled={exportLoading}
+                                    className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[13px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.12)] rounded-[10px] hover:bg-[#F5F4F0] transition-colors disabled:opacity-60"
+                                >
+                                    <Download className="w-3.5 h-3.5" />
+                                    {exportLoading ? "Exporting..." : "Export"}
+                                </button>
+                            }
+                        />
+                        <EnhancedTable
+                            storageKey="loyalty-customer-details-table"
+                            data={walletTransactions}
+                            columns={walletTransactionColumns}
+                            renderCell={renderWalletTransactionCell}
+                            enableExport={false}
+                            enableGlobalSearch={false}
+                            hideTableSearch={true}
+                            hideTableExport={true}
+                            hideColumnsButton={true}
+                            loading={loading}
+                            loadingMessage="Loading transactions..."
+                            emptyMessage="No transactions found"
+                        />
                     </div>
                 </TabsContent>
 
                 <TabsContent value="orders" className="mt-6">
-                    <div className="w-full bg-white rounded-lg shadow-sm border">
-                        <div className="flex items-center justify-between gap-3 bg-[#FAF7F1] py-3 px-4 border border-[#ECE9E2]">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F3EBDD]">
-                                    <Settings className="w-5 h-5 text-[#C72030]" />
-                                </div>
-                                <h3 className="text-lg font-semibold text-black">
-                                    Orders
-                                </h3>
-                            </div>
-                        </div>
-                        <div className="bg-[#FBFBFA]">
-                            <EnhancedTable
-                                storageKey="loyalty-customer-details-table-2"
-                                data={orders}
-                                columns={ordersColumns}
-                                renderCell={renderOrderCell}
-                                enableExport={false}
-                                enableGlobalSearch={false}
-                                hideTableSearch={true}
-                                hideTableExport={true}
-                                hideColumnsButton={true}
-                                loading={loading}
-                                loadingMessage="Loading orders..."
-                                emptyMessage="No orders found"
-                            />
-                        </div>
+                    <div className={SECTION_CARD}>
+                        <SectionHeader icon={<Settings />} title="Orders" />
+                        <EnhancedTable
+                            storageKey="loyalty-customer-details-table-2"
+                            data={orders}
+                            columns={ordersColumns}
+                            renderCell={renderOrderCell}
+                            enableExport={false}
+                            enableGlobalSearch={false}
+                            hideTableSearch={true}
+                            hideTableExport={true}
+                            hideColumnsButton={true}
+                            loading={loading}
+                            loadingMessage="Loading orders..."
+                            emptyMessage="No orders found"
+                        />
                     </div>
                 </TabsContent>
 
                 {/* Vouchers Tab */}
                 <TabsContent value="vouchers" className="mt-6">
-                    <div className="w-full bg-white rounded-lg shadow-sm border">
-                        <div className="flex items-center justify-between gap-3 bg-[#FAF7F1] py-3 px-4 border border-[#ECE9E2]">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F3EBDD]">
-                                    <Gift className="w-5 h-5 text-[#C72030]" />
-                                </div>
-                                <h3 className="text-lg font-semibold text-black">Vouchers</h3>
-                            </div>
-                        </div>
-                        <div className="bg-[#FBFBFA]">
-                            <EnhancedTable
-                                storageKey="loyalty-customer-details-table-3"
-                                data={vouchers}
-                                columns={voucherColumns}
-                                renderCell={renderVoucherCell}
-                                enableExport={false}
-                                enableGlobalSearch={false}
-                                hideTableSearch={true}
-                                hideTableExport={true}
-                                hideColumnsButton={true}
-                                loading={false}
-                                loadingMessage="Loading vouchers..."
-                                emptyMessage="No vouchers found"
-                            />
-                        </div>
+                    <div className={SECTION_CARD}>
+                        <SectionHeader icon={<Gift />} title="Vouchers" />
+                        <EnhancedTable
+                            storageKey="loyalty-customer-details-table-3"
+                            data={vouchers}
+                            columns={voucherColumns}
+                            renderCell={renderVoucherCell}
+                            enableExport={false}
+                            enableGlobalSearch={false}
+                            hideTableSearch={true}
+                            hideTableExport={true}
+                            hideColumnsButton={true}
+                            loading={false}
+                            loadingMessage="Loading vouchers..."
+                            emptyMessage="No vouchers found"
+                        />
                     </div>
                 </TabsContent>
 
-                {/* Encashment Tab Placeholder */}
                 {/* Encashment Tab */}
                 <TabsContent value="encashment" className="mt-6">
-                    <div className="w-full bg-white rounded-lg shadow-sm border">
-                        <div className="flex items-center justify-between gap-3 bg-[#FAF7F1] py-3 px-4 border border-[#ECE9E2]">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F3EBDD]">
-                                    <Banknote className="w-5 h-5 text-[#C72030]" />
-                                </div>
-                                <h3 className="text-lg font-semibold text-black">
-                                    Encashment Details
-                                </h3>
-                            </div>
-                        </div>
-                        <div className="bg-[#FBFBFA]">
-                            <EnhancedTable
-                                storageKey="loyalty-customer-details-table-4"
-                                data={encashments}
-                                columns={encashmentColumns}
-                                renderCell={renderEncashmentCell}
-                                enableExport={false}
-                                enableGlobalSearch={false}
-                                hideTableSearch={true}
-                                hideTableExport={true}
-                                hideColumnsButton={true}
-                                loading={false}
-                                loadingMessage="Loading encashment details..."
-                                emptyMessage="No encashment details found"
-                            />
-                        </div>
+                    <div className={SECTION_CARD}>
+                        <SectionHeader icon={<Banknote />} title="Encashment Details" />
+                        <EnhancedTable
+                            storageKey="loyalty-customer-details-table-4"
+                            data={encashments}
+                            columns={encashmentColumns}
+                            renderCell={renderEncashmentCell}
+                            enableExport={false}
+                            enableGlobalSearch={false}
+                            hideTableSearch={true}
+                            hideTableExport={true}
+                            hideColumnsButton={true}
+                            loading={false}
+                            loadingMessage="Loading encashment details..."
+                            emptyMessage="No encashment details found"
+                        />
                     </div>
                 </TabsContent>
             </Tabs>
@@ -946,6 +897,7 @@ const LoyaltyCustomerDetails = () => {
                     <DialogFooter className="gap-2">
                         <Button
                             variant="outline"
+                            className="btn-cancel h-9 px-4 text-sm font-medium"
                             onClick={() => {
                                 setCreditDialogOpen(false);
                                 setCreditAmount("");
@@ -959,7 +911,7 @@ const LoyaltyCustomerDetails = () => {
                         <Button
                             onClick={handleCreditWallet}
                             disabled={creditLoading}
-                            className="bg-[#00A651] hover:bg-[#008C44] text-white"
+                            className="btn-primary h-9 px-4 text-sm font-medium"
                         >
                             {creditLoading ? "Crediting..." : "Credit Points"}
                         </Button>

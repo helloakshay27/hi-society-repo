@@ -11,6 +11,7 @@ import {
   Calendar,
   Clock,
   Smile,
+  ChevronRight,
 } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import { emojis } from "@/utils/emojies";
@@ -21,8 +22,8 @@ import {
   Select as MuiSelect,
   MenuItem,
   Typography,
-  Switch,
 } from "@mui/material";
+import { Switch } from "@/components/ui/switch";
 
 interface ContestStep {
   id: number;
@@ -112,13 +113,17 @@ export const EditContestPage: React.FC = () => {
   const [loadingProducts, setLoadingProducts] = useState(false);
 
   // Emoji picker for description
-  const [showDescriptionEmojiPicker, setShowDescriptionEmojiPicker] = useState(false);
+  const [showDescriptionEmojiPicker, setShowDescriptionEmojiPicker] =
+    useState(false);
   const descriptionEmojiPickerRef = useRef<HTMLDivElement>(null);
 
   // Click outside listener for emoji picker
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (descriptionEmojiPickerRef.current && !descriptionEmojiPickerRef.current.contains(event.target as Node)) {
+      if (
+        descriptionEmojiPickerRef.current &&
+        !descriptionEmojiPickerRef.current.contains(event.target as Node)
+      ) {
         setShowDescriptionEmojiPicker(false);
       }
     };
@@ -144,19 +149,21 @@ export const EditContestPage: React.FC = () => {
     const fetchContest = async () => {
       setLoading(true);
       try {
-        const baseUrl = localStorage.getItem('baseUrl') || '';
-        const token = localStorage.getItem('token') || '';
+        const baseUrl = localStorage.getItem("baseUrl") || "";
+        const token = localStorage.getItem("token") || "";
 
         if (!baseUrl || !token) {
           throw new Error("Base URL or token not set");
         }
 
-        const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+        const url = /^https?:\/\//i.test(baseUrl)
+          ? baseUrl
+          : `https://${baseUrl}`;
         const res = await fetch(`${url}/contests/${id}.json`, {
           headers: {
             Accept: "application/json",
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
 
@@ -184,7 +191,12 @@ export const EditContestPage: React.FC = () => {
         // Populate form fields
         setContestName(data.name || "");
         setContestDescription(data.description || "");
-        setContestType(data.content_type ? data.content_type.charAt(0).toUpperCase() + data.content_type.slice(1) : "");
+        setContestType(
+          data.content_type
+            ? data.content_type.charAt(0).toUpperCase() +
+                data.content_type.slice(1)
+            : ""
+        );
         setIsActive(data.active ?? true);
         setUsersCap(data.user_caps?.toString() || "");
         setAttemptsRequired(data.attemp_required?.toString() || "");
@@ -194,13 +206,13 @@ export const EditContestPage: React.FC = () => {
         // Parse dates and times
         if (data.start_at) {
           const startDateTime = new Date(data.start_at);
-          setStartDate(startDateTime.toISOString().split('T')[0]);
+          setStartDate(startDateTime.toISOString().split("T")[0]);
           setStartTime(startDateTime.toTimeString().slice(0, 5));
         }
 
         if (data.end_at) {
           const endDateTime = new Date(data.end_at);
-          setEndDate(endDateTime.toISOString().split('T')[0]);
+          setEndDate(endDateTime.toISOString().split("T")[0]);
           setEndTime(endDateTime.toTimeString().slice(0, 5));
         }
 
@@ -218,7 +230,14 @@ export const EditContestPage: React.FC = () => {
             offerDescription: prize.terms_and_conditions || "",
             bannerImage: null,
             bannerImageName: "",
-            rewardType: prize.reward_type === "points" ? "Points" : prize.reward_type === "merchandise" ? "Merchandise" : prize.reward_type === "none" ? "None" : "Coupon Code",
+            rewardType:
+              prize.reward_type === "points"
+                ? "Points"
+                : prize.reward_type === "merchandise"
+                  ? "Merchandise"
+                  : prize.reward_type === "none"
+                    ? "None"
+                    : "Coupon Code",
             pointsValue: prize.points_value?.toString() || "",
             existingImageUrl: prize.image?.url || prize.icon_url || "",
             resourceId: prize.resource_id?.toString() || "",
@@ -301,24 +320,26 @@ export const EditContestPage: React.FC = () => {
     const fetchProducts = async () => {
       try {
         setLoadingProducts(true);
-        const baseUrl = localStorage.getItem('baseUrl') || '';
-        const token = localStorage.getItem('token') || '';
-        const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+        const baseUrl = localStorage.getItem("baseUrl") || "";
+        const token = localStorage.getItem("token") || "";
+        const url = /^https?:\/\//i.test(baseUrl)
+          ? baseUrl
+          : `https://${baseUrl}`;
 
         const response = await fetch(`${url}/products?source=admin_portal`, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
 
-        if (!response.ok) throw new Error('Failed to fetch products');
+        if (!response.ok) throw new Error("Failed to fetch products");
 
         const data = await response.json();
         setProducts(data.products || []);
       } catch (error) {
-        console.error('Error fetching products:', error);
-        sonnerToast.error('Failed to load products');
+        console.error("Error fetching products:", error);
+        sonnerToast.error("Failed to load products");
       } finally {
         setLoadingProducts(false);
       }
@@ -328,10 +349,30 @@ export const EditContestPage: React.FC = () => {
   }, []);
 
   const steps: ContestStep[] = [
-    { id: 1, title: "Basic Info", completed: completedSteps.includes(1), active: currentStep === 1 },
-    { id: 2, title: "Offers & Vouchers", completed: completedSteps.includes(2), active: currentStep === 2 },
-    { id: 3, title: "Validity & Status", completed: completedSteps.includes(3), active: currentStep === 3 },
-    { id: 4, title: "Terms & Conditions", completed: completedSteps.includes(4), active: currentStep === 4 },
+    {
+      id: 1,
+      title: "Basic Info",
+      completed: completedSteps.includes(1),
+      active: currentStep === 1,
+    },
+    {
+      id: 2,
+      title: "Offers & Vouchers",
+      completed: completedSteps.includes(2),
+      active: currentStep === 2,
+    },
+    {
+      id: 3,
+      title: "Validity & Status",
+      completed: completedSteps.includes(3),
+      active: currentStep === 3,
+    },
+    {
+      id: 4,
+      title: "Terms & Conditions",
+      completed: completedSteps.includes(4),
+      active: currentStep === 4,
+    },
   ];
 
   const contestTypes = ["Spin", "Scratch", "Flip"];
@@ -352,7 +393,9 @@ export const EditContestPage: React.FC = () => {
     value: string | File | null
   ) => {
     setOffers((prev) =>
-      prev.map((offer) => (offer.id === id ? { ...offer, [field]: value } : offer))
+      prev.map((offer) =>
+        offer.id === id ? { ...offer, [field]: value } : offer
+      )
     );
   };
 
@@ -360,13 +403,20 @@ export const EditContestPage: React.FC = () => {
     setOffers((prev) =>
       prev.map((offer) =>
         offer.id === id
-          ? { ...offer, bannerImage: file, bannerImageName: file ? file.name : "" }
+          ? {
+              ...offer,
+              bannerImage: file,
+              bannerImageName: file ? file.name : "",
+            }
           : offer
       )
     );
   };
 
-  const handleRewardTypeChange = (id: string | number, newRewardType: string) => {
+  const handleRewardTypeChange = (
+    id: string | number,
+    newRewardType: string
+  ) => {
     setOffers((prev) =>
       prev.map((offer) => {
         if (offer.id === id) {
@@ -394,12 +444,14 @@ export const EditContestPage: React.FC = () => {
 
   const buildISO = (date: string, time: string, isEnd = false): string => {
     if (!date) return "";
-    let h = 0, min = 0;
+    let h = 0,
+      min = 0;
     if (time && /^\d{2}:\d{2}$/.test(time)) {
       [h, min] = time.split(":").map(Number);
     } else if (isEnd) {
       // If no time provided for end, default to 23:59:59.999
-      h = 23; min = 59;
+      h = 23;
+      min = 59;
     }
     const [y, m, d] = date.split("-");
     const dt = new Date(Number(y), Number(m) - 1, Number(d), h, min);
@@ -413,10 +465,7 @@ export const EditContestPage: React.FC = () => {
   const normalizeHTML = (html: string): string => {
     if (!html) return "";
     // Remove extra whitespace and normalize formatting
-    return html
-      .replace(/\s+/g, ' ')
-      .replace(/>\s+</g, '><')
-      .trim();
+    return html.replace(/\s+/g, " ").replace(/>\s+</g, "><").trim();
   };
 
   const handleSubmit = async () => {
@@ -424,8 +473,8 @@ export const EditContestPage: React.FC = () => {
 
     setSubmitting(true);
 
-    const baseUrl = localStorage.getItem('baseUrl') || '';
-    const token = localStorage.getItem('token') || '';
+    const baseUrl = localStorage.getItem("baseUrl") || "";
+    const token = localStorage.getItem("token") || "";
     const formData = new FormData();
 
     // Track if there are any changes
@@ -433,22 +482,22 @@ export const EditContestPage: React.FC = () => {
 
     // Only add changed basic contest fields
     if (contestName.trim() !== originalData?.name) {
-      formData.append('contest[name]', contestName.trim());
+      formData.append("contest[name]", contestName.trim());
       hasChanges = true;
     }
 
     if (contestDescription.trim() !== originalData?.description) {
-      formData.append('contest[description]', contestDescription.trim());
+      formData.append("contest[description]", contestDescription.trim());
       hasChanges = true;
     }
 
     if (contestType.toLowerCase() !== originalData?.content_type) {
-      formData.append('contest[content_type]', contestType.toLowerCase());
+      formData.append("contest[content_type]", contestType.toLowerCase());
       hasChanges = true;
     }
 
     if (isActive !== originalData?.active) {
-      formData.append('contest[active]', String(isActive));
+      formData.append("contest[active]", String(isActive));
       hasChanges = true;
     }
 
@@ -457,40 +506,46 @@ export const EditContestPage: React.FC = () => {
     const newEndISO = buildISO(endDate, endTime, true);
 
     if (newStartISO !== originalData?.start_at) {
-      formData.append('contest[start_at]', newStartISO);
+      formData.append("contest[start_at]", newStartISO);
       hasChanges = true;
     }
 
     if (newEndISO !== originalData?.end_at) {
-      formData.append('contest[end_at]', newEndISO);
+      formData.append("contest[end_at]", newEndISO);
       hasChanges = true;
     }
 
     if (usersCap !== originalData?.user_caps) {
       if (usersCap) {
-        formData.append('contest[user_caps]', usersCap);
+        formData.append("contest[user_caps]", usersCap);
       }
       hasChanges = true;
     }
 
     if (attemptsRequired !== originalData?.attemp_required) {
       if (attemptsRequired) {
-        formData.append('contest[attemp_required]', attemptsRequired);
+        formData.append("contest[attemp_required]", attemptsRequired);
       }
       hasChanges = true;
     }
 
     // Check if terms or redemption guide changed
-    if (normalizeHTML(termsText) !== normalizeHTML(originalData?.terms_and_conditions || "")) {
+    if (
+      normalizeHTML(termsText) !==
+      normalizeHTML(originalData?.terms_and_conditions || "")
+    ) {
       if (termsText.trim()) {
-        formData.append('contest[terms_and_conditions]', termsText.trim());
+        formData.append("contest[terms_and_conditions]", termsText.trim());
       }
       hasChanges = true;
     }
 
-    if (normalizeHTML(redemptionText) !== normalizeHTML(originalData?.redemption_guide || "")) {
+    if (
+      normalizeHTML(redemptionText) !==
+      normalizeHTML(originalData?.redemption_guide || "")
+    ) {
       if (redemptionText.trim()) {
-        formData.append('contest[redemption_guide]', redemptionText.trim());
+        formData.append("contest[redemption_guide]", redemptionText.trim());
       }
       hasChanges = true;
     }
@@ -498,7 +553,9 @@ export const EditContestPage: React.FC = () => {
     // Check if prizes changed
     const originalPrizes = originalData?.prizes || [];
     offers.forEach((offer, index) => {
-      const originalPrize = originalPrizes.find((p: any) => p.id === offer.prizeId);
+      const originalPrize = originalPrizes.find(
+        (p: any) => p.id === offer.prizeId
+      );
       let prizeChanged = false;
 
       if (!originalPrize) {
@@ -511,11 +568,20 @@ export const EditContestPage: React.FC = () => {
           offer.couponCode.trim() !== (originalPrize.coupon_code || "") ||
           offer.displayName.trim() !== (originalPrize.display_name || "") ||
           offer.partner.trim() !== (originalPrize.partner_name || "") ||
-          offer.winningProbability !== (originalPrize.probability_value?.toString() || "") ||
-          offer.totalQuantity !== (originalPrize.total_quantity?.toString() || "") ||
+          offer.winningProbability !==
+            (originalPrize.probability_value?.toString() || "") ||
+          offer.totalQuantity !==
+            (originalPrize.total_quantity?.toString() || "") ||
           offer.offerDescription.trim() !== (originalPrize.description || "") ||
-          offer.pointsValue !== (originalPrize.points_value?.toString() || "") ||
-          (offer.rewardType === "Points" ? "points" : offer.rewardType === "Merchandise" ? "merchandise" : offer.rewardType === "None" ? "none" : "coupon") !== originalPrize.reward_type ||
+          offer.pointsValue !==
+            (originalPrize.points_value?.toString() || "") ||
+          (offer.rewardType === "Points"
+            ? "points"
+            : offer.rewardType === "Merchandise"
+              ? "merchandise"
+              : offer.rewardType === "None"
+                ? "none"
+                : "coupon") !== originalPrize.reward_type ||
           offer.bannerImage !== null
         ) {
           prizeChanged = true;
@@ -524,38 +590,75 @@ export const EditContestPage: React.FC = () => {
 
       if (prizeChanged) {
         hasChanges = true;
-        formData.append(`contest[prizes_attributes][${index}][title]`, offer.offerTitle.trim());
+        formData.append(
+          `contest[prizes_attributes][${index}][title]`,
+          offer.offerTitle.trim()
+        );
 
         if (offer.prizeId) {
-          formData.append(`contest[prizes_attributes][${index}][id]`, offer.prizeId.toString());
+          formData.append(
+            `contest[prizes_attributes][${index}][id]`,
+            offer.prizeId.toString()
+          );
         }
 
-        const rewardType = offer.rewardType === "Points" ? "points" : offer.rewardType === "Merchandise" ? "merchandise" : offer.rewardType === "None" ? "none" : "coupon";
-        formData.append(`contest[prizes_attributes][${index}][reward_type]`, rewardType);
+        const rewardType =
+          offer.rewardType === "Points"
+            ? "points"
+            : offer.rewardType === "Merchandise"
+              ? "merchandise"
+              : offer.rewardType === "None"
+                ? "none"
+                : "coupon";
+        formData.append(
+          `contest[prizes_attributes][${index}][reward_type]`,
+          rewardType
+        );
 
         if (offer.displayName.trim()) {
-          formData.append(`contest[prizes_attributes][${index}][display_name]`, offer.displayName.trim());
+          formData.append(
+            `contest[prizes_attributes][${index}][display_name]`,
+            offer.displayName.trim()
+          );
         }
 
         if (offer.offerDescription.trim()) {
-          formData.append(`contest[prizes_attributes][${index}][terms_and_conditions]`, offer.offerDescription.trim());
+          formData.append(
+            `contest[prizes_attributes][${index}][terms_and_conditions]`,
+            offer.offerDescription.trim()
+          );
         }
 
         if (offer.rewardType === "Coupon Code") {
-          formData.append(`contest[prizes_attributes][${index}][coupon_code]`, offer.couponCode.trim());
+          formData.append(
+            `contest[prizes_attributes][${index}][coupon_code]`,
+            offer.couponCode.trim()
+          );
         }
 
         if (offer.rewardType === "Points") {
-          formData.append(`contest[prizes_attributes][${index}][points_value]`, offer.pointsValue.trim());
+          formData.append(
+            `contest[prizes_attributes][${index}][points_value]`,
+            offer.pointsValue.trim()
+          );
         }
 
         if (offer.rewardType === "Merchandise" && offer.resourceId) {
-          formData.append(`contest[prizes_attributes][${index}][resource_id]`, offer.resourceId);
-          formData.append(`contest[prizes_attributes][${index}][resource_type]`, offer.resourceType);
+          formData.append(
+            `contest[prizes_attributes][${index}][resource_id]`,
+            offer.resourceId
+          );
+          formData.append(
+            `contest[prizes_attributes][${index}][resource_type]`,
+            offer.resourceType
+          );
         }
 
         if (offer.partner.trim()) {
-          formData.append(`contest[prizes_attributes][${index}][partner_name]`, offer.partner.trim());
+          formData.append(
+            `contest[prizes_attributes][${index}][partner_name]`,
+            offer.partner.trim()
+          );
         }
 
         formData.append(
@@ -566,7 +669,10 @@ export const EditContestPage: React.FC = () => {
           `contest[prizes_attributes][${index}][total_quantity]`,
           offer.totalQuantity || "0"
         );
-        formData.append(`contest[prizes_attributes][${index}][position]`, String(index + 1));
+        formData.append(
+          `contest[prizes_attributes][${index}][position]`,
+          String(index + 1)
+        );
         formData.append(`contest[prizes_attributes][${index}][active]`, "true");
 
         if (offer.bannerImage) {
@@ -580,11 +686,17 @@ export const EditContestPage: React.FC = () => {
 
     // Check for deleted prizes
     originalPrizes.forEach((originalPrize: any) => {
-      const stillExists = offers.some(o => o.prizeId === originalPrize.id);
+      const stillExists = offers.some((o) => o.prizeId === originalPrize.id);
       if (!stillExists) {
         const index = offers.length;
-        formData.append(`contest[prizes_attributes][${index}][id]`, originalPrize.id.toString());
-        formData.append(`contest[prizes_attributes][${index}][_destroy]`, "true");
+        formData.append(
+          `contest[prizes_attributes][${index}][id]`,
+          originalPrize.id.toString()
+        );
+        formData.append(
+          `contest[prizes_attributes][${index}][_destroy]`,
+          "true"
+        );
         hasChanges = true;
       }
     });
@@ -596,18 +708,17 @@ export const EditContestPage: React.FC = () => {
     }
 
     try {
-      const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+      const url = /^https?:\/\//i.test(baseUrl)
+        ? baseUrl
+        : `https://${baseUrl}`;
 
-      const res = await fetch(
-        `${url}/contests/${id}.json`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
+      const res = await fetch(`${url}/contests/${id}.json`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
       if (!res.ok) {
         const errText = await res.text();
@@ -617,7 +728,6 @@ export const EditContestPage: React.FC = () => {
       await res.json();
       sonnerToast.success("Contest updated successfully!");
       setShowSuccessModal(true);
-
     } catch (err: any) {
       console.error(err);
       sonnerToast.error(err.message || "Failed to update contest");
@@ -667,7 +777,9 @@ export const EditContestPage: React.FC = () => {
             return false;
           }
           if (!offer.winningProbability.trim()) {
-            sonnerToast.error("Please enter winning probability for all offers");
+            sonnerToast.error(
+              "Please enter winning probability for all offers"
+            );
             return false;
           }
           if (offer.rewardType === "Coupon Code" && !offer.couponCode.trim()) {
@@ -679,7 +791,9 @@ export const EditContestPage: React.FC = () => {
             return false;
           }
           if (offer.rewardType === "Merchandise" && !offer.resourceId) {
-            sonnerToast.error("Please select a resource for all merchandise offers");
+            sonnerToast.error(
+              "Please select a resource for all merchandise offers"
+            );
             return false;
           }
         }
@@ -697,12 +811,14 @@ export const EditContestPage: React.FC = () => {
           return false;
         }
         if (startDate === endDate) {
-          const [startHour, startMin] = startTime.split(':').map(Number);
-          const [endHour, endMin] = endTime.split(':').map(Number);
+          const [startHour, startMin] = startTime.split(":").map(Number);
+          const [endHour, endMin] = endTime.split(":").map(Number);
           const startMinutes = startHour * 60 + startMin;
           const endMinutes = endHour * 60 + endMin;
           if (endMinutes <= startMinutes) {
-            sonnerToast.error("End Time must be after Start Time when on the same day");
+            sonnerToast.error(
+              "End Time must be after Start Time when on the same day"
+            );
             return false;
           }
         }
@@ -729,17 +845,21 @@ export const EditContestPage: React.FC = () => {
   const textFieldSx = {
     "& .MuiOutlinedInput-root": {
       backgroundColor: "white",
-      "& fieldset": { borderColor: "#e5e7eb" },
-      "&:hover fieldset": { borderColor: "#C72030" },
-      "&.Mui-focused fieldset": { borderColor: "#C72030" },
+      borderRadius: "12px",
+      "& fieldset": {
+        borderColor: "rgba(26, 26, 24, 0.08)",
+        borderRadius: "12px",
+      },
+      "&:hover fieldset": { borderColor: "#1A1A18" },
+      "&.Mui-focused fieldset": { borderColor: "#1A1A18" },
     },
-    "& .MuiInputLabel-root.Mui-focused": { color: "#C72030" },
+    "& .MuiInputLabel-root.Mui-focused": { color: "#1A1A18" },
   };
 
   if (loading) {
     return (
-      <div className="p-4 sm:p-6 min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="h-12 w-12 rounded-full border-4 border-gray-300 border-t-[#C72030] animate-spin" />
+      <div className="p-4 sm:p-6 min-h-screen bg-white flex items-center justify-center">
+        <div className="h-12 w-12 rounded-full border-4 border-gray-300 border-t-[#1A1A18] animate-spin" />
       </div>
     );
   }
@@ -748,13 +868,13 @@ export const EditContestPage: React.FC = () => {
     switch (currentStep) {
       case 1:
         return (
-          <Card className="shadow-sm w-full">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                  <Trophy className="w-5 h-5 text-[#C72030]" />
+          <Card className="w-full rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none">
+            <CardContent className="px-6 py-[22px]">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                  <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
                 </div>
-                <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                <h2 className="text-sm font-semibold text-[#1A1A18]">
                   Basic Contest Info
                 </h2>
               </div>
@@ -831,7 +951,9 @@ export const EditContestPage: React.FC = () => {
                         className="text-gray-500 cursor-pointer hover:text-gray-700"
                         size={18}
                         onClick={() =>
-                          setShowDescriptionEmojiPicker(!showDescriptionEmojiPicker)
+                          setShowDescriptionEmojiPicker(
+                            !showDescriptionEmojiPicker
+                          )
                         }
                       />
                       {showDescriptionEmojiPicker && (
@@ -862,13 +984,13 @@ export const EditContestPage: React.FC = () => {
 
       case 2:
         return (
-          <Card className="shadow-sm w-full">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                  <Trophy className="w-5 h-5 text-[#C72030]" />
+          <Card className="w-full rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none">
+            <CardContent className="px-6 py-[22px]">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                  <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
                 </div>
-                <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                <h2 className="text-sm font-semibold text-[#1A1A18]">
                   Offers & Vouchers
                 </h2>
               </div>
@@ -876,18 +998,18 @@ export const EditContestPage: React.FC = () => {
               {offers.map((offer, index) => (
                 <div
                   key={offer.id}
-                  className="border border-gray-200 rounded-lg p-6 mb-4 relative"
+                  className="border border-[rgba(26,26,24,0.09)] rounded-xl p-5 mb-4 relative"
                 >
                   {offers.length > 1 && (
                     <button
                       onClick={() => removeOffer(offer.id)}
-                      className="absolute top-4 right-4 text-[#C72030] hover:text-red-800"
+                      className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 rounded-lg text-[rgba(26,26,24,0.55)] hover:bg-[#F5F4F0] hover:text-[#1A1A18] transition-colors"
                     >
                       <X size={20} />
                     </button>
                   )}
 
-                  <h3 className="text-base font-semibold text-[#1A1A1A] mb-4">
+                  <h3 className="text-sm font-semibold text-[#1A1A18] mb-4">
                     {index + 1}.
                   </h3>
 
@@ -896,7 +1018,9 @@ export const EditContestPage: React.FC = () => {
                       fullWidth
                       label="Offer Title *"
                       value={offer.offerTitle}
-                      onChange={(e) => updateOffer(offer.id, "offerTitle", e.target.value)}
+                      onChange={(e) =>
+                        updateOffer(offer.id, "offerTitle", e.target.value)
+                      }
                       sx={textFieldSx}
                       size="small"
                     />
@@ -906,7 +1030,9 @@ export const EditContestPage: React.FC = () => {
                       <MuiSelect
                         value={offer.rewardType}
                         label="Reward Type"
-                        onChange={(e) => handleRewardTypeChange(offer.id, e.target.value)}
+                        onChange={(e) =>
+                          handleRewardTypeChange(offer.id, e.target.value)
+                        }
                       >
                         <MenuItem value="Coupon Code">Coupon Code</MenuItem>
                         <MenuItem value="Points">Points</MenuItem>
@@ -920,7 +1046,9 @@ export const EditContestPage: React.FC = () => {
                         fullWidth
                         label="Coupon Code"
                         value={offer.couponCode}
-                        onChange={(e) => updateOffer(offer.id, "couponCode", e.target.value)}
+                        onChange={(e) =>
+                          updateOffer(offer.id, "couponCode", e.target.value)
+                        }
                         sx={textFieldSx}
                         size="small"
                         required
@@ -932,7 +1060,9 @@ export const EditContestPage: React.FC = () => {
                         fullWidth
                         label="Points"
                         value={offer.pointsValue}
-                        onChange={(e) => updateOffer(offer.id, "pointsValue", e.target.value)}
+                        onChange={(e) =>
+                          updateOffer(offer.id, "pointsValue", e.target.value)
+                        }
                         sx={textFieldSx}
                         size="small"
                         type="number"
@@ -942,12 +1072,19 @@ export const EditContestPage: React.FC = () => {
                     )}
 
                     {offer.rewardType === "Merchandise" && (
-                      <FormControl fullWidth size="small" sx={textFieldSx} required>
+                      <FormControl
+                        fullWidth
+                        size="small"
+                        sx={textFieldSx}
+                        required
+                      >
                         <InputLabel>Resource</InputLabel>
                         <MuiSelect
                           value={offer.resourceId}
                           label="Resource *"
-                          onChange={(e) => updateOffer(offer.id, "resourceId", e.target.value)}
+                          onChange={(e) =>
+                            updateOffer(offer.id, "resourceId", e.target.value)
+                          }
                         >
                           {loadingProducts ? (
                             <MenuItem disabled>Loading products...</MenuItem>
@@ -955,7 +1092,10 @@ export const EditContestPage: React.FC = () => {
                             <MenuItem disabled>No products available</MenuItem>
                           ) : (
                             products.map((product) => (
-                              <MenuItem key={product.id} value={product.id.toString()}>
+                              <MenuItem
+                                key={product.id}
+                                value={product.id.toString()}
+                              >
                                 {product.name}
                               </MenuItem>
                             ))
@@ -968,7 +1108,9 @@ export const EditContestPage: React.FC = () => {
                       fullWidth
                       label="Display Name"
                       value={offer.displayName}
-                      onChange={(e) => updateOffer(offer.id, "displayName", e.target.value)}
+                      onChange={(e) =>
+                        updateOffer(offer.id, "displayName", e.target.value)
+                      }
                       sx={textFieldSx}
                       size="small"
                     />
@@ -977,7 +1119,9 @@ export const EditContestPage: React.FC = () => {
                       fullWidth
                       label="Partner (if any)"
                       value={offer.partner}
-                      onChange={(e) => updateOffer(offer.id, "partner", e.target.value)}
+                      onChange={(e) =>
+                        updateOffer(offer.id, "partner", e.target.value)
+                      }
                       sx={textFieldSx}
                       size="small"
                     />
@@ -986,7 +1130,13 @@ export const EditContestPage: React.FC = () => {
                       fullWidth
                       label="Winning Probability"
                       value={offer.winningProbability}
-                      onChange={(e) => updateOffer(offer.id, "winningProbability", e.target.value)}
+                      onChange={(e) =>
+                        updateOffer(
+                          offer.id,
+                          "winningProbability",
+                          e.target.value
+                        )
+                      }
                       sx={textFieldSx}
                       size="small"
                       type="number"
@@ -998,7 +1148,9 @@ export const EditContestPage: React.FC = () => {
                       fullWidth
                       label="Total Quantity"
                       value={offer.totalQuantity}
-                      onChange={(e) => updateOffer(offer.id, "totalQuantity", e.target.value)}
+                      onChange={(e) =>
+                        updateOffer(offer.id, "totalQuantity", e.target.value)
+                      }
                       sx={textFieldSx}
                       size="small"
                       type="number"
@@ -1012,7 +1164,13 @@ export const EditContestPage: React.FC = () => {
                       fullWidth
                       label="Offer Description"
                       value={offer.offerDescription}
-                      onChange={(e) => updateOffer(offer.id, "offerDescription", e.target.value)}
+                      onChange={(e) =>
+                        updateOffer(
+                          offer.id,
+                          "offerDescription",
+                          e.target.value
+                        )
+                      }
                       variant="outlined"
                       multiline
                       rows={3}
@@ -1023,7 +1181,7 @@ export const EditContestPage: React.FC = () => {
                   <div className="mt-4">
                     <Typography variant="body2" className="text-gray-700 mb-2">
                       Upload Banner Image
-                      <span className="text-[#C72030]">*</span>
+                      <span className="text-[#1A1A18]">*</span>
                     </Typography>
 
                     {offer.existingImageUrl && !offer.bannerImage && (
@@ -1033,11 +1191,13 @@ export const EditContestPage: React.FC = () => {
                           alt="Current banner"
                           className="w-32 h-20 object-cover rounded border"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Current image</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Current image
+                        </p>
                       </div>
                     )}
 
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <div className="border-[1.5px] border-dashed border-[rgba(26,26,24,0.18)] rounded-[14px] bg-[#FAF9F7] p-6 text-center">
                       <p className="text-sm text-gray-600 mb-2">
                         {offer.bannerImageName ||
                           "Choose a file (jpg/png) 5 MB max. or drag & drop it here"}
@@ -1047,13 +1207,16 @@ export const EditContestPage: React.FC = () => {
                         id={`banner-${offer.id}`}
                         className="hidden"
                         onChange={(e) =>
-                          handleOfferBannerUpload(offer.id, e.target.files?.[0] || null)
+                          handleOfferBannerUpload(
+                            offer.id,
+                            e.target.files?.[0] || null
+                          )
                         }
                         accept="image/jpeg,image/png"
                       />
                       <label
                         htmlFor={`banner-${offer.id}`}
-                        className="inline-block bg-[#F6F4EE] text-[#C72030] px-4 py-2 rounded-md cursor-pointer hover:bg-[#EDEAE3] transition-colors border border-[#C72030]"
+                        className="btn-cancel inline-flex items-center h-9 px-4 text-sm font-medium cursor-pointer"
                       >
                         Browse
                       </label>
@@ -1065,7 +1228,7 @@ export const EditContestPage: React.FC = () => {
               <Button
                 onClick={addOffer}
                 variant="outline"
-                className="w-full border-2 border-dashed border-gray-300 text-gray-600 hover:border-[#C72030] hover:text-[#C72030]"
+                className="w-full h-10 border-[1.5px] border-dashed border-[rgba(26,26,24,0.18)] rounded-xl bg-white text-[rgba(26,26,24,0.68)] hover:border-[rgba(26,26,24,0.35)] hover:bg-[#FAF9F7] hover:text-[#1A1A18]"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Offer
@@ -1076,32 +1239,25 @@ export const EditContestPage: React.FC = () => {
 
       case 3:
         return (
-          <Card className="shadow-sm w-full">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6 bg-[#F6F4EE] p-4 rounded-lg">
+          <Card className="w-full rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none">
+            <CardContent className="px-6 py-[22px]">
+              <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                    <Trophy className="w-5 h-5 text-[#C72030]" />
+                  <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                    <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
                   </div>
-                  <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                  <h2 className="text-sm font-semibold text-[#1A1A18]">
                     Validity & Status
                   </h2>
                 </div>
                 <div className="flex items-center gap-3">
                   <Switch
                     checked={isActive}
-                    onChange={() => setIsActive(!isActive)}
-                    sx={{
-                      "& .MuiSwitch-switchBase.Mui-checked": {
-                        color: "#22c55e",
-                      },
-                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                        backgroundColor: "#22c55e",
-                      },
-                    }}
+                    onCheckedChange={setIsActive}
+                    aria-label="Toggle contest status"
                   />
                   <span
-                    className={`px-4 py-2 rounded-md text-sm font-medium ${isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+                    className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium text-black ${isActive ? "bg-[#C7EDDA]" : "bg-[#F2C8C4]"}`}
                   >
                     {isActive ? "Active" : "Inactive"}
                   </span>
@@ -1121,10 +1277,18 @@ export const EditContestPage: React.FC = () => {
                   InputLabelProps={{ shrink: true }}
                   sx={{
                     ...textFieldSx,
-                    '& input[type="date"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-month-field': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-day-field': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-year-field': { textTransform: 'uppercase' },
+                    '& input[type="date"]::-webkit-datetime-edit-text': {
+                      textTransform: "uppercase",
+                    },
+                    '& input[type="date"]::-webkit-datetime-edit-month-field': {
+                      textTransform: "uppercase",
+                    },
+                    '& input[type="date"]::-webkit-datetime-edit-day-field': {
+                      textTransform: "uppercase",
+                    },
+                    '& input[type="date"]::-webkit-datetime-edit-year-field': {
+                      textTransform: "uppercase",
+                    },
                   }}
                 />
 
@@ -1140,14 +1304,19 @@ export const EditContestPage: React.FC = () => {
                   InputLabelProps={{ shrink: true }}
                   inputProps={{
                     placeholder: "HH:MM",
-                    style: { textTransform: 'uppercase' }
+                    style: { textTransform: "uppercase" },
                   }}
                   sx={{
                     ...textFieldSx,
-                    '& input[type="time"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
-                    '& input[type="time"]::-webkit-datetime-edit-hour-field': { textTransform: 'uppercase' },
-                    '& input[type="time"]::-webkit-datetime-edit-minute-field': { textTransform: 'uppercase' },
-                    '& input::placeholder': { textTransform: 'uppercase' },
+                    '& input[type="time"]::-webkit-datetime-edit-text': {
+                      textTransform: "uppercase",
+                    },
+                    '& input[type="time"]::-webkit-datetime-edit-hour-field': {
+                      textTransform: "uppercase",
+                    },
+                    '& input[type="time"]::-webkit-datetime-edit-minute-field':
+                      { textTransform: "uppercase" },
+                    "& input::placeholder": { textTransform: "uppercase" },
                   }}
                 />
 
@@ -1166,10 +1335,18 @@ export const EditContestPage: React.FC = () => {
                   }}
                   sx={{
                     ...textFieldSx,
-                    '& input[type="date"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-month-field': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-day-field': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-year-field': { textTransform: 'uppercase' },
+                    '& input[type="date"]::-webkit-datetime-edit-text': {
+                      textTransform: "uppercase",
+                    },
+                    '& input[type="date"]::-webkit-datetime-edit-month-field': {
+                      textTransform: "uppercase",
+                    },
+                    '& input[type="date"]::-webkit-datetime-edit-day-field': {
+                      textTransform: "uppercase",
+                    },
+                    '& input[type="date"]::-webkit-datetime-edit-year-field': {
+                      textTransform: "uppercase",
+                    },
                   }}
                 />
               </div>
@@ -1187,18 +1364,26 @@ export const EditContestPage: React.FC = () => {
                   InputLabelProps={{ shrink: true }}
                   inputProps={{
                     placeholder: "HH:MM",
-                    style: { textTransform: 'uppercase' },
+                    style: { textTransform: "uppercase" },
                     min:
-                      startDate && endDate && startDate === endDate && /^\d{2}:\d{2}$/.test(startTime)
+                      startDate &&
+                      endDate &&
+                      startDate === endDate &&
+                      /^\d{2}:\d{2}$/.test(startTime)
                         ? startTime
                         : undefined,
                   }}
                   sx={{
                     ...textFieldSx,
-                    '& input[type="time"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
-                    '& input[type="time"]::-webkit-datetime-edit-hour-field': { textTransform: 'uppercase' },
-                    '& input[type="time"]::-webkit-datetime-edit-minute-field': { textTransform: 'uppercase' },
-                    '& input::placeholder': { textTransform: 'uppercase' },
+                    '& input[type="time"]::-webkit-datetime-edit-text': {
+                      textTransform: "uppercase",
+                    },
+                    '& input[type="time"]::-webkit-datetime-edit-hour-field': {
+                      textTransform: "uppercase",
+                    },
+                    '& input[type="time"]::-webkit-datetime-edit-minute-field':
+                      { textTransform: "uppercase" },
+                    "& input::placeholder": { textTransform: "uppercase" },
                   }}
                 />
 
@@ -1231,13 +1416,13 @@ export const EditContestPage: React.FC = () => {
       case 4:
         return (
           <div className="flex flex-col gap-6 w-full">
-            <Card className="shadow-sm w-full">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                    <Trophy className="w-5 h-5 text-[#C72030]" />
+            <Card className="w-full rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none">
+              <CardContent className="px-6 py-[22px]">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                    <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
                   </div>
-                  <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                  <h2 className="text-sm font-semibold text-[#1A1A18]">
                     Terms & Conditions
                   </h2>
                 </div>
@@ -1255,13 +1440,13 @@ export const EditContestPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm w-full">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                    <Trophy className="w-5 h-5 text-[#C72030]" />
+            <Card className="w-full rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none">
+              <CardContent className="px-6 py-[22px]">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                    <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
                   </div>
-                  <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                  <h2 className="text-sm font-semibold text-[#1A1A18]">
                     Redemption Guide
                   </h2>
                 </div>
@@ -1287,73 +1472,88 @@ export const EditContestPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 min-h-screen bg-gray-50">
+    <div className="p-4 sm:p-6 min-h-screen bg-white">
       {/* Header */}
-      <div className="mb-4">
-        <button
-          onClick={() => navigate(`/contests/${id}`)}
-          className="flex items-center gap-1 hover:text-gray-800 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Contest Details
-        </button>
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
+          <button
+            type="button"
+            onClick={() => navigate(`/contests/${id}`)}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Back to Contest Details"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Contests</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold text-[#1A1A18]">Edit Contest</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+          Edit Contest
+        </h1>
       </div>
 
       {/* Step Progress Indicator */}
-      <div className="mb-4">
-        <div className="relative w-full">
-          <div
-            className="absolute top-8 left-0 right-0 h-0.5"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(to right, #9CA3AF 0, #9CA3AF 6px, transparent 6px, transparent 12px)",
-              height: "2px",
-            }}
-          ></div>
-
-          <div className="relative flex justify-between items-start">
-            {steps.map((step) => (
-              <div
+      <nav aria-label="Contest creation steps" className="mb-4">
+        <ol className="flex items-center w-full">
+          {steps.map((step, index) => {
+            const isReachable =
+              step.id <= Math.max(...completedSteps, currentStep);
+            return (
+              <li
                 key={step.id}
-                className={`flex flex-col items-center ${step.id <= Math.max(...completedSteps, currentStep)
-                  ? "cursor-pointer"
-                  : "cursor-not-allowed opacity-100"
-                  }`}
-                onClick={() => handleStepClick(step.id)}
+                className={`flex items-center ${index < steps.length - 1 ? "flex-1" : ""}`}
               >
-                <div className="py-2 px-3 rounded text-white font-semibold bg-white">
-                  <div
-                    className={`
-                    px-6 py-3 rounded text-white font-semibold text-xs relative z-5 transition-colors whitespace-nowrap
-                    ${step.active || step.completed || step.id < currentStep ? "bg-[#C72030]" : "bg-gray-400"}
-                  `}
-                  >
+                <button
+                  type="button"
+                  aria-current={step.active ? "step" : undefined}
+                  aria-disabled={!isReachable}
+                  disabled={!isReachable}
+                  onClick={() => handleStepClick(step.id)}
+                  style={step.active ? { color: "#ffffff" } : undefined}
+                  className={`flex-1 flex items-center justify-center text-center h-10 px-4 sm:px-5 rounded-xl border text-xs sm:text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1A18] ${
+                    isReachable ? "cursor-pointer" : "cursor-not-allowed"
+                  } ${
+                    step.active
+                      ? "bg-[#1A1A18] border-[#1A1A18]"
+                      : "bg-white border-[rgba(26,26,24,0.09)] text-[rgba(26,26,24,0.68)] hover:text-[#1A1A18]"
+                  }`}
+                >
+                  <span style={step.active ? { color: "#ffffff" } : undefined}>
                     {step.id}. {step.title}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+                  </span>
+                </button>
+                {index < steps.length - 1 && (
+                  <div
+                    aria-hidden="true"
+                    className="flex-1 h-0 mx-0.5 self-center"
+                    style={{ borderTop: "1.5px dashed rgba(26, 26, 24, 0.18)" }}
+                  ></div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
 
       {/* Step Content */}
-      <div className="w-full px-6">
+      <div className="w-full">
         {renderStepContent()}
 
         {/* Action Buttons */}
-        <div className="flex justify-center gap-4 mt-6">
+        <div className="flex justify-end gap-2 mt-6">
           <Button
             onClick={() => navigate(`/contests/${id}`)}
             variant="outline"
-            className="bg-[#F6F4EE] text-[#C72030] border-[#C72030] hover:bg-[#EDEAE3]"
+            disabled={submitting}
+            className="btn-cancel h-9 px-4 text-sm font-medium"
           >
             Cancel
           </Button>
           {currentStep < 4 ? (
             <Button
               onClick={handleNext}
-              className="bg-[#C72030] text-white hover:bg-[#B71C1C]"
+              className="btn-primary h-9 px-4 text-sm font-medium"
               disabled={submitting}
             >
               Proceed to next
@@ -1362,7 +1562,7 @@ export const EditContestPage: React.FC = () => {
             <Button
               onClick={handleSubmit}
               disabled={submitting}
-              className="bg-[#C72030] text-white hover:bg-[#B71C1C]"
+              className="btn-primary h-9 px-4 text-sm font-medium"
             >
               {submitting ? "Updating..." : "Update Contest"}
             </Button>
@@ -1405,7 +1605,7 @@ export const EditContestPage: React.FC = () => {
 
               <button
                 onClick={handleViewDetails}
-                className="text-[#C72030] font-medium hover:underline"
+                className="text-[#1A1A18] font-medium hover:underline"
               >
                 View details
               </button>

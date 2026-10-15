@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Plus, Eye, Edit, X } from 'lucide-react';
+import { Plus, Eye, Edit, X, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
@@ -275,12 +275,12 @@ const LoyaltyTiersList = () => {
   };
 
   const columns = [
+    { key: 'actions', label: 'Actions', sortable: false },
     { key: 'name', label: 'Tier Name', sortable: true },
     { key: 'exit_points', label: 'Exit Points', sortable: true },
     // { key: 'multipliers', label: 'Multipliers', sortable: true },
     { key: 'welcome_bonus', label: 'Welcome Bonus', sortable: true },
     { key: 'member_count', label: 'Member Count', sortable: true },
-    { key: 'actions', label: 'Actions', sortable: false },
   ];
 
   const renderCell = (item: LoyaltyTier, columnKey: string) => {
@@ -344,7 +344,7 @@ const LoyaltyTiersList = () => {
         pagination={false}
         enableExport={false}
         exportFileName="loyalty-tiers"
-        storageKey="loyalty-tiers-table"
+        storageKey="loyalty-tiers-table-v2"
         enableGlobalSearch={true}
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search tiers..."
@@ -454,15 +454,17 @@ const LoyaltyTiersList = () => {
       {/* Edit Modal */}
       {showModal && (
         <>
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900">Edit Tier</h3>
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-[rgba(26,26,24,0.08)]">
+                <h3 className="text-lg font-semibold text-[#1A1A18]">Edit Tier</h3>
                 <button
+                  type="button"
                   onClick={handleCloseModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="flex items-center justify-center w-8 h-8 rounded-lg text-[rgba(26,26,24,0.55)] hover:bg-[#F5F4F0] hover:text-[#1A1A18] transition-colors"
+                  aria-label="Close"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
               <div className="p-6">
@@ -482,38 +484,38 @@ const LoyaltyTiersList = () => {
                   >
                     {({ values, handleChange }) => (
                       <Form>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           {/* Tier Name */}
                           <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-700">
+                            <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,0.68)]">
                               Tier Name
                               <span className="text-red-500 ml-1">*</span>
                             </label>
                             <Field
                               type="text"
                               name="name"
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                              className="w-full h-11 px-3.5 text-[13.5px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.08)] rounded-xl outline-none transition-shadow placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus:border-[#1A1A18] focus:shadow-[0_0_0_4px_rgba(26,26,24,0.1)]"
                             />
                             <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
 
                           {/* Title */}
                           <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-700">
+                            <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,0.68)]">
                               Title
                               <span className="text-red-500 ml-1">*</span>
                             </label>
                             <Field
                               type="text"
                               name="title"
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                              className="w-full h-11 px-3.5 text-[13.5px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.08)] rounded-xl outline-none transition-shadow placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus:border-[#1A1A18] focus:shadow-[0_0_0_4px_rgba(26,26,24,0.1)]"
                             />
                             <ErrorMessage name="title" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
 
                           {/* Exit Points */}
                           <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-700">
+                            <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,0.68)]">
                               Exit Points
                               <span className="text-red-500 ml-1">*</span>
                             </label>
@@ -522,14 +524,14 @@ const LoyaltyTiersList = () => {
                               name="exit_points"
                               value={values.exit_points}
                               onChange={handleChange}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                              className="w-full h-11 px-3.5 text-[13.5px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.08)] rounded-xl outline-none transition-shadow placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus:border-[#1A1A18] focus:shadow-[0_0_0_4px_rgba(26,26,24,0.1)]"
                             />
                             <ErrorMessage name="exit_points" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
 
                           {/* Multipliers */}
                           {/* <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-700">
+                            <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,0.68)]">
                               Multipliers
                               <span className="text-red-500 ml-1">*</span>
                             </label>
@@ -538,14 +540,14 @@ const LoyaltyTiersList = () => {
                               name="multipliers"
                               value={values.multipliers}
                               onChange={handleChange}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                              className="w-full h-11 px-3.5 text-[13.5px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.08)] rounded-xl outline-none transition-shadow placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus:border-[#1A1A18] focus:shadow-[0_0_0_4px_rgba(26,26,24,0.1)]"
                             />
                             <ErrorMessage name="multipliers" component="div" className="text-red-500 text-xs mt-1" />
                           </div> */}
 
                           {/* Welcome Bonus */}
                           <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-700">
+                            <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,0.68)]">
                               Welcome Bonus
                               <span className="text-red-500 ml-1">*</span>
                             </label>
@@ -554,33 +556,36 @@ const LoyaltyTiersList = () => {
                               name="welcome_bonus"
                               value={values.welcome_bonus}
                               onChange={handleChange}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
+                              className="w-full h-11 px-3.5 text-[13.5px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.08)] rounded-xl outline-none transition-shadow placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus:border-[#1A1A18] focus:shadow-[0_0_0_4px_rgba(26,26,24,0.1)]"
                             />
                             <ErrorMessage name="welcome_bonus" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
 
                           {/* Point Type */}
                           <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-700">
+                            <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,0.68)]">
                               Point Type
                               <span className="text-red-500 ml-1">*</span>
                             </label>
-                            <select
-                              name="point_type"
-                              onChange={handleChange}
-                              value={values.point_type}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
-                            >
-                              <option value="lifetime">Life Time</option>
-                              <option value="yearly">Yearly</option>
-                            </select>
+                            <div className="relative">
+                              <select
+                                name="point_type"
+                                onChange={handleChange}
+                                value={values.point_type}
+                                className="w-full h-11 px-3.5 text-[13.5px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.08)] rounded-xl outline-none transition-shadow placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus:border-[#1A1A18] focus:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] appearance-none pr-10 cursor-pointer"
+                              >
+                                <option value="lifetime">Life Time</option>
+                                <option value="yearly">Yearly</option>
+                              </select>
+                              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgba(26,26,24,0.45)]" />
+                            </div>
                             <ErrorMessage name="point_type" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
                         </div>
 
                         {/* Description - full width */}
-                        <div className="space-y-2 mt-6">
-                          <label className="block text-sm font-medium text-gray-700">
+                        <div className="space-y-2 mt-5">
+                          <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,0.68)]">
                             Description
                           </label>
                           <Field
@@ -588,25 +593,25 @@ const LoyaltyTiersList = () => {
                             name="description"
                             rows={3}
                             placeholder="Enter description"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none"
+                            className="w-full px-3.5 py-2.5 text-[13.5px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.08)] rounded-xl outline-none transition-shadow resize-none placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus:border-[#1A1A18] focus:shadow-[0_0_0_4px_rgba(26,26,24,0.1)]"
                           />
                           <ErrorMessage name="description" component="div" className="text-red-500 text-xs mt-1" />
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center justify-center gap-4 mt-8">
-                          <button
-                            type="submit"
-                            className="px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium"
-                          >
-                            Submit
-                          </button>
+                        <div className="flex items-center justify-end gap-2 mt-6 pt-5 border-t border-[rgba(26,26,24,0.08)]">
                           <button
                             type="button"
                             onClick={handleCloseModal}
-                            className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                            className="btn-cancel h-9 px-4 text-sm font-medium"
                           >
                             Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="btn-primary h-9 px-4 text-sm font-medium"
+                          >
+                            Submit
                           </button>
                         </div>
                       </Form>

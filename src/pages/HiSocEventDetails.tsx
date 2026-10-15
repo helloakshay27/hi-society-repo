@@ -194,25 +194,125 @@ const HiSocEventDetails = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
+    <div className="p-6 min-h-screen hi-soc-event-details-page">
+      <div className="mb-[22px]">
         <button
+          type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1 hover:text-gray-800 mb-4"
+          className="ref-back"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Hi Soc Event List
+          <ArrowLeft className="w-[18px] h-[18px]" />
+          Back to Event List
         </button>
-        <div className="flex items-center justify-between">
-          {/* <h1 className="text-2xl font-bold text-[#1a1a1a]">Event Details</h1> */}
-        </div>
+        <h1 className="mt-[14px] text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>
+          {eventData?.event_name || "Event Details"}
+        </h1>
       </div>
 
-      <div className="rounded-lg border-r border-b border-gray-200 shadow-sm" style={{ borderTop: 'none', borderLeft: 'none', backgroundColor: 'rgba(250, 250, 250, 1)' }}>
+      <div>
         <style>{`
-          .top-level-tabs button[data-state="active"] {
-            background-color: rgba(237, 234, 227, 1) !important;
-            color: rgba(199, 32, 48, 1) !important;
+          /* ---- Reference design ---- */
+          html body #root .hi-soc-event-details-page {
+            background-color: #FDFDFB !important;
+          }
+          html body #root .hi-soc-event-details-page .ref-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            background: transparent;
+            padding: 0;
+            color: rgba(26, 26, 24, 0.48);
+            font-size: 12.5px;
+            font-weight: 600;
+            transition: color 0.16s ease;
+          }
+          html body #root .hi-soc-event-details-page .ref-back:hover {
+            color: #1A1A18;
+          }
+          /* segmented tabs (reference .seg) */
+          html body #root .hi-soc-event-details-page .top-level-tabs {
+            display: inline-flex !important;
+            width: fit-content !important;
+            height: auto !important;
+            gap: 3px !important;
+            padding: 3px !important;
+            margin-bottom: 24px !important;
+            border-radius: 12px !important;
+            background-color: rgba(26, 26, 24, 0.055) !important;
+          }
+          html body #root .hi-soc-event-details-page .top-level-tabs button[role="tab"] {
+            width: auto !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            background-color: transparent !important;
+            color: rgba(26, 26, 24, 0.55) !important;
+            font-family: inherit !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            box-shadow: none !important;
+            transition: all 0.16s ease;
+          }
+          html body #root .hi-soc-event-details-page .top-level-tabs button[role="tab"]:hover {
+            color: #1A1A18 !important;
+          }
+          html body #root .hi-soc-event-details-page .top-level-tabs button[role="tab"][data-state="active"] {
+            background-color: #FFFFFF !important;
+            color: #1A1A18 !important;
+            box-shadow: 0 1px 2px rgba(26, 26, 24, 0.1), 0 0 0 1px rgba(26, 26, 24, 0.05) !important;
+          }
+          /* tab panels sit directly on the canvas */
+          html body #root .hi-soc-event-details-page [role="tabpanel"] {
+            padding: 0 !important;
+            background-color: transparent !important;
+          }
+          html body #root .hi-soc-event-details-page [role="tabpanel"] > * + * {
+            margin-top: 20px !important;
+          }
+          /* cards (reference .card) */
+          html body #root .hi-soc-event-details-page .bg-white.rounded-lg.shadow-sm.border {
+            border: 1px solid rgba(26, 26, 24, 0.09) !important;
+            border-radius: 16px !important;
+            box-shadow: none !important;
+            overflow: hidden;
+          }
+          html body #root .hi-soc-event-details-page .bg-white.rounded-lg.shadow-sm.border > div:first-child {
+            padding: 22px 24px 0 !important;
+            background: transparent !important;
+            border: none !important;
+          }
+          html body #root .hi-soc-event-details-page .bg-white.rounded-lg.shadow-sm.border > div:first-child .rounded-full {
+            display: none !important;
+          }
+          html body #root .hi-soc-event-details-page .bg-white.rounded-lg.shadow-sm.border > div:first-child h3 {
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            line-height: 1.4 !important;
+            text-transform: none !important;
+            color: #1A1A18 !important;
+          }
+          html body #root .hi-soc-event-details-page .bg-white.rounded-lg.shadow-sm.border > div:nth-child(2) {
+            background-color: #FFFFFF !important;
+            padding: 16px 24px 22px !important;
+          }
+          /* key / value grid (reference .kv) */
+          html body #root .hi-soc-event-details-page .bg-white.rounded-lg.shadow-sm.border .grid {
+            gap: 18px 24px !important;
+          }
+          html body #root .hi-soc-event-details-page .bg-white.rounded-lg.shadow-sm.border .flex.items-start.gap-2 {
+            flex-direction: column !important;
+            gap: 4px !important;
+          }
+          html body #root .hi-soc-event-details-page .bg-white.rounded-lg.shadow-sm.border p.text-sm.text-gray-500 {
+            min-width: 0 !important;
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            color: rgba(26, 26, 24, 0.48) !important;
+          }
+          html body #root .hi-soc-event-details-page .bg-white.rounded-lg.shadow-sm.border p.text-base {
+            font-size: 13.5px !important;
+            font-weight: 500 !important;
+            color: #1A1A18 !important;
           }
         `}</style>
         <Tabs defaultValue="event-details" className="w-full">
@@ -226,7 +326,7 @@ const HiSocEventDetails = () => {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030]"
+                className="data-[state=active]:bg-white data-[state=active]:text-[#1A1A18]"
                 style={{
                   width: '230px',
                   // height: '36px',

@@ -11,21 +11,12 @@ import {
   Trophy,
   Calendar,
   Clock,
-  Smile,
-} from "lucide-react";
+  Smile, ChevronRight } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import { emojis } from "@/utils/emojies";
 import Select from 'react-select';
-import {
-  TextField,
-  FormControl,
-  InputLabel,
-  Select as MuiSelect,
-  MenuItem,
-  Box,
-  Typography,
-  Switch,
-} from "@mui/material";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Box, Typography } from "@mui/material";
+import { Switch } from "@/components/ui/switch";
 
 interface ContestStep {
   id: number;
@@ -729,11 +720,12 @@ export const CreateContestPage: React.FC = () => {
   const textFieldSx = {
     "& .MuiOutlinedInput-root": {
       backgroundColor: "white",
-      "& fieldset": { borderColor: "#e5e7eb" },
-      "&:hover fieldset": { borderColor: "#C72030" },
-      "&.Mui-focused fieldset": { borderColor: "#C72030" },
+      borderRadius: "12px",
+      "& fieldset": { borderColor: "rgba(26, 26, 24, 0.08)", borderRadius: "12px" },
+      "&:hover fieldset": { borderColor: "#1A1A18" },
+      "&.Mui-focused fieldset": { borderColor: "#1A1A18" },
     },
-    "& .MuiInputLabel-root.Mui-focused": { color: "#C72030" },
+    "& .MuiInputLabel-root.Mui-focused": { color: "#1A1A18" },
   };
 
   // CustomMultiValue Component for react-select
@@ -797,8 +789,8 @@ export const CreateContestPage: React.FC = () => {
         type="button"
         onMouseOver={(e) => {
           (e.currentTarget as HTMLButtonElement).style.background = "#f6f4ee";
-          (e.currentTarget as HTMLButtonElement).style.color = "#C72030";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "#C72030";
+          (e.currentTarget as HTMLButtonElement).style.color = "#1A1A18";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "#1A1A18";
         }}
         onMouseOut={(e) => {
           (e.currentTarget as HTMLButtonElement).style.background = "transparent";
@@ -816,12 +808,12 @@ export const CreateContestPage: React.FC = () => {
     control: (provided: any, state: any) => ({
       ...provided,
       minHeight: "44px",
-      borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
+      borderColor: state.isFocused ? "#1A1A18" : "#dcdcdc",
       boxShadow: "none",
       fontSize: "14px",
       paddingTop: "6px",
       backgroundColor: "transparent",
-      "&:hover": { borderColor: "#C72030" },
+      "&:hover": { borderColor: "#1A1A18" },
     }),
     valueContainer: (provided: any) => ({
       ...provided,
@@ -832,8 +824,8 @@ export const CreateContestPage: React.FC = () => {
     dropdownIndicator: (provided: any, state: any) => ({
       ...provided,
       padding: "4px 8px",
-      color: state.isFocused ? "#C72030" : "#666",
-      "&:hover": { color: "#C72030" },
+      color: state.isFocused ? "#1A1A18" : "#666",
+      "&:hover": { color: "#1A1A18" },
     }),
     indicatorSeparator: () => ({ display: "none" }),
     placeholder: (provided: any) => ({
@@ -850,7 +842,7 @@ export const CreateContestPage: React.FC = () => {
     option: (provided: any, state: any) => ({
       ...provided,
       backgroundColor: state.isSelected
-        ? "#C72030"
+        ? "#1A1A18"
         : state.isFocused
           ? "#F6F4EE"
           : "#fff",
@@ -863,7 +855,7 @@ export const CreateContestPage: React.FC = () => {
         color: "#1A1A1A",
       },
       "&:active": {
-        backgroundColor: "#C72030",
+        backgroundColor: "#1A1A18",
         color: "#fff",
       },
     }),
@@ -883,13 +875,13 @@ export const CreateContestPage: React.FC = () => {
     switch (currentStep) {
       case 1:
         return (
-          <Card className="shadow-sm w-full">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                  <Trophy className="w-5 h-5 text-[#C72030]" />
+          <Card className="w-full rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none">
+            <CardContent className="px-6 py-[22px]">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                  <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
                 </div>
-                <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                <h2 className="text-sm font-semibold text-[#1A1A18]">
                   Basic Contest Info
                 </h2>
               </div>
@@ -923,7 +915,7 @@ export const CreateContestPage: React.FC = () => {
               </div>
 
               <div className="mt-6">
-                <div className="relative w-full border border-gray-300 rounded-lg bg-white">
+                <div className="relative w-full border border-[rgba(26,26,24,0.08)] rounded-xl bg-white transition-colors hover:border-[rgba(26,26,24,0.28)] focus-within:border-[#1A1A18]">
                   {/* Floating Label */}
                   <label className="absolute -top-2 left-3 bg-white px-1 text-[12.5px] text-black pointer-events-none">
                     Contest Description <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
@@ -987,13 +979,13 @@ export const CreateContestPage: React.FC = () => {
 
       case 2:
         return (
-          <Card className="shadow-sm w-full">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                  <Trophy className="w-5 h-5 text-[#C72030]" />
+          <Card className="w-full rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none">
+            <CardContent className="px-6 py-[22px]">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                  <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
                 </div>
-                <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                <h2 className="text-sm font-semibold text-[#1A1A18]">
                   Offers & Vouchers
                 </h2>
               </div>
@@ -1001,18 +993,18 @@ export const CreateContestPage: React.FC = () => {
               {offers.map((offer, index) => (
                 <div
                   key={offer.id}
-                  className="border border-gray-200 rounded-lg p-6 mb-4 relative"
+                  className="border border-[rgba(26,26,24,0.09)] rounded-xl p-5 mb-4 relative"
                 >
                   {offers.length > 1 && (
                     <button
                       onClick={() => removeOffer(offer.id)}
-                      className="absolute top-4 right-4 text-[#C72030] hover:text-red-800"
+                      className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 rounded-lg text-[rgba(26,26,24,0.55)] hover:bg-[#F5F4F0] hover:text-[#1A1A18] transition-colors"
                     >
                       <X size={20} />
                     </button>
                   )}
 
-                  <h3 className="text-base font-semibold text-[#1A1A1A] mb-4">
+                  <h3 className="text-sm font-semibold text-[#1A1A18] mb-4">
                     {index + 1}.
                   </h3>
 
@@ -1179,7 +1171,7 @@ export const CreateContestPage: React.FC = () => {
                       Upload Banner Image
                       <span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                     </Typography>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <div className="border-[1.5px] border-dashed border-[rgba(26,26,24,0.18)] rounded-[14px] bg-[#FAF9F7] p-6 text-center">
                       <p className="text-sm text-gray-600 mb-2">
                         {offer.bannerImageName ||
                           "Choose a file (jpg/png) 5 MB max. or drag & drop it here"}
@@ -1195,7 +1187,7 @@ export const CreateContestPage: React.FC = () => {
                       />
                       <label
                         htmlFor={`banner-${offer.id}`}
-                        className="inline-block bg-[#F6F4EE] text-[#C72030] px-4 py-2 rounded-md cursor-pointer hover:bg-[#EDEAE3] transition-colors border border-[#C72030]"
+                        className="btn-cancel inline-flex items-center h-9 px-4 text-sm font-medium cursor-pointer"
                       >
                         Browse
                       </label>
@@ -1207,7 +1199,7 @@ export const CreateContestPage: React.FC = () => {
               <Button
                 onClick={addOffer}
                 variant="outline"
-                className="w-full border-2 border-dashed border-gray-300 text-gray-600 hover:border-[#C72030] hover:text-[#C72030]"
+                className="w-full h-10 border-[1.5px] border-dashed border-[rgba(26,26,24,0.18)] rounded-xl bg-white text-[rgba(26,26,24,0.68)] hover:border-[rgba(26,26,24,0.35)] hover:bg-[#FAF9F7] hover:text-[#1A1A18]"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Offer
@@ -1221,32 +1213,25 @@ export const CreateContestPage: React.FC = () => {
         return (
           <div className="flex flex-col gap-6 w-full">
             {/* Validity & Status Card */}
-            <Card className="shadow-sm w-full">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6 bg-[#F6F4EE] p-4 rounded-lg">
+            <Card className="w-full rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none">
+              <CardContent className="px-6 py-[22px]">
+                <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                      <Trophy className="w-5 h-5 text-[#C72030]" />
+                    <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                      <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
                     </div>
-                    <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                    <h2 className="text-sm font-semibold text-[#1A1A18]">
                       Validity & Status
                     </h2>
                   </div>
                   <div className="flex items-center gap-3">
                     <Switch
                       checked={isActive}
-                      onChange={() => setIsActive(!isActive)}
-                      sx={{
-                        "& .MuiSwitch-switchBase.Mui-checked": {
-                          color: "#22c55e",
-                        },
-                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                          backgroundColor: "#22c55e",
-                        },
-                      }}
+                      onCheckedChange={setIsActive}
+                      aria-label="Toggle contest status"
                     />
                     <span
-                      className={`px-4 py-2 rounded-md text-sm font-medium ${isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+                      className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium text-black ${isActive ? "bg-[#C7EDDA]" : "bg-[#F2C8C4]"}`}
                     >
                       {isActive ? "Active" : "Inactive"}
                     </span>
@@ -1376,13 +1361,13 @@ export const CreateContestPage: React.FC = () => {
             </Card>
 
             {/* Share With Card */}
-            {/* <Card className="shadow-sm w-full">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                    <Trophy className="w-5 h-5 text-[#C72030]" />
+            {/* <Card className="w-full rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none">
+              <CardContent className="px-6 py-[22px]">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                    <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
                   </div>
-                  <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                  <h2 className="text-sm font-semibold text-[#1A1A18]">
                     Share With
                   </h2>
                 </div>
@@ -1399,7 +1384,7 @@ export const CreateContestPage: React.FC = () => {
                           setShareType(e.target.value);
                           setSelectedSocieties([]);
                         }}
-                        className="w-4 h-4 accent-[#C72030]"
+                        className="w-4 h-4 accent-[#1A1A18]"
                       />
                       <span className="text-[#1A1A1A] font-medium">All</span>
                     </label>
@@ -1410,7 +1395,7 @@ export const CreateContestPage: React.FC = () => {
                         value="individuals"
                         checked={shareType === "individuals"}
                         onChange={(e) => setShareType(e.target.value)}
-                        className="w-4 h-4 accent-[#C72030]"
+                        className="w-4 h-4 accent-[#1A1A18]"
                       />
                       <span className="text-[#1A1A1A] font-medium">Individuals</span>
                     </label>
@@ -1460,13 +1445,13 @@ export const CreateContestPage: React.FC = () => {
         // ... your original terms & redemption step (unchanged)
         return (
           <div className="flex flex-col gap-6 w-full">
-            <Card className="shadow-sm w-full">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                    <Trophy className="w-5 h-5 text-[#C72030]" />
+            <Card className="w-full rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none">
+              <CardContent className="px-6 py-[22px]">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                    <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
                   </div>
-                  <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                  <h2 className="text-sm font-semibold text-[#1A1A18]">
                     Terms & Conditions
                   </h2>
                 </div>
@@ -1485,13 +1470,13 @@ export const CreateContestPage: React.FC = () => {
             </Card>
 
 
-            <Card className="shadow-sm w-full">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                    <Trophy className="w-5 h-5 text-[#C72030]" />
+            <Card className="w-full rounded-2xl border border-[rgba(26,26,24,0.09)] shadow-none">
+              <CardContent className="px-6 py-[22px]">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-8 h-8 flex-none rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                    <Trophy className="w-3.5 h-3.5 text-[#1A1A18]" />
                   </div>
-                  <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                  <h2 className="text-sm font-semibold text-[#1A1A18]">
                     Redemption Guide
                   </h2>
                 </div>
@@ -1518,17 +1503,26 @@ export const CreateContestPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 min-h-screen bg-gray-50 create-contest-page">
+    <div className="p-4 sm:p-6 min-h-screen bg-white create-contest-page">
       <style>{`.create-contest-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Header */}
-      <div className="mb-4">
-        <button
-          onClick={() => navigate("/contests")}
-          className="flex items-center gap-1 hover:text-gray-800 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Contests
-        </button>
+      <div className="mb-[22px]">
+        <div className="flex items-center gap-2 text-[13px] font-medium mb-3 text-[rgba(26,26,24,0.48)]">
+          <button
+            type="button"
+            onClick={() => navigate("/contests")}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#F5F4F0] transition-colors"
+            aria-label="Back to Contests"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span>Contests</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="font-semibold text-[#1A1A18]">Create Contest</span>
+        </div>
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+          Create Contest
+        </h1>
       </div>
 
       {/* Step Progress Indicator */}
@@ -1545,12 +1539,12 @@ export const CreateContestPage: React.FC = () => {
                   disabled={!isReachable}
                   onClick={() => handleStepClick(step.id)}
                   style={step.active ? { color: "#ffffff" } : undefined}
-                  className={`flex-1 flex items-center justify-center text-center h-12 sm:h-[46px] px-5 sm:px-6  border text-xs sm:text-sm font-serif whitespace-nowrap shadow-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E67E56] ${
+                  className={`flex-1 flex items-center justify-center text-center h-10 px-4 sm:px-5 rounded-xl border text-xs sm:text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1A18] ${
                     isReachable ? "cursor-pointer" : "cursor-not-allowed"
                   } ${
                     step.active
-                      ? "bg-[#E67E56] border-[#E67E56]"
-                      : "bg-white border-[#E5E7EB] text-[#1A1A1A]"
+                      ? "bg-[#1A1A18] border-[#1A1A18]"
+                      : "bg-white border-[rgba(26,26,24,0.09)] text-[rgba(26,26,24,0.68)] hover:text-[#1A1A18]"
                   }`}
                 >
                   <span style={step.active ? { color: "#ffffff" } : undefined}>
@@ -1561,7 +1555,7 @@ export const CreateContestPage: React.FC = () => {
                   <div
                     aria-hidden="true"
                     className="flex-1 h-0 mx-0.5 self-center"
-                    style={{ borderTop: "2px dotted #C4B89D" }}
+                    style={{ borderTop: "1.5px dashed rgba(26, 26, 24, 0.18)" }}
                   ></div>
                 )}
               </li>
@@ -1571,22 +1565,25 @@ export const CreateContestPage: React.FC = () => {
       </nav>
 
       {/* Step Content */}
-      <div className="w-full px-6">
+      <div className="w-full">
         {renderStepContent()}
 
         {/* Action Buttons */}
-        <div className="flex justify-center gap-4 mt-6">
-          {/* <Button
-            onClick={handleSaveDraft}
-            variant="outline"
-            className="bg-[#F6F4EE] text-[#C72030] border-[#C72030] hover:bg-[#EDEAE3]"
-          >
-            Save to draft
-          </Button> */}
+        <div className="flex justify-end gap-2 mt-6">
+          {currentStep > 1 && (
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={submitting}
+              className="btn-cancel h-9 px-4 text-sm font-medium"
+            >
+              Back
+            </Button>
+          )}
           {currentStep < 4 ? (
             <Button
               onClick={handleNext}
-              className="bg-[#C72030] text-white hover:bg-[#B71C1C]"
+              className="btn-primary h-9 px-4 text-sm font-medium"
               disabled={submitting}
             >
               Proceed to next
@@ -1595,7 +1592,7 @@ export const CreateContestPage: React.FC = () => {
             <Button
               onClick={handleSubmit}
               disabled={submitting}
-              className="bg-[#C72030] text-white hover:bg-[#B71C1C]"
+              className="btn-primary h-9 px-4 text-sm font-medium"
             >
               {submitting ? "Submitting..." : "Submit"}
             </Button>
@@ -1638,7 +1635,7 @@ export const CreateContestPage: React.FC = () => {
 
               <button
                 onClick={handleViewDetails}
-                className="text-[#C72030] font-medium hover:underline"
+                className="text-[#1A1A18] font-medium hover:underline"
               >
                 View details
               </button>

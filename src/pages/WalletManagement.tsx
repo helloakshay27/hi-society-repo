@@ -297,7 +297,7 @@ export const WalletManagement = () => {
         // normalise casing
         const type = str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
         // determine text and background colours
-        let classes = "pl-4 pr-4 py-1 text-sm font-[400] rounded-[2px]"; // explicit left/right padding and 3px radius
+        let classes = "inline-flex items-center px-3 py-0.5 text-xs font-medium rounded-full"; // capsule
         if (type === "Debit" || type === "Dr") {
           classes += " bg-[#efcac4]";
         } else if (type === "Credit" || type === "Cr") {

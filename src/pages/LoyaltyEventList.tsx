@@ -708,7 +708,7 @@ const LoyaltyEventsList = () => {
   );
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
+    <div className="p-2 sm:p-4 lg:p-6 min-h-screen bg-white">
       <div className="w-full">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">

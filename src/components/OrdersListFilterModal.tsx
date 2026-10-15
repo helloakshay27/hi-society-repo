@@ -145,19 +145,19 @@ export const OrdersListFilterModal: React.FC<OrdersListFilterModalProps> = ({
           </FormControl>
         </div>
 
-        <div className="flex gap-3 pt-4">
-          <Button
-            onClick={handleApply}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"           >
-            Apply
-          </Button>
+        <div className="flex justify-end gap-2 pt-4">
           <Button
             onClick={handleReset}
             variant="outline"
-           className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+            className="btn-cancel h-9 px-4 text-sm font-medium"
           >
             Reset
+          </Button>
+          <Button
+            onClick={handleApply}
+            className="btn-primary h-9 px-4 text-sm font-medium"
+          >
+            Apply
           </Button>
         </div>
       </DialogContent>

@@ -1,16 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Box,
-  Paper,
-  Typography,
-  IconButton,
-  CircularProgress,
-  styled,
-  Chip,
-} from "@mui/material";
-import { Info, ArrowLeft, Pencil, Calendar, Link, FileText, Clock } from "lucide-react";
+import { Info, ArrowLeft, Pencil, Clock, Loader2 } from "lucide-react";
 import axios from "axios";
+import { OFFER_PAGE_STYLES } from "./offerPageStyles";
 
 interface Offer {
   id: number;
@@ -25,73 +17,18 @@ interface Offer {
   updated_at: string;
 }
 
-const SectionCard = styled(Paper)(() => ({
-  backgroundColor: "white",
-  boxShadow: "0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06)",
-  borderRadius: 0,
-  overflow: "hidden",
-  marginBottom: "24px",
-}));
-
-const SectionHeader = styled(Box)(() => ({
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  padding: "16px 24px",
-  backgroundColor: "#f9fafb",
-  borderBottom: "1px solid #e5e7eb",
-}));
-
-const RedIcon = styled(Box)(() => ({
-  color: "white",
-  backgroundColor: "#C72030",
-  borderRadius: "50%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "32px",
-  height: "32px",
-  flexShrink: 0,
-}));
-
-const FieldLabel = ({ children }: { children: React.ReactNode }) => (
-  <Typography
-    sx={{
-      fontSize: "12px",
-      fontWeight: 500,
-      color: "rgba(0,0,0,0.45)",
-      fontFamily: "Work Sans, sans-serif",
-      textTransform: "uppercase",
-      letterSpacing: "0.5px",
-      mb: 0.5,
-    }}
-  >
-    {children}
-  </Typography>
+const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div>
+    <div className="ref-kv-label">{label}</div>
+    <div className="ref-kv-value">{children || "-"}</div>
+  </div>
 );
 
-const FieldValue = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
-  <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-    {icon && <Box sx={{ color: "rgba(0,0,0,0.35)", display: "flex" }}>{icon}</Box>}
-    <Typography
-      sx={{
-        fontSize: "14px",
-        fontWeight: 500,
-        color: "#1A1A1A",
-        fontFamily: "Work Sans, sans-serif",
-        wordBreak: "break-word",
-      }}
-    >
-      {children || "-"}
-    </Typography>
-  </Box>
-);
-
-const statusStyles: Record<string, { bg: string; color: string; border: string }> = {
-  Active:    { bg: "#e6f4ea", color: "#1e7e34", border: "#a8d5b5" },
-  Inactive:  { bg: "#f3f4f6", color: "#4b5563", border: "#d1d5db" },
-  Expired:   { bg: "#fde8e8", color: "#c72030", border: "#f5c2c2" },
-  Scheduled: { bg: "#e0effe", color: "#1a56db", border: "#a4cafe" },
+const statusTone: Record<string, string> = {
+  Active: "success",
+  Inactive: "neutral",
+  Expired: "danger",
+  Scheduled: "warning",
 };
 
 function formatDate(val?: string) {
@@ -134,215 +71,97 @@ const BMSOfferViewPage: React.FC = () => {
       .finally(() => setIsFetching(false));
   }, [id]);
 
-  const statusStyle = offer?.status ? statusStyles[offer.status] ?? statusStyles.Inactive : statusStyles.Inactive;
+  const statusPill = offer?.status ? (
+    <span className={`ref-pill ref-pill-${statusTone[offer.status] ?? "neutral"}`}>
+      {offer.status}
+    </span>
+  ) : null;
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        backgroundColor: "#fafafa",
-        padding: "24px",
-        fontFamily: "Work Sans, sans-serif",
-      }}
-    >
-      <Box sx={{ maxWidth: "1400px", margin: "0 auto" }}>
-        {/* Page Header */}
-        <Paper
-          sx={{
-            backgroundColor: "#f6f4ee",
-            borderRadius: 0,
-            boxShadow: "0 1px 3px 0 rgba(0,0,0,0.1)",
-            marginBottom: "24px",
-            padding: "12px 24px",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <IconButton
-                onClick={() => navigate(-1)}
-                size="small"
-                sx={{ color: "#C72030", "&:hover": { backgroundColor: "#f6eaea" } }}
-              >
-                <ArrowLeft size={20} />
-              </IconButton>
-              <Typography
-                sx={{ fontSize: "20px", fontWeight: 600, color: "#1A1A1A", fontFamily: "Work Sans, sans-serif" }}
-              >
-                View Offer
-              </Typography>
-            </Box>
+    <div className="p-6 min-h-screen offer-ref-page">
+      <style>{OFFER_PAGE_STYLES}</style>
 
-            {/* Edit button */}
-            {offer && (
-              <IconButton
-                onClick={() => navigate(`/bms/offers/edit/${id}`)}
-                size="small"
-                sx={{
-                  color: "#C72030",
-                  border: "1px solid #C72030",
-                  borderRadius: 0,
-                  padding: "6px 14px",
-                  gap: 0.75,
-                  "&:hover": { backgroundColor: "#fff5f5" },
-                }}
-              >
-                <Pencil size={15} />
-                <Typography sx={{ fontSize: "13px", fontFamily: "Work Sans, sans-serif", fontWeight: 500 }}>
-                  Edit
-                </Typography>
-              </IconButton>
-            )}
-          </Box>
-        </Paper>
+      <button type="button" onClick={() => navigate(-1)} className="ref-back">
+        <ArrowLeft className="w-4 h-4" />
+        Back to Offers
+      </button>
 
-        {/* Details Section */}
-        <SectionCard>
-          <SectionHeader>
-            <RedIcon>
-              <Info size={16} />
-            </RedIcon>
-            <Typography
-              sx={{ fontSize: "16px", fontWeight: 600, color: "#1A1A1A", fontFamily: "Work Sans, sans-serif" }}
-            >
-              Offer Details
-            </Typography>
-            {offer?.status && (
-              <Chip
-                label={offer.status}
-                size="small"
-                sx={{
-                  ml: "auto",
-                  backgroundColor: statusStyle.bg,
-                  color: statusStyle.color,
-                  border: `1px solid ${statusStyle.border}`,
-                  borderRadius: "4px",
-                  fontFamily: "Work Sans, sans-serif",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                }}
-              />
-            )}
-          </SectionHeader>
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+            View Offer
+          </h1>
+          {statusPill}
+        </div>
+        {offer && (
+          <button
+            type="button"
+            onClick={() => navigate(`/bms/offers/edit/${id}`)}
+            className="ref-edit-btn"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            Edit
+          </button>
+        )}
+      </div>
 
-          <Box sx={{ padding: "24px" }}>
-            {isFetching ? (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-                <CircularProgress size={32} sx={{ color: "#C72030" }} />
-              </Box>
-            ) : error ? (
-              <Typography
-                sx={{ textAlign: "center", color: "#C72030", fontFamily: "Work Sans, sans-serif", py: 4 }}
-              >
-                {error}
-              </Typography>
-            ) : offer ? (
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
-                  gap: "24px 32px",
-                }}
-              >
-                {/* Start Date */}
-                <Box>
-                  <FieldLabel>Start Date</FieldLabel>
-                  <FieldValue icon={<Calendar size={14} />}>{formatDate(offer.start_date)}</FieldValue>
-                </Box>
-
-                {/* End Date */}
-                <Box>
-                  <FieldLabel>End Date</FieldLabel>
-                  <FieldValue icon={<Calendar size={14} />}>{formatDate(offer.end_date)}</FieldValue>
-                </Box>
-
-                {/* Status */}
-                <Box>
-                  <FieldLabel>Status</FieldLabel>
-                  <FieldValue>{offer.status}</FieldValue>
-                </Box>
-
-                {/* URL */}
-                <Box sx={{ gridColumn: { md: "span 3" } }}>
-                  <FieldLabel>URL</FieldLabel>
+      {isFetching ? (
+        <div className="ref-card">
+          <div className="ref-card-body flex justify-center py-12">
+            <Loader2 className="w-7 h-7 animate-spin text-[rgba(26,26,24,0.48)]" />
+          </div>
+        </div>
+      ) : error ? (
+        <div className="ref-card">
+          <p className="ref-card-body text-center py-10 text-[13.5px] text-[#A63D49]">{error}</p>
+        </div>
+      ) : offer ? (
+        <div className="space-y-6">
+          <div className="ref-card">
+            <div className="ref-card-head">
+              <span className="ref-chip">
+                <Info />
+              </span>
+              <h2>Offer Details</h2>
+            </div>
+            <div className="ref-card-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+              <Field label="Start Date">{formatDate(offer.start_date)}</Field>
+              <Field label="End Date">{formatDate(offer.end_date)}</Field>
+              <Field label="Status">{statusPill}</Field>
+              <div className="sm:col-span-2 lg:col-span-3">
+                <Field label="URL">
                   {offer.url ? (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                      <Link size={14} color="rgba(0,0,0,0.35)" />
-                      <Typography
-                        component="a"
-                        href={offer.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        sx={{
-                          fontSize: "14px",
-                          fontWeight: 500,
-                          fontFamily: "Work Sans, sans-serif",
-                          color: "#1a56db",
-                          textDecoration: "underline",
-                          wordBreak: "break-all",
-                        }}
-                      >
-                        {offer.url}
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <FieldValue>-</FieldValue>
-                  )}
-                </Box>
+                    <a href={offer.url} target="_blank" rel="noopener noreferrer" className="ref-link">
+                      {offer.url}
+                    </a>
+                  ) : null}
+                </Field>
+              </div>
+              <div className="sm:col-span-2 lg:col-span-3">
+                <Field label="Description">
+                  <span className="whitespace-pre-wrap leading-relaxed">
+                    {offer.description || "No description provided"}
+                  </span>
+                </Field>
+              </div>
+            </div>
+          </div>
 
-                {/* Description */}
-                <Box sx={{ gridColumn: { md: "span 3" } }}>
-                  <FieldLabel>Description</FieldLabel>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: 0.75,
-                    }}
-                  >
-                    <Box sx={{ color: "rgba(0,0,0,0.35)", display: "flex", mt: "2px" }}>
-                      <FileText size={14} />
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontSize: "14px",
-                        fontWeight: 500,
-                        color: offer.description ? "#1A1A1A" : "rgba(0,0,0,0.35)",
-                        fontFamily: "Work Sans, sans-serif",
-                        lineHeight: 1.6,
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {offer.description || "No description provided"}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Divider */}
-                <Box
-                  sx={{
-                    gridColumn: { md: "span 3" },
-                    borderTop: "1px solid #e5e7eb",
-                    my: 0.5,
-                  }}
-                />
-
-                {/* Created At */}
-                <Box>
-                  <FieldLabel>Created At</FieldLabel>
-                  <FieldValue icon={<Clock size={14} />}>{formatDateTime(offer.created_at)}</FieldValue>
-                </Box>
-
-                {/* Updated At */}
-                <Box>
-                  <FieldLabel>Last Updated</FieldLabel>
-                  <FieldValue icon={<Clock size={14} />}>{formatDateTime(offer.updated_at)}</FieldValue>
-                </Box>
-              </Box>
-            ) : null}
-          </Box>
-        </SectionCard>
-      </Box>
-    </Box>
+          <div className="ref-card">
+            <div className="ref-card-head">
+              <span className="ref-chip">
+                <Clock />
+              </span>
+              <h2>Record Info</h2>
+            </div>
+            <div className="ref-card-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+              <Field label="Created At">{formatDateTime(offer.created_at)}</Field>
+              <Field label="Last Updated">{formatDateTime(offer.updated_at)}</Field>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 };
 

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Upload, X, Loader2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, ClipboardList, CreditCard, Loader2, Plus, Receipt, Upload, UserRound, X } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
     TextField,
@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { toast } from "sonner";
+import { CLUB_MEMBER_STYLES } from "@/pages/clubMemberStyles";
 
 interface MemberForm {
     id: string; // Front-end ID (timestamp) or Backend ID
@@ -41,21 +42,7 @@ interface MemberForm {
 }
 
 const fieldStyles = {
-    backgroundColor: '#fff',
-    borderRadius: '4px',
-    '& .MuiOutlinedInput-root': {
-        '& fieldset': {
-            borderColor: '#ddd',
-        },
-        '&.Mui-focused fieldset': {
-            borderColor: '#C72030',
-        },
-    },
-    '& .MuiInputLabel-root': {
-        '&.Mui-focused': {
-            color: '#C72030',
-        },
-    },
+    backgroundColor: "#fff",
 };
 
 const fileToBase64 = (file: File): Promise<string> => {
@@ -406,37 +393,48 @@ const EditCMSClubMembers = () => {
 
     if (loading) {
         return (
-            <div className="bg-gray-50 h-screen flex items-center justify-center">
+            <div className="bg-[#FDFDFB] h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading club members...</p>
+                    <div className="animate-spin rounded-full h-10 w-10 border-2 border-[rgba(26,26,24,0.12)] border-t-[#1A1A18] mx-auto mb-4"></div>
+                    <p className="text-[13px] text-[rgba(26,26,24,0.55)]">Loading club members...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="p-6 bg-white min-h-screen">
-            <div className="mb-4 space-y-3">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-2"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    <p className="text-gray-600 text-sm">Back</p>
-                </button>
-
-                <h2 className="text-lg font-semibold text-[#1a1a1a] mb-2">Edit Club Member</h2>
+        <div className="p-6 min-h-screen club-member-page">
+            <style>{CLUB_MEMBER_STYLES}</style>
+            <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-[#1A1A18] hover:bg-[#F5F4F0] transition-colors"
+                        aria-label="Back"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                    </button>
+                    <span className="text-[13px] text-[rgba(26,26,24,0.55)]">Club Members</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-[rgba(26,26,24,0.4)]" />
+                    <span className="text-[13px] font-semibold text-[#1A1A18]">Edit Member</span>
+                </div>
+                <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+                    Edit Club Member
+                </h1>
             </div>
 
             <div className="space-y-6">
                 {/* Plan Selection Card */}
-                <Card>
-                    <CardContent className="pt-6">
+                <Card className="ref-section">
+                    <CardContent className="ref-section-body">
                         <div className="space-y-4">
-                            <h2 className="text-lg font-semibold text-[#1a1a1a] mb-2">Select Membership Plan</h2>
+                            <div className="ref-head">
+                                <span className="ref-chip"><CreditCard /></span>
+                                <h2>Select Membership Plan</h2>
+                            </div>
                             {membershipPlans.length === 0 ? (
-                                <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed">
+                                <div className="text-center py-6 bg-[#FAF9F7] rounded-xl border border-dashed border-[rgba(26,26,24,0.15)]">
                                     <p className="text-gray-500 text-sm">No membership plans available.</p>
                                 </div>
                             ) : (
@@ -448,20 +446,20 @@ const EditCMSClubMembers = () => {
                                                 setGlobalMembershipPlanId(plan.id);
                                                 setEditablePlanCost(plan.price || "0");
                                             }}
-                                            className={`border-2 rounded-lg p-4 cursor-pointer transition-all relative ${globalMembershipPlanId === plan.id || globalMembershipPlanId === plan.id.toString()
-                                                ? 'border-[#C72030] bg-red-50'
-                                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                                            className={`border rounded-xl p-4 cursor-pointer transition-all relative ${globalMembershipPlanId === plan.id || globalMembershipPlanId === plan.id.toString()
+                                                ? 'border-[#1A1A18] bg-[#FAF9F7] ring-1 ring-[#1A1A18]'
+                                                : 'border-[rgba(26,26,24,0.1)] hover:border-[rgba(26,26,24,0.28)] bg-white'
                                                 }`}
                                         >
                                             <div className="flex items-start justify-between mb-2">
                                                 <div>
-                                                    <h4 className="font-bold text-gray-900">{plan.name}</h4>
+                                                    <h4 className="text-[14px] font-semibold text-[#1A1A18]">{plan.name}</h4>
                                                     <p className="text-xs text-gray-500 mt-1 capitalize">
                                                         {plan.renewal_terms} Membership
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-xl font-bold text-[#C72030]">₹{plan.price}</p>
+                                                    <p className="text-lg font-semibold text-[#1A1A18]">₹{plan.price}</p>
                                                     <p className="text-[10px] text-gray-400 capitalize">per {plan.renewal_terms}</p>
                                                 </div>
                                             </div>
@@ -471,7 +469,7 @@ const EditCMSClubMembers = () => {
                                                     <div className="flex flex-wrap gap-x-3 gap-y-1">
                                                         {plan.plan_amenities.slice(0, 3).map((amenity: any) => (
                                                             <div key={amenity.id} className="flex items-center gap-1">
-                                                                <div className="w-1 h-1 rounded-full bg-green-500"></div>
+                                                                <div className="w-1 h-1 rounded-full bg-[#798C5E]"></div>
                                                                 <span className="text-[11px] text-gray-600">
                                                                     {amenity.facility_setup_name || amenity.facility_setup?.name || 'Amenity'}
                                                                 </span>
@@ -491,10 +489,13 @@ const EditCMSClubMembers = () => {
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardContent className="pt-6">
+                <Card className="ref-section">
+                    <CardContent className="ref-section-body">
                         <div className="space-y-6">
-                            <h2 className="text-lg font-semibold text-[#1a1a1a]">Membership Info</h2>
+                            <div className="ref-head">
+                                <span className="ref-chip"><ClipboardList /></span>
+                                <h2>Membership Info</h2>
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormControl required sx={fieldStyles}>
                                     <InputLabel className="bg-white px-1">Tower</InputLabel>
@@ -572,16 +573,19 @@ const EditCMSClubMembers = () => {
 
                 {/* Cost Summary Card */}
                 {globalMembershipPlanId && (
-                    <Card className="bg-gray-50 border-gray-200">
-                        <CardContent className="pt-6">
+                    <Card className="ref-section">
+                        <CardContent className="ref-section-body">
                             <div className="space-y-4">
-                                <h3 className="text-lg font-semibold text-[#1a1a1a]">Cost Summary</h3>
+                                <div className="ref-head">
+                                <span className="ref-chip"><Receipt /></span>
+                                <h2>Cost Summary</h2>
+                            </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Left Column: Inputs */}
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-4">
-                                            <label className="text-sm font-medium text-gray-700 w-32">Plan Cost (₹):</label>
+                                            <label className="text-[13px] font-medium text-[rgba(26,26,24,0.68)] w-32">Plan Cost (₹):</label>
                                             <TextField
                                                 value={editablePlanCost}
                                                 onChange={(e) => setEditablePlanCost(e.target.value)}
@@ -592,7 +596,7 @@ const EditCMSClubMembers = () => {
                                         </div>
 
                                         <div className="flex items-center gap-4">
-                                            <label className="text-sm font-medium text-gray-700 w-32">Discount (%):</label>
+                                            <label className="text-[13px] font-medium text-[rgba(26,26,24,0.68)] w-32">Discount (%):</label>
                                             <div className="flex items-center gap-2 flex-1">
                                                 <TextField
                                                     value={discountPercentage}
@@ -613,7 +617,7 @@ const EditCMSClubMembers = () => {
                                         </div>
 
                                         <div className="flex items-center gap-4">
-                                            <label className="text-sm font-medium text-gray-700 w-32">CGST (%):</label>
+                                            <label className="text-[13px] font-medium text-[rgba(26,26,24,0.68)] w-32">CGST (%):</label>
                                             <div className="flex items-center gap-2 flex-1">
                                                 <TextField
                                                     value={cgstPercentage}
@@ -629,7 +633,7 @@ const EditCMSClubMembers = () => {
                                         </div>
 
                                         <div className="flex items-center gap-4">
-                                            <label className="text-sm font-medium text-gray-700 w-32">SGST (%):</label>
+                                            <label className="text-[13px] font-medium text-[rgba(26,26,24,0.68)] w-32">SGST (%):</label>
                                             <div className="flex items-center gap-2 flex-1">
                                                 <TextField
                                                     value={sgstPercentage}
@@ -646,12 +650,12 @@ const EditCMSClubMembers = () => {
                                     </div>
 
                                     {/* Right Column: Calculations */}
-                                    <div className="bg-white p-4 rounded-md border border-gray-200 space-y-2">
+                                    <div className="bg-[#FAF9F7] p-4 rounded-xl border border-[rgba(26,26,24,0.08)] space-y-2">
                                         <div className="flex justify-between text-sm">
                                             <span className="text-gray-600">Plan Base Cost:</span>
                                             <span className="font-medium">₹{planCost.toFixed(2)}</span>
                                         </div>
-                                        <div className="flex justify-between text-sm text-red-600">
+                                        <div className="flex justify-between text-sm text-[#A63D49]">
                                             <span>Discount:</span>
                                             <span>-₹{discountAmount.toFixed(2)}</span>
                                         </div>
@@ -663,9 +667,9 @@ const EditCMSClubMembers = () => {
                                             <span className="text-gray-600">Total Tax (CGST + SGST):</span>
                                             <span className="font-medium">₹{(cgstAmount + sgstAmount).toFixed(2)}</span>
                                         </div>
-                                        <div className="border-t-2 border-double pt-2 flex justify-between items-center mt-2">
+                                        <div className="border-t border-[rgba(26,26,24,0.12)] pt-3 flex justify-between items-center mt-2">
                                             <span className="text-base font-bold text-gray-900">Total Amount:</span>
-                                            <span className="text-xl font-bold text-[#C72030]">₹{totalCost.toFixed(2)}</span>
+                                            <span className="text-xl font-semibold text-[#1A1A18]">₹{totalCost.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -679,20 +683,21 @@ const EditCMSClubMembers = () => {
                 {members.map((member, index) => {
                     if (member._destroy) return null;
                     return (
-                        <Card key={member.id} className="border shadow-sm">
-                            <CardContent className="pt-6">
-                                {index >= 0 && (
-                                    <div className="flex justify-end mb-2">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
+                        <Card key={member.id} className="ref-section">
+                            <CardContent className="ref-section-body">
+                                <div className="ref-head">
+                                    <span className="ref-chip"><UserRound /></span>
+                                    <h2>Member {members.filter((m) => !m._destroy).indexOf(member) + 1}</h2>
+                                    {index >= 0 && (
+                                        <button
+                                            type="button"
                                             onClick={() => removeMember(member.id)}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                            className="ref-remove-btn"
                                         >
-                                            <X className="w-4 h-4 mr-1" /> Remove Member
-                                        </Button>
-                                    </div>
-                                )}
+                                            <X /> Remove
+                                        </button>
+                                    )}
+                                </div>
 
                                 <div className="space-y-6">
                                     {/* User Selection Radio */}
@@ -791,7 +796,7 @@ const EditCMSClubMembers = () => {
                                             />
                                             <label
                                                 htmlFor={`club-membership-${member.id}`}
-                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                className="text-[13.5px] font-medium leading-none text-[#1A1A18] cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                             >
                                                 Club Membership
                                             </label>
@@ -823,7 +828,7 @@ const EditCMSClubMembers = () => {
                                             />
                                             <label
                                                 htmlFor={`access-card-${member.id}`}
-                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                className="text-[13.5px] font-medium leading-none text-[#1A1A18] cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                             >
                                                 Access Card Allocated / Face Base
                                             </label>
@@ -847,8 +852,8 @@ const EditCMSClubMembers = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {/* ID Card */}
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700">ID Card</label>
-                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer relative group">
+                                            <label className="text-[12px] font-semibold text-[rgba(26,26,24,0.68)]">ID Card</label>
+                                            <div className="ref-dropzone p-8 flex flex-col items-center justify-center text-center cursor-pointer relative group">
                                                 <input
                                                     type="file"
                                                     accept="image/*"
@@ -876,10 +881,10 @@ const EditCMSClubMembers = () => {
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <div className="w-12 h-12 mb-2 text-gray-400">
+                                                        <div className="w-8 h-8 mb-2">
                                                             <Upload className="w-full h-full" />
                                                         </div>
-                                                        <span className="text-xl font-medium text-gray-400">Upload</span>
+                                                        <span className="text-[13px] font-medium text-[rgba(26,26,24,0.55)]">Click to upload</span>
                                                     </>
                                                 )}
                                             </div>
@@ -887,8 +892,8 @@ const EditCMSClubMembers = () => {
 
                                         {/* Resident's Photo */}
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700">Resident's Photo</label>
-                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer relative group">
+                                            <label className="text-[12px] font-semibold text-[rgba(26,26,24,0.68)]">Resident's Photo</label>
+                                            <div className="ref-dropzone p-8 flex flex-col items-center justify-center text-center cursor-pointer relative group">
                                                 <input
                                                     type="file"
                                                     accept="image/*"
@@ -916,10 +921,10 @@ const EditCMSClubMembers = () => {
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <div className="w-12 h-12 mb-2 text-gray-400">
+                                                        <div className="w-8 h-8 mb-2">
                                                             <Upload className="w-full h-full" />
                                                         </div>
-                                                        <span className="text-xl font-medium text-gray-400">Upload</span>
+                                                        <span className="text-[13px] font-medium text-[rgba(26,26,24,0.55)]">Click to upload</span>
                                                     </>
                                                 )}
                                             </div>
@@ -933,19 +938,21 @@ const EditCMSClubMembers = () => {
                 })}
 
                 {/* Action Buttons */}
-                <div className="flex justify-center gap-4 pt-4">
+                <div className="flex justify-end gap-4">
                     <Button
+                        type="button"
                         variant="outline"
-                        className="border-green-600 text-green-600 hover:bg-green-50 min-w-[120px]"
+                        className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100 flex items-center gap-2"
                         onClick={addMember}
                         disabled={members.filter(m => !m._destroy).length === 8}
                     >
-                        Add Member
+                        <Plus className="w-4 h-4" /> Add Member
                     </Button>
                     <Button
                         onClick={handleSubmit}
+                        type="button"
                         disabled={submitting}
-                        className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                        className="btn-primary h-9 px-4 text-sm font-medium min-w-[90px] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {submitting ? "Updating..." : "Update"}
                     </Button>

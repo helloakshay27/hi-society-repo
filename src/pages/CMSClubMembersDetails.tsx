@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { API_CONFIG } from '@/config/apiConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogsTimeline } from '@/components/LogTimeline';
+import { CLUB_MEMBER_STYLES } from '@/pages/clubMemberStyles';
 import {
     Dialog,
     DialogTitle,
@@ -709,7 +710,7 @@ export const CMSClubMembersDetails = () => {
         return (
             <div className="p-4 sm:p-6 min-h-screen flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030]"></div>
+                    <div className="animate-spin rounded-full h-10 w-10 border-2 border-[rgba(26,26,24,0.12)] border-t-[#1A1A18]"></div>
                     <p className="text-gray-600">Loading membership data...</p>
                 </div>
             </div>
@@ -734,35 +735,37 @@ export const CMSClubMembersDetails = () => {
     const selectedBill = billDetails[selectedBillIndex];
 
     return (
-        <div className="p-4 sm:p-6 min-h-screen">
+        <div className="p-4 sm:p-6 min-h-screen club-member-page">
+            <style>{CLUB_MEMBER_STYLES}</style>
             {/* Header */}
             <div className="mb-6">
                 <button
+                    type="button"
                     onClick={handleBackToList}
-                    className="flex items-center gap-1 hover:text-gray-800 mb-4"
+                    className="ref-back"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back
+                    Back to Club Members
                 </button>
 
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-4">
-                            <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
+                            <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
                                 Membership #{membershipData.id}
                             </h1>
                             {/* {renderStatusBadge()} */}
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-[13px] text-[rgba(26,26,24,0.55)]">
                             {membershipData.club_members?.length || 0} Members • Start: {formatDate(membershipData.start_date)} - End: {formatDate(membershipData.end_date)}
                         </div>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                         <Button
                             onClick={() => setIsRenewDialogOpen(true)}
                             variant="outline"
-                            className="border-[#C72030] text-[#C72030]"
+                            className="ref-edit-btn"
                         >
                             <RefreshCw className="w-4 h-4 mr-2" />
                             Renew Membership
@@ -772,7 +775,7 @@ export const CMSClubMembersDetails = () => {
                                 <Button
                                     onClick={handleEdit}
                                     variant="outline"
-                                    className="border-[#C72030] text-[#C72030]"
+                                    className="ref-edit-btn"
                                 >
                                     <Edit className="w-4 h-4 mr-2" />
                                     Edit
@@ -784,58 +787,58 @@ export const CMSClubMembersDetails = () => {
             </div>
 
             {/* Main Content - Tabs */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="ref-tabs-card">
                 <Tabs defaultValue="overview" className="w-full" onValueChange={setActiveTab}>
-                    <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-auto p-0 text-sm justify-stretch">
+                    <TabsList className="ref-tabs">
                         <TabsTrigger
                             value="overview"
-                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                            className="ref-tab"
                         >
                             Group Overview
                         </TabsTrigger>
                         <TabsTrigger
                             value="members"
-                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                            className="ref-tab"
                         >
                             Members ({membershipData.club_members?.length || 0})
                         </TabsTrigger>
                         {membershipData.allocation_payment_detail && (
                             <TabsTrigger
                                 value="payment"
-                                className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                                className="ref-tab"
                             >
                                 Payment Details
                             </TabsTrigger>
                         )}
                         <TabsTrigger
                             value="bill"
-                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                            className="ref-tab"
                         >
                             Bill Details
                         </TabsTrigger>
                         <TabsTrigger
                             value="member-details"
-                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                            className="ref-tab"
                         >
                             Member Details
                         </TabsTrigger>
                         <TabsTrigger
                             value="logs"
-                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                            className="ref-tab"
                         >
                             Logs
                         </TabsTrigger>
                         <TabsTrigger
                             value="renewal-logs"
-                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                            className="ref-tab"
                         >
                             Renewal Logs
                         </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="overview" className="p-4 sm:p-6">
-                        <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                            <User className="w-5 h-5 text-[#C72030]" />
+                        <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                            <User className="w-4 h-4 text-[#1A1A18]" />
                             Group Membership Information
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
@@ -854,7 +857,7 @@ export const CMSClubMembersDetails = () => {
                                             Loading...
                                         </span>
                                     ) : (
-                                        membershipPlanName || `Plan #${membershipData.membership_plan_id}`
+                                        membershipPlanName || (membershipData.membership_plan_id ? `Plan #${membershipData.membership_plan_id}` : '-')
                                     )}
                                 </span>
                             </div>
@@ -889,16 +892,16 @@ export const CMSClubMembersDetails = () => {
                     </TabsContent>
 
                     <TabsContent value="members" className="p-4 sm:p-6">
-                        <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                            <User className="w-5 h-5 text-[#C72030]" />
+                        <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                            <User className="w-4 h-4 text-[#1A1A18]" />
                             Group Members List
                         </h2>
                         <div className="space-y-3">
                             {membershipData.club_members?.map((member, index) => (
-                                <div key={member.id} className="border border-gray-200 rounded-lg p-4 hover:border-[#C72030] transition-colors">
+                                <div key={member.id} className="border border-[rgba(26,26,24,0.09)] rounded-xl p-4 hover:border-[rgba(26,26,24,0.24)] transition-colors">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-start gap-3">
-                                            <div className="bg-[#C72030] text-white rounded-full w-10 h-10 flex items-center justify-center text-sm font-semibold">
+                                            <div className="bg-[#F5F4F0] text-[#1A1A18] rounded-full w-10 h-10 flex items-center justify-center text-sm font-semibold">
                                                 {index + 1}
                                             </div>
                                             <div>
@@ -917,7 +920,7 @@ export const CMSClubMembersDetails = () => {
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-2 items-end">
-                                            <Badge variant={member.club_member_check ? "default" : "secondary"}>
+                                            <Badge className={`ref-pill ${member.club_member_check ? "is-success" : "is-neutral"}`}>
                                                 {member.club_member_check ? 'Active' : 'Inactive'}
                                             </Badge>
                                             {/* <Button
@@ -940,8 +943,8 @@ export const CMSClubMembersDetails = () => {
                     {membershipData.allocation_payment_detail && (
                         <TabsContent value="payment" className="p-4 sm:p-6">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                                    <CreditCard className="w-5 h-5 text-[#C72030]" />
+                                <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                                    <CreditCard className="w-4 h-4 text-[#1A1A18]" />
                                     Payment Information
                                 </h2>
 
@@ -949,7 +952,7 @@ export const CMSClubMembersDetails = () => {
                                     membershipData.allocation_payment_detail.payment_status.toLowerCase() === 'pending') && (
                                         <Button
                                             onClick={() => setIsCaptureDialogOpen(true)}
-                                            className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                                            className="btn-primary h-9 px-4 text-sm font-medium flex items-center gap-2"
                                         >
                                             Capture Payment
                                         </Button>
@@ -1008,7 +1011,7 @@ export const CMSClubMembersDetails = () => {
                                     <span className="text-gray-500 min-w-[140px]">Payment Status</span>
                                     <span className="text-gray-500 mx-2">:</span>
                                     <div className="flex items-center gap-2">
-                                        <Badge variant={membershipData.allocation_payment_detail.payment_status === 'success' ? "default" : "secondary"} className="capitalize">
+                                        <Badge className={`ref-pill capitalize ${membershipData.allocation_payment_detail.payment_status === 'success' ? "is-success" : "is-warning"}`}>
                                             {membershipData.allocation_payment_detail.payment_status ?? "Pending"}
                                         </Badge>
                                     </div>
@@ -1023,11 +1026,11 @@ export const CMSClubMembersDetails = () => {
 
                             {membershipData.allocation_payment_detail.paid_bills && membershipData.allocation_payment_detail.paid_bills.length > 0 && (
                                 <div className="mt-6">
-                                    <h3 className="text-base font-semibold text-[#1a1a1a] mb-3 flex items-center gap-2">
-                                        <CreditCard className="w-4 h-4 text-[#C72030]" />
+                                    <h3 className="text-[14px] font-semibold text-[#1A1A18] mb-3 flex items-center gap-2">
+                                        <CreditCard className="w-4 h-4 text-[#1A1A18]" />
                                         Paid Bills
                                     </h3>
-                                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                                    <div className="overflow-x-auto rounded-xl border border-[rgba(26,26,24,0.09)]">
                                         <table className="w-full text-sm">
                                             <thead className="bg-gray-50 border-b border-gray-200">
                                                 <tr>
@@ -1063,7 +1066,7 @@ export const CMSClubMembersDetails = () => {
                                                             {bill.lock_payment?.paid_date ? formatDateTime(bill?.lock_payment?.paid_date) : '-'}
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <Badge className="bg-green-100 text-green-800 border-0 capitalize">
+                                                            <Badge className="bg-[rgba(121,140,94,0.18)] text-[#56683F] hover:bg-[rgba(121,140,94,0.18)] border-0 capitalize">
                                                                 {bill?.status}
                                                             </Badge>
                                                         </td>
@@ -1071,7 +1074,7 @@ export const CMSClubMembersDetails = () => {
                                                             {bill?.invoice_file ? (
                                                                 <button
                                                                     onClick={() => window.open(bill?.invoice_file!, '_blank')}
-                                                                    className="text-[#C72030] hover:underline flex items-center gap-1 text-xs font-medium"
+                                                                    className="text-[#1A1A18] underline-offset-2 hover:underline flex items-center gap-1 text-xs font-medium"
                                                                 >
                                                                     <Download className="w-3 h-3" />
                                                                     Download
@@ -1092,8 +1095,8 @@ export const CMSClubMembersDetails = () => {
 
 
                     <TabsContent value="bill" className="p-4 sm:p-6">
-                        <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                            <FileText className="w-5 h-5 text-[#C72030]" />
+                        <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                            <FileText className="w-4 h-4 text-[#1A1A18]" />
                             Billing Details
                         </h2>
 
@@ -1102,17 +1105,16 @@ export const CMSClubMembersDetails = () => {
                                 {membershipData.bills.map((bill) => {
                                     const getStatusColor = (status: string) => {
                                         const statusLower = status.toLowerCase();
-                                        if (statusLower === 'paid') return 'bg-green-100 text-green-800 border-green-200';
-                                        if (statusLower === 'pending') return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-                                        if (statusLower === 'overdue') return 'bg-red-100 text-red-800 border-red-200';
-                                        if (statusLower === 'cancelled') return 'bg-gray-100 text-gray-800 border-gray-200';
-                                        return 'bg-blue-100 text-blue-800 border-blue-200';
+                                        if (statusLower === 'paid') return 'bg-[rgba(121,140,94,0.18)] text-[#56683F] border-transparent hover:bg-[rgba(121,140,94,0.18)]';
+                                        if (statusLower === 'pending') return 'bg-[rgba(237,196,136,0.3)] text-[#85621F] border-transparent hover:bg-[rgba(237,196,136,0.3)]';
+                                        if (statusLower === 'overdue') return 'bg-[rgba(231,132,142,0.18)] text-[#A63D49] border-transparent hover:bg-[rgba(231,132,142,0.18)]';
+                                        return 'bg-[#F5F4F0] text-[#1A1A18] border-transparent hover:bg-[#F5F4F0]';
                                     };
 
                                     return (
                                         <div
                                             key={bill.id}
-                                            className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow"
+                                            className="bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl p-5 hover:border-[rgba(26,26,24,0.22)] transition-colors"
                                         >
                                             {/* Header with Bill Number and Status */}
                                             <div className="flex items-start justify-between mb-4">
@@ -1131,7 +1133,7 @@ export const CMSClubMembersDetails = () => {
                                             <div className="space-y-3 mb-4">
                                                 <div className="flex items-center justify-between text-sm">
                                                     <span className="text-gray-600">Total Amount</span>
-                                                    <span className="text-lg font-bold text-[#C72030]">
+                                                    <span className="text-lg font-semibold text-[#1A1A18]">
                                                         ₹{bill.total_amount?.toLocaleString('en-IN', {
                                                             minimumFractionDigits: 2,
                                                             maximumFractionDigits: 2
@@ -1153,7 +1155,7 @@ export const CMSClubMembersDetails = () => {
                                                     onClick={() => {
                                                         window.open(bill.invoice_file!, '_blank');
                                                     }}
-                                                    className="w-full px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center justify-center gap-2"
+                                                    className="w-full btn-primary h-9 px-4 text-sm font-medium flex items-center justify-center gap-2"
                                                 >
                                                     <Download className="w-3 h-3" />
                                                     Download Invoice
@@ -1169,7 +1171,7 @@ export const CMSClubMembersDetails = () => {
                                 })}
                             </div>
                         ) : (
-                            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="text-center py-12 bg-[#FAF9F7] rounded-2xl border border-dashed border-[rgba(26,26,24,0.12)]">
                                 <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                                 <p className="text-gray-600 font-medium">No bills available</p>
                                 <p className="text-sm text-gray-500 mt-1">Bills will appear here once generated</p>
@@ -1182,11 +1184,11 @@ export const CMSClubMembersDetails = () => {
                             <>
                                 {/* Member Selector */}
                                 <div className="mb-6">
-                                    <label className="text-sm font-medium text-gray-700 mb-2 block">Select Member</label>
+                                    <label className="text-[12px] font-semibold text-[rgba(26,26,24,0.68)] mb-2 block">Select Member</label>
                                     <select
                                         value={selectedMemberIndex}
                                         onChange={(e) => setSelectedMemberIndex(Number(e.target.value))}
-                                        className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030]"
+                                        className="w-full max-w-md h-11 px-3 rounded-xl border border-[rgba(26,26,24,0.1)] bg-white text-[13.5px] font-medium text-[#1A1A18] focus:outline-none focus:border-[#1A1A18] focus:ring-4 focus:ring-[rgba(26,26,24,0.1)]"
                                     >
                                         {membershipData.club_members?.map((member, index) => (
                                             <option key={member.id} value={index}>
@@ -1198,36 +1200,36 @@ export const CMSClubMembersDetails = () => {
 
                                 {/* Nested Tabs for Member Details */}
                                 <Tabs defaultValue="personal" className="w-full">
-                                    <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-lg h-auto p-0 text-xs justify-stretch mb-6">
+                                    <TabsList className="ref-tabs ref-tabs-sub">
                                         <TabsTrigger
                                             value="personal"
-                                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-2 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                                            className="ref-tab"
                                         >
                                             Personal Info
                                         </TabsTrigger>
                                         <TabsTrigger
                                             value="membership"
-                                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-2 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                                            className="ref-tab"
                                         >
                                             Membership
                                         </TabsTrigger>
                                         <TabsTrigger
                                             value="address"
-                                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-2 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                                            className="ref-tab"
                                         >
                                             Address
                                         </TabsTrigger>
                                         {selectedMember.snag_answers && selectedMember.snag_answers.length > 0 && (
                                             <TabsTrigger
                                                 value="questionnaires"
-                                                className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-2 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                                                className="ref-tab"
                                             >
                                                 Questionnaires
                                             </TabsTrigger>
                                         )}
                                         <TabsTrigger
                                             value="system"
-                                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-2 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                                            className="ref-tab"
                                         >
                                             System Info
                                         </TabsTrigger>
@@ -1235,8 +1237,8 @@ export const CMSClubMembersDetails = () => {
 
                                     {/* Personal Information Tab */}
                                     <TabsContent value="personal" className="mt-0">
-                                        <h3 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                                            <User className="w-5 h-5 text-[#C72030]" />
+                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                                            <User className="w-4 h-4 text-[#1A1A18]" />
                                             Personal Information
                                         </h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
@@ -1258,7 +1260,7 @@ export const CMSClubMembersDetails = () => {
                                             <div className="flex items-start">
                                                 <span className="text-gray-500 min-w-[140px]">Face Added</span>
                                                 <span className="text-gray-500 mx-2">:</span>
-                                                <Badge variant={selectedMember.face_added ? "default" : "secondary"}>
+                                                <Badge className={`ref-pill ${selectedMember.face_added ? "is-success" : "is-neutral"}`}>
                                                     {selectedMember.access_card_check ? 'Yes' : 'No'}
                                                 </Badge>
                                             </div>
@@ -1272,8 +1274,8 @@ export const CMSClubMembersDetails = () => {
 
                                     {/* Membership Details Tab */}
                                     <TabsContent value="membership" className="mt-0">
-                                        <h3 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                                            <CreditCard className="w-5 h-5 text-[#C72030]" />
+                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                                            <CreditCard className="w-4 h-4 text-[#1A1A18]" />
                                             Membership Details
                                         </h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
@@ -1285,14 +1287,14 @@ export const CMSClubMembersDetails = () => {
                                             <div className="flex items-start">
                                                 <span className="text-gray-500 min-w-[140px]">Club Member</span>
                                                 <span className="text-gray-500 mx-2">:</span>
-                                                <Badge variant={selectedMember.club_member_check ? "default" : "secondary"}>
+                                                <Badge className={`ref-pill ${selectedMember.club_member_check ? "is-success" : "is-neutral"}`}>
                                                     {selectedMember.club_member_check ? 'Enabled' : 'Disabled'}
                                                 </Badge>
                                             </div>
                                             <div className="flex items-start">
                                                 <span className="text-gray-500 min-w-[140px]">Access Card</span>
                                                 <span className="text-gray-500 mx-2">:</span>
-                                                <Badge variant={selectedMember.access_card_check ? "default" : "secondary"}>
+                                                <Badge className={`ref-pill ${selectedMember.access_card_check ? "is-success" : "is-neutral"}`}>
                                                     {selectedMember.access_card_check ? 'Enabled' : 'Disabled'}
                                                 </Badge>
                                             </div>
@@ -1306,8 +1308,8 @@ export const CMSClubMembersDetails = () => {
 
                                     {/* Address Information Tab */}
                                     <TabsContent value="address" className="mt-0">
-                                        <h3 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                                            <Building2 className="w-5 h-5 text-[#C72030]" />
+                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                                            <Building2 className="w-4 h-4 text-[#1A1A18]" />
                                             Address Information
                                         </h3>
                                         {selectedMember.user?.addresses && selectedMember.user.addresses.length > 0 ? (
@@ -1355,8 +1357,8 @@ export const CMSClubMembersDetails = () => {
                                     {/* Questionnaires Tab */}
                                     {selectedMember.snag_answers && selectedMember.snag_answers.length > 0 && (
                                         <TabsContent value="questionnaires" className="mt-0">
-                                            <h3 className="text-lg font-semibold text-[#1a1a1a] mb-6 flex items-center gap-3">
-                                                <FileText className="w-5 h-5 text-[#C72030]" />
+                                            <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                                                <FileText className="w-4 h-4 text-[#1A1A18]" />
                                                 Member Questionnaires
                                             </h3>
                                             <div className="space-y-8">
@@ -1371,19 +1373,19 @@ export const CMSClubMembersDetails = () => {
                                                         if (sectionQuestions.length === 0) return null;
 
                                                         return (
-                                                            <div key={sectionKey} className="border border-gray-200 rounded-lg p-6 bg-white">
-                                                                <h4 className="text-md font-semibold text-[#C72030] mb-4 pb-3 border-b border-gray-200 flex items-center gap-2">
+                                                            <div key={sectionKey} className="border border-[rgba(26,26,24,0.09)] rounded-2xl p-6 bg-white">
+                                                                <h4 className="text-[14px] font-semibold text-[#1A1A18] mb-4 pb-3 border-b border-[rgba(26,26,24,0.08)] flex items-center gap-2">
                                                                     {section.title}
                                                                 </h4>
                                                                 <div className="space-y-4">
                                                                     {sectionQuestions.map((questionId) => (
-                                                                        <div key={questionId} className="bg-gray-50 rounded-lg p-4">
+                                                                        <div key={questionId} className="bg-[#FAF9F7] rounded-xl p-4">
                                                                             <div className="mb-2">
                                                                                 <span className="text-sm font-medium text-gray-700">
                                                                                     {QUESTION_MAP[questionId]}
                                                                                 </span>
                                                                             </div>
-                                                                            <div className="pl-4 border-l-2 border-[#C72030]">
+                                                                            <div className="pl-4 border-l-2 border-[rgba(26,26,24,0.2)]">
                                                                                 {renderAnswerValue(questionId, parsedAnswers[questionId])}
                                                                             </div>
                                                                         </div>
@@ -1399,8 +1401,8 @@ export const CMSClubMembersDetails = () => {
 
                                     {/* System Information Tab */}
                                     <TabsContent value="system" className="mt-0">
-                                        <h3 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                                            <FileText className="w-5 h-5 text-[#C72030]" />
+                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                                            <FileText className="w-4 h-4 text-[#1A1A18]" />
                                             System Information
                                         </h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
@@ -1432,7 +1434,7 @@ export const CMSClubMembersDetails = () => {
                                             <div className="flex items-start">
                                                 <span className="text-gray-500 min-w-[140px]">Active</span>
                                                 <span className="text-gray-500 mx-2">:</span>
-                                                <Badge variant={selectedMember.active ? "default" : "secondary"}>
+                                                <Badge className={`ref-pill ${selectedMember.active ? "is-success" : "is-neutral"}`}>
                                                     {selectedMember.active ? 'Yes' : 'No'}
                                                 </Badge>
                                             </div>
@@ -1445,10 +1447,10 @@ export const CMSClubMembersDetails = () => {
 
                     <TabsContent value="logs" className="p-4 sm:p-6">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                                <Logs className="w-5 h-5" />
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] text-[#1A1A18]">
+                                <Logs className="w-4 h-4" />
                             </div>
-                            <h2 className="text-lg font-semibold text-[#1a1a1a]">
+                            <h2 className="text-[15px] font-semibold text-[#1A1A18]">
                                 Activity Logs
                             </h2>
                         </div>
@@ -1485,7 +1487,7 @@ export const CMSClubMembersDetails = () => {
                                 />
                             </div>
                         ) : (
-                            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="text-center py-12 bg-[#FAF9F7] rounded-2xl border border-dashed border-[rgba(26,26,24,0.12)]">
                                 <Logs className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                                 <p className="text-gray-600 font-medium">No logs available</p>
                                 <p className="text-sm text-gray-500 mt-1">Activity logs will appear here</p>
@@ -1495,10 +1497,10 @@ export const CMSClubMembersDetails = () => {
 
                     <TabsContent value="renewal-logs" className="p-4 sm:p-6">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                                <RefreshCw className="w-5 h-5" />
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] text-[#1A1A18]">
+                                <RefreshCw className="w-4 h-4" />
                             </div>
-                            <h2 className="text-lg font-semibold text-[#1a1a1a]">
+                            <h2 className="text-[15px] font-semibold text-[#1A1A18]">
                                 Renewal Logs
                             </h2>
                         </div>
@@ -1531,7 +1533,7 @@ export const CMSClubMembersDetails = () => {
                                 />
                             </div>
                         ) : (
-                            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="text-center py-12 bg-[#FAF9F7] rounded-2xl border border-dashed border-[rgba(26,26,24,0.12)]">
                                 <RefreshCw className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                                 <p className="text-gray-600 font-medium">No renewal logs available</p>
                                 <p className="text-sm text-gray-500 mt-1">Renewal history will appear here</p>
@@ -1567,7 +1569,7 @@ export const CMSClubMembersDetails = () => {
 
             {/* Renew Membership Dialog */}
             <Dialog open={isRenewDialogOpen} onClose={() => !renewing && setIsRenewDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle className="text-[#C72030] font-bold">Renew Membership</DialogTitle>
+                <DialogTitle className="text-[#1A1A18] font-semibold">Renew Membership</DialogTitle>
                 <DialogContent>
                     <div className="grid grid-cols-1 gap-6 pt-4 pb-2">
                         <TextField
@@ -1599,7 +1601,7 @@ export const CMSClubMembersDetails = () => {
                         Cancel
                     </Button>
                     <Button
-                        className="bg-[#C72030] hover:bg-[#A01828] text-white"
+                        className="btn-primary h-9 px-4 text-sm font-medium"
                         onClick={handleRenew}
                         disabled={renewing}
                     >
