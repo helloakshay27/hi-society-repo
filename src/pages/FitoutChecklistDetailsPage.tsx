@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Edit } from "lucide-react";
+import { ArrowLeft, Edit, Info, ListChecks } from "lucide-react";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 
@@ -89,7 +89,7 @@ export const FitoutChecklistDetailsPage = () => {
         {!loading && checklistData && (
           <Button
             onClick={() => navigate(`/fitout/checklists/edit/${id}`)}
-            className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="!bg-[#1A1A18] hover:!bg-[#12100E] !text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Edit className="w-4 h-4" />
             Edit Checklist
@@ -97,37 +97,42 @@ export const FitoutChecklistDetailsPage = () => {
         )}
       </div>
 
-      {/* Main Checklist Content Card */}
-      <Card className="border border-gray-200 bg-white shadow-sm">
-        <CardHeader className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-gray-900">
-              Fitout Checklist Details
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6">
+      <div className="space-y-6">
+        <div className="space-y-6">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
+            <Card className="border border-gray-200 bg-white shadow-sm">
+              <CardContent className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
                 <p className="text-gray-600">Loading checklist data...</p>
               </div>
-            </div>
+              </CardContent>
+            </Card>
           ) : !checklistData ? (
-            <div className="flex items-center justify-center py-8">
+            <Card className="border border-gray-200 bg-white shadow-sm">
+              <CardContent className="flex items-center justify-center py-8">
               <div className="text-gray-500">Checklist not found</div>
-            </div>
+              </CardContent>
+            </Card>
           ) : (
             <>
               {/* Checklist Basic Information */}
-              <div className="mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="border border-gray-200 bg-white shadow-sm">
+                <CardHeader className="px-6 py-4 border-b border-gray-100">
+                  <CardTitle className="flex items-center text-base font-semibold text-gray-900">
+                    <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                      <Info size={14} color="#1A1A18" />
+                    </span>
+                    Basic Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Checklist Title
                     </label>
-                    <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border">
+                    <div className="min-h-12 break-words text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border border-gray-200">
                       {checklistData.name || "Untitled Checklist"}
                     </div>
                   </div>
@@ -135,7 +140,7 @@ export const FitoutChecklistDetailsPage = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Total Questions
                     </label>
-                    <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border">
+                    <div className="min-h-12 break-words text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border border-gray-200">
                       {checklistData.questions?.length || 0} Questions
                     </div>
                   </div>
@@ -143,7 +148,7 @@ export const FitoutChecklistDetailsPage = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Check Type
                     </label>
-                    <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border">
+                    <div className="min-h-12 break-words text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border border-gray-200">
                       {checklistData.check_type
                         ? checklistData.check_type.charAt(0).toUpperCase() + 
                           checklistData.check_type.slice(1)
@@ -154,7 +159,7 @@ export const FitoutChecklistDetailsPage = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Category
                     </label>
-                    <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border">
+                    <div className="min-h-12 break-words text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border border-gray-200">
                       {checklistData.category_name || "Not Assigned"}
                     </div>
                   </div>
@@ -162,7 +167,7 @@ export const FitoutChecklistDetailsPage = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Sub Category
                     </label>
-                    <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border">
+                    <div className="min-h-12 break-words text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border border-gray-200">
                       {checklistData.sub_category_name || "Not Assigned"}
                     </div>
                   </div>
@@ -170,7 +175,7 @@ export const FitoutChecklistDetailsPage = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Status
                     </label>
-                    <div className="text-base font-medium bg-gray-50 px-3 py-2 rounded-md border">
+                    <div className="min-h-12 flex items-center break-words text-base font-medium bg-gray-50 px-3 py-2 rounded-md border border-gray-200">
                       <span
                         className={`${
                           checklistData.active === 1 ? "text-green-600" : "text-red-600"
@@ -181,26 +186,35 @@ export const FitoutChecklistDetailsPage = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+                </CardContent>
+              </Card>
 
               {/* Questions Section */}
               {!loading && checklistData && (
-                <div>
-                  <div className="mb-4 pb-2 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Checklist Questions
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {checklistData.questions?.length || 0} question(s) configured for this checklist
-                    </p>
-                  </div>
-                  <div className="space-y-6">
+                <Card className="border border-gray-200 bg-white shadow-sm">
+                  <CardHeader className="px-6 py-4 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                        <ListChecks size={14} color="#1A1A18" />
+                      </span>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Checklist Questions
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {checklistData.questions?.length || 0} question(s) configured for this checklist
+                        </p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                  <div className="space-y-5">
                     {checklistData.questions?.map((question: Question, index) => (
                       <Card
                         key={question.id}
-                        className="border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                        className="border border-gray-200 bg-white shadow-none"
                       >
-                        <CardHeader className="px-6 py-4 border-b border-gray-200">
+        <CardHeader className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                               <span className="text-sm font-semibold text-gray-600">
@@ -391,12 +405,13 @@ export const FitoutChecklistDetailsPage = () => {
                       </Card>
                     ))}
                   </div>
-                </div>
+                  </CardContent>
+                </Card>
               )}
             </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

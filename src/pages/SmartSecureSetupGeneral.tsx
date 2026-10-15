@@ -665,12 +665,12 @@ const SmartSecureSetupGeneral: React.FC = () => {
         <DialogContent className="sm:max-w-[400px] bg-white p-0 gap-0 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)]">
           <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
             <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center text-left">
-              <span
+              {/* <span
                 className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#F5F4F0" }}
               >
                 <Plus size={14} color="#1A1A18" />
-              </span>
+              </span> */}
               Add {getTabLabel()}
             </DialogTitle>
             <button
@@ -768,12 +768,12 @@ const SmartSecureSetupGeneral: React.FC = () => {
         <DialogContent className="sm:max-w-[400px] bg-white p-0 gap-0 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)]">
           <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
             <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center text-left">
-              <span
+              {/* <span
                 className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: "#F5F4F0" }}
               >
                 <Pencil size={14} color="#1A1A18" />
-              </span>
+              </span> */}
               Edit {getTabLabel()}
             </DialogTitle>
             <button

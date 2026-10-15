@@ -627,12 +627,12 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
       >
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4">
           <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
-            <span
+            {/* <span
               className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
               style={{ backgroundColor: "#F5F4F0" }}
             >
               <Filter size={14} color="#1A1A18" />
-            </span>
+            </span> */}
             Filter Survey Mappings
           </DialogTitle>
           <Button

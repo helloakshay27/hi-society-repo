@@ -364,58 +364,58 @@ const ViolationDetail: React.FC = () => {
       <div className="space-y-6">
         {/* Summary Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
+          <div className="min-h-36 rounded-2xl bg-[#F6F4EE] p-6">
+            <div className="flex h-full items-start justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-xs text-gray-600">Deviation ID</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="mt-2 break-words text-2xl font-semibold text-gray-900">
                   #{deviation.id}
                 </p>
               </div>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white">
+                <FileText className="h-5 w-5 text-gray-600" />
+              </div>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                <Paperclip className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
+          <div className="min-h-36 rounded-2xl bg-[#F6F4EE] p-6">
+            <div className="flex h-full items-start justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-xs text-gray-600">Attachments</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="mt-2 break-words text-2xl font-semibold text-gray-900">
                   {deviation.attachments.length}
                 </p>
               </div>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white">
+                <Paperclip className="h-5 w-5 text-gray-600" />
+              </div>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
+          <div className="min-h-36 rounded-2xl bg-[#F6F4EE] p-6">
+            <div className="flex h-full items-start justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-xs text-gray-600">Comments</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="mt-2 break-words text-2xl font-semibold text-gray-900">
                   {deviation.comments.length}
                 </p>
               </div>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white">
+                <MessageSquare className="h-5 w-5 text-gray-600" />
+              </div>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
+          <div className="min-h-36 rounded-2xl bg-[#F6F4EE] p-6">
+            <div className="flex h-full items-start justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-xs text-gray-600">Created</p>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="mt-2 break-words text-lg font-semibold text-gray-900">
                   {formatDate(deviation.created_at)}
                 </p>
+              </div>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white">
+                <Clock className="h-5 w-5 text-gray-600" />
               </div>
             </div>
           </div>
@@ -424,18 +424,19 @@ const ViolationDetail: React.FC = () => {
         {/* Tabs */}
         <Card className="w-full bg-white shadow-sm border border-gray-200">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-auto p-0 text-sm border-b border-gray-200">
+            <TabsList className="h-auto w-fit flex-wrap justify-start gap-1 rounded-xl bg-[#F5F4F0] p-1 text-sm">
               {[
-                { label: "Deviation Details", value: "deviation-details" },
-                { label: "Attachments", value: "attachments" },
-                { label: "Comments", value: "comments" },
-                { label: "Logs", value: "logs" },
+                { label: "Deviation Details", value: "deviation-details", icon: FileText },
+                { label: "Attachments", value: "attachments", icon: Paperclip },
+                { label: "Comments", value: "comments", icon: MessageSquare },
+                { label: "Logs", value: "logs", icon: Clock },
               ].map((tab) => (
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] px-3 py-2 border-r border-gray-200 last:border-r-0 text-sm"
+                  className="inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm text-gray-700 transition-colors data-[state=active]:bg-white data-[state=active]:text-[#1A1A18] data-[state=active]:shadow-sm"
                 >
+                  <tab.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                   {tab.label}
                 </TabsTrigger>
               ))}
@@ -445,51 +446,31 @@ const ViolationDetail: React.FC = () => {
             <TabsContent value="deviation-details" className="p-4 sm:p-6">
               <Card className="mb-6 border-none bg-transparent shadow-none">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div
-                    className="px-6 py-3 border-b border-gray-200"
-                    style={{ backgroundColor: "#F6F4EE" }}
-                  >
+                  <div className="bg-white px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                        <FileText className="w-4 h-4" style={{ color: '#C72030' }} />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                        <FileText className="h-4 w-4 text-[#1A1A18]" />
                       </div>
                       <h3 className="text-base font-semibold text-gray-900">Deviation Information</h3>
                     </div>
                   </div>
                   <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Deviation ID</span>
-                        <span className="font-medium text-gray-900">#{deviation.id}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Status</span>
-                        <span className="font-medium text-gray-900">{deviation.status || 'Pending'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Tower</span>
-                        <span className="font-medium text-gray-900">{deviation.user_society?.society_flat?.block_no || '—'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Flat</span>
-                        <span className="font-medium text-gray-900">{deviation.user_society?.society_flat?.flat_no || '—'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">User Society ID</span>
-                        <span className="font-medium text-gray-900">{deviation.user_society?.id || '—'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Created By</span>
-                        <span className="font-medium text-gray-900">{deviation.user.email}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Created At</span>
-                        <span className="font-medium text-gray-900">{formatDate(deviation.created_at)}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Updated At</span>
-                        <span className="font-medium text-gray-900">{formatDate(deviation.updated_at)}</span>
-                      </div>
+                    <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 xl:grid-cols-3">
+                      {[
+                        { label: "Deviation ID", value: `#${deviation.id}` },
+                        { label: "Status", value: deviation.status || "Pending" },
+                        { label: "Tower", value: deviation.user_society?.society_flat?.block_no || "—" },
+                        { label: "Flat", value: deviation.user_society?.society_flat?.flat_no || "—" },
+                        { label: "User Society ID", value: deviation.user_society?.id || "—" },
+                        { label: "Created By", value: deviation.user.email },
+                        { label: "Created At", value: formatDate(deviation.created_at) },
+                        { label: "Updated At", value: formatDate(deviation.updated_at) },
+                      ].map(({ label, value }) => (
+                        <div key={label} className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                          <span className="mb-1 block text-xs text-gray-600">{label}</span>
+                          <span className="block break-words font-medium text-gray-900">{value}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -500,13 +481,10 @@ const ViolationDetail: React.FC = () => {
             <TabsContent value="attachments" className="p-4 sm:p-6">
               <Card className="mb-6 border-none bg-transparent shadow-none">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div
-                    className="px-6 py-3 border-b border-gray-200"
-                    style={{ backgroundColor: "#F6F4EE" }}
-                  >
+                  <div className="bg-white px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                        <Paperclip className="w-4 h-4" style={{ color: '#C72030' }} />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                        <Paperclip className="h-4 w-4 text-[#1A1A18]" />
                       </div>
                       <h3 className="text-base font-semibold text-gray-900">
                         Attachments ({deviation.attachments.length})
@@ -564,13 +542,10 @@ const ViolationDetail: React.FC = () => {
             <TabsContent value="comments" className="p-4 sm:p-6">
               <Card className="mb-6 border-none bg-transparent shadow-none">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div
-                    className="px-6 py-3 border-b border-gray-200"
-                    style={{ backgroundColor: "#F6F4EE" }}
-                  >
+                  <div className="bg-white px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                        <MessageSquare className="w-4 h-4" style={{ color: '#C72030' }} />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                        <MessageSquare className="h-4 w-4 text-[#1A1A18]" />
                       </div>
                       <h3 className="text-base font-semibold text-gray-900">
                         Comments ({deviation.comments.length + (deviation.comment ? 1 : 0)})
@@ -670,13 +645,10 @@ const ViolationDetail: React.FC = () => {
             <TabsContent value="logs" className="p-4 sm:p-6">
               <Card className="mb-6 border-none bg-transparent shadow-none">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div
-                    className="px-6 py-3 border-b border-gray-200"
-                    style={{ backgroundColor: "#F6F4EE" }}
-                  >
+                  <div className="bg-white px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                        <Clock className="w-4 h-4" style={{ color: '#C72030' }} />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                        <Clock className="h-4 w-4 text-[#1A1A18]" />
                       </div>
                       <h3 className="text-base font-semibold text-gray-900">
                         Logs ({logs.length})

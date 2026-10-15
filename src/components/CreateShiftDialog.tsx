@@ -191,12 +191,12 @@ export const CreateShiftDialog = ({ open, onOpenChange, onShiftCreated }: Create
         <DialogHeader className="px-6 pt-[22px] pb-4">
           <DialogTitle className="flex items-center justify-between text-sm font-semibold leading-[1.4] text-[#1A1A18]">
             <span className="flex items-center">
-              <span
+              {/* <span
                 className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
                 style={{ backgroundColor: '#F5F4F0' }}
               >
                 <Clock size={14} color="#1A1A18" />
-              </span>
+              </span> */}
               Create Shift
             </span>
             <Button
