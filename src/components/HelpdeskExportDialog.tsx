@@ -4,7 +4,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarIcon, Download, ChevronsRight, ChevronRight, ChevronLeft, ChevronsLeft, ChevronDown, Check } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { DateRange } from "react-day-picker";
@@ -16,6 +16,10 @@ interface TowerOption { id: number; name: string; }
 interface FlatOption { id: number; flat_no: string; society_block_id: number; }
 interface CategoryOption { id: number; name: string; }
 interface StatusOption { id: number; name: string; color_code: string; }
+
+// Matches the date fields on the Helpdesk Report page
+const dateTriggerClass =
+  "w-full h-11 flex items-center gap-2.5 px-3.5 text-left text-[13.5px] font-medium text-[#1A1A18] bg-white border border-[rgba(26,26,24,0.08)] rounded-xl transition-[border-color,box-shadow] hover:border-[rgba(26,26,24,0.28)] data-[state=open]:border-[#1A1A18] data-[state=open]:shadow-[0_0_0_4px_rgba(26,26,24,0.1)]";
 
 const ALL_COLUMNS = [
   "Id",
@@ -161,9 +165,12 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
 }) => {
   const [exportType, setExportType] = useState<ExportType>("all");
   const [exportDate, setExportDate] = useState<DateRange | undefined>({
-    from: defaultStartDate ?? new Date(2026, 3, 1),
-    to: defaultEndDate ?? new Date(2026, 3, 23),
+    from: defaultStartDate ?? startOfMonth(new Date()),
+    to: defaultEndDate ?? new Date(),
   });
+
+  const [startPickerOpen, setStartPickerOpen] = useState(false);
+  const [endPickerOpen, setEndPickerOpen] = useState(false);
 
   // Sync date range with the parent's applied dates each time the dialog opens
   useEffect(() => {
@@ -193,7 +200,6 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
   const [availableHighlight, setAvailableHighlight] = useState<string[]>([]);
   const [selectedHighlight, setSelectedHighlight] = useState<string[]>([]);
 
-  const showDateRange = exportType !== "open";
   const showAdvancedFilter = exportType === "all" || exportType === "updated";
 
   // Fetch towers, categories, statuses when dialog opens
@@ -319,7 +325,7 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
         to: selectedCols.length > 0 ? selectedCols : ALL_COLUMNS,
       };
 
-      if (showDateRange && dateRange) q.date_range = dateRange;
+      if (dateRange) q.date_range = dateRange;
       if (showAdvancedFilter) {
         if (filterStatus.length > 0) q.issue_status_in = filterStatus;
         if (filterCategory.length > 0) q.category_type_id_in = filterCategory;
@@ -408,29 +414,63 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
             ))}
           </div>
 
-          {/* Date range picker */}
-          {showDateRange && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="w-full flex items-center gap-3 border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 hover:border-gray-400 text-left">
-                  <CalendarIcon className="h-4 w-4 text-gray-400 shrink-0" />
-                  {exportDate?.from && exportDate?.to
-                    ? `${format(exportDate.from, "MM/dd/yyyy")} - ${format(exportDate.to, "MM/dd/yyyy")}`
-                    : "Pick a date range"}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={exportDate?.from}
-                  selected={exportDate}
-                  onSelect={setExportDate}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
-          )}
+          {/* Start / End date — same fields as the Helpdesk Report page */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-2 text-xs font-semibold text-[rgba(26,26,24,0.68)]">Start Date</label>
+              <Popover open={startPickerOpen} onOpenChange={setStartPickerOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(dateTriggerClass, !exportDate?.from && "text-[rgba(26,26,24,0.3)]")}
+                  >
+                    <CalendarIcon className="h-4 w-4 text-[rgba(26,26,24,0.48)] shrink-0" />
+                    {exportDate?.from ? format(exportDate.from, "dd/MM/yyyy") : "Pick start date"}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="single"
+                    defaultMonth={exportDate?.from}
+                    selected={exportDate?.from}
+                    onSelect={(day) => {
+                      setExportDate((prev) => ({ from: day, to: prev?.to }));
+                      setStartPickerOpen(false);
+                    }}
+                    disabled={(day) => (exportDate?.to ? day > exportDate.to : false)}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <label className="block mb-2 text-xs font-semibold text-[rgba(26,26,24,0.68)]">End Date</label>
+              <Popover open={endPickerOpen} onOpenChange={setEndPickerOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(dateTriggerClass, !exportDate?.to && "text-[rgba(26,26,24,0.3)]")}
+                  >
+                    <CalendarIcon className="h-4 w-4 text-[rgba(26,26,24,0.48)] shrink-0" />
+                    {exportDate?.to ? format(exportDate.to, "dd/MM/yyyy") : "Pick end date"}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="single"
+                    defaultMonth={exportDate?.to ?? exportDate?.from}
+                    selected={exportDate?.to}
+                    onSelect={(day) => {
+                      setExportDate((prev) => ({ from: prev?.from, to: day }));
+                      setEndPickerOpen(false);
+                    }}
+                    disabled={(day) => (exportDate?.from ? day < exportDate.from : false)}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
 
           {/* Advanced Filter */}
           {showAdvancedFilter && (
