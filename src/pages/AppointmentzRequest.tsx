@@ -752,7 +752,7 @@ export const AppointmentzRequest: React.FC = () => {
           <button
             type="button"
             onClick={() => handleEditClick(item)}
-            className="p-1 text-[#DA7756] hover:text-[#c96844] transition-colors rounded hover:bg-[#DA7756]/10 flex items-center justify-center"
+            className="p-1 text-[#DA7756] hover:text-[#c96844] transition-colors rounded flex items-center justify-center"
             title="Edit Request"
           >
             <Pencil className="h-4 w-4" />
