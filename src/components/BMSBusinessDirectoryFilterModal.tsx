@@ -232,16 +232,16 @@ export const BMSBusinessDirectoryFilterModal: React.FC<BMSBusinessDirectoryFilte
                                 </Select>
                             </FormControl>
 
-                            <div className="flex gap-3 pt-4">
+                            <div className="flex justify-end gap-3 pt-4">
                                 <Button
                                     variant="outline"
-                                    className="flex-1 border-[#C72030] text-[#C72030] hover:bg-[#FDEFF1]"
+                                    className="h-9 px-5 text-sm border-[#C72030] text-[#C72030] hover:bg-[#FDEFF1]"
                                     onClick={handleReset}
                                 >
                                     Reset
                                 </Button>
                                 <Button
-                                    className="flex-1 bg-[#C72030] hover:bg-[#A01828] !text-white"
+                                    className="h-9 px-5 text-sm bg-[#C72030] hover:bg-[#A01828] !text-white"
                                     onClick={handleApply}
                                 >
                                     Apply

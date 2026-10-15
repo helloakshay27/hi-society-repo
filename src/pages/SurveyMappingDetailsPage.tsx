@@ -1279,17 +1279,20 @@ export const SurveyMappingDetailsPage = () => {
               </Card>
             </div>
 
-            <Card className="mb-6 border border-[#D9D9D9] bg-[#F6F7F7]">
-              <CardHeader className="bg-[#F6F4EE] mb-6">
-                <CardTitle className="text-lg flex items-center">
-                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded-full mr-3">
-                    <FileText className="h-5 w-5 text-[#C72030]" />
-                  </div>
+            <Card className="mb-6 bg-white border border-[rgba(26,26,24,0.09)] shadow-none">
+              <CardHeader className="px-6 py-3">
+                <CardTitle className="text-sm font-semibold text-gray-900 flex items-center">
+                  <span
+                    className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
+                    <FileText size={14} color="#2C2C2C" />
+                  </span>
                   Survey Information
                 </CardTitle>
               </CardHeader>
 
-              <CardContent>
+              <CardContent className="pt-4" style={{ backgroundColor: "#AAB9C50D" }}>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="text-sm text-gray-800">
                     <span className="text-gray-500">Survey Name:</span>{" "}
@@ -1423,24 +1426,27 @@ export const SurveyMappingDetailsPage = () => {
 
           {/* Questions */}
           <TabsContent value="questions" className="mt-4">
-            <Card className="mb-6 border border-[#D9D9D9] bg-[#F6F7F7]">
-              <CardHeader className="bg-[#F6F4EE] mb-6">
-                <CardTitle className="text-lg flex items-center">
-                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded-full mr-3">
-                    <QuestionMark className="h-5 w-5 text-[#C72030]" />
-                  </div>
+            <Card className="mb-6 bg-white border border-[rgba(26,26,24,0.09)] shadow-none">
+              <CardHeader className="px-6 py-3">
+                <CardTitle className="text-sm font-semibold text-gray-900 flex items-center">
+                  <span
+                    className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
+                    <QuestionMark sx={{ fontSize: 14, color: "#2C2C2C" }} />
+                  </span>
                   Survey Question
                   {/* ({mapping.questions?.length || 0}) */}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4" style={{ backgroundColor: "#AAB9C50D" }}>
                 <EnhancedTable
                   data={questionsTableData}
                   columns={questionsTableColumns}
                   renderCell={renderQuestionCell}
                   getItemId={(item: QuestionsTableItem) => String(item.id)}
                   storageKey="survey-questions-table"
-                  className="min-w-[800px] bg-[#F6F7F7]"
+                  className="min-w-[800px]"
                   emptyMessage="No questions available"
                   enableSearch={true}
                   enableSelection={false}
@@ -1454,17 +1460,20 @@ export const SurveyMappingDetailsPage = () => {
 
           {/* Location Details */}
           <TabsContent value="location-details" className="mt-4">
-            <Card className="mb-6 border border-[#D9D9D9] bg-[#F6F7F7]">
-              <CardHeader className="bg-[#F6F4EE] mb-6">
-                <CardTitle className="text-lg flex items-center">
-                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded-full mr-3">
-                    <MapPin className="h-5 w-5 text-[#C72030]" />
-                  </div>
+            <Card className="mb-6 bg-white border border-[rgba(26,26,24,0.09)] shadow-none">
+              <CardHeader className="px-6 py-3">
+                <CardTitle className="text-sm font-semibold text-gray-900 flex items-center">
+                  <span
+                    className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
+                    <MapPin size={14} color="#2C2C2C" />
+                  </span>
                   Location Details
                   {/* ({mapping.mappings?.length || 0} Locations) */}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="relative">
+              <CardContent className="relative pt-4" style={{ backgroundColor: "#AAB9C50D" }}>
                 {selectedLocations.length > 0 && (
                   <LocationSelectionPanel
                     selectedLocations={selectedLocations}
@@ -1488,7 +1497,7 @@ export const SurveyMappingDetailsPage = () => {
                     String(item.mapping_id)
                   }
                   storageKey="location-details-table"
-                  className="min-w-[1200px] bg-[#F6F7F7]"
+                  className="min-w-[1200px]"
                   emptyMessage="No location details found"
                   enableSearch={true}
                   enableSelection={false}

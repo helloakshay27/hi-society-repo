@@ -234,8 +234,8 @@ export const AppointmentzEmailConfig: React.FC = () => {
       {/* Page Header */}
       <div className="bg-white p-5 rounded-xl border border-[#D5DbDB] shadow-xs flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[#DA7756] text-white flex items-center justify-center shadow-xs">
-            <Mail className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-lg bg-[#DA7756]/10 flex items-center justify-center shadow-xs">
+            <Mail className="w-5 h-5 text-black" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-[#1A1A1A]">Email Configuration</h1>

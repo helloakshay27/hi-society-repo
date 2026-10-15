@@ -496,26 +496,26 @@ const AddApprovalMatrixPage = () => {
             Add Level
           </button>
         </div>
+      </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-3 pt-6 border-t border-[rgba(26,26,24,.09)]">
-          <button
-            type="button"
-            onClick={handleSaveAndCreateNew}
-            disabled={isSubmitting}
-            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
-          >
-            Save And Create New
-          </button>
-          <button
-            type="button"
-            onClick={handleCreate}
-            disabled={isSubmitting}
-            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
-          >
-            {isSubmitting ? 'Creating...' : 'Create'}
-          </button>
-        </div>
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-3 pt-6">
+        <button
+          type="button"
+          onClick={handleSaveAndCreateNew}
+          disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
+        >
+          Save And Create New
+        </button>
+        <button
+          type="button"
+          onClick={handleCreate}
+          disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+        >
+          {isSubmitting ? 'Creating...' : 'Create'}
+        </button>
       </div>
     </div>
   );

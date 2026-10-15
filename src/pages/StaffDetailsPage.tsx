@@ -373,17 +373,17 @@ export const StaffDetailsPage = () => {
     children: React.ReactNode;
     hasData?: boolean;
   }) => (
-    <Card className="w-full mb-6">
+    <Card className="mb-4 w-full rounded-2xl border border-[rgba(26,26,24,.09)] bg-white px-6 py-5 shadow-none">
       <CardHeader
         onClick={onToggle}
-        className="cursor-pointer pb-4 lg:pb-6"
+        className="cursor-pointer p-0 pb-4"
       >
-        <CardTitle className="flex items-center justify-between gap-3 text-lg font-semibold text-[#1A1A1A]">
+        <CardTitle className="flex items-center justify-between gap-3 text-[14px] font-semibold text-[#1A1A18]">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-              <Icon className="w-6 h-6" style={{ color: '#C72030' }} />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+              <Icon className="h-[14px] w-[14px] text-[#1A1A18]" />
             </div>
-            <span className="uppercase tracking-wide">{title}</span>
+            <span>{title}</span>
           </div>
           <div className="flex items-center gap-2">
             {!hasData && (
@@ -393,34 +393,34 @@ export const StaffDetailsPage = () => {
           </div>
         </CardTitle>
       </CardHeader>
-      {isExpanded && <CardContent className="pt-0">{children}</CardContent>}
+      {isExpanded && <CardContent className="p-0">{children}</CardContent>}
     </Card>
   );
 
   return (
-    <div className="p-4 sm:p-6 min-h-screen">
+    <div className="min-h-screen bg-[#FDFDFB] p-4 sm:p-6">
       {/* Header */}
       <div className="mb-6">
         <button
           onClick={() => navigate('/smartsecure/staff')}
-          className="flex items-center gap-1 hover:text-gray-800 mb-4"
+          className="mb-4 flex items-center gap-1.5 text-[12.5px] font-semibold text-[rgba(26,26,24,.48)] transition-colors hover:text-[#1A1A18]"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Staff List
         </button>
 
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="my-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Staff Details</h1>
+            <h1 className="mb-2 text-[22px] font-semibold text-[#1A1A18]" style={{ letterSpacing: '-0.015em', lineHeight: 1.2 }}>Staff Details</h1>
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 font-medium">Staff Name:</span>
-                <span className="font-semibold text-gray-900">{staff.full_name || '--'}</span>
+                <span className="font-medium text-[rgba(26,26,24,.48)]">Staff Name:</span>
+                <span className="font-semibold text-[#1A1A18]">{staff.full_name || '--'}</span>
               </div>
               {hasData(staff.soc_staff_id) && (
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500 font-medium">Staff ID:</span>
-                  <span className="font-semibold text-gray-900">{staff.soc_staff_id}</span>
+                  <span className="font-medium text-[rgba(26,26,24,.48)]">Staff ID:</span>
+                  <span className="font-semibold text-[#1A1A18]">{staff.soc_staff_id}</span>
                 </div>
               )}
               {hasData(staff.status_text) && (
@@ -442,10 +442,13 @@ export const StaffDetailsPage = () => {
           <div className="flex gap-2">
             <Button
               onClick={handleEdit}
-              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+              variant="outline"
+              size="icon"
+              aria-label="Edit staff details"
+              title="Edit staff details"
+              className="h-12 w-12 rounded-[8px] !border-[#1a1a1814] bg-white p-0 text-[rgba(26,26,24,.68)] shadow-none hover:bg-[#F5F4F0] hover:text-[#1A1A18]"
             >
-              <Edit className="w-4 h-4" style={{ color: '#fff' }} />
-              Edit
+              <Edit className="h-5 w-5" />
             </Button>
           </div>
         </div>
@@ -453,86 +456,80 @@ export const StaffDetailsPage = () => {
 
       {/* Section 1: Basic Information */}
       <ExpandableSection
-        title="BASIC INFORMATION"
+        title="Basic Information"
         icon={User}
         isExpanded={expandedSections.basicInfo}
         onToggle={() => toggleSection('basicInfo')}
         hasData={hasData(staff.full_name) || hasData(staff.email) || hasData(staff.mobile)}
       >
         {/* Centered Image and Name */}
-        <div className="flex flex-col items-center mb-8">
+        <div className="mb-6 flex items-center justify-start gap-4">
           <img
             src={staff.staff_image_url || '/placeholder.svg'}
             alt="Staff profile"
-            className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 mb-4"
+            className="h-16 w-16 rounded-xl border border-[rgba(26,26,24,.12)] object-cover"
           />
-          <h3 className="text-xl font-semibold text-gray-900 mb-1">{staff.full_name}</h3>
-          <p className="text-sm text-gray-500">{staff.work_type_name}</p>
+          <div>
+            <h3 className="mb-1 text-[15px] font-semibold text-[#1A1A18]">{staff.full_name}</h3>
+            <p className="text-[12px] text-[rgba(26,26,24,.48)]">{staff.work_type_name}</p>
+          </div>
         </div>
 
         {/* Two Column Grid for Data */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
           <div className="space-y-4">
             {hasData(staff.full_name) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Name</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{staff.full_name}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Name</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{staff.full_name}</span>
               </div>
             )}
             
             {hasData(staff.email) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Email</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{staff.email}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Email</span>
+                <span className="break-all text-[13.5px] font-medium text-[#1A1A18]">{staff.email}</span>
               </div>
             )}
             
             {hasData(staff.mobile) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Mobile</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{staff.mobile}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Mobile</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{staff.mobile}</span>
               </div>
             )}
             
             {hasData(staff.vendor_name) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Company Name</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{staff.vendor_name}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Company Name</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{staff.vendor_name}</span>
               </div>
             )}
             
             {hasData(staff.soc_staff_id) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Staff ID</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{staff.soc_staff_id}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Staff ID</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{staff.soc_staff_id}</span>
               </div>
             )}
             
             {hasData(staff.valid_from) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Valid From</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{formatDate(staff.valid_from)}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Valid From</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{formatDate(staff.valid_from)}</span>
               </div>
             )}
 
             {hasData(staff.expiry) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Valid Till</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{formatDate(staff.expiry!)}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Valid Till</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{formatDate(staff.expiry!)}</span>
               </div>
             )}
 
              {hasData(staff.status_text) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Status</span>
-                <span className="text-gray-500 mx-2">:</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Status</span>
                 <div className="flex-1">
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
                     staff.status_text === 'Approved' ? 'bg-green-100 text-green-800' :
@@ -546,18 +543,16 @@ export const StaffDetailsPage = () => {
             )}
 
             {hasData(staff.blocked_by_user_name) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Blocked By</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{staff.blocked_by_user_name}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Blocked By</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{staff.blocked_by_user_name}</span>
               </div>
             )}
 
             {hasData(staff.block_reason) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Block Reason</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{staff.block_reason}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Block Reason</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{staff.block_reason}</span>
               </div>
             )}
           </div>
@@ -566,56 +561,49 @@ export const StaffDetailsPage = () => {
            
             
             {hasData(staff.department_name) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Department</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{staff.department_name}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Department</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{staff.department_name}</span>
               </div>
             )}
             
             {hasData(staff.unit_name) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Unit</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{staff.unit_name}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Unit</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{staff.unit_name}</span>
               </div>
             )}
             
             {hasData(staff.work_type_name) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Work Type</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{staff.work_type_name}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Work Type</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{staff.work_type_name}</span>
               </div>
             )}
 
             {hasData(staff.staff_type) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Staff Type</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{staff.staff_type}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Staff Type</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{staff.staff_type}</span>
               </div>
             )}
 
             {hasData(staff.associate_function_name) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Association Type</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1 capitalize">{staff.associate_function_name}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Association Type</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18] capitalize">{staff.associate_function_name}</span>
               </div>
             )}
             
             {hasData(staff.created_at) && (
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Created On</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium flex-1">{formatDate(staff.created_at)}</span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Created On</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">{formatDate(staff.created_at)}</span>
               </div>
             )}
             
-            {/* <div className="flex items-start">
-              <span className="text-gray-500 min-w-[140px]">Number Verified</span>
-              <span className="text-gray-500 mx-2">:</span>
+            {/* <div className="flex min-w-0 flex-col items-start gap-1">
+              <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Number Verified</span>
               <div className="flex-1">
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
                   staff.number_verified ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
@@ -630,7 +618,7 @@ export const StaffDetailsPage = () => {
 
       {/* Section 2: Work Information */}
       <ExpandableSection
-        title="WORK INFORMATION"
+        title="Work Information"
         icon={FileText}
         isExpanded={expandedSections.workInfo}
         onToggle={() => toggleSection('workInfo')}
@@ -638,10 +626,9 @@ export const StaffDetailsPage = () => {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
           <div className="space-y-4">
-            <div className="flex items-start">
-              <span className="text-gray-500 min-w-[140px]">Expiry Type</span>
-              <span className="text-gray-500 mx-2">:</span>
-              <span className="text-gray-900 font-medium flex-1">
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Expiry Type</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">
                 {hasData(staff.expiry_type) ? (
                   <>
                     {staff.expiry_type}
@@ -658,7 +645,7 @@ export const StaffDetailsPage = () => {
 
       {/* Section 3: Schedule Information */}
       <ExpandableSection
-        title="SCHEDULE INFORMATION"
+        title="Schedule Information"
         icon={Calendar}
         isExpanded={expandedSections.scheduleInfo}
         onToggle={() => toggleSection('scheduleInfo')}
@@ -667,14 +654,14 @@ export const StaffDetailsPage = () => {
         {staff.helpdesk_operations && staff.helpdesk_operations.length > 0 ? (
           <div className="bg-white rounded-lg border border-gray-200">
             <div className="grid grid-cols-2 gap-4 p-4 text-sm">
-              <div className="text-center font-semibold text-gray-900 border-b border-gray-200 pb-2">Day</div>
-              <div className="text-center font-semibold text-gray-900 border-b border-gray-200 pb-2">Time</div>
+          <div className="rounded-tl-lg bg-[#F5F4F0] py-3 text-center text-[11px] font-semibold uppercase tracking-wide text-[rgba(26,26,24,.55)]">Day</div>
+              <div className="rounded-tr-lg bg-[#F5F4F0] py-3 text-center text-[11px] font-semibold uppercase tracking-wide text-[rgba(26,26,24,.55)]">Time</div>
               {staff.helpdesk_operations.map((operation, index) => (
                 <React.Fragment key={index}>
-                  <div className="text-center py-2 border-b border-gray-200 text-gray-900">
+                  <div className="border-b border-[rgba(26,26,24,.08)] py-3 text-center text-[13px] text-[#1A1A18]">
                     {operation.day}
                   </div>
-                  <div className="text-center py-2 border-b border-gray-200 text-gray-900 font-medium">
+                  <div className="border-b border-[rgba(26,26,24,.08)] py-3 text-center text-[13px] font-medium text-[#1A1A18]">
                     {operation.start_hour && operation.end_hour 
                       ? `${formatTime(operation.start_hour, operation.start_min)} to ${formatTime(operation.end_hour, operation.end_min)}`
                       : '--:-- to --:--'
@@ -690,17 +677,17 @@ export const StaffDetailsPage = () => {
       </ExpandableSection>
 
       {/* Section 5: Associate Flat */}
-      <Card className="w-full mb-6">
+      <Card className="mb-4 w-full rounded-2xl border border-[rgba(26,26,24,.09)] bg-white px-6 py-5 shadow-none">
         <CardHeader
           onClick={() => toggleSection('associateFlat')}
-          className="cursor-pointer pb-4 lg:pb-6"
+          className="cursor-pointer p-0 pb-4"
         >
-          <CardTitle className="flex items-center justify-between gap-3 text-lg font-semibold text-[#1A1A1A]">
+          <CardTitle className="flex items-center justify-between gap-3 text-[14px] font-semibold text-[#1A1A18]">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                <MapPin className="w-6 h-6" style={{ color: '#C72030' }} />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                <MapPin className="h-[14px] w-[14px] text-[#1A1A18]" />
               </div>
-              <span className="uppercase tracking-wide">Associate Flat</span>
+              <span>Associate Flat</span>
               {associatedFlats.length > 0 && (
                 <span className="w-6 h-6 rounded-full bg-[#C72030] text-white text-xs font-bold flex items-center justify-center">
                   {associatedFlats.length}
@@ -711,7 +698,7 @@ export const StaffDetailsPage = () => {
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); handleOpenFlatModal(); }}
-                className="w-8 h-8 rounded-lg bg-[#C72030] hover:bg-[#A01828] text-white flex items-center justify-center"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1A1A18] text-white hover:bg-[#12100E]"
                 aria-label="Associate flat"
               >
                 <Plus className="w-4 h-4" />
@@ -723,7 +710,7 @@ export const StaffDetailsPage = () => {
           </CardTitle>
         </CardHeader>
         {expandedSections.associateFlat && (
-          <CardContent className="pt-0">
+          <CardContent className="p-0 pt-0">
             {associatedFlats.length === 0 ? (
               <p className="text-sm text-gray-500 text-center py-4">No flats associated. Click + to add.</p>
             ) : (
@@ -752,14 +739,14 @@ export const StaffDetailsPage = () => {
 
       {/* Section 4: QR Code Information */}
       <ExpandableSection
-        title="QR CODE"
+        title="QR Code"
         icon={QrCode}
         isExpanded={expandedSections.qrInfo}
         onToggle={() => toggleSection('qrInfo')}
         hasData={staff.qr_code_present}
       >
         <div className="text-center">
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4 inline-block">
+          <div className="mb-4 inline-block rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-5">
             {staff.qr_code_present && staff.qr_code_url ? (
               <img 
                 src={staff.qr_code_url} 
@@ -775,18 +762,19 @@ export const StaffDetailsPage = () => {
           <div>
             <Button
               onClick={handlePrint}
-              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2 mx-auto"
+              className="mx-auto flex min-h-[42px] items-center justify-center gap-2 rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white [&_svg]:!text-white hover:!bg-[#12100E]"
               disabled={!staff.qr_code_present || isPrinting}
+              style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
             >
               {isPrinting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Printing...
+                  <span style={{ color: '#FFFFFF' }}>Printing...</span>
                 </>
               ) : (
                 <>
                   <Printer className="w-4 h-4" />
-                  Print QR Code
+                  <span style={{ color: '#FFFFFF' }}>Print QR Code</span>
                 </>
               )}
             </Button>

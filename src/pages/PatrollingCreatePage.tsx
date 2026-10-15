@@ -1738,9 +1738,11 @@ export const PatrollingCreatePage: React.FC = () => {
             <Button
               onClick={addCheckpoint}
               disabled={isSubmitting}
-              className="inline-flex min-h-[42px] items-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:bg-[#12100E] disabled:opacity-60"
+              className="inline-flex min-h-[42px] items-center rounded-lg !border-[#1A1A18] !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E] disabled:opacity-60"
+              style={{ backgroundColor: '#1A1A18', borderColor: '#1A1A18', color: '#FFFFFF' }}
             >
-              <Plus className="w-4 h-4 mr-2" /> Add Checkpoint
+              <Plus className="mr-2 h-4 w-4 text-white" />
+              <span style={{ color: '#FFFFFF' }}>Add Checkpoint</span>
             </Button>
           </div>
         </div>

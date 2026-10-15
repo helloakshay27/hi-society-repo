@@ -72,7 +72,7 @@ const CMSPaymentPlanSetupDetails = () => {
         return (
             <div className="bg-gray-50 h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading payment plan details...</p>
                 </div>
             </div>
@@ -85,21 +85,21 @@ const CMSPaymentPlanSetupDetails = () => {
 
     const totalPercentage = calculateTotalPercentage();
 
-    return (
-        <div className="p-[30px] min-h-screen bg-transparent">
-            {/* Header */}
-            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2 cursor-pointer">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-1 hover:text-gray-800 transition-colors"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span>Back</span>
-                </button>
-            </div>
+    const totalClass = totalPercentage === 100 ? 'text-[#0E7F3F]' : 'text-[#A32126]';
 
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-[24px] font-semibold text-[#1a1a1a]">
+    return (
+        <div className="p-6 min-h-screen bg-[#FDFDFB]">
+            {/* Back link + title */}
+            <div className="mb-[22px]">
+                <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[rgba(26,26,24,0.48)] hover:text-[#1A1A18] transition-colors"
+                >
+                    <ArrowLeft className="w-[18px] h-[18px]" />
+                    Back to Payment Plans
+                </button>
+                <h1 className="mt-[14px] text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
                     Payment Plan Details
                 </h1>
                 {/* <Button
@@ -112,16 +112,16 @@ const CMSPaymentPlanSetupDetails = () => {
             </div>
 
             {/* Plan Information */}
-            <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
-                <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
+            <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] px-6 py-[22px]">
+                <div className="flex items-center gap-3 mb-4">
+                    <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] text-[#1A1A18]">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
-                            strokeWidth={1.5}
+                            strokeWidth={1.8}
                             stroke="currentColor"
-                            className="w-6 h-6"
+                            className="w-[14px] h-[14px]"
                         >
                             <path
                                 strokeLinecap="round"
@@ -129,55 +129,42 @@ const CMSPaymentPlanSetupDetails = () => {
                                 d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"
                             />
                         </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-                        PLAN INFORMATION
+                    </span>
+                    <h3 className="text-[14px] leading-[1.4] font-semibold text-[#1A1A18]">
+                        Plan Information
                     </h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-3">
-                    <div className="space-y-4">
-                        <div className="flex items-start">
-                            <span className="text-gray-500 min-w-[140px]">Plan Name</span>
-                            <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{plan.name}</span>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-[18px]">
+                    <div>
+                        <div className="text-[11px] font-medium text-[rgba(26,26,24,0.48)] mb-1">Plan Name</div>
+                        <div className="text-[13.5px] font-medium text-[#1A1A18]">{plan.name}</div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="flex items-start">
-                            <span className="text-gray-500 min-w-[140px]">Frequency</span>
-                            <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium capitalize">
-                                {plan.frequency}
-                            </span>
-                        </div>
+                    <div>
+                        <div className="text-[11px] font-medium text-[rgba(26,26,24,0.48)] mb-1">Frequency</div>
+                        <div className="text-[13.5px] font-medium text-[#1A1A18] capitalize">{plan.frequency}</div>
                     </div>
 
-                    {/* <div className="space-y-4">
-            <div className="flex items-start">
-              <span className="text-gray-500 min-w-[140px]">Duration</span>
-              <span className="text-gray-500 mx-2">:</span>
-              <span className="text-gray-900 font-medium">
-                {plan.duration_in_months} Months
-              </span>
-            </div>
+                    {/* <div>
+            <div className="text-[11px] font-medium text-[rgba(26,26,24,0.48)] mb-1">Duration</div>
+            <div className="text-[13.5px] font-medium text-[#1A1A18]">{plan.duration_in_months} Months</div>
           </div> */}
                 </div>
             </div>
 
             {/* Payment Schedule */}
-            <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6 mt-6">
-                <div className="flex items-center justify-between">
+            <div className="bg-white rounded-2xl border border-[rgba(26,26,24,0.09)] px-6 py-[22px] mt-5">
+                <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#C72030] text-white">
+                        <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] text-[#1A1A18]">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
-                                strokeWidth={1.5}
+                                strokeWidth={1.8}
                                 stroke="currentColor"
-                                className="w-6 h-6"
+                                className="w-[14px] h-[14px]"
                             >
                                 <path
                                     strokeLinecap="round"
@@ -185,66 +172,46 @@ const CMSPaymentPlanSetupDetails = () => {
                                     d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
                                 />
                             </svg>
-                        </div>
-                        <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-                            PAYMENT SCHEDULE
+                        </span>
+                        <h3 className="text-[14px] leading-[1.4] font-semibold text-[#1A1A18]">
+                            Payment Schedule
                         </h3>
                     </div>
-                    <div className="text-sm">
+                    <div className="text-[12px] font-semibold text-[rgba(26,26,24,0.68)]">
                         Total:{' '}
-                        <span
-                            className={`font-bold text-lg ${totalPercentage === 100 ? 'text-green-600' : 'text-red-600'
-                                }`}
-                        >
+                        <span className={`text-[13.5px] ${totalClass}`}>
                             {totalPercentage.toFixed(2)}%
                         </span>
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
+                <div className="rounded-xl border border-[rgba(26,26,24,0.09)] overflow-x-auto">
+                    <table className="w-full">
                         <thead>
-                            <tr className="bg-[#E5E0D3]">
-                                <th className="border border-gray-300 px-4 py-3 text-left font-semibold">
-                                    Sr No.
-                                </th>
-                                <th className="border border-gray-300 px-4 py-3 text-left font-semibold">
-                                    Month Number
-                                </th>
-                                <th className="border border-gray-300 px-4 py-3 text-right font-semibold">
-                                    Percentage
-                                </th>
+                            <tr>
+                                <th className="text-left">Sr No.</th>
+                                <th className="text-left">Month Number</th>
+                                <th className="text-right">Percentage</th>
                             </tr>
                         </thead>
                         <tbody>
                             {plan.payment_plan_schedules.map((schedule, index) => (
-                                <tr key={index} className="border-b hover:bg-gray-50">
-                                    <td className="border border-gray-300 px-4 py-3">{index + 1}</td>
-                                    <td className="border border-gray-300 px-4 py-3">
-                                        Month {schedule.month_number}
-                                    </td>
-                                    <td className="border border-gray-300 px-4 py-3 text-right font-medium">
+                                <tr key={index}>
+                                    <td>{index + 1}</td>
+                                    <td>Month {schedule.month_number}</td>
+                                    <td className="text-right">
                                         {parseFloat(schedule.percentage).toFixed(2)}%
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                         <tfoot>
-                            <tr className="bg-gray-50 font-bold">
-                                <td
-                                    colSpan={2}
-                                    className="border border-gray-300 px-4 py-3 text-right"
-                                >
+                            <tr className="bg-[#F5F4F0]">
+                                <td colSpan={2} className="px-4 py-3 text-right text-[12.5px] font-semibold text-[#1A1A18]">
                                     Total
                                 </td>
-                                <td className="border border-gray-300 px-4 py-3 text-right">
-                                    <span
-                                        className={
-                                            totalPercentage === 100 ? 'text-green-600' : 'text-red-600'
-                                        }
-                                    >
-                                        {totalPercentage.toFixed(2)}%
-                                    </span>
+                                <td className={`px-4 py-3 text-right text-[12.5px] font-semibold ${totalClass}`}>
+                                    {totalPercentage.toFixed(2)}%
                                 </td>
                             </tr>
                         </tfoot>

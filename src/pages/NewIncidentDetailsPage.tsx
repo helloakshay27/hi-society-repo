@@ -557,7 +557,7 @@
 //                     <CardHeader className="bg-[#F6F4EE] mb-0">
 //                         <CardTitle className="text-lg text-black flex items-center gap-2">
 //                             INJURIES
-//                             <span className="bg-[#C72030] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+//                             <span className="bg-[#F5F4F0] text-[#1A1A18] text-xs rounded-full w-5 h-5 flex items-center justify-center">
 //                                 {incident.injuries.length}
 //                             </span>
 //                         </CardTitle>
@@ -594,7 +594,7 @@
 //                     <CardHeader className="bg-[#F6F4EE] mb-0">
 //                         <CardTitle className="text-lg text-black flex items-center gap-2">
 //                             WITNESSES
-//                             <span className="bg-[#C72030] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+//                             <span className="bg-[#F5F4F0] text-[#1A1A18] text-xs rounded-full w-5 h-5 flex items-center justify-center">
 //                                 {incident.witnesses.length}
 //                             </span>
 //                         </CardTitle>
@@ -747,7 +747,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 // Adjust this import path to wherever incidentService actually lives in your project
 import { incidentService, Incident, IncidentAttachment } from '@/services/incidentService';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ClipboardList, ShieldCheck, Paperclip, Activity } from 'lucide-react';
 
 interface InjuryRow {
     injuryType: string;
@@ -1223,7 +1223,7 @@ export const NewIncidentDetailsPage = () => {
 
     if (loading) {
         return (
-            <div className="p-6">
+            <div className="p-6 bg-[#FDFDFB] min-h-screen">
                 <p className="text-sm text-gray-500">Loading incident details…</p>
             </div>
         );
@@ -1231,7 +1231,7 @@ export const NewIncidentDetailsPage = () => {
 
     if (error || !incident) {
         return (
-            <div className="p-6">
+            <div className="p-6 bg-[#FDFDFB] min-h-screen">
                 <p className="text-sm text-red-600 mb-4">
                     {error ?? 'Incident details could not be loaded.'}
                 </p>
@@ -1246,19 +1246,19 @@ export const NewIncidentDetailsPage = () => {
     }
 
     return (
-        <div className="p-6">
+        <div className="p-6 bg-[#FDFDFB] min-h-screen">
             {/* Breadcrumb */}
             <div className="mb-6">
-                <button
-                    type="button"
-                    onClick={() => navigate("/safety/incident")}
-                    aria-label="Back to Incident List"
-                    className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E7EB] bg-white shadow-sm hover:bg-gray-50"
-                >
-                    <ArrowLeft className="h-5 w-5 text-[#1A1A1A]" />
-                </button>
-
                 <nav className="flex items-center text-sm text-gray-600 mb-4">
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="mr-2 flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-[#F7F6F2]"
+                        aria-label="Go back"
+                        title="Go back"
+                    >
+                        <ArrowLeft className="h-4 w-4 text-gray-600" />
+                    </button>
                     <span>Home</span>
                     <span className="mx-2">{">"}</span>
                     <span>Safety</span>
@@ -1279,9 +1279,10 @@ export const NewIncidentDetailsPage = () => {
             {/* =====================================================
                 INCIDENT DETAIL CARD
             ====================================================== */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className="bg-[#F6F4EE] mb-0 flex flex-row items-center justify-between space-y-0">
-                    <CardTitle className="text-lg text-black">
+            <Card className="mb-6 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white shadow-none">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-0">
+                    <CardTitle className="flex items-center text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+                        <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><ClipboardList size={14} color="#1A1A18" /></span>
                         DETAIL (#{incident.id})
                     </CardTitle>
 
@@ -1477,11 +1478,12 @@ export const NewIncidentDetailsPage = () => {
             ====================================================== */}
 
             {/* INJURIES */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className="bg-[#F6F4EE] mb-0">
-                    <CardTitle className="text-lg text-black flex items-center gap-2">
+            <Card className="mb-6 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white shadow-none">
+                <CardHeader className="px-6 pt-[22px] pb-0">
+                    <CardTitle className="flex items-center gap-2 text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+                        <span className="mr-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><ShieldCheck size={14} color="#1A1A18" /></span>
                         INJURIES
-                        <span className="bg-[#C72030] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        <span className="bg-[#F5F4F0] text-[#1A1A18] text-xs rounded-full w-5 h-5 flex items-center justify-center">
                             {incident.injuries.length}
                         </span>
                     </CardTitle>
@@ -1513,11 +1515,12 @@ export const NewIncidentDetailsPage = () => {
             </Card>
 
             {/* ATTACHMENTS */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className="bg-[#F6F4EE] mb-0">
-                    <CardTitle className="text-lg text-black flex items-center gap-2">
+            <Card className="mb-6 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white shadow-none">
+                <CardHeader className="px-6 pt-[22px] pb-0">
+                    <CardTitle className="flex items-center gap-2 text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+                        <span className="mr-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><Paperclip size={14} color="#1A1A18" /></span>
                         ATTACHMENTS
-                        <span className="bg-[#C72030] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        <span className="bg-[#F5F4F0] text-[#1A1A18] text-xs rounded-full w-5 h-5 flex items-center justify-center">
                             {incident.attachments.length}
                         </span>
                     </CardTitle>
@@ -1580,9 +1583,9 @@ export const NewIncidentDetailsPage = () => {
             </Card>
 
             {/* UPDATE STATUS (log history) */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className="bg-[#F6F4EE] mb-0 flex flex-row items-center justify-between space-y-0">
-                    <CardTitle className="text-lg text-black">UPDATE STATUS</CardTitle>
+            <Card className="mb-6 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white shadow-none">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-0">
+                    <CardTitle className="flex items-center text-sm font-semibold leading-[1.4] text-[#1A1A18]"><span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><Activity size={14} color="#1A1A18" /></span>UPDATE STATUS</CardTitle>
                     {/* <Button
                         onClick={() => setUpdateStatusOpen(true)}
                         className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white text-sm px-4 py-2"

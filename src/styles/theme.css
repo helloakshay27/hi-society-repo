@@ -6427,3 +6427,43 @@ html body button[title="Import"]:hover {
 html body button[title="Import"] {
   border-radius: var(--radius-md) !important;
 }
+
+/* ============================================================
+   CALENDAR GRID (react-day-picker) — opt out of the global table
+   styles above. Day pickers render a real <table>, so the data-table
+   header band, cell padding and row separators were leaking in and
+   pushing the weekday headers out of line with the date columns.
+   Specificity (0,5,5) beats the (0,3,3) table rules.
+   ============================================================ */
+html body .rdp table.rdp-table thead th.rdp-head_cell:not(.analytics-header):not(.analytics-header) {
+  width: 2.5rem !important;
+  height: 2rem !important;
+  padding: 0 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  line-height: 2rem !important;
+  text-align: center !important;
+  color: rgba(26, 26, 24, 0.48) !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+html body .rdp table.rdp-table tbody tr.rdp-row td.rdp-cell:not([colspan]):not(.analytics-header) {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  border: none !important;
+  background-color: transparent !important;
+}
+html body .rdp table.rdp-table tbody tr.rdp-row:hover {
+  background-color: transparent !important;
+}
+
+/* Survey filter Apply button: black bg, white text */
+html body [role="dialog"] button.survey-apply-btn {
+  background-color: #000 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}

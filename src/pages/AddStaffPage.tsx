@@ -820,7 +820,7 @@ export const AddStaffPage = () => {
                 )}
 
                 {/* File Upload */}
-                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-[#F5F4F0] rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
+                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-white rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
                   <input
                     type="file"
                     accept="image/*"
@@ -858,7 +858,7 @@ export const AddStaffPage = () => {
               
               <div>
                 <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-2 block">Documents Upload</Label>
-                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-[#F5F4F0] rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
+                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-white rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx"

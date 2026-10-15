@@ -281,7 +281,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("companyName", e.target.value)
                     }
-                    className="h-10 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                    className="h-11 rounded-xl border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
 
@@ -294,7 +294,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("contactPerson", e.target.value)
                     }
-                    className="h-10 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                    className="h-11 rounded-xl border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
 
@@ -307,7 +307,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("address", e.target.value)
                     }
-                    className="min-h-[80px] border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20 resize-none"
+                    className="min-h-[80px] rounded-xl px-3.5 py-3 leading-relaxed resize-none border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
 
@@ -315,8 +315,8 @@ const AddBusinessDirectoryPage: React.FC = () => {
                   <Label htmlFor="mobile">
                     Mobile Number <span className="text-red-500">*</span>
                   </Label>
-                  <div className="flex rounded-md shadow-sm">
-                    <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-sm">
+                  <div className="flex">
+                    <span className="inline-flex items-center h-11 px-3.5 rounded-l-xl border border-r-0 border-[rgba(26,26,24,0.08)] bg-[#F5F4F0] text-[12.5px] font-semibold text-[rgba(26,26,24,0.48)]">
                       +91
                     </span>
                     <Input
@@ -328,7 +328,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                         const value = e.target.value.replace(/\D/g, "").slice(0, 10);
                         handleInputChange("mobile", value);
                       }}
-                      className="rounded-l-none border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                      className="rounded-l-none rounded-r-xl h-11 border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                     />
                   </div>
                 </div>
@@ -342,7 +342,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("landline1", e.target.value)
                     }
-                    className="h-10 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                    className="h-11 rounded-xl border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
 
@@ -355,7 +355,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("landline2", e.target.value)
                     }
-                    className="h-10 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                    className="h-11 rounded-xl border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
 
@@ -368,7 +368,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("extIntercom", e.target.value)
                     }
-                    className="h-10 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                    className="h-11 rounded-xl border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
 
@@ -384,7 +384,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("primaryEmail", e.target.value)
                     }
-                    className="h-10 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                    className="h-11 rounded-xl border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
 
@@ -398,7 +398,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("secondaryEmail", e.target.value)
                     }
-                    className="h-10 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                    className="h-11 rounded-xl border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
 
@@ -411,7 +411,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("website", e.target.value)
                     }
-                    className="h-10 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                    className="h-11 rounded-xl border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
 
@@ -425,7 +425,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                       handleInputChange("category", value)
                     }
                   >
-                    <SelectTrigger className="h-10 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20">
+                    <SelectTrigger className="h-11 rounded-xl border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow">
                       <SelectValue placeholder="Select Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -449,7 +449,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     }
                     disabled={!form.category}
                   >
-                    <SelectTrigger className="h-10 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20">
+                    <SelectTrigger className="h-11 rounded-xl border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow">
                       <SelectValue placeholder="Select Sub Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -471,7 +471,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("keyOffering", e.target.value)
                     }
-                    className="h-10 border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                    className="h-11 rounded-xl border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
 
@@ -484,7 +484,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("description", e.target.value)
                     }
-                    className="min-h-[100px] border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                    className="min-h-[100px] rounded-xl px-3.5 py-3 leading-relaxed border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
 
@@ -497,7 +497,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange("profile", e.target.value)
                     }
-                    className="min-h-[100px] border-gray-200 focus:border-[#C72030] focus:ring-[#C72030]/20"
+                    className="min-h-[100px] rounded-xl px-3.5 py-3 leading-relaxed border-[rgba(26,26,24,0.08)] bg-white text-[13.5px] font-medium text-[#1A1A18] placeholder:text-[rgba(26,26,24,0.3)] hover:border-[rgba(26,26,24,0.28)] focus-visible:border-[#1A1A18] focus-visible:shadow-[0_0_0_4px_rgba(26,26,24,0.1)] transition-shadow"
                   />
                 </div>
               </div>
@@ -570,17 +570,17 @@ const AddBusinessDirectoryPage: React.FC = () => {
             </form>
           </CardContent>
         </Card>
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-end gap-4">
           <Button
             variant="outline"
             onClick={handleCancel}
-            className="px-6 bg-white hover:bg-gray-50 text-gray-700"
+            className="btn-cancel h-9 px-4 text-sm font-medium"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
-            className="px-6 bg-[#C72030] hover:bg-[#a31b28] text-white shadow-sm"
+            className="btn-primary h-9 px-4 text-sm font-medium"
           >
             Submit 
           </Button>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Checkbox, FormControlLabel, Dialog, DialogContent, IconButton } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { ArrowLeft, ClipboardList, ShieldCheck, Paperclip } from 'lucide-react';
 import CloseIcon from '@mui/icons-material/Close';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import { Heading } from '@/components/ui/heading';
@@ -669,7 +669,7 @@ export const EditIncidentPage = () => {
 
     if (loading) {
         return (
-            <div className="p-6">
+            <div className="p-6 bg-[#FDFDFB] min-h-screen">
                 <p className="text-sm text-gray-500">Loading incident for editing…</p>
             </div>
         );
@@ -677,7 +677,7 @@ export const EditIncidentPage = () => {
 
     if (loadError) {
         return (
-            <div className="p-6">
+            <div className="p-6 bg-[#FDFDFB] min-h-screen">
                 <p className="text-sm text-red-600 mb-4">{loadError}</p>
                 <Button
                     onClick={fetchIncident}
@@ -690,7 +690,7 @@ export const EditIncidentPage = () => {
     }
 
     return (
-        <div className="p-6">
+        <div className="p-6 bg-[#FDFDFB] min-h-screen">
             <div className="mb-6">
                 {/* Breadcrumb */}
                 <nav className="flex items-center text-sm text-gray-600 mb-8">
@@ -698,9 +698,9 @@ export const EditIncidentPage = () => {
                         variant="ghost"
                         onClick={() => navigate(-1)}
                         aria-label="Go back to previous page"
-                        className="!h-10 !w-10 !min-w-10 !rounded-full !p-0 !border !border-[#E5E7EB] !bg-white shadow-sm hover:!bg-[#F3F4F6] mr-1"
+                        className="!mr-2 !flex !h-8 !w-8 !min-w-8 !items-center !justify-center !rounded-md !p-0 transition-colors hover:!bg-[#F7F6F2]"
                     >
-                        <ArrowBackIcon className="!text-[#E07856]" />
+                        <ArrowLeft className="h-4 w-4 text-gray-600" />
                     </Button>
 
                     <span>Home</span>
@@ -722,10 +722,10 @@ export const EditIncidentPage = () => {
             </div>
 
             {/* Basic Details */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className='bg-[#F6F4EE] mb-4'>
-                    <CardTitle className="text-lg text-black flex items-center">
-                        <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">1</span>
+            <Card className="mb-6 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white shadow-none">
+                <CardHeader className="px-6 pt-[22px] pb-0">
+                    <CardTitle className="flex items-center text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+                        <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><ClipboardList size={14} color="#1A1A18" /></span>
                         INCIDENT DETAILS
                     </CardTitle>
                 </CardHeader>
@@ -1217,10 +1217,10 @@ export const EditIncidentPage = () => {
             </Card>
 
             {/* Support and Disclaimer */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className='bg-[#F6F4EE] mb-4'>
-                    <CardTitle className="text-lg text-black flex items-center">
-                        <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">2</span>
+            <Card className="mb-6 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white shadow-none">
+                <CardHeader className="px-6 pt-[22px] pb-0">
+                    <CardTitle className="flex items-center text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+                        <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><ShieldCheck size={14} color="#1A1A18" /></span>
                         SUPPORT & DISCLAIMER
                     </CardTitle>
                 </CardHeader>
@@ -1268,10 +1268,10 @@ export const EditIncidentPage = () => {
             </Card>
 
             {/* Attachments */}
-            <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-                <CardHeader className='bg-[#F6F4EE] mb-4'>
-                    <CardTitle className="text-lg text-black flex items-center">
-                        <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">3</span>
+            <Card className="mb-6 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white shadow-none">
+                <CardHeader className="px-6 pt-[22px] pb-0">
+                    <CardTitle className="flex items-center text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+                        <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><Paperclip size={14} color="#1A1A18" /></span>
                         ATTACHMENTS
                     </CardTitle>
                 </CardHeader>
@@ -1443,7 +1443,7 @@ export const EditIncidentPage = () => {
                     )}
                 </DialogContent>
             </Dialog>
-            <div className="flex justify-center gap-4 pt-6">
+            <div className="flex justify-end gap-4 pt-6">
                 <Button
                     variant="outline"
                     onClick={() => navigate(-1)}

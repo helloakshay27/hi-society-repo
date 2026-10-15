@@ -386,13 +386,13 @@ variant="ghost"
 
                 <div className="flex justify-end gap-3 pt-4">
                   <Button
-                    className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="min-w-[110px] bg-[#C72030] hover:bg-[#B01C29] text-white px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleApplyFilters}
                   >
                     Apply
                   </Button>
                   <Button
-                    className="flex-1 !bg-white border border-[#C72030] text-[#C72030] px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="min-w-[110px] !bg-white border border-[#C72030] text-[#C72030] px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleResetFilters}
                   >
                     Reset

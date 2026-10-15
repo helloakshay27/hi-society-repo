@@ -3,12 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 import {
   TextField,
   FormControl,
-  InputLabel,
   Select as MuiSelect,
   MenuItem,
   CircularProgress
@@ -150,15 +148,14 @@ export const PatrollingFilterModal = ({ isOpen, onClose, onApply }: PatrollingFi
   };
 
   const fieldStyles = {
-    height: { xs: 28, sm: 36, md: 45 },
+    height: 50,
     backgroundColor: 'white',
-    '& .MuiInputBase-input, & .MuiSelect-select': {
-      padding: { xs: '8px', sm: '10px', md: '12px' },
-      backgroundColor: 'white',
-    },
-    '& .MuiOutlinedInput-root': {
-      backgroundColor: 'white',
-    }
+    borderRadius: '12px',
+    color: 'rgba(26,26,24,.38)',
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(26,26,24,.10)' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(26,26,24,.24)' },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#1A1A18', borderWidth: 1 },
+    '& .MuiSelect-select': { padding: '14px 16px', fontSize: '13.5px' },
   };
 
   const menuProps = {
@@ -175,189 +172,81 @@ export const PatrollingFilterModal = ({ isOpen, onClose, onApply }: PatrollingFi
     disableEnforceFocus: true,
   };
 
+  type LocationFilterKey = 'buildingId' | 'wingId' | 'areaId' | 'floorId' | 'roomId';
+  const renderLocationField = (
+    label: string,
+    key: LocationFilterKey,
+    placeholder: string,
+    options: Array<{ id: number; name: string }>,
+    disabled: boolean,
+    isLoading: boolean,
+  ) => (
+    <div className="space-y-2">
+      <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,.68)]">{label}</label>
+      <FormControl fullWidth variant="outlined" disabled={disabled}>
+        <MuiSelect
+          value={filters[key] ?? ''}
+          onChange={(event) => handleInputChange(key, event.target.value ? Number(event.target.value) : null)}
+          displayEmpty
+          sx={{ ...fieldStyles, color: filters[key] ? '#1A1A18' : 'rgba(26,26,24,.38)' }}
+          MenuProps={menuProps}
+        >
+          <MenuItem value="">{isLoading ? 'Loading...' : placeholder}</MenuItem>
+          {options.map((option) => (
+            <MenuItem key={option.id} value={option.id}>{option.name}</MenuItem>
+          ))}
+        </MuiSelect>
+        {isLoading && (
+          <div className="absolute right-8 top-1/2 -translate-y-1/2">
+            <CircularProgress size={16} />
+          </div>
+        )}
+      </FormControl>
+    </div>
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }} modal={false}>
-      <DialogContent className="max-w-2xl bg-white [&>button]:hidden" aria-describedby="filter-dialog-description">
-        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
-          <DialogTitle className="text-xl font-semibold">FILTER BY</DialogTitle>
+      <DialogContent className="max-h-[86vh] w-[min(720px,calc(100vw-32px))] max-w-none overflow-y-auto !rounded-3xl border border-[rgba(26,26,24,.09)] bg-white p-7 shadow-[0_8px_40px_rgba(26,26,24,.16)] [&>button]:hidden" aria-describedby="filter-dialog-description">
+        <DialogHeader className="mb-1 flex flex-row items-center justify-between pb-5">
+          <DialogTitle className="text-[18px] font-semibold text-[#1A1A18]">Filter By</DialogTitle>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleClose}
-            className="h-6 w-6 p-0"
+            aria-label="Close filters"
+            className="h-8 w-8 rounded-lg p-0 text-[rgba(26,26,24,.48)] hover:bg-[#F7F6F2] hover:text-[#1A1A18]"
           >
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
-        
-        <div className="p-6 space-y-6">
-          {/* Search Section */}
-      
 
-          {/* Location Details */}
-          <div>
-            <h3 className="text-[14px] text-[#C72030] font-medium mb-4">Location Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Building */}
-              <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                <InputLabel shrink>Building</InputLabel>
-                <MuiSelect
-                  value={filters.buildingId || ''}
-                  onChange={(e) => handleInputChange('buildingId', e.target.value ? Number(e.target.value) : null)}
-                  label="Building"
-                  notched
-                  displayEmpty
-                  disabled={loading.buildings}
-                  MenuProps={menuProps}
-                >
-                  <MenuItem value="">
-                    <em>Select Building</em>
-                  </MenuItem>
-                  {buildings.map((building) => (
-                    <MenuItem key={building.id} value={building.id}>
-                      {building.name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-                {loading.buildings && (
-                  <div className="absolute right-8 top-1/2 -translate-y-1/2">
-                    <CircularProgress size={16} />
-                  </div>
-                )}
-              </FormControl>
-
-              {/* Wing */}
-              <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                <InputLabel shrink>Wing</InputLabel>
-                <MuiSelect
-                  value={filters.wingId || ''}
-                  onChange={(e) => handleInputChange('wingId', e.target.value ? Number(e.target.value) : null)}
-                  label="Wing"
-                  notched
-                  displayEmpty
-                  disabled={!filters.buildingId || loading.wings}
-                  MenuProps={menuProps}
-                >
-                  <MenuItem value="">
-                    <em>Select Wing</em>
-                  </MenuItem>
-                  {wings.map((wing) => (
-                    <MenuItem key={wing.id} value={wing.id}>
-                      {wing.name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-                {loading.wings && (
-                  <div className="absolute right-8 top-1/2 -translate-y-1/2">
-                    <CircularProgress size={16} />
-                  </div>
-                )}
-              </FormControl>
-
-              {/* Area */}
-              <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                <InputLabel shrink>Area</InputLabel>
-                <MuiSelect
-                  value={filters.areaId || ''}
-                  onChange={(e) => handleInputChange('areaId', e.target.value ? Number(e.target.value) : null)}
-                  label="Area"
-                  notched
-                  displayEmpty
-                  disabled={!filters.wingId || loading.areas}
-                  MenuProps={menuProps}
-                >
-                  <MenuItem value="">
-                    <em>Select Area</em>
-                  </MenuItem>
-                  {areas.map((area) => (
-                    <MenuItem key={area.id} value={area.id}>
-                      {area.name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-                {loading.areas && (
-                  <div className="absolute right-8 top-1/2 -translate-y-1/2">
-                    <CircularProgress size={16} />
-                  </div>
-                )}
-              </FormControl>
-
-              {/* Floor */}
-              <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                <InputLabel shrink>Floor</InputLabel>
-                <MuiSelect
-                  value={filters.floorId || ''}
-                  onChange={(e) => handleInputChange('floorId', e.target.value ? Number(e.target.value) : null)}
-                  label="Floor"
-                  notched
-                  displayEmpty
-                  disabled={!filters.areaId || loading.floors}
-                  MenuProps={menuProps}
-                >
-                  <MenuItem value="">
-                    <em>Select Floor</em>
-                  </MenuItem>
-                  {floors.map((floor) => (
-                    <MenuItem key={floor.id} value={floor.id}>
-                      {floor.name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-                {loading.floors && (
-                  <div className="absolute right-8 top-1/2 -translate-y-1/2">
-                    <CircularProgress size={16} />
-                  </div>
-                )}
-              </FormControl>
-
-              {/* Room */}
-              <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                <InputLabel shrink>Room</InputLabel>
-                <MuiSelect
-                  value={filters.roomId || ''}
-                  onChange={(e) => handleInputChange('roomId', e.target.value ? Number(e.target.value) : null)}
-                  label="Room"
-                  notched
-                  displayEmpty
-                  disabled={!filters.floorId || loading.rooms}
-                  MenuProps={menuProps}
-                >
-                  <MenuItem value="">
-                    <em>Select Room</em>
-                  </MenuItem>
-                  {rooms.map((room) => (
-                    <MenuItem key={room.id} value={room.id}>
-                      {room.name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-                {loading.rooms && (
-                  <div className="absolute right-8 top-1/2 -translate-y-1/2">
-                    <CircularProgress size={16} />
-                  </div>
-                )}
-              </FormControl>
-
-              {/* Status */}
-            
-            </div>
+        <div className="space-y-5 py-1">
+          <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+            {renderLocationField('Building', 'buildingId', 'Select Building', buildings, loading.buildings, loading.buildings)}
+            {renderLocationField('Wing', 'wingId', 'Select Wing', wings, !filters.buildingId || loading.wings, loading.wings)}
+            {renderLocationField('Area', 'areaId', 'Select Area', areas, !filters.wingId || loading.areas, loading.areas)}
+            {renderLocationField('Floor', 'floorId', 'Select Floor', floors, !filters.areaId || loading.floors, loading.floors)}
+            {renderLocationField('Room', 'roomId', 'Select Room', rooms, !filters.floorId || loading.rooms, loading.rooms)}
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-4 pt-6">
-            <Button 
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"               onClick={handleApply}
-            >
-              Apply Filters
-            </Button>
-            <Button 
-              variant="outline"
-  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"              onClick={handleReset}
-            >
-              Reset
-            </Button>
-          </div>
+        <div className="flex justify-end gap-2.5 pt-2">
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className="min-h-[42px] rounded-lg !border-[rgba(26,26,24,.18)] bg-white px-[22px] text-[13px] font-semibold !text-[#1A1A18] hover:bg-[#F7F6F2]"
+            style={{ color: '#1A1A18', border: '1px solid rgba(26,26,24,.18)' }}
+          >
+            Reset
+          </Button>
+          <Button
+            onClick={handleApply}
+            className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
+            style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
+          >
+            <span style={{ color: '#FFFFFF' }}>Apply Filters</span>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

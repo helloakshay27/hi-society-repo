@@ -15,11 +15,11 @@ import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 // Helper component for displaying info fields
 const InfoField = ({ label, value }: { label: string; value: any }) => (
-  <Box sx={{ mb: 1.5 }}>
-    <Typography variant="body2" sx={{ color: "#888", fontSize: "11px", mb: 0.3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+  <Box>
+    <Typography variant="body2" sx={{ color: "rgba(26, 26, 24, 0.48)", fontSize: "11px", mb: 0.5, fontWeight: 500 }}>
       {label}
     </Typography>
-    <Typography variant="body2" sx={{ color: "#1A1A1A", fontWeight: 500, fontSize: "13px" }}>
+    <Typography variant="body2" sx={{ color: "#1A1A18", fontWeight: 500, fontSize: "13.5px" }}>
       {value || "-"}
     </Typography>
   </Box>
@@ -163,7 +163,7 @@ export const ViewUserPage = () => {
     return (
       <div className="p-6 bg-white min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
           <p>Loading user details...</p>
         </div>
       </div>
@@ -376,25 +376,26 @@ export const ViewUserPage = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, background: "#f5f5f5" }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, background: "#FDFDFB", minHeight: "100vh" }}>
       {/* Back Button */}
       <button
+        type="button"
         onClick={() => navigate("/settings/manage-users")}
-        className="flex items-center gap-1 text-gray-600 hover:text-gray-800 mb-6"
+        className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[rgba(26,26,24,0.48)] hover:text-[#1A1A18] transition-colors mb-[14px]"
       >
-        <ArrowLeft className="w-4 h-4" />
-        Back
+        <ArrowLeft className="w-[18px] h-[18px]" />
+        Back to Manage Users
       </button>
 
-      {/* Main Container Paper */}
-      <Paper sx={{ borderRadius: 2, overflow: "hidden", boxShadow: 1 }}>
+      {/* Main Container */}
+      <Paper elevation={0} sx={{ borderRadius: 0, overflow: "visible", boxShadow: "none", background: "transparent" }}>
         {/* Header Section with Avatar and User Info */}
-        <Box sx={{ background: "linear-gradient(135deg, #da7756 0%, #da7756 100%)", p: 4, position: "relative" }}>
+        <Box sx={{ background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px", position: "relative" }}>
           {/* Edit Button */}
           <Box sx={{ position: "absolute", top: 16, right: 16 }}>
             <Button
               size="sm"
-              className="px-8 border-0 bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium [&_svg]:!text-[#da7756] flex items-center gap-2"
+              className="btn-primary h-9 px-4 text-sm font-medium inline-flex items-center gap-1.5 [&_svg]:!text-white"
               onClick={() => navigate(`/settings/manage-users/edit/${userId}`)}
             >
               <Edit className="w-4 h-4 mr-1" />
@@ -406,14 +407,14 @@ export const ViewUserPage = () => {
           <Box sx={{ display: "flex", alignItems: "flex-start", gap: 3 }}>
             <Avatar
               sx={{
-                width: 100,
-                height: 100,
-                bgcolor: "#E7E3D9",
-                border: "4px solid #fff",
-                color: "#C72030",
-                fontSize: "36px",
-                fontWeight: 700,
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                width: 72,
+                height: 72,
+                bgcolor: "#F5F4F0",
+                border: "none",
+                color: "#1A1A18",
+                fontSize: "28px",
+                fontWeight: 600,
+                boxShadow: "none",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -435,12 +436,12 @@ export const ViewUserPage = () => {
               ) : null}
               {!getProfilePictureUrl(user?.profile_picture) && (
                 <Box sx={{ textAlign: "center" }}>
-                  <UserIcon size={50} />
+                  <UserIcon size={32} />
                 </Box>
               )}
             </Avatar>
-            <Box sx={{ flex: 1, color: "white" }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+            <Box sx={{ flex: 1, color: "rgba(26, 26, 24, 0.48)" }}>
+              <Typography sx={{ fontSize: "22px", fontWeight: 600, lineHeight: 1.2, letterSpacing: "-0.015em", color: "#1A1A18", mb: 1 }}>
                 {user?.full_name || (user?.firstname && user?.lastname ? `${user.firstname} ${user.lastname}` : "User")}
               </Typography>
               <Box sx={{ display: "flex", gap: 3, mb: 1.5, flexWrap: "wrap" }}>
@@ -464,16 +465,16 @@ export const ViewUserPage = () => {
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 1,
-                    px: 2,
-                    py: 0.75,
-                    borderRadius: "20px",
-                    backgroundColor: user?.approved ? "#10b981" : user?.approved === false ? "#ef4444" : "#f59e0b",
-                    color: "white",
-                    fontSize: "12px",
+                    px: 1.25,
+                    py: 0.375,
+                    borderRadius: "999px",
+                    backgroundColor: user?.approved ? "rgba(18, 161, 80, 0.12)" : user?.approved === false ? "rgba(229, 72, 77, 0.12)" : "rgba(242, 163, 18, 0.3)",
+                    color: user?.approved ? "#0E7F3F" : user?.approved === false ? "#A32126" : "#8A5B00",
+                    fontSize: "11px",
                     fontWeight: 600,
                   }}
                 >
-                  <Box sx={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.4)" }} />
+                  <Box sx={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "currentColor" }} />
                   {user?.approved ? "Approved" : user?.approved === false ? "Rejected" : "Pending"}
                 </Box>
               </Box>
@@ -483,27 +484,27 @@ export const ViewUserPage = () => {
           {/* Add to Another Flat Button */}
           <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3, gap: 2 }}>
             <Button
-              className="px-8 border-0 bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2"
+              className="btn-cancel h-9 px-4 text-sm font-medium inline-flex items-center gap-1.5"
               onClick={() => setIsAddToAnotherFlatModalOpen(true)}
             >
               + Add to Another Flat
             </Button>
             <Button
-              className="px-8 border-0 bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium [&_svg]:!text-[#da7756] flex items-center gap-2"
+              className="btn-cancel h-9 px-4 text-sm font-medium inline-flex items-center gap-1.5"
               onClick={() => setCreditDialogOpen(true)}
             >
               <Plus className="w-4 h-4 mr-1" />
               Credit Wallet
             </Button>
             <Button
-              className="px-8 border-0 bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2"
+              className="btn-cancel h-9 px-4 text-sm font-medium inline-flex items-center gap-1.5"
               onClick={() => setSendEmailOpen(true)}
             >
               <Mail className="w-4 h-4 mr-1" />
               Send Email
             </Button>
             <Button
-              className="px-8 border-0 bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2"
+              className="btn-cancel h-9 px-4 text-sm font-medium inline-flex items-center gap-1.5"
               onClick={() => setInviteVisitorLinkOpen(true)}
               disabled={!user?.encrypted_id}
             >
@@ -514,27 +515,37 @@ export const ViewUserPage = () => {
         </Box>
 
         {/* Tabs */}
-        <Box sx={{ borderBottom: "2px solid #e5e7eb", background: "#fff" }}>
+        <Box sx={{ mt: 3, mb: 3 }}>
           <Tabs
             value={tabValue}
             onChange={(e, newValue) => setTabValue(newValue)}
             sx={{
+              minHeight: 0,
+              "& .MuiTabs-flexContainer": { gap: "3px" },
               "& .MuiTab-root": {
                 textTransform: "none",
-                fontSize: "14px",
+                fontSize: "12.5px",
                 fontWeight: 600,
-                color: "#666",
-                py: 2,
+                color: "rgba(26, 26, 24, 0.55)",
+                minHeight: 0,
+                py: "8px",
+                px: "16px",
+                borderRadius: "8px",
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
-                "&.Mui-selected": {
-                  color: "#C72030",
-                },
+                "&:hover": { color: "#1A1A18" },
+              },
+              // theme.css styles [role="tablist"] tabs as a segmented control but only
+              // highlights Radix tabs (data-state="active"); MUI marks the selected tab
+              // with .Mui-selected, so highlight it here with a selector strong enough to win.
+              "& .MuiTabs-flexContainer[role='tablist'] .MuiTab-root.Mui-selected.Mui-selected.Mui-selected": {
+                color: "#1A1A18 !important",
+                backgroundColor: "#FFFFFF !important",
+                boxShadow: "0 1px 2px rgba(26, 26, 24, 0.1), 0 0 0 1px rgba(26, 26, 24, 0.05) !important",
               },
               "& .MuiTabs-indicator": {
-                backgroundColor: "#C72030",
-                height: "3px",
+                display: "none",
               },
             }}
           >
@@ -546,17 +557,17 @@ export const ViewUserPage = () => {
         {/* Tab Content - User Info */}
         {
           tabValue === 0 && (
-            <Box sx={{ p: 4, background: "#fafafa" }}>
+            <Box sx={{ p: 0, background: "transparent" }}>
               {/* Contact Information Section */}
-              <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                  <Mail className="w-5 h-5 text-C72030" style={{ color: "#C72030" }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
+              <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><Mail className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
+                  <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
                     Contact Information
                   </Typography>
                 </Box>
-                <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+                <Paper elevation={0} sx={{ p: 0, background: "transparent", borderRadius: 0, boxShadow: "none" }}>
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: "18px 24px" }}>
                     <InfoField label="Email" value={user?.email || "-"} />
                     <InfoField label="Mobile Number" value={user?.mobile_number || "-"} />
                     <InfoField label="Alternate Email 1" value={user?.alternate_email_1 || "-"} />
@@ -568,15 +579,15 @@ export const ViewUserPage = () => {
               </Box>
 
               {/* Personal Details Section */}
-              <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                  <UserIcon className="w-5 h-5" style={{ color: "#C72030" }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
+              <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><UserIcon className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
+                  <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
                     Personal Details
                   </Typography>
                 </Box>
-                <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+                <Paper elevation={0} sx={{ p: 0, background: "transparent", borderRadius: 0, boxShadow: "none" }}>
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: "18px 24px" }}>
                     <InfoField label="Date of Birth" value={user?.birthday || "-"} />
                     <InfoField label="Anniversary" value={user?.anniversary || "-"} />
                     <InfoField label="Spouse Birthday" value={user?.spouse_birthday || "-"} />
@@ -590,15 +601,15 @@ export const ViewUserPage = () => {
               </Box>
 
               {/* Residential Details Section */}
-              <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                  <Home className="w-5 h-5" style={{ color: "#C72030" }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
+              <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><Home className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
+                  <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
                     Residential Details
                   </Typography>
                 </Box>
-                <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+                <Paper elevation={0} sx={{ p: 0, background: "transparent", borderRadius: 0, boxShadow: "none" }}>
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: "18px 24px" }}>
                     <InfoField label="Phase" value={user?.phase || "-"} />
                     <InfoField label="Alternate Address" value={user?.alternate_address || "-"} />
                     <InfoField label="Adults Residing" value={user?.adults || "-"} />
@@ -611,15 +622,15 @@ export const ViewUserPage = () => {
               </Box>
 
               {/* Official Details Section */}
-              <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                  <Info className="w-5 h-5" style={{ color: "#C72030" }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
+              <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><Info className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
+                  <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
                     Official Details
                   </Typography>
                 </Box>
-                <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+                <Paper elevation={0} sx={{ p: 0, background: "transparent", borderRadius: 0, boxShadow: "none" }}>
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: "18px 24px" }}>
                     <InfoField label="GST Number" value={user?.gst_number || "-"} />
                     <InfoField label="PAN Number" value={user?.pan_number || "-"} />
                     <InfoField label="Designation" value={user?.designation || "-"} />
@@ -630,14 +641,14 @@ export const ViewUserPage = () => {
 
               {/* Members List Section */}
               {members.length > 0 && (
-                <Box sx={{ mb: 4 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                    <Users className="w-5 h-5" style={{ color: "#C72030" }} />
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
+                <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                    <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><Users className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
+                    <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
                       Members List ({members.length})
                     </Typography>
                   </Box>
-                  <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
+                  <Paper elevation={0} sx={{ p: 0, background: "transparent", borderRadius: 0, boxShadow: "none" }}>
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                       {members.map((member, index) => (
                         <Typography
@@ -660,10 +671,10 @@ export const ViewUserPage = () => {
 
               {/* Documents Section */}
               {user?.user_flat_documents && user?.user_flat_documents.length > 0 && (
-                <Box sx={{ mb: 4 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                    <Files className="w-5 h-5" style={{ color: "#C72030" }} />
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
+                <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                    <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><Files className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
+                    <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
                       Attachments ({user.user_flat_documents.length})
                     </Typography>
                   </Box>
@@ -754,7 +765,7 @@ export const ViewUserPage = () => {
                             <Typography
                               variant="caption"
                               sx={{
-                                color: "#C72030",
+                                color: "rgba(26, 26, 24, 0.48)",
                                 fontSize: "11px",
                                 display: "block",
                                 fontWeight: 500,
@@ -776,7 +787,7 @@ export const ViewUserPage = () => {
         {/* Tab Content - Club Info */}
         {
           tabValue === 1 && (
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
               {!user?.club_member ? (
                 <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                   <Typography variant="body1" sx={{ color: "#666" }}>
@@ -784,7 +795,7 @@ export const ViewUserPage = () => {
                   </Typography>
                   <Button
                     onClick={() => setIsConfigureDetailsModalOpen(true)}
-                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                    className="btn-primary h-9 px-4 text-sm font-medium inline-flex items-center gap-1.5"
                   >
                     Configure Details
                   </Button>

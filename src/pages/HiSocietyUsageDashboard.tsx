@@ -6,7 +6,6 @@ import { ControlBar } from '../features/posthog-dashboard/components/ControlBar'
 import { InfoPopover } from '../features/posthog-dashboard/components/InfoPopover';
 import { AiPanel } from '../features/posthog-dashboard/components/AiPanel';
 import { TierNote } from '../features/posthog-dashboard/components/TierNote';
-import { Footer } from '../features/posthog-dashboard/components/Footer';
 import { TrafficSection } from '../features/posthog-dashboard/sections/TrafficSection';
 import { AdoptionSection } from '../features/posthog-dashboard/sections/AdoptionSection';
 import { WorkflowSection } from '../features/posthog-dashboard/sections/WorkflowSection';
@@ -102,8 +101,6 @@ function DashboardLayout() {
           {activePage === 'pgTraffic' && <TrafficSection />}
           {activePage === 'pgAdopt' && <AdoptionSection />}
           {activePage === 'pgFlows' && <WorkflowSection />}
-
-          <Footer />
         </main>
       </div>
       <InfoPopover />

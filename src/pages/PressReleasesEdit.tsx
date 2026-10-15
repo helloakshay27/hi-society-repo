@@ -391,10 +391,13 @@ const PressReleasesEdit = () => {
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
           {/* Section: Press Release Information */}
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+            <div className="px-6 py-3">
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                  <FileText size={16} color="#C72030" />
+                <span
+                  className="w-7 h-7 rounded-full flex items-center justify-center mr-3"
+                  style={{ backgroundColor: "#F6F4EE" }}
+                >
+                  <FileText size={14} color="#2C2C2C" />
                 </span>
                 Press Release Information
               </h2>
@@ -530,10 +533,11 @@ const PressReleasesEdit = () => {
                   </h5>
 
                   <button
-           className="btn-primary h-9 px-4 text-sm font-medium"                    type="button"
+                    className="btn-primary h-9 px-4 text-sm font-medium"
+                    type="button"
                     onClick={() => setShowUploader(true)}
                   >
-                    <svg
+                    {/* <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width={20}
                       height={20}
@@ -541,7 +545,7 @@ const PressReleasesEdit = () => {
                       viewBox="0 0 16 16"
                     >
                       <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg>
+                    </svg> */}
                     <span>Add</span>
                   </button>
                 </div>
@@ -648,21 +652,20 @@ const PressReleasesEdit = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 justify-center pt-6">
-            <button
-              type="submit"
-              disabled={loading}
-           className="btn-primary h-9 px-4 text-sm font-medium"            >
-              {loading ? 'Update' : 'Update'}
-            </button>
+          <div className="flex gap-4 justify-end pt-6">
             <button
               type="button"
               onClick={handleCancel}
-         
-  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
-
+              className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
             >
               Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary h-9 px-4 text-sm font-medium"
+            >
+              {loading ? 'Update' : 'Update'}
             </button>
           </div>
         </form>

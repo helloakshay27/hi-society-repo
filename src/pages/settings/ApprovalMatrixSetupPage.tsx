@@ -4,7 +4,7 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbS
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Heading } from "@/components/ui/heading";
-import { Search, Edit } from "lucide-react";
+import { Edit } from "lucide-react";
 import { apiClient } from "@/utils/apiClient";
 import { format } from "date-fns";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -89,33 +89,21 @@ const ApprovalMatrixSetupPage = () => {
       APPROVAL MATRIX SETUP
     </Heading>
 
-    {/* Action Bar */}
-    <div className="flex justify-between items-center mb-6">
-      {shouldShow("ApprovalMatrix", "create") && (
-        <Button
-          onClick={() => navigate('/settings/approval-matrix/setup/add')}
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"         >
-          + Add
-        </Button>
-      )}
-
-      <div className="relative">
-        {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" /> */}
-        {/* <input
-          type="text"
-          placeholder="Search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 pr-4 py-2 border border-gray-300 rounded-md bg-white text-[#1a1a1a] focus:outline-none focus:ring-1 focus:ring-[#C72030] w-64"
-        /> */}
-      </div>
-    </div>
-
     {/* Table */}
     <EnhancedTable
       storageKey="approval-matrix-setup-page-table"
       data={approvalData}
+      leftActions={
+        shouldShow("ApprovalMatrix", "create") ? (
+          <Button
+            onClick={() => navigate('/settings/approval-matrix/setup/add')}
+            variant="ghost"
+            className="btn-primary h-9 px-4 text-sm font-medium"
+          >
+            + Add
+          </Button>
+        ) : null
+      }
       columns={[
         { key: 'edit', label: 'Edit' },
         { key: 'id', label: 'Id' },

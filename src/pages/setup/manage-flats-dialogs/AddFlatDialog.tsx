@@ -246,7 +246,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
   return (
     <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl border border-[rgba(26,26,24,.09)] shadow-none">
-        <DialogHeader className="border-b border-[rgba(26,26,24,.09)] pb-4">
+        <DialogHeader className="pb-4">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-lg font-semibold text-[#1A1A18]">Add Flat</DialogTitle>
             <button

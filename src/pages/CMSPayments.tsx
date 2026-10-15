@@ -609,39 +609,35 @@ const CMSPayments = () => {
         fullWidth
         PaperProps={{
           style: {
-            borderRadius: "8px",
+            borderRadius: "16px",
           },
         }}
       >
         <DialogTitle
           sx={{
             m: 0,
-            p: 1.5,
+            p: "22px 24px 0",
             display: "flex",
-            justifyContent: "center",
+            justifyContent: "space-between",
             alignItems: "center",
-            bgcolor: "#f5f5f5",
-            position: "relative",
-            borderBottom: "1px solid #ddd",
+            bgcolor: "#FFFFFF",
           }}
         >
-          <Typography variant="h6" fontWeight="bold">
+          <Typography sx={{ fontSize: "18px", fontWeight: 600, color: "#1A1A18" }}>
             Edit Details
           </Typography>
           <IconButton
             aria-label="close"
             onClick={() => setIsEditDialogOpen(false)}
             sx={{
-              position: "absolute",
-              right: 8,
-              top: 8,
-              color: "red",
+              color: "rgba(26, 26, 24, 0.48)",
+              "&:hover": { color: "#1A1A18", backgroundColor: "#F5F4F0" },
             }}
           >
-            <X size={20} />
+            <X size={18} />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: 4 }}>
+        <DialogContent sx={{ p: "16px 24px 0 !important" }}>
           <Box className="space-y-6">
             <RadioGroup
               row
@@ -652,12 +648,12 @@ const CMSPayments = () => {
             >
               <FormControlLabel
                 value="FacilityBooking"
-                control={<Radio sx={{ color: '#666', '&.Mui-checked': { color: '#C72030' } }} />}
+                control={<Radio sx={{ color: 'rgba(26, 26, 24, 0.48)', '&.Mui-checked': { color: '#1A1A18' } }} />}
                 label="Facility Booking"
               />
               <FormControlLabel
                 value="ClubMember"
-                control={<Radio sx={{ color: '#666', '&.Mui-checked': { color: '#C72030' } }} />}
+                control={<Radio sx={{ color: 'rgba(26, 26, 24, 0.48)', '&.Mui-checked': { color: '#1A1A18' } }} />}
                 label="Club Member"
               />
             </RadioGroup>
@@ -724,11 +720,11 @@ const CMSPayments = () => {
             </FormControl>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", pb: 3, borderTop: "1px solid #eee" }}>
+        <DialogActions sx={{ justifyContent: "flex-end", p: "24px" }}>
           <Button
             onClick={handleEditSubmit}
             disabled={isSubmitting}
-            className="bg-[#00A65A] hover:bg-[#008d4c] text-white px-8 py-2 font-semibold"
+            className="btn-primary h-9 px-4 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>

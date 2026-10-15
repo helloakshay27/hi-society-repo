@@ -520,7 +520,7 @@ export const PatrollingDashboard = () => {
     }
   };
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen space-y-6 bg-[#FDFDFB] p-6">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Patrolling List</h1>
       </header>

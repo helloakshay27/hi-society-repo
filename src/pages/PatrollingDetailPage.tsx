@@ -920,7 +920,7 @@ export const PatrollingDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="min-h-screen bg-[#FDFDFB] p-6">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
           <span className="ml-2 text-gray-600">
@@ -933,7 +933,7 @@ export const PatrollingDetailPage: React.FC = () => {
 
   if (!patrolling) {
     return (
-      <div className="p-6">
+      <div className="min-h-screen bg-[#FDFDFB] p-6">
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold text-gray-900">
             Patrolling not found
@@ -953,25 +953,25 @@ export const PatrollingDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#FDFDFB] p-4 sm:p-6">
       {/* Header */}
       <div className="mb-6">
         <button
           onClick={() => navigate("/security/patrolling")}
-          className="flex items-center gap-1 hover:text-gray-800 mb-4"
+          className="mb-4 flex items-center gap-1.5 text-[12.5px] font-semibold text-[rgba(26,26,24,.48)] transition-colors hover:text-[#1A1A18]"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Patrolling List
         </button>
 
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="my-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">
+            <h1 className="mb-2 text-[22px] font-semibold text-[#1A1A18]" style={{ letterSpacing: '-0.015em', lineHeight: 1.2 }}>
               {patrolling.name}
             </h1>
             <Badge
               variant={patrolling.active ? "default" : "secondary"}
-              className="text-xs"
+              className={`rounded-full px-2.5 py-1 text-[10.5px] font-semibold ${patrolling.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}
             >
               {patrolling.active ? (
                 <>
@@ -990,16 +990,21 @@ export const PatrollingDetailPage: React.FC = () => {
           <div className="flex gap-2">
             <Button
               onClick={handleEdit}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Edit patrolling"
+              variant="outline"
+              className="h-[50px] rounded-[16px] !border-[rgba(26,26,24,.18)] bg-white px-[22px] text-[13px] font-semibold !text-[#1A1A18] hover:bg-[#F7F6F2]"
             >
-              <Edit className="w-4 h-4 mr-2" />
+              <Edit
+                className="mr-2 h-4 w-4 !text-[#1A1A18] !stroke-[#1A1A18]"
+              />
               Edit
             </Button>
             <Button
               onClick={handleDelete}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="outline"
+              className="h-[50px] rounded-[16px] !border-[rgba(26,26,24,.18)] bg-white px-[22px] text-[13px] font-semibold !text-[#1A1A18] hover:bg-[#F7F6F2]"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="mr-2 h-4 w-4 !text-[#1A1A18] !stroke-[#1A1A18]" />
               Delete
             </Button>
           </div>
@@ -1007,11 +1012,11 @@ export const PatrollingDetailPage: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Tabs */}
-        <Card className="w-full bg-white shadow-sm border border-gray-200">
+        <div className="w-full">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-auto p-0 text-sm border-b border-gray-200">
+            <TabsList className="flex h-auto w-fit max-w-full flex-wrap justify-start gap-1 rounded-xl bg-[#1a1a180e] p-1 text-sm">
               {[
                 { label: "Patrol Information", value: "patrol-information" },
                 { label: "Questions", value: "questions" },
@@ -1021,7 +1026,7 @@ export const PatrollingDetailPage: React.FC = () => {
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] px-3 py-2 border-r border-gray-200 last:border-r-0 text-sm"
+                  className="min-w-0 rounded-lg border-0 bg-transparent px-4 py-2 text-[13px] font-medium text-[rgba(26,26,24,.68)] data-[state=active]:bg-white data-[state=active]:text-[#1A1A18] data-[state=active]:shadow-sm"
                 >
                   {tab.label}
                 </TabsTrigger>
@@ -1029,59 +1034,59 @@ export const PatrollingDetailPage: React.FC = () => {
             </TabsList>
 
           {/* Patrol Information */}
-          <TabsContent value="patrol-information" className="p-4 sm:p-6">
+          <TabsContent value="patrol-information" className="mt-4 space-y-4 p-0">
             {/* Summary Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+              <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] p-4 shadow-none">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-orange-600" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFFFFF]">
+                    <Clock className="h-4 w-4 text-[#1A1A18]" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Duration</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Duration</p>
+                    <p className="text-[16px] font-semibold text-[#1A1A18]">
                       {patrolling.grace_period_minutes} min
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+              <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] p-4 shadow-none">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <ListChecks className="w-5 h-5 text-blue-600" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFFFFF]">
+                    <ListChecks className="h-4 w-4 text-[#1A1A18]" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Questions</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Questions</p>
+                    <p className="text-[16px] font-semibold text-[#1A1A18]">
                       {patrolling.summary?.questions_count || 0}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+              <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] p-4 shadow-none">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-purple-600" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFFFFF]">
+                    <Users className="h-4 w-4 text-[#1A1A18]" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Schedules</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Schedules</p>
+                    <p className="text-[16px] font-semibold text-[#1A1A18]">
                       {patrolling.summary?.schedules_count || 0}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+              <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] p-4 shadow-none">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-green-600" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFFFFF]">
+                    <MapPin className="h-4 w-4 text-[#1A1A18]" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Checkpoints</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Checkpoints</p>
+                    <p className="text-[16px] font-semibold text-[#1A1A18]">
                       {patrolling.summary?.checkpoints_count || 0}
                     </p>
                   </div>
@@ -1090,39 +1095,39 @@ export const PatrollingDetailPage: React.FC = () => {
             </div>
 
             {/* Patrol Information Card */}
-            <Card className="mb-6 border-none bg-transparent shadow-none">
-              <div className="figma-card-header">
+            <Card className="mb-4 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6 shadow-none">
+              <div className="mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="figma-card-icon-wrapper">
-                    <Shield className="figma-card-icon" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                    <Shield className="h-[14px] w-[14px] text-[#1A1A18]" />
                   </div>
-                  <h3 className="figma-card-title">Patrol Information</h3>
+                  <h3 className="text-[14px] font-semibold text-[#1A1A18]">Patrol Information</h3>
                 </div>
               </div>
-              <div className="figma-card-content">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+              <div>
+                <div className="grid grid-cols-1 gap-x-8 gap-y-5 text-sm md:grid-cols-2">
                   <div className="flex flex-col">
-                    <span className="text-gray-600 text-xs mb-1">Name</span>
-                    <span className="font-medium text-gray-900">{patrolling.name}</span>
+                    <span className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Name</span>
+                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{patrolling.name}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-gray-600 text-xs mb-1">Description</span>
-                    <span className="font-medium text-gray-900">{patrolling.description || "—"}</span>
+                    <span className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Description</span>
+                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{patrolling.description || "—"}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-gray-600 text-xs mb-1">Start Date</span>
-                    <span className="font-medium text-gray-900">{formatDate(patrolling.validity_start_date)}</span>
+                    <span className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Start Date</span>
+                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{formatDate(patrolling.validity_start_date)}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-gray-600 text-xs mb-1">End Date</span>
-                    <span className="font-medium text-gray-900">{formatDate(patrolling.validity_end_date)}</span>
+                    <span className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">End Date</span>
+                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{formatDate(patrolling.validity_end_date)}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-gray-600 text-xs mb-1">Grace Period</span>
-                    <span className="font-medium text-gray-900">{patrolling.grace_period_minutes} minutes</span>
+                    <span className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Grace Period</span>
+                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{patrolling.grace_period_minutes} minutes</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-gray-600 text-xs mb-1">Status</span>
+                    <span className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Status</span>
                     <div>
                       <Badge
                         variant={patrolling.active ? "default" : "secondary"}
@@ -1133,8 +1138,8 @@ export const PatrollingDetailPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-gray-600 text-xs mb-1">Created On</span>
-                    <span className="font-medium text-gray-900">{formatDateTime(patrolling.created_at)}</span>
+                    <span className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Created On</span>
+                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{formatDateTime(patrolling.created_at)}</span>
                   </div>
                 </div>
               </div>
@@ -1142,27 +1147,27 @@ export const PatrollingDetailPage: React.FC = () => {
 
             {/* Checklist Information */}
             {patrolling.checklist && (
-              <Card className="mb-6 border-none bg-transparent shadow-none">
-                <div className="figma-card-header">
+              <Card className="mb-4 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6 shadow-none">
+                <div className="mb-5">
                   <div className="flex items-center gap-3">
-                    <div className="figma-card-icon-wrapper">
-                      <ListChecks className="figma-card-icon" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                      <ListChecks className="h-[14px] w-[14px] text-[#1A1A18]" />
                     </div>
-                    <h3 className="figma-card-title">Checklist Information</h3>
+                    <h3 className="text-[14px] font-semibold text-[#1A1A18]">Checklist Information</h3>
                   </div>
                 </div>
-                <div className="figma-card-content">
+                <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
                     <div className="flex flex-col">
-                      <span className="text-gray-600 text-xs mb-1">Checklist Name</span>
-                      <span className="font-medium text-gray-900">{patrolling.checklist.name}</span>
+                      <span className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Checklist Name</span>
+                      <span className="text-[13.5px] font-medium text-[#1A1A18]">{patrolling.checklist.name}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-gray-600 text-xs mb-1">Check Type</span>
-                      <span className="font-medium text-gray-900">{patrolling.checklist.check_type}</span>
+                      <span className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Check Type</span>
+                      <span className="text-[13.5px] font-medium text-[#1A1A18]">{patrolling.checklist.check_type}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-gray-600 text-xs mb-1">Status</span>
+                      <span className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Status</span>
                       <div>
                         <Badge
                           variant="outline"
@@ -1173,8 +1178,8 @@ export const PatrollingDetailPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-gray-600 text-xs mb-1">Created On</span>
-                      <span className="font-medium text-gray-900">{formatDateTime(patrolling.checklist.created_at)}</span>
+                      <span className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Created On</span>
+                      <span className="text-[13.5px] font-medium text-[#1A1A18]">{formatDateTime(patrolling.checklist.created_at)}</span>
                     </div>
                   </div>
                 </div>
@@ -1185,8 +1190,8 @@ export const PatrollingDetailPage: React.FC = () => {
             {/* {patrolling.checkpoints &&
               patrolling.checkpoints.some &&
               patrolling.checkpoints.some((cp) => cp.qr_code_available) && (
-                <Card className="mb-6 border-none bg-transparent shadow-none">
-                  <div className="figma-card-header">
+              <Card className="mb-4 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6 shadow-none">
+              <div className="mb-5">
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-3">
                         <div className="figma-card-icon-wrapper">
@@ -1425,7 +1430,7 @@ export const PatrollingDetailPage: React.FC = () => {
           </TabsContent>
 
           {/* Questions */}
-          <TabsContent value="questions" className="p-4 sm:p-6">
+          <TabsContent value="questions" className="mt-4 space-y-4 p-0">
             {patrolling.checklist && checklistQuestions.length > 0 ? (
               // Show checklist questions
               <>
@@ -1444,13 +1449,13 @@ export const PatrollingDetailPage: React.FC = () => {
                   </div>
                 </div>
 
-                <Card className="mb-6 border-none bg-transparent shadow-none">
-                  <div className="figma-card-header">
+                <Card className="mb-4 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6 shadow-none">
+                  <div className="mb-5">
                     <div className="flex items-center gap-3">
-                      <div className="figma-card-icon-wrapper">
-                        <ListChecks className="figma-card-icon" />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                        <ListChecks className="h-[14px] w-[14px] text-[#1A1A18]" />
                       </div>
-                      <h3 className="figma-card-title">
+                      <h3 className="text-[14px] font-semibold text-[#1A1A18]">
                         Checklist Questions ({checklistQuestions.length})
                         {loadingChecklistQuestions && (
                           <Loader2 className="w-4 h-4 animate-spin ml-2 text-[#C72030]" />
@@ -1458,7 +1463,7 @@ export const PatrollingDetailPage: React.FC = () => {
                       </h3>
                     </div>
                   </div>
-                  <div className="figma-card-content">
+                  <div>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
@@ -1532,13 +1537,13 @@ export const PatrollingDetailPage: React.FC = () => {
               </>
             ) : (
               // Show patrolling questions
-              <Card className="mb-6 border-none bg-transparent shadow-none">
-                <div className="figma-card-header">
+              <Card className="mb-4 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6 shadow-none">
+                <div className="mb-5">
                   <div className="flex items-center gap-3">
-                    <div className="figma-card-icon-wrapper">
-                      <ListChecks className="figma-card-icon" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                      <ListChecks className="h-[14px] w-[14px] text-[#1A1A18]" />
                     </div>
-                    <h3 className="figma-card-title">
+                    <h3 className="text-[14px] font-semibold text-[#1A1A18]">
                       Questions ({patrolling.questions?.length || 0})
                       {patrolling.checklist && loadingChecklistQuestions && (
                         <Loader2 className="w-4 h-4 animate-spin ml-2 text-[#C72030]" />
@@ -1546,7 +1551,7 @@ export const PatrollingDetailPage: React.FC = () => {
                     </h3>
                   </div>
                 </div>
-                <div className="figma-card-content">
+                <div>
          
 
                   <div className="overflow-x-auto">
@@ -1633,15 +1638,15 @@ export const PatrollingDetailPage: React.FC = () => {
           </TabsContent>
 
           {/* Schedules */}
-          <TabsContent value="schedules" className="p-4 sm:p-6">
-            <Card className="mb-6 border-none bg-transparent shadow-none">
-              <div className="figma-card-header">
+          <TabsContent value="schedules" className="mt-4 space-y-4 p-0">
+            <Card className="mb-4 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6 shadow-none">
+              <div className="mb-5">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-3">
-                    <div className="figma-card-icon-wrapper">
-                      <Calendar className="figma-card-icon" />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                      <Calendar className="h-[14px] w-[14px] text-[#1A1A18]" />
                     </div>
-                    <h3 className="figma-card-title">Schedules ({patrolling.schedules?.length || 0})</h3>
+                    <h3 className="text-[14px] font-semibold text-[#1A1A18]">Schedules ({patrolling.schedules?.length || 0})</h3>
                   </div>
                   {patrolling.schedules && patrolling.schedules.length > 0 && (
                     <div className="flex items-center gap-4 text-sm">
@@ -1661,7 +1666,7 @@ export const PatrollingDetailPage: React.FC = () => {
                   )}
                 </div>
               </div>
-              <div className="figma-card-content">
+              <div>
                 {patrolling.schedules && patrolling.schedules.length > 0 ? (
                   <div className="space-y-6">
                     {patrolling.schedules.map((schedule) => (
@@ -1845,14 +1850,14 @@ export const PatrollingDetailPage: React.FC = () => {
           </TabsContent>
 
           {/* Checkpoints */}
-          <TabsContent value="checkpoints" className="mt-4">
-            <Card className="mb-6 border border-[#D9D9D9] bg-[#F6F7F7]">
-              <CardHeader className="bg-[#F6F4EE] mb-6">
+          <TabsContent value="checkpoints" className="mt-4 space-y-4 p-0">
+            <Card className="mb-4 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white shadow-none">
+              <CardHeader className="mb-2 bg-white px-6 pt-5">
                 <CardTitle className="text-lg flex items-center">
-                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded-full mr-3">
-                    <MapPin className="h-5 w-5 text-[#C72030]" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                    <MapPin className="h-[14px] w-[14px] text-[#1A1A18]" />
                   </div>
-                  Checkpoints ({patrolling.checkpoints?.length || 0})
+                  <span className="text-[14px] font-semibold text-[#1A1A18]">Checkpoints ({patrolling.checkpoints?.length || 0})</span>
                   {isReordering && (
                     <span className="ml-4 flex items-center gap-1 text-sm font-normal text-gray-500">
                       <Loader2 className="w-4 h-4 animate-spin text-[#C72030]" />
@@ -1861,7 +1866,7 @@ export const PatrollingDetailPage: React.FC = () => {
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="relative">
+              <CardContent className="relative px-6 pb-6 pt-0">
                 {selectedCheckpointIds.length > 0 && (
                   <LocationSelectionPanel
                     selectedLocations={selectedCheckpointIds}
@@ -2072,17 +2077,17 @@ export const PatrollingDetailPage: React.FC = () => {
           </TabsContent>
 
           {/* Recent Sessions */}
-          <TabsContent value="recent-sessions" className="p-4 sm:p-6">
-            <Card className="mb-6 border-none bg-transparent shadow-none">
-              <div className="figma-card-header">
+          <TabsContent value="recent-sessions" className="mt-4 space-y-4 p-0">
+            <Card className="mb-4 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6 shadow-none">
+              <div className="mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="figma-card-icon-wrapper">
-                    <Activity className="figma-card-icon" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                    <Activity className="h-[14px] w-[14px] text-[#1A1A18]" />
                   </div>
-                  <h3 className="figma-card-title">Recent Sessions ({patrolling.recent_sessions?.length || 0})</h3>
+                  <h3 className="text-[14px] font-semibold text-[#1A1A18]">Recent Sessions ({patrolling.recent_sessions?.length || 0})</h3>
                 </div>
               </div>
-              <div className="figma-card-content">
+              <div>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -2165,7 +2170,7 @@ export const PatrollingDetailPage: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
-        </Card>
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}

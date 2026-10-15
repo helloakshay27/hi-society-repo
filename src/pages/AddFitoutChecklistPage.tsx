@@ -513,7 +513,7 @@ export const AddFitoutChecklistPage = () => {
               <Button
                 type="button"
                 onClick={handleAddQuestion}
-                className="bg-[#1A1A18] hover:bg-[#12100E] text-white"
+                className="!bg-[#1A1A18] hover:!bg-[#12100E] !text-white [&_svg]:text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Question

@@ -636,23 +636,7 @@ export const ManageFlatsPage = () => {
                   Action
                 </Button>
 
-                {/* Unit and Tower Buttons */}
-                <Button
-                  size="sm"
-                  onClick={handleAddUnit}
-                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Unit Type
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleAddTower}
-                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Tower
-                </Button>
+                {/* Unit Type / Tower / Floor live in the Actions panel (see below) */}
                 {/* <Button
                   size="sm"
                   onClick={handleAddWing}
@@ -661,14 +645,6 @@ export const ManageFlatsPage = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   Wing
                 </Button> */}
-                <Button
-                  size="sm"
-                  onClick={handleAddFloor}
-                  className="border-none bg-[#C72030] text-white hover:bg-[#C72030]/90"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Floor
-                </Button>
               </div>
             }
             loading={loading}
@@ -771,10 +747,37 @@ export const ManageFlatsPage = () => {
         {showActionDropdown && (
           <SelectionPanel
             className="selection-panel--end"
+            actions={[
+              {
+                label: "Unit Type",
+                icon: Plus,
+                onClick: () => {
+                  setShowActionDropdown(false);
+                  handleAddUnit();
+                },
+              },
+              {
+                label: "Tower",
+                icon: Plus,
+                onClick: () => {
+                  setShowActionDropdown(false);
+                  handleAddTower();
+                },
+              },
+              {
+                label: "Floor",
+                icon: Plus,
+                onClick: () => {
+                  setShowActionDropdown(false);
+                  handleAddFloor();
+                },
+              },
+            ]}
             onAdd={handleAddFlat}
             onImport={handleImport}
             onClearSelection={() => setShowActionDropdown(false)}
             addLabel="Add Flat"
+            subtitle={null}
           />
         )}
 

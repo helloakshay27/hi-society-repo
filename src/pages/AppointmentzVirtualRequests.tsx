@@ -577,7 +577,7 @@ export const AppointmentzVirtualRequests: React.FC = () => {
       {/* Details / Add Request Modal (Matching Screenshot 2 Structure with Design Guidelines) */}
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl">
-          <DialogHeader className="bg-[#f6f4ee] px-6 py-4 border-b border-[#D5DbDB]">
+          <DialogHeader className="bg-white px-6 py-4">
             <DialogTitle className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
               <Video className="w-5 h-5 text-[#DA7756]" />
               Details
@@ -671,14 +671,7 @@ export const AppointmentzVirtualRequests: React.FC = () => {
             </div>
           </div>
 
-          <DialogFooter className="bg-[#f6f4ee] px-6 py-3 border-t border-[#D5DbDB] flex gap-2 sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setIsAddModalOpen(false)}
-              className="border-[#D5DbDB] hover:bg-[#DBC2A9] text-[#1A1A1A]"
-            >
-              Cancel
-            </Button>
+          <DialogFooter className="bg-white px-6 py-3 flex gap-2 sm:justify-end">
             <Button
               variant="ghost"
               className="btn-primary"
@@ -686,6 +679,13 @@ export const AppointmentzVirtualRequests: React.FC = () => {
               disabled={isSubmittingAdd}
             >
               {isSubmittingAdd ? "Submitting..." : "Submit"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsAddModalOpen(false)}
+              className="border-[#D5DbDB] hover:bg-[#DBC2A9] text-[#1A1A1A]"
+            >
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

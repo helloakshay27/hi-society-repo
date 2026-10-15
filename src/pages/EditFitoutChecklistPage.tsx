@@ -893,26 +893,26 @@ export const EditFitoutChecklistPage = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-3 pb-8">
-          <button
-            type="button"
-            onClick={() => navigate("/fitout/checklists")}
-            disabled={isSubmitting}
-            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleUpdateChecklist}
-            disabled={isSubmitting || loading}
-            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
-          >
-            {isSubmitting ? 'Updating...' : 'Update Checklist'}
-          </button>
-        </div>
       </form>
+      {/* Keep the form actions separate from the information and questions cards. */}
+      <div className="flex justify-end gap-3 pt-6 pb-8">
+        <button
+          type="button"
+          onClick={() => navigate("/fitout/checklists")}
+          disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={handleUpdateChecklist}
+          disabled={isSubmitting || loading}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+        >
+          {isSubmitting ? 'Updating...' : 'Update Checklist'}
+        </button>
+      </div>
     </div>
   );
 };

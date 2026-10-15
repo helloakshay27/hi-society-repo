@@ -631,7 +631,7 @@ const AppointmentzRMConfig = () => {
         maxWidth="md"
         PaperProps={{ className: "bg-white overflow-hidden" }}
       >
-        <MuiDialogTitle className="bg-white p-4 border-b text-center font-bold text-lg">
+        <MuiDialogTitle className="bg-white p-4 text-left font-bold text-lg">
           {isEditMode ? `Edit - ${editingUserName}` : "Add New User"}
         </MuiDialogTitle>
 
@@ -759,7 +759,7 @@ const AppointmentzRMConfig = () => {
             </FormControl>
         </MuiDialogContent>
 
-        <MuiDialogActions className="p-4 bg-white border-t justify-center">
+        <MuiDialogActions className="p-4 bg-white justify-center">
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting}

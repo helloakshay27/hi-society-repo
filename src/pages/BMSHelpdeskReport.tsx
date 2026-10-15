@@ -3,15 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Download, SlidersHorizontal } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { HelpdeskExportDialog } from "@/components/HelpdeskExportDialog";
 
 const BMSHelpdeskReport: React.FC = () => {
-  // Page-level date filter
-  const DEFAULT_START_DATE = new Date(2026, 3, 1);
-  const DEFAULT_END_DATE = new Date(2026, 3, 23);
+  // Page-level date filter — defaults to the current month so far (1st → today)
+  const [DEFAULT_START_DATE] = useState(() => startOfMonth(new Date()));
+  const [DEFAULT_END_DATE] = useState(() => new Date());
   const [startDate, setStartDate] = useState<Date | undefined>(DEFAULT_START_DATE);
   const [endDate, setEndDate] = useState<Date | undefined>(DEFAULT_END_DATE);
   const [startOpen, setStartOpen] = useState(false);

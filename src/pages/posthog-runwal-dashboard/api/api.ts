@@ -8,6 +8,7 @@
  */
 
 import { getBaseUrl, getToken, getUser } from '../../../utils/auth';
+import * as XLSX from 'xlsx';
 import {
   DashboardFilters,
   TrafficSessionResponse,
@@ -206,23 +207,57 @@ export const fetchRecentActiveUsers = (filters: DashboardFilters, limit = 10) =>
  * saves it via a throwaway anchor, mirroring the blob-download pattern used
  * elsewhere in the app (see WalletTopup.tsx's handleExport).
  */
-export async function downloadActiveUsersExport(filters: DashboardFilters): Promise<void> {
+export async function downloadActiveUsersExport(
+  filters: Pick<DashboardFilters, 'appId' | 'from' | 'to'>,
+): Promise<void> {
   const base = getPosthogApiBase();
   const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-  const queryStr = buildPosthogQuery(filters);
-  const url = `${cleanBase}/fm/adoption/active_users_export?${queryStr}`;
+  const params = new URLSearchParams({
+    base_url: 'lockated-api.gophygital.work',
+    from: filters.from,
+    to: filters.to,
+  });
+  const appId = filters.appId || getAppIdFromUrl();
+  if (appId) params.set('app_id', appId);
+  const url = `${cleanBase}/fm/adoption/active_users_export.json?${params.toString()}`;
 
-  const response = await fetch(url, { method: 'GET', headers: { Accept: '*/*' } });
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { Accept: '*/*' },
+    cache: 'no-store',
+  });
   if (!response.ok) {
     throw new Error(`Active users export failed (${response.status}): ${response.statusText || 'Failed to fetch'}`);
   }
 
-  const blob = await response.blob();
+  const responseBlob = await response.blob();
+  const workbook = XLSX.read(await responseBlob.arrayBuffer(), { type: 'array', cellStyles: true });
+  const firstSheetName = workbook.SheetNames[0];
+  const worksheet = firstSheetName ? workbook.Sheets[firstSheetName] : undefined;
+  if (worksheet) {
+    worksheet['!cols'] = [
+      { wch: 14 },
+      { wch: 24 },
+      { wch: 38 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 38 },
+      { wch: 24 },
+      { wch: 14 },
+      { wch: 26 },
+    ];
+  }
+  const workbookData = XLSX.write(workbook, { bookType: 'xlsx', type: 'array', cellStyles: true });
+  const blob = new Blob([workbookData], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
   const disposition = response.headers.get('content-disposition') || '';
   const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
-  const filename = match
+  const filenameWithoutExtension = (match
     ? decodeURIComponent(match[1])
-    : `active_users_${filters.from || 'today'}_to_${filters.to || 'today'}.xlsx`;
+    : `active_users_${filters.from || 'today'}_to_${filters.to || 'today'}`)
+    .replace(/\.(?:csv|json|xls|xlsx)$/i, '');
+  const filename = `${filenameWithoutExtension}.xlsx`;
 
   const blobUrl = window.URL.createObjectURL(blob);
   const link = document.createElement('a');

@@ -28,11 +28,12 @@ export function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-1",
-        head_row: "flex",
-        head_cell: "text-muted-foreground w-9 font-normal text-[0.8rem] rounded-none",
-        row: "flex w-full mt-2",
-        cell: "relative w-10 h-10 text-center text-sm p-0", // Ensure square dimensions
+        // `rdp-*` marker classes let theme.css shield the grid from the global table styles
+        table: "rdp-table w-full border-collapse space-y-1",
+        head_row: "rdp-head_row flex",
+        head_cell: "rdp-head_cell text-muted-foreground w-10 font-normal text-[0.8rem] rounded-none",
+        row: "rdp-row flex w-full mt-2",
+        cell: "rdp-cell relative w-10 h-10 text-center text-sm p-0", // Ensure square dimensions
         day: cn(
           "w-10 h-10 flex items-center justify-center font-normal border-0 shadow-none rounded-full hover:bg-gray-100"
         ),

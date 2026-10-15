@@ -1000,17 +1000,17 @@ const CampaignsOtherProject: React.FC = () => {
 
                 <div className="flex justify-end gap-3 pt-4">
                   <Button
-                    className="flex-1"
+                    className="min-w-[110px] bg-[#C72030] hover:bg-[#B01C29] text-white px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleApplyFilters}
+                  >
+                    Apply
+                  </Button>
+                  <Button
+                    className="min-w-[110px]"
                     variant="outline"
                     onClick={handleResetFilters}
                   >
                     Reset
-                  </Button>
-                  <Button
-                    className="flex-1 bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleApplyFilters}
-                  >
-                    Apply
                   </Button>
                 </div>
               </div>

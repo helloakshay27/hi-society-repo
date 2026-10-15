@@ -746,14 +746,7 @@ export const IncidentFilterModal: React.FC<IncidentFilterModalProps> = ({
             />
           </div>
 
-          <div className="flex justify-center gap-4 pt-6">
-            <Button
-              onClick={handleApply}
-              disabled={isLoading}
-              className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white px-8"
-            >
-              {isLoading ? 'Applying...' : 'Apply'}
-            </Button>
+          <div className="flex justify-end gap-4 pt-6">
             <Button
               onClick={handleReset}
               variant="outline"
@@ -761,6 +754,13 @@ export const IncidentFilterModal: React.FC<IncidentFilterModalProps> = ({
               disabled={isLoading}
             >
               Reset
+            </Button>
+            <Button
+              onClick={handleApply}
+              disabled={isLoading}
+              className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white px-8"
+            >
+              {isLoading ? 'Applying...' : 'Apply'}
             </Button>
           </div>
         </div>

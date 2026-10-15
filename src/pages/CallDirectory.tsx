@@ -656,8 +656,8 @@ variant="ghost"
                       className={cn(
                         "h-14 w-14 rounded-xl flex items-center justify-center border transition-all overflow-hidden shrink-0 bg-white",
                         isSelected
-                          ? "border-[#BF213E] ring-2 ring-[#BF213E]/20 shadow-sm"
-                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                          ? "border-[#1A1A18] ring-4 ring-[rgba(26,26,24,0.1)]"
+                          : "border-[rgba(26,26,24,0.08)] hover:border-[rgba(26,26,24,0.28)] hover:bg-[#FDFDFB]"
                       )}
                       aria-label={opt.icon_name}
                       title={opt.icon_name}
@@ -674,20 +674,22 @@ variant="ghost"
             </div>
           </div>
 
-          <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onSubmit}
-           className="btn-primary h-9 px-4 text-sm font-medium"               disabled={!form.name.trim() || !form.phone.trim() || !form.quick_call_icon_id || isSubmitting}
-              title={!form.quick_call_icon_id ? "Please select an icon" : ""}
-            >
-              {isSubmitting ? "Submitting..." : "Submit"}
-            </button>
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,0.08)]">
             <button
               type="button"
               onClick={closeAdd}
-  className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100">
-                  Cancel
+              className="btn-cancel h-9 px-4 text-sm font-medium bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onSubmit}
+              className="btn-primary h-9 px-4 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!form.name.trim() || !form.phone.trim() || !form.quick_call_icon_id || isSubmitting}
+              title={!form.quick_call_icon_id ? "Please select an icon" : ""}
+            >
+              {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </div>
         </DialogContent>
@@ -794,22 +796,23 @@ variant="ghost"
               );
             })()}
 
-          <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50/50">
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,0.08)]">
+            <Button
+              variant="outline"
+              onClick={() => setViewingItem(null)}
+              className="btn-cancel h-9 px-4 text-sm font-medium"
+            >
+              Close
+            </Button>
             <Button
               onClick={() => {
                 const item = viewingItem;
                 setViewingItem(null);
                 if (item) handleEditClick(item);
               }}
-              className="!bg-[#BF213E] !text-white hover:!bg-[#9e1b33] px-10"
+              className="btn-primary h-9 px-4 text-sm font-medium"
             >
               Edit
-            </Button>
-            <Button
-              onClick={() => setViewingItem(null)}
-              className="!bg-[#F2EEE9] !text-[#BF213E] hover:!bg-[#e8e1d9] px-10"
-            >
-              Close
             </Button>
           </div>
         </DialogContent>

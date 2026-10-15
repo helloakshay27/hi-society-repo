@@ -43,12 +43,14 @@ const Section: React.FC<{
   icon: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, icon, children }) => (
-  <section className="bg-card rounded-lg border border-border shadow-sm">
-    <div className="px-6 py-4 border-b border-border flex items-center gap-3">
-      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-        {icon}
-      </div>
-      <h2 className="text-sm font-semibold tracking-wide uppercase">{title}</h2>
+  <section className="overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white">
+    <div className="px-6 pt-[22px]">
+      <h2 className="flex items-center text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+        <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0] text-[#1A1A18]">
+          {icon}
+        </span>
+        {title}
+      </h2>
     </div>
     <div className="p-6">{children}</div>
   </section>
@@ -1545,7 +1547,7 @@ export const PatrollingEditPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="min-h-screen bg-[#FDFDFB] p-6">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
           <span className="ml-2 text-gray-600">Loading patrolling data...</span>
@@ -1555,7 +1557,7 @@ export const PatrollingEditPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 relative patrolling-edit-page">
+    <div className="relative min-h-screen space-y-6 bg-[#FDFDFB] p-6 patrolling-edit-page">
       <style>{`.patrolling-edit-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {isSubmitting && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
@@ -1563,18 +1565,19 @@ export const PatrollingEditPage: React.FC = () => {
         </div>
       )}
 
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/security/patrolling")}
+      <header className="mb-2">
+        <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <button
+            type="button"
+            onClick={() => navigate('/security/patrolling')}
+            className="mr-2 flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-[#F7F6F2]"
+            aria-label="Go back"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-xl font-bold tracking-wide uppercase">
-            Edit Patrolling
-          </h1>
+            <ArrowLeft className="h-4 w-4 text-gray-600" />
+          </button>
+          <span>Patrolling</span>
+          <span>{'>'}</span>
+          <span className="font-medium text-gray-900">Edit Patrolling</span>
         </div>
       </header>
 
@@ -1746,13 +1749,13 @@ export const PatrollingEditPage: React.FC = () => {
           {questions.map((q, idx) => (
             <div
               key={q.id}
-              className="relative rounded-md border border-dashed bg-muted/30 p-4"
+              className="relative rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-4"
             >
               {idx > 0 && !selectedChecklist && (
                 <button
                   type="button"
                   onClick={() => removeQuestion(idx)}
-                  className="absolute -right-2 -top-2 rounded-full p-1 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="absolute -right-2 -top-2 rounded-full border border-[rgba(26,26,24,.09)] bg-white p-1 shadow-sm hover:bg-[#F7F6F2] disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Remove question"
                   disabled={isSubmitting}
                 >
@@ -1977,13 +1980,13 @@ export const PatrollingEditPage: React.FC = () => {
           {shifts.map((s, idx) => (
             <div
               key={s.id}
-              className="relative rounded-md border border-dashed bg-muted/30 p-4"
+              className="relative rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-4"
             >
               {idx > 0 && (
                 <button
                   type="button"
                   onClick={() => removeShift(idx)}
-                  className="absolute -right-2 -top-2 rounded-full p-1 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="absolute -right-2 -top-2 rounded-full border border-[rgba(26,26,24,.09)] bg-white p-1 shadow-sm hover:bg-[#F7F6F2] disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Remove shift"
                   disabled={isSubmitting}
                 >
@@ -2075,13 +2078,13 @@ export const PatrollingEditPage: React.FC = () => {
             </div>
           ))}
           <div className="flex justify-end">
-            <Button
-              variant="outline"
-              onClick={addShift}
-              disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Plus className="w-4 h-4 mr-2" /> Add Schedule
+              <Button
+                onClick={addShift}
+                disabled={isSubmitting}
+                className="inline-flex min-h-[42px] items-center rounded-lg !border-[#1A1A18] !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E] disabled:opacity-60"
+                style={{ backgroundColor: '#1A1A18', borderColor: '#1A1A18', color: '#FFFFFF' }}
+              >
+                <Plus className="mr-2 h-4 w-4 text-white" /> <span style={{ color: '#FFFFFF' }}>Add Schedule</span>
             </Button>
           </div>
         </div>
@@ -2095,20 +2098,20 @@ export const PatrollingEditPage: React.FC = () => {
           {checkpoints.map((c, idx) => (
             <div
               key={c.id}
-              className="relative rounded-md border border-dashed bg-muted/30 p-4"
+              className="relative rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-4"
             >
               {idx > 0 && (
                 <button
                   type="button"
                   onClick={() => removeCheckpoint(idx)}
-                  className="absolute -right-2 -top-2 rounded-full p-1 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="absolute -right-2 -top-2 rounded-full border border-[rgba(26,26,24,.09)] bg-white p-1 shadow-sm hover:bg-[#F7F6F2] disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Remove checkpoint"
                   disabled={isSubmitting}
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
-              <p className="mb-3 text-sm font-medium text-muted-foreground">
+              <p className="mb-3 text-sm font-medium text-[rgba(26,26,24,.68)]">
                 Checkpoint {idx + 1}
               </p>
               <div className="space-y-4">
@@ -2163,41 +2166,41 @@ export const PatrollingEditPage: React.FC = () => {
           ))}
           <div className="flex justify-end">
             <Button
-              variant="outline"
               onClick={addCheckpoint}
               disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-[42px] items-center rounded-lg !border-[#1A1A18] !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E] disabled:opacity-60"
+              style={{ backgroundColor: '#1A1A18', borderColor: '#1A1A18', color: '#FFFFFF' }}
             >
-              <Plus className="w-4 h-4 mr-2" /> Add Checkpoint
+              <Plus className="mr-2 h-4 w-4 text-white" /> <span style={{ color: '#FFFFFF' }}>Add Checkpoint</span>
             </Button>
           </div>
         </div>
       </Section>
 
-      <div className="flex items-center gap-3 justify-center pt-2">
-        <Button
-          variant="destructive"
-          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      <div className="flex justify-end gap-3 pb-8">
+        <button
+          type="button"
+          onClick={() => navigate('/security/patrolling')}
+          disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Updating...
             </>
           ) : (
             "Update"
           )}
-        </Button>
-        <Button
-          variant="outline"
-          className="px-8"
-          onClick={() => navigate("/security/patrolling")}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
+        </button>
       </div>
     </div>
   );
