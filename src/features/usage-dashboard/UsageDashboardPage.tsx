@@ -1,16 +1,24 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import "./usage-dashboard.css";
+import { downloadActiveUsersExport } from "../../pages/posthog-runwal-dashboard/api/api";
 import {
   SITES,
   fetchRecentActiveUsers,
   fetchTrafficSection,
   fetchAdoptionSection,
   fetchLiveWorkflow,
+  fetchWorkflowModules,
   fetchSitesLeague,
   siteByKey,
   EMPTY_DASHBOARD,
 } from "./api";
-import type { LeagueRow, LiveDashboard, LiveWorkflow, SiteKey } from "./api";
+import type {
+  LeagueRow,
+  LiveDashboard,
+  LiveWorkflow,
+  SiteKey,
+  WorkflowModuleNode,
+} from "./api";
 
 /* ================================================================
    Usage Analytics Dashboard (live data only — no sample numbers)
@@ -119,80 +127,14 @@ function pct(x: number, d?: number): string {
   return x.toFixed(d == null ? 0 : d) + "%";
 }
 
-/* ---------- Workflows list (structure only — values come from live workflow_usage) ---------- */
-interface WorkflowItem {
-  key: string;
-  name: string;
-  bucket: string;
-  steps: string[];
-  incompleteNote?: string;
-  proposed?: boolean;
+/* ---------- Backend module names ("main_home6" -> "Main Home 6", display only) ---------- */
+function formatModuleName(name: string): string {
+  return name
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
-
-const WORKFLOWS: WorkflowItem[] = [
-  {
-    key: "serviceRequestCreate",
-    name: "Service Request Creation",
-    bucket: "Service & Support",
-    steps: [
-      "service_request_create_opened",
-      "service_request_category_selected",
-      "service_request_subcategory_selected",
-      "service_request_field_selected",
-      "service_request_submit_tapped",
-      "service_request_created_success",
-    ],
-  },
-  {
-    key: "visitorApproval",
-    name: "Visitor Approval",
-    bucket: "Service & Support",
-    steps: ["push_notification_opened", "visitor_approval_answered"],
-    incompleteNote:
-      "This is a thin, single-decision funnel by design: visitor_approval_answered captures the in-app gate-approval decision itself (approve/reject), with press-through from a push notification as the only real predecessor event in the catalogue. The repository's legacy events (visitor_approve_success/visitor_reject_success, in the 221-event legacy family) record the same approval action under different names — see the Workflow Usage scope note below for why those are not unioned into this funnel.",
-  },
-  {
-    key: "facilityBooking",
-    name: "Facility Booking",
-    bucket: "Community & Amenities",
-    steps: [
-      "facility_booking_opened",
-      "facility_book_cta_tapped",
-      "facility_booking_submit_tapped",
-      "amenity_payment_mode_selected",
-      "amenity_payment_gateway_opened",
-      "amenity_booking_confirmed",
-    ],
-    incompleteNote:
-      '"Amenities & Bookings" is not one of Artesia\'s 9 named Home-tab tiles in the product Read-Me, but its 8 events are real, confirmed instrumentation in the shared flutter_resident codebase, reachable if the backend enables the relevant module for a given society — same backend-driven availability caveat as every other module here.',
-  },
-  {
-    key: "eventRsvp",
-    name: "Event RSVP",
-    bucket: "Community & Amenities",
-    steps: [
-      "event_item_tapped",
-      "event_details_viewed",
-      "event_rsvp_confirmed",
-    ],
-  },
-  {
-    key: "dailyHelpRegister",
-    name: "Daily Help Registration",
-    bucket: "Engagement & Daily Life",
-    steps: [
-      "daily_help_opened",
-      "daily_help_create_opened",
-      "daily_help_create_submitted",
-    ],
-  },
-  {
-    key: "pollVote",
-    name: "Poll Voting",
-    bucket: "Engagement & Daily Life",
-    steps: ["poll_list_viewed", "poll_vote_submitted"],
-  },
-];
 
 /* ================================================================
    SVG CHARTS ENGINE (Ported from FM Matrix v2)
@@ -591,6 +533,9 @@ function SvgStackedBarChart({
   lineColor = "#d9d6ce",
   faintColor = "#9b9990",
 }: StackedBarProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
   if (labels.length === 0)
     return <div className="chart-empty">No live data available.</div>;
 
@@ -611,6 +556,49 @@ function SvgStackedBarChart({
   const zero = pt + (H - pt - pb) * (maxUp / (maxUp + maxDn || 1));
   const scaleUp = (zero - pt) / (maxUp || 1);
   const scaleDn = (H - pb - zero) / (maxDn || 1);
+
+  const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+    const svg = svgRef.current;
+    if (!svg || n === 0) return;
+    const rect = svg.getBoundingClientRect();
+    if (rect.width === 0) return;
+    const svgX = ((event.clientX - rect.left) / rect.width) * W;
+    if (svgX < pl || svgX > W - pr) {
+      setHoverIdx(null);
+      return;
+    }
+    setHoverIdx(Math.min(n - 1, Math.floor((svgX - pl) / gap)));
+  };
+
+  const tooltipItems = hoverIdx === null
+    ? []
+    : [
+        ...series.map((item) => ({
+          label: item.label,
+          value: item.data[hoverIdx] ?? 0,
+          color: item.color,
+        })),
+        ...(negSeries
+          ? [{
+              label: negSeries.label,
+              value: negSeries.data[hoverIdx] ?? 0,
+              color: negSeries.color,
+            }]
+          : []),
+      ];
+  const tooltipWidth = 170;
+  const tooltipHeight = 34 + tooltipItems.length * 17;
+  const columnCenter = hoverIdx === null ? 0 : pl + hoverIdx * gap + gap / 2;
+  const tooltipX = Math.max(
+    pl,
+    Math.min(
+      hoverIdx !== null && hoverIdx >= n / 2
+        ? columnCenter - tooltipWidth - 14
+        : columnCenter + 14,
+      W - pr - tooltipWidth
+    )
+  );
+  const tooltipY = Math.max(pt + 2, Math.min(zero - tooltipHeight / 2, H - pb - tooltipHeight));
 
   const bars: React.ReactNode[] = [];
   const xLabels: React.ReactNode[] = [];
@@ -665,7 +653,26 @@ function SvgStackedBarChart({
   });
 
   return (
-    <svg className="chart" viewBox={`0 0 ${W} ${H}`}>
+    <svg
+      ref={svgRef}
+      className="chart"
+      viewBox={`0 0 ${W} ${H}`}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={() => setHoverIdx(null)}
+      style={{ cursor: "crosshair" }}
+    >
+      {hoverIdx !== null && (
+        <rect
+          x={pl + hoverIdx * gap + 2}
+          y={pt}
+          width={gap - 4}
+          height={H - pt - pb}
+          fill="var(--ink, #141413)"
+          opacity="0.05"
+          rx={4}
+          style={{ pointerEvents: "none" }}
+        />
+      )}
       {bars}
       {xLabels}
       <line
@@ -675,6 +682,58 @@ function SvgStackedBarChart({
         y2={zero.toFixed(1)}
         stroke={lineColor}
       />
+      {hoverIdx !== null && (
+        <g style={{ pointerEvents: "none" }}>
+          <rect
+            x={tooltipX}
+            y={tooltipY}
+            width={tooltipWidth}
+            height={tooltipHeight}
+            rx={6}
+            fill="var(--surface, #fff)"
+            stroke="var(--border, #d9d6ce)"
+            style={{ filter: "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.12))" }}
+          />
+          <text
+            x={tooltipX + 10}
+            y={tooltipY + 16}
+            fontSize={11}
+            fontWeight={600}
+            fill="var(--ink, #141413)"
+            fontFamily="Inter,-apple-system,Segoe UI,sans-serif"
+          >
+            {labels[hoverIdx]}
+          </text>
+          {tooltipItems.map((item, index) => {
+            const rowY = tooltipY + 34 + index * 17;
+            return (
+              <g key={item.label}>
+                <circle cx={tooltipX + 14} cy={rowY - 3} r={3.5} fill={item.color} />
+                <text
+                  x={tooltipX + 23}
+                  y={rowY}
+                  fontSize={10.5}
+                  fill="var(--muted, #6f6e68)"
+                  fontFamily="Inter,-apple-system,Segoe UI,sans-serif"
+                >
+                  {item.label}
+                </text>
+                <text
+                  x={tooltipX + tooltipWidth - 10}
+                  y={rowY}
+                  textAnchor="end"
+                  fontSize={11}
+                  fontWeight={600}
+                  fill="var(--ink, #141413)"
+                  fontFamily="Inter,-apple-system,Segoe UI,sans-serif"
+                >
+                  {item.value.toLocaleString()}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      )}
     </svg>
   );
 }
@@ -738,6 +797,8 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
   >([]);
   const [recentActivityLoading, setRecentActivityLoading] =
     useState<boolean>(false);
+  const [recentActivityExporting, setRecentActivityExporting] =
+    useState<boolean>(false);
   const [liveWf, setLiveWf] = useState<Record<string, LiveWorkflow | null>>({});
   const [wfError, setWfError] = useState<string | null>(null);
   const [league, setLeague] = useState<LeagueRow[] | null>(null);
@@ -764,10 +825,9 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     "visitors"
   );
 
-  // Workflow state
-  const [activeWfKey, setActiveWfKey] = useState<string>(
-    "serviceRequestCreate"
-  );
+  // Workflow state — backend module name (null = All Modules, like Runwal's ModuleNav).
+  const [activeWfKey, setActiveWfKey] = useState<string | null>(null);
+  const [wfModules, setWfModules] = useState<WorkflowModuleNode[] | null>(null);
 
   // Benchmark targets (user-editable)
   const [benchmarks, setBenchmarks] = useState<Record<string, number | null>>(
@@ -848,6 +908,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     setLive(null);
     setLeague(null);
     setLiveWf({});
+    setWfModules(null);
     setWfError(null);
     setTrafficSig(null);
     setAdoptionSig(null);
@@ -899,15 +960,19 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
       .finally(() => {
         if (!cancelled) setAdoptionLoading(false);
       });
-    fetchSitesLeague({ from: effRange.from, to: effRange.to, dev }).then(
-      (rows) => {
-        if (!cancelled && rows) setLeague(rows);
-      }
-    );
+    // Cross-site league hits traffic_session for every app_id — skip it on
+    // the locked per-site pages so they only ever query their own app_id.
+    if (!lockedSite) {
+      fetchSitesLeague({ from: effRange.from, to: effRange.to, dev }).then(
+        (rows) => {
+          if (!cancelled && rows) setLeague(rows);
+        }
+      );
+    }
     return () => {
       cancelled = true;
     };
-  }, [page, sig, adoptionSig, siteRef.appId, effRange.from, effRange.to, dev]);
+  }, [page, sig, adoptionSig, lockedSite, siteRef.appId, effRange.from, effRange.to, dev]);
 
   // Per-layer readiness for the current signature.
   const trafficReady = trafficSig === sig && live?.tiles != null;
@@ -1069,19 +1134,49 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
       ? Math.round(live.engagement.breadthTotal)
       : 0;
 
-  // Workflow items
-  const activeWorkflow = useMemo(
-    () => WORKFLOWS.find((w) => w.key === activeWfKey) || WORKFLOWS[0],
-    [activeWfKey]
+  // Sorted backend module catalogue for the picker (null = not loaded yet).
+  const sortedWfModules = useMemo(
+    () =>
+      wfModules === null
+        ? null
+        : wfModules.slice().sort((a, b) => b.users - a.users),
+    [wfModules]
   );
 
-  // Live funnel per selected workflow — fires only when the workflow layer is open.
-  // Cache is keyed by signature+module; the clear effect wipes it on filter change.
-  const wfCacheKey = `${sig}|${activeWfKey}`;
+  // Workflow layer — fires only while open: module catalogue once per
+  // signature, funnel per selected backend module (null = All Modules).
+  const wfCacheKey = `${sig}|${activeWfKey ?? "all"}`;
+  const wfCacheKeyRef = useRef(wfCacheKey);
+  wfCacheKeyRef.current = wfCacheKey;
+  const wfModuleLabel =
+    activeWfKey === null ? "All Modules" : formatModuleName(activeWfKey);
+  // Module catalogue and funnel run in separate effects: when they shared one,
+  // the catalogue resolving re-ran the effect, cancelled the in-flight funnel
+  // and fired workflow_usage a second time.
+  useEffect(() => {
+    if (page !== "pgFlows" || wfModules !== null) return;
+    let cancelled = false;
+    fetchWorkflowModules({ appId: siteRef.appId, from: effRange.from, to: effRange.to, dev }).then(
+      (mods) => {
+        if (!cancelled && mods) setWfModules(mods);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [page, sig, wfModules, siteRef.appId, effRange.from, effRange.to, dev]);
+
+  // Funnel keys with a workflow_usage request in flight — dedupes re-runs.
+  const wfInFlight = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (page !== "pgFlows") return;
-    if (liveWf[wfCacheKey] !== undefined) return;
-    let cancelled = false;
+    if (liveWf[wfCacheKey] !== undefined) {
+      setWfLoading(false);
+      return;
+    }
+    if (wfInFlight.current.has(wfCacheKey)) return;
+    wfInFlight.current.add(wfCacheKey);
+    const key = wfCacheKey;
     setWfLoading(true);
     setWfError(null);
     fetchLiveWorkflow(
@@ -1089,22 +1184,19 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
       activeWfKey
     )
       .then((w) => {
-        if (cancelled) return;
-        setLiveWf((prev) => ({ ...prev, [wfCacheKey]: w }));
-        setWfError(null);
+        setLiveWf((prev) => ({ ...prev, [key]: w }));
+        if (wfCacheKeyRef.current === key) setWfError(null);
       })
       .catch((e) => {
-        if (cancelled) return;
-        setLiveWf((prev) => ({ ...prev, [wfCacheKey]: null }));
-        setWfError(e instanceof Error ? e.message : String(e));
+        setLiveWf((prev) => ({ ...prev, [key]: null }));
+        if (wfCacheKeyRef.current === key)
+          setWfError(e instanceof Error ? e.message : String(e));
       })
       .finally(() => {
-        if (!cancelled) setWfLoading(false);
+        wfInFlight.current.delete(key);
+        if (wfCacheKeyRef.current === key) setWfLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [page, sig, wfCacheKey, activeWfKey, liveWf, siteRef.appId, effRange.from, effRange.to, dev]);
+  }, [page, wfCacheKey, activeWfKey, liveWf, siteRef.appId, effRange.from, effRange.to, dev]);
 
   const activeLiveWf = liveWf[wfCacheKey] ?? null;
   const wfReady = activeLiveWf != null;
@@ -1166,23 +1258,21 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     return null;
   }, [liveWf, wfCacheKey]);
 
-  // Download recent activity as CSV
-  const downloadRecentActivity = () => {
-    if (recentActivity.length === 0) return;
-    const headers = ["Name", "Last Event / Path", "Time"];
-    const rows = recentActivity.map((u) => [
-      `"${(u.display_name ?? "").replace(/"/g, '""')}"`,
-      `"${(u.path ?? u.last_event ?? "—").replace(/"/g, '""')}"`,
-      u.minutes_ago != null ? `"${formatActivityAge(u.minutes_ago)}"` : '"—"',
-    ]);
-    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `recent-activity-${siteRef.label.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  // Download the full active-user export, independently of the sidebar's 10-row preview.
+  const downloadRecentActivity = async () => {
+    if (recentActivityExporting) return;
+    setRecentActivityExporting(true);
+    try {
+      await downloadActiveUsersExport({
+        appId: siteRef.appId,
+        from: effRange.from,
+        to: effRange.to,
+      });
+    } catch (error) {
+      console.error("Failed to download recent activity", error);
+    } finally {
+      setRecentActivityExporting(false);
+    }
   };
 
   // Helpers to render KPI Tiles with popovers
@@ -1407,10 +1497,10 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
               <h2 className="sidebar-recent-heading">Recent Activity</h2>
               <button
                 className="iconbtn sidebar-recent-download"
-                aria-label="Download recent activity as CSV"
-                title="Download Recent Activity"
+                aria-label="Download recent activity as Excel"
+                title="Download Recent Activity (.xlsx)"
                 onClick={downloadRecentActivity}
-                disabled={recentActivity.length === 0}
+                disabled={recentActivityExporting}
               >
                 <svg
                   viewBox="0 0 20 20"
@@ -2395,7 +2485,8 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
               </div>
 
 
-              {/* Site-wise breakdown card */}
+              {/* Site-wise breakdown card (multi-site page only) */}
+              {!lockedSite && (
               <div
                 className="card"
                 style={{ marginTop: 12 }}
@@ -2491,6 +2582,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                   })()}
                 </div>
               </div>
+              )}
             </section>
           ) : adoptionLoading ? (
             <PageSkeleton />
@@ -2502,7 +2594,9 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
               PAGE 3: WORKFLOW USAGE
               Layer-gated: workflow_usage fires only while open, per module.
               ================================================================ */}
-          {page === "pgFlows" && (wfReady ? (
+          {page === "pgFlows" && (wfPending && !wfReady ? (
+            <PageSkeleton />
+          ) : (
             <section className="section" id="pgFlows">
               <div className="section-head">
                 <h2>Workflow Usage</h2>
@@ -2512,66 +2606,49 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                 </span>
               </div>
 
-              {/* Module Nav (Buckets & modules) */}
+              {/* API failure notice — UI below still renders with empty states */}
+              {wfError && !wfReady ? (
+                <div className="bmnote crashnote" style={{ marginBottom: 14 }}>
+                  <span>&#9888;</span>
+                  <div style={{ flex: 1 }}>
+                    <b>No workflow data for this filter.</b> {wfError}{" "}
+                    <button
+                      className="ctrl"
+                      style={{ marginLeft: 8 }}
+                      onClick={() => setRetryKey((k) => k + 1)}
+                    >
+                      <span className="ic">&#8634;</span> Retry
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Module Nav (backend catalogue, like Runwal's ModuleNav) */}
               <div
                 className="mnav"
                 id="modNav"
                 title="Choose a module — this filter applies to the per-module cards only"
               >
-                {(() => {
-                  const buckets = Array.from(
-                    new Set(WORKFLOWS.map((w) => w.bucket))
-                  );
-                  const curBucket = activeWorkflow.bucket;
-                  const modsInBucket = WORKFLOWS.filter(
-                    (w) => w.bucket === curBucket
-                  );
-
-                  return (
-                    <>
-                      <div className="mnav-buckets">
-                        {buckets.map((b) => (
-                          <button
-                            key={b}
-                            className={b === curBucket ? "on" : ""}
-                            onClick={() => {
-                              const first = WORKFLOWS.find(
-                                (w) => w.bucket === b
-                              );
-                              if (first) setActiveWfKey(first.key);
-                            }}
-                          >
-                            {b}
-                            <span className="mcount">
-                              {WORKFLOWS.filter((w) => w.bucket === b).length}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                      <div className="mnav-mods">
-                        <div className="segbar">
-                          {modsInBucket.map((w) => (
-                            <button
-                              key={w.key}
-                              className={w.key === activeWfKey ? "on" : ""}
-                              onClick={() => setActiveWfKey(w.key)}
-                            >
-                              {w.name}
-                              {w.proposed && (
-                                <span
-                                  style={{ opacity: 0.6, fontStyle: "italic" }}
-                                >
-                                  {" "}
-                                  (proposed)
-                                </span>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  );
-                })()}
+                <div className="mnav-mods">
+                  <div className="segbar">
+                    <button
+                      className={activeWfKey === null ? "on" : ""}
+                      onClick={() => setActiveWfKey(null)}
+                    >
+                      All Modules
+                    </button>
+                    {(sortedWfModules ?? []).map((m) => (
+                      <button
+                        key={m.name}
+                        className={m.name === activeWfKey ? "on" : ""}
+                        onClick={() => setActiveWfKey(m.name)}
+                        title={`${m.users.toLocaleString()} users · ${m.sessions.toLocaleString()} sessions`}
+                      >
+                        {formatModuleName(m.name)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Workflow KPI tiles */}
@@ -2627,33 +2704,6 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                 })}
               </div>
 
-              {/* Scope & Legacy notes */}
-              <div id="wfScopeNote" style={{ marginTop: 14 }}>
-                {activeWorkflow.incompleteNote && (
-                  <div className="bmnote crashnote">
-                    <span>&#9888;</span>
-                    <div>
-                      <b>Scope note.</b> {activeWorkflow.incompleteNote}
-                    </div>
-                  </div>
-                )}
-                <div className="bmnote">
-                  <span>&#8505;</span>
-                  <div>
-                    <b>Legacy events, not unioned here.</b> The 221-event legacy
-                    Google-Analytics family
-                    (Artesia_PostHog_Events_Catalogue.xlsx,
-                    &quot;3_Legacy_GA_Events&quot;) mirrors into PostHog from
-                    the same call sites under different, less-certain names
-                    (almost all &quot;derived from name&quot; rather than an
-                    authored code comment). This dashboard is built entirely
-                    from the 157 modern events; the legacy family is disclosed
-                    in the companion instrumentation reference but not wired
-                    into this or any other chart.
-                  </div>
-                </div>
-              </div>
-
               {/* Workflow Funnel Card */}
               <div
                 className="card"
@@ -2667,7 +2717,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                         Workflow funnel (real event sequence)
                       </div>
                       <div className="ct">
-                        {activeWorkflow.name} — completion funnel
+                        {wfModuleLabel} — completion funnel
                       </div>
                     </div>
                     <span className="info-wrap">
@@ -2685,7 +2735,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                 </div>
                 <div className="card-body">
                   {(() => {
-                    // Live funnel from workflow_usage (reach per step); mock decay fallback.
+                    // Live funnel from workflow_usage (reach per step).
                     if (activeLiveWf && activeLiveWf.funnel.length > 0) {
                       const maxReach = Math.max(
                         1,
@@ -2753,7 +2803,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                       </button>
                       <div className="info-pop">
                         <b>Purpose</b>
-                        Every screen path inside {activeWorkflow.name}, with
+                        Every screen path inside {wfModuleLabel}, with
                         users, events, sessions and completion rate for each —
                         the module-scoped equivalent of the funnel above, at the
                         individual-screen level.
@@ -2881,30 +2931,8 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                 </div>
               </div>
             </section>
-          ) : wfPending ? (
-            <PageSkeleton />
-          ) : (
-            <LayerError layer="Workflow Usage" detail={wfError} />
           ))}
 
-          {/* ============ FOOTER ============ */}
-          <div className="footer">
-            <b>Data note.</b> Every tile, chart and table on this page renders{" "}
-            <b>live data only</b> from the same PostHog adoption backend as the
-            Runwal dashboard (<code>/fm/adoption/*</code>), with a{" "}
-            <b>static app_id per site</b> — Artesia <code>27</code> · Sunteck{" "}
-            <code>16</code> · Suncity <code>6</code> — plus <code>from/to</code>{" "}
-            and <code>device_type/os</code> from the filters above. APIs fire{" "}
-            <b>layer-wise</b>: landing loads only Traffic &amp; Session;
-            Adoption &amp; Engagement loads when you open it (league queries{" "}
-            <code>traffic_session</code> once per app_id); Workflow Usage loads{" "}
-            <code>workflow_usage</code> per selected module. No dummy or
-            sample numbers are rendered: while loading you see skeletons, and
-            any card whose endpoint returns nothing shows an empty state (badge
-            in the header shows <code>Live</code>, <code>Loading…</code> or the
-            error panel with Retry). Hover the <code>i</code> on any tile or
-            chart for its exact definition.
-          </div>
         </main>
       </div>
     </div>

@@ -41,26 +41,18 @@ export function siteByKey(key: SiteKey): SiteRef {
 }
 
 /**
- * Use the dev-server proxy locally so the browser does not enforce the
- * upstream PostHog host's CORS headers; use an absolute API base elsewhere.
+ * Always call the absolute API base (also on localhost) — the upstream host
+ * sends Access-Control-Allow-Origin: *, so no dev proxy is needed.
  *
  * Resolution order:
- *   1. /posthog-api on localhost (Vite proxy)
- *   2. VITE_FM_ADOPTION_API_URL / VITE_POSTHOG_API_URL (build env)
- *   3. localStorage 'posthog_api_url' (per-deployment override)
- *   4. Tenant baseUrl (localStorage 'baseUrl' from login) when it already
+ *   1. VITE_FM_ADOPTION_API_URL / VITE_POSTHOG_API_URL (build env)
+ *   2. localStorage 'posthog_api_url' (per-deployment override)
+ *   3. Tenant baseUrl (localStorage 'baseUrl' from login) when it already
  *      points at an absolute backend host — keeps the call on the same
  *      landscape the app was launched against
- *   5. Default shared host https://posthog-api.lockated.com
+ *   4. Default shared host https://posthog-api.lockated.com
  */
 function getPosthogApiBase(): string {
-  if (
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ) {
-    return '/posthog-api';
-  }
-
   const env =
     (import.meta as any).env?.VITE_FM_ADOPTION_API_URL ||
     (import.meta as any).env?.VITE_POSTHOG_API_URL;
@@ -376,7 +368,35 @@ export async function fetchAdoptionSection(input: QueryInput): Promise<AdoptionS
   };
 }
 
-/* ---------------- per-workflow funnel (live, fallback null) ---------------- */
+/* ---------------- module catalogue (backend-driven names) ---------------- */
+
+export interface WorkflowModuleNode {
+  name: string;
+  users: number;
+  events: number;
+  sessions: number;
+}
+
+/** Module catalogue for the workflow picker — raw backend names (same as Runwal's ModuleNav). */
+export async function fetchWorkflowModules(
+  input: QueryInput,
+): Promise<WorkflowModuleNode[] | null> {
+  try {
+    const res = await getPosthog<ModulesResponse>('modules', buildQuery(input, {}));
+    if (!res || !Array.isArray(res.tree)) return null;
+    return res.tree.map((m) => ({
+      name: m.name,
+      users: num(m.users),
+      events: num(m.events),
+      sessions: num(m.sessions),
+    }));
+  } catch (e) {
+    console.warn('[usage-dashboard] modules catalogue failed:', e);
+    return null;
+  }
+}
+
+/* ---------------- per-workflow funnel (live, throws descriptive error) ---------------- */
 
 export interface LiveFunnelStep {
   step: string;
@@ -406,34 +426,37 @@ export interface LiveWorkflow {
 
 export async function fetchLiveWorkflow(
   input: QueryInput,
-  module: string,
+  module: string | null,
 ): Promise<LiveWorkflow> {
   const err = (e: unknown) => (e instanceof Error ? e.message : String(e));
-  // 1) module-scoped funnel first.
-  try {
-    const scoped = await getPosthog<WorkflowUsageResponse>(
-      'workflow_usage',
-      buildQuery(input, { module }),
-    );
-    const mapped = mapWorkflow(scoped);
-    if (mapped) return mapped;
-  } catch (e) {
-    console.warn(`[usage-dashboard] workflow_usage module '${module}' failed:`, e);
+  const label = module ?? "all modules";
+  // 1) Module-scoped funnel first (backend's own module name).
+  if (module) {
+    try {
+      const scoped = await getPosthog<WorkflowUsageResponse>(
+        'workflow_usage',
+        buildQuery(input, { module }),
+      );
+      const mapped = mapWorkflow(scoped);
+      if (mapped) return mapped;
+    } catch (e) {
+      console.warn(`[usage-dashboard] workflow_usage module '${module}' failed:`, e);
+    }
   }
-  // 2) Fallback: aggregate funnel without module filter (backend module
-  // names vary by app — e.g. app_id 27 may not know 'serviceRequestCreate').
+  // 2) Fallback: aggregate funnel without module filter (same default the
+  // Runwal dashboard uses — module: null).
   const res = await getPosthog<WorkflowUsageResponse>(
     'workflow_usage',
     buildQuery(input, {}),
   ).catch((e) => {
     throw new Error(
-      `workflow_usage failed (app_id ${input.appId}, module '${module}'): ${err(e)}`,
+      `workflow_usage failed (app_id ${input.appId}, module '${label}'): ${err(e)}`,
     );
   });
   const mapped = mapWorkflow(res);
   if (!mapped) {
     throw new Error(
-      `workflow_usage returned no funnel steps (app_id ${input.appId}, module '${module}')`,
+      `workflow_usage returned no funnel steps (app_id ${input.appId}, module '${label}')`,
     );
   }
   return mapped;
