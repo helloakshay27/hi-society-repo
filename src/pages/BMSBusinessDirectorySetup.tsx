@@ -547,12 +547,12 @@ const BMSBusinessDirectorySetup: React.FC = () => {
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6 bg-white border">
-          <TabsTrigger value="category" className="data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none">Category</TabsTrigger>
-          <TabsTrigger value="subcategory" className="data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none">Sub Category</TabsTrigger>
+        <TabsList className="mb-6">
+          <TabsTrigger value="category">Category</TabsTrigger>
+          <TabsTrigger value="subcategory">Sub Category</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="category" className="space-y-6">
+        <TabsContent value="category" className="space-y-6 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0">
           <div className="flex justify-start">
             {shouldShow("Business Directory", "create") && (
             <Button
@@ -581,7 +581,7 @@ const BMSBusinessDirectorySetup: React.FC = () => {
           />
         </TabsContent>
 
-        <TabsContent value="subcategory" className="space-y-6">
+        <TabsContent value="subcategory" className="space-y-6 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0">
           <div className="flex justify-start">
             {shouldShow("Business Directory", "create") && (
             <Button
