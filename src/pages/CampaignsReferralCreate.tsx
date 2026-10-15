@@ -195,7 +195,7 @@ const CampaignsReferralCreate: React.FC = () => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-b shadow-sm overflow-hidden">
+        <form id="campaign-referral-form" onSubmit={handleSubmit} className="bg-white rounded-b shadow-sm overflow-hidden">
           {error && (
             <div className="mx-6 mt-6 p-3 bg-red-50 text-red-600 rounded-md text-sm">
               {error}
@@ -427,17 +427,18 @@ const CampaignsReferralCreate: React.FC = () => {
             </FormControl>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-end py-6">
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-             className="bg-[#C72030] hover:bg-[#A01828] !text-white px-10 py-2"
-            >
-              {isSubmitting ? "Submitting..." : "Submit"}
-            </Button>
-          </div>
         </form>
+
+        <div className="mt-4 flex justify-end">
+          <Button
+            type="submit"
+            form="campaign-referral-form"
+            disabled={isSubmitting}
+            className="bg-[#C72030] hover:bg-[#A01828] !text-white px-10 py-2"
+          >
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -24,59 +24,167 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { OpsConsoleGuard } from "./components/OpsConsoleGuard";
 import { Dashboard } from "./pages/Dashboard";
 const TicketsDashboardPage = lazy(() => import("./pages/TicketsDashboardPage"));
-const DashboardConfiguration = lazy(() => import("./pages/DashboardConfiguration"));
-const ParkingBookingListSiteWise = lazy(() => import("./pages/ParkingBookingListSiteWise"));
-const ConditionalParkingPage = lazy(() => import("./pages/ConditionalParkingPage"));
+const DashboardConfiguration = lazy(
+  () => import("./pages/DashboardConfiguration")
+);
+const ParkingBookingListSiteWise = lazy(
+  () => import("./pages/ParkingBookingListSiteWise")
+);
+const ConditionalParkingPage = lazy(
+  () => import("./pages/ConditionalParkingPage")
+);
 
 // Import existing pages
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const PublicSiteScheduleBooking = lazy(() => import("./pages/PublicSiteScheduleBooking"));
+const PublicSiteScheduleBooking = lazy(
+  () => import("./pages/PublicSiteScheduleBooking")
+);
 
 // Import Invoice Approvals page
-const InvoiceApprovalsPage = lazy(() => import("./pages/InvoiceApprovalsPage").then(m => ({ default: m.InvoiceApprovalsPage })));
-const AddInvoiceApprovalsPage = lazy(() => import("./pages/settings/AddInvoiceApprovalsPage").then(m => ({ default: m.AddInvoiceApprovalsPage })));
+const InvoiceApprovalsPage = lazy(() =>
+  import("./pages/InvoiceApprovalsPage").then((m) => ({
+    default: m.InvoiceApprovalsPage,
+  }))
+);
+const AddInvoiceApprovalsPage = lazy(() =>
+  import("./pages/settings/AddInvoiceApprovalsPage").then((m) => ({
+    default: m.AddInvoiceApprovalsPage,
+  }))
+);
 
 // Import Asset Groups page
-const AssetGroupsPage = lazy(() => import("./pages/AssetGroupsPage").then(m => ({ default: m.AssetGroupsPage })));
-const AssetGroupsPageNew = lazy(() => import("./pages/AssetGroupsPageNew").then(m => ({ default: m.AssetGroupsPageNew })));
-const ChecklistGroupsPage = lazy(() => import("./pages/ChecklistGroupsPage").then(m => ({ default: m.ChecklistGroupsPage })));
+const AssetGroupsPage = lazy(() =>
+  import("./pages/AssetGroupsPage").then((m) => ({
+    default: m.AssetGroupsPage,
+  }))
+);
+const AssetGroupsPageNew = lazy(() =>
+  import("./pages/AssetGroupsPageNew").then((m) => ({
+    default: m.AssetGroupsPageNew,
+  }))
+);
+const ChecklistGroupsPage = lazy(() =>
+  import("./pages/ChecklistGroupsPage").then((m) => ({
+    default: m.ChecklistGroupsPage,
+  }))
+);
 
 // Import Snagging pages
-const SnaggingDashboard = lazy(() => import("./pages/SnaggingDashboard").then(m => ({ default: m.SnaggingDashboard })));
-const SnaggingDetailsPage = lazy(() => import("./pages/SnaggingDetailsPage").then(m => ({ default: m.SnaggingDetailsPage })));
+const SnaggingDashboard = lazy(() =>
+  import("./pages/SnaggingDashboard").then((m) => ({
+    default: m.SnaggingDashboard,
+  }))
+);
+const SnaggingDetailsPage = lazy(() =>
+  import("./pages/SnaggingDetailsPage").then((m) => ({
+    default: m.SnaggingDetailsPage,
+  }))
+);
 
 // Import Ticket pages
-const TicketDashboard = lazy(() => import("./pages/TicketDashboard").then(m => ({ default: m.TicketDashboard })));
-const AddTicketDashboard = lazy(() => import("./pages/AddTicketDashboard").then(m => ({ default: m.AddTicketDashboard })));
-const TicketDetailsPage = lazy(() => import("./pages/TicketDetailsPage").then(m => ({ default: m.TicketDetailsPage })));
-const TicketFeedsPage = lazy(() => import("./pages/TicketFeedsPage").then(m => ({ default: m.TicketFeedsPage })));
-const TicketTagVendorPage = lazy(() => import("./pages/TicketTagVendorPage").then(m => ({ default: m.TicketTagVendorPage })));
+const TicketDashboard = lazy(() =>
+  import("./pages/TicketDashboard").then((m) => ({
+    default: m.TicketDashboard,
+  }))
+);
+const AddTicketDashboard = lazy(() =>
+  import("./pages/AddTicketDashboard").then((m) => ({
+    default: m.AddTicketDashboard,
+  }))
+);
+const TicketDetailsPage = lazy(() =>
+  import("./pages/TicketDetailsPage").then((m) => ({
+    default: m.TicketDetailsPage,
+  }))
+);
+const TicketFeedsPage = lazy(() =>
+  import("./pages/TicketFeedsPage").then((m) => ({
+    default: m.TicketFeedsPage,
+  }))
+);
+const TicketTagVendorPage = lazy(() =>
+  import("./pages/TicketTagVendorPage").then((m) => ({
+    default: m.TicketTagVendorPage,
+  }))
+);
 const AssignTicketsPage = lazy(() => import("./pages/AssignTicketsPage"));
 const UpdateTicketsPage = lazy(() => import("./pages/UpdateTicketsPage"));
 
 // Import Fitout pages
-const FitoutSetupDashboard = lazy(() => import("./pages/FitoutSetupDashboard").then(m => ({ default: m.FitoutSetupDashboard })));
-const FitoutRequestListDashboard = lazy(() => import("./pages/FitoutRequestListDashboard").then(m => ({ default: m.FitoutRequestListDashboard })));
-const AddProjectDashboard = lazy(() => import("./pages/AddProjectDashboard").then(m => ({ default: m.AddProjectDashboard })));
-const FitoutChecklistDashboard = lazy(() => import("./pages/FitoutChecklistDashboard").then(m => ({ default: m.FitoutChecklistDashboard })));
-const AddChecklistDashboard = lazy(() => import("./pages/AddChecklistDashboard").then(m => ({ default: m.AddChecklistDashboard })));
-const FitoutViolationDashboard = lazy(() => import("./pages/FitoutViolationDashboard").then(m => ({ default: m.FitoutViolationDashboard })));
-const CostApprovalPage = lazy(() => import("./pages/maintenance/CostApprovalPage").then(m => ({ default: m.CostApprovalPage })));
-const CostApprovalStandalonePage = lazy(() => import("./pages/CostApprovalPage").then(m => ({ default: m.CostApprovalPage })));
+const FitoutSetupDashboard = lazy(() =>
+  import("./pages/FitoutSetupDashboard").then((m) => ({
+    default: m.FitoutSetupDashboard,
+  }))
+);
+const FitoutRequestListDashboard = lazy(() =>
+  import("./pages/FitoutRequestListDashboard").then((m) => ({
+    default: m.FitoutRequestListDashboard,
+  }))
+);
+const AddProjectDashboard = lazy(() =>
+  import("./pages/AddProjectDashboard").then((m) => ({
+    default: m.AddProjectDashboard,
+  }))
+);
+const FitoutChecklistDashboard = lazy(() =>
+  import("./pages/FitoutChecklistDashboard").then((m) => ({
+    default: m.FitoutChecklistDashboard,
+  }))
+);
+const AddChecklistDashboard = lazy(() =>
+  import("./pages/AddChecklistDashboard").then((m) => ({
+    default: m.AddChecklistDashboard,
+  }))
+);
+const FitoutViolationDashboard = lazy(() =>
+  import("./pages/FitoutViolationDashboard").then((m) => ({
+    default: m.FitoutViolationDashboard,
+  }))
+);
+const CostApprovalPage = lazy(() =>
+  import("./pages/maintenance/CostApprovalPage").then((m) => ({
+    default: m.CostApprovalPage,
+  }))
+);
+const CostApprovalStandalonePage = lazy(() =>
+  import("./pages/CostApprovalPage").then((m) => ({
+    default: m.CostApprovalPage,
+  }))
+);
 
 // Import Maintenance pages
-const AssetDashboard = lazy(() => import("./pages/AssetDashboard").then(m => ({ default: m.AssetDashboard })));
-const AssetDetailsPage = lazy(() => import("./pages/AssetDetailsPage").then(m => ({ default: m.AssetDetailsPage })));
+const AssetDashboard = lazy(() =>
+  import("./pages/AssetDashboard").then((m) => ({ default: m.AssetDashboard }))
+);
+const AssetDetailsPage = lazy(() =>
+  import("./pages/AssetDetailsPage").then((m) => ({
+    default: m.AssetDetailsPage,
+  }))
+);
 const AddAssetPage = lazy(() => import("./pages/AddAssetPage"));
-const InActiveAssetsDashboard = lazy(() => import("./pages/InActiveAssetsDashboard").then(m => ({ default: m.InActiveAssetsDashboard })));
-const MoveAssetPage = lazy(() => import("./pages/MoveAssetPage").then(m => ({ default: m.MoveAssetPage })));
-const DisposeAssetPage = lazy(() => import("./pages/DisposeAssetPage").then(m => ({ default: m.DisposeAssetPage })));
+const InActiveAssetsDashboard = lazy(() =>
+  import("./pages/InActiveAssetsDashboard").then((m) => ({
+    default: m.InActiveAssetsDashboard,
+  }))
+);
+const MoveAssetPage = lazy(() =>
+  import("./pages/MoveAssetPage").then((m) => ({ default: m.MoveAssetPage }))
+);
+const DisposeAssetPage = lazy(() =>
+  import("./pages/DisposeAssetPage").then((m) => ({
+    default: m.DisposeAssetPage,
+  }))
+);
 
 // Import Incident pages
 import { IncidentListDashboard } from "./pages/IncidentListDashboard";
 import { AddIncidentPage } from "./pages/AddIncidentPage";
-const NewAddIncidentPage = lazy(() => import("./pages/NewAddIncidentPage").then(m => ({ default: m.NewAddIncidentPage })));
+const NewAddIncidentPage = lazy(() =>
+  import("./pages/NewAddIncidentPage").then((m) => ({
+    default: m.NewAddIncidentPage,
+  }))
+);
 
 import { IncidentDetailsPage } from "./pages/IncidentDetailsPage";
 import { EditIncidentDetailsPage } from "./pages/EditIncidentDetailsPage";
@@ -94,15 +202,31 @@ import { EditInventoryPage } from "./pages/EditInventoryPage";
 import InventoryConsumptionDashboard from "./pages/InventoryConsumptionDashboard";
 import InventoryConsumptionViewPage from "./pages/InventoryConsumptionViewPage";
 import EcoFriendlyListPage from "./pages/EcoFriendlyListPage";
-const NewInboundPage = lazy(() => import("./pages/NewInboundPage").then(m => ({ default: m.NewInboundPage })));
-const NewOutboundPage = lazy(() => import("./pages/NewOutboundPage").then(m => ({ default: m.NewOutboundPage })));
-const OutboundListPage = lazy(() => import("./pages/OutboundListPage").then(m => ({ default: m.OutboundListPage })));
-const OutboundDetailPage = lazy(() => import("./pages/OutboundDetailPage").then(m => ({ default: m.OutboundDetailPage })));
+const NewInboundPage = lazy(() =>
+  import("./pages/NewInboundPage").then((m) => ({ default: m.NewInboundPage }))
+);
+const NewOutboundPage = lazy(() =>
+  import("./pages/NewOutboundPage").then((m) => ({
+    default: m.NewOutboundPage,
+  }))
+);
+const OutboundListPage = lazy(() =>
+  import("./pages/OutboundListPage").then((m) => ({
+    default: m.OutboundListPage,
+  }))
+);
+const OutboundDetailPage = lazy(() =>
+  import("./pages/OutboundDetailPage").then((m) => ({
+    default: m.OutboundDetailPage,
+  }))
+);
 
 // Import Task pages
 import { ScheduledTaskDashboard } from "./pages/maintenance/ScheduledTaskDashboard";
 import { TaskDetailsPage } from "./pages/TaskDetailsPage";
-const JobSheetPage = lazy(() => import("./pages/JobSheetPage").then(m => ({ default: m.JobSheetPage })));
+const JobSheetPage = lazy(() =>
+  import("./pages/JobSheetPage").then((m) => ({ default: m.JobSheetPage }))
+);
 
 // Import Issue pages
 // import IssuesListPage from "./pages/IssuesListPage";
@@ -114,40 +238,98 @@ import { AddAssetDashboard } from "./pages/AddAssetDashboard";
 import { AddEnergyAssetDashboard } from "./pages/AddEnergyAssetDashboard";
 import { UtilityWaterDashboard } from "./pages/UtilityWaterDashboard";
 import { AddWaterAssetDashboard } from "./pages/AddWaterAssetDashboard";
-const EditWaterAssetDashboard = lazy(() => import("./pages/EditWaterAssetDashboard").then(m => ({ default: m.EditWaterAssetDashboard })));
+const EditWaterAssetDashboard = lazy(() =>
+  import("./pages/EditWaterAssetDashboard").then((m) => ({
+    default: m.EditWaterAssetDashboard,
+  }))
+);
 import UtilitySTPDashboard from "./pages/UtilitySTPDashboard";
 import AddSTPAssetDashboard from "./pages/AddSTPAssetDashboard";
 import UtilityEVConsumptionDashboard from "./pages/UtilityEVConsumptionDashboard";
-const UtilityDailyReadingsDashboard = lazy(() => import("./pages/UtilityDailyReadingsDashboard"));
+const UtilityDailyReadingsDashboard = lazy(
+  () => import("./pages/UtilityDailyReadingsDashboard")
+);
 const EditMeasurementPage = lazy(() => import("./pages/EditMeasurementPage"));
 import UtilitySolarGeneratorDashboard from "./pages/UtilitySolarGeneratorDashboard";
-const UtilityRequestDashboard = lazy(() => import("./pages/UtilityRequestDashboard").then(m => ({ default: m.UtilityRequestDashboard })));
-const UtilityRequestDetailsPage = lazy(() => import("./pages/UtilityRequestDetailsPage").then(m => ({ default: m.UtilityRequestDetailsPage })));
-const AddUtilityRequestPage = lazy(() => import("./pages/AddUtilityRequestPage").then(m => ({ default: m.AddUtilityRequestPage })));
-const EditUtilityRequestPage = lazy(() => import("./pages/EditUtilityRequestPage").then(m => ({ default: m.EditUtilityRequestPage })));
-const UtilityConsumptionDashboard = lazy(() => import("./pages/UtilityConsumptionDashboard"));
-const GenerateUtilityBillPage = lazy(() => import("./pages/GenerateUtilityBillPage").then(m => ({ default: m.GenerateUtilityBillPage })));
+const UtilityRequestDashboard = lazy(() =>
+  import("./pages/UtilityRequestDashboard").then((m) => ({
+    default: m.UtilityRequestDashboard,
+  }))
+);
+const UtilityRequestDetailsPage = lazy(() =>
+  import("./pages/UtilityRequestDetailsPage").then((m) => ({
+    default: m.UtilityRequestDetailsPage,
+  }))
+);
+const AddUtilityRequestPage = lazy(() =>
+  import("./pages/AddUtilityRequestPage").then((m) => ({
+    default: m.AddUtilityRequestPage,
+  }))
+);
+const EditUtilityRequestPage = lazy(() =>
+  import("./pages/EditUtilityRequestPage").then((m) => ({
+    default: m.EditUtilityRequestPage,
+  }))
+);
+const UtilityConsumptionDashboard = lazy(
+  () => import("./pages/UtilityConsumptionDashboard")
+);
+const GenerateUtilityBillPage = lazy(() =>
+  import("./pages/GenerateUtilityBillPage").then((m) => ({
+    default: m.GenerateUtilityBillPage,
+  }))
+);
 
 // Import Waste Generation pages
 import UtilityWasteGenerationDashboard from "./pages/UtilityWasteGenerationDashboard";
 import { UtilityWasteGenerationSetupDashboard } from "./pages/UtilityWasteGenerationSetupDashboard";
 import AddWasteGenerationPage from "./pages/AddWasteGenerationPage";
-const EditWasteGenerationPage = lazy(() => import("./pages/EditWasteGenerationPage"));
-const WasteGenerationDetailsPage = lazy(() => import("./pages/WasteGenerationDetailsPage").then(m => ({ default: m.WasteGenerationDetailsPage })));
+const EditWasteGenerationPage = lazy(
+  () => import("./pages/EditWasteGenerationPage")
+);
+const WasteGenerationDetailsPage = lazy(() =>
+  import("./pages/WasteGenerationDetailsPage").then((m) => ({
+    default: m.WasteGenerationDetailsPage,
+  }))
+);
 
 // Import Survey pages
 import { SurveyListDashboard } from "./pages/SurveyListDashboard";
 import { AddSurveyPage } from "./pages/AddSurveyPage";
-const EditSurveyPage = lazy(() => import("./pages/EditSurveyPage").then(m => ({ default: m.EditSurveyPage })));
-const SurveyDetailsPage = lazy(() => import("./pages/SurveyDetailsPage").then(m => ({ default: m.SurveyDetailsPage })));
+const EditSurveyPage = lazy(() =>
+  import("./pages/EditSurveyPage").then((m) => ({ default: m.EditSurveyPage }))
+);
+const SurveyDetailsPage = lazy(() =>
+  import("./pages/SurveyDetailsPage").then((m) => ({
+    default: m.SurveyDetailsPage,
+  }))
+);
 import { SurveyMappingDashboard } from "./pages/SurveyMappingDashboard";
-const AddSurveyMapping = lazy(() => import("./pages/AddSurveyMapping").then(m => ({ default: m.AddSurveyMapping })));
-const EditSurveyMapping = lazy(() => import("./pages/EditSurveyMapping").then(m => ({ default: m.EditSurveyMapping })));
-const SurveyMappingDetailsPage = lazy(() => import("./pages/SurveyMappingDetailsPage").then(m => ({ default: m.SurveyMappingDetailsPage })));
-const UserQRSetup = lazy(() => import("./pages/UserQRSetup").then(m => ({ default: m.UserQRSetup })));
+const AddSurveyMapping = lazy(() =>
+  import("./pages/AddSurveyMapping").then((m) => ({
+    default: m.AddSurveyMapping,
+  }))
+);
+const EditSurveyMapping = lazy(() =>
+  import("./pages/EditSurveyMapping").then((m) => ({
+    default: m.EditSurveyMapping,
+  }))
+);
+const SurveyMappingDetailsPage = lazy(() =>
+  import("./pages/SurveyMappingDetailsPage").then((m) => ({
+    default: m.SurveyMappingDetailsPage,
+  }))
+);
+const UserQRSetup = lazy(() =>
+  import("./pages/UserQRSetup").then((m) => ({ default: m.UserQRSetup }))
+);
 import { SurveyResponseDashboard } from "./pages/SurveyResponseDashboard";
 import { SurveyResponsePage } from "./pages/SurveyResponsePage";
-const SurveyResponseDetailPage = lazy(() => import("./pages/SurveyResponseDetailPage").then(m => ({ default: m.SurveyResponseDetailPage })));
+const SurveyResponseDetailPage = lazy(() =>
+  import("./pages/SurveyResponseDetailPage").then((m) => ({
+    default: m.SurveyResponseDetailPage,
+  }))
+);
 
 // Import Schedule pages
 import { ScheduleListDashboard } from "./pages/ScheduleListDashboard";
@@ -158,50 +340,150 @@ const CloneSchedulePage = lazy(() => import("./pages/CloneSchedulePage"));
 import { CopySchedulePage } from "./pages/CopySchedulePage";
 import { ViewSchedulePage } from "./pages/ViewSchedulePage";
 
-const EditEventPage = lazy(() => import("./pages/EditEventPage").then(m => ({ default: m.EditEventPage })));
+const EditEventPage = lazy(() =>
+  import("./pages/EditEventPage").then((m) => ({ default: m.EditEventPage }))
+);
 
 // Import Visitors pages
 import { VisitorsDashboard } from "./pages/VisitorsDashboard";
 import { VisitorsHistoryDashboard } from "./pages/VisitorsHistoryDashboard";
-const VisitorDetailsPage = lazy(() => import("./pages/VisitorDetailsPage").then(m => ({ default: m.VisitorDetailsPage })));
+const VisitorDetailsPage = lazy(() =>
+  import("./pages/VisitorDetailsPage").then((m) => ({
+    default: m.VisitorDetailsPage,
+  }))
+);
 import { PatrollingDashboard } from "./pages/PatrollingDashboard";
-const PatrollingResponsePage = lazy(() => import("./pages/PatrollingResponsePage").then(m => ({ default: m.PatrollingResponsePage })));
+const PatrollingResponsePage = lazy(() =>
+  import("./pages/PatrollingResponsePage").then((m) => ({
+    default: m.PatrollingResponsePage,
+  }))
+);
 import { PatrollingDetailsPage } from "./pages/PatrollingDetailsPage";
-const PatrollingCreatePage = lazy(() => import("./pages/PatrollingCreatePage").then(m => ({ default: m.PatrollingCreatePage })));
-const PatrollingEditPage = lazy(() => import("./pages/PatrollingEditPage").then(m => ({ default: m.PatrollingEditPage })));
-const VisitorFormPage = lazy(() => import("./pages/VisitorFormPage").then(m => ({ default: m.VisitorFormPage })));
-const VisitorManagementSetup = lazy(() => import("./pages/VisitorManagementSetup").then(m => ({ default: m.VisitorManagementSetup })));
-const AddVisitorGatePage = lazy(() => import("./pages/AddVisitorGatePage").then(m => ({ default: m.AddVisitorGatePage })));
-const EditVisitorGatePage = lazy(() => import("./pages/EditVisitorGatePage").then(m => ({ default: m.EditVisitorGatePage })));
-const SupportStaffPage = lazy(() => import("./pages/SupportStaffPage").then(m => ({ default: m.SupportStaffPage })));
-const EditSupportStaffPage = lazy(() => import("./pages/EditSupportStaffPage").then(m => ({ default: m.EditSupportStaffPage })));
-const VisitingPurposePage = lazy(() => import("./pages/VisitingPurposePage").then(m => ({ default: m.VisitingPurposePage })));
+const PatrollingCreatePage = lazy(() =>
+  import("./pages/PatrollingCreatePage").then((m) => ({
+    default: m.PatrollingCreatePage,
+  }))
+);
+const PatrollingEditPage = lazy(() =>
+  import("./pages/PatrollingEditPage").then((m) => ({
+    default: m.PatrollingEditPage,
+  }))
+);
+const VisitorFormPage = lazy(() =>
+  import("./pages/VisitorFormPage").then((m) => ({
+    default: m.VisitorFormPage,
+  }))
+);
+const VisitorManagementSetup = lazy(() =>
+  import("./pages/VisitorManagementSetup").then((m) => ({
+    default: m.VisitorManagementSetup,
+  }))
+);
+const AddVisitorGatePage = lazy(() =>
+  import("./pages/AddVisitorGatePage").then((m) => ({
+    default: m.AddVisitorGatePage,
+  }))
+);
+const EditVisitorGatePage = lazy(() =>
+  import("./pages/EditVisitorGatePage").then((m) => ({
+    default: m.EditVisitorGatePage,
+  }))
+);
+const SupportStaffPage = lazy(() =>
+  import("./pages/SupportStaffPage").then((m) => ({
+    default: m.SupportStaffPage,
+  }))
+);
+const EditSupportStaffPage = lazy(() =>
+  import("./pages/EditSupportStaffPage").then((m) => ({
+    default: m.EditSupportStaffPage,
+  }))
+);
+const VisitingPurposePage = lazy(() =>
+  import("./pages/VisitingPurposePage").then((m) => ({
+    default: m.VisitingPurposePage,
+  }))
+);
 
 // Import Carpool pages
-const CarpoolDashboard = lazy(() => import("./pages/pulse/CarpoolDashboard").then(m => ({ default: m.CarpoolDashboard })));
+const CarpoolDashboard = lazy(() =>
+  import("./pages/pulse/CarpoolDashboard").then((m) => ({
+    default: m.CarpoolDashboard,
+  }))
+);
 
 // Import Icons pages
-const IconsDashboard = lazy(() => import("./pages/IconsDashboard").then(m => ({ default: m.IconsDashboard })));
-const AddIconPage = lazy(() => import("./pages/AddIconPage").then(m => ({ default: m.AddIconPage })));
-const EditIconPage = lazy(() => import("./pages/EditIconPage").then(m => ({ default: m.EditIconPage })));
+const IconsDashboard = lazy(() =>
+  import("./pages/IconsDashboard").then((m) => ({ default: m.IconsDashboard }))
+);
+const AddIconPage = lazy(() =>
+  import("./pages/AddIconPage").then((m) => ({ default: m.AddIconPage }))
+);
+const EditIconPage = lazy(() =>
+  import("./pages/EditIconPage").then((m) => ({ default: m.EditIconPage }))
+);
 
 // Import new dashboard pages
-const IncidentDashboard = lazy(() => import("./pages/IncidentDashboard").then(m => ({ default: m.IncidentDashboard })));
-const PermitToWorkDashboard = lazy(() => import("./pages/PermitToWorkDashboard").then(m => ({ default: m.PermitToWorkDashboard })));
-const PermitDetails = lazy(() => import("./pages/PermitDetails").then(m => ({ default: m.PermitDetails })));
-const PermitSafetyCheckForm = lazy(() => import("./pages/PermitSafetyCheckForm"));
-const PermitPendingApprovalsDashboard = lazy(() => import("./pages/PermitPendingApprovalsDashboard").then(m => ({ default: m.PermitPendingApprovalsDashboard })));
-const VendorPermitForm = lazy(() => import("./pages/VendorPermitForm").then(m => ({ default: m.VendorPermitForm })));
+const IncidentDashboard = lazy(() =>
+  import("./pages/IncidentDashboard").then((m) => ({
+    default: m.IncidentDashboard,
+  }))
+);
+const PermitToWorkDashboard = lazy(() =>
+  import("./pages/PermitToWorkDashboard").then((m) => ({
+    default: m.PermitToWorkDashboard,
+  }))
+);
+const PermitDetails = lazy(() =>
+  import("./pages/PermitDetails").then((m) => ({ default: m.PermitDetails }))
+);
+const PermitSafetyCheckForm = lazy(
+  () => import("./pages/PermitSafetyCheckForm")
+);
+const PermitPendingApprovalsDashboard = lazy(() =>
+  import("./pages/PermitPendingApprovalsDashboard").then((m) => ({
+    default: m.PermitPendingApprovalsDashboard,
+  }))
+);
+const VendorPermitForm = lazy(() =>
+  import("./pages/VendorPermitForm").then((m) => ({
+    default: m.VendorPermitForm,
+  }))
+);
 const FillForm = lazy(() => import("./pages/FillForm"));
 const FillJSAForm = lazy(() => import("./pages/FillJSAForm"));
-const AddPermitChecklist = lazy(() => import("./pages/AddPermitChecklist").then(m => ({ default: m.AddPermitChecklist })));
-const PermitChecklistList = lazy(() => import("./pages/PermitChecklistList").then(m => ({ default: m.PermitChecklistList })));
-const PermitChecklistDetails = lazy(() => import("./pages/PermitChecklistDetails").then(m => ({ default: m.PermitChecklistDetails })));
-const EditPermitChecklist = lazy(() => import("./pages/EditPermitCheklist").then(m => ({ default: m.EditPermitChecklist })));
-const EditPermitPage = lazy(() => import("./pages/EditPermitPage").then(m => ({ default: m.EditPermitPage })));
+const AddPermitChecklist = lazy(() =>
+  import("./pages/AddPermitChecklist").then((m) => ({
+    default: m.AddPermitChecklist,
+  }))
+);
+const PermitChecklistList = lazy(() =>
+  import("./pages/PermitChecklistList").then((m) => ({
+    default: m.PermitChecklistList,
+  }))
+);
+const PermitChecklistDetails = lazy(() =>
+  import("./pages/PermitChecklistDetails").then((m) => ({
+    default: m.PermitChecklistDetails,
+  }))
+);
+const EditPermitChecklist = lazy(() =>
+  import("./pages/EditPermitCheklist").then((m) => ({
+    default: m.EditPermitChecklist,
+  }))
+);
+const EditPermitPage = lazy(() =>
+  import("./pages/EditPermitPage").then((m) => ({ default: m.EditPermitPage }))
+);
 
-const LeadDashboard = lazy(() => import("./pages/LeadDashboard").then(m => ({ default: m.LeadDashboard })));
-const EnergyDashboard = lazy(() => import("./pages/EnergyDashboard").then(m => ({ default: m.EnergyDashboard })));
+const LeadDashboard = lazy(() =>
+  import("./pages/LeadDashboard").then((m) => ({ default: m.LeadDashboard }))
+);
+const EnergyDashboard = lazy(() =>
+  import("./pages/EnergyDashboard").then((m) => ({
+    default: m.EnergyDashboard,
+  }))
+);
 
 // // Import Inventory pages
 // import { InventoryDashboard } from "./pages/InventoryDashboard";
@@ -246,7 +528,11 @@ const EnergyDashboard = lazy(() => import("./pages/EnergyDashboard").then(m => (
 // import { EditSchedulePage } from "./pages/EditSchedulePage";
 // import { CopySchedulePage } from "./pages/CopySchedulePage";
 // import { ViewSchedulePage } from "./pages/ViewSchedulePage";
-const ViewPerformancePage = lazy(() => import("./pages/ViewPerformancePage").then(m => ({ default: m.ViewPerformancePage })));
+const ViewPerformancePage = lazy(() =>
+  import("./pages/ViewPerformancePage").then((m) => ({
+    default: m.ViewPerformancePage,
+  }))
+);
 
 // // Import Visitors pages
 // import { VisitorsDashboard } from "./pages/VisitorsDashboard";
@@ -255,50 +541,150 @@ const ViewPerformancePage = lazy(() => import("./pages/ViewPerformancePage").the
 // import { PatrollingDetailsPage } from "./pages/PatrollingDetailsPage";
 
 // Import Staff pages
-const StaffsDashboard = lazy(() => import("./pages/StaffsDashboard").then(m => ({ default: m.StaffsDashboard })));
+const StaffsDashboard = lazy(() =>
+  import("./pages/StaffsDashboard").then((m) => ({
+    default: m.StaffsDashboard,
+  }))
+);
 
 // Import Staff Details page
-const StaffDetailsPage = lazy(() => import("./pages/StaffDetailsPage").then(m => ({ default: m.StaffDetailsPage })));
+const StaffDetailsPage = lazy(() =>
+  import("./pages/StaffDetailsPage").then((m) => ({
+    default: m.StaffDetailsPage,
+  }))
+);
 
 // Import Edit Staff page
-const EditStaffPage = lazy(() => import("./pages/EditStaffPage").then(m => ({ default: m.EditStaffPage })));
+const EditStaffPage = lazy(() =>
+  import("./pages/EditStaffPage").then((m) => ({ default: m.EditStaffPage }))
+);
 
 // Import Add Staff page
-const AddStaffPage = lazy(() => import("./pages/AddStaffPage").then(m => ({ default: m.AddStaffPage })));
+const AddStaffPage = lazy(() =>
+  import("./pages/AddStaffPage").then((m) => ({ default: m.AddStaffPage }))
+);
 
 // Import Mailroom pages
-const InboundListPage = lazy(() => import("./pages/InboundListPage").then(m => ({ default: m.InboundListPage })));
-const InboundDetailPage = lazy(() => import("./pages/InboundDetailPage").then(m => ({ default: m.InboundDetailPage })));
+const InboundListPage = lazy(() =>
+  import("./pages/InboundListPage").then((m) => ({
+    default: m.InboundListPage,
+  }))
+);
+const InboundDetailPage = lazy(() =>
+  import("./pages/InboundDetailPage").then((m) => ({
+    default: m.InboundDetailPage,
+  }))
+);
 
-const FnBRestaurantDashboard = lazy(() => import("./pages/FnBRestaurantDashboard").then(m => ({ default: m.FnBRestaurantDashboard })));
-const FnBRestaurantDetailsPage = lazy(() => import("./pages/FnBRestaurantDetailsPage").then(m => ({ default: m.FnBRestaurantDetailsPage })));
-const ProductSetupDetailPage = lazy(() => import("./pages/ProductSetupDetailPage").then(m => ({ default: m.ProductSetupDetailPage })));
-const ProductEditPage = lazy(() => import("./pages/ProductEditPage").then(m => ({ default: m.ProductEditPage })));
-const RestaurantOrderDetailPage = lazy(() => import("./pages/RestaurantOrderDetailPage").then(m => ({ default: m.RestaurantOrderDetailPage })));
-const FnBDiscountsPage = lazy(() => import("./pages/FnBDiscountsPage").then(m => ({ default: m.FnBDiscountsPage })));
-const AddRestaurantPage = lazy(() => import("./pages/AddRestaurantPage").then(m => ({ default: m.AddRestaurantPage })));
+const FnBRestaurantDashboard = lazy(() =>
+  import("./pages/FnBRestaurantDashboard").then((m) => ({
+    default: m.FnBRestaurantDashboard,
+  }))
+);
+const FnBRestaurantDetailsPage = lazy(() =>
+  import("./pages/FnBRestaurantDetailsPage").then((m) => ({
+    default: m.FnBRestaurantDetailsPage,
+  }))
+);
+const ProductSetupDetailPage = lazy(() =>
+  import("./pages/ProductSetupDetailPage").then((m) => ({
+    default: m.ProductSetupDetailPage,
+  }))
+);
+const ProductEditPage = lazy(() =>
+  import("./pages/ProductEditPage").then((m) => ({
+    default: m.ProductEditPage,
+  }))
+);
+const RestaurantOrderDetailPage = lazy(() =>
+  import("./pages/RestaurantOrderDetailPage").then((m) => ({
+    default: m.RestaurantOrderDetailPage,
+  }))
+);
+const FnBDiscountsPage = lazy(() =>
+  import("./pages/FnBDiscountsPage").then((m) => ({
+    default: m.FnBDiscountsPage,
+  }))
+);
+const AddRestaurantPage = lazy(() =>
+  import("./pages/AddRestaurantPage").then((m) => ({
+    default: m.AddRestaurantPage,
+  }))
+);
 const ParkingDashboard = lazy(() => import("./pages/ParkingDashboard"));
 const ParkingDetailsPage = lazy(() => import("./pages/ParkingDetailsPage"));
-const ParkingBookingsDashboard = lazy(() => import("./pages/ParkingBookingsDashboard"));
+const ParkingBookingsDashboard = lazy(
+  () => import("./pages/ParkingBookingsDashboard")
+);
 const ParkingCreatePage = lazy(() => import("./pages/ParkingCreatePage"));
 const ParkingEditPage = lazy(() => import("./pages/ParkingEditPage"));
-const ParkingCategoryPage = lazy(() => import("./pages/ParkingCategoryPage").then(m => ({ default: m.ParkingCategoryPage })));
-const SlotConfigurationPage = lazy(() => import("./pages/SlotConfigurationPage").then(m => ({ default: m.SlotConfigurationPage })));
-const AddSlotConfigurationPage = lazy(() => import("./pages/AddSlotConfigurationPage").then(m => ({ default: m.AddSlotConfigurationPage })));
-const EditSlotConfigurationPage = lazy(() => import("./pages/EditSlotConfigurationPage").then(m => ({ default: m.EditSlotConfigurationPage })));
-const TimeSlotSetupPage = lazy(() => import("./pages/TimeSlotSetupPage").then(m => ({ default: m.TimeSlotSetupPage })));
+const ParkingCategoryPage = lazy(() =>
+  import("./pages/ParkingCategoryPage").then((m) => ({
+    default: m.ParkingCategoryPage,
+  }))
+);
+const SlotConfigurationPage = lazy(() =>
+  import("./pages/SlotConfigurationPage").then((m) => ({
+    default: m.SlotConfigurationPage,
+  }))
+);
+const AddSlotConfigurationPage = lazy(() =>
+  import("./pages/AddSlotConfigurationPage").then((m) => ({
+    default: m.AddSlotConfigurationPage,
+  }))
+);
+const EditSlotConfigurationPage = lazy(() =>
+  import("./pages/EditSlotConfigurationPage").then((m) => ({
+    default: m.EditSlotConfigurationPage,
+  }))
+);
+const TimeSlotSetupPage = lazy(() =>
+  import("./pages/TimeSlotSetupPage").then((m) => ({
+    default: m.TimeSlotSetupPage,
+  }))
+);
 
 // Import Design Insights pages
-const DesignInsightsDashboard = lazy(() => import("./pages/DesignInsightsDashboard").then(m => ({ default: m.DesignInsightsDashboard })));
-const AddDesignInsightDashboard = lazy(() => import("./pages/AddDesignInsightDashboard").then(m => ({ default: m.AddDesignInsightDashboard })));
-const DesignInsightDetailsDashboard = lazy(() => import("./pages/DesignInsightDetailsDashboard").then(m => ({ default: m.DesignInsightDetailsDashboard })));
-const EditDesignInsightDashboard = lazy(() => import("./pages/EditDesignInsightDashboard").then(m => ({ default: m.EditDesignInsightDashboard })));
-const HOTODashboard = lazy(() => import("./pages/HOTODashboard").then(m => ({ default: m.HOTODashboard })));
+const DesignInsightsDashboard = lazy(() =>
+  import("./pages/DesignInsightsDashboard").then((m) => ({
+    default: m.DesignInsightsDashboard,
+  }))
+);
+const AddDesignInsightDashboard = lazy(() =>
+  import("./pages/AddDesignInsightDashboard").then((m) => ({
+    default: m.AddDesignInsightDashboard,
+  }))
+);
+const DesignInsightDetailsDashboard = lazy(() =>
+  import("./pages/DesignInsightDetailsDashboard").then((m) => ({
+    default: m.DesignInsightDetailsDashboard,
+  }))
+);
+const EditDesignInsightDashboard = lazy(() =>
+  import("./pages/EditDesignInsightDashboard").then((m) => ({
+    default: m.EditDesignInsightDashboard,
+  }))
+);
+const HOTODashboard = lazy(() =>
+  import("./pages/HOTODashboard").then((m) => ({ default: m.HOTODashboard }))
+);
 
 // Import Security pages
-const VehicleParkingDashboard = lazy(() => import("./pages/VehicleParkingDashboard").then(m => ({ default: m.VehicleParkingDashboard })));
-const RVehiclesDashboard = lazy(() => import("./pages/RVehiclesDashboard").then(m => ({ default: m.RVehiclesDashboard })));
-const RVehiclesHistoryDashboard = lazy(() => import("./pages/RVehiclesHistoryDashboard").then(m => ({ default: m.RVehiclesHistoryDashboard })));
+const VehicleParkingDashboard = lazy(() =>
+  import("./pages/VehicleParkingDashboard").then((m) => ({
+    default: m.VehicleParkingDashboard,
+  }))
+);
+const RVehiclesDashboard = lazy(() =>
+  import("./pages/RVehiclesDashboard").then((m) => ({
+    default: m.RVehiclesDashboard,
+  }))
+);
+const RVehiclesHistoryDashboard = lazy(() =>
+  import("./pages/RVehiclesHistoryDashboard").then((m) => ({
+    default: m.RVehiclesHistoryDashboard,
+  }))
+);
 
 // Import GVehiclesDashboard
 import { GVehiclesDashboard } from "./pages/GVehiclesDashboard";
@@ -307,71 +693,229 @@ import { GVehiclesDashboard } from "./pages/GVehiclesDashboard";
 import { GVehicleOutDashboard } from "./pages/GVehicleOutDashboard";
 
 // Import Gate Pass pages
-const GatePassDashboard = lazy(() => import("./pages/GatePassDashboard").then(m => ({ default: m.GatePassDashboard })));
-const GatePassInwardsDashboard = lazy(() => import("./pages/GatePassInwardsDashboard").then(m => ({ default: m.GatePassInwardsDashboard })));
-const GatePassInwardsDetailPage = lazy(() => import("./pages/GatePassInwardsDetailPage").then(m => ({ default: m.GatePassInwardsDetailPage })));
-const AddGatePassInwardPage = lazy(() => import("./pages/AddGatePassInwardPage").then(m => ({ default: m.AddGatePassInwardPage })));
-const GatePassOutwardsDashboard = lazy(() => import("./pages/GatePassOutwardsDashboard").then(m => ({ default: m.GatePassOutwardsDashboard })));
-const GatePassOutwardsAddPage = lazy(() => import("./pages/GatePassOutwardsAddPage").then(m => ({ default: m.GatePassOutwardsAddPage })));
-const GatePassOutwardsDetailPage = lazy(() => import("./pages/GatePassOutwardsDetailPage").then(m => ({ default: m.GatePassOutwardsDetailPage })));
+const GatePassDashboard = lazy(() =>
+  import("./pages/GatePassDashboard").then((m) => ({
+    default: m.GatePassDashboard,
+  }))
+);
+const GatePassInwardsDashboard = lazy(() =>
+  import("./pages/GatePassInwardsDashboard").then((m) => ({
+    default: m.GatePassInwardsDashboard,
+  }))
+);
+const GatePassInwardsDetailPage = lazy(() =>
+  import("./pages/GatePassInwardsDetailPage").then((m) => ({
+    default: m.GatePassInwardsDetailPage,
+  }))
+);
+const AddGatePassInwardPage = lazy(() =>
+  import("./pages/AddGatePassInwardPage").then((m) => ({
+    default: m.AddGatePassInwardPage,
+  }))
+);
+const GatePassOutwardsDashboard = lazy(() =>
+  import("./pages/GatePassOutwardsDashboard").then((m) => ({
+    default: m.GatePassOutwardsDashboard,
+  }))
+);
+const GatePassOutwardsAddPage = lazy(() =>
+  import("./pages/GatePassOutwardsAddPage").then((m) => ({
+    default: m.GatePassOutwardsAddPage,
+  }))
+);
+const GatePassOutwardsDetailPage = lazy(() =>
+  import("./pages/GatePassOutwardsDetailPage").then((m) => ({
+    default: m.GatePassOutwardsDetailPage,
+  }))
+);
 
 // Import Space Management pages
-const SpaceManagementBookingsDashboard = lazy(() => import("./pages/SpaceManagementBookingsDashboard").then(m => ({ default: m.SpaceManagementBookingsDashboard })));
-const SpaceManagementSeatRequestsDashboard = lazy(() => import("./pages/SpaceManagementSeatRequestsDashboard").then(m => ({ default: m.SpaceManagementSeatRequestsDashboard })));
+const SpaceManagementBookingsDashboard = lazy(() =>
+  import("./pages/SpaceManagementBookingsDashboard").then((m) => ({
+    default: m.SpaceManagementBookingsDashboard,
+  }))
+);
+const SpaceManagementSeatRequestsDashboard = lazy(() =>
+  import("./pages/SpaceManagementSeatRequestsDashboard").then((m) => ({
+    default: m.SpaceManagementSeatRequestsDashboard,
+  }))
+);
 
 // Import Seat Setup pages
-const SeatSetupDashboard = lazy(() => import("./pages/setup/SeatSetupDashboard").then(m => ({ default: m.SeatSetupDashboard })));
-const AddSeatSetupDashboard = lazy(() => import("./pages/setup/AddSeatSetupDashboard").then(m => ({ default: m.AddSeatSetupDashboard })));
-const EditSeatSetupDashboard = lazy(() => import("./pages/setup/EditSeatSetupDashboard").then(m => ({ default: m.EditSeatSetupDashboard })));
-const SeatTypeDashboard = lazy(() => import("./pages/SeatTypeDashboard").then(m => ({ default: m.SeatTypeDashboard })));
+const SeatSetupDashboard = lazy(() =>
+  import("./pages/setup/SeatSetupDashboard").then((m) => ({
+    default: m.SeatSetupDashboard,
+  }))
+);
+const AddSeatSetupDashboard = lazy(() =>
+  import("./pages/setup/AddSeatSetupDashboard").then((m) => ({
+    default: m.AddSeatSetupDashboard,
+  }))
+);
+const EditSeatSetupDashboard = lazy(() =>
+  import("./pages/setup/EditSeatSetupDashboard").then((m) => ({
+    default: m.EditSeatSetupDashboard,
+  }))
+);
+const SeatTypeDashboard = lazy(() =>
+  import("./pages/SeatTypeDashboard").then((m) => ({
+    default: m.SeatTypeDashboard,
+  }))
+);
 
 // Import Shift page
-const ShiftDashboard = lazy(() => import("./pages/setup/ShiftDashboard").then(m => ({ default: m.ShiftDashboard })));
-const AccountShiftDashboard = lazy(() => import("./pages/ShiftDashboard").then(m => ({ default: m.ShiftDashboard })));
-const AccountRosterDashboard = lazy(() => import("./pages/RosterDashboard").then(m => ({ default: m.RosterDashboard })));
-const RosterCreatePage = lazy(() => import("./pages/RosterCreatePage").then(m => ({ default: m.RosterCreatePage })));
-const RosterDetailPage = lazy(() => import("./pages/RosterDetailPage").then(m => ({ default: m.RosterDetailPage })));
-const RosterEditPage = lazy(() => import("./pages/RosterEditPage").then(m => ({ default: m.RosterEditPage })));
+const ShiftDashboard = lazy(() =>
+  import("./pages/setup/ShiftDashboard").then((m) => ({
+    default: m.ShiftDashboard,
+  }))
+);
+const AccountShiftDashboard = lazy(() =>
+  import("./pages/ShiftDashboard").then((m) => ({ default: m.ShiftDashboard }))
+);
+const AccountRosterDashboard = lazy(() =>
+  import("./pages/RosterDashboard").then((m) => ({
+    default: m.RosterDashboard,
+  }))
+);
+const RosterCreatePage = lazy(() =>
+  import("./pages/RosterCreatePage").then((m) => ({
+    default: m.RosterCreatePage,
+  }))
+);
+const RosterDetailPage = lazy(() =>
+  import("./pages/RosterDetailPage").then((m) => ({
+    default: m.RosterDetailPage,
+  }))
+);
+const RosterEditPage = lazy(() =>
+  import("./pages/RosterEditPage").then((m) => ({ default: m.RosterEditPage }))
+);
 
 // Import Setup User pages
-const FMUserDashboard = lazy(() => import("./pages/setup/FMUserDashboard").then(m => ({ default: m.FMUserDashboard })));
-const AddFMUserDashboard = lazy(() => import("./pages/setup/AddFMUserDashboard").then(m => ({ default: m.AddFMUserDashboard })));
-const OccupantUsersDashboard = lazy(() => import("./pages/setup/OccupantUsersDashboard").then(m => ({ default: m.OccupantUsersDashboard })));
-const AddOccupantUserDashboard = lazy(() => import("./pages/setup/AddOccupantUserDashboard").then(m => ({ default: m.AddOccupantUserDashboard })));
-const AddUserPage = lazy(() => import("./pages/AddUserPage").then(m => ({ default: m.AddUserPage })));
+const FMUserDashboard = lazy(() =>
+  import("./pages/setup/FMUserDashboard").then((m) => ({
+    default: m.FMUserDashboard,
+  }))
+);
+const AddFMUserDashboard = lazy(() =>
+  import("./pages/setup/AddFMUserDashboard").then((m) => ({
+    default: m.AddFMUserDashboard,
+  }))
+);
+const OccupantUsersDashboard = lazy(() =>
+  import("./pages/setup/OccupantUsersDashboard").then((m) => ({
+    default: m.OccupantUsersDashboard,
+  }))
+);
+const AddOccupantUserDashboard = lazy(() =>
+  import("./pages/setup/AddOccupantUserDashboard").then((m) => ({
+    default: m.AddOccupantUserDashboard,
+  }))
+);
+const AddUserPage = lazy(() =>
+  import("./pages/AddUserPage").then((m) => ({ default: m.AddUserPage }))
+);
 const ManageUsersPage = lazy(() => import("./pages/ManageUsersPage"));
-const EmailTemplatesPage = lazy(() => import("./pages/settings/EmailTemplatesPage").then(m => ({ default: m.EmailTemplatesPage })));
-const ViewManageUserPage = lazy(() => import("./pages/setup/ViewManageUserPage").then(m => ({ default: m.ViewManageUserPage })));
-const ManageFlatsPage = lazy(() => import("./pages/setup/ManageFlatsPage").then(m => ({ default: m.ManageFlatsPage })));
+const EmailTemplatesPage = lazy(() =>
+  import("./pages/settings/EmailTemplatesPage").then((m) => ({
+    default: m.EmailTemplatesPage,
+  }))
+);
+const ViewManageUserPage = lazy(() =>
+  import("./pages/setup/ViewManageUserPage").then((m) => ({
+    default: m.ViewManageUserPage,
+  }))
+);
+const ManageFlatsPage = lazy(() =>
+  import("./pages/setup/ManageFlatsPage").then((m) => ({
+    default: m.ManageFlatsPage,
+  }))
+);
 const EditFlatPage = lazy(() => import("./pages/setup/EditFlatPage"));
-const SpecialUsersCategoryDashboard = lazy(() => import("./pages/setup/SpecialUsersCategoryDashboard").then(m => ({ default: m.SpecialUsersCategoryDashboard })));
-const KYCDetailsDashboard = lazy(() => import("./pages/setup/KYCDetailsDashboard").then(m => ({ default: m.KYCDetailsDashboard })));
-const KYCDetailView = lazy(() => import("./pages/setup/KYCDetailView").then(m => ({ default: m.KYCDetailView })));
-const HelpdeskSetupDashboard = lazy(() => import("./pages/setup/HelpdeskSetupDashboard").then(m => ({ default: m.HelpdeskSetupDashboard })));
-const CommunicationSetupDashboard = lazy(() => import("./pages/setup/CommunicationSetupDashboard").then(m => ({ default: m.CommunicationSetupDashboard })));
+const SpecialUsersCategoryDashboard = lazy(() =>
+  import("./pages/setup/SpecialUsersCategoryDashboard").then((m) => ({
+    default: m.SpecialUsersCategoryDashboard,
+  }))
+);
+const KYCDetailsDashboard = lazy(() =>
+  import("./pages/setup/KYCDetailsDashboard").then((m) => ({
+    default: m.KYCDetailsDashboard,
+  }))
+);
+const KYCDetailView = lazy(() =>
+  import("./pages/setup/KYCDetailView").then((m) => ({
+    default: m.KYCDetailView,
+  }))
+);
+const HelpdeskSetupDashboard = lazy(() =>
+  import("./pages/setup/HelpdeskSetupDashboard").then((m) => ({
+    default: m.HelpdeskSetupDashboard,
+  }))
+);
+const CommunicationSetupDashboard = lazy(() =>
+  import("./pages/setup/CommunicationSetupDashboard").then((m) => ({
+    default: m.CommunicationSetupDashboard,
+  }))
+);
 
 // Import Communication pages
 const NoticePage = lazy(() => import("./pages/communication/NoticePage"));
 const AddNoticePage = lazy(() => import("./pages/communication/AddNoticePage"));
-const NoticeDetailPage = lazy(() => import("./pages/communication/NoticeDetailPage"));
+const NoticeDetailPage = lazy(
+  () => import("./pages/communication/NoticeDetailPage")
+);
 const EventsPage = lazy(() => import("./pages/communication/EventsPage"));
-const CommunicationAddEventPage = lazy(() => import("./pages/communication/AddEventPage"));
-const EventDetailPage = lazy(() => import("./pages/communication/EventDetailPage"));
+const CommunicationAddEventPage = lazy(
+  () => import("./pages/communication/AddEventPage")
+);
+const EventDetailPage = lazy(
+  () => import("./pages/communication/EventDetailPage")
+);
 const PollsPage = lazy(() => import("./pages/communication/PollsPage"));
 const AddPollPage = lazy(() => import("./pages/communication/AddPollPage"));
-const NotificationsPage = lazy(() => import("./pages/communication/NotificationsPage"));
+const NotificationsPage = lazy(
+  () => import("./pages/communication/NotificationsPage")
+);
 const EventList = lazy(() => import("./pages/EventList"));
 
 // Import User Roasters pages
-const UserRoastersDashboard = lazy(() => import("./pages/setup/UserRoastersDashboard").then(m => ({ default: m.UserRoastersDashboard })));
-const CreateRosterTemplateDashboard = lazy(() => import("./pages/setup/CreateRosterTemplateDashboard").then(m => ({ default: m.CreateRosterTemplateDashboard })));
+const UserRoastersDashboard = lazy(() =>
+  import("./pages/setup/UserRoastersDashboard").then((m) => ({
+    default: m.UserRoastersDashboard,
+  }))
+);
+const CreateRosterTemplateDashboard = lazy(() =>
+  import("./pages/setup/CreateRosterTemplateDashboard").then((m) => ({
+    default: m.CreateRosterTemplateDashboard,
+  }))
+);
 
 // Import Employee pages
-const EmployeesDashboard = lazy(() => import("./pages/setup/EmployeesDashboard").then(m => ({ default: m.EmployeesDashboard })));
-const EmployeeDashboard = lazy(() => import("./pages/EmployeeDashboard").then(m => ({ default: m.EmployeeDashboard })));
-const EmployeeCalendarPage = lazy(() => import("./pages/EmployeeCalendarPage").then(m => ({ default: m.EmployeeCalendarPage })));
-const AddEmployeeDashboard = lazy(() => import("./pages/setup/AddEmployeeDashboard").then(m => ({ default: m.AddEmployeeDashboard })));
-const EditEmployeePage = lazy(() => import("./pages/setup/EditEmployeePage").then(m => ({ default: m.EditEmployeePage })));
+const EmployeesDashboard = lazy(() =>
+  import("./pages/setup/EmployeesDashboard").then((m) => ({
+    default: m.EmployeesDashboard,
+  }))
+);
+const EmployeeDashboard = lazy(() =>
+  import("./pages/EmployeeDashboard").then((m) => ({
+    default: m.EmployeeDashboard,
+  }))
+);
+const EmployeeCalendarPage = lazy(() =>
+  import("./pages/EmployeeCalendarPage").then((m) => ({
+    default: m.EmployeeCalendarPage,
+  }))
+);
+const AddEmployeeDashboard = lazy(() =>
+  import("./pages/setup/AddEmployeeDashboard").then((m) => ({
+    default: m.AddEmployeeDashboard,
+  }))
+);
+const EditEmployeePage = lazy(() =>
+  import("./pages/setup/EditEmployeePage").then((m) => ({
+    default: m.EditEmployeePage,
+  }))
+);
 const CompanyHub = lazy(() => import("./pages/CompanyHub"));
 const BusinessPlan = lazy(() => import("./pages/BusinessPlan"));
 const OurGroup = lazy(() => import("./pages/OurGroup"));
@@ -383,269 +927,769 @@ import Directory from "./pages/Directory";
 const EmployeeFAQ = lazy(() => import("./pages/EmployeeFAQ"));
 
 // Import Check In Margin page
-const CheckInMarginDashboard = lazy(() => import("./pages/setup/CheckInMarginDashboard").then(m => ({ default: m.CheckInMarginDashboard })));
+const CheckInMarginDashboard = lazy(() =>
+  import("./pages/setup/CheckInMarginDashboard").then((m) => ({
+    default: m.CheckInMarginDashboard,
+  }))
+);
 
 // Import AMC pages
-const AMCDashboard = lazy(() => import("./pages/AMCDashboard").then(m => ({ default: m.AMCDashboard })));
-const AddAMCPage = lazy(() => import("./pages/AddAMCPage").then(m => ({ default: m.AddAMCPage })));
-const AMCDetailsPage = lazy(() => import("./pages/AMCDetailsPage").then(m => ({ default: m.AMCDetailsPage })));
-const EditAMCPage = lazy(() => import("./pages/EditAMCPage").then(m => ({ default: m.EditAMCPage })));
+const AMCDashboard = lazy(() =>
+  import("./pages/AMCDashboard").then((m) => ({ default: m.AMCDashboard }))
+);
+const AddAMCPage = lazy(() =>
+  import("./pages/AddAMCPage").then((m) => ({ default: m.AddAMCPage }))
+);
+const AMCDetailsPage = lazy(() =>
+  import("./pages/AMCDetailsPage").then((m) => ({ default: m.AMCDetailsPage }))
+);
+const EditAMCPage = lazy(() =>
+  import("./pages/EditAMCPage").then((m) => ({ default: m.EditAMCPage }))
+);
 
 // Import Service pages
-const ServiceDashboard = lazy(() => import("./pages/ServiceDashboard").then(m => ({ default: m.ServiceDashboard })));
-const AddServicePage = lazy(() => import("./pages/AddServicePage").then(m => ({ default: m.AddServicePage })));
-const ServiceDetailsPage = lazy(() => import("./pages/ServiceDetailsPage").then(m => ({ default: m.ServiceDetailsPage })));
+const ServiceDashboard = lazy(() =>
+  import("./pages/ServiceDashboard").then((m) => ({
+    default: m.ServiceDashboard,
+  }))
+);
+const AddServicePage = lazy(() =>
+  import("./pages/AddServicePage").then((m) => ({ default: m.AddServicePage }))
+);
+const ServiceDetailsPage = lazy(() =>
+  import("./pages/ServiceDetailsPage").then((m) => ({
+    default: m.ServiceDetailsPage,
+  }))
+);
 const EditServicePage = lazy(() => import("./pages/EditServicePage"));
 
 // Import Attendance pages
-const AttendanceDashboard = lazy(() => import("./pages/AttendanceDashboard").then(m => ({ default: m.AttendanceDashboard })));
-const AttendanceDetailsPage = lazy(() => import("./pages/AttendanceDetailsPage").then(m => ({ default: m.AttendanceDetailsPage })));
+const AttendanceDashboard = lazy(() =>
+  import("./pages/AttendanceDashboard").then((m) => ({
+    default: m.AttendanceDashboard,
+  }))
+);
+const AttendanceDetailsPage = lazy(() =>
+  import("./pages/AttendanceDetailsPage").then((m) => ({
+    default: m.AttendanceDetailsPage,
+  }))
+);
 
 // Import Roster Calendar page
-const RosterCalendarDashboard = lazy(() => import("./pages/setup/RosterCalendarDashboard").then(m => ({ default: m.RosterCalendarDashboard })));
+const RosterCalendarDashboard = lazy(() =>
+  import("./pages/setup/RosterCalendarDashboard").then((m) => ({
+    default: m.RosterCalendarDashboard,
+  }))
+);
 
 // Import Export page
-const ExportDashboard = lazy(() => import("./pages/setup/ExportDashboard").then(m => ({ default: m.ExportDashboard })));
+const ExportDashboard = lazy(() =>
+  import("./pages/setup/ExportDashboard").then((m) => ({
+    default: m.ExportDashboard,
+  }))
+);
 
 // Import Employee Details page
-const EmployeeDetailsPage = lazy(() => import("./pages/setup/EmployeeDetailsPage").then(m => ({ default: m.EmployeeDetailsPage })));
+const EmployeeDetailsPage = lazy(() =>
+  import("./pages/setup/EmployeeDetailsPage").then((m) => ({
+    default: m.EmployeeDetailsPage,
+  }))
+);
 
 // Import Permit pages
-const PermitListDashboard = lazy(() => import("./pages/PermitListDashboard").then(m => ({ default: m.PermitListDashboard })));
-const AddPermitPage = lazy(() => import("./pages/AddPermitPage").then(m => ({ default: m.AddPermitPage })));
+const PermitListDashboard = lazy(() =>
+  import("./pages/PermitListDashboard").then((m) => ({
+    default: m.PermitListDashboard,
+  }))
+);
+const AddPermitPage = lazy(() =>
+  import("./pages/AddPermitPage").then((m) => ({ default: m.AddPermitPage }))
+);
 
 // Import Operational Audit pages
-const OperationalAuditScheduledDashboard = lazy(() => import("./pages/OperationalAuditScheduledDashboard").then(m => ({ default: m.OperationalAuditScheduledDashboard })));
-const ViewOperationalAuditSchedulePage = lazy(() => import("./pages/ViewOperationalAuditSchedulePage").then(m => ({ default: m.ViewOperationalAuditSchedulePage })));
-const ViewOperationalAuditSchedulePerformancePage = lazy(() => import("./pages/ViewOperationalAuditSchedulePerformancePage").then(m => ({ default: m.ViewOperationalAuditSchedulePerformancePage })));
-const AddOperationalAuditSchedulePage = lazy(() => import("./pages/AddOperationalAuditSchedulePage").then(m => ({ default: m.AddOperationalAuditSchedulePage })));
-const OperationalAuditConductedDashboard = lazy(() => import("./pages/OperationalAuditConductedDashboard").then(m => ({ default: m.OperationalAuditConductedDashboard })));
-const OperationalAuditMasterChecklistsDashboard = lazy(() => import("./pages/OperationalAuditMasterChecklistsDashboard").then(m => ({ default: m.OperationalAuditMasterChecklistsDashboard })));
+const OperationalAuditScheduledDashboard = lazy(() =>
+  import("./pages/OperationalAuditScheduledDashboard").then((m) => ({
+    default: m.OperationalAuditScheduledDashboard,
+  }))
+);
+const ViewOperationalAuditSchedulePage = lazy(() =>
+  import("./pages/ViewOperationalAuditSchedulePage").then((m) => ({
+    default: m.ViewOperationalAuditSchedulePage,
+  }))
+);
+const ViewOperationalAuditSchedulePerformancePage = lazy(() =>
+  import("./pages/ViewOperationalAuditSchedulePerformancePage").then((m) => ({
+    default: m.ViewOperationalAuditSchedulePerformancePage,
+  }))
+);
+const AddOperationalAuditSchedulePage = lazy(() =>
+  import("./pages/AddOperationalAuditSchedulePage").then((m) => ({
+    default: m.AddOperationalAuditSchedulePage,
+  }))
+);
+const OperationalAuditConductedDashboard = lazy(() =>
+  import("./pages/OperationalAuditConductedDashboard").then((m) => ({
+    default: m.OperationalAuditConductedDashboard,
+  }))
+);
+const OperationalAuditMasterChecklistsDashboard = lazy(() =>
+  import("./pages/OperationalAuditMasterChecklistsDashboard").then((m) => ({
+    default: m.OperationalAuditMasterChecklistsDashboard,
+  }))
+);
 
 // Import Vendor Audit pages
-const VendorAuditScheduledDashboard = lazy(() => import("./pages/VendorAuditScheduledDashboard").then(m => ({ default: m.VendorAuditScheduledDashboard })));
-const VendorAuditConductedDashboard = lazy(() => import("./pages/VendorAuditConductedDashboard").then(m => ({ default: m.VendorAuditConductedDashboard })));
-const AddVendorAuditSchedulePage = lazy(() => import("./pages/AddVendorAuditSchedulePage").then(m => ({ default: m.AddVendorAuditSchedulePage })));
-const AddVendorAuditPage = lazy(() => import("./pages/AddVendorAuditPage").then(m => ({ default: m.AddVendorAuditPage })));
-const ViewVendorAuditPage = lazy(() => import("./pages/ViewVendorAuditPage").then(m => ({ default: m.ViewVendorAuditPage })));
-const ViewVendorAuditSchedulePerformancePage = lazy(() => import("./pages/ViewVendorAuditSchedulePerformancePage").then(m => ({ default: m.ViewVendorAuditSchedulePerformancePage })));
+const VendorAuditScheduledDashboard = lazy(() =>
+  import("./pages/VendorAuditScheduledDashboard").then((m) => ({
+    default: m.VendorAuditScheduledDashboard,
+  }))
+);
+const VendorAuditConductedDashboard = lazy(() =>
+  import("./pages/VendorAuditConductedDashboard").then((m) => ({
+    default: m.VendorAuditConductedDashboard,
+  }))
+);
+const AddVendorAuditSchedulePage = lazy(() =>
+  import("./pages/AddVendorAuditSchedulePage").then((m) => ({
+    default: m.AddVendorAuditSchedulePage,
+  }))
+);
+const AddVendorAuditPage = lazy(() =>
+  import("./pages/AddVendorAuditPage").then((m) => ({
+    default: m.AddVendorAuditPage,
+  }))
+);
+const ViewVendorAuditPage = lazy(() =>
+  import("./pages/ViewVendorAuditPage").then((m) => ({
+    default: m.ViewVendorAuditPage,
+  }))
+);
+const ViewVendorAuditSchedulePerformancePage = lazy(() =>
+  import("./pages/ViewVendorAuditSchedulePerformancePage").then((m) => ({
+    default: m.ViewVendorAuditSchedulePerformancePage,
+  }))
+);
 
 // Import Training Audit pages
-const TrainingScheduledDashboard = lazy(() => import("./pages/TrainingScheduledDashboard").then(m => ({ default: m.TrainingScheduledDashboard })));
-const ViewTrainingSchedule = lazy(() => import("./pages/ViewTraningSchedule").then(m => ({ default: m.ViewTrainingSchedule })));
+const TrainingScheduledDashboard = lazy(() =>
+  import("./pages/TrainingScheduledDashboard").then((m) => ({
+    default: m.TrainingScheduledDashboard,
+  }))
+);
+const ViewTrainingSchedule = lazy(() =>
+  import("./pages/ViewTraningSchedule").then((m) => ({
+    default: m.ViewTrainingSchedule,
+  }))
+);
 import ViewTrainingPerformancePage from "./ViewTrainingPerformance";
-const AddTrainingSchedulePage = lazy(() => import("./pages/AddTrainingSchedulePage").then(m => ({ default: m.AddTrainingSchedulePage })));
-const TrainingConductedDashboard = lazy(() => import("./pages/TrainingConductedDashboard").then(m => ({ default: m.TrainingConductedDashboard })));
+const AddTrainingSchedulePage = lazy(() =>
+  import("./pages/AddTrainingSchedulePage").then((m) => ({
+    default: m.AddTrainingSchedulePage,
+  }))
+);
+const TrainingConductedDashboard = lazy(() =>
+  import("./pages/TrainingConductedDashboard").then((m) => ({
+    default: m.TrainingConductedDashboard,
+  }))
+);
 
 // Import Asset Audit pages
-const AssetAuditDashboard = lazy(() => import("./pages/AssetAuditDashboard").then(m => ({ default: m.AssetAuditDashboard })));
-const AddAssetAuditPage = lazy(() => import("./pages/AddAssetAuditPage").then(m => ({ default: m.AddAssetAuditPage })));
-const EditAssetAuditPage = lazy(() => import("./pages/EditAssetAuditPage").then(m => ({ default: m.EditAssetAuditPage })));
-const AssetAuditDetailsPage = lazy(() => import("./pages/AssetAuditDetailsPage").then(m => ({ default: m.AssetAuditDetailsPage })));
-const AssetAuditReportPage = lazy(() => import("./pages/AssetAuditReportPage").then(m => ({ default: m.AssetAuditReportPage })));
+const AssetAuditDashboard = lazy(() =>
+  import("./pages/AssetAuditDashboard").then((m) => ({
+    default: m.AssetAuditDashboard,
+  }))
+);
+const AddAssetAuditPage = lazy(() =>
+  import("./pages/AddAssetAuditPage").then((m) => ({
+    default: m.AddAssetAuditPage,
+  }))
+);
+const EditAssetAuditPage = lazy(() =>
+  import("./pages/EditAssetAuditPage").then((m) => ({
+    default: m.EditAssetAuditPage,
+  }))
+);
+const AssetAuditDetailsPage = lazy(() =>
+  import("./pages/AssetAuditDetailsPage").then((m) => ({
+    default: m.AssetAuditDetailsPage,
+  }))
+);
+const AssetAuditReportPage = lazy(() =>
+  import("./pages/AssetAuditReportPage").then((m) => ({
+    default: m.AssetAuditReportPage,
+  }))
+);
 
 // Import Master Checklist page
-const AddMasterChecklistPage = lazy(() => import("./pages/AddMasterChecklistPage").then(m => ({ default: m.AddMasterChecklistPage })));
+const AddMasterChecklistPage = lazy(() =>
+  import("./pages/AddMasterChecklistPage").then((m) => ({
+    default: m.AddMasterChecklistPage,
+  }))
+);
 
 // Import Checklist Master pages
-const ChecklistMasterDashboard = lazy(() => import("./pages/ChecklistMasterDashboard").then(m => ({ default: m.ChecklistMasterDashboard })));
-const AddChecklistMasterPage = lazy(() => import("./pages/AddChecklistMasterPage").then(m => ({ default: m.AddChecklistMasterPage })));
-const ChecklistListPage = lazy(() => import("./pages/ChecklistListPage").then(m => ({ default: m.ChecklistListPage })));
-const ChecklistMasterPage = lazy(() => import("./pages/ChecklistMasterPage").then(m => ({ default: m.ChecklistMasterPage })));
+const ChecklistMasterDashboard = lazy(() =>
+  import("./pages/ChecklistMasterDashboard").then((m) => ({
+    default: m.ChecklistMasterDashboard,
+  }))
+);
+const AddChecklistMasterPage = lazy(() =>
+  import("./pages/AddChecklistMasterPage").then((m) => ({
+    default: m.AddChecklistMasterPage,
+  }))
+);
+const ChecklistListPage = lazy(() =>
+  import("./pages/ChecklistListPage").then((m) => ({
+    default: m.ChecklistListPage,
+  }))
+);
+const ChecklistMasterPage = lazy(() =>
+  import("./pages/ChecklistMasterPage").then((m) => ({
+    default: m.ChecklistMasterPage,
+  }))
+);
 
 // Import Master User pages
-const FMUserMasterDashboard = lazy(() => import("./pages/master/FMUserMasterDashboard").then(m => ({ default: m.FMUserMasterDashboard })));
-const OccupantUserMasterDashboard = lazy(() => import("./pages/master/OccupantUserMasterDashboard").then(m => ({ default: m.OccupantUserMasterDashboard })));
-const AddFMUserPage = lazy(() => import("./pages/master/AddFMUserPage").then(m => ({ default: m.AddFMUserPage })));
-const EditFMUserPage = lazy(() => import("./pages/master/EditFMUserPage").then(m => ({ default: m.EditFMUserPage })));
-const ViewFMUserPage = lazy(() => import("./pages/master/ViewFMUserPage").then(m => ({ default: m.ViewFMUserPage })));
+const FMUserMasterDashboard = lazy(() =>
+  import("./pages/master/FMUserMasterDashboard").then((m) => ({
+    default: m.FMUserMasterDashboard,
+  }))
+);
+const OccupantUserMasterDashboard = lazy(() =>
+  import("./pages/master/OccupantUserMasterDashboard").then((m) => ({
+    default: m.OccupantUserMasterDashboard,
+  }))
+);
+const AddFMUserPage = lazy(() =>
+  import("./pages/master/AddFMUserPage").then((m) => ({
+    default: m.AddFMUserPage,
+  }))
+);
+const EditFMUserPage = lazy(() =>
+  import("./pages/master/EditFMUserPage").then((m) => ({
+    default: m.EditFMUserPage,
+  }))
+);
+const ViewFMUserPage = lazy(() =>
+  import("./pages/master/ViewFMUserPage").then((m) => ({
+    default: m.ViewFMUserPage,
+  }))
+);
 
 // Import Material Master page
-const MaterialMasterPage = lazy(() => import("./pages/MaterialMasterPage").then(m => ({ default: m.MaterialMasterPage })));
+const MaterialMasterPage = lazy(() =>
+  import("./pages/MaterialMasterPage").then((m) => ({
+    default: m.MaterialMasterPage,
+  }))
+);
 
 // Import Plant Detail Setup page
-const PlantDetailSetupPage = lazy(() => import("./pages/PlantDetailSetupPage").then(m => ({ default: m.PlantDetailSetupPage })));
+const PlantDetailSetupPage = lazy(() =>
+  import("./pages/PlantDetailSetupPage").then((m) => ({
+    default: m.PlantDetailSetupPage,
+  }))
+);
 
 // Import RVehiclesInDashboard and RVehiclesOutDashboard
 import { RVehiclesInDashboard } from "./pages/RVehiclesInDashboard";
 import { RVehiclesOutDashboard } from "./pages/RVehiclesOutDashboard";
-const SmartSecureVehiclesHistory = lazy(() => import("./pages/SmartSecureVehiclesHistory"));
-const AddVehicleHistoryPage = lazy(() => import("./pages/AddVehicleHistoryPage"));
+const SmartSecureVehiclesHistory = lazy(
+  () => import("./pages/SmartSecureVehiclesHistory")
+);
+const AddVehicleHistoryPage = lazy(
+  () => import("./pages/AddVehicleHistoryPage")
+);
 
 // Import Finance pages
-const MaterialPRDashboard = lazy(() => import("./pages/MaterialPRDashboard").then(m => ({ default: m.MaterialPRDashboard })));
-const MaterialPRDetailsPage = lazy(() => import("./pages/MaterialPRDetailsPage").then(m => ({ default: m.MaterialPRDetailsPage })));
-const CloneMaterialPRPage = lazy(() => import("./pages/CloneMaterialPRPage").then(m => ({ default: m.CloneMaterialPRPage })));
-const MaterialPRFeedsPage = lazy(() => import("./pages/MaterialPRFeedsPage").then(m => ({ default: m.MaterialPRFeedsPage })));
-const ServicePRDashboard = lazy(() => import("./pages/ServicePRDashboard").then(m => ({ default: m.ServicePRDashboard })));
-const AddMaterialPRDashboard = lazy(() => import("./pages/AddMaterialPRDashboard").then(m => ({ default: m.AddMaterialPRDashboard })));
-const AddServicePRDashboard = lazy(() => import("./pages/AddServicePRDashboard").then(m => ({ default: m.AddServicePRDashboard })));
-const EditServicePRPage = lazy(() => import("./pages/EditServicePRPage").then(m => ({ default: m.EditServicePRPage })));
-const ServicePRDetailsPage = lazy(() => import("./pages/ServicePRDetailsPage").then(m => ({ default: m.ServicePRDetailsPage })));
-const CloneServicePRPage = lazy(() => import("./pages/CloneServicePRPage").then(m => ({ default: m.CloneServicePRPage })));
-const ServicePRFeedsPage = lazy(() => import("./pages/ServicePRFeedsPage").then(m => ({ default: m.ServicePRFeedsPage })));
-const PODashboard = lazy(() => import("./pages/PODashboard").then(m => ({ default: m.PODashboard })));
-const AddPODashboard = lazy(() => import("./pages/AddPODashboard").then(m => ({ default: m.AddPODashboard })));
-const PODetailsPage = lazy(() => import("./pages/PODetailsPage").then(m => ({ default: m.PODetailsPage })));
-const POFeedsPage = lazy(() => import("./pages/POFeedsPage").then(m => ({ default: m.POFeedsPage })));
-const WODashboard = lazy(() => import("./pages/WODashboard").then(m => ({ default: m.WODashboard })));
-const WODetailsPage = lazy(() => import("./pages/WODetailsPage").then(m => ({ default: m.WODetailsPage })));
-const AutoSavedPRDashboard = lazy(() => import("./pages/AutoSavedPRDashboard").then(m => ({ default: m.AutoSavedPRDashboard })));
-const GRNSRNDashboard = lazy(() => import("./pages/GRNSRNDashboard").then(m => ({ default: m.GRNSRNDashboard })));
-const AddGRNDashboard = lazy(() => import("./pages/AddGRNDashboard").then(m => ({ default: m.AddGRNDashboard })));
-const GRNDetailsPage = lazy(() => import("./pages/GRNDetailsPage").then(m => ({ default: m.GRNDetailsPage })));
-const GRNFeedsPage = lazy(() => import("./pages/GRNFeedsPage").then(m => ({ default: m.GRNFeedsPage })));
-const InvoicesDashboard = lazy(() => import("./pages/InvoicesDashboard").then(m => ({ default: m.InvoicesDashboard })));
-const InvoicesSESDashboard = lazy(() => import("./pages/InvoicesSESDashboard").then(m => ({ default: m.InvoicesSESDashboard })));
-const BillBookingDashboard = lazy(() => import("./pages/BillBookingDashboard").then(m => ({ default: m.BillBookingDashboard })));
-const AddBillPage = lazy(() => import("./pages/AddBillPage").then(m => ({ default: m.AddBillPage })));
-const PendingApprovalsDashboard = lazy(() => import("./pages/PendingApprovalsDashboard").then(m => ({ default: m.PendingApprovalsDashboard })));
+const MaterialPRDashboard = lazy(() =>
+  import("./pages/MaterialPRDashboard").then((m) => ({
+    default: m.MaterialPRDashboard,
+  }))
+);
+const MaterialPRDetailsPage = lazy(() =>
+  import("./pages/MaterialPRDetailsPage").then((m) => ({
+    default: m.MaterialPRDetailsPage,
+  }))
+);
+const CloneMaterialPRPage = lazy(() =>
+  import("./pages/CloneMaterialPRPage").then((m) => ({
+    default: m.CloneMaterialPRPage,
+  }))
+);
+const MaterialPRFeedsPage = lazy(() =>
+  import("./pages/MaterialPRFeedsPage").then((m) => ({
+    default: m.MaterialPRFeedsPage,
+  }))
+);
+const ServicePRDashboard = lazy(() =>
+  import("./pages/ServicePRDashboard").then((m) => ({
+    default: m.ServicePRDashboard,
+  }))
+);
+const AddMaterialPRDashboard = lazy(() =>
+  import("./pages/AddMaterialPRDashboard").then((m) => ({
+    default: m.AddMaterialPRDashboard,
+  }))
+);
+const AddServicePRDashboard = lazy(() =>
+  import("./pages/AddServicePRDashboard").then((m) => ({
+    default: m.AddServicePRDashboard,
+  }))
+);
+const EditServicePRPage = lazy(() =>
+  import("./pages/EditServicePRPage").then((m) => ({
+    default: m.EditServicePRPage,
+  }))
+);
+const ServicePRDetailsPage = lazy(() =>
+  import("./pages/ServicePRDetailsPage").then((m) => ({
+    default: m.ServicePRDetailsPage,
+  }))
+);
+const CloneServicePRPage = lazy(() =>
+  import("./pages/CloneServicePRPage").then((m) => ({
+    default: m.CloneServicePRPage,
+  }))
+);
+const ServicePRFeedsPage = lazy(() =>
+  import("./pages/ServicePRFeedsPage").then((m) => ({
+    default: m.ServicePRFeedsPage,
+  }))
+);
+const PODashboard = lazy(() =>
+  import("./pages/PODashboard").then((m) => ({ default: m.PODashboard }))
+);
+const AddPODashboard = lazy(() =>
+  import("./pages/AddPODashboard").then((m) => ({ default: m.AddPODashboard }))
+);
+const PODetailsPage = lazy(() =>
+  import("./pages/PODetailsPage").then((m) => ({ default: m.PODetailsPage }))
+);
+const POFeedsPage = lazy(() =>
+  import("./pages/POFeedsPage").then((m) => ({ default: m.POFeedsPage }))
+);
+const WODashboard = lazy(() =>
+  import("./pages/WODashboard").then((m) => ({ default: m.WODashboard }))
+);
+const WODetailsPage = lazy(() =>
+  import("./pages/WODetailsPage").then((m) => ({ default: m.WODetailsPage }))
+);
+const AutoSavedPRDashboard = lazy(() =>
+  import("./pages/AutoSavedPRDashboard").then((m) => ({
+    default: m.AutoSavedPRDashboard,
+  }))
+);
+const GRNSRNDashboard = lazy(() =>
+  import("./pages/GRNSRNDashboard").then((m) => ({
+    default: m.GRNSRNDashboard,
+  }))
+);
+const AddGRNDashboard = lazy(() =>
+  import("./pages/AddGRNDashboard").then((m) => ({
+    default: m.AddGRNDashboard,
+  }))
+);
+const GRNDetailsPage = lazy(() =>
+  import("./pages/GRNDetailsPage").then((m) => ({ default: m.GRNDetailsPage }))
+);
+const GRNFeedsPage = lazy(() =>
+  import("./pages/GRNFeedsPage").then((m) => ({ default: m.GRNFeedsPage }))
+);
+const InvoicesDashboard = lazy(() =>
+  import("./pages/InvoicesDashboard").then((m) => ({
+    default: m.InvoicesDashboard,
+  }))
+);
+const InvoicesSESDashboard = lazy(() =>
+  import("./pages/InvoicesSESDashboard").then((m) => ({
+    default: m.InvoicesSESDashboard,
+  }))
+);
+const BillBookingDashboard = lazy(() =>
+  import("./pages/BillBookingDashboard").then((m) => ({
+    default: m.BillBookingDashboard,
+  }))
+);
+const AddBillPage = lazy(() =>
+  import("./pages/AddBillPage").then((m) => ({ default: m.AddBillPage }))
+);
+const PendingApprovalsDashboard = lazy(() =>
+  import("./pages/PendingApprovalsDashboard").then((m) => ({
+    default: m.PendingApprovalsDashboard,
+  }))
+);
 const InvoiceDashboard = lazy(() => import("./pages/InvoiceDashboard"));
 
 // Import WBS page
-const WBSElementDashboard = lazy(() => import("./pages/WBSElementDashboard").then(m => ({ default: m.WBSElementDashboard })));
+const WBSElementDashboard = lazy(() =>
+  import("./pages/WBSElementDashboard").then((m) => ({
+    default: m.WBSElementDashboard,
+  }))
+);
 
 // Import Work Order pages
 
 // Import Settings pages
-const FMUsersDashboard = lazy(() => import("./pages/settings/FMUsersDashboard").then(m => ({ default: m.FMUsersDashboard })));
-const CloneRolePage = lazy(() => import("./pages/settings/CloneRolePage").then(m => ({ default: m.CloneRolePage })));
-const AccountDashboard = lazy(() => import("./pages/settings/AccountDashboard").then(m => ({ default: m.AccountDashboard })));
+const FMUsersDashboard = lazy(() =>
+  import("./pages/settings/FMUsersDashboard").then((m) => ({
+    default: m.FMUsersDashboard,
+  }))
+);
+const CloneRolePage = lazy(() =>
+  import("./pages/settings/CloneRolePage").then((m) => ({
+    default: m.CloneRolePage,
+  }))
+);
+const AccountDashboard = lazy(() =>
+  import("./pages/settings/AccountDashboard").then((m) => ({
+    default: m.AccountDashboard,
+  }))
+);
 
 // Import Approval Matrix pages
-const ApprovalMatrixDashboard = lazy(() => import("./pages/settings/ApprovalMatrixDashboard").then(m => ({ default: m.ApprovalMatrixDashboard })));
-const AddApprovalMatrixDashboard = lazy(() => import("./pages/settings/AddApprovalMatrixDashboard").then(m => ({ default: m.AddApprovalMatrixDashboard })));
-const EditApprovalMatrixDashboard = lazy(() => import("./pages/settings/EditApprovalMatrixDashboard").then(m => ({ default: m.EditApprovalMatrixDashboard })));
+const ApprovalMatrixDashboard = lazy(() =>
+  import("./pages/settings/ApprovalMatrixDashboard").then((m) => ({
+    default: m.ApprovalMatrixDashboard,
+  }))
+);
+const AddApprovalMatrixDashboard = lazy(() =>
+  import("./pages/settings/AddApprovalMatrixDashboard").then((m) => ({
+    default: m.AddApprovalMatrixDashboard,
+  }))
+);
+const EditApprovalMatrixDashboard = lazy(() =>
+  import("./pages/settings/EditApprovalMatrixDashboard").then((m) => ({
+    default: m.EditApprovalMatrixDashboard,
+  }))
+);
 
 // Import Department Dashboard for Settings
-const DepartmentDashboard = lazy(() => import("./pages/settings/DepartmentDashboard").then(m => ({ default: m.DepartmentDashboard })));
+const DepartmentDashboard = lazy(() =>
+  import("./pages/settings/DepartmentDashboard").then((m) => ({
+    default: m.DepartmentDashboard,
+  }))
+);
 
 // Import Role Dashboard for Settings
-const RoleDashboard = lazy(() => import("./pages/settings/RoleDashboard").then(m => ({ default: m.RoleDashboard })));
-const AddRolePage = lazy(() => import("./pages/settings/AddRolePage").then(m => ({ default: m.AddRolePage })));
+const RoleDashboard = lazy(() =>
+  import("./pages/settings/RoleDashboard").then((m) => ({
+    default: m.RoleDashboard,
+  }))
+);
+const AddRolePage = lazy(() =>
+  import("./pages/settings/AddRolePage").then((m) => ({
+    default: m.AddRolePage,
+  }))
+);
 
 // Import AddNewBillDashboard
 import { AddNewBillDashboard } from "./pages/AddNewBillDashboard";
 
 // Import Edit FM User Details page
-const EditFMUserDetailsPage = lazy(() => import("./pages/settings/EditFMUserDetailsPage").then(m => ({ default: m.EditFMUserDetailsPage })));
+const EditFMUserDetailsPage = lazy(() =>
+  import("./pages/settings/EditFMUserDetailsPage").then((m) => ({
+    default: m.EditFMUserDetailsPage,
+  }))
+);
 
 // Import Energy Asset Routes
-const EnergyAssetDetailsPage = lazy(() => import("./pages/EnergyAssetDetailsPage").then(m => ({ default: m.EnergyAssetDetailsPage })));
-const EditEnergyAssetPage = lazy(() => import("./pages/EditEnergyAssetPage").then(m => ({ default: m.EditEnergyAssetPage })));
+const EnergyAssetDetailsPage = lazy(() =>
+  import("./pages/EnergyAssetDetailsPage").then((m) => ({
+    default: m.EnergyAssetDetailsPage,
+  }))
+);
+const EditEnergyAssetPage = lazy(() =>
+  import("./pages/EditEnergyAssetPage").then((m) => ({
+    default: m.EditEnergyAssetPage,
+  }))
+);
 
 // Import Water Asset Details Route
-const WaterAssetDetailsPage = lazy(() => import("./pages/WaterAssetDetailsPage").then(m => ({ default: m.WaterAssetDetailsPage })));
+const WaterAssetDetailsPage = lazy(() =>
+  import("./pages/WaterAssetDetailsPage").then((m) => ({
+    default: m.WaterAssetDetailsPage,
+  }))
+);
 
 // Import Edit Material PR page
-const EditMaterialPRDashboard = lazy(() => import("./pages/EditMaterialPRDashboard").then(m => ({ default: m.EditMaterialPRDashboard })));
-const GRNDashboard = lazy(() => import("./pages/GRNDashboard").then(m => ({ default: m.GRNDashboard })));
+const EditMaterialPRDashboard = lazy(() =>
+  import("./pages/EditMaterialPRDashboard").then((m) => ({
+    default: m.EditMaterialPRDashboard,
+  }))
+);
+const GRNDashboard = lazy(() =>
+  import("./pages/GRNDashboard").then((m) => ({ default: m.GRNDashboard }))
+);
 
 // Import Edit GRN page
-const EditGRNDashboard = lazy(() => import("./pages/EditGRNDashboard").then(m => ({ default: m.EditGRNDashboard })));
-const AddInventoryPage = lazy(() => import("./pages/AddInventoryPage").then(m => ({ default: m.AddInventoryPage })));
-const EditAssetDetailsPage = lazy(() => import("./pages/EditAssetDetailsPage").then(m => ({ default: m.EditAssetDetailsPage })));
+const EditGRNDashboard = lazy(() =>
+  import("./pages/EditGRNDashboard").then((m) => ({
+    default: m.EditGRNDashboard,
+  }))
+);
+const AddInventoryPage = lazy(() =>
+  import("./pages/AddInventoryPage").then((m) => ({
+    default: m.AddInventoryPage,
+  }))
+);
+const EditAssetDetailsPage = lazy(() =>
+  import("./pages/EditAssetDetailsPage").then((m) => ({
+    default: m.EditAssetDetailsPage,
+  }))
+);
 
 // Import M Safe pages
 
-const MSafeDashboard = lazy(() => import("./pages/MSafeDashboard").then(m => ({ default: m.MSafeDashboard })));
-const MSafeUserDetail = lazy(() => import("./pages/MSafeUserDetail").then(m => ({ default: m.MSafeUserDetail })));
-const ExternalUserDetail = lazy(() => import("./pages/ExternalUserDetail").then(m => ({ default: m.ExternalUserDetail })));
-const EditExternalUserPage = lazy(() => import("./pages/EditExternalUserPage").then(m => ({ default: m.EditExternalUserPage })));
-const NonFTEUsersDashboard = lazy(() => import("./pages/NonFTEUsersDashboard").then(m => ({ default: m.NonFTEUsersDashboard })));
-const ExternalUsersDashboard = lazy(() => import("./pages/ExternalUsersDashboard").then(m => ({ default: m.ExternalUsersDashboard })));
-const KRCCFormListDashboard = lazy(() => import("./pages/KRCCFormListDashboard").then(m => ({ default: m.KRCCFormListDashboard })));
-const KRCCFormDetail = lazy(() => import("./pages/KRCCFormDetail").then(m => ({ default: m.KRCCFormDetail })));
+const MSafeDashboard = lazy(() =>
+  import("./pages/MSafeDashboard").then((m) => ({ default: m.MSafeDashboard }))
+);
+const MSafeUserDetail = lazy(() =>
+  import("./pages/MSafeUserDetail").then((m) => ({
+    default: m.MSafeUserDetail,
+  }))
+);
+const ExternalUserDetail = lazy(() =>
+  import("./pages/ExternalUserDetail").then((m) => ({
+    default: m.ExternalUserDetail,
+  }))
+);
+const EditExternalUserPage = lazy(() =>
+  import("./pages/EditExternalUserPage").then((m) => ({
+    default: m.EditExternalUserPage,
+  }))
+);
+const NonFTEUsersDashboard = lazy(() =>
+  import("./pages/NonFTEUsersDashboard").then((m) => ({
+    default: m.NonFTEUsersDashboard,
+  }))
+);
+const ExternalUsersDashboard = lazy(() =>
+  import("./pages/ExternalUsersDashboard").then((m) => ({
+    default: m.ExternalUsersDashboard,
+  }))
+);
+const KRCCFormListDashboard = lazy(() =>
+  import("./pages/KRCCFormListDashboard").then((m) => ({
+    default: m.KRCCFormListDashboard,
+  }))
+);
+const KRCCFormDetail = lazy(() =>
+  import("./pages/KRCCFormDetail").then((m) => ({ default: m.KRCCFormDetail }))
+);
 
 // Import Edit Roster Template page
-const EditRosterTemplatePage = lazy(() => import("./pages/setup/EditRosterTemplatePage").then(m => ({ default: m.EditRosterTemplatePage })));
+const EditRosterTemplatePage = lazy(() =>
+  import("./pages/setup/EditRosterTemplatePage").then((m) => ({
+    default: m.EditRosterTemplatePage,
+  }))
+);
 
 // Import Accounting Dashboard
 // import { AccountingDashboard } from "./pages/AccountingDashboard";
 
 // Import Loyalty Rule Engine Dashboard
-const LoyaltyRuleEngineDashboard = lazy(() => import("./pages/LoyaltyRuleEngineDashboard").then(m => ({ default: m.LoyaltyRuleEngineDashboard })));
+const LoyaltyRuleEngineDashboard = lazy(() =>
+  import("./pages/LoyaltyRuleEngineDashboard").then((m) => ({
+    default: m.LoyaltyRuleEngineDashboard,
+  }))
+);
 
 // Import OSR pages
-const OSRDashboard = lazy(() => import("./pages/OSRDashboard").then(m => ({ default: m.OSRDashboard })));
-const OSRDetailsPage = lazy(() => import("./pages/OSRDetailsPage").then(m => ({ default: m.OSRDetailsPage })));
+const OSRDashboard = lazy(() =>
+  import("./pages/OSRDashboard").then((m) => ({ default: m.OSRDashboard }))
+);
+const OSRDetailsPage = lazy(() =>
+  import("./pages/OSRDetailsPage").then((m) => ({ default: m.OSRDetailsPage }))
+);
 
 // Import OSR Generate Receipt page
-const OSRGenerateReceiptPage = lazy(() => import("./pages/OSRGenerateReceiptPage").then(m => ({ default: m.OSRGenerateReceiptPage })));
+const OSRGenerateReceiptPage = lazy(() =>
+  import("./pages/OSRGenerateReceiptPage").then((m) => ({
+    default: m.OSRGenerateReceiptPage,
+  }))
+);
 
 // Import Market Place Accounting pages
-const MarketPlaceAccountingPage = lazy(() => import("./pages/MarketPlaceAccountingPage").then(m => ({ default: m.MarketPlaceAccountingPage })));
-const MarketPlaceAccountingDetailsPage = lazy(() => import("./pages/MarketPlaceAccountingDetailsPage").then(m => ({ default: m.MarketPlaceAccountingDetailsPage })));
-const MarketPlaceAccountingEditPage = lazy(() => import("./pages/MarketPlaceAccountingEditPage").then(m => ({ default: m.MarketPlaceAccountingEditPage })));
+const MarketPlaceAccountingPage = lazy(() =>
+  import("./pages/MarketPlaceAccountingPage").then((m) => ({
+    default: m.MarketPlaceAccountingPage,
+  }))
+);
+const MarketPlaceAccountingDetailsPage = lazy(() =>
+  import("./pages/MarketPlaceAccountingDetailsPage").then((m) => ({
+    default: m.MarketPlaceAccountingDetailsPage,
+  }))
+);
+const MarketPlaceAccountingEditPage = lazy(() =>
+  import("./pages/MarketPlaceAccountingEditPage").then((m) => ({
+    default: m.MarketPlaceAccountingEditPage,
+  }))
+);
 
 // Import Market Place Cost Center page
-const MarketPlaceCostCenterPage = lazy(() => import("./pages/MarketPlaceCostCenterPage").then(m => ({ default: m.MarketPlaceCostCenterPage })));
+const MarketPlaceCostCenterPage = lazy(() =>
+  import("./pages/MarketPlaceCostCenterPage").then((m) => ({
+    default: m.MarketPlaceCostCenterPage,
+  }))
+);
 
 // Import CRM Campaign pages
-const CRMCampaignPage = lazy(() => import("./pages/CRMCampaignPage").then(m => ({ default: m.CRMCampaignPage })));
-const AddLeadPage = lazy(() => import("./pages/AddLeadPage").then(m => ({ default: m.AddLeadPage })));
-const LeadDetailsPage = lazy(() => import("./pages/LeadDetailsPage").then(m => ({ default: m.LeadDetailsPage })));
-const CRMEventsPage = lazy(() => import("./pages/CRMEventsPage").then(m => ({ default: m.CRMEventsPage })));
-const CRMEventDetailsPage = lazy(() => import("./pages/CRMEventDetailsPage").then(m => ({ default: m.CRMEventDetailsPage })));
-const AddEventPage = lazy(() => import("./pages/AddEventPage").then(m => ({ default: m.AddEventPage })));
+const CRMCampaignPage = lazy(() =>
+  import("./pages/CRMCampaignPage").then((m) => ({
+    default: m.CRMCampaignPage,
+  }))
+);
+const AddLeadPage = lazy(() =>
+  import("./pages/AddLeadPage").then((m) => ({ default: m.AddLeadPage }))
+);
+const LeadDetailsPage = lazy(() =>
+  import("./pages/LeadDetailsPage").then((m) => ({
+    default: m.LeadDetailsPage,
+  }))
+);
+const CRMEventsPage = lazy(() =>
+  import("./pages/CRMEventsPage").then((m) => ({ default: m.CRMEventsPage }))
+);
+const CRMEventDetailsPage = lazy(() =>
+  import("./pages/CRMEventDetailsPage").then((m) => ({
+    default: m.CRMEventDetailsPage,
+  }))
+);
+const AddEventPage = lazy(() =>
+  import("./pages/AddEventPage").then((m) => ({ default: m.AddEventPage }))
+);
 
 // Import CRM Groups page
 const CRMGroupsPage = lazy(() => import("./pages/CRMGroupsPage"));
 const CRMGroupDetailsPage = lazy(() => import("./pages/CRMGroupDetailsPage"));
 
 // Import Broadcast page
-const BroadcastDashboard = lazy(() => import("./pages/BroadcastDashboard").then(m => ({ default: m.BroadcastDashboard })));
-const AddBroadcastPage = lazy(() => import("./pages/AddBroadcastPage").then(m => ({ default: m.AddBroadcastPage })));
-const EditBroadcastPage = lazy(() => import("./pages/EditBroadcastPage").then(m => ({ default: m.EditBroadcastPage })));
-const BroadcastDetailsPage = lazy(() => import("./pages/BroadcastDetailsPage").then(m => ({ default: m.BroadcastDetailsPage })));
+const BroadcastDashboard = lazy(() =>
+  import("./pages/BroadcastDashboard").then((m) => ({
+    default: m.BroadcastDashboard,
+  }))
+);
+const AddBroadcastPage = lazy(() =>
+  import("./pages/AddBroadcastPage").then((m) => ({
+    default: m.AddBroadcastPage,
+  }))
+);
+const EditBroadcastPage = lazy(() =>
+  import("./pages/EditBroadcastPage").then((m) => ({
+    default: m.EditBroadcastPage,
+  }))
+);
+const BroadcastDetailsPage = lazy(() =>
+  import("./pages/BroadcastDetailsPage").then((m) => ({
+    default: m.BroadcastDetailsPage,
+  }))
+);
 
 // Import Notice pages
-const NoticePageList = lazy(() => import("./pages/communication/NoticePageList"));
-const NoticePageCreate = lazy(() => import("./pages/communication/NoticePageCreate"));
-const NoticePageEdit = lazy(() => import("./pages/communication/NoticePageEdit"));
-const NoticePageDetails = lazy(() => import("./pages/communication/NoticePageDetails"));
+const NoticePageList = lazy(
+  () => import("./pages/communication/NoticePageList")
+);
+const NoticePageCreate = lazy(
+  () => import("./pages/communication/NoticePageCreate")
+);
+const NoticePageEdit = lazy(
+  () => import("./pages/communication/NoticePageEdit")
+);
+const NoticePageDetails = lazy(
+  () => import("./pages/communication/NoticePageDetails")
+);
 
 // Import Communication Event pages
-const EventCommunicationList = lazy(() => import("./pages/communication/EventCommunicationList"));
-const EventCommunicationCreate = lazy(() => import("./pages/communication/EventCommunicationCreate"));
-const EventCommunicationEdit = lazy(() => import("./pages/communication/EventCommunicationEdit"));
-const EventCommunicationDetails = lazy(() => import("./pages/communication/EventCommunicationDetails"));
+const EventCommunicationList = lazy(
+  () => import("./pages/communication/EventCommunicationList")
+);
+const EventCommunicationCreate = lazy(
+  () => import("./pages/communication/EventCommunicationCreate")
+);
+const EventCommunicationEdit = lazy(
+  () => import("./pages/communication/EventCommunicationEdit")
+);
+const EventCommunicationDetails = lazy(
+  () => import("./pages/communication/EventCommunicationDetails")
+);
 
 // Import Redemption Marketplace page
-const RedemptionMarketplacePage = lazy(() => import("./pages/RedemptionMarketplacePage").then(m => ({ default: m.RedemptionMarketplacePage })));
-const HotelRewardsPage = lazy(() => import("./pages/HotelRewardsPage").then(m => ({ default: m.HotelRewardsPage })));
-const TicketDiscountsPage = lazy(() => import("./pages/TicketDiscountsPage").then(m => ({ default: m.TicketDiscountsPage })));
+const RedemptionMarketplacePage = lazy(() =>
+  import("./pages/RedemptionMarketplacePage").then((m) => ({
+    default: m.RedemptionMarketplacePage,
+  }))
+);
+const HotelRewardsPage = lazy(() =>
+  import("./pages/HotelRewardsPage").then((m) => ({
+    default: m.HotelRewardsPage,
+  }))
+);
+const TicketDiscountsPage = lazy(() =>
+  import("./pages/TicketDiscountsPage").then((m) => ({
+    default: m.TicketDiscountsPage,
+  }))
+);
 
 // Import Hotel Details page
-const HotelDetailsPage = lazy(() => import("./pages/HotelDetailsPage").then(m => ({ default: m.HotelDetailsPage })));
+const HotelDetailsPage = lazy(() =>
+  import("./pages/HotelDetailsPage").then((m) => ({
+    default: m.HotelDetailsPage,
+  }))
+);
 
 // Import Hotel Booking page
-const HotelBookingPage = lazy(() => import("./pages/HotelBookingPage").then(m => ({ default: m.HotelBookingPage })));
+const HotelBookingPage = lazy(() =>
+  import("./pages/HotelBookingPage").then((m) => ({
+    default: m.HotelBookingPage,
+  }))
+);
 
 // Import CRM Polls page
 const CRMPollsPage = lazy(() => import("./pages/CRMPollsPage"));
 
 // Import CRM Occupant User Detail page
-const CRMOccupantUserDetailPage = lazy(() => import("./pages/CRMOccupantUserDetailPage").then(m => ({ default: m.CRMOccupantUserDetailPage })));
-const CRMOccupantUserEditPage = lazy(() => import("./pages/CRMOccupantUserEditPage").then(m => ({ default: m.CRMOccupantUserEditPage })));
+const CRMOccupantUserDetailPage = lazy(() =>
+  import("./pages/CRMOccupantUserDetailPage").then((m) => ({
+    default: m.CRMOccupantUserDetailPage,
+  }))
+);
+const CRMOccupantUserEditPage = lazy(() =>
+  import("./pages/CRMOccupantUserEditPage").then((m) => ({
+    default: m.CRMOccupantUserEditPage,
+  }))
+);
 
 // Import Market Place All page
 const MarketPlaceAllPage = lazy(() => import("./pages/MarketPlaceAllPage"));
 
 // Import Market Place Installed page
-const MarketPlaceInstalledPage = lazy(() => import("./pages/MarketPlaceInstalledPage").then(m => ({ default: m.MarketPlaceInstalledPage })));
+const MarketPlaceInstalledPage = lazy(() =>
+  import("./pages/MarketPlaceInstalledPage").then((m) => ({
+    default: m.MarketPlaceInstalledPage,
+  }))
+);
 
 // Import Market Place Updates page
-const MarketPlaceUpdatesPage = lazy(() => import("./pages/MarketPlaceUpdatesPage").then(m => ({ default: m.MarketPlaceUpdatesPage })));
+const MarketPlaceUpdatesPage = lazy(() =>
+  import("./pages/MarketPlaceUpdatesPage").then((m) => ({
+    default: m.MarketPlaceUpdatesPage,
+  }))
+);
 
 // Import Lease Management Detail page
-const LeaseManagementDetailPage = lazy(() => import("./pages/LeaseManagementDetailPage"));
+const LeaseManagementDetailPage = lazy(
+  () => import("./pages/LeaseManagementDetailPage")
+);
 
 // Import Loyalty Rule Engine Detail page
-const LoyaltyRuleEngineDetailPage = lazy(() => import("./pages/LoyaltyRuleEngineDetailPage"));
+const LoyaltyRuleEngineDetailPage = lazy(
+  () => import("./pages/LoyaltyRuleEngineDetailPage")
+);
 
 // Import Cloud Telephony Detail page
-const CloudTelephonyDetailPage = lazy(() => import("./pages/CloudTelephonyDetailPage"));
+const CloudTelephonyDetailPage = lazy(
+  () => import("./pages/CloudTelephonyDetailPage")
+);
 
 // Import Accounting Detail page
 const AccountingDetailPage = lazy(() => import("./pages/AccountingDetailPage"));
@@ -657,207 +1701,617 @@ const TierDetails = lazy(() => import("./pages/TierDetails"));
 const OrderDetails = lazy(() => import("./pages/OrderDetails"));
 
 // Import Rule List page
-const RuleListPage = lazy(() => import("./pages/RuleListPage").then(m => ({ default: m.RuleListPage })));
-const TrainingListDashboard = lazy(() => import("./pages/TrainingListDashboard").then(m => ({ default: m.TrainingListDashboard })));
-const AddTrainingRecordDashboard = lazy(() => import("./pages/AddTrainingRecordDashboard").then(m => ({ default: m.AddTrainingRecordDashboard })));
-const TrainingRecordDetailsPage = lazy(() => import("./pages/TrainingRecordDetailsPage").then(m => ({ default: m.TrainingRecordDetailsPage })));
+const RuleListPage = lazy(() =>
+  import("./pages/RuleListPage").then((m) => ({ default: m.RuleListPage }))
+);
+const TrainingListDashboard = lazy(() =>
+  import("./pages/TrainingListDashboard").then((m) => ({
+    default: m.TrainingListDashboard,
+  }))
+);
+const AddTrainingRecordDashboard = lazy(() =>
+  import("./pages/AddTrainingRecordDashboard").then((m) => ({
+    default: m.AddTrainingRecordDashboard,
+  }))
+);
+const TrainingRecordDetailsPage = lazy(() =>
+  import("./pages/TrainingRecordDetailsPage").then((m) => ({
+    default: m.TrainingRecordDetailsPage,
+  }))
+);
 
 // Import Edit Checklist Master page
-const EditChecklistMasterPage = lazy(() => import("./pages/EditChecklistMasterPage").then(m => ({ default: m.EditChecklistMasterPage })));
+const EditChecklistMasterPage = lazy(() =>
+  import("./pages/EditChecklistMasterPage").then((m) => ({
+    default: m.EditChecklistMasterPage,
+  }))
+);
 
 // Import View Checklist Master page
-const ViewChecklistMasterPage = lazy(() => import("./pages/ViewChecklistMasterPage").then(m => ({ default: m.ViewChecklistMasterPage })));
+const ViewChecklistMasterPage = lazy(() =>
+  import("./pages/ViewChecklistMasterPage").then((m) => ({
+    default: m.ViewChecklistMasterPage,
+  }))
+);
 
 // Import Unit Master page
-const UnitMasterPage = lazy(() => import("./pages/UnitMasterPage").then(m => ({ default: m.UnitMasterPage })));
+const UnitMasterPage = lazy(() =>
+  import("./pages/UnitMasterPage").then((m) => ({ default: m.UnitMasterPage }))
+);
 
 // Import Location Master pages
-const BuildingPage = lazy(() => import("./pages/master/BuildingPage").then(m => ({ default: m.BuildingPage })));
-const WingPage = lazy(() => import("./pages/master/WingPage").then(m => ({ default: m.WingPage })));
-const AreaPage = lazy(() => import("./pages/master/AreaPage").then(m => ({ default: m.AreaPage })));
-const FloorPage = lazy(() => import("./pages/master/FloorPage").then(m => ({ default: m.FloorPage })));
-const UnitPage = lazy(() => import("./pages/master/UnitPage").then(m => ({ default: m.UnitPage })));
-const RoomPage = lazy(() => import("./pages/master/RoomPage").then(m => ({ default: m.RoomPage })));
-const OpsAccountPage = lazy(() => import("./pages/master/OpsAccountPage").then(m => ({ default: m.OpsAccountPage })));
-const OrganizationDetailsPage = lazy(() => import("./pages/master/OrganizationDetailsPage").then(m => ({ default: m.OrganizationDetailsPage })));
-const CompanyDetailsPage = lazy(() => import("./pages/master/CompanyDetailsPage").then(m => ({ default: m.CompanyDetailsPage })));
-const HeadquartersDetailsPage = lazy(() => import("./pages/master/HeadquartersDetailsPage"));
+const BuildingPage = lazy(() =>
+  import("./pages/master/BuildingPage").then((m) => ({
+    default: m.BuildingPage,
+  }))
+);
+const WingPage = lazy(() =>
+  import("./pages/master/WingPage").then((m) => ({ default: m.WingPage }))
+);
+const AreaPage = lazy(() =>
+  import("./pages/master/AreaPage").then((m) => ({ default: m.AreaPage }))
+);
+const FloorPage = lazy(() =>
+  import("./pages/master/FloorPage").then((m) => ({ default: m.FloorPage }))
+);
+const UnitPage = lazy(() =>
+  import("./pages/master/UnitPage").then((m) => ({ default: m.UnitPage }))
+);
+const RoomPage = lazy(() =>
+  import("./pages/master/RoomPage").then((m) => ({ default: m.RoomPage }))
+);
+const OpsAccountPage = lazy(() =>
+  import("./pages/master/OpsAccountPage").then((m) => ({
+    default: m.OpsAccountPage,
+  }))
+);
+const OrganizationDetailsPage = lazy(() =>
+  import("./pages/master/OrganizationDetailsPage").then((m) => ({
+    default: m.OrganizationDetailsPage,
+  }))
+);
+const CompanyDetailsPage = lazy(() =>
+  import("./pages/master/CompanyDetailsPage").then((m) => ({
+    default: m.CompanyDetailsPage,
+  }))
+);
+const HeadquartersDetailsPage = lazy(
+  () => import("./pages/master/HeadquartersDetailsPage")
+);
 const SiteDetailsPage = lazy(() => import("./pages/master/SiteDetailsPage"));
 
 // Import Address Master page
-const AddressMasterPage = lazy(() => import("./pages/AddressMasterPage").then(m => ({ default: m.AddressMasterPage })));
+const AddressMasterPage = lazy(() =>
+  import("./pages/AddressMasterPage").then((m) => ({
+    default: m.AddressMasterPage,
+  }))
+);
 
 // Import new master pages
-const UnitMasterByDefaultPage = lazy(() => import("./pages/UnitMasterByDefaultPage").then(m => ({ default: m.UnitMasterByDefaultPage })));
-const CommunicationTemplatePage = lazy(() => import("./pages/CommunicationTemplatePage").then(m => ({ default: m.CommunicationTemplatePage })));
+const UnitMasterByDefaultPage = lazy(() =>
+  import("./pages/UnitMasterByDefaultPage").then((m) => ({
+    default: m.UnitMasterByDefaultPage,
+  }))
+);
+const CommunicationTemplatePage = lazy(() =>
+  import("./pages/CommunicationTemplatePage").then((m) => ({
+    default: m.CommunicationTemplatePage,
+  }))
+);
 
 // Import Add Address page
-const AddAddressPage = lazy(() => import("./pages/AddAddressPage").then(m => ({ default: m.AddAddressPage })));
+const AddAddressPage = lazy(() =>
+  import("./pages/AddAddressPage").then((m) => ({ default: m.AddAddressPage }))
+);
 
 // Import Edit Address page
-const EditAddressPage = lazy(() => import("./pages/EditAddressPage").then(m => ({ default: m.EditAddressPage })));
+const EditAddressPage = lazy(() =>
+  import("./pages/EditAddressPage").then((m) => ({
+    default: m.EditAddressPage,
+  }))
+);
 
 // Import ChecklistGroupDashboard for setup and settings
 import { ChecklistGroupDashboard } from "./pages/setup/ChecklistGroupDashboard";
 
 // Import Booking Setup Dashboard
-const BookingSetupDashboard = lazy(() => import("./pages/BookingSetupDashboard").then(m => ({ default: m.BookingSetupDashboard })));
-const BookingSetupDetailPage = lazy(() => import("./pages/BookingSetupDetailPage").then(m => ({ default: m.BookingSetupDetailPage })));
-const AddBookingSetupPage = lazy(() => import("./pages/AddBookingSetupPage").then(m => ({ default: m.AddBookingSetupPage })));
+const BookingSetupDashboard = lazy(() =>
+  import("./pages/BookingSetupDashboard").then((m) => ({
+    default: m.BookingSetupDashboard,
+  }))
+);
+const BookingSetupDetailPage = lazy(() =>
+  import("./pages/BookingSetupDetailPage").then((m) => ({
+    default: m.BookingSetupDetailPage,
+  }))
+);
+const AddBookingSetupPage = lazy(() =>
+  import("./pages/AddBookingSetupPage").then((m) => ({
+    default: m.AddBookingSetupPage,
+  }))
+);
 
 // Import Add Facility Booking page
-const AddFacilityBookingPage = lazy(() => import("./pages/AddFacilityBookingPage"));
-const PaymentRedirectPage = lazy(() => import("./pages/PaymentRedirectPage").then(m => ({ default: m.PaymentRedirectPage })));
-const AssetGroupsDashboard = lazy(() => import("./pages/setup/AssetGroupsDashboard").then(m => ({ default: m.AssetGroupsDashboard })));
+const AddFacilityBookingPage = lazy(
+  () => import("./pages/AddFacilityBookingPage")
+);
+const PaymentRedirectPage = lazy(() =>
+  import("./pages/PaymentRedirectPage").then((m) => ({
+    default: m.PaymentRedirectPage,
+  }))
+);
+const AssetGroupsDashboard = lazy(() =>
+  import("./pages/setup/AssetGroupsDashboard").then((m) => ({
+    default: m.AssetGroupsDashboard,
+  }))
+);
 
-const PaymentsMadePage = lazy(() => import("./pages/PaymentsMadePage").then(m => ({ default: m.PaymentsMadePage })));
-const CreatePaymentPage = lazy(() => import("./pages/CreatePaymentPage").then(m => ({ default: m.CreatePaymentPage })));
+const PaymentsMadePage = lazy(() =>
+  import("./pages/PaymentsMadePage").then((m) => ({
+    default: m.PaymentsMadePage,
+  }))
+);
+const CreatePaymentPage = lazy(() =>
+  import("./pages/CreatePaymentPage").then((m) => ({
+    default: m.CreatePaymentPage,
+  }))
+);
 
-const ApprovalMatrixSetupPage = lazy(() => import("./pages/settings/ApprovalMatrixSetupPage"));
-const AddApprovalMatrixPage = lazy(() => import("./pages/settings/AddApprovalMatrixPage"));
+const ApprovalMatrixSetupPage = lazy(
+  () => import("./pages/settings/ApprovalMatrixSetupPage")
+);
+const AddApprovalMatrixPage = lazy(
+  () => import("./pages/settings/AddApprovalMatrixPage")
+);
 
-const MobileAdminOrderDetailsPage = lazy(() => import("./pages/MobileAdminOrderDetailsPage"));
-const MobileSurveyPage = lazy(() => import("./pages/mobile/MobileSurveyPage").then(m => ({ default: m.MobileSurveyPage })));
-const InvitedVisitorPage = lazy(() => import("./pages/mobile/InvitedVisitorPage").then(m => ({ default: m.InvitedVisitorPage })));
+const MobileAdminOrderDetailsPage = lazy(
+  () => import("./pages/MobileAdminOrderDetailsPage")
+);
+const MobileSurveyPage = lazy(() =>
+  import("./pages/mobile/MobileSurveyPage").then((m) => ({
+    default: m.MobileSurveyPage,
+  }))
+);
+const InvitedVisitorPage = lazy(() =>
+  import("./pages/mobile/InvitedVisitorPage").then((m) => ({
+    default: m.InvitedVisitorPage,
+  }))
+);
 
 import { MobileOrderPlaced } from "./components/mobile/MobileOrderPlaced";
 import { ExternalFlowTester } from "./components/mobile/ExternalFlowTester";
-const EmailRuleSetupPage = lazy(() => import("./pages/maintenance/EmailRuleSetupPage").then(m => ({ default: m.EmailRuleSetupPage })));
-const TaskEscalationPage = lazy(() => import("./pages/maintenance/TaskEscalationPage").then(m => ({ default: m.TaskEscalationPage })));
-const TicketManagementSetupPage = lazy(() => import("./pages/maintenance/TicketManagementSetupPage").then(m => ({ default: m.TicketManagementSetupPage })));
-const MobileTicketsPage = lazy(() => import("./pages/mobile/MobileTicketsPage").then(m => ({ default: m.MobileTicketsPage })));
-const MobileNewTicketPage = lazy(() => import("./pages/mobile/MobileNewTicketPage").then(m => ({ default: m.MobileNewTicketPage })));
-const TicketListPage = lazy(() => import("./pages/TicketListPage").then(m => ({ default: m.TicketListPage })));
-const MobileRestaurantPage = lazy(() => import("./pages/mobile/MobileRestaurantPage").then(m => ({ default: m.MobileRestaurantPage })));
-const MobileAssetPage = lazy(() => import("./pages/mobile/MobileAssetPage").then(m => ({ default: m.MobileAssetPage })));
-const MobileOwnerCostAssetPage = lazy(() => import("./pages/mobile/MobileOwnerCostAssetPage").then(m => ({ default: m.MobileOwnerCostAssetPage })));
+const EmailRuleSetupPage = lazy(() =>
+  import("./pages/maintenance/EmailRuleSetupPage").then((m) => ({
+    default: m.EmailRuleSetupPage,
+  }))
+);
+const TaskEscalationPage = lazy(() =>
+  import("./pages/maintenance/TaskEscalationPage").then((m) => ({
+    default: m.TaskEscalationPage,
+  }))
+);
+const TicketManagementSetupPage = lazy(() =>
+  import("./pages/maintenance/TicketManagementSetupPage").then((m) => ({
+    default: m.TicketManagementSetupPage,
+  }))
+);
+const MobileTicketsPage = lazy(() =>
+  import("./pages/mobile/MobileTicketsPage").then((m) => ({
+    default: m.MobileTicketsPage,
+  }))
+);
+const MobileNewTicketPage = lazy(() =>
+  import("./pages/mobile/MobileNewTicketPage").then((m) => ({
+    default: m.MobileNewTicketPage,
+  }))
+);
+const TicketListPage = lazy(() =>
+  import("./pages/TicketListPage").then((m) => ({ default: m.TicketListPage }))
+);
+const MobileRestaurantPage = lazy(() =>
+  import("./pages/mobile/MobileRestaurantPage").then((m) => ({
+    default: m.MobileRestaurantPage,
+  }))
+);
+const MobileAssetPage = lazy(() =>
+  import("./pages/mobile/MobileAssetPage").then((m) => ({
+    default: m.MobileAssetPage,
+  }))
+);
+const MobileOwnerCostAssetPage = lazy(() =>
+  import("./pages/mobile/MobileOwnerCostAssetPage").then((m) => ({
+    default: m.MobileOwnerCostAssetPage,
+  }))
+);
 import { MobileOrdersPage } from "./components/mobile/MobileOrdersPage";
-const QRTestPage = lazy(() => import("./pages/QRTestPage").then(m => ({ default: m.QRTestPage })));
+const QRTestPage = lazy(() =>
+  import("./pages/QRTestPage").then((m) => ({ default: m.QRTestPage }))
+);
 
-const EscalationMatrixPage = lazy(() => import("./pages/maintenance/EscalationMatrixPage").then(m => ({ default: m.EscalationMatrixPage })));
-const OSRAssignEscalationPage = lazy(() => import("./pages/setup/OSRAssignEscalationPage").then(m => ({ default: m.OSRAssignEscalationPage })));
-const OSRSchedulePage = lazy(() => import("./pages/setup/OSRSchedulePage").then(m => ({ default: m.OSRSchedulePage })));
-const OSRSetupRulePage = lazy(() => import("./pages/setup/OSRSetupRulePage").then(m => ({ default: m.OSRSetupRulePage })));
-const OSRSetupPage = lazy(() => import("./pages/setup/OSRSetupPage").then(m => ({ default: m.OSRSetupPage })));
+const EscalationMatrixPage = lazy(() =>
+  import("./pages/maintenance/EscalationMatrixPage").then((m) => ({
+    default: m.EscalationMatrixPage,
+  }))
+);
+const OSRAssignEscalationPage = lazy(() =>
+  import("./pages/setup/OSRAssignEscalationPage").then((m) => ({
+    default: m.OSRAssignEscalationPage,
+  }))
+);
+const OSRSchedulePage = lazy(() =>
+  import("./pages/setup/OSRSchedulePage").then((m) => ({
+    default: m.OSRSchedulePage,
+  }))
+);
+const OSRSetupRulePage = lazy(() =>
+  import("./pages/setup/OSRSetupRulePage").then((m) => ({
+    default: m.OSRSetupRulePage,
+  }))
+);
+const OSRSetupPage = lazy(() =>
+  import("./pages/setup/OSRSetupPage").then((m) => ({
+    default: m.OSRSetupPage,
+  }))
+);
 
 // Import Setup pages
-const PermitSetupDashboard = lazy(() => import("./pages/PermitSetupDashboard").then(m => ({ default: m.PermitSetupDashboard })));
-const IncidentSetupDashboard = lazy(() => import("./pages/IncidentSetupDashboard").then(m => ({ default: m.IncidentSetupDashboard })));
-const IncidentNewDetails = lazy(() => import("./pages/IncidentNewDetails").then(m => ({ default: m.IncidentNewDetails })));
-const NewIncidentDetailsPage = lazy(() => import("./pages/NewIncidentDetailsPage").then(m => ({ default: m.NewIncidentDetailsPage })));
+const PermitSetupDashboard = lazy(() =>
+  import("./pages/PermitSetupDashboard").then((m) => ({
+    default: m.PermitSetupDashboard,
+  }))
+);
+const IncidentSetupDashboard = lazy(() =>
+  import("./pages/IncidentSetupDashboard").then((m) => ({
+    default: m.IncidentSetupDashboard,
+  }))
+);
+const IncidentNewDetails = lazy(() =>
+  import("./pages/IncidentNewDetails").then((m) => ({
+    default: m.IncidentNewDetails,
+  }))
+);
+const NewIncidentDetailsPage = lazy(() =>
+  import("./pages/NewIncidentDetailsPage").then((m) => ({
+    default: m.NewIncidentDetailsPage,
+  }))
+);
 // Import Holiday Calendar page
-const SettingsHolidayCalendarPage = lazy(() => import("./pages/settings/HolidayCalendarPage").then(m => ({ default: m.HolidayCalendarPage })));
-const HolidayCalendarPage = lazy(() => import("./pages/HolidayCalendarPage").then(m => ({ default: m.HolidayCalendarPage })));
+const SettingsHolidayCalendarPage = lazy(() =>
+  import("./pages/settings/HolidayCalendarPage").then((m) => ({
+    default: m.HolidayCalendarPage,
+  }))
+);
+const HolidayCalendarPage = lazy(() =>
+  import("./pages/HolidayCalendarPage").then((m) => ({
+    default: m.HolidayCalendarPage,
+  }))
+);
 
-const LoginPage = lazy(() => import("@/pages/LoginPage").then(m => ({ default: m.LoginPage })));
-const OTPVerificationPage = lazy(() => import("@/pages/OTPVerificationPage").then(m => ({ default: m.OTPVerificationPage })));
-const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage").then(m => ({ default: m.ForgotPasswordPage })));
-const ForgotPasswordOTPPage = lazy(() => import("@/pages/ForgotPasswordOTPPage").then(m => ({ default: m.ForgotPasswordOTPPage })));
-const NewPasswordPage = lazy(() => import("@/pages/NewPasswordPage").then(m => ({ default: m.NewPasswordPage })));
-const LoginSuccessPage = lazy(() => import("@/pages/LoginSuccessPage").then(m => ({ default: m.LoginSuccessPage })));
-const PasswordResetSuccessPage = lazy(() => import("@/pages/PasswordResetSuccessPage").then(m => ({ default: m.PasswordResetSuccessPage })));
+const LoginPage = lazy(() =>
+  import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage }))
+);
+const OTPVerificationPage = lazy(() =>
+  import("@/pages/OTPVerificationPage").then((m) => ({
+    default: m.OTPVerificationPage,
+  }))
+);
+const ForgotPasswordPage = lazy(() =>
+  import("@/pages/ForgotPasswordPage").then((m) => ({
+    default: m.ForgotPasswordPage,
+  }))
+);
+const ForgotPasswordOTPPage = lazy(() =>
+  import("@/pages/ForgotPasswordOTPPage").then((m) => ({
+    default: m.ForgotPasswordOTPPage,
+  }))
+);
+const NewPasswordPage = lazy(() =>
+  import("@/pages/NewPasswordPage").then((m) => ({
+    default: m.NewPasswordPage,
+  }))
+);
+const LoginSuccessPage = lazy(() =>
+  import("@/pages/LoginSuccessPage").then((m) => ({
+    default: m.LoginSuccessPage,
+  }))
+);
+const PasswordResetSuccessPage = lazy(() =>
+  import("@/pages/PasswordResetSuccessPage").then((m) => ({
+    default: m.PasswordResetSuccessPage,
+  }))
+);
 import { isAuthenticated } from "@/utils/auth";
 const BookingDetailsPage = lazy(() => import("./pages/BookingDetailsPage"));
 import { RestaurantOrdersTable } from "./components/RestaurantOrdersTable";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { useEffect, useState, Suspense } from "react";
 import { getCurrency } from "./store/slices/currencySlice";
-const EditBookingSetupPage = lazy(() => import("./pages/setup/EditBookingSetupPage").then(m => ({ default: m.EditBookingSetupPage })));
-const MobileAdminOrdersPage = lazy(() => import("./pages/MobileAdminOrdersPage").then(m => ({ default: m.MobileAdminOrdersPage })));
-const DesignInsightsSetupDashboard = lazy(() => import("./pages/DesignInsightsSetupDashboard"));
-const CRMOccupantUsersDashboard = lazy(() => import("./pages/CRMOccupantUsersDashboard"));
+const EditBookingSetupPage = lazy(() =>
+  import("./pages/setup/EditBookingSetupPage").then((m) => ({
+    default: m.EditBookingSetupPage,
+  }))
+);
+const MobileAdminOrdersPage = lazy(() =>
+  import("./pages/MobileAdminOrdersPage").then((m) => ({
+    default: m.MobileAdminOrdersPage,
+  }))
+);
+const DesignInsightsSetupDashboard = lazy(
+  () => import("./pages/DesignInsightsSetupDashboard")
+);
+const CRMOccupantUsersDashboard = lazy(
+  () => import("./pages/CRMOccupantUsersDashboard")
+);
 const CRMFMUserDashboard = lazy(() => import("./pages/CRMFMUserDashboard"));
-const CRMCustomersDashboard = lazy(() => import("./pages/CRMCustomersDashboard"));
-const PatrollingDetailPage = lazy(() => import("./pages/PatrollingDetailPage").then(m => ({ default: m.PatrollingDetailPage })));
-const WorkOrderAddPage = lazy(() => import("./pages/WorkOrderAddPage").then(m => ({ default: m.WorkOrderAddPage })));
+const CRMCustomersDashboard = lazy(
+  () => import("./pages/CRMCustomersDashboard")
+);
+const PatrollingDetailPage = lazy(() =>
+  import("./pages/PatrollingDetailPage").then((m) => ({
+    default: m.PatrollingDetailPage,
+  }))
+);
+const WorkOrderAddPage = lazy(() =>
+  import("./pages/WorkOrderAddPage").then((m) => ({
+    default: m.WorkOrderAddPage,
+  }))
+);
 const LMCDashboard = lazy(() => import("./pages/LMCDashboard"));
 const LMCUserDetail = lazy(() => import("./pages/LMCUserDetail"));
 const TrainingDashboard = lazy(() => import("./pages/TrainingDashboard"));
-const TrainingUserDetailPage = lazy(() => import("./pages/TrainingUserDetailPage"));
+const TrainingUserDetailPage = lazy(
+  () => import("./pages/TrainingUserDetailPage")
+);
 const TrainingDetailPage = lazy(() => import("./pages/TrainingDetailPage"));
 const SMTDashboard = lazy(() => import("./pages/SMTDashboard"));
 const SMTDetailPage = lazy(() => import("./pages/SMTDetailPage"));
-const RoleConfigList = lazy(() => import("./pages/settings/RoleConfigList").then(m => ({ default: m.RoleConfigList })));
-const RoleConfigView = lazy(() => import("./pages/settings/RoleConfigView").then(m => ({ default: m.RoleConfigView })));
-const RoleConfigEdit = lazy(() => import("./pages/settings/RoleConfigEdit").then(m => ({ default: m.RoleConfigEdit })));
-const LockFunctionList = lazy(() => import("./pages/settings/LockFunctionList").then(m => ({ default: m.LockFunctionList })));
-const LockFunctionView = lazy(() => import("./pages/settings/LockFunctionView").then(m => ({ default: m.LockFunctionView })));
-const LockFunctionEdit = lazy(() => import("./pages/settings/LockFunctionEdit").then(m => ({ default: m.LockFunctionEdit })));
-const LockFunctionCreate = lazy(() => import("./pages/settings/LockFunctionCreate").then(m => ({ default: m.LockFunctionCreate })));
-const LockModuleList = lazy(() => import("./pages/settings/LockModuleList").then(m => ({ default: m.LockModuleList })));
-const LockModuleEdit = lazy(() => import("./pages/settings/LockModuleEdit").then(m => ({ default: m.LockModuleEdit })));
-const LockModuleView = lazy(() => import("./pages/settings/LockModuleView").then(m => ({ default: m.LockModuleView })));
-const LockSubFunctionList = lazy(() => import("./pages/settings/LockSubFunctionList").then(m => ({ default: m.LockSubFunctionList })));
-const LockSubFunctionView = lazy(() => import("./pages/settings/LockSubFunctionView").then(m => ({ default: m.LockSubFunctionView })));
-const LockSubFunctionEdit = lazy(() => import("./pages/settings/LockSubFunctionEdit").then(m => ({ default: m.LockSubFunctionEdit })));
-const LockSubFunctionCreate = lazy(() => import("./pages/settings/LockSubFunctionCreate").then(m => ({ default: m.CreateLockSubFunctionDialog })));
+const RoleConfigList = lazy(() =>
+  import("./pages/settings/RoleConfigList").then((m) => ({
+    default: m.RoleConfigList,
+  }))
+);
+const RoleConfigView = lazy(() =>
+  import("./pages/settings/RoleConfigView").then((m) => ({
+    default: m.RoleConfigView,
+  }))
+);
+const RoleConfigEdit = lazy(() =>
+  import("./pages/settings/RoleConfigEdit").then((m) => ({
+    default: m.RoleConfigEdit,
+  }))
+);
+const LockFunctionList = lazy(() =>
+  import("./pages/settings/LockFunctionList").then((m) => ({
+    default: m.LockFunctionList,
+  }))
+);
+const LockFunctionView = lazy(() =>
+  import("./pages/settings/LockFunctionView").then((m) => ({
+    default: m.LockFunctionView,
+  }))
+);
+const LockFunctionEdit = lazy(() =>
+  import("./pages/settings/LockFunctionEdit").then((m) => ({
+    default: m.LockFunctionEdit,
+  }))
+);
+const LockFunctionCreate = lazy(() =>
+  import("./pages/settings/LockFunctionCreate").then((m) => ({
+    default: m.LockFunctionCreate,
+  }))
+);
+const LockModuleList = lazy(() =>
+  import("./pages/settings/LockModuleList").then((m) => ({
+    default: m.LockModuleList,
+  }))
+);
+const LockModuleEdit = lazy(() =>
+  import("./pages/settings/LockModuleEdit").then((m) => ({
+    default: m.LockModuleEdit,
+  }))
+);
+const LockModuleView = lazy(() =>
+  import("./pages/settings/LockModuleView").then((m) => ({
+    default: m.LockModuleView,
+  }))
+);
+const LockSubFunctionList = lazy(() =>
+  import("./pages/settings/LockSubFunctionList").then((m) => ({
+    default: m.LockSubFunctionList,
+  }))
+);
+const LockSubFunctionView = lazy(() =>
+  import("./pages/settings/LockSubFunctionView").then((m) => ({
+    default: m.LockSubFunctionView,
+  }))
+);
+const LockSubFunctionEdit = lazy(() =>
+  import("./pages/settings/LockSubFunctionEdit").then((m) => ({
+    default: m.LockSubFunctionEdit,
+  }))
+);
+const LockSubFunctionCreate = lazy(() =>
+  import("./pages/settings/LockSubFunctionCreate").then((m) => ({
+    default: m.CreateLockSubFunctionDialog,
+  }))
+);
 const WalletTopup = lazy(() => import("./pages/WalletTopup"));
 const FeedbackDashboard = lazy(() => import("./pages/admin/FeedbackDashboard"));
 const SystemAndSOP = lazy(() => import("./pages/admin/SystemAndSOP"));
 const DiscReport = lazy(() => import("./pages/admin/DiscReport"));
-const CrmCustomerDetails = lazy(() => import("./pages/CrmCustomerDetails").then(m => ({ default: m.CrmCustomerDetails })));
-const EditCrmCustomer = lazy(() => import("./pages/EditCrmCustomer").then(m => ({ default: m.EditCrmCustomer })));
-const MultipleUserDeletePage = lazy(() => import("./pages/MultipleUserDeletePage"));
-const ReporteesReassignPage = lazy(() => import("./pages/ReporteesReassignPage"));
-const InvoiceDetails = lazy(() => import("./pages/InvoiceDetails").then(m => ({ default: m.InvoiceDetails })));
+const CrmCustomerDetails = lazy(() =>
+  import("./pages/CrmCustomerDetails").then((m) => ({
+    default: m.CrmCustomerDetails,
+  }))
+);
+const EditCrmCustomer = lazy(() =>
+  import("./pages/EditCrmCustomer").then((m) => ({
+    default: m.EditCrmCustomer,
+  }))
+);
+const MultipleUserDeletePage = lazy(
+  () => import("./pages/MultipleUserDeletePage")
+);
+const ReporteesReassignPage = lazy(
+  () => import("./pages/ReporteesReassignPage")
+);
+const InvoiceDetails = lazy(() =>
+  import("./pages/InvoiceDetails").then((m) => ({ default: m.InvoiceDetails }))
+);
 import VehicleDetails from "./components/VehicleDetails";
 import VehicleCheckIn from "./components/VehicleCheckIn";
-const UpdateVehicleHistoryPage = lazy(() => import("./pages/UpdateVehicleHistoryPage"));
+const UpdateVehicleHistoryPage = lazy(
+  () => import("./pages/UpdateVehicleHistoryPage")
+);
 const SacHsn = lazy(() => import("./pages/SacHsn"));
 const DetailPageSacHsn = lazy(() => import("./pages/DetailPageSacHsn"));
 const AddSacHsn = lazy(() => import("./pages/AddSacHsn"));
-const WOFeedsPage = lazy(() => import("./pages/WOFeedsPage").then(m => ({ default: m.WOFeedsPage })));
-const VendorPage = lazy(() => import("./pages/VendorPage").then(m => ({ default: m.VendorPage })));
-const AddVendorPage = lazy(() => import("./pages/AddVendorPage").then(m => ({ default: m.AddVendorPage })));
-const FinanceMasterPage = lazy(() => import("./pages/FinanceMasterPage").then(m => ({ default: m.FinanceMasterPage })));
+const WOFeedsPage = lazy(() =>
+  import("./pages/WOFeedsPage").then((m) => ({ default: m.WOFeedsPage }))
+);
+const VendorPage = lazy(() =>
+  import("./pages/VendorPage").then((m) => ({ default: m.VendorPage }))
+);
+const AddVendorPage = lazy(() =>
+  import("./pages/AddVendorPage").then((m) => ({ default: m.AddVendorPage }))
+);
+const FinanceMasterPage = lazy(() =>
+  import("./pages/FinanceMasterPage").then((m) => ({
+    default: m.FinanceMasterPage,
+  }))
+);
 const MsafeReportDownload = lazy(() => import("./pages/MsafeReportDownload"));
-const MsafeDetailReportDownload = lazy(() => import("./pages/MsafeDetailReportDownload"));
+const MsafeDetailReportDownload = lazy(
+  () => import("./pages/MsafeDetailReportDownload")
+);
 const DetailsVendorPage = lazy(() => import("./pages/DetailsVendorPage"));
-const EditPODashboard = lazy(() => import("./pages/EditPODashboard").then(m => ({ default: m.EditPODashboard })));
-const EditWODashboard = lazy(() => import("./pages/EditWODashboard").then(m => ({ default: m.EditWODashboard })));
+const EditPODashboard = lazy(() =>
+  import("./pages/EditPODashboard").then((m) => ({
+    default: m.EditPODashboard,
+  }))
+);
+const EditWODashboard = lazy(() =>
+  import("./pages/EditWODashboard").then((m) => ({
+    default: m.EditWODashboard,
+  }))
+);
 const GateNumberPage = lazy(() => import("./pages/master/GateNumberPage"));
 const FieldsSetupPage = lazy(() => import("./pages/master/FieldsSetupPage"));
 const GatePassTypePage = lazy(() => import("./pages/master/GatePassTypePage"));
-const InventoryTypePage = lazy(() => import("./pages/master/InventoryTypePage"));
-const InventorySubTypePage = lazy(() => import("./pages/master/InventorySubTypePage"));
-const AddGateNumberPage = lazy(() => import("./pages/master/AddGateNumberPage"));
-const AddGatePassTypePage = lazy(() => import("./pages/master/AddGatePassTypePage"));
-const EditGateNumberPage = lazy(() => import("./pages/master/EditGateNumberPage"));
-const EditGatePassTypePage = lazy(() => import("./pages/master/EditGatePassTypePage"));
-const CommunicationTemplateListPage = lazy(() => import("./pages/master/CommunicationTemplateListPage"));
-const AddCommunicationTemplatePage = lazy(() => import("./pages/master/AddCommunicationTemplatePage"));
-const EditCommunicationTemplatePage = lazy(() => import("./pages/master/EditCommunicationTemplatePage"));
-const DocumentCategoryListPage = lazy(() => import("./pages/master/DocumentCategoryListPage"));
-const AddDocumentCategoryPage = lazy(() => import("./pages/master/AddDocumentCategoryPage"));
-const EditDocumentCategoryPage = lazy(() => import("./pages/master/EditDocumentCategoryPage"));
+const InventoryTypePage = lazy(
+  () => import("./pages/master/InventoryTypePage")
+);
+const InventorySubTypePage = lazy(
+  () => import("./pages/master/InventorySubTypePage")
+);
+const AddGateNumberPage = lazy(
+  () => import("./pages/master/AddGateNumberPage")
+);
+const AddGatePassTypePage = lazy(
+  () => import("./pages/master/AddGatePassTypePage")
+);
+const EditGateNumberPage = lazy(
+  () => import("./pages/master/EditGateNumberPage")
+);
+const EditGatePassTypePage = lazy(
+  () => import("./pages/master/EditGatePassTypePage")
+);
+const CommunicationTemplateListPage = lazy(
+  () => import("./pages/master/CommunicationTemplateListPage")
+);
+const AddCommunicationTemplatePage = lazy(
+  () => import("./pages/master/AddCommunicationTemplatePage")
+);
+const EditCommunicationTemplatePage = lazy(
+  () => import("./pages/master/EditCommunicationTemplatePage")
+);
+const DocumentCategoryListPage = lazy(
+  () => import("./pages/master/DocumentCategoryListPage")
+);
+const AddDocumentCategoryPage = lazy(
+  () => import("./pages/master/AddDocumentCategoryPage")
+);
+const EditDocumentCategoryPage = lazy(
+  () => import("./pages/master/EditDocumentCategoryPage")
+);
 
 // Import Template pages
-const RootCauseAnalysisListPage = lazy(() => import("./pages/master/template/RootCauseAnalysisListPage"));
-const AddRootCauseAnalysisPage = lazy(() => import("./pages/master/template/AddRootCauseAnalysisPage"));
-const EditRootCauseAnalysisPage = lazy(() => import("./pages/master/template/EditRootCauseAnalysisPage"));
-const PreventiveActionListPage = lazy(() => import("./pages/master/template/PreventiveActionListPage"));
-const AddPreventiveActionPage = lazy(() => import("./pages/master/template/AddPreventiveActionPage"));
-const EditPreventiveActionPage = lazy(() => import("./pages/master/template/EditPreventiveActionPage"));
-const ShortTermImpactListPage = lazy(() => import("./pages/master/template/ShortTermImpactListPage"));
-const AddShortTermImpactPage = lazy(() => import("./pages/master/template/AddShortTermImpactPage"));
-const EditShortTermImpactPage = lazy(() => import("./pages/master/template/EditShortTermImpactPage"));
-const LongTermImpactListPage = lazy(() => import("./pages/master/template/LongTermImpactListPage"));
-const AddLongTermImpactPage = lazy(() => import("./pages/master/template/AddLongTermImpactPage"));
-const EditLongTermImpactPage = lazy(() => import("./pages/master/template/EditLongTermImpactPage"));
-const CorrectiveActionListPage = lazy(() => import("./pages/master/template/CorrectiveActionListPage"));
-const AddCorrectiveActionPage = lazy(() => import("./pages/master/template/AddCorrectiveActionPage"));
-const EditCorrectiveActionPage = lazy(() => import("./pages/master/template/EditCorrectiveActionPage"));
+const RootCauseAnalysisListPage = lazy(
+  () => import("./pages/master/template/RootCauseAnalysisListPage")
+);
+const AddRootCauseAnalysisPage = lazy(
+  () => import("./pages/master/template/AddRootCauseAnalysisPage")
+);
+const EditRootCauseAnalysisPage = lazy(
+  () => import("./pages/master/template/EditRootCauseAnalysisPage")
+);
+const PreventiveActionListPage = lazy(
+  () => import("./pages/master/template/PreventiveActionListPage")
+);
+const AddPreventiveActionPage = lazy(
+  () => import("./pages/master/template/AddPreventiveActionPage")
+);
+const EditPreventiveActionPage = lazy(
+  () => import("./pages/master/template/EditPreventiveActionPage")
+);
+const ShortTermImpactListPage = lazy(
+  () => import("./pages/master/template/ShortTermImpactListPage")
+);
+const AddShortTermImpactPage = lazy(
+  () => import("./pages/master/template/AddShortTermImpactPage")
+);
+const EditShortTermImpactPage = lazy(
+  () => import("./pages/master/template/EditShortTermImpactPage")
+);
+const LongTermImpactListPage = lazy(
+  () => import("./pages/master/template/LongTermImpactListPage")
+);
+const AddLongTermImpactPage = lazy(
+  () => import("./pages/master/template/AddLongTermImpactPage")
+);
+const EditLongTermImpactPage = lazy(
+  () => import("./pages/master/template/EditLongTermImpactPage")
+);
+const CorrectiveActionListPage = lazy(
+  () => import("./pages/master/template/CorrectiveActionListPage")
+);
+const AddCorrectiveActionPage = lazy(
+  () => import("./pages/master/template/AddCorrectiveActionPage")
+);
+const EditCorrectiveActionPage = lazy(
+  () => import("./pages/master/template/EditCorrectiveActionPage")
+);
 
-const AddInventoryTypePage = lazy(() => import("./pages/master/AddInventoryTypePage"));
-const EditInventoryTypePage = lazy(() => import("./pages/master/EditInventoryTypePage"));
-const AddInventorySubTypePage = lazy(() => import("./pages/master/AddInventorySubTypePage"));
-const EditInventorySubTypePage = lazy(() => import("./pages/master/EditInventorySubTypePage"));
-const AddOccupantUserPage = lazy(() => import("./pages/master/AddOccupantUserPage"));
-const EditOccupantUserPage = lazy(() => import("./pages/master/EditOccupantUserPage"));
-const AddCRMCustomerPage = lazy(() => import("./pages/AddCRMCustomerPage").then(m => ({ default: m.AddCRMCustomerPage })));
+const AddInventoryTypePage = lazy(
+  () => import("./pages/master/AddInventoryTypePage")
+);
+const EditInventoryTypePage = lazy(
+  () => import("./pages/master/EditInventoryTypePage")
+);
+const AddInventorySubTypePage = lazy(
+  () => import("./pages/master/AddInventorySubTypePage")
+);
+const EditInventorySubTypePage = lazy(
+  () => import("./pages/master/EditInventorySubTypePage")
+);
+const AddOccupantUserPage = lazy(
+  () => import("./pages/master/AddOccupantUserPage")
+);
+const EditOccupantUserPage = lazy(
+  () => import("./pages/master/EditOccupantUserPage")
+);
+const AddCRMCustomerPage = lazy(() =>
+  import("./pages/AddCRMCustomerPage").then((m) => ({
+    default: m.AddCRMCustomerPage,
+  }))
+);
 import CheckHierarchy from "./components/CheckHierarchy";
-const InvoiceFeeds = lazy(() => import("./pages/InvoiceFeeds").then(m => ({ default: m.InvoiceFeeds })));
-const EditApprovalMatrixPage = lazy(() => import("./pages/settings/EditApprovalMatrixPage"));
+const InvoiceFeeds = lazy(() =>
+  import("./pages/InvoiceFeeds").then((m) => ({ default: m.InvoiceFeeds }))
+);
+const EditApprovalMatrixPage = lazy(
+  () => import("./pages/settings/EditApprovalMatrixPage")
+);
 import AllContent from "./components/fm-pdf/AllContent";
 import DailyReport from "./components/DailyReport";
 import PDFDownloadPage from "./components/PDFDownloadPage";
@@ -865,73 +2319,217 @@ import PermissionDemo from "./components/PermissionDemo";
 const CRMWalletList = lazy(() => import("./pages/CRMWalletList"));
 const CRMWalletPointExpiry = lazy(() => import("./pages/CRMWalletPointExpiry"));
 const CRMWalletDetails = lazy(() => import("./pages/CRMWalletDetails"));
-const EditCRMWalletPointExpiry = lazy(() => import("./pages/EditCRMWalletPointExpiry"));
+const EditCRMWalletPointExpiry = lazy(
+  () => import("./pages/EditCRMWalletPointExpiry")
+);
 import EmployeeDeletionHistory from "./components/EmployeeDeletionHistory";
 const AddAddressMaster = lazy(() => import("./pages/master/AddAddressMaster"));
-const EditAddressMaster = lazy(() => import("./pages/master/EditAddressMaster"));
+const EditAddressMaster = lazy(
+  () => import("./pages/master/EditAddressMaster")
+);
 const MobileLMCPage = lazy(() => import("./pages/MobileLMCPage"));
-const ViBusinessCard = lazy(() => import("./pages/mobile/ViBusinessCard").then(m => ({ default: m.ViBusinessCard })));
-const CompanyPartnersSetupDashboard = lazy(() => import("./pages/CompanyPartnersSetupDashboard").then(m => ({ default: m.CompanyPartnersSetupDashboard })));
-const TestimonialsSetupDashboard = lazy(() => import("./pages/TestimonialsSetupDashboard").then(m => ({ default: m.TestimonialsSetupDashboard })));
+const ViBusinessCard = lazy(() =>
+  import("./pages/mobile/ViBusinessCard").then((m) => ({
+    default: m.ViBusinessCard,
+  }))
+);
+const CompanyPartnersSetupDashboard = lazy(() =>
+  import("./pages/CompanyPartnersSetupDashboard").then((m) => ({
+    default: m.CompanyPartnersSetupDashboard,
+  }))
+);
+const TestimonialsSetupDashboard = lazy(() =>
+  import("./pages/TestimonialsSetupDashboard").then((m) => ({
+    default: m.TestimonialsSetupDashboard,
+  }))
+);
 const BannerListPage = lazy(() => import("./pages/BannerListPage"));
 const BannerDetailsPage = lazy(() => import("./pages/BannerDetailsPage"));
 const BannerAddPage = lazy(() => import("./pages/BannerAddPage"));
 const BannerEditPage = lazy(() => import("./pages/BannerEditPage"));
-const AmenitySetupDashboard = lazy(() => import("./pages/AmenitySetupDashboard"));
+const AmenitySetupDashboard = lazy(
+  () => import("./pages/AmenitySetupDashboard")
+);
 const PlusServiceDashboard = lazy(() => import("./pages/PlusServiceDashboard"));
-const AddPlusServicePage = lazy(() => import("./pages/AddPlusServicePage").then(m => ({ default: m.AddPlusServicePage })));
-const EditPlusServicePage = lazy(() => import("./pages/EditPlusServicePage").then(m => ({ default: m.EditPlusServicePage })));
-const ServiceCategoryDashboard = lazy(() => import("./pages/ServiceCategoryDashboard"));
-const AddServiceCategoryPage = lazy(() => import("./pages/AddServiceCategoryPage").then(m => ({ default: m.AddServiceCategoryPage })));
-const EditServiceCategoryPage = lazy(() => import("./pages/EditServiceCategoryPage").then(m => ({ default: m.EditServiceCategoryPage })));
-const TestimonialDetailsPage = lazy(() => import("./pages/TestimonialDetailsPage"));
+const AddPlusServicePage = lazy(() =>
+  import("./pages/AddPlusServicePage").then((m) => ({
+    default: m.AddPlusServicePage,
+  }))
+);
+const EditPlusServicePage = lazy(() =>
+  import("./pages/EditPlusServicePage").then((m) => ({
+    default: m.EditPlusServicePage,
+  }))
+);
+const ServiceCategoryDashboard = lazy(
+  () => import("./pages/ServiceCategoryDashboard")
+);
+const AddServiceCategoryPage = lazy(() =>
+  import("./pages/AddServiceCategoryPage").then((m) => ({
+    default: m.AddServiceCategoryPage,
+  }))
+);
+const EditServiceCategoryPage = lazy(() =>
+  import("./pages/EditServiceCategoryPage").then((m) => ({
+    default: m.EditServiceCategoryPage,
+  }))
+);
+const TestimonialDetailsPage = lazy(
+  () => import("./pages/TestimonialDetailsPage")
+);
 const AmenityDetailsPage = lazy(() => import("./pages/AmenityDetailsPage"));
-const ViewOccupantUserPage = lazy(() => import("./pages/master/ViewOccupantUserPage").then(m => ({ default: m.ViewOccupantUserPage })));
+const ViewOccupantUserPage = lazy(() =>
+  import("./pages/master/ViewOccupantUserPage").then((m) => ({
+    default: m.ViewOccupantUserPage,
+  }))
+);
 import WeeklyReport from "./components/WeeklyReport";
-const LocationAccountPage = lazy(() => import("./pages/master/LocationAccountPage").then(m => ({ default: m.LocationAccountPage })));
+const LocationAccountPage = lazy(() =>
+  import("./pages/master/LocationAccountPage").then((m) => ({
+    default: m.LocationAccountPage,
+  }))
+);
 const LMCPage = lazy(() => import("./pages/LMCPage"));
-const ChannelsLayout = lazy(() => import("./pages/ChannelsLayout").then(m => ({ default: m.ChannelsLayout })));
+const ChannelsLayout = lazy(() =>
+  import("./pages/ChannelsLayout").then((m) => ({ default: m.ChannelsLayout }))
+);
 const DMConversation = lazy(() => import("./pages/DMConversation"));
-const TaskSubmissionPage = lazy(() => import("./pages/TaskSubmissionPage").then(m => ({ default: m.TaskSubmissionPage })));
-const AdminUsersDashboard = lazy(() => import("./pages/admin/AdminUsersDashboard").then(m => ({ default: m.AdminUsersDashboard })));
-const CreateAdminUserPage = lazy(() => import("./pages/admin/CreateAdminUserPage").then(m => ({ default: m.CreateAdminUserPage })));
-const UserDetailsPage = lazy(() => import("./pages/admin/UserDetailsPage").then(m => ({ default: m.UserDetailsPage })));
-const UsersManagementDashboard = lazy(() => import("./pages/admin/UsersManagementDashboard").then(m => ({ default: m.UsersManagementDashboard })));
-const AdminUsersDetails = lazy(() => import("./pages/admin/AdminUsersDetails").then(m => ({ default: m.AdminUsersDetails })));
-const DocumentManagement = lazy(() => import("./pages/DocumentManagement").then(m => ({ default: m.DocumentManagement })));
-const AddDocumentDashboard = lazy(() => import("./pages/AddDocumentDashboard").then(m => ({ default: m.AddDocumentDashboard })));
-const EditDocumentPage = lazy(() => import("./pages/EditDocumentPage").then(m => ({ default: m.EditDocumentPage })));
-const FolderDetailsPage = lazy(() => import("./pages/FolderDetailsPage").then(m => ({ default: m.FolderDetailsPage })));
-const DocumentDetailPage = lazy(() => import("./pages/DocumentDetailPage").then(m => ({ default: m.DocumentDetailPage })));
-const CreateFolderPage = lazy(() => import("./pages/CreateFolderPage").then(m => ({ default: m.CreateFolderPage })));
-const EditFolderPage = lazy(() => import("./pages/EditFolderPage").then(m => ({ default: m.EditFolderPage })));
-const OnlyOfficeEditorPage = lazy(() => import("./pages/OnlyOfficeEditorPage").then(m => ({ default: m.OnlyOfficeEditorPage })));
+const TaskSubmissionPage = lazy(() =>
+  import("./pages/TaskSubmissionPage").then((m) => ({
+    default: m.TaskSubmissionPage,
+  }))
+);
+const AdminUsersDashboard = lazy(() =>
+  import("./pages/admin/AdminUsersDashboard").then((m) => ({
+    default: m.AdminUsersDashboard,
+  }))
+);
+const CreateAdminUserPage = lazy(() =>
+  import("./pages/admin/CreateAdminUserPage").then((m) => ({
+    default: m.CreateAdminUserPage,
+  }))
+);
+const UserDetailsPage = lazy(() =>
+  import("./pages/admin/UserDetailsPage").then((m) => ({
+    default: m.UserDetailsPage,
+  }))
+);
+const UsersManagementDashboard = lazy(() =>
+  import("./pages/admin/UsersManagementDashboard").then((m) => ({
+    default: m.UsersManagementDashboard,
+  }))
+);
+const AdminUsersDetails = lazy(() =>
+  import("./pages/admin/AdminUsersDetails").then((m) => ({
+    default: m.AdminUsersDetails,
+  }))
+);
+const DocumentManagement = lazy(() =>
+  import("./pages/DocumentManagement").then((m) => ({
+    default: m.DocumentManagement,
+  }))
+);
+const AddDocumentDashboard = lazy(() =>
+  import("./pages/AddDocumentDashboard").then((m) => ({
+    default: m.AddDocumentDashboard,
+  }))
+);
+const EditDocumentPage = lazy(() =>
+  import("./pages/EditDocumentPage").then((m) => ({
+    default: m.EditDocumentPage,
+  }))
+);
+const FolderDetailsPage = lazy(() =>
+  import("./pages/FolderDetailsPage").then((m) => ({
+    default: m.FolderDetailsPage,
+  }))
+);
+const DocumentDetailPage = lazy(() =>
+  import("./pages/DocumentDetailPage").then((m) => ({
+    default: m.DocumentDetailPage,
+  }))
+);
+const CreateFolderPage = lazy(() =>
+  import("./pages/CreateFolderPage").then((m) => ({
+    default: m.CreateFolderPage,
+  }))
+);
+const EditFolderPage = lazy(() =>
+  import("./pages/EditFolderPage").then((m) => ({ default: m.EditFolderPage }))
+);
+const OnlyOfficeEditorPage = lazy(() =>
+  import("./pages/OnlyOfficeEditorPage").then((m) => ({
+    default: m.OnlyOfficeEditorPage,
+  }))
+);
 
-const DocumentShareLinkPage = lazy(() => import("./pages/DocumentShareLinkPage").then(m => ({ default: m.DocumentShareLinkPage })));
+const DocumentShareLinkPage = lazy(() =>
+  import("./pages/DocumentShareLinkPage").then((m) => ({
+    default: m.DocumentShareLinkPage,
+  }))
+);
 import GroupConversation from "./components/GroupConversation";
 const ChannelTasksAll = lazy(() => import("./pages/ChannelTasksAll"));
 const ChatTaskDetailsPage = lazy(() => import("./pages/ChatTaskDetailsPage"));
-const TabularResponseDetailsPage = lazy(() => import("./pages/TabularResponseDetailsPage"));
+const TabularResponseDetailsPage = lazy(
+  () => import("./pages/TabularResponseDetailsPage")
+);
 const CurrencyPage = lazy(() => import("./pages/CurrencyPage"));
-const LockedUsersDashboard = lazy(() => import("./pages/settings/LockedUsersDashboard").then(m => ({ default: m.LockedUsersDashboard })));
-const PRDeletionRequests = lazy(() => import("./pages/PRDeletionRequests").then(m => ({ default: m.PRDeletionRequests })));
-const DirectPDFDownloadPage = lazy(() => import("./pages/DirectPDFDownloadPage").then(m => ({ default: m.DirectPDFDownloadPage })));
-const DirectPDFDownloadAPIPage = lazy(() => import("./pages/DirectPDFDownloadAPIPage").then(m => ({ default: m.DirectPDFDownloadAPIPage })));
-const DeletedPRs = lazy(() => import("./pages/DeletedPRs").then(m => ({ default: m.DeletedPRs })));
+const LockedUsersDashboard = lazy(() =>
+  import("./pages/settings/LockedUsersDashboard").then((m) => ({
+    default: m.LockedUsersDashboard,
+  }))
+);
+const PRDeletionRequests = lazy(() =>
+  import("./pages/PRDeletionRequests").then((m) => ({
+    default: m.PRDeletionRequests,
+  }))
+);
+const DirectPDFDownloadPage = lazy(() =>
+  import("./pages/DirectPDFDownloadPage").then((m) => ({
+    default: m.DirectPDFDownloadPage,
+  }))
+);
+const DirectPDFDownloadAPIPage = lazy(() =>
+  import("./pages/DirectPDFDownloadAPIPage").then((m) => ({
+    default: m.DirectPDFDownloadAPIPage,
+  }))
+);
+const DeletedPRs = lazy(() =>
+  import("./pages/DeletedPRs").then((m) => ({ default: m.DeletedPRs }))
+);
 const MsafeDashboardVI = lazy(() => import("./pages/MsafeDashboardVI"));
-const DashboardMobile = lazy(() => import("./pages/DashboardMobile").then(m => ({ default: m.DashboardMobile })));
+const DashboardMobile = lazy(() =>
+  import("./pages/DashboardMobile").then((m) => ({
+    default: m.DashboardMobile,
+  }))
+);
 const SafetyCheckAudit = lazy(() => import("./pages/SafetyCheckAudit"));
 const MsafeCirlce = lazy(() => import("./pages/MsafeCirlce"));
-const TicketJobSheetPage = lazy(() => import("./pages/TicketJobSheetPage").then(m => ({ default: m.TicketJobSheetPage })));
+const TicketJobSheetPage = lazy(() =>
+  import("./pages/TicketJobSheetPage").then((m) => ({
+    default: m.TicketJobSheetPage,
+  }))
+);
 const Sitemap = lazy(() => import("./pages/Sitemap"));
 const BookingList = lazy(() => import("./pages/BookingList"));
 const IframeDashboardMsafe = lazy(() => import("./pages/IframeDashboardMsafe"));
-const ProjectsDashboard = lazy(() => import("./pages/ProjectsDashboard").then(m => ({ default: m.ProjectsDashboard })));
+const ProjectsDashboard = lazy(() =>
+  import("./pages/ProjectsDashboard").then((m) => ({
+    default: m.ProjectsDashboard,
+  }))
+);
 const ProjectDetailsPage = lazy(() => import("./pages/ProjectDetailsPage"));
 const ProjectMilestones = lazy(() => import("./pages/ProjectMilestones"));
 const ProjectTasksPage = lazy(() => import("./pages/ProjectTasksPage"));
-const ProjectTaskDetailsPage = lazy(() => import("./pages/ProjectTaskDetailsPage"));
-const SprintDashboard = lazy(() => import("./pages/SprintDashboard").then(m => ({ default: m.SprintDashboard })));
+const ProjectTaskDetailsPage = lazy(
+  () => import("./pages/ProjectTaskDetailsPage")
+);
+const SprintDashboard = lazy(() =>
+  import("./pages/SprintDashboard").then((m) => ({
+    default: m.SprintDashboard,
+  }))
+);
 const SprintDetailsPage = lazy(() => import("./pages/SprintDetailsPage"));
 const MilestoneDetailsPage = lazy(() => import("./pages/MilestoneDetailsPage"));
 const ProjectTaskDetails = lazy(() => import("./pages/ProjectTaskDetails"));
@@ -942,16 +2540,32 @@ const FitoutRequests = lazy(() => import("./pages/FitoutRequests"));
 const FitoutRequestAdd = lazy(() => import("./pages/FitoutRequestAdd"));
 
 import { setupMemberRoutes } from "./routes/setupMemberRoutes";
-const PosthogRunwalDashboard = lazy(() => import("./pages/posthog-runwal-dashboard/PosthogRunwalDashboard"));
-const PosthogRunwalCpDashboard = lazy(() => import("./pages/posthog-runwal-dashboard/PosthogRunwalCpDashboard"));
-const PosthogGodrejDashboard = lazy(() => import("./pages/posthog-godrej-dashboard/PosthogGodrejDashboard"));
-const PosthogKRahejaDashboard = lazy(() => import("./pages/posthog-kraheja-dashboard/PosthogKRahejaDashboard"));
-const PosthogLacircleDashboard = lazy(() => import("./pages/posthog-lacircle-dashboard/PosthogLacircleDashboard"));
-const ViewUserPage = lazy(() => import("./pages/ViewUserPage").then(m => ({ default: m.ViewUserPage })));
+const PosthogRunwalDashboard = lazy(
+  () => import("./pages/posthog-runwal-dashboard/PosthogRunwalDashboard")
+);
+const PosthogRunwalCpDashboard = lazy(
+  () => import("./pages/posthog-runwal-dashboard/PosthogRunwalCpDashboard")
+);
+const PosthogGodrejDashboard = lazy(
+  () => import("./pages/posthog-godrej-dashboard/PosthogGodrejDashboard")
+);
+const PosthogKRahejaDashboard = lazy(
+  () => import("./pages/posthog-kraheja-dashboard/PosthogKRahejaDashboard")
+);
+const PosthogLacircleDashboard = lazy(
+  () => import("./pages/posthog-lacircle-dashboard/PosthogLacircleDashboard")
+);
+const ViewUserPage = lazy(() =>
+  import("./pages/ViewUserPage").then((m) => ({ default: m.ViewUserPage }))
+);
 const FioutMobileView = lazy(() => import("./pages/FioutMobileView"));
-const FitoutRequestDetailsPageMobile = lazy(() => import("./pages/FitoutRequestDetailsPageMobile"));
+const FitoutRequestDetailsPageMobile = lazy(
+  () => import("./pages/FitoutRequestDetailsPageMobile")
+);
 const OpportunityDashboard = lazy(() => import("./pages/OpportunityDashboard"));
-const OpportunityDetailsPage = lazy(() => import("./pages/OpportunityDetailsPage"));
+const OpportunityDetailsPage = lazy(
+  () => import("./pages/OpportunityDetailsPage")
+);
 const ProjectRoles = lazy(() => import("./pages/ProjectRoles"));
 const ProjectTeams = lazy(() => import("./pages/ProjectTeams"));
 const ProjectStatus = lazy(() => import("./pages/ProjectStatus"));
@@ -968,33 +2582,79 @@ const EditMoMPage = lazy(() => import("./pages/EditMoMPage"));
 const Todo = lazy(() => import("./pages/Todo"));
 const ProjectDocuments = lazy(() => import("./pages/ProjectDocuments"));
 import SupersetDashboard from "./components/SupersetDashboard";
-const TicketDashboardEmployee = lazy(() => import("./pages/TicketDashboardEmplooyee").then(m => ({ default: m.TicketDashboardEmployee })));
-const AddTicketDashboardEmployee = lazy(() => import("./pages/AddTicketDashboardEmployee").then(m => ({ default: m.AddTicketDashboardEmployee })));
-const VisitorsDashboardEmployee = lazy(() => import("./pages/VisitorsDashboardEmployee").then(m => ({ default: m.VisitorsDashboardEmployee })));
+const TicketDashboardEmployee = lazy(() =>
+  import("./pages/TicketDashboardEmplooyee").then((m) => ({
+    default: m.TicketDashboardEmployee,
+  }))
+);
+const AddTicketDashboardEmployee = lazy(() =>
+  import("./pages/AddTicketDashboardEmployee").then((m) => ({
+    default: m.AddTicketDashboardEmployee,
+  }))
+);
+const VisitorsDashboardEmployee = lazy(() =>
+  import("./pages/VisitorsDashboardEmployee").then((m) => ({
+    default: m.VisitorsDashboardEmployee,
+  }))
+);
 const EmployeeBookingList = lazy(() => import("./pages/EmployeeBookingList"));
-const EmployeeAddBookingPage = lazy(() => import("./pages/EmployeeAddBookingPage").then(m => ({ default: m.EmployeeAddBookingPage })));
-const EmployeeFnb = lazy(() => import("./pages/EmployeeFnb").then(m => ({ default: m.EmployeeFnb })));
-const TicketDetailsEmployee = lazy(() => import("./pages/TicketDetailsEmployee").then(m => ({ default: m.TicketDetailsEmployee })));
+const EmployeeAddBookingPage = lazy(() =>
+  import("./pages/EmployeeAddBookingPage").then((m) => ({
+    default: m.EmployeeAddBookingPage,
+  }))
+);
+const EmployeeFnb = lazy(() =>
+  import("./pages/EmployeeFnb").then((m) => ({ default: m.EmployeeFnb }))
+);
+const TicketDetailsEmployee = lazy(() =>
+  import("./pages/TicketDetailsEmployee").then((m) => ({
+    default: m.TicketDetailsEmployee,
+  }))
+);
 // import { VisitorFormPageEmployee } from "./pages/VisitorFormPageEmployee";
-const VisitorFormPageEmployeeNew = lazy(() => import("./pages/VisitorFormPageEmployeeNew").then(m => ({ default: m.VisitorFormPageEmployeeNew })));
-const VisitorDetailsPageEmployee = lazy(() => import("./pages/VisitorDetailsPageEmployee"));
+const VisitorFormPageEmployeeNew = lazy(() =>
+  import("./pages/VisitorFormPageEmployeeNew").then((m) => ({
+    default: m.VisitorFormPageEmployeeNew,
+  }))
+);
+const VisitorDetailsPageEmployee = lazy(
+  () => import("./pages/VisitorDetailsPageEmployee")
+);
 const SOSDirectory = lazy(() => import("./pages/SOSDirectory"));
 const EditSosDirectory = lazy(() => import("./pages/EditSosDirectory"));
 const AddSosDirectory = lazy(() => import("./pages/AddSosDirectory"));
-const SosDirectoryDetailsPage = lazy(() => import("./pages/SosDirectoryDetailsPage"));
+const SosDirectoryDetailsPage = lazy(
+  () => import("./pages/SosDirectoryDetailsPage")
+);
 const SOSCategorySetupPage = lazy(() => import("./pages/SOSCategorySetupPage"));
 
-const BMSDocumentsCommonFiles = lazy(() => import("./pages/BMSDocumentsCommonFiles"));
+const BMSDocumentsCommonFiles = lazy(
+  () => import("./pages/BMSDocumentsCommonFiles")
+);
 const BMSDocumentViewer = lazy(() => import("./pages/BMSDocumentViewer"));
 const CallDirectory = lazy(() => import("./pages/CallDirectory"));
 
-const ParkingBookingListEmployee = lazy(() => import("./pages/ParkingBookingListEmployee"));
-const ParkingBookingAddEmployee = lazy(() => import("./pages/ParkingBookingAddEmployee"));
+const ParkingBookingListEmployee = lazy(
+  () => import("./pages/ParkingBookingListEmployee")
+);
+const ParkingBookingAddEmployee = lazy(
+  () => import("./pages/ParkingBookingAddEmployee")
+);
 const ProfileDetailsPage = lazy(() => import("./pages/ProfileDetailsPage"));
 const PlaceFnbOrder = lazy(() => import("./pages/PlaceFnbOrder"));
-const SpaceManagementBookingsDashboardEmployee = lazy(() => import("./pages/SpaceManagementBookingsDashboardEmployee").then(m => ({ default: m.SpaceManagementBookingsDashboardEmployee })));
-const SpaceManagementBookingDetailsPage = lazy(() => import("./pages/SpaceManagementBookingDetailsPage").then(m => ({ default: m.SpaceManagementBookingDetailsPage })));
-const SpaceManagementBookingAddEmployee = lazy(() => import("./pages/SpaceManagementBookingAddEmployee"));
+const SpaceManagementBookingsDashboardEmployee = lazy(() =>
+  import("./pages/SpaceManagementBookingsDashboardEmployee").then((m) => ({
+    default: m.SpaceManagementBookingsDashboardEmployee,
+  }))
+);
+const SpaceManagementBookingDetailsPage = lazy(() =>
+  import("./pages/SpaceManagementBookingDetailsPage").then((m) => ({
+    default: m.SpaceManagementBookingDetailsPage,
+  }))
+);
+const SpaceManagementBookingAddEmployee = lazy(
+  () => import("./pages/SpaceManagementBookingAddEmployee")
+);
 const EmployeeWallet = lazy(() => import("./pages/EmployeeWallet"));
 import { useWebSocket } from "./hooks/useWebSocket";
 const SprintKanban = lazy(() => import("./pages/SprintKanban"));
@@ -1003,26 +2663,52 @@ const CommunityAdd = lazy(() => import("./pages/CommunityAdd"));
 const CommunityDetails = lazy(() => import("./pages/CommunityDetails"));
 const CommunityReportsPage = lazy(() => import("./pages/CommunityReportsPage"));
 const CommunityEdit = lazy(() => import("./pages/CommunityEdit"));
-const CuratedServiceDashboard = lazy(() => import("./pages/CuratedServiceDashboard"));
-const AddCuratedServicePage = lazy(() => import("./pages/AddCuratedServicePage").then(m => ({ default: m.AddCuratedServicePage })));
-const EditCuratedServicePage = lazy(() => import("./pages/EditCuratedServicePage").then(m => ({ default: m.EditCuratedServicePage })));
-const CuratedServiceCategoryDashboard = lazy(() => import("./pages/CuratedServiceCategoryDashboard"));
-const AddCuratedServiceCategoryPage = lazy(() => import("./pages/AddCuratedServiceCategoryPage").then(m => ({ default: m.AddCuratedServiceCategoryPage })));
-const EditCuratedServiceCategoryPage = lazy(() => import("./pages/EditCuratedServiceCategoryPage").then(m => ({ default: m.EditCuratedServiceCategoryPage })));
+const CuratedServiceDashboard = lazy(
+  () => import("./pages/CuratedServiceDashboard")
+);
+const AddCuratedServicePage = lazy(() =>
+  import("./pages/AddCuratedServicePage").then((m) => ({
+    default: m.AddCuratedServicePage,
+  }))
+);
+const EditCuratedServicePage = lazy(() =>
+  import("./pages/EditCuratedServicePage").then((m) => ({
+    default: m.EditCuratedServicePage,
+  }))
+);
+const CuratedServiceCategoryDashboard = lazy(
+  () => import("./pages/CuratedServiceCategoryDashboard")
+);
+const AddCuratedServiceCategoryPage = lazy(() =>
+  import("./pages/AddCuratedServiceCategoryPage").then((m) => ({
+    default: m.AddCuratedServiceCategoryPage,
+  }))
+);
+const EditCuratedServiceCategoryPage = lazy(() =>
+  import("./pages/EditCuratedServiceCategoryPage").then((m) => ({
+    default: m.EditCuratedServiceCategoryPage,
+  }))
+);
 const CommunityUserDetails = lazy(() => import("./pages/CommunityUserDetails"));
 const ReportsDetailsPage = lazy(() => import("./pages/ReportsDetailsPage"));
 const AmenityCategorySetup = lazy(() => import("./pages/AmenityCategorySetup"));
 import VisitorPassWeb from "./components/VisitorPassWeb";
 const ProjectsMobileView = lazy(() => import("./pages/ProjectsMobileView"));
 const MilestoneMobileView = lazy(() => import("./pages/MilestoneMobileView"));
-const ProjectTasksMobileView = lazy(() => import("./pages/ProjectTasksMobileView"));
+const ProjectTasksMobileView = lazy(
+  () => import("./pages/ProjectTasksMobileView")
+);
 const ProjectDetailsMobile = lazy(() => import("./pages/ProjectDetailsMobile"));
 import ProjectTaskDetailsMobile from "./components/ProjectTaskDetailsMobile";
 import MilestoneDetailsMobile from "./components/MilestoneDetailsMobile";
 import VisitorSharingFormWeb from "./components/VisitorSharingFormWeb";
 import { ActionLayoutProvider } from "./contexts/ActionLayoutContext";
 const EventUserDetailsPage = lazy(() => import("./pages/EventUserDetailsPage"));
-const OnlyOfficePublicEditorPage = lazy(() => import("./pages/OnlyOfficePublicEditorPage").then(m => ({ default: m.OnlyOfficePublicEditorPage })));
+const OnlyOfficePublicEditorPage = lazy(() =>
+  import("./pages/OnlyOfficePublicEditorPage").then((m) => ({
+    default: m.OnlyOfficePublicEditorPage,
+  }))
+);
 const PollsPageList = lazy(() => import("./pages/communication/PollsPageList"));
 const NoticeboardList = lazy(() => import("./pages/NoticeboardList"));
 import IssuesListPage from "./pages/IssuesListPage";
@@ -1033,14 +2719,40 @@ const IssueDetailsMobile = lazy(() => import("./pages/IssueDetailsMobile"));
 const AddIssueMobileView = lazy(() => import("./pages/AddIssueMobileView"));
 const IssuesMobileView = lazy(() => import("./pages/IssuesMobileView"));
 const AccessoriesSetup = lazy(() => import("./pages/AccessoriesSetup"));
-const AccessoriesDetailsPage = lazy(() => import("./pages/AccessoriesDetailsPage"));
-const EditFacilityBookingPage = lazy(() => import("./pages/EditFacilityBookingPage"));
-const CommunityNoticeDetails = lazy(() => import("./pages/CommunityNoticeDetails").then(m => ({ default: m.CommunityNoticeDetails })));
-const CommunityEventDetails = lazy(() => import("./pages/CommunityEvenetDetails").then(m => ({ default: m.CommunityEventDetails })));
-const CommunityDocumentDetails = lazy(() => import("./pages/CommunityDocumentDetails"));
-const ContestListPage = lazy(() => import("./pages/ContestListPage").then(m => ({ default: m.ContestListPage })));
-const CreateContestPage = lazy(() => import("./pages/CreateContestPage").then(m => ({ default: m.CreateContestPage })));
-const ContestDetailsPage = lazy(() => import("./pages/ContestDetailsPage").then(m => ({ default: m.ContestDetailsPage })));
+const AccessoriesDetailsPage = lazy(
+  () => import("./pages/AccessoriesDetailsPage")
+);
+const EditFacilityBookingPage = lazy(
+  () => import("./pages/EditFacilityBookingPage")
+);
+const CommunityNoticeDetails = lazy(() =>
+  import("./pages/CommunityNoticeDetails").then((m) => ({
+    default: m.CommunityNoticeDetails,
+  }))
+);
+const CommunityEventDetails = lazy(() =>
+  import("./pages/CommunityEvenetDetails").then((m) => ({
+    default: m.CommunityEventDetails,
+  }))
+);
+const CommunityDocumentDetails = lazy(
+  () => import("./pages/CommunityDocumentDetails")
+);
+const ContestListPage = lazy(() =>
+  import("./pages/ContestListPage").then((m) => ({
+    default: m.ContestListPage,
+  }))
+);
+const CreateContestPage = lazy(() =>
+  import("./pages/CreateContestPage").then((m) => ({
+    default: m.CreateContestPage,
+  }))
+);
+const ContestDetailsPage = lazy(() =>
+  import("./pages/ContestDetailsPage").then((m) => ({
+    default: m.ContestDetailsPage,
+  }))
+);
 
 import { SpinnerContest } from "./components/mobile/SpinnerContest";
 import { ScratchCard } from "./components/mobile/ScratchCard";
@@ -1052,123 +2764,449 @@ import { FlipCardDetails } from "./components/mobile/FlipCardDetails";
 
 // import RouteLogger from "./components/RouteLogger";
 
-const AddBookingSetupClubPage = lazy(() => import("./pages/ClubManagement/AmenityBookingSetupClubAdd").then(m => ({ default: m.AddBookingSetupClubPage })));
-const AddClubBroadcastPage = lazy(() => import("./pages/AddClubBroadcastPage").then(m => ({ default: m.AddClubBroadcastPage })));
-const AddClubEventPage = lazy(() => import("./pages/AddClubEventPage").then(m => ({ default: m.AddClubEventPage })));
-const AddFacilityBookingClubPage = lazy(() => import("./pages/ClubManagement/AmenityBookingAdd").then(m => ({ default: m.AddFacilityBookingClubPage })));
-const AddGuestUserPage = lazy(() => import("./pages/ClubManagement/AddGuestUserPage").then(m => ({ default: m.AddGuestUserPage })));
-const AddMembershipPlanPage = lazy(() => import("./pages/AddMembershipPlanPage").then(m => ({ default: m.AddMembershipPlanPage })));
-const AddPaymentPlan = lazy(() => import("./pages/settings/AddPaymentPlan").then(m => ({ default: m.AddPaymentPlan })));
-const AmenityBookingDetailsClubPage = lazy(() => import("./pages/ClubManagement/AmenityBookingDetails").then(m => ({ default: m.AmenityBookingDetailsClubPage })));
-const BillCreatePage = lazy(() => import("./pages/BillCreatePage").then(m => ({ default: m.BillCreatePage })));
-const BillCyclesDetails = lazy(() => import("./pages/ClubManagement/BillCyclesDetails").then(m => ({ default: m.BillCyclesDetails })));
-const BillDetailPage = lazy(() => import("./pages/BillDetailPage").then(m => ({ default: m.BillDetailPage })));
-const BillListPage = lazy(() => import("./pages/BillListPage").then(m => ({ default: m.BillListPage })));
-const BookingSetupClubDashboard = lazy(() => import("./pages/ClubManagement/AmenityBookingSetupClub").then(m => ({ default: m.BookingSetupClubDashboard })));
-const BookingSetupDetailClubPage = lazy(() => import("./pages/ClubManagement/AmenityBookingSetupClubDetails").then(m => ({ default: m.BookingSetupDetailClubPage })));
-const BudgetDashboard = lazy(() => import("./pages/ClubManagement/BudgetDashboard").then(m => ({ default: m.BudgetDashboard })));
-const ChargeSetupDetails = lazy(() => import("./pages/ClubManagement/ChargeSetupDetails").then(m => ({ default: m.ChargeSetupDetails })));
-const ChartOfAccountDetails = lazy(() => import("./pages/ClubManagement/ChartOfAccountDetails").then(m => ({ default: m.ChartOfAccountDetails })));
-const ClubBroadcastDashboard = lazy(() => import("./pages/ClubBroadcastDashboard").then(m => ({ default: m.ClubBroadcastDashboard })));
-const ClubBroadcastDetailsPage = lazy(() => import("./pages/ClubBroadcastDetailsPage").then(m => ({ default: m.ClubBroadcastDetailsPage })));
-const ClubEventDetailsPage = lazy(() => import("./pages/ClubEventDetailsPage").then(m => ({ default: m.ClubEventDetailsPage })));
-const ClubEventsPage = lazy(() => import("./pages/ClubEventPage").then(m => ({ default: m.ClubEventsPage })));
-const EditBookingSetupClubPage = lazy(() => import("./pages/ClubManagement/AmenityBookingSetupClubEdit").then(m => ({ default: m.EditBookingSetupClubPage })));
-const EditGuestUserPage = lazy(() => import("./pages/ClubManagement/EditGuestUserPage").then(m => ({ default: m.EditGuestUserPage })));
-const EditMembershipPlanPage = lazy(() => import("./pages/EditMembershipPlanPage").then(m => ({ default: m.EditMembershipPlanPage })));
-const ExpenseCreatePage = lazy(() => import("./pages/ExpenseCreatePage").then(m => ({ default: m.ExpenseCreatePage })));
-const ExpenseDetailPage = lazy(() => import("./pages/ExpenseDetailPage").then(m => ({ default: m.ExpenseDetailPage })));
-const ExpenseListPage = lazy(() => import("./pages/ExpenseListPage").then(m => ({ default: m.ExpenseListPage })));
-const GuestUserMasterDashboard = lazy(() => import("./pages/ClubManagement/GuestUserMasterDashboard").then(m => ({ default: m.GuestUserMasterDashboard })));
-const ItemsDetails = lazy(() => import("./pages/ClubManagement/ItemsDetails").then(m => ({ default: m.ItemsDetails })));
-const ManualJournalDetails = lazy(() => import("./pages/ClubManagement/ManualJournalDetails").then(m => ({ default: m.ManualJournalDetails })));
-const MembershipPlanDashboard = lazy(() => import("./pages/MembershipPlanDashboard").then(m => ({ default: m.MembershipPlanDashboard })));
-const MembershipPlanDetailsPage = lazy(() => import("./pages/MembershipPlanDetailsPage").then(m => ({ default: m.MembershipPlanDetailsPage })));
-const PaymentDetailPage = lazy(() => import("./pages/settings/PaymentDetailPage").then(m => ({ default: m.PaymentDetailPage })));
-const PaymentManagementDashboard = lazy(() => import("./pages/settings/PaymentManagementDashboard").then(m => ({ default: m.PaymentManagementDashboard })));
-const PaymentPlanDetails = lazy(() => import("./pages/settings/PaymentPlanDetails").then(m => ({ default: m.PaymentPlanDetails })));
-const PaymentPlanSetup = lazy(() => import("./pages/settings/PaymentPlanSetup").then(m => ({ default: m.PaymentPlanSetup })));
-const PurchaseOrderCreatePage = lazy(() => import("./pages/PurchaseOrderCreatePage").then(m => ({ default: m.PurchaseOrderCreatePage })));
-const PurchaseOrderDetailPage = lazy(() => import("./pages/PurchaseOrderDetailPage").then(m => ({ default: m.PurchaseOrderDetailPage })));
-const PurchaseOrderListPage = lazy(() => import("./pages/PurchaseOrderListPage").then(m => ({ default: m.PurchaseOrderListPage })));
-const RecurringBillCreatePage = lazy(() => import("./pages/ClubManagement/RecurringBillCreatePage").then(m => ({ default: m.RecurringBillCreatePage })));
-const RecurringBillsDashboard = lazy(() => import("./pages/ClubManagement/RecurringBillsDashboard").then(m => ({ default: m.RecurringBillsDashboard })));
-const NewRecurringExpensePage = lazy(() => import("./pages/New Recurring Expense"));
-const RecurringExpensesListPage = lazy(() => import("./pages/ClubManagement/RecurringExpensesListPage"));
-const RecurringExpenseDetailPage = lazy(() => import("./pages/ClubManagement/RecurringExpenseDetailPage"));
-const RecurringInvoicesCreatePage = lazy(() => import("./pages/ClubManagement/RecurringInvoicesCreatePage").then(m => ({ default: m.RecurringInvoicesCreatePage })));
-const RecurringInvoicesListPage = lazy(() => import("./pages/ClubManagement/RecurringInvoicesListPage").then(m => ({ default: m.RecurringInvoicesListPage })));
-const RecurringJournalDashboard = lazy(() => import("./pages/ClubManagement/RecurringJournalDashboard").then(m => ({ default: m.RecurringJournalDashboard })));
-const RecurringJournalDetails = lazy(() => import("./pages/ClubManagement/RecurringJournalDetails").then(m => ({ default: m.RecurringJournalDetails })));
-const SalesOrderCreatePage = lazy(() => import("./pages/SalesOrderCreatePage").then(m => ({ default: m.SalesOrderCreatePage })));
-const SalesOrderDetailPage = lazy(() => import("./pages/SalesOrderDetailPage").then(m => ({ default: m.SalesOrderDetailPage })));
-const SalesOrderListPage = lazy(() => import("./pages/SalesOrderListPage").then(m => ({ default: m.SalesOrderListPage })));
-const TransactionsDetails = lazy(() => import("./pages/ClubManagement/TransationsDetails").then(m => ({ default: m.TransactionsDetails })));
-const ViewClubOccupantUser = lazy(() => import("./pages/master/ViewClubOccupantUser").then(m => ({ default: m.ViewClubOccupantUser })));
-const ViewGuestUserPage = lazy(() => import("./pages/ClubManagement/ViewGuestUserPage").then(m => ({ default: m.ViewGuestUserPage })));
-const AddClubMembershipPage = lazy(() => import("./pages/ClubManagement/AddClubMembershipPage"));
-const AddGroupMembershipPage = lazy(() => import("./pages/ClubManagement/AddGroupMembershipPage"));
-const AmenityBookingListClub = lazy(() => import("./pages/ClubManagement/AmenityBookingList"));
-const BalanceSheetReport = lazy(() => import("./pages/ClubManagement/BalanceSheetReport"));
+const AddBookingSetupClubPage = lazy(() =>
+  import("./pages/ClubManagement/AmenityBookingSetupClubAdd").then((m) => ({
+    default: m.AddBookingSetupClubPage,
+  }))
+);
+const AddClubBroadcastPage = lazy(() =>
+  import("./pages/AddClubBroadcastPage").then((m) => ({
+    default: m.AddClubBroadcastPage,
+  }))
+);
+const AddClubEventPage = lazy(() =>
+  import("./pages/AddClubEventPage").then((m) => ({
+    default: m.AddClubEventPage,
+  }))
+);
+const AddFacilityBookingClubPage = lazy(() =>
+  import("./pages/ClubManagement/AmenityBookingAdd").then((m) => ({
+    default: m.AddFacilityBookingClubPage,
+  }))
+);
+const AddGuestUserPage = lazy(() =>
+  import("./pages/ClubManagement/AddGuestUserPage").then((m) => ({
+    default: m.AddGuestUserPage,
+  }))
+);
+const AddMembershipPlanPage = lazy(() =>
+  import("./pages/AddMembershipPlanPage").then((m) => ({
+    default: m.AddMembershipPlanPage,
+  }))
+);
+const AddPaymentPlan = lazy(() =>
+  import("./pages/settings/AddPaymentPlan").then((m) => ({
+    default: m.AddPaymentPlan,
+  }))
+);
+const AmenityBookingDetailsClubPage = lazy(() =>
+  import("./pages/ClubManagement/AmenityBookingDetails").then((m) => ({
+    default: m.AmenityBookingDetailsClubPage,
+  }))
+);
+const BillCreatePage = lazy(() =>
+  import("./pages/BillCreatePage").then((m) => ({ default: m.BillCreatePage }))
+);
+const BillCyclesDetails = lazy(() =>
+  import("./pages/ClubManagement/BillCyclesDetails").then((m) => ({
+    default: m.BillCyclesDetails,
+  }))
+);
+const BillDetailPage = lazy(() =>
+  import("./pages/BillDetailPage").then((m) => ({ default: m.BillDetailPage }))
+);
+const BillListPage = lazy(() =>
+  import("./pages/BillListPage").then((m) => ({ default: m.BillListPage }))
+);
+const BookingSetupClubDashboard = lazy(() =>
+  import("./pages/ClubManagement/AmenityBookingSetupClub").then((m) => ({
+    default: m.BookingSetupClubDashboard,
+  }))
+);
+const BookingSetupDetailClubPage = lazy(() =>
+  import("./pages/ClubManagement/AmenityBookingSetupClubDetails").then((m) => ({
+    default: m.BookingSetupDetailClubPage,
+  }))
+);
+const BudgetDashboard = lazy(() =>
+  import("./pages/ClubManagement/BudgetDashboard").then((m) => ({
+    default: m.BudgetDashboard,
+  }))
+);
+const ChargeSetupDetails = lazy(() =>
+  import("./pages/ClubManagement/ChargeSetupDetails").then((m) => ({
+    default: m.ChargeSetupDetails,
+  }))
+);
+const ChartOfAccountDetails = lazy(() =>
+  import("./pages/ClubManagement/ChartOfAccountDetails").then((m) => ({
+    default: m.ChartOfAccountDetails,
+  }))
+);
+const ClubBroadcastDashboard = lazy(() =>
+  import("./pages/ClubBroadcastDashboard").then((m) => ({
+    default: m.ClubBroadcastDashboard,
+  }))
+);
+const ClubBroadcastDetailsPage = lazy(() =>
+  import("./pages/ClubBroadcastDetailsPage").then((m) => ({
+    default: m.ClubBroadcastDetailsPage,
+  }))
+);
+const ClubEventDetailsPage = lazy(() =>
+  import("./pages/ClubEventDetailsPage").then((m) => ({
+    default: m.ClubEventDetailsPage,
+  }))
+);
+const ClubEventsPage = lazy(() =>
+  import("./pages/ClubEventPage").then((m) => ({ default: m.ClubEventsPage }))
+);
+const EditBookingSetupClubPage = lazy(() =>
+  import("./pages/ClubManagement/AmenityBookingSetupClubEdit").then((m) => ({
+    default: m.EditBookingSetupClubPage,
+  }))
+);
+const EditGuestUserPage = lazy(() =>
+  import("./pages/ClubManagement/EditGuestUserPage").then((m) => ({
+    default: m.EditGuestUserPage,
+  }))
+);
+const EditMembershipPlanPage = lazy(() =>
+  import("./pages/EditMembershipPlanPage").then((m) => ({
+    default: m.EditMembershipPlanPage,
+  }))
+);
+const ExpenseCreatePage = lazy(() =>
+  import("./pages/ExpenseCreatePage").then((m) => ({
+    default: m.ExpenseCreatePage,
+  }))
+);
+const ExpenseDetailPage = lazy(() =>
+  import("./pages/ExpenseDetailPage").then((m) => ({
+    default: m.ExpenseDetailPage,
+  }))
+);
+const ExpenseListPage = lazy(() =>
+  import("./pages/ExpenseListPage").then((m) => ({
+    default: m.ExpenseListPage,
+  }))
+);
+const GuestUserMasterDashboard = lazy(() =>
+  import("./pages/ClubManagement/GuestUserMasterDashboard").then((m) => ({
+    default: m.GuestUserMasterDashboard,
+  }))
+);
+const ItemsDetails = lazy(() =>
+  import("./pages/ClubManagement/ItemsDetails").then((m) => ({
+    default: m.ItemsDetails,
+  }))
+);
+const ManualJournalDetails = lazy(() =>
+  import("./pages/ClubManagement/ManualJournalDetails").then((m) => ({
+    default: m.ManualJournalDetails,
+  }))
+);
+const MembershipPlanDashboard = lazy(() =>
+  import("./pages/MembershipPlanDashboard").then((m) => ({
+    default: m.MembershipPlanDashboard,
+  }))
+);
+const MembershipPlanDetailsPage = lazy(() =>
+  import("./pages/MembershipPlanDetailsPage").then((m) => ({
+    default: m.MembershipPlanDetailsPage,
+  }))
+);
+const PaymentDetailPage = lazy(() =>
+  import("./pages/settings/PaymentDetailPage").then((m) => ({
+    default: m.PaymentDetailPage,
+  }))
+);
+const PaymentManagementDashboard = lazy(() =>
+  import("./pages/settings/PaymentManagementDashboard").then((m) => ({
+    default: m.PaymentManagementDashboard,
+  }))
+);
+const PaymentPlanDetails = lazy(() =>
+  import("./pages/settings/PaymentPlanDetails").then((m) => ({
+    default: m.PaymentPlanDetails,
+  }))
+);
+const PaymentPlanSetup = lazy(() =>
+  import("./pages/settings/PaymentPlanSetup").then((m) => ({
+    default: m.PaymentPlanSetup,
+  }))
+);
+const PurchaseOrderCreatePage = lazy(() =>
+  import("./pages/PurchaseOrderCreatePage").then((m) => ({
+    default: m.PurchaseOrderCreatePage,
+  }))
+);
+const PurchaseOrderDetailPage = lazy(() =>
+  import("./pages/PurchaseOrderDetailPage").then((m) => ({
+    default: m.PurchaseOrderDetailPage,
+  }))
+);
+const PurchaseOrderListPage = lazy(() =>
+  import("./pages/PurchaseOrderListPage").then((m) => ({
+    default: m.PurchaseOrderListPage,
+  }))
+);
+const RecurringBillCreatePage = lazy(() =>
+  import("./pages/ClubManagement/RecurringBillCreatePage").then((m) => ({
+    default: m.RecurringBillCreatePage,
+  }))
+);
+const RecurringBillsDashboard = lazy(() =>
+  import("./pages/ClubManagement/RecurringBillsDashboard").then((m) => ({
+    default: m.RecurringBillsDashboard,
+  }))
+);
+const NewRecurringExpensePage = lazy(
+  () => import("./pages/New Recurring Expense")
+);
+const RecurringExpensesListPage = lazy(
+  () => import("./pages/ClubManagement/RecurringExpensesListPage")
+);
+const RecurringExpenseDetailPage = lazy(
+  () => import("./pages/ClubManagement/RecurringExpenseDetailPage")
+);
+const RecurringInvoicesCreatePage = lazy(() =>
+  import("./pages/ClubManagement/RecurringInvoicesCreatePage").then((m) => ({
+    default: m.RecurringInvoicesCreatePage,
+  }))
+);
+const RecurringInvoicesListPage = lazy(() =>
+  import("./pages/ClubManagement/RecurringInvoicesListPage").then((m) => ({
+    default: m.RecurringInvoicesListPage,
+  }))
+);
+const RecurringJournalDashboard = lazy(() =>
+  import("./pages/ClubManagement/RecurringJournalDashboard").then((m) => ({
+    default: m.RecurringJournalDashboard,
+  }))
+);
+const RecurringJournalDetails = lazy(() =>
+  import("./pages/ClubManagement/RecurringJournalDetails").then((m) => ({
+    default: m.RecurringJournalDetails,
+  }))
+);
+const SalesOrderCreatePage = lazy(() =>
+  import("./pages/SalesOrderCreatePage").then((m) => ({
+    default: m.SalesOrderCreatePage,
+  }))
+);
+const SalesOrderDetailPage = lazy(() =>
+  import("./pages/SalesOrderDetailPage").then((m) => ({
+    default: m.SalesOrderDetailPage,
+  }))
+);
+const SalesOrderListPage = lazy(() =>
+  import("./pages/SalesOrderListPage").then((m) => ({
+    default: m.SalesOrderListPage,
+  }))
+);
+const TransactionsDetails = lazy(() =>
+  import("./pages/ClubManagement/TransationsDetails").then((m) => ({
+    default: m.TransactionsDetails,
+  }))
+);
+const ViewClubOccupantUser = lazy(() =>
+  import("./pages/master/ViewClubOccupantUser").then((m) => ({
+    default: m.ViewClubOccupantUser,
+  }))
+);
+const ViewGuestUserPage = lazy(() =>
+  import("./pages/ClubManagement/ViewGuestUserPage").then((m) => ({
+    default: m.ViewGuestUserPage,
+  }))
+);
+const AddClubMembershipPage = lazy(
+  () => import("./pages/ClubManagement/AddClubMembershipPage")
+);
+const AddGroupMembershipPage = lazy(
+  () => import("./pages/ClubManagement/AddGroupMembershipPage")
+);
+const AmenityBookingListClub = lazy(
+  () => import("./pages/ClubManagement/AmenityBookingList")
+);
+const BalanceSheetReport = lazy(
+  () => import("./pages/ClubManagement/BalanceSheetReport")
+);
 const BannerSetupDashboard = lazy(() => import("./pages/BannerSetupDashboard"));
-const BillCyclesAdd = lazy(() => import("./pages/ClubManagement/BillCyclesAdd"));
-const BillCyclesDashboard = lazy(() => import("./pages/ClubManagement/BillCyclesDashboard"));
+const BillCyclesAdd = lazy(
+  () => import("./pages/ClubManagement/BillCyclesAdd")
+);
+const BillCyclesDashboard = lazy(
+  () => import("./pages/ClubManagement/BillCyclesDashboard")
+);
 const BudgetAdd = lazy(() => import("./pages/ClubManagement/BudgetAdd"));
 const BudgetAddNew = lazy(() => import("./pages/ClubManagement/BudgetAddNew"));
-const BudgetDetails = lazy(() => import("./pages/ClubManagement/BudgetDetails"));
-const ChargeSetupAdd = lazy(() => import("./pages/ClubManagement/ChargeSetupAdd"));
-const ChargeSetupDashboard = lazy(() => import("./pages/ClubManagement/ChargeSetupDashboard"));
-const ChartOfAccountsDashboard = lazy(() => import("./pages/ClubManagement/ChartOfAccountsDashboard"));
-const ClubGroupMembershipDashboard = lazy(() => import("./pages/ClubManagement/ClubGroupMembershipDashboard"));
-const ClubGroupMembershipDetails = lazy(() => import("./pages/ClubManagement/ClubGroupMembershipDetails"));
-const ClubMembershipDashboard = lazy(() => import("./pages/ClubManagement/ClubMembershipDashboard"));
-const ClubMembershipDetailPage = lazy(() => import("./pages/ClubManagement/ClubMembershipDetailPage"));
+const BudgetDetails = lazy(
+  () => import("./pages/ClubManagement/BudgetDetails")
+);
+const ChargeSetupAdd = lazy(
+  () => import("./pages/ClubManagement/ChargeSetupAdd")
+);
+const ChargeSetupDashboard = lazy(
+  () => import("./pages/ClubManagement/ChargeSetupDashboard")
+);
+const ChartOfAccountsDashboard = lazy(
+  () => import("./pages/ClubManagement/ChartOfAccountsDashboard")
+);
+const ClubGroupMembershipDashboard = lazy(
+  () => import("./pages/ClubManagement/ClubGroupMembershipDashboard")
+);
+const ClubGroupMembershipDetails = lazy(
+  () => import("./pages/ClubManagement/ClubGroupMembershipDetails")
+);
+const ClubMembershipDashboard = lazy(
+  () => import("./pages/ClubManagement/ClubMembershipDashboard")
+);
+const ClubMembershipDetailPage = lazy(
+  () => import("./pages/ClubManagement/ClubMembershipDetailPage")
+);
 const CustomersAdd = lazy(() => import("./pages/ClubManagement/CustomersAdd"));
-const CustomersDashboard = lazy(() => import("./pages/ClubManagement/CustomersDashboard"));
+const CustomersDashboard = lazy(
+  () => import("./pages/ClubManagement/CustomersDashboard")
+);
 const EditBudget = lazy(() => import("./pages/ClubManagement/BudgetEdit"));
-const GstPayableReport = lazy(() => import("./pages/ClubManagement/GstPayableReport"));
+const GstPayableReport = lazy(
+  () => import("./pages/ClubManagement/GstPayableReport")
+);
 const ItemsAdd = lazy(() => import("./pages/ClubManagement/ItemsAdd"));
-const ItemsDashboard = lazy(() => import("./pages/ClubManagement/ItemsDashboard"));
+const ItemsDashboard = lazy(
+  () => import("./pages/ClubManagement/ItemsDashboard")
+);
 const ItemsEdit = lazy(() => import("./pages/ClubManagement/ItemsEdit"));
-const ManualJournalAdd = lazy(() => import("./pages/ClubManagement/ManualJournalAdd"));
-const ManualJournalDashboard = lazy(() => import("./pages/ClubManagement/ManualJournalDashboard"));
-const ManualJournalEdit = lazy(() => import("./pages/ClubManagement/ManualJournalEdit"));
-const OpeningBalance = lazy(() => import("./pages/ClubManagement/OpeningBalance"));
-const ProfitAndLossReport = lazy(() => import("./pages/ClubManagement/ProfitAndLossReport"));
-const RecurringJournalAdd = lazy(() => import("./pages/ClubManagement/RecurringJournalAdd"));
-const BillEdit = lazy(() => import("./pages/ClubManagement/BillEdit").then(m => ({ default: m.BillEdit })));
-const ExpenseEditPage = lazy(() => import("./pages/ExpenseEditPage").then(m => ({ default: m.ExpenseEditPage })));
-const TaxSetupTabView = lazy(() => import("./pages/ClubManagement/TaxSetupTabView"));
-const TaxSummaryReport = lazy(() => import("./pages/ClubManagement/TaxSummaryReport"));
-const TransactionsAdd = lazy(() => import("./pages/ClubManagement/TransationsAdd"));
-const TransactionsDashboard = lazy(() => import("./pages/ClubManagement/TransactionsDashboard"));
-const TransactionsEdit = lazy(() => import("./pages/ClubManagement/TransactionsEdit"));
+const ManualJournalAdd = lazy(
+  () => import("./pages/ClubManagement/ManualJournalAdd")
+);
+const ManualJournalDashboard = lazy(
+  () => import("./pages/ClubManagement/ManualJournalDashboard")
+);
+const ManualJournalEdit = lazy(
+  () => import("./pages/ClubManagement/ManualJournalEdit")
+);
+const OpeningBalance = lazy(
+  () => import("./pages/ClubManagement/OpeningBalance")
+);
+const ProfitAndLossReport = lazy(
+  () => import("./pages/ClubManagement/ProfitAndLossReport")
+);
+const RecurringJournalAdd = lazy(
+  () => import("./pages/ClubManagement/RecurringJournalAdd")
+);
+const BillEdit = lazy(() =>
+  import("./pages/ClubManagement/BillEdit").then((m) => ({
+    default: m.BillEdit,
+  }))
+);
+const ExpenseEditPage = lazy(() =>
+  import("./pages/ExpenseEditPage").then((m) => ({
+    default: m.ExpenseEditPage,
+  }))
+);
+const TaxSetupTabView = lazy(
+  () => import("./pages/ClubManagement/TaxSetupTabView")
+);
+const TaxSummaryReport = lazy(
+  () => import("./pages/ClubManagement/TaxSummaryReport")
+);
+const TransactionsAdd = lazy(
+  () => import("./pages/ClubManagement/TransationsAdd")
+);
+const TransactionsDashboard = lazy(
+  () => import("./pages/ClubManagement/TransactionsDashboard")
+);
+const TransactionsEdit = lazy(
+  () => import("./pages/ClubManagement/TransactionsEdit")
+);
 import useRouteLogger from "./hooks/useRouteLogger";
-const ClubEditOccupantUserPage = lazy(() => import("./pages/master/ClubEditOccupantUserPage"));
-const ClubAddOccupantUserPage = lazy(() => import("./pages/master/ClubAddOccupantUserPage"));
-const RideDetail = lazy(() => import("./pages/pulse/RideDetail").then(m => ({ default: m.RideDetail })));
+const ClubEditOccupantUserPage = lazy(
+  () => import("./pages/master/ClubEditOccupantUserPage")
+);
+const ClubAddOccupantUserPage = lazy(
+  () => import("./pages/master/ClubAddOccupantUserPage")
+);
+const RideDetail = lazy(() =>
+  import("./pages/pulse/RideDetail").then((m) => ({ default: m.RideDetail }))
+);
 import { OccupantUserListWrapper } from "./components/OccupantUserListWrapper";
 import { OccupantUserDetailWrapper } from "./components/OccupantUserDetailWrapper";
 import { LoginPageWrapper } from "./components/LoginPageWrapper";
-const ModulesManagement = lazy(() => import("./pages/settings/ModulesManagement"));
-const LoyaltyTDS = lazy(() => import("./pages/ops-console/admin/LoyaltyTDS").then(m => ({ default: m.LoyaltyTDS })));
-const AdminNewDashboard = lazy(() => import("./pages/ops-console/admin/AdminNewDashboard"));
-const SmartsecureIntegration = lazy(() => import("./pages/ops-console/admin/SmartsecureIntegration"));
-const UserDevices = lazy(() => import("./features/user-devices/pages/UserDevices"));
-const AddSmartsecureGatePage = lazy(() => import("./pages/ops-console/admin/AddSmartsecureGatePage"));
-const EditSmartsecureGatePage = lazy(() => import("./pages/ops-console/admin/EditSmartsecureGatePage"));
-const HiSocietyUsersDashboard = lazy(() => import("./pages/master/HiSocietyUsersDashboard").then(m => ({ default: m.HiSocietyUsersDashboard })));
-const ViewHiSocietyUserPage = lazy(() => import("./pages/master/ViewHiSocietyUserPage").then(m => ({ default: m.ViewHiSocietyUserPage })));
-const GCMList = lazy(() => import("./pages/master/GCMList").then(m => ({ default: m.GCMList })));
-const APNSList = lazy(() => import("./pages/master/APNSList").then(m => ({ default: m.APNSList })));
-const InvoiceAdd = lazy(() => import("./pages/ClubManagement/InvoiceAdd").then(m => ({ default: m.InvoiceAdd })));
-const InvoiceDashboardAccounting = lazy(() => import("./pages/ClubManagement/InvoiceDashboard").then(m => ({ default: m.InvoiceDashboardAccounting })));
-const QuotesDashboard = lazy(() => import("./pages/ClubManagement/QuotesDashboard").then(m => ({ default: m.QuotesDashboard })));
-const QuotesAdd = lazy(() => import("./pages/ClubManagement/QuotesAdd").then(m => ({ default: m.QuotesAdd })));
+const ModulesManagement = lazy(
+  () => import("./pages/settings/ModulesManagement")
+);
+const LoyaltyTDS = lazy(() =>
+  import("./pages/ops-console/admin/LoyaltyTDS").then((m) => ({
+    default: m.LoyaltyTDS,
+  }))
+);
+const AdminNewDashboard = lazy(
+  () => import("./pages/ops-console/admin/AdminNewDashboard")
+);
+const SmartsecureIntegration = lazy(
+  () => import("./pages/ops-console/admin/SmartsecureIntegration")
+);
+const UserDevices = lazy(
+  () => import("./features/user-devices/pages/UserDevices")
+);
+const AddSmartsecureGatePage = lazy(
+  () => import("./pages/ops-console/admin/AddSmartsecureGatePage")
+);
+const EditSmartsecureGatePage = lazy(
+  () => import("./pages/ops-console/admin/EditSmartsecureGatePage")
+);
+const HiSocietyUsersDashboard = lazy(() =>
+  import("./pages/master/HiSocietyUsersDashboard").then((m) => ({
+    default: m.HiSocietyUsersDashboard,
+  }))
+);
+const ViewHiSocietyUserPage = lazy(() =>
+  import("./pages/master/ViewHiSocietyUserPage").then((m) => ({
+    default: m.ViewHiSocietyUserPage,
+  }))
+);
+const GCMList = lazy(() =>
+  import("./pages/master/GCMList").then((m) => ({ default: m.GCMList }))
+);
+const APNSList = lazy(() =>
+  import("./pages/master/APNSList").then((m) => ({ default: m.APNSList }))
+);
+const InvoiceAdd = lazy(() =>
+  import("./pages/ClubManagement/InvoiceAdd").then((m) => ({
+    default: m.InvoiceAdd,
+  }))
+);
+const InvoiceDashboardAccounting = lazy(() =>
+  import("./pages/ClubManagement/InvoiceDashboard").then((m) => ({
+    default: m.InvoiceDashboardAccounting,
+  }))
+);
+const QuotesDashboard = lazy(() =>
+  import("./pages/ClubManagement/QuotesDashboard").then((m) => ({
+    default: m.QuotesDashboard,
+  }))
+);
+const QuotesAdd = lazy(() =>
+  import("./pages/ClubManagement/QuotesAdd").then((m) => ({
+    default: m.QuotesAdd,
+  }))
+);
 
-const DeliveryChallansDashboard = lazy(() => import("./pages/ClubManagement/DeliveryChallansDashboard").then(m => ({ default: m.DeliveryChallansDashboard })));
-const DeliveryChallansAdd = lazy(() => import("./pages/ClubManagement/DeliveryChallansAdd").then(m => ({ default: m.DeliveryChallansAdd })));
-const FitoutRequestCategoryApprovalRequestMobile = lazy(() => import("./pages/FitoutRequestCategoryApprovalRequestMobile"));
+const DeliveryChallansDashboard = lazy(() =>
+  import("./pages/ClubManagement/DeliveryChallansDashboard").then((m) => ({
+    default: m.DeliveryChallansDashboard,
+  }))
+);
+const DeliveryChallansAdd = lazy(() =>
+  import("./pages/ClubManagement/DeliveryChallansAdd").then((m) => ({
+    default: m.DeliveryChallansAdd,
+  }))
+);
+const FitoutRequestCategoryApprovalRequestMobile = lazy(
+  () => import("./pages/FitoutRequestCategoryApprovalRequestMobile")
+);
 const AddVisitorPage = lazy(() => import("./pages/AddVisitorPage"));
 const SettingsGenericPage = lazy(() => import("./pages/SettingsGenericPage"));
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -1182,17 +3220,35 @@ const LockFees = lazy(() => import("./pages/LockFees"));
 // AdminLayout instead of bouncing out to the member Layout (and its own
 // "Loyalty" sidebar section, which is what /loyalty/* resolves to there).
 const EncashmentConfigPage = lazy(() => import("./pages/EncashmentConfigPage"));
-const EncashmentRequestsPage = lazy(() => import("./pages/EncashmentRequestsPage"));
+const EncashmentRequestsPage = lazy(
+  () => import("./pages/EncashmentRequestsPage")
+);
 const KycRequestsPage = lazy(() => import("./pages/KycRequestsPage"));
 const LockFeesAdd = lazy(() => import("./pages/LockFeesAdd"));
 const LockFeesDetail = lazy(() => import("./pages/LockFeesDetail"));
 const EditLockFeesPage = lazy(() => import("./pages/EditLockFeesPage"));
-const SocietyDetailsPage = lazy(() => import("./pages/master/SocietyDetailsPage"));
+const SocietyDetailsPage = lazy(
+  () => import("./pages/master/SocietyDetailsPage")
+);
 const BlockDetailsPage = lazy(() => import("./pages/master/BlockDetailsPage"));
-const SmartSecureDashboardPage = lazy(() => import("./features/smartsecure-dashboard/SmartSecureDashboardPage"));
-const QuickgateDashboardPage = lazy(() => import("./features/smartsecure-dashboard/QuickgateDashboardPage"));
-const HiSocietyUsageDashboard = lazy(() => import("./pages/HiSocietyUsageDashboard"));
-
+const SmartSecureDashboardPage = lazy(
+  () => import("./features/smartsecure-dashboard/SmartSecureDashboardPage")
+);
+const QuickgateDashboardPage = lazy(
+  () => import("./features/smartsecure-dashboard/QuickgateDashboardPage")
+);
+const HiSocietyUsageDashboard = lazy(
+  () => import("./pages/HiSocietyUsageDashboard")
+);
+const UsageDashboardPage = lazy(
+  () => import("./features/usage-dashboard/UsageDashboardPage")
+);
+const SunteckDashboardPage = lazy(
+  () => import("./features/usage-dashboard/SunteckDashboardPage")
+);
+const SuncityDashboardPage = lazy(
+  () => import("./features/usage-dashboard/SuncityDashboardPage")
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -1251,7 +3307,7 @@ function App() {
         ).unwrap()) as Array<{ currency?: string; symbol?: string }>;
         const currency =
           Array.isArray(response) &&
-            (response[0]?.currency as string | undefined)
+          (response[0]?.currency as string | undefined)
             ? response[0].currency
             : "INR";
         const currencySymbol =
@@ -1346,14 +3402,16 @@ function App() {
             <LayoutProvider>
               <PermissionsProvider>
                 <ActionLayoutProvider>
-                  <Suspense fallback={
-                    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-[#da7756] border-r-[#da7756] border-b-gray-200 border-l-gray-200"></div>
-                        <p className="text-gray-600">Loading...</p>
+                  <Suspense
+                    fallback={
+                      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-[#da7756] border-r-[#da7756] border-b-gray-200 border-l-gray-200"></div>
+                          <p className="text-gray-600">Loading...</p>
+                        </div>
                       </div>
-                    </div>
-                  }>
+                    }
+                  >
                     <Routes>
                       {/* Setup Member Routes - wrapped in Layout */}
                       <Route
@@ -1492,14 +3550,8 @@ function App() {
                           path="master/user/hi-society-users/view/:id"
                           element={<ViewHiSocietyUserPage />}
                         />
-                        <Route
-                          path="master/gcm"
-                          element={<GCMList />}
-                        />
-                        <Route
-                          path="master/apns"
-                          element={<APNSList />}
-                        />
+                        <Route path="master/gcm" element={<GCMList />} />
+                        <Route path="master/apns" element={<APNSList />} />
                         <Route
                           path="settings/roles/role"
                           element={<RoleDashboard />}
@@ -1538,7 +3590,9 @@ function App() {
                         />
                         <Route
                           path="admin/new-dashboard"
-                          element={<Navigate to="/admin/new-dashboard" replace />}
+                          element={
+                            <Navigate to="/admin/new-dashboard" replace />
+                          }
                         />
                         <Route
                           path="admin/smartsecure-integration"
@@ -1597,10 +3651,7 @@ function App() {
                           element={<LockedUsersDashboard />}
                         />
 
-                        <Route
-                          path="admin/lock-fees"
-                          element={<LockFees />}
-                        />
+                        <Route path="admin/lock-fees" element={<LockFees />} />
                         <Route
                           path="admin/lock-fees/add"
                           element={<LockFeesAdd />}
@@ -1627,8 +3678,14 @@ function App() {
                           element={<KycRequestsPage />}
                         />
 
-                        <Route path="settings/account/user-list-otp" element={<OccupantUserListWrapper />} />
-                        <Route path="settings/account/user-list-otp/detail/:id" element={<OccupantUserDetailWrapper />} />
+                        <Route
+                          path="settings/account/user-list-otp"
+                          element={<OccupantUserListWrapper />}
+                        />
+                        <Route
+                          path="settings/account/user-list-otp/detail/:id"
+                          element={<OccupantUserDetailWrapper />}
+                        />
 
                         {/* <Route
                       path="settings/account/lock-sub-function/create"
@@ -1674,7 +3731,18 @@ function App() {
                         path="/hi-society-usage-dashboard"
                         element={<HiSocietyUsageDashboard />}
                       />
-
+                      <Route
+                        path="/artesia-usage-analytics"
+                        element={<UsageDashboardPage fixedSite="artesia" />}
+                      />
+                      <Route
+                        path="/sunteck-usage-analytics"
+                        element={<SunteckDashboardPage />}
+                      />
+                      <Route
+                        path="/suncity-usage-analytics"
+                        element={<SuncityDashboardPage />}
+                      />
 
                       {/* Post Possession admin dashboard (standalone — own header/tabs) */}
                       <Route
@@ -1720,8 +3788,14 @@ function App() {
                         path="/forgot-password-otp"
                         element={<ForgotPasswordOTPPage />}
                       />
-                      <Route path="/new-password" element={<NewPasswordPage />} />
-                      <Route path="/login-success" element={<LoginSuccessPage />} />
+                      <Route
+                        path="/new-password"
+                        element={<NewPasswordPage />}
+                      />
+                      <Route
+                        path="/login-success"
+                        element={<LoginSuccessPage />}
+                      />
                       <Route
                         path="/password-reset-success"
                         element={<PasswordResetSuccessPage />}
@@ -1797,7 +3871,10 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
-                      <Route path="/PermissionDemo" element={<PermissionDemo />} />
+                      <Route
+                        path="/PermissionDemo"
+                        element={<PermissionDemo />}
+                      />
 
                       <Route
                         path="/tickets"
@@ -1923,7 +4000,10 @@ function App() {
                         }
                       >
                         <Route index element={<Index />} />
-                        <Route path="/vas/channels" element={<ChannelsLayout />}>
+                        <Route
+                          path="/vas/channels"
+                          element={<ChannelsLayout />}
+                        >
                           <Route
                             index
                             element={
@@ -2307,8 +4387,14 @@ function App() {
                         />
 
                         {/* CRM Routes */}
-                        <Route path="/crm/campaign" element={<CRMCampaignPage />} />
-                        <Route path="/crm/campaign/add" element={<AddLeadPage />} />
+                        <Route
+                          path="/crm/campaign"
+                          element={<CRMCampaignPage />}
+                        />
+                        <Route
+                          path="/crm/campaign/add"
+                          element={<AddLeadPage />}
+                        />
                         <Route
                           path="/crm/campaign/details/:id"
                           element={<LeadDetailsPage />}
@@ -2326,7 +4412,10 @@ function App() {
                           element={<CRMOccupantUsersDashboard />}
                         />
                         <Route path="/crm/events" element={<CRMEventsPage />} />
-                        <Route path="/crm/events/add" element={<AddEventPage />} />
+                        <Route
+                          path="/crm/events/add"
+                          element={<AddEventPage />}
+                        />
                         <Route
                           path="/crm/events/details/:id"
                           element={<CRMEventDetailsPage />}
@@ -2336,7 +4425,10 @@ function App() {
                           element={<BroadcastDashboard />}
                         />
                         <Route path="/crm/polls" element={<CRMPollsPage />} />
-                        <Route path="/crm/polls/add" element={<AddPollPage />} />
+                        <Route
+                          path="/crm/polls/add"
+                          element={<AddPollPage />}
+                        />
                         <Route
                           path="/crm/groups/details/:id"
                           element={<CRMGroupDetailsPage />}
@@ -2664,7 +4756,10 @@ function App() {
                       />
 
                       {/* Setup - KYC Detail View Route */}
-                      <Route path="/kyc-details/:id" element={<KYCDetailView />} />
+                      <Route
+                        path="/kyc-details/:id"
+                        element={<KYCDetailView />}
+                      />
 
                       {/* Setup - Helpdesk Setup Route */}
                       <Route
@@ -2690,7 +4785,10 @@ function App() {
                     path="/communication/events/view/:id"
                     element={<EventDetailPage />}
                   /> */}
-                      <Route path="/communication/polls" element={<PollsPage />} />
+                      <Route
+                        path="/communication/polls"
+                        element={<PollsPage />}
+                      />
                       <Route
                         path="/communication/polls/add"
                         element={<AddPollPage />}
@@ -2725,8 +4823,14 @@ function App() {
                         path="/forgot-password-otp"
                         element={<ForgotPasswordOTPPage />}
                       />
-                      <Route path="/new-password" element={<NewPasswordPage />} />
-                      <Route path="/login-success" element={<LoginSuccessPage />} />
+                      <Route
+                        path="/new-password"
+                        element={<NewPasswordPage />}
+                      />
+                      <Route
+                        path="/login-success"
+                        element={<LoginSuccessPage />}
+                      />
                       <Route
                         path="/password-reset-success"
                         element={<PasswordResetSuccessPage />}
@@ -2755,8 +4859,14 @@ function App() {
                         }
                       />
                       {/* CRM Routes */}
-                      <Route path="/crm/campaign" element={<CRMCampaignPage />} />
-                      <Route path="/crm/campaign/add" element={<AddLeadPage />} />
+                      <Route
+                        path="/crm/campaign"
+                        element={<CRMCampaignPage />}
+                      />
+                      <Route
+                        path="/crm/campaign/add"
+                        element={<AddLeadPage />}
+                      />
                       <Route
                         path="/crm/campaign/details/:id"
                         element={<LeadDetailsPage />}
@@ -2774,7 +4884,10 @@ function App() {
                         element={<CRMOccupantUsersDashboard />}
                       />
                       <Route path="/crm/events" element={<CRMEventsPage />} />
-                      <Route path="/crm/events/add" element={<AddEventPage />} />
+                      <Route
+                        path="/crm/events/add"
+                        element={<AddEventPage />}
+                      />
                       <Route
                         path="/crm/events/details/:id"
                         element={<CRMEventDetailsPage />}
@@ -2807,7 +4920,10 @@ function App() {
                         path="/communication/notice/details/:id"
                         element={<NoticePageDetails />}
                       />
-                      <Route path="/communication/events" element={<EventList />} />
+                      <Route
+                        path="/communication/events"
+                        element={<EventList />}
+                      />
                       <Route
                         path="/communication/events/create"
                         element={<EventCommunicationCreate />}
@@ -2846,7 +4962,10 @@ function App() {
                         path="/crm/customers/edit/:id"
                         element={<EditCrmCustomer />}
                       />
-                      <Route path="/crm/wallet-list" element={<CRMWalletList />} />
+                      <Route
+                        path="/crm/wallet-list"
+                        element={<CRMWalletList />}
+                      />
                       <Route
                         path="/crm/wallet-list/:id"
                         element={<CRMWalletDetails />}
@@ -2880,7 +4999,10 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
-                      <Route path="/PermissionDemo" element={<PermissionDemo />} />
+                      <Route
+                        path="/PermissionDemo"
+                        element={<PermissionDemo />}
+                      />
 
                       <Route
                         path="/tickets/add"
@@ -3079,7 +5201,10 @@ function App() {
                           }
                         />
 
-                        <Route path="/vas/channels" element={<ChannelsLayout />}>
+                        <Route
+                          path="/vas/channels"
+                          element={<ChannelsLayout />}
+                        >
                           <Route
                             index
                             element={
@@ -3104,7 +5229,10 @@ function App() {
                           element={<ChannelTasksAll />}
                         />
 
-                        <Route path="/business-card" element={<BusinessCard />} />
+                        <Route
+                          path="/business-card"
+                          element={<BusinessCard />}
+                        />
                         <Route path="/ask-ai" element={<AskAI />} />
 
                         <Route
@@ -3377,8 +5505,14 @@ function App() {
                           element={<PlantDetailSetupPage />}
                         />
                         {/* CRM Routes */}
-                        <Route path="/crm/campaign" element={<CRMCampaignPage />} />
-                        <Route path="/crm/campaign/add" element={<AddLeadPage />} />
+                        <Route
+                          path="/crm/campaign"
+                          element={<CRMCampaignPage />}
+                        />
+                        <Route
+                          path="/crm/campaign/add"
+                          element={<AddLeadPage />}
+                        />
                         <Route
                           path="/crm/campaign/details/:id"
                           element={<LeadDetailsPage />}
@@ -3396,7 +5530,10 @@ function App() {
                           element={<CRMOccupantUsersDashboard />}
                         />
                         <Route path="/crm/events" element={<CRMEventsPage />} />
-                        <Route path="/crm/events/add" element={<AddEventPage />} />
+                        <Route
+                          path="/crm/events/add"
+                          element={<AddEventPage />}
+                        />
                         <Route
                           path="/crm/events/details/:id"
                           element={<CRMEventDetailsPage />}
@@ -3410,7 +5547,10 @@ function App() {
                           element={<BroadcastDetailsPage />}
                         />
                         <Route path="/crm/polls" element={<CRMPollsPage />} />
-                        <Route path="/crm/polls/add" element={<AddPollPage />} />
+                        <Route
+                          path="/crm/polls/add"
+                          element={<AddPollPage />}
+                        />
                         <Route
                           path="/crm/groups/details/:id"
                           element={<CRMGroupDetailsPage />}
@@ -4346,7 +6486,9 @@ function App() {
                         />
                         <Route
                           path="/maintenance/audit/operational/scheduled/performance/:id"
-                          element={<ViewOperationalAuditSchedulePerformancePage />}
+                          element={
+                            <ViewOperationalAuditSchedulePerformancePage />
+                          }
                         />
                         <Route
                           path="/maintenance/audit/operational/conducted"
@@ -4376,7 +6518,9 @@ function App() {
                         />
                         <Route
                           path="/maintenance/audit/operational/master-checklists"
-                          element={<OperationalAuditMasterChecklistsDashboard />}
+                          element={
+                            <OperationalAuditMasterChecklistsDashboard />
+                          }
                         />
                         <Route
                           path="/maintenance/audit/operational/master-checklists/add"
@@ -4753,7 +6897,10 @@ function App() {
                         />
 
                         {/* AMC Routes */}
-                        <Route path="/maintenance/amc" element={<AMCDashboard />} />
+                        <Route
+                          path="/maintenance/amc"
+                          element={<AMCDashboard />}
+                        />
                         <Route
                           path="/maintenance/amc/add"
                           element={<AddAMCPage />}
@@ -4936,7 +7083,10 @@ function App() {
                           path="/vas/projects/:id/milestones/:mid/tasks"
                           element={<ProjectTasksPage />}
                         />
-                        <Route path="/vas/tasks" element={<ProjectTasksPage />} />
+                        <Route
+                          path="/vas/tasks"
+                          element={<ProjectTasksPage />}
+                        />
                         <Route
                           path="/vas/projects/:id/milestones/:mid/tasks/:taskId"
                           element={<ProjectTaskDetails />}
@@ -4946,12 +7096,18 @@ function App() {
                           path="/vas/tasks/:taskId"
                           element={<ProjectTaskDetails />}
                         />
-                        <Route path="/vas/sprint" element={<SprintDashboard />} />
+                        <Route
+                          path="/vas/sprint"
+                          element={<SprintDashboard />}
+                        />
                         <Route
                           path="/vas/sprint/details/:id"
                           element={<SprintDetailsPage />}
                         />
-                        <Route path="/vas/sprint/:id" element={<SprintKanban />} />
+                        <Route
+                          path="/vas/sprint/:id"
+                          element={<SprintKanban />}
+                        />
 
                         <Route
                           path="/vas/projects/:id/milestones/:mid"
@@ -4959,7 +7115,10 @@ function App() {
                         />
 
                         {/* Issues Routes */}
-                        <Route path="/vas/issues" element={<IssuesListPage />} />
+                        <Route
+                          path="/vas/issues"
+                          element={<IssuesListPage />}
+                        />
                         <Route
                           path="/vas/issues/:id"
                           element={<IssueDetailsPage />}
@@ -4999,7 +7158,10 @@ function App() {
 
                         <Route path="/vas/add-mom" element={<AddMoMPage />} />
 
-                        <Route path="/vas/edit-mom/:id" element={<EditMoMPage />} />
+                        <Route
+                          path="/vas/edit-mom/:id"
+                          element={<EditMoMPage />}
+                        />
 
                         <Route
                           path="/settings/project-task-setup/roles"
@@ -5524,7 +7686,10 @@ function App() {
                         <Route
                           path="/vas/redemonection-marketplace"
                           element={
-                            <Navigate to="/vas/redemption-marketplace" replace />
+                            <Navigate
+                              to="/vas/redemption-marketplace"
+                              replace
+                            />
                           }
                         />
                         {/* Space Management Routes */}
@@ -6073,7 +8238,10 @@ function App() {
                           path="/vas/mailroom/outbound/:id"
                           element={<OutboundDetailPage />}
                         />
-                        <Route path="/vas/parking" element={<ParkingDashboard />} />
+                        <Route
+                          path="/vas/parking"
+                          element={<ParkingDashboard />}
+                        />
                         <Route
                           path="/vas/parking/details/:clientId"
                           element={<ParkingDetailsPage />}
@@ -6180,7 +8348,10 @@ function App() {
                         <Route
                           path="/vas/redemonection-marketplace"
                           element={
-                            <Navigate to="/vas/redemption-marketplace" replace />
+                            <Navigate
+                              to="/vas/redemption-marketplace"
+                              replace
+                            />
                           }
                         />
 
@@ -6203,7 +8374,10 @@ function App() {
                         />
 
                         {/* Event Routes */}
-                        <Route path="/pulse/events" element={<CRMEventsPage />} />
+                        <Route
+                          path="/pulse/events"
+                          element={<CRMEventsPage />}
+                        />
                         <Route
                           path="/pulse/events/add"
                           element={<AddEventPage />}
@@ -6240,7 +8414,10 @@ function App() {
                         />
 
                         {/* Community Routes */}
-                        <Route path="/pulse/community" element={<Communtiy />} />
+                        <Route
+                          path="/pulse/community"
+                          element={<Communtiy />}
+                        />
                         <Route
                           path="/pulse/community/add"
                           element={<CommunityAdd />}
@@ -6349,7 +8526,10 @@ function App() {
                           path="/pulse/pulse-privilege/service-category/edit/:id"
                           element={<EditServiceCategoryPage />}
                         />
-                        <Route path="/pulse/amenity" element={<BookingList />} />
+                        <Route
+                          path="/pulse/amenity"
+                          element={<BookingList />}
+                        />
 
                         {/* Plus curated Service Routes */}
                         <Route
@@ -6364,7 +8544,6 @@ function App() {
                           path="/pulse/curated-services/service/edit/:id"
                           element={<EditCuratedServicePage />}
                         />
-
 
                         {/*  curated Service  Category Routes */}
                         <Route
@@ -6663,7 +8842,10 @@ function App() {
                         />
 
                         {/* VAS Booking Routes */}
-                        <Route path="/vas/booking/list" element={<BookingList />} />
+                        <Route
+                          path="/vas/booking/list"
+                          element={<BookingList />}
+                        />
                         <Route
                           path="/vas/booking/add"
                           element={<AddFacilityBookingPage />}
@@ -6756,7 +8938,11 @@ function App() {
                         />
                         <Route
                           path="/ops-console/master/user/hi-society-users/view/:id"
-                          element={<OpsConsoleGuard><ViewHiSocietyUserPage /></OpsConsoleGuard>}
+                          element={
+                            <OpsConsoleGuard>
+                              <ViewHiSocietyUserPage />
+                            </OpsConsoleGuard>
+                          }
                         />
 
                         {/* Material Master Route */}
@@ -7242,7 +9428,10 @@ function App() {
                       <Route path="/business-plan" element={<BusinessPlan />} />
                       <Route path="/our-group" element={<OurGroup />} />
                       <Route path="/products" element={<Products />} />
-                      <Route path="/document-drive" element={<DocumentDrive />} />
+                      <Route
+                        path="/document-drive"
+                        element={<DocumentDrive />}
+                      />
                       <Route path="/hr-policies" element={<HRPolicies />} />
                       <Route path="/directory" element={<Directory />} />
                       <Route path="/eployee-faq" element={<EmployeeFAQ />} />
@@ -7252,7 +9441,10 @@ function App() {
                         path="/mobile/tickets"
                         element={<MobileTicketsPage />}
                       />
-                      <Route path="/mobile/orders" element={<MobileOrdersPage />} />
+                      <Route
+                        path="/mobile/orders"
+                        element={<MobileOrdersPage />}
+                      />
                       <Route
                         path="/mobile/admin/orders"
                         element={<MobileAdminOrdersPage />}
@@ -7315,7 +9507,10 @@ function App() {
                         element={<InvitedVisitorPage />}
                       />
                       {/* Mobile Asset Routes */}
-                      <Route path="/mobile/assets" element={<MobileAssetPage />} />
+                      <Route
+                        path="/mobile/assets"
+                        element={<MobileAssetPage />}
+                      />
                       <Route
                         path="/mobile/assets/:assetId"
                         element={<MobileAssetPage />}
@@ -7340,7 +9535,10 @@ function App() {
                         path="/mobile-projects"
                         element={<ProjectsMobileView />}
                       />
-                      <Route path="/mobile-issues" element={<IssuesMobileView />} />
+                      <Route
+                        path="/mobile-issues"
+                        element={<IssuesMobileView />}
+                      />
                       <Route
                         path="/mobile-issues/add"
                         element={<AddIssueMobileView />}
@@ -7369,7 +9567,10 @@ function App() {
                         path="/mobile-projects/:id/milestones/:mid/tasks/:taskId"
                         element={<ProjectTaskDetailsMobile />}
                       />
-                      <Route path="/mobile-tasks" element={<TasksMobileView />} />
+                      <Route
+                        path="/mobile-tasks"
+                        element={<TasksMobileView />}
+                      />
                       <Route
                         path="/mobile-tasks/:taskId"
                         element={<TaskDetailsMobile />}
@@ -7383,7 +9584,10 @@ function App() {
                         element={<ContestPromotion />}
                       />
                       {/* Spinner Contest Routes */}
-                      <Route path="/spinnercontest" element={<SpinnerContest />} />
+                      <Route
+                        path="/spinnercontest"
+                        element={<SpinnerContest />}
+                      />
                       <Route
                         path="/spinnercontest/:contestId"
                         element={<SpinnerContest />}
@@ -7449,4 +9653,3 @@ function App() {
 }
 
 export default App;
-

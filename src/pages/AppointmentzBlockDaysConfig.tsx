@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import {
   Switch,
   FormControl,
-  InputLabel,
   Select as MuiSelect,
   MenuItem,
   SelectChangeEvent,
@@ -471,16 +470,15 @@ variant="ghost"
         onClose={() => setIsAddModalOpen(false)}
         fullWidth
         maxWidth="sm"
-        PaperProps={{ sx: { borderRadius: 2, overflow: "visible" } }}
+        PaperProps={{ sx: { borderRadius: 2, overflow: "hidden" } }}
       >
         <DialogTitle
           sx={{
             p: 2,
-            textAlign: "center",
+            textAlign: "left",
             fontWeight: 700,
             fontSize: 18,
-            backgroundColor: "#F6F4EE",
-            borderBottom: "1px solid #e5e7eb",
+            backgroundColor: "#fff",
           }}
         >
           {isEditMode ? "Edit" : "Add"}
@@ -500,63 +498,68 @@ variant="ghost"
 
         <DialogContent sx={{ p: 4, backgroundColor: "#fff" }}>
           <div className="grid grid-cols-2 gap-8 pt-4">
-            <FormControl
-              fullWidth
-              variant="outlined"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  height: "40px",
-                  backgroundColor: "#fff",
-                  "& fieldset": { borderColor: "#d1d5db" },
-                  "&:hover fieldset": { borderColor: "#C72030" },
-                  "&.Mui-focused fieldset": { borderColor: "#C72030" },
-                },
-                "& .MuiInputLabel-root.Mui-focused": { color: "#C72030" },
-                "& .MuiFormLabel-asterisk": { color: "#da7756" },
-              }}
-            >
-              <InputLabel id="rm-user-label" shrink required>
-                Rm User
-              </InputLabel>
-              <MuiSelect
-                labelId="rm-user-label"
-                label="Rm User *"
-                notched
-                displayEmpty
-                value={
-                  formData.rmUserId ? formData.rmUserId.toString() : ""
-                }
-                onChange={(event: SelectChangeEvent<string>) =>
-                  handleSelectChange("rmUser", event.target.value)
-                }
-                MenuProps={{
-                  PaperProps: { sx: { maxHeight: 300, mt: 0.5 } },
+            <div className="space-y-2">
+              <label
+                id="rm-user-label"
+                htmlFor="rm-user-select"
+                className="block text-xs font-semibold text-gray-600"
+              >
+                Rm User <span className="text-[#da7756]">*</span>
+              </label>
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: "40px",
+                    backgroundColor: "#fff",
+                    "& fieldset": { borderColor: "#d1d5db" },
+                    "&:hover fieldset": { borderColor: "#C72030" },
+                    "&.Mui-focused fieldset": { borderColor: "#C72030" },
+                  },
                 }}
               >
-                <MenuItem value="" disabled>
-                  Select Rm User
-                </MenuItem>
-                {rmUsers.map((user) => (
-                  <MenuItem key={user.id} value={user.id.toString()}>
-                    {user.name}
+                <MuiSelect
+                  id="rm-user-select"
+                  labelId="rm-user-label"
+                  displayEmpty
+                  value={
+                    formData.rmUserId ? formData.rmUserId.toString() : ""
+                  }
+                  onChange={(event: SelectChangeEvent<string>) =>
+                    handleSelectChange("rmUser", event.target.value)
+                  }
+                  MenuProps={{
+                    PaperProps: { sx: { maxHeight: 300, mt: 0.5 } },
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    Select Rm User
                   </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
+                  {rmUsers.map((user) => (
+                    <MenuItem key={user.id} value={user.id.toString()}>
+                      {user.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+            </div>
 
             <div className="space-y-2">
-              <div className="relative">
-                <label className="absolute -top-2 left-2 bg-white px-1 text-xs font-semibold text-gray-600 z-10">
-                  Block Dates <span className="text-[#da7756]">*</span>
-                </label>
-                <Input
-                  type="date"
-                  name="blockDate"
-                  value={formData.blockDate}
-                  onChange={handleInputChange}
-                  className="bg-white border-gray-300 text-gray-500 focus:border-[#C72030] focus:ring-0 h-10"
-                />
-              </div>
+              <label
+                htmlFor="block-date"
+                className="block text-xs font-semibold text-gray-600"
+              >
+                Block Dates <span className="text-[#da7756]">*</span>
+              </label>
+              <Input
+                id="block-date"
+                type="date"
+                name="blockDate"
+                value={formData.blockDate}
+                onChange={handleInputChange}
+                className="bg-white border-gray-300 text-gray-500 focus:border-[#C72030] focus:ring-0 h-10"
+              />
             </div>
           </div>
         </DialogContent>
@@ -564,8 +567,7 @@ variant="ghost"
         <DialogActions
           sx={{
             p: 2,
-            borderTop: "1px solid #e5e7eb",
-            justifyContent: "center",
+            justifyContent: "flex-end",
             backgroundColor: "#fff",
           }}
         >

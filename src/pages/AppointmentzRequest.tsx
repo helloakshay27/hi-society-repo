@@ -963,7 +963,7 @@ export const AppointmentzRequest: React.FC = () => {
       {/* Filter Modal Popup according to Design Guidelines */}
       <Dialog open={showFilterBar} onOpenChange={setShowFilterBar}>
         <DialogContent className="sm:max-w-[560px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl">
-          <DialogHeader className="bg-[#f6f4ee] px-6 py-4 border-b border-[#D5DbDB]">
+          <DialogHeader className="bg-white px-6 py-4">
             <DialogTitle className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
               <Filter className="w-5 h-5 text-[#DA7756]" />
               Filter Requests
@@ -1095,7 +1095,17 @@ export const AppointmentzRequest: React.FC = () => {
             </div>
           </div>
 
-          <DialogFooter className="bg-[#f6f4ee] px-6 py-3 border-t border-[#D5DbDB] flex gap-2 sm:justify-end">
+          <DialogFooter className="bg-white px-6 py-3 flex gap-2 sm:justify-end">
+            <Button
+              variant="ghost"
+              className="btn-primary"
+              onClick={() => {
+                handleApplyFilter();
+                setShowFilterBar(false);
+              }}
+            >
+              Apply
+            </Button>
             <Button
               variant="outline"
               onClick={() => {
@@ -1105,16 +1115,6 @@ export const AppointmentzRequest: React.FC = () => {
               className="border-[#D5DbDB] hover:bg-[#DBC2A9] text-[#1A1A1A]"
             >
               Reset
-            </Button>
-            <Button
-              variant="ghost"
-              className="btn-primary"
-              onClick={() => {
-                handleApplyFilter();
-                setShowFilterBar(false);
-              }}
-            >
-              Apply Filter
             </Button>
           </DialogFooter>
         </DialogContent>

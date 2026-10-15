@@ -462,8 +462,8 @@ const CampaignsOtherProjectConfig: React.FC = () => {
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
-        <form onSubmit={handleSubmit}>
+      <div className="bg-white rounded-lg shadow border border-[rgba(26,26,24,.09)] p-6 space-y-6">
+        <form id="campaigns-other-project-config-form" onSubmit={handleSubmit}>
           <div className="space-y-6">
             {/* Row 1: Name and Cover Image */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1262,26 +1262,27 @@ const CampaignsOtherProjectConfig: React.FC = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
-            <div className="flex gap-3 justify-end pt-4">
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="!bg-[#C72030] !text-white px-8 border-0 flex items-center gap-2"
-              >
-                {isLoading ? "Submitting..." : "Submit"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isLoading}
-                onClick={() => navigate("/campaigns/other-project")}
-              >
-                Cancel
-              </Button>
-            </div>
           </div>
         </form>
+      </div>
+
+      <div className="mt-4 flex gap-3 justify-end">
+        <Button
+          type="submit"
+          form="campaigns-other-project-config-form"
+          disabled={isLoading}
+          className="!bg-[#C72030] !text-white px-8 border-0 flex items-center gap-2"
+        >
+          {isLoading ? "Submitting..." : "Submit"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isLoading}
+          onClick={() => navigate("/campaigns/other-project")}
+        >
+          Cancel
+        </Button>
       </div>
     </div>
   );

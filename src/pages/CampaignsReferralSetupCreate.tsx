@@ -139,7 +139,7 @@ const CampaignsReferralSetupCreate: React.FC = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6">
+          <form id="referral-setup-create-form" onSubmit={handleSubmit} className="p-6">
             {error && (
               <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
                 {error}
@@ -421,26 +421,26 @@ const CampaignsReferralSetupCreate: React.FC = () => {
               )}
             </div>
 
-
-            {/* Submit Button */}
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                disabled={isSubmitting}
-                className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
-              >
-                {isSubmitting ? "Submitting..." : "Submit"}
-              </button>
-            </div>
           </form>
+        </div>
+
+        <div className="mt-4 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            disabled={isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="referral-setup-create-form"
+            disabled={isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+          >
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </button>
         </div>
       </div>
     </div>

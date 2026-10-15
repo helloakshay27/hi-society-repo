@@ -564,8 +564,8 @@ const AppointmentzSlotsConfig = () => {
             }
           }}
         >
-          <DialogHeader className="bg-[#f6f4ee] p-4 border-b border-[#D5DbDB]">
-            <DialogTitle className="text-center w-full font-bold text-lg text-[#1A1A1A]">
+          <DialogHeader className="bg-white p-4 rounded-t-lg">
+            <DialogTitle className="text-left w-full font-bold text-lg text-[#1A1A1A]">
               {isEditMode ? "Edit Schedule" : "Add Schedule"}
             </DialogTitle>
           </DialogHeader>
@@ -795,14 +795,7 @@ const AppointmentzSlotsConfig = () => {
             </div>
           </div>
 
-          <DialogFooter className="p-4 border-t border-[#D5DbDB] flex justify-end gap-2 bg-[#f6f4ee]">
-            <Button
-              variant="outline"
-              onClick={() => setIsAddModalOpen(false)}
-              className="border-[#D5DbDB] text-gray-700 hover:bg-white text-xs h-9 px-4"
-            >
-              Cancel
-            </Button>
+          <DialogFooter className="p-4 flex flex-row justify-end gap-2 bg-white rounded-b-lg">
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
@@ -810,6 +803,13 @@ const AppointmentzSlotsConfig = () => {
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
               <span>{isEditMode ? "Update" : "Submit"}</span>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsAddModalOpen(false)}
+              className="border-[#D5DbDB] text-gray-700 hover:bg-white text-xs h-9 px-4"
+            >
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

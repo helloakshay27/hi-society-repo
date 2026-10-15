@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardFilters } from '../../api/types';
 import { KpiTile } from '../common/KpiTile';
 import { Card } from '../common/Card';
@@ -27,6 +27,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   sitesSettled = true,
   isRefreshing = false,
 }) => {
+
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   const {
@@ -41,6 +42,11 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
     error: wfError,
     refetch: refetchWf,
   } = useWorkflowUsage(filters, selectedModule, null, sitesSettled);
+
+  // Refetch workflow usage when the selected module changes to ensure fresh data
+  useEffect(() => {
+    refetchWf();
+  }, [selectedModule]);
 
   const isWfActiveLoading = isWfLoading || isRefreshing;
   const isModulesActiveLoading = isModulesLoading || isRefreshing;
