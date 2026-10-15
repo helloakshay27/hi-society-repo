@@ -249,8 +249,8 @@ const SmartSecureStaffReport: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] p-6">
       {/* Header */}
-      <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
-        <div className="px-6 py-4">
+      <div className="mb-6">
+        <div className="px-6">
           <h1 className="text-2xl font-semibold text-gray-900">Staff Report</h1>
         </div>
       </div>

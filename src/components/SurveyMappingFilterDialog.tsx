@@ -13,7 +13,7 @@ import {
   Select as MuiSelect,
   MenuItem,
 } from "@mui/material";
-import { X } from "lucide-react";
+import { X, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -82,10 +82,12 @@ interface SocietyItem {
 }
 
 const fieldStyles = {
-  height: { xs: 28, sm: 36, md: 45 },
-  "& .MuiInputBase-input, & .MuiSelect-select": {
-    padding: { xs: "8px", sm: "10px", md: "12px" },
-  },
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-notchedOutline": { borderColor: "#ddd" },
+  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
 };
 
 const selectMenuProps = {
@@ -93,8 +95,8 @@ const selectMenuProps = {
     style: {
       maxHeight: 224,
       backgroundColor: "white",
-      border: "1px solid #e2e8f0",
-      borderRadius: "8px",
+      border: "1px solid rgba(26,26,24,.09)",
+      borderRadius: "12px",
       boxShadow:
         "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
       zIndex: 9999,
@@ -620,30 +622,37 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
   return (
     <Dialog open={isOpen} onOpenChange={onClose} modal={false}>
       <DialogContent
-        className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white z-50"
+        className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white z-50 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] p-0 gap-0"
         aria-describedby="survey-mapping-filter-dialog-description"
       >
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <DialogTitle className="text-lg font-semibold text-gray-900">
-            FILTER SURVEY MAPPINGS
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4">
+          <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+              style={{ backgroundColor: "#F5F4F0" }}
+            >
+              <Filter size={14} color="#1A1A18" />
+            </span>
+            Filter Survey Mappings
           </DialogTitle>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-6 w-6 p-0 hover:bg-gray-100"
+            className="h-8 w-8 p-0 rounded-md hover:bg-[#F7F6F2]"
+            aria-label="Close"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 text-gray-600" />
           </Button>
           <div id="survey-mapping-filter-dialog-description" className="sr-only">
             Filter survey mappings by survey title and location hierarchy (site, building, wing, floor, area, room)
           </div>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 px-6 pb-6">
           {/* Society Selection Section */}
           {/* <div>
-            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+            <h3 className="text-sm font-semibold text-[#1A1A18] mb-4">
               Society
             </h3>
             <div className="grid grid-cols-1 gap-6">
@@ -672,7 +681,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
 
           {/* Survey Details Section */}
           <div>
-            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+            <h3 className="text-sm font-semibold text-[#1A1A18] mb-4">
               Survey Details
             </h3>
             <div className="grid grid-cols-1 gap-6">
@@ -701,7 +710,7 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
 
           {/* Location Hierarchy Section */}
           <div>
-            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+            <h3 className="text-sm font-semibold text-[#1A1A18] mb-4">
               Location Hierarchy
             </h3>
             {/* Society Selection */}
@@ -800,21 +809,22 @@ export const SurveyMappingFilterDialog: React.FC<SurveyMappingFilterDialogProps>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
-          <Button
-            onClick={handleApply}
-            disabled={isLoading}
-            className="bg-[#C72030] text-white hover:bg-[#C72030]/90 flex-1 h-11"
-          >
-            {isLoading ? "Applying..." : "Apply Filter"}
-          </Button>
-          <Button
-            variant="outline"
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.08)]">
+          <button
+            type="button"
             onClick={handleClear}
-            className="flex-1 h-11"
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
           >
             Clear All
-          </Button>
+          </button>
+          <button
+            type="button"
+            onClick={handleApply}
+            disabled={isLoading}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+          >
+            {isLoading ? "Applying..." : "Apply Filter"}
+          </button>
         </div>
       </DialogContent>
     </Dialog>

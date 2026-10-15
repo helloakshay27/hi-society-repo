@@ -684,7 +684,7 @@ const SmartSecureVisitorIn: React.FC = () => {
     <Button
       variant="outline"
       size="sm"
-      className="h-8 flex items-center gap-2 rounded-lg border-[#da7756] text-[#da7756] [&_svg]:text-[#da7756]"
+      className="h-8 w-9 flex items-center gap-2 rounded-lg"
       onClick={() => setIsBulkUploadOpen(true)}
       title="Import"
     >

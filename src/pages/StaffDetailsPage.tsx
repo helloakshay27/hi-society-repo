@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Edit, Printer, ArrowLeft, Loader2, ChevronDown, ChevronUp, User, MapPin, Calendar, FileText, Image, QrCode, Plus, X } from 'lucide-react';
@@ -87,7 +89,7 @@ export const StaffDetailsPage = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+      <div className="p-4 sm:p-6 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
           <p>Loading staff details...</p>
@@ -99,14 +101,14 @@ export const StaffDetailsPage = () => {
   // Error state
   if (error || !staff) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="p-4 sm:p-6 min-h-screen">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <div className="text-red-800 font-medium">Error loading staff details</div>
           <div className="text-red-600 text-sm mt-1">{error || 'Staff not found'}</div>
           <div className="flex gap-2 mt-3">
             <Button 
               onClick={() => window.location.reload()} 
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-[#C72030] hover:bg-[#A01828] !text-white"
               size="sm"
             >
               Retry
@@ -355,14 +357,14 @@ export const StaffDetailsPage = () => {
     return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
   };
 
-  // Expandable Section Component (similar to ticket details)
-  const ExpandableSection = ({ 
-    title, 
-    icon: Icon, 
-    isExpanded, 
-    onToggle, 
+  // Expandable Section Component (Card layout, same as Visitor Details)
+  const ExpandableSection = ({
+    title,
+    icon: Icon,
+    isExpanded,
+    onToggle,
     children,
-    hasData = true 
+    hasData = true
   }: {
     title: string;
     icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
@@ -371,74 +373,79 @@ export const StaffDetailsPage = () => {
     children: React.ReactNode;
     hasData?: boolean;
   }) => (
-    <div className="border-2 rounded-lg mb-6">
-      <div 
-        onClick={onToggle} 
-        className="flex items-center justify-between cursor-pointer p-6"
-        style={{ backgroundColor: 'rgb(246 244 238)' }}
+    <Card className="w-full mb-6">
+      <CardHeader
+        onClick={onToggle}
+        className="cursor-pointer pb-4 lg:pb-6"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-            <Icon className="w-4 h-4" style={{ color: "#C72030" }} />
+        <CardTitle className="flex items-center justify-between gap-3 text-lg font-semibold text-[#1A1A1A]">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+              <Icon className="w-6 h-6" style={{ color: '#C72030' }} />
+            </div>
+            <span className="uppercase tracking-wide">{title}</span>
           </div>
-          <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-            {title}
-          </h3>
-        </div>
-        <div className="flex items-center gap-2">
-          {!hasData && (
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">No data</span>
-          )}
-          {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-600" /> : <ChevronDown className="w-5 h-5 text-gray-600" />}
-        </div>
-      </div>
-      {isExpanded && (
-        <div 
-          className="p-6"
-          style={{ backgroundColor: 'rgb(246 247 247)' }}
-        >
-          {children}
-        </div>
-      )}
-    </div>
+          <div className="flex items-center gap-2">
+            {!hasData && (
+              <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">No data</span>
+            )}
+            {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-600" /> : <ChevronDown className="w-5 h-5 text-gray-600" />}
+          </div>
+        </CardTitle>
+      </CardHeader>
+      {isExpanded && <CardContent className="pt-0">{children}</CardContent>}
+    </Card>
   );
 
   return (
-    <div className="p-6 bg-white min-h-screen">
+    <div className="p-4 sm:p-6 min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-          <button onClick={() => navigate('/smartsecure/staff')} className="flex items-center gap-1 hover:text-[#C72030] transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            <span className="font-bold text-[#1a1a1a]">Back to Staff List</span>
-          </button>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-[#1a1a1a]">Staff Summary</h1>
-          <div className="flex gap-3">
-            {/* <Button
-              onClick={handleVerifyNumber}
-              className="bg-[#8B4B8C] hover:bg-[#7A4077] text-white px-4 py-2"
-              disabled={staff.number_verified || sendingOTP}
-            >
-              {sendingOTP ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Sending OTP...
-                </>
-              ) : staff.number_verified ? (
-                'Number Verified'
-              ) : (
-                'Verify Number'
+        <button
+          onClick={() => navigate('/smartsecure/staff')}
+          className="flex items-center gap-1 hover:text-gray-800 mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Staff List
+        </button>
+
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Staff Details</h1>
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500 font-medium">Staff Name:</span>
+                <span className="font-semibold text-gray-900">{staff.full_name || '--'}</span>
+              </div>
+              {hasData(staff.soc_staff_id) && (
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 font-medium">Staff ID:</span>
+                  <span className="font-semibold text-gray-900">{staff.soc_staff_id}</span>
+                </div>
               )}
-            </Button> */}
+              {hasData(staff.status_text) && (
+                <Badge
+                  className={
+                    staff.status_text === 'Approved'
+                      ? 'bg-green-100 text-green-800'
+                      : staff.status_text === 'Pending'
+                        ? 'bg-orange-100 text-orange-800'
+                        : 'bg-red-100 text-red-800'
+                  }
+                >
+                  {String(staff.status_text).toUpperCase()}
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-2">
             <Button
               onClick={handleEdit}
-              style={{ backgroundColor: '#C72030' }}
-              className="text-white hover:bg-[#C72030]/90"
+              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
             >
               <Edit className="w-4 h-4" style={{ color: '#fff' }} />
+              Edit
             </Button>
           </div>
         </div>
@@ -454,83 +461,83 @@ export const StaffDetailsPage = () => {
       >
         {/* Centered Image and Name */}
         <div className="flex flex-col items-center mb-8">
-          <img 
-            src={staff.staff_image_url || '/placeholder.svg'} 
+          <img
+            src={staff.staff_image_url || '/placeholder.svg'}
             alt="Staff profile"
             className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 mb-4"
           />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">{staff.full_name}</h3>
-          <p className="text-gray-600 mb-4">{staff.work_type_name}</p>
+          <h3 className="text-xl font-semibold text-gray-900 mb-1">{staff.full_name}</h3>
+          <p className="text-sm text-gray-500">{staff.work_type_name}</p>
         </div>
 
         {/* Two Column Grid for Data */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
           <div className="space-y-4">
             {hasData(staff.full_name) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Name</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{staff.full_name}</span>
+                <span className="text-gray-500 min-w-[140px]">Name</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{staff.full_name}</span>
               </div>
             )}
             
             {hasData(staff.email) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Email</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-blue-600 font-semibold flex-1">{staff.email}</span>
+                <span className="text-gray-500 min-w-[140px]">Email</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{staff.email}</span>
               </div>
             )}
             
             {hasData(staff.mobile) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Mobile</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{staff.mobile}</span>
+                <span className="text-gray-500 min-w-[140px]">Mobile</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{staff.mobile}</span>
               </div>
             )}
             
             {hasData(staff.vendor_name) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Company Name</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{staff.vendor_name}</span>
+                <span className="text-gray-500 min-w-[140px]">Company Name</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{staff.vendor_name}</span>
               </div>
             )}
             
             {hasData(staff.soc_staff_id) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Staff ID</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{staff.soc_staff_id}</span>
+                <span className="text-gray-500 min-w-[140px]">Staff ID</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{staff.soc_staff_id}</span>
               </div>
             )}
             
             {hasData(staff.valid_from) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Valid From</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{formatDate(staff.valid_from)}</span>
+                <span className="text-gray-500 min-w-[140px]">Valid From</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{formatDate(staff.valid_from)}</span>
               </div>
             )}
 
             {hasData(staff.expiry) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Valid Till</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{formatDate(staff.expiry!)}</span>
+                <span className="text-gray-500 min-w-[140px]">Valid Till</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{formatDate(staff.expiry!)}</span>
               </div>
             )}
 
              {hasData(staff.status_text) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Status</span>
-                <span className="text-gray-500 mx-3">:</span>
+                <span className="text-gray-500 min-w-[140px]">Status</span>
+                <span className="text-gray-500 mx-2">:</span>
                 <div className="flex-1">
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    staff.status_text === 'Approved' ? 'bg-green-100 text-green-600' :
-                    staff.status_text === 'Pending' ? 'bg-yellow-100 text-yellow-600' :
-                    'bg-red-100 text-red-600'
+                    staff.status_text === 'Approved' ? 'bg-green-100 text-green-800' :
+                    staff.status_text === 'Pending' ? 'bg-orange-100 text-orange-800' :
+                    'bg-red-100 text-red-800'
                   }`}>
                     {staff.status_text}
                   </span>
@@ -540,17 +547,17 @@ export const StaffDetailsPage = () => {
 
             {hasData(staff.blocked_by_user_name) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Blocked By</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{staff.blocked_by_user_name}</span>
+                <span className="text-gray-500 min-w-[140px]">Blocked By</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{staff.blocked_by_user_name}</span>
               </div>
             )}
 
             {hasData(staff.block_reason) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Block Reason</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{staff.block_reason}</span>
+                <span className="text-gray-500 min-w-[140px]">Block Reason</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{staff.block_reason}</span>
               </div>
             )}
           </div>
@@ -560,55 +567,55 @@ export const StaffDetailsPage = () => {
             
             {hasData(staff.department_name) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Department</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{staff.department_name}</span>
+                <span className="text-gray-500 min-w-[140px]">Department</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{staff.department_name}</span>
               </div>
             )}
             
             {hasData(staff.unit_name) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Unit</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{staff.unit_name}</span>
+                <span className="text-gray-500 min-w-[140px]">Unit</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{staff.unit_name}</span>
               </div>
             )}
             
             {hasData(staff.work_type_name) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Work Type</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{staff.work_type_name}</span>
+                <span className="text-gray-500 min-w-[140px]">Work Type</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{staff.work_type_name}</span>
               </div>
             )}
 
             {hasData(staff.staff_type) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Staff Type</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{staff.staff_type}</span>
+                <span className="text-gray-500 min-w-[140px]">Staff Type</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{staff.staff_type}</span>
               </div>
             )}
 
             {hasData(staff.associate_function_name) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Association Type</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1 capitalize">{staff.associate_function_name}</span>
+                <span className="text-gray-500 min-w-[140px]">Association Type</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1 capitalize">{staff.associate_function_name}</span>
               </div>
             )}
             
             {hasData(staff.created_at) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Created On</span>
-                <span className="text-gray-500 mx-3">:</span>
-                <span className="text-gray-900 font-semibold flex-1">{formatDate(staff.created_at)}</span>
+                <span className="text-gray-500 min-w-[140px]">Created On</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium flex-1">{formatDate(staff.created_at)}</span>
               </div>
             )}
             
             {/* <div className="flex items-start">
-              <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Number Verified</span>
-              <span className="text-gray-500 mx-3">:</span>
+              <span className="text-gray-500 min-w-[140px]">Number Verified</span>
+              <span className="text-gray-500 mx-2">:</span>
               <div className="flex-1">
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
                   staff.number_verified ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
@@ -629,12 +636,12 @@ export const StaffDetailsPage = () => {
         onToggle={() => toggleSection('workInfo')}
         hasData={hasData(staff.expiry_type) || hasData(staff.expiry_value)}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
           <div className="space-y-4">
             <div className="flex items-start">
-              <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Expiry Type</span>
-              <span className="text-gray-500 mx-3">:</span>
-              <span className="text-gray-900 font-semibold flex-1">
+              <span className="text-gray-500 min-w-[140px]">Expiry Type</span>
+              <span className="text-gray-500 mx-2">:</span>
+              <span className="text-gray-900 font-medium flex-1">
                 {hasData(staff.expiry_type) ? (
                   <>
                     {staff.expiry_type}
@@ -658,16 +665,16 @@ export const StaffDetailsPage = () => {
         hasData={staff.helpdesk_operations && staff.helpdesk_operations.length > 0}
       >
         {staff.helpdesk_operations && staff.helpdesk_operations.length > 0 ? (
-          <div className="bg-white rounded-lg border">
-            <div className="grid grid-cols-2 gap-4 p-4">
-              <div className="text-center font-semibold border-b border-gray-300 pb-2">Day</div>
-              <div className="text-center font-semibold border-b border-gray-300 pb-2">Time</div>
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="grid grid-cols-2 gap-4 p-4 text-sm">
+              <div className="text-center font-semibold text-gray-900 border-b border-gray-200 pb-2">Day</div>
+              <div className="text-center font-semibold text-gray-900 border-b border-gray-200 pb-2">Time</div>
               {staff.helpdesk_operations.map((operation, index) => (
                 <React.Fragment key={index}>
-                  <div className="text-center py-2 border-b border-gray-200">
+                  <div className="text-center py-2 border-b border-gray-200 text-gray-900">
                     {operation.day}
                   </div>
-                  <div className="text-center py-2 border-b border-gray-200 text-blue-600">
+                  <div className="text-center py-2 border-b border-gray-200 text-gray-900 font-medium">
                     {operation.start_hour && operation.end_hour 
                       ? `${formatTime(operation.start_hour, operation.start_min)} to ${formatTime(operation.end_hour, operation.end_min)}`
                       : '--:-- to --:--'
@@ -683,55 +690,55 @@ export const StaffDetailsPage = () => {
       </ExpandableSection>
 
       {/* Section 5: Associate Flat */}
-      <div className="border-2 rounded-lg mb-6">
-        <div
+      <Card className="w-full mb-6">
+        <CardHeader
           onClick={() => toggleSection('associateFlat')}
-          className="flex items-center justify-between cursor-pointer p-6"
-          style={{ backgroundColor: 'rgb(246 244 238)' }}
+          className="cursor-pointer pb-4 lg:pb-6"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-              <MapPin className="w-4 h-4" style={{ color: '#C72030' }} />
+          <CardTitle className="flex items-center justify-between gap-3 text-lg font-semibold text-[#1A1A1A]">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                <MapPin className="w-6 h-6" style={{ color: '#C72030' }} />
+              </div>
+              <span className="uppercase tracking-wide">Associate Flat</span>
+              {associatedFlats.length > 0 && (
+                <span className="w-6 h-6 rounded-full bg-[#C72030] text-white text-xs font-bold flex items-center justify-center">
+                  {associatedFlats.length}
+                </span>
+              )}
             </div>
-            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-              Associate Flat
-            </h3>
-            {associatedFlats.length > 0 && (
-              <span className="w-6 h-6 rounded-full bg-[#c72030] text-white text-xs font-bold flex items-center justify-center">
-                {associatedFlats.length}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); handleOpenFlatModal(); }}
-              className="w-8 h-8 rounded bg-[#c72030] hover:bg-[#2f8fc4] text-white flex items-center justify-center"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-            {expandedSections.associateFlat
-              ? <ChevronUp className="w-5 h-5 text-gray-600" />
-              : <ChevronDown className="w-5 h-5 text-gray-600" />}
-          </div>
-        </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); handleOpenFlatModal(); }}
+                className="w-8 h-8 rounded-lg bg-[#C72030] hover:bg-[#A01828] text-white flex items-center justify-center"
+                aria-label="Associate flat"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+              {expandedSections.associateFlat
+                ? <ChevronUp className="w-5 h-5 text-gray-600" />
+                : <ChevronDown className="w-5 h-5 text-gray-600" />}
+            </div>
+          </CardTitle>
+        </CardHeader>
         {expandedSections.associateFlat && (
-          <div className="p-6" style={{ backgroundColor: 'rgb(246 247 247)' }}>
+          <CardContent className="pt-0">
             {associatedFlats.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No flats associated. Click + to add.</p>
+              <p className="text-sm text-gray-500 text-center py-4">No flats associated. Click + to add.</p>
             ) : (
               <div className="flex flex-wrap gap-3">
                 {associatedFlats.map((flat, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 px-4 py-2 rounded text-sm font-medium"
-                    style={{ backgroundColor: '#f5e6c8', color: '#8B5C00' }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#F5F4F0] text-[#1A1A18] border border-[rgba(26,26,24,.09)]"
                   >
                     <span>{flat.display}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveFlat(index)}
-                      className="text-red-500 hover:text-red-700 ml-1"
+                      className="text-gray-400 hover:text-[#C72030] ml-1"
+                      aria-label={`Remove ${flat.display}`}
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -739,9 +746,9 @@ export const StaffDetailsPage = () => {
                 ))}
               </div>
             )}
-          </div>
+          </CardContent>
         )}
-      </div>
+      </Card>
 
       {/* Section 4: QR Code Information */}
       <ExpandableSection
@@ -752,7 +759,7 @@ export const StaffDetailsPage = () => {
         hasData={staff.qr_code_present}
       >
         <div className="text-center">
-          <div className="bg-white border-2 border-gray-200 rounded-lg p-8 mb-4 inline-block">
+          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4 inline-block">
             {staff.qr_code_present && staff.qr_code_url ? (
               <img 
                 src={staff.qr_code_url} 
@@ -760,8 +767,8 @@ export const StaffDetailsPage = () => {
                 className="w-48 h-48 mx-auto"
               />
             ) : (
-              <div className="w-48 h-48 mx-auto bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">No QR Code Available</span>
+              <div className="w-48 h-48 mx-auto bg-[#F5F4F0] rounded-lg flex items-center justify-center">
+                <span className="text-sm text-gray-500">No QR Code Available</span>
               </div>
             )}
           </div>
@@ -804,7 +811,7 @@ export const StaffDetailsPage = () => {
                   <select
                     value={selectedTower}
                     onChange={(e) => handleTowerChange(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030] bg-white text-gray-700"
+                    className="w-full px-3 py-2.5 border border-[rgba(26,26,24,.12)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030] bg-white text-gray-700"
                     title="Select Tower"
                   >
                     <option value="">Select Tower</option>
@@ -818,7 +825,7 @@ export const StaffDetailsPage = () => {
                     value={selectedFlat}
                     onChange={(e) => setSelectedFlat(e.target.value)}
                     disabled={!selectedTower || loadingFlats}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030] bg-white text-gray-700 disabled:bg-gray-100 disabled:text-gray-400"
+                    className="w-full px-3 py-2.5 border border-[rgba(26,26,24,.12)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030] bg-white text-gray-700 disabled:bg-gray-100 disabled:text-gray-400"
                     title="Select Flat"
                   >
                     <option value="">
@@ -839,7 +846,7 @@ export const StaffDetailsPage = () => {
             <Button
               onClick={handleAddFlat}
               disabled={savingFlat || !selectedFlat}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-[#C72030] hover:bg-[#A01828] !text-white"
             >
               {savingFlat ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving...</> : 'Submit'}
             </Button>
@@ -874,7 +881,7 @@ export const StaffDetailsPage = () => {
                 variant="link"
                 onClick={handleResendOTP}
                 disabled={sendingOTP}
-                className="text-[#8B4B8C] hover:text-[#7A4077] p-0 h-auto text-sm"
+                className="text-[#C72030] hover:text-[#A01828] p-0 h-auto text-sm"
               >
                 {sendingOTP ? 'Resending...' : 'Resend OTP'}
               </Button>
@@ -891,7 +898,7 @@ export const StaffDetailsPage = () => {
             <Button
               onClick={handleVerifySubmit}
               disabled={verifying || !otp.trim()}
-              className="bg-[#8B4B8C] hover:bg-[#7A4077] text-white"
+              className="bg-[#C72030] hover:bg-[#A01828] !text-white"
             >
               {verifying ? (
                 <>

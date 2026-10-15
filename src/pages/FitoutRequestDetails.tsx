@@ -9,18 +9,10 @@ import html2pdf from "html2pdf.js";
 import { 
   ArrowLeft, 
   FileText, 
-  CheckCircle, 
-  XCircle, 
-  Info,
   Loader2,
   Edit,
   Trash2,
   Clock,
-  MapPin,
-  User,
-  Calendar,
-  Building2,
-  Home,
   DollarSign,
   Paperclip,
   Download,
@@ -29,8 +21,13 @@ import {
   Logs,
   MessageSquare,
   Upload,
-  FileQuestion,
-  Eye
+  Eye,
+  MoreVertical,
+  Pencil,
+  Check,
+  ListChecks,
+  LayoutDashboard,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
@@ -52,7 +49,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Feed } from "@mui/icons-material";
 import { getAuthHeader } from "@/config/apiConfig";
 
 // Type definitions matching the API response
@@ -288,7 +284,8 @@ const FitoutRequestDetails: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [requestData, setRequestData] = useState<FitoutRequestDetail | null>(null);
-  const [activeTab, setActiveTab] = useState("request-information");
+  const [activeTab, setActiveTab] = useState("overview");
+  const [actionMenuOpen, setActionMenuOpen] = useState(false);
   const [responses, setResponses] = useState<FitoutResponse[]>([]);
   const [responsesLoading, setResponsesLoading] = useState(false);
   
@@ -2160,349 +2157,250 @@ const FitoutRequestDetails: React.FC = () => {
   const totalDocuments = requestData.fitout_request_categories.reduce((sum, cat) => sum + cat.documents.length, 0);
 
   return (
-    <div className="p-4 sm:p-6 min-h-screen bg-gray-50">
+    <div className="p-4 sm:p-6 min-h-screen" style={{ backgroundColor: "#FDFDFB" }}>
+
+      {/* Back */}
+      <button
+        onClick={handleBack}
+        className="flex items-center gap-1.5 text-[12.5px] font-semibold text-[rgba(26,26,24,.48)] hover:text-[#1A1A18] transition-colors"
+      >
+        <ArrowLeft className="w-[18px] h-[18px]" />
+        Back to Fitout Requests
+      </button>
 
       {/* Header */}
-      <div className="mb-6">
-        <button
-          onClick={handleBack}
-          className="flex items-center gap-1 hover:text-gray-800 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Fitout Requests
-        </button>
-
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 my-4">
+        <div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-[22px] font-semibold text-[#1A1A18]" style={{ letterSpacing: '-0.015em', lineHeight: 1.2 }}>
               Fitout Request #{requestData.id}
             </h1>
-            <Badge
-              variant={requestData.status_name ? "default" : "secondary"}
-              className="text-xs"
-              style={{
-                backgroundColor: statuses.find(s => s.id === requestData.status_id)?.color_code || '#C72030',
-                color: 'white'
-              }}
+            <span
+              className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold text-white whitespace-nowrap"
+              style={{ backgroundColor: statuses.find((s) => s.id === requestData.status_id)?.color_code || '#C72030' }}
             >
               {requestData.status_name || 'Pending'}
-            </Badge>
+            </span>
           </div>
+          <p className="text-[13.5px] text-[rgba(26,26,24,.68)] mt-1">
+            Created {formatDateTime(requestData.created_at)} · Last updated {formatDateTime(requestData.updated_at)}
+          </p>
+        </div>
 
-          <div className="flex gap-2">
-            {!requestData.lock_payment && (
-              <Button
-                onClick={handleCapturePayment}
-                size="sm"
-                className="bg-[#C72030] hover:bg-[#C72030] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <DollarSign className="w-4 h-4 mr-2" />
-                Capture Payment
-              </Button>
+        <div className="flex items-center gap-2.5">
+          {!requestData.lock_payment && (
+            <button
+              onClick={handleCapturePayment}
+              className="inline-flex items-center justify-center gap-2 min-h-[42px] px-[22px] rounded-lg bg-[#1A1A18] hover:bg-[#12100E] text-white text-[13px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <DollarSign className="w-4 h-4" />
+              Capture Payment
+            </button>
+          )}
+
+          <button
+            onClick={handleEdit}
+            className="inline-flex items-center justify-center gap-2 min-h-[42px] px-[22px] rounded-lg border border-[rgba(26,26,24,.08)] bg-white text-[#1A1A18] text-[13px] font-semibold hover:border-[rgba(26,26,24,.28)] hover:bg-[#F7F6F2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Pencil className="w-4 h-4" />
+            Edit
+          </button>
+
+          <div className="relative">
+            <button
+              onClick={() => setActionMenuOpen((o) => !o)}
+              className="w-[42px] h-[42px] rounded-lg border border-[rgba(26,26,24,.08)] bg-white flex items-center justify-center text-[rgba(26,26,24,.68)] hover:text-[#1A1A18] hover:border-[rgba(26,26,24,.28)] transition-all"
+              aria-label="More actions"
+            >
+              <MoreVertical className="w-[18px] h-[18px]" />
+            </button>
+
+            {actionMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setActionMenuOpen(false)} />
+                <div className="absolute right-0 top-full mt-1.5 z-40 bg-white border border-[rgba(26,26,24,.08)] rounded-xl p-1.5 shadow-[0_8px_28px_rgba(26,26,24,.12)] min-w-[200px]">
+                  <button
+                    onClick={() => { setActionMenuOpen(false); handleChecklistOpen(); }}
+                    className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-[12.5px] font-medium text-[rgba(26,26,24,.68)] hover:text-[#1A1A18] hover:bg-[#F7F6F2] transition-colors"
+                  >
+                    <ListChecks className="w-4 h-4" />
+                    Checklist
+                  </button>
+                  <button
+                    onClick={() => { setActionMenuOpen(false); handleLogsOpen(); }}
+                    className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-[12.5px] font-medium text-[rgba(26,26,24,.68)] hover:text-[#1A1A18] hover:bg-[#F7F6F2] transition-colors"
+                  >
+                    <Logs className="w-4 h-4" />
+                    Logs
+                  </button>
+                </div>
+              </>
             )}
-           
-            <Button
-              onClick={handleEdit}
-              // variant="outline"
-              size="sm"
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </Button>
-              <Button
-              onClick={handleLogsOpen}
-              size="sm"
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Logs className="w-4 h-4 mr-2" />
-              Logs
-            </Button>
-             <Button
-              onClick={handleChecklistOpen}
-              size="sm"
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Checklist
-            </Button>
-
-            {/* <Button
-              onClick={handleDelete}
-              variant="outline"
-              size="sm"
-              style={{ borderColor: "#C72030", color: "#C72030" }}
-              className="hover:bg-red-50"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </Button> */}
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="space-y-6">
-        {/* Tabs */}
-        <Card className="w-full bg-white shadow-sm border border-gray-200">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-auto p-0 text-sm border-b border-gray-200">
-              {[
-                { label: "Request Information", value: "request-information" },
-                { label: "Annexures", value: "annexures" },
-                { label: "Deviations", value: "deviations" },
-                // { label: "Transactions", value: "transactions" },
-                { label: "Captured Payment", value: "responses" },
-              ].map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] px-3 py-2 border-r border-gray-200 last:border-r-0 text-sm"
-                >
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+      {/* Segmented control */}
+      <div
+        className="flex flex-wrap items-center gap-1 p-1 bg-[rgba(26,26,24,.055)] rounded-xl w-fit"
+        style={{ marginBottom: activeTab === 'overview' ? 14 : 22 }}
+      >
+        {[
+          { label: 'Overview', value: 'overview', icon: LayoutDashboard },
+          { label: 'Annexures', value: 'annexures', icon: FileText },
+          { label: 'Deviations', value: 'deviations', icon: AlertTriangle },
+          { label: 'Payment', value: 'payment', icon: DollarSign },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.value;
+          return (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`flex items-center gap-[7px] px-4 py-2 rounded-lg text-[12.5px] font-semibold whitespace-nowrap transition-all ${
+                active
+                  ? 'bg-white text-[#1A1A18] shadow-[0_1px_2px_rgba(26,26,24,.1),0_0_0_1px_rgba(26,26,24,.05)]'
+                  : 'text-[rgba(26,26,24,.55)] hover:text-[#1A1A18]'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-            {/* Request Information */}
-            <TabsContent value="request-information" className="p-4 sm:p-6">
-              {/* Summary Stats */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <DollarSign className="w-5 h-5 text-green-600" />
+      {/* Overview */}
+      {activeTab === 'overview' && (
+        <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 mt-4">
+                {[
+                  { label: 'Total Amount', value: `₹${(totalAmount || 0).toFixed(2)}`, icon: DollarSign },
+                  { label: 'Annexures', value: `${requestData.fitout_request_categories.length}`, icon: FileText },
+                  { label: 'Documents', value: `${totalDocuments}`, icon: Paperclip },
+                  { label: 'Created', value: `${formatDate(requestData.created_at)}`, icon: Clock },
+                ].map((stat) => {
+                  const StatIcon = stat.icon;
+                  return (
+                    <div
+                      key={stat.label}
+                      className="p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 bg-[#F6F4EE] transition-all hover:shadow-lg"
+                    >
+                      <div className="w-14 h-14 flex items-center justify-center rounded bg-[#C4B89D54] flex-shrink-0">
+                        <StatIcon className="w-6 h-6 text-[#C72030]" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-2xl font-semibold text-[#1A1A1A] truncate">{stat.value}</div>
+                        <div className="text-sm font-medium text-[#1A1A1A] truncate">{stat.label}</div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-600">Total Amount</p>
-                      <p className="text-lg font-semibold text-gray-900">
-                        ₹{(totalAmount || 0).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600">Annexures</p>
-                      <p className="text-lg font-semibold text-gray-900">
-                        {requestData.fitout_request_categories.length}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                      <Paperclip className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600">Documents</p>
-                      <p className="text-lg font-semibold text-gray-900">
-                        {totalDocuments}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600">Created</p>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {formatDate(requestData.created_at)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
 
-              {/* Request Information Card */}
-              <Card className="mb-6 border-none bg-transparent shadow-none">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div
-                    className="px-6 py-3 border-b border-gray-200"
-                    style={{ backgroundColor: "#F6F4EE" }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                        <FileText className="w-4 h-4" style={{ color: '#C72030' }} />
-                      </div>
-                      <h3 className="text-base font-semibold text-gray-900">Request Details</h3>
-                    </div>
+              {/* Request Details */}
+              <Card className="mt-4 bg-white border border-[rgba(26,26,24,.09)] rounded-2xl px-6 py-5 shadow-none">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+                    <FileText className="w-4 h-4" style={{ color: '#1A1A18' }} />
                   </div>
-                  <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Request ID</span>
-                        <span className="font-medium text-gray-900">#{requestData.id}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Status</span>
-                        <span className="font-medium text-gray-900">{requestData.status_name || 'Pending'}</span>
-                      </div>
-                       <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Fitout Type</span>
-                        <span className="font-medium text-gray-900">{requestData.fitout_type || 'Pending'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Tower</span>
-                        <span className="font-medium text-gray-900">{requestData.tower || '—'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Flat</span>
-                        <span className="font-medium text-gray-900">{requestData.flat || '—'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">User Name</span>
-                        <span className="font-medium text-gray-900">{requestData.user_name || '—'}</span>
-                      </div>
-                       <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Description</span>
-                        <span className="font-medium text-gray-900">{requestData.description || '—'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Start Date</span>
-                        <span className="font-medium text-gray-900">{formatDate(requestData.start_date)}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Expiry Date</span>
-                        <span className="font-medium text-gray-900">{formatDate(requestData.expiry_date)}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Refund Date</span>
-                        <span className="font-medium text-gray-900">{formatDate(requestData.refund_date)}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Contractor Name</span>
-                        <span className="font-medium text-gray-900">{requestData.contactor_name || '—'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Contractor Mobile</span>
-                        <span className="font-medium text-gray-900">{requestData.contactor_no || '—'}</span>
-                      </div>
-                        <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Amount</span>
-                        <span className="font-medium text-gray-900">{requestData.amount || '—'}</span>
-                      </div>
-                       <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Convenience Charge</span>
-                        <span className="font-medium text-gray-900">{requestData.convenience_charge || '—'}</span>
-                      </div>
-                        <div className="flex flex-col">
-                      <span className="text-gray-600 text-xs mb-1">Deposit</span>
-                        <span className="font-medium text-gray-900">{requestData.deposit || '—'}</span>
-                      </div>
-                     
-                     
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Created At</span>
-                        <span className="font-medium text-gray-900">{formatDateTime(requestData.created_at)}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-xs mb-1">Updated At</span>
-                        <span className="font-medium text-gray-900">{formatDateTime(requestData.updated_at)}</span>
-                      </div>
-                      
-
+                  <h3 className="text-[14px] font-semibold text-[#1A1A18]">Request Details</h3>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
+                  {[
+                    { label: 'Request ID', value: `#${requestData.id}` },
+                    { label: 'Status', value: requestData.status_name || 'Pending' },
+                    { label: 'Fitout Type', value: requestData.fitout_type || '—' },
+                    { label: 'Tower', value: requestData.tower || '—' },
+                    { label: 'Flat', value: requestData.flat || '—' },
+                    { label: 'User Name', value: requestData.user_name || '—' },
+                    { label: 'Description', value: requestData.description || '—' },
+                    { label: 'Start Date', value: formatDate(requestData.start_date) },
+                    { label: 'Expiry Date', value: formatDate(requestData.expiry_date) },
+                    { label: 'Refund Date', value: formatDate(requestData.refund_date) },
+                    { label: 'Contractor Name', value: requestData.contactor_name || '—' },
+                    { label: 'Contractor Mobile', value: requestData.contactor_no || '—' },
+                    { label: 'Amount', value: requestData.amount || '—' },
+                    { label: 'Convenience Charge', value: requestData.convenience_charge || '—' },
+                    { label: 'Deposit', value: requestData.deposit || '—' },
+                    { label: 'Created At', value: formatDateTime(requestData.created_at) },
+                    { label: 'Updated At', value: formatDateTime(requestData.updated_at) },
+                  ].map((f) => (
+                    <div key={f.label} className="min-w-0">
+                      <p className="text-[11px] font-medium text-[rgba(26,26,24,.48)] mb-1">{f.label}</p>
+                      <p className="text-[13.5px] font-medium text-[#1A1A18] break-words">{f.value}</p>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </Card>
 
               {/* Payment Information */}
               {requestData.lock_payment && (
-                <Card className="mb-6 border-none bg-transparent shadow-none">
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                    <div
-                      className="px-6 py-3 border-b border-gray-200"
-                      style={{ backgroundColor: "#F6F4EE" }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                          <DollarSign className="w-4 h-4" style={{ color: '#C72030' }} />
-                        </div>
-                        <h3 className="text-base font-semibold text-gray-900">Payment Information</h3>
-                      </div>
+                <Card className="mt-4 bg-white border border-[rgba(26,26,24,.09)] rounded-2xl px-6 py-5 shadow-none">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+                      <DollarSign className="w-4 h-4" style={{ color: '#1A1A18' }} />
                     </div>
-                    <div className="p-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                        <div className="flex flex-col">
-                          <span className="text-gray-600 text-xs mb-1">Convenience Charge</span>
-                          <span className="font-medium text-gray-900">
-                            ₹{requestData.lock_payment.convenience_charge?.toFixed(2) || '0.00'}
-                          </span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-gray-600 text-xs mb-1">Total Amount (with charges)</span>
-                          <span className="font-medium text-gray-900">
-                            ₹{((totalAmount || 0) + (requestData.lock_payment.convenience_charge || 0)).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
+                    <h3 className="text-[14px] font-semibold text-[#1A1A18]">Payment Information</h3>
+                  </div>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
+                    <div>
+                      <p className="text-[11px] font-medium text-[rgba(26,26,24,.48)] mb-1">Convenience Charge</p>
+                      <p className="text-[13.5px] font-medium text-[#1A1A18]">
+                        ₹{requestData.lock_payment.convenience_charge?.toFixed(2) || '0.00'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-medium text-[rgba(26,26,24,.48)] mb-1">Total Amount (with charges)</p>
+                      <p className="text-[13.5px] font-medium text-[#1A1A18]">
+                        ₹{((totalAmount || 0) + (requestData.lock_payment.convenience_charge || 0)).toFixed(2)}
+                      </p>
                     </div>
                   </div>
                 </Card>
               )}
-            </TabsContent>
+        </>
+            )}
 
             {/* Annexures */}
-            <TabsContent value="annexures" className="p-4 sm:p-6">
-              <Card className="mb-6 border-none bg-transparent shadow-none">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div
-                    className="px-6 py-3 border-b border-gray-200"
-                    style={{ backgroundColor: "#F6F4EE" }}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                          <FileText className="w-4 h-4" style={{ color: '#C72030' }} />
-                        </div>
-                        <h3 className="text-base font-semibold text-gray-900">
-                          Annexures ({requestData.fitout_request_categories.length})
-                        </h3>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Button
-                          onClick={handleDownloadAnnexuresPDF}
-                          size="sm"
-                          className="h-8 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030]"
-                          disabled={isDownloadingAnnexurePDF || annexureSaveLoading}
-                        >
-                          {isDownloadingAnnexurePDF ? (
-                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                          ) : (
-                            <Download className="w-3 h-3 mr-1" />
-                          )}
-                          {isDownloadingAnnexurePDF ? 'Generating...' : 'Download PDF'}
-                        </Button>
-                        <Button
-                          onClick={handleAnnexureResponsesEditButtonClick}
-                          size="sm"
-                          className="h-8 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030]"
-                          disabled={annexureSaveLoading}
-                        >
-                          {annexureSaveLoading ? (
-                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                          ) : (
-                            <Edit className="w-3 h-3 mr-1" />
-                          )}
-                          {annexureResponsesEditMode ? 'Done' : 'Edit Responses'}
-                        </Button>
-                      </div>
+            {activeTab === 'annexures' && (
+              <div className="flex flex-col gap-4 mt-3 pt-0">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+                      <FileText className="w-4 h-4" style={{ color: '#1A1A18' }} />
                     </div>
+                    <h3 className="text-[14px] font-semibold text-[#1A1A18]">
+                      Annexures ({requestData.fitout_request_categories.length})
+                    </h3>
                   </div>
-                  <div className="p-6">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <button
+                      onClick={handleAnnexureResponsesEditButtonClick}
+                      disabled={annexureSaveLoading}
+                      className="inline-flex items-center justify-center gap-2 min-h-[38px] px-[18px] rounded-lg border border-[rgba(26,26,24,.08)] bg-white text-[#1A1A18] text-[12.5px] font-semibold hover:border-[rgba(26,26,24,.28)] hover:bg-[#F7F6F2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {annexureSaveLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Check className="w-4 h-4" />
+                      )}
+                      {annexureResponsesEditMode ? 'Done' : 'Edit Responses'}
+                    </button>
+                    <button
+                      onClick={handleDownloadAnnexuresPDF}
+                      disabled={isDownloadingAnnexurePDF || annexureSaveLoading}
+                      className="inline-flex items-center justify-center gap-2 min-h-[38px] px-[18px] rounded-lg border border-[rgba(26,26,24,.08)] bg-white text-[#1A1A18] text-[12.5px] font-semibold hover:border-[rgba(26,26,24,.28)] hover:bg-[#F7F6F2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isDownloadingAnnexurePDF ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                      {isDownloadingAnnexurePDF ? 'Generating…' : 'Download Annexures PDF'}
+                    </button>
+                  </div>
+                </div>
                     {requestData.fitout_request_categories.length > 0 ? (
                       <div className="space-y-6">
                         {annexureResponses.map((categoryResponse, index) => {
@@ -2517,153 +2415,132 @@ const FitoutRequestDetails: React.FC = () => {
                           return (
                             <div
                               key={categoryResponse.id}
-                              className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300"
+                              className="bg-white border border-[rgba(26,26,24,.09)] rounded-2xl px-6 py-5"
                             >
                               {/* Category Header */}
-                              <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                                <div className="flex items-center justify-between gap-4">
-                                  <div className="flex items-center gap-3 flex-1">
-                                    <div className="w-8 h-8 rounded-full bg-[#C72030] text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                                      {index + 1}
-                                    </div>
-                                    <h4 className="text-base font-semibold text-gray-900">
+                              <div className="flex items-start justify-between gap-4 flex-wrap">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#F5F4F0' }}>
+                                    <FileText className="w-4 h-4" style={{ color: '#1A1A18' }} />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <h4 className="text-[14px] font-semibold text-[#1A1A18] truncate">
                                       {categoryResponse.name}
                                     </h4>
-                                  </div>
-                                  <div className="flex items-center gap-2 flex-shrink-0">
-                                    <p className="text-lg font-bold text-gray-900 mr-2">
-                                      ₹{(category?.amount || 0).toLocaleString()}
+                                    <p className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">
+                                      Annexure {index + 1}
                                     </p>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2 mt-3 ml-11">
-                                  <Badge
-                                    variant="outline"
-                                    className="text-xs"
-                                    style={{
-                                      backgroundColor: categoryResponse.status_color || '#C72030',
-                                      color: 'white',
-                                      borderColor: categoryResponse.status_color || '#C72030'
-                                    }}
+                                <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
+                                  <p className="text-[13.5px] font-semibold text-[#1A1A18]">
+                                    ₹{(category?.amount || 0).toLocaleString()}
+                                  </p>
+                                  <span
+                                    className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold text-white whitespace-nowrap"
+                                    style={{ backgroundColor: categoryResponse.status_color || '#C72030' }}
                                   >
                                     {categoryResponse.status || categoryResponse.complaint_status_name || 'Pending'}
-                                  </Badge>
-                                  {/* <Button
-                                    onClick={() => category && handleDownloadCategoryPDF(category.id, category.category_name)}
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 text-xs border-gray-300 hover:bg-gray-50"
-                                  >
-                                    <Download className="w-3 h-3 mr-1" />
-                                    Download PDF
-                                  </Button> */}
-                                  <Button
-                                    onClick={() => category && handleStatusChangeOpen(category)}
-                                    size="sm"
-                                    className="h-7 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030]"
-                                  >
-                                    <Edit className="w-3 h-3 mr-1" />
-                                    Change Status
-                                  </Button>
-                                  {/* {annexureResponsesEditMode && ( */}
-                                    <Button
-                                      onClick={() => category && handleFileUploadOpen(category)}
-                                      size="sm"
-                                      className="h-7 text-xs bg-[#C72030] text-white border-0 hover:bg-[#C72030] [&_svg]:text-white"
-                                    >
-                                      <Upload className="w-3 h-3 mr-1" />
-                                      Upload
-                                    </Button>
-                                  {/* )} */}
+                                  </span>
                                 </div>
                               </div>
-
-                              {/* Category Content */}
-                              <div className=" space-y-4">
-                                {/* Comments Section */}
-                                {comments && Array.isArray(comments) && comments.length > 0 && (
-                                  <div className="bg-[#f6f4ee] rounded-lg p-4">
-                                    <div className="flex items-start gap-2 mb-3">
-                                      <MessageSquare className="w-4 h-4 text-[#C72030] mt-0.5 flex-shrink-0" />
-                                      <h5 className="font-semibold text-gray-900 text-sm">Comments ({comments.length})</h5>
-                                    </div>
-                                    <div className="space-y-3">
-                                      {comments.map((comment: any) => (
-                                        <div key={comment.id} className="bg-white rounded-lg p-3 border border-blue-100">
-                                          <div className="flex items-start gap-2">
-                                            <div className="w-7 h-7 rounded-full bg-[#C72030] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                                              {comment.commentor_name?.charAt(0) || 'U'}
-                                            </div>
-                                            <div className="flex-1">
-                                              <div className="flex items-start justify-between gap-2 mb-1">
-                                                <p className="text-sm font-medium text-gray-900">{comment.commentor_name}</p>
-                                                <p className="text-xs text-gray-500 whitespace-nowrap">{formatDateTime(comment.created_at)}</p>
-                                              </div>
-                                              <p className="text-sm text-gray-700">{comment.body}</p>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
+                              <div className="flex items-center gap-2 mt-3 pl-11">
+                                <button
+                                  onClick={() => category && handleStatusChangeOpen(category)}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold text-[#1A1A18] hover:bg-[#F7F6F2] transition-colors"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                  Change Status
+                                </button>
+                                <button
+                                  onClick={() => category && handleFileUploadOpen(category)}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold text-[#1A1A18] hover:bg-[#F7F6F2] transition-colors"
+                                >
+                                  <Upload className="w-3.5 h-3.5" />
+                                  Upload
+                                </button>
                               </div>
+
+                              {/* Comments Section */}
+                              {comments && Array.isArray(comments) && comments.length > 0 && (
+                                <div className="mt-4 pt-4 border-t border-[rgba(26,26,24,.08)]">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <MessageSquare className="w-4 h-4 text-[#1A1A18] flex-shrink-0" />
+                                    <p className="text-[10.5px] font-bold uppercase tracking-[.09em] text-[rgba(26,26,24,.48)]">
+                                      Comments ({comments.length})
+                                    </p>
+                                  </div>
+                                  <div className="divide-y divide-[rgba(26,26,24,.08)]">
+                                    {comments.map((comment: any) => (
+                                      <div key={comment.id} className="flex items-start gap-3 py-3">
+                                        <div className="w-7 h-7 rounded-full bg-[#F5F4F0] flex items-center justify-center text-xs font-semibold text-[#1A1A18] flex-shrink-0">
+                                          {comment.commentor_name?.charAt(0) || 'U'}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-start justify-between gap-2">
+                                            <p className="text-[13px] font-medium text-[#1A1A18]">{comment.commentor_name}</p>
+                                            <p className="text-xs text-[rgba(26,26,24,.48)] whitespace-nowrap">{formatDateTime(comment.created_at)}</p>
+                                          </div>
+                                          <p className="text-[13.5px] text-[rgba(26,26,24,.68)] mt-0.5">{comment.body}</p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
 
                               {/* Invoice Approval Histories Section */}
                               {categoryResponse.invoice_approval_histories && 
                                categoryResponse.invoice_approval_histories.length > 0 && (
-                                <div className="mt-6 pt-6 border-t border-gray-200 px-4">
-                                  <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-[#C72030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                <div className="mt-5 pt-4 border-t border-[rgba(26,26,24,.08)]">
+                                  <p className="text-[10.5px] font-bold uppercase tracking-[.09em] text-[rgba(26,26,24,.48)] mb-1">
                                     Approval History ({categoryResponse.invoice_approval_histories.length})
-                                  </h3>
-                                  <div className="space-y-3 mb-6">
+                                  </p>
+                                  <div>
                                     {categoryResponse.invoice_approval_histories
                                       .sort((a, b) => a.order - b.order)
                                       .map((history) => (
                                       <div
                                         key={history.id}
-                                        className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                                        className="py-3.5 border-t border-[rgba(26,26,24,.08)] first:border-t-0"
                                       >
-                                        <div className="flex items-start justify-between mb-2">
-                                          <div className="flex items-center gap-3">
-                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#C72030] text-white text-xs font-semibold">
+                                        <div className="flex items-start justify-between gap-4">
+                                          <div className="flex items-center gap-3 min-w-0">
+                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#1A1A18] text-white text-xs font-semibold flex-shrink-0">
                                               {history.order}
                                             </span>
-                                            <div>
-                                              <p className="text-sm font-semibold text-gray-900">
+                                            <div className="min-w-0">
+                                              <p className="text-[13px] font-semibold text-[#1A1A18] truncate">
                                                 {history.level_name}
                                               </p>
-                                              <p className="text-xs text-gray-500">
+                                              <p className="text-xs text-[rgba(26,26,24,.48)] truncate">
                                                 {history.updated_by_name || history.approval_user_name || 'N/A'}
                                               </p>
                                             </div>
                                           </div>
-                                          <div className="flex items-center gap-2">
+                                          <div className="flex items-center gap-2 flex-shrink-0">
                                             <Badge
                                               variant="outline"
                                               className="text-xs"
                                               style={{
                                                 backgroundColor:
                                                   history.approve === true
-                                                    ? '#22c55e15'
+                                                    ? 'rgba(18,161,80,.12)'
                                                     : history.approve === false
-                                                    ? '#ef444415'
-                                                    : '#f59e0b15',
+                                                    ? '#FDEDED'
+                                                    : 'rgba(242,163,18,.24)',
                                                 color:
                                                   history.approve === true
-                                                    ? '#22c55e'
+                                                    ? '#0E7F3F'
                                                     : history.approve === false
-                                                    ? '#ef4444'
-                                                    : '#f59e0b',
+                                                    ? '#A32126'
+                                                    : '#8A5B00',
                                                 borderColor:
                                                   history.approve === true
-                                                    ? '#22c55e'
+                                                    ? 'rgba(18,161,80,.25)'
                                                     : history.approve === false
-                                                    ? '#ef4444'
-                                                    : '#f59e0b',
+                                                    ? 'rgba(229,72,77,.3)'
+                                                    : 'rgba(242,163,18,.35)',
                                               }}
                                             >
                                               {history.status_text}
@@ -2672,7 +2549,7 @@ const FitoutRequestDetails: React.FC = () => {
                                               <button
                                                 onClick={() => handleResendApprovalMail(categoryResponse.id, history.id)}
                                                 disabled={resendingMailId === history.id}
-                                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-[#C72030] hover:bg-[#a51a28] rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-[#1A1A18] hover:bg-[#F7F6F2] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                               >
                                                 {resendingMailId === history.id ? (
                                                   <>
@@ -2696,28 +2573,28 @@ const FitoutRequestDetails: React.FC = () => {
                                         </div>
                                         
                                         {history.rejection_reason && (
-                                          <div className="mt-3 bg-red-50 border border-red-200 rounded-md p-3">
-                                            <p className="text-xs font-semibold text-red-900 mb-1">
+                                          <div className="mt-3 pl-11">
+                                            <p className="text-[11px] font-semibold text-[#A32126] mb-1">
                                               Rejection Reason:
                                             </p>
-                                            <p className="text-xs text-red-700">
+                                            <p className="text-[12.5px] text-[rgba(26,26,24,.68)] bg-[#FDEDED] border border-[rgba(229,72,77,.2)] rounded-lg px-3 py-2">
                                               {history.rejection_reason}
                                             </p>
                                           </div>
                                         )}
                                         
                                         {history.rectify_comments && (
-                                          <div className="mt-3 bg-blue-50 border border-blue-200 rounded-md p-3">
-                                            <p className="text-xs font-semibold text-blue-900 mb-1">
+                                          <div className="mt-3 pl-11">
+                                            <p className="text-[11px] font-semibold text-[#2556B0] mb-1">
                                               Rectification Comments:
                                             </p>
-                                            <p className="text-xs text-blue-700">
+                                            <p className="text-[12.5px] text-[rgba(26,26,24,.68)] bg-[#DBE7FF] border border-[rgba(47,111,224,.18)] rounded-lg px-3 py-2">
                                               {history.rectify_comments}
                                             </p>
                                           </div>
                                         )}
                                         
-                                        <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                                        <div className="mt-2 pl-11 flex items-center justify-between text-[11px] text-[rgba(26,26,24,.48)]">
                                           <span>
                                             Updated: {history.status_updated_at ? formatDateTime(history.status_updated_at) : 'Pending'}
                                           </span>
@@ -2733,19 +2610,19 @@ const FitoutRequestDetails: React.FC = () => {
 
                               {/* Questions and Responses Section */}
                               {categoryResponse?.snag_quest_maps && categoryResponse.snag_quest_maps.length > 0 && (
-                                <div className="pt-4 border-t border-gray-200 px-4">
-                                  <div className="flex items-center gap-2 mb-4">
-                                    <div className="w-8 h-8 rounded-full bg-[#C72030] bg-opacity-10 flex items-center justify-center">
-                                      <FileText className="w-4 h-4 text-[#C72030]" />
+                                <div className="mt-5 pt-4 border-t border-[rgba(26,26,24,.08)]">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-8 h-8 rounded-full bg-[#F5F4F0] flex items-center justify-center">
+                                      <FileText className="w-4 h-4 text-[#1A1A18]" />
                                     </div>
-                                    <p className="text-sm font-semibold text-gray-900">
+                                    <p className="text-[13px] font-semibold text-[#1A1A18]">
                                       Questions & Responses
                                     </p>
-                                    <Badge variant="outline" className="text-xs bg-gray-50">
+                                    <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">
                                       {categoryResponse.snag_quest_maps.length} Questions
-                                    </Badge>
+                                    </span>
                                   </div>
-                                  <div className="space-y-3">
+                                  <div className="space-y-0">
                                     {categoryResponse.snag_quest_maps
                                       .filter((questMap) => Boolean(questMap?.snag_question))
                                       .map((questMap, qIndex) => {
@@ -2783,16 +2660,16 @@ const FitoutRequestDetails: React.FC = () => {
                                       return (
                                         <div
                                           key={questMap.id}
-                                          className="bg-white rounded-lg p-4 border border-gray-200"
+                                          className="py-4 border-t border-[rgba(26,26,24,.08)] first:border-t-0"
                                         >
                                           <div className="space-y-3">
                                             {/* Question */}
                                             <div className="flex items-start gap-3">
-                                              <div className="w-6 h-6 rounded-full bg-[#C72030] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                              <div className="w-6 h-6 rounded-full bg-[#1A1A18] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
                                                 {question.qnumber}
                                               </div>
                                               <div className="flex-1">
-                                                <p className="text-sm font-medium text-gray-900">
+                                                <p className="text-[13.5px] font-medium text-[#1A1A18]">
                                                   {question.descr}
                                                 </p>
                                               </div>
@@ -2801,7 +2678,7 @@ const FitoutRequestDetails: React.FC = () => {
                                             {/* Answer */}
                                             <div className="ml-9 space-y-2">
                                               {(annexureResponsesEditMode || (question.qtype !== 'file' && question.qtype !== 'signature')) && (
-                                                <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                                                <div className="bg-[#F7F6F2] rounded-xl p-3.5">
                                                   {annexureResponsesEditMode ? (
                                                     question.qtype === 'multiple' ? (
                                                       <Select
@@ -2879,7 +2756,7 @@ const FitoutRequestDetails: React.FC = () => {
                                                               {latestAnswer.docs.map((doc: any, docIdx: number) => (
                                                                 <div
                                                                   key={doc.id}
-                                                                  className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
+                                                                  className="relative group border border-[rgba(26,26,24,.08)] rounded-xl overflow-hidden transition-all"
                                                                 >
                                                                   {doc.document_type?.startsWith('image/') ? (
                                                                     <img
@@ -2949,7 +2826,7 @@ const FitoutRequestDetails: React.FC = () => {
                                                       />
                                                     )
                                                   ) : (
-                                                    <p className={`text-sm ${latestAnswer ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                                                    <p className={`text-[13.5px] ${latestAnswer ? 'text-[#1A1A18]' : 'text-[rgba(26,26,24,.38)] italic'}`}>
                                                       {answerDisplay}
                                                     </p>
                                                   )}
@@ -2980,11 +2857,11 @@ const FitoutRequestDetails: React.FC = () => {
                                                   </div>
                                                   <div className="space-y-1">
                                                     {editedAnnexureFilesByMapId[questMap.id].map((file: File, fileIdx: number) => (
-                                                      <div key={fileIdx} className="flex items-center justify-between bg-white rounded p-2 border border-gray-200">
+                                                      <div key={fileIdx} className="flex items-center justify-between bg-white rounded-lg p-2 border border-[rgba(26,26,24,.08)]">
                                                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                          <Paperclip className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                                                          <span className="text-xs text-gray-700 truncate">{file.name}</span>
-                                                          <span className="text-xs text-gray-400 flex-shrink-0">
+                                                          <Paperclip className="w-3 h-3 text-[rgba(26,26,24,.38)] flex-shrink-0" />
+                                                          <span className="text-xs text-[#1A1A18] truncate">{file.name}</span>
+                                                          <span className="text-xs text-[rgba(26,26,24,.38)] flex-shrink-0">
                                                             ({(file.size / 1024).toFixed(1)} KB)
                                                           </span>
                                                         </div>
@@ -3008,28 +2885,28 @@ const FitoutRequestDetails: React.FC = () => {
                                               )}
 
                                               {question.qtype !== 'file' && question.qtype !== 'signature' && sortedAnswers.length > 1 && (
-                                                <div className="space-y-2">
-                                                  <p className="text-xs font-medium text-gray-600">
+                                                <div>
+                                                  <p className="text-[10.5px] font-bold uppercase tracking-[.09em] text-[rgba(26,26,24,.48)] mb-1">
                                                     Response History ({sortedAnswers.length})
                                                   </p>
-                                                  <div className="space-y-2">
+                                                  <div>
                                                     {sortedAnswers
                                                       .slice(0, -1)
                                                       .reverse()
                                                       .map((ans) => (
                                                         <div
                                                           key={ans.id}
-                                                          className="bg-white rounded-md p-3 border border-gray-200"
+                                                          className="py-2.5 border-t border-[rgba(26,26,24,.06)] first:border-t-0"
                                                         >
                                                           <div className="flex items-center justify-between gap-2 mb-1">
-                                                            <p className="text-xs text-gray-500">
+                                                            <p className="text-xs text-[rgba(26,26,24,.48)]">
                                                               {formatDateTime(ans.created_at)}
                                                             </p>
                                                             {ans.id && (
-                                                              <p className="text-[10px] text-gray-400">#{ans.id}</p>
+                                                              <p className="text-[10px] text-[rgba(26,26,24,.38)]">#{ans.id}</p>
                                                             )}
                                                           </div>
-                                                          <p className="text-sm text-gray-700">
+                                                          <p className="text-[13px] text-[rgba(26,26,24,.68)]">
                                                             {ans.ans_descr || '—'}
                                                           </p>
                                                         </div>
@@ -3040,8 +2917,8 @@ const FitoutRequestDetails: React.FC = () => {
                                               
                                               {/* Answer Documents */}
                                               {sortedAnswers.some((a) => Array.isArray(a.docs) && a.docs.length > 0) && (
-                                                <div className="space-y-2">
-                                                  <p className="text-xs font-medium text-gray-600">Attachments</p>
+                                                <div>
+                                                  <p className="text-[10.5px] font-bold uppercase tracking-[.09em] text-[rgba(26,26,24,.48)] mb-2">Attachments</p>
                                                   <div className="space-y-3">
                                                     {sortedAnswers
                                                       .filter((a) => Array.isArray(a.docs) && a.docs.length > 0)
@@ -3049,14 +2926,14 @@ const FitoutRequestDetails: React.FC = () => {
                                                       .reverse()
                                                       .map((ansWithDocs) => (
                                                         <div key={ansWithDocs.id} className="space-y-2">
-                                                          <p className="text-xs text-gray-500">
+                                                          <p className="text-xs text-[rgba(26,26,24,.48)]">
                                                             {formatDateTime(ansWithDocs.created_at)}
                                                           </p>
                                                           <div className="grid grid-cols-2 gap-2">
                                                             {(ansWithDocs.docs || []).map((doc: any, docIdx: number) => (
                                                               <div
                                                                 key={doc.id}
-                                                                className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
+                                                                className="relative group border border-[rgba(26,26,24,.08)] rounded-xl overflow-hidden transition-all"
                                                               >
                                                                 {doc.document_type?.startsWith('image/') ? (
                                                                   <img
@@ -3069,8 +2946,8 @@ const FitoutRequestDetails: React.FC = () => {
                                                                     }}
                                                                   />
                                                                 ) : (
-                                                                  <div className="w-full h-24 bg-gray-100 flex items-center justify-center">
-                                                                    <Paperclip className="w-8 h-8 text-gray-400" />
+                                                                  <div className="w-full h-24 bg-[#F5F4F0] flex items-center justify-center">
+                                                                    <Paperclip className="w-8 h-8 text-[rgba(26,26,24,.38)]" />
                                                                   </div>
                                                                 )}
                                                                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center gap-1">
@@ -3109,58 +2986,55 @@ const FitoutRequestDetails: React.FC = () => {
                                           {/* Invoice Approval Histories for this Annexure */}
                                           {questMap.invoice_approval_histories && 
                                            questMap.invoice_approval_histories.length > 0 && (
-                                            <div className="mt-4 pt-4 border-t border-gray-200">
-                                              <h4 className="text-xs font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                                <svg className="w-4 h-4 text-[#C72030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
+                                            <div className="mt-4 pt-4 border-t border-[rgba(26,26,24,.08)] ml-9">
+                                              <p className="text-[10.5px] font-bold uppercase tracking-[.09em] text-[rgba(26,26,24,.48)] mb-1">
                                                 Approval History ({questMap.invoice_approval_histories.length})
-                                              </h4>
-                                              <div className="space-y-2">
+                                              </p>
+                                              <div>
                                                 {questMap.invoice_approval_histories
                                                   .sort((a, b) => a.order - b.order)
                                                   .map((history) => (
                                                   <div
                                                     key={history.id}
-                                                    className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                                                    className="py-2.5 border-t border-[rgba(26,26,24,.08)] first:border-t-0"
                                                   >
-                                                    <div className="flex items-start justify-between mb-2">
-                                                      <div className="flex items-center gap-2">
-                                                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#C72030] text-white text-[10px] font-semibold">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                      <div className="flex items-center gap-2 min-w-0">
+                                                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#1A1A18] text-white text-[10px] font-semibold flex-shrink-0">
                                                           {history.order}
                                                         </span>
-                                                        <div>
-                                                          <p className="text-xs font-semibold text-gray-900">
+                                                        <div className="min-w-0">
+                                                          <p className="text-xs font-semibold text-[#1A1A18] truncate">
                                                             {history.level_name}
                                                           </p>
-                                                          <p className="text-[10px] text-gray-500">
+                                                          <p className="text-[10px] text-[rgba(26,26,24,.48)] truncate">
                                                             {history.updated_by_name || history.approval_user_name || 'N/A'}
                                                           </p>
                                                         </div>
                                                       </div>
-                                                      <div className="flex items-center gap-1.5">
+                                                      <div className="flex items-center gap-1.5 flex-shrink-0">
                                                         <Badge
                                                           variant="outline"
                                                           className="text-[10px] px-1.5 py-0.5"
                                                           style={{
                                                             backgroundColor:
                                                               history.approve === true
-                                                                ? '#22c55e15'
+                                                                ? 'rgba(18,161,80,.12)'
                                                                 : history.approve === false
-                                                                ? '#ef444415'
-                                                                : '#f59e0b15',
+                                                                ? '#FDEDED'
+                                                                : 'rgba(242,163,18,.24)',
                                                             color:
                                                               history.approve === true
-                                                                ? '#22c55e'
+                                                                ? '#0E7F3F'
                                                                 : history.approve === false
-                                                                ? '#ef4444'
-                                                                : '#f59e0b',
+                                                                ? '#A32126'
+                                                                : '#8A5B00',
                                                             borderColor:
                                                               history.approve === true
-                                                                ? '#22c55e'
+                                                                ? 'rgba(18,161,80,.25)'
                                                                 : history.approve === false
-                                                                ? '#ef4444'
-                                                                : '#f59e0b',
+                                                                ? 'rgba(229,72,77,.3)'
+                                                                : 'rgba(242,163,18,.35)',
                                                           }}
                                                         >
                                                           {history.status_text}
@@ -3169,7 +3043,7 @@ const FitoutRequestDetails: React.FC = () => {
                                                           <button
                                                             onClick={() => handleResendApprovalMail(categoryResponse.id, history.id)}
                                                             disabled={resendingMailId === history.id}
-                                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-white bg-[#C72030] hover:bg-[#a51a28] rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                            className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-[#1A1A18] hover:bg-[#F7F6F2] rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                                           >
                                                             {resendingMailId === history.id ? (
                                                               <>
@@ -3193,28 +3067,28 @@ const FitoutRequestDetails: React.FC = () => {
                                                     </div>
                                                     
                                                     {history.rejection_reason && (
-                                                      <div className="mt-2 bg-red-50 border border-red-200 rounded-md p-2">
-                                                        <p className="text-[10px] font-semibold text-red-900 mb-0.5">
+                                                      <div className="mt-2 pl-8">
+                                                        <p className="text-[10px] font-semibold text-[#A32126] mb-0.5">
                                                           Rejection Reason:
                                                         </p>
-                                                        <p className="text-[10px] text-red-700">
+                                                        <p className="text-[11px] text-[rgba(26,26,24,.68)] bg-[#FDEDED] border border-[rgba(229,72,77,.2)] rounded-lg px-2.5 py-1.5">
                                                           {history.rejection_reason}
                                                         </p>
                                                       </div>
                                                     )}
                                                     
                                                     {history.rectify_comments && (
-                                                      <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-2">
-                                                        <p className="text-[10px] font-semibold text-blue-900 mb-0.5">
+                                                      <div className="mt-2 pl-8">
+                                                        <p className="text-[10px] font-semibold text-[#2556B0] mb-0.5">
                                                           Rectification Comments:
                                                         </p>
-                                                        <p className="text-[10px] text-blue-700">
+                                                        <p className="text-[11px] text-[rgba(26,26,24,.68)] bg-[#DBE7FF] border border-[rgba(47,111,224,.18)] rounded-lg px-2.5 py-1.5">
                                                           {history.rectify_comments}
                                                         </p>
                                                       </div>
                                                     )}
                                                     
-                                                    <div className="mt-2 flex items-center justify-between text-[10px] text-gray-500">
+                                                    <div className="mt-2 pl-8 flex items-center justify-between text-[10px] text-[rgba(26,26,24,.48)]">
                                                       <span>
                                                         Updated: {history.status_updated_at ? formatDateTime(history.status_updated_at) : 'Pending'}
                                                       </span>
@@ -3236,15 +3110,15 @@ const FitoutRequestDetails: React.FC = () => {
 
                               {/* Documents Section */}
                               {category.documents.length > 0 && (
-                                <div className="mt-4 pt-4 border-t border-gray-200">
-                                  <p className="text-sm font-medium text-gray-700 mb-3 ml-3">
+                                <div className="mt-5 pt-4 border-t border-[rgba(26,26,24,.08)]">
+                                  <p className="text-[10.5px] font-bold uppercase tracking-[.09em] text-[rgba(26,26,24,.48)] mb-3">
                                     Documents ({category.documents.length})
                                   </p>
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 ml-3 mb-3">
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                     {category.documents.map((doc, docIndex) => (
                                       <div
                                         key={doc.id}
-                                        className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
+                                        className="border border-[rgba(26,26,24,.08)] rounded-xl overflow-hidden transition-all"
                                       >
                                         <img
                                           src={decodeURIComponent(doc.document_url)}
@@ -3256,12 +3130,12 @@ const FitoutRequestDetails: React.FC = () => {
                                             target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
                                           }}
                                         />
-                                        <div className="flex items-center justify-between px-2 py-1 bg-gray-50">
-                                          <span className="text-xs text-gray-500">Doc {docIndex + 1}</span>
+                                        <div className="flex items-center justify-between px-2 py-1 bg-[#F7F6F2]">
+                                          <span className="text-xs text-[rgba(26,26,24,.48)]">Doc {docIndex + 1}</span>
                                           <button
                                             type="button"
                                             onClick={() => handleDeleteDocument(category.id, doc.id)}
-                                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                                            className="text-[#A32126] hover:text-[#7d1619] p-1 rounded transition-colors"
                                             title="Delete document"
                                           >
                                             <Trash2 className="w-4 h-4" />
@@ -3277,64 +3151,56 @@ const FitoutRequestDetails: React.FC = () => {
                         })}
                       </div>
                     ) : (
-                      <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
-                        <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      <div className="text-center py-12 bg-white rounded-xl border border-dashed border-[rgba(26,26,24,.12)]">
+                        <FileText className="w-16 h-16 text-[rgba(26,26,24,.3)] mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-[#1A1A18] mb-2">
                           No Annexures Found
                         </h3>
-                        <p className="text-gray-500">
+                        <p className="text-[rgba(26,26,24,.55)]">
                           No annexure categories have been added to this request yet.
                         </p>
                       </div>
                     )}
                   </div>
-                </div>
-              </Card>
-            </TabsContent>
+            )}
 
             {/* Deviations */}
-            <TabsContent value="deviations" className="p-4 sm:p-6">
-              <Card className="mb-6 border-none bg-transparent shadow-none">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div
-                    className="px-6 py-3 border-b border-gray-200"
-                    style={{ backgroundColor: "#F6F4EE" }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                        <FileText className="w-4 h-4" style={{ color: '#C72030' }} />
-                      </div>
-                      <h3 className="text-base font-semibold text-gray-900">
-                        Deviations ({requestData.deviation_details?.length || 0})
-                      </h3>
-                    </div>
+            {activeTab === 'deviations' && (
+              <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden mt-3">
+                <div className="flex items-center gap-3 px-6 py-4 border-b border-[rgba(26,26,24,.08)]">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+                    <FileText className="w-4 h-4" style={{ color: '#1A1A18' }} />
                   </div>
-                  <div className="p-6">
+                  <h3 className="text-[14px] font-semibold text-[#1A1A18]">
+                    Deviations ({requestData.deviation_details?.length || 0})
+                  </h3>
+                </div>
+                <div className="p-6">
                     {requestData.deviation_details && requestData.deviation_details.length > 0 ? (
                       <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead style={{ backgroundColor: '#F6F4EE' }}>
+                        <table className="min-w-full divide-y divide-[rgba(26,26,24,.08)]">
+                          <thead>
                             <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-[11px] font-semibold text-[rgba(26,26,24,.55)] uppercase tracking-[.09em]">
                                 Actions
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-[11px] font-semibold text-[rgba(26,26,24,.55)] uppercase tracking-[.09em]">
                                 Description
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-[11px] font-semibold text-[rgba(26,26,24,.55)] uppercase tracking-[.09em]">
                                 Status
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-[11px] font-semibold text-[rgba(26,26,24,.55)] uppercase tracking-[.09em]">
                                 Created At
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-[11px] font-semibold text-[rgba(26,26,24,.55)] uppercase tracking-[.09em]">
                                 Comments
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
+                          <tbody className="divide-y divide-[rgba(26,26,24,.08)]">
                             {requestData.deviation_details.map((deviation) => (
-                              <tr key={deviation.id} className="hover:bg-gray-50">
+                              <tr key={deviation.id} className="hover:bg-[#F7F6F2]">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <Button
                                     onClick={() => handleDeviationEdit(deviation)}
@@ -3347,7 +3213,7 @@ const FitoutRequestDetails: React.FC = () => {
                                 </td>
                                 <td className="px-6 py-4">
                                   <div className="max-w-md">
-                                    <p className="text-sm text-gray-900">{deviation.description}</p>
+                                    <p className="text-sm text-[#1A1A18]">{deviation.description}</p>
                                     {deviation.attachments && deviation.attachments.length > 0 && (
                                       <div className="flex items-center gap-1 mt-1">
                                         {/* <Paperclip className="w-3 h-3 text-gray-400" /> */}
@@ -3374,10 +3240,10 @@ const FitoutRequestDetails: React.FC = () => {
                                   )}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                  <p className="text-sm text-gray-900">{formatDateTime(deviation.created_at)}</p>
+                                  <p className="text-sm text-[#1A1A18]">{formatDateTime(deviation.created_at)}</p>
                                 </td>
                                 <td className="px-6 py-4">
-                                  <p className="text-sm text-gray-900">
+                                  <p className="text-sm text-[#1A1A18]">
                                     {deviation.comments && deviation.comments.length > 0
                                       ? `${deviation.comments.length} comment(s)`
                                       : 'No comments'}
@@ -3389,83 +3255,47 @@ const FitoutRequestDetails: React.FC = () => {
                         </table>
                       </div>
                     ) : (
-                      <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
-                        <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      <div className="text-center py-12 bg-white rounded-xl border border-dashed border-[rgba(26,26,24,.12)]">
+                        <FileText className="w-16 h-16 text-[rgba(26,26,24,.3)] mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-[#1A1A18] mb-2">
                           No Deviations Found
                         </h3>
-                        <p className="text-gray-500">
+                        <p className="text-[rgba(26,26,24,.55)]">
                           No deviation details have been recorded for this fitout request yet.
                         </p>
                       </div>
                     )}
                   </div>
-                </div>
-              </Card>
-            </TabsContent>
-
-            {/* Transactions */}
-            <TabsContent value="transactions" className="p-4 sm:p-6">
-              <Card className="mb-6 border-none bg-transparent shadow-none">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div
-                    className="px-6 py-3 border-b border-gray-200"
-                    style={{ backgroundColor: "#F6F4EE" }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                        <DollarSign className="w-4 h-4" style={{ color: '#C72030' }} />
-                      </div>
-                      <h3 className="text-base font-semibold text-gray-900">Transaction Details</h3>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
-                      <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        No Transactions Found
-                      </h3>
-                      <p className="text-gray-500">
-                        No payment transactions have been recorded for this fitout request yet.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
+              </div>
+            )}
 
             {/* Responses */}
-            <TabsContent value="responses" className="p-4 sm:p-6">
-              <Card className="mb-6 border border-gray-200 bg-white shadow-none">
-                <div
-                  className="px-6 py-3 border-b border-gray-200"
-                  style={{ backgroundColor: "#F6F4EE" }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                      <DollarSign className="w-4 h-4" style={{ color: '#C72030' }} />
-                    </div>
-                    <h3 className="text-base font-semibold text-gray-900">Captured Payment</h3>
+            {activeTab === 'payment' && (
+              <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden mt-3">
+                <div className="flex items-center gap-3 px-6 py-4 border-b border-[rgba(26,26,24,.08)]">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+                    <DollarSign className="w-4 h-4" style={{ color: '#1A1A18' }} />
                   </div>
+                  <h3 className="text-[14px] font-semibold text-[#1A1A18]">Captured Payment</h3>
                 </div>
                 <div className="p-6">
                   {requestData.lock_payment ? (
                     <div className="space-y-6">
-                      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                      <div className="rounded-2xl border border-[rgba(26,26,24,.08)] overflow-hidden">
                         <Table>
                           <TableHeader>
-                            <TableRow style={{ backgroundColor: '#F6F4EE' }}>
-                              <TableHead className="font-semibold text-gray-900">Field</TableHead>
-                              <TableHead className="font-semibold text-gray-900">Value</TableHead>
+                            <TableRow className="bg-[#F7F6F2]">
+                              <TableHead className="font-semibold text-[#1A1A18]">Field</TableHead>
+                              <TableHead className="font-semibold text-[#1A1A18]">Value</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             <TableRow>
-                              <TableCell className="font-medium text-gray-700">Payment ID</TableCell>
-                              <TableCell className="text-gray-900">#{requestData.lock_payment.id}</TableCell>
+                              <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Payment ID</TableCell>
+                              <TableCell className="text-[#1A1A18]">#{requestData.lock_payment.id}</TableCell>
                             </TableRow>
                             <TableRow>
-                              <TableCell className="font-medium text-gray-700">Payment Status</TableCell>
+                              <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Payment Status</TableCell>
                               <TableCell>
                                 <Badge 
                                   variant="default" 
@@ -3478,75 +3308,75 @@ const FitoutRequestDetails: React.FC = () => {
                               </TableCell>
                             </TableRow>
                             <TableRow>
-                              <TableCell className="font-medium text-gray-700">Total Amount</TableCell>
-                              <TableCell className="text-gray-900 font-semibold">₹{parseFloat(requestData.lock_payment.total_amount || '0').toFixed(2)}</TableCell>
+                              <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Total Amount</TableCell>
+                              <TableCell className="text-[#1A1A18] font-semibold">₹{parseFloat(requestData.lock_payment.total_amount || '0').toFixed(2)}</TableCell>
                             </TableRow>
                             <TableRow>
-                              <TableCell className="font-medium text-gray-700">Payment Method</TableCell>
-                              <TableCell className="text-gray-900 capitalize">{requestData.lock_payment.payment_method || '—'}</TableCell>
+                              <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Payment Method</TableCell>
+                              <TableCell className="text-[#1A1A18] capitalize">{requestData.lock_payment.payment_method || '—'}</TableCell>
                             </TableRow>
                             <TableRow>
-                              <TableCell className="font-medium text-gray-700">Transaction ID</TableCell>
-                              <TableCell className="text-gray-900">{requestData.lock_payment.pg_transaction_id || '—'}</TableCell>
+                              <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Transaction ID</TableCell>
+                              <TableCell className="text-[#1A1A18]">{requestData.lock_payment.pg_transaction_id || '—'}</TableCell>
                             </TableRow>
                             {requestData.lock_payment.order_number && (
                               <TableRow>
-                                <TableCell className="font-medium text-gray-700">Order Number</TableCell>
-                                <TableCell className="text-gray-900">{requestData.lock_payment.order_number}</TableCell>
+                                <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Order Number</TableCell>
+                                <TableCell className="text-[#1A1A18]">{requestData.lock_payment.order_number}</TableCell>
                               </TableRow>
                             )}
                             {requestData.lock_payment.payment_mode && (
                               <TableRow>
-                                <TableCell className="font-medium text-gray-700">Payment Mode</TableCell>
-                                <TableCell className="text-gray-900">{requestData.lock_payment.payment_mode}</TableCell>
+                                <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Payment Mode</TableCell>
+                                <TableCell className="text-[#1A1A18]">{requestData.lock_payment.payment_mode}</TableCell>
                               </TableRow>
                             )}
                             {requestData.lock_payment.sub_total && (
                               <TableRow>
-                                <TableCell className="font-medium text-gray-700">Sub Total</TableCell>
-                                <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.sub_total || '0').toFixed(2)}</TableCell>
+                                <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Sub Total</TableCell>
+                                <TableCell className="text-[#1A1A18]">₹{parseFloat(requestData.lock_payment.sub_total || '0').toFixed(2)}</TableCell>
                               </TableRow>
                             )}
                             {requestData.lock_payment.gst && (
                               <TableRow>
-                                <TableCell className="font-medium text-gray-700">GST</TableCell>
-                                <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.gst || '0').toFixed(2)}</TableCell>
+                                <TableCell className="font-medium text-[rgba(26,26,24,.55)]">GST</TableCell>
+                                <TableCell className="text-[#1A1A18]">₹{parseFloat(requestData.lock_payment.gst || '0').toFixed(2)}</TableCell>
                               </TableRow>
                             )}
                             {requestData.lock_payment.discount && (
                               <TableRow>
-                                <TableCell className="font-medium text-gray-700">Discount</TableCell>
-                                <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.discount || '0').toFixed(2)}</TableCell>
+                                <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Discount</TableCell>
+                                <TableCell className="text-[#1A1A18]">₹{parseFloat(requestData.lock_payment.discount || '0').toFixed(2)}</TableCell>
                               </TableRow>
                             )}
                             {requestData.lock_payment.convenience_charge && (
                               <TableRow>
-                                <TableCell className="font-medium text-gray-700">Convenience Charge</TableCell>
-                                <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.convenience_charge || '0').toFixed(2)}</TableCell>
+                                <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Convenience Charge</TableCell>
+                                <TableCell className="text-[#1A1A18]">₹{parseFloat(requestData.lock_payment.convenience_charge || '0').toFixed(2)}</TableCell>
                               </TableRow>
                             )}
                             {requestData.lock_payment.payment_gateway && (
                               <TableRow>
-                                <TableCell className="font-medium text-gray-700">Payment Gateway</TableCell>
-                                <TableCell className="text-gray-900">{requestData.lock_payment.payment_gateway}</TableCell>
+                                <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Payment Gateway</TableCell>
+                                <TableCell className="text-[#1A1A18]">{requestData.lock_payment.payment_gateway}</TableCell>
                               </TableRow>
                             )}
                             {requestData.lock_payment.bank_name && (
                               <TableRow>
-                                <TableCell className="font-medium text-gray-700">Bank Name</TableCell>
-                                <TableCell className="text-gray-900">{requestData.lock_payment.bank_name}</TableCell>
+                                <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Bank Name</TableCell>
+                                <TableCell className="text-[#1A1A18]">{requestData.lock_payment.bank_name}</TableCell>
                               </TableRow>
                             )}
                             {requestData.lock_payment.pg_response_code && (
                               <TableRow>
-                                <TableCell className="font-medium text-gray-700">Response Code</TableCell>
-                                <TableCell className="text-gray-900">{requestData.lock_payment.pg_response_code}</TableCell>
+                                <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Response Code</TableCell>
+                                <TableCell className="text-[#1A1A18]">{requestData.lock_payment.pg_response_code}</TableCell>
                               </TableRow>
                             )}
                             {requestData.lock_payment.pg_response_msg && (
                               <TableRow>
-                                <TableCell className="font-medium text-gray-700">Response Message</TableCell>
-                                <TableCell className="text-gray-900">{requestData.lock_payment.pg_response_msg}</TableCell>
+                                <TableCell className="font-medium text-[rgba(26,26,24,.55)]">Response Message</TableCell>
+                                <TableCell className="text-[#1A1A18]">{requestData.lock_payment.pg_response_msg}</TableCell>
                               </TableRow>
                             )}
                           </TableBody>
@@ -3555,22 +3385,19 @@ const FitoutRequestDetails: React.FC = () => {
 
                       {/* Payment Receipt/Attachment */}
                       {requestData.lock_payment.receipt_pdf && (
-                        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                          <div
-                            className="px-4 py-3 border-b border-gray-200"
-                            style={{ backgroundColor: "#F6F4EE" }}
-                          >
+                        <div className="rounded-2xl border border-[rgba(26,26,24,.08)] overflow-hidden">
+                          <div className="px-4 py-3 border-b border-[rgba(26,26,24,.08)] bg-[#F7F6F2]">
                             <div className="flex items-center gap-2">
-                              <Paperclip className="w-4 h-4" style={{ color: '#C72030' }} />
-                              <h4 className="text-sm font-semibold text-gray-900">Attachment</h4>
+                              <Paperclip className="w-4 h-4 text-[#1A1A18]" />
+                              <h4 className="text-[13px] font-semibold text-[#1A1A18]">Attachment</h4>
                             </div>
                           </div>
                           <div className="p-4">
-                            <div className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all">
+                            <div className="relative group border border-[rgba(26,26,24,.08)] rounded-xl overflow-hidden transition-all">
                               <img
                                 src={requestData.lock_payment.receipt_pdf}
                                 alt="Payment Receipt"
-                                className="w-full h-64 object-contain bg-gray-50"
+                                className="w-full h-64 object-contain bg-[#F7F6F2]"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EReceipt%3C/text%3E%3C/svg%3E';
@@ -3586,15 +3413,6 @@ const FitoutRequestDetails: React.FC = () => {
                                   <Eye className="w-4 h-4 mr-1" />
                                   View
                                 </Button>
-                                {/* <Button
-                                  size="sm"
-                                  variant="secondary"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => downloadDocument(requestData.lock_payment.receipt_pdf, `payment-receipt-${requestData.lock_payment.id}.pdf`)}
-                                >
-                                  <Download className="w-4 h-4 mr-1" />
-                                  Download
-                                </Button> */}
                               </div>
                             </div>
                           </div>
@@ -3602,12 +3420,12 @@ const FitoutRequestDetails: React.FC = () => {
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
-                      <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    <div className="text-center py-12 bg-white rounded-xl border border-dashed border-[rgba(26,26,24,.12)]">
+                      <DollarSign className="w-16 h-16 text-[rgba(26,26,24,.3)] mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-[#1A1A18] mb-2">
                         No Payment Captured
                       </h3>
-                      <p className="text-gray-500 mb-4">
+                      <p className="text-[rgba(26,26,24,.55)] mb-4">
                         No payment has been captured for this fitout request yet.
                       </p>
                       <Button
@@ -3620,11 +3438,8 @@ const FitoutRequestDetails: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </Card>
-      </div>
+              </div>
+            )}
 
       {/* Capture Payment Modal */}
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   ArrowLeft,
   List,
@@ -329,12 +330,17 @@ const Section: React.FC<{
   icon: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, icon, children }) => (
-  <section className="bg-card rounded-lg border border-border shadow-sm">
-    <div className="px-6 py-4 border-b border-border flex items-center gap-3">
-      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-        {icon}
-      </div>
-      <h2 className="text-sm font-semibold tracking-wide uppercase">{title}</h2>
+  <section className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+    <div className="px-6 pt-[22px]">
+      <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+        <span
+          className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+          style={{ backgroundColor: "#F5F4F0" }}
+        >
+          {icon}
+        </span>
+        {title}
+      </h2>
     </div>
     <div className="p-6">{children}</div>
   </section>
@@ -777,9 +783,17 @@ export const EditSurveyMapping = () => {
 
   // Field styles for Material-UI components
   const fieldStyles = {
-    height: { xs: 28, sm: 36, md: 45 },
-    "& .MuiInputBase-input, & .MuiSelect-select": {
-      padding: { xs: "8px", sm: "10px", md: "12px" },
+    height: "45px",
+    backgroundColor: "#fff",
+    borderRadius: "4px",
+    "& .MuiOutlinedInput-root": {
+      height: "45px",
+      "& fieldset": { borderColor: "#ddd" },
+      "&:hover fieldset": { borderColor: "#C72030" },
+      "&.Mui-focused fieldset": { borderColor: "#C72030" },
+    },
+    "& .MuiInputLabel-root": {
+      "&.Mui-focused": { color: "#C72030" },
     },
   };
 
@@ -1583,31 +1597,33 @@ export const EditSurveyMapping = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 relative min-h-screen overflow-y-auto">
+    <div className="p-4 sm:p-6 space-y-6 relative min-h-screen overflow-y-auto bg-[#FDFDFB]">
       {isSubmitting && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
         </div>
       )}
 
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
+      <header className="mb-2">
+        <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <button
+            type="button"
             onClick={() => navigate("/maintenance/survey/mapping")}
-            className="p-2"
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors mr-2"
+            aria-label="Go back"
           >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">Edit Survey Mapping</h1>
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Survey Mapping</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Edit Survey Mapping</span>
         </div>
       </header>
 
       <Section title="Survey Selection" icon={<List className="w-3.5 h-3.5" />}>
         <div className="space-y-6">
-          <div className="rounded-md border border-dashed bg-muted/30 p-4">
-            <p className="mb-3 text-sm font-medium text-muted-foreground">
+          <div className="rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-4">
+            <p className="mb-3 text-sm font-medium text-[rgba(26,26,24,.68)]">
               Select Survey for All Location Configurations
             </p>
 
@@ -1617,10 +1633,10 @@ export const EditSurveyMapping = () => {
                 <FormControl
                   fullWidth
                   variant="outlined"
-                  sx={{ "& .MuiInputBase-root": fieldStyles }}
+                  sx={fieldStyles}
                 >
                   <InputLabel shrink>
-                    Select Survey <span className="text-red-500">*</span>
+                    Select Survey <span className="text-[#C72030]">*</span>
                   </InputLabel>
                   <Select
                     value={selectedSurveyId || ""}
@@ -1657,14 +1673,14 @@ export const EditSurveyMapping = () => {
               </div>
 
               {selectedSurveyId && (
-                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800">
-                    ✅ Survey selected:{" "}
+                <div className="mt-3 p-3 bg-white border border-[rgba(26,26,24,.09)] rounded-lg">
+                  <p className="text-sm text-[#1A1A18]">
+                    Survey selected:{" "}
                     <span className="font-medium">
                       {surveys.find((s) => s.id === selectedSurveyId)?.name}
                     </span>
                   </p>
-                  <p className="text-xs text-green-600 mt-1">
+                  <p className="text-xs text-[rgba(26,26,24,.55)] mt-1">
                     This survey will be applied to all location configurations
                     below.
                   </p>
@@ -1679,13 +1695,13 @@ export const EditSurveyMapping = () => {
       {hasUserConfigData && (
       <Section title="Customer Configuration" icon={<MapPin className="w-3.5 h-3.5" />}>
         <div className="space-y-6">
-          <div className="mb-4 text-sm text-gray-600">
+          <div className="mb-4 text-sm text-[rgba(26,26,24,.55)]">
             Edit the Customer configurations associated with this survey mapping.
           </div>
           {userConfigs.map((config, configIdx) => (
             <div
               key={config.id}
-              className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+              className="border border-[rgba(26,26,24,.09)] rounded-xl p-4 bg-white"
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-semibold text-gray-800">
@@ -1698,9 +1714,9 @@ export const EditSurveyMapping = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Society Selection */}
-                <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                <FormControl fullWidth variant="outlined" sx={fieldStyles}>
                   <InputLabel shrink>
-                    Society <span className="text-red-500">*</span>
+                    Society <span className="text-[#C72030]">*</span>
                   </InputLabel>
                   <Select
                     value={config.society_id}
@@ -1726,9 +1742,9 @@ export const EditSurveyMapping = () => {
                 </FormControl>
 
                 {/* Tower Selection */}
-                <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                <FormControl fullWidth variant="outlined" sx={fieldStyles}>
                   <InputLabel shrink>
-                    Tower <span className="text-red-500">*</span>
+                    Tower <span className="text-[#C72030]">*</span>
                   </InputLabel>
                   <Select
                     value={config.building_id}
@@ -1759,9 +1775,9 @@ export const EditSurveyMapping = () => {
                 </FormControl>
 
                 {/* Flat Selection */}
-                <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                <FormControl fullWidth variant="outlined" sx={fieldStyles}>
                   <InputLabel shrink>
-                    Flat <span className="text-red-500">*</span>
+                    Flat <span className="text-[#C72030]">*</span>
                   </InputLabel>
                   <Select
                     value={config.flat_id}
@@ -1791,9 +1807,9 @@ export const EditSurveyMapping = () => {
                 </FormControl>
 
                 {/* User Selection */}
-                <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
+                <FormControl fullWidth variant="outlined" sx={fieldStyles}>
                   <InputLabel shrink>
-                    User <span className="text-red-500">*</span>
+                    User <span className="text-[#C72030]">*</span>
                   </InputLabel>
                   <Select
                     value={config.user_id}
@@ -1844,7 +1860,7 @@ export const EditSurveyMapping = () => {
               return (
                 <div
                   key={mapping.id}
-                  className="relative rounded-md border border-dashed bg-muted/30 p-4"
+                  className="relative rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-4"
                 >
                   {surveyMappings.filter((m) => !m.markedForDeletion).length >
                     1 && (
@@ -1859,10 +1875,10 @@ export const EditSurveyMapping = () => {
                     </button>
                   )}
 
-                  <p className="mb-4 text-sm font-medium text-muted-foreground">
+                  <p className="mb-4 text-sm font-medium text-[rgba(26,26,24,.68)]">
                     Location Configuration {mappingIdx + 1}
                     {selectedSurveyId && (
-                      <span className="ml-2 text-blue-600">
+                      <span className="ml-2 text-[rgba(26,26,24,.55)]">
                         (
                         {surveys.find((s) => s.id === selectedSurveyId)?.name ||
                           "Survey"}{" "}
@@ -1876,10 +1892,10 @@ export const EditSurveyMapping = () => {
                     <FormControl
                       fullWidth
                       variant="outlined"
-                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      sx={fieldStyles}
                     >
                       <InputLabel shrink>
-                        Site <span className="text-red-500">*</span>
+                        Site <span className="text-[#C72030]">*</span>
                       </InputLabel>
                       <Select
                         value={mapping.selectedLocation.site}
@@ -1922,10 +1938,10 @@ export const EditSurveyMapping = () => {
                     <FormControl
                       fullWidth
                       variant="outlined"
-                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      sx={fieldStyles}
                     >
                       <InputLabel shrink>
-                        Building <span className="text-red-500">*</span>
+                        Building <span className="text-[#C72030]">*</span>
                       </InputLabel>
                       <Select
                         value={mapping.selectedLocation.building}
@@ -1965,7 +1981,7 @@ export const EditSurveyMapping = () => {
                     <FormControl
                       fullWidth
                       variant="outlined"
-                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      sx={fieldStyles}
                     >
                       <InputLabel shrink>Wing</InputLabel>
                       <Select
@@ -2003,7 +2019,7 @@ export const EditSurveyMapping = () => {
                     <FormControl
                       fullWidth
                       variant="outlined"
-                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      sx={fieldStyles}
                     >
                       <InputLabel shrink>Area</InputLabel>
                       <Select
@@ -2041,7 +2057,7 @@ export const EditSurveyMapping = () => {
                     <FormControl
                       fullWidth
                       variant="outlined"
-                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      sx={fieldStyles}
                     >
                       <InputLabel shrink>Floor</InputLabel>
                       <Select
@@ -2082,7 +2098,7 @@ export const EditSurveyMapping = () => {
                     <FormControl
                       fullWidth
                       variant="outlined"
-                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      sx={fieldStyles}
                     >
                       <InputLabel shrink>Room</InputLabel>
                       <Select
@@ -2142,25 +2158,19 @@ export const EditSurveyMapping = () => {
           icon={<ListChecks className="w-3.5 h-3.5" />}
         >
           <div className="space-y-4">
-            <div className="mb-4 text-sm text-gray-600">
+            <div className="mb-4 text-sm text-[rgba(26,26,24,.55)]">
               Displaying questions from the selected survey. These questions
               will be applied to all location configurations.
             </div>
             {selectedSurveyQuestions.map((q, idx) => (
               <div
                 key={q.id}
-                className="relative rounded-md border border-dashed bg-muted/30 p-4"
+                className="relative rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-4"
               >
                 {/* First Row - Mandatory Checkbox */}
                 <div className="mb-6">
                   <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id={`mandatory-${idx}`}
-                      checked={q.mandatory}
-                      className="w-4 h-4 text-[#C72030] bg-white border-gray-300 rounded focus:ring-[#C72030] focus:ring-2 accent-[#C72030]"
-                      disabled
-                    />
+                    <Checkbox id={`mandatory-${idx}`} checked={q.mandatory} disabled />
                     <label
                       htmlFor={`mandatory-${idx}`}
                       className="text-sm font-medium text-gray-700 cursor-pointer select-none"
@@ -2176,7 +2186,7 @@ export const EditSurveyMapping = () => {
                     <FormControl
                       fullWidth
                       variant="outlined"
-                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      sx={fieldStyles}
                     >
                       <InputLabel shrink>Question</InputLabel>
                       <Select
@@ -2196,7 +2206,7 @@ export const EditSurveyMapping = () => {
                     <FormControl
                       fullWidth
                       variant="outlined"
-                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      sx={fieldStyles}
                     >
                       <InputLabel shrink>Input Type</InputLabel>
                       <Select
@@ -2231,7 +2241,7 @@ export const EditSurveyMapping = () => {
                     <FormControl
                       fullWidth
                       variant="outlined"
-                      sx={{ "& .MuiInputBase-root": fieldStyles }}
+                      sx={fieldStyles}
                     >
                       <InputLabel shrink>Options</InputLabel>
                       <Select
@@ -2249,15 +2259,15 @@ export const EditSurveyMapping = () => {
 
                     {/* Show parsed options preview */}
                     {q.options && q.options.length > 0 && (
-                      <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-xs">
+                      <div className="mt-2 p-2 bg-white border border-[rgba(26,26,24,.09)] rounded-lg text-xs">
                         <p className="font-medium text-gray-800 mb-1">
-                          ✅ Multi-Options ({q.options.length}):
+                          Multi-Options ({q.options.length}):
                         </p>
                         <div className="flex flex-wrap gap-1">
                           {q.options.map((option, optIdx) => (
                             <span
                               key={optIdx}
-                              className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded"
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-[#F5F4F0] text-[#1A1A18] rounded"
                             >
                               {option}
                             </span>
@@ -2273,12 +2283,20 @@ export const EditSurveyMapping = () => {
         </Section>
       )}
 
-      <div className="flex flex-col sm:flex-row items-center gap-3 justify-center pt-2">
-        <Button
-          variant="destructive"
-          className="bg-[#C72030] hover:bg-[#A01828] !text-white px-6 sm:px-8 w-full sm:w-auto"
+      <div className="flex justify-end gap-3 pb-8">
+        <button
+          type="button"
+          onClick={() => navigate("/maintenance/survey/mapping")}
+          disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
         >
           {isSubmitting ? (
             <>
@@ -2288,14 +2306,7 @@ export const EditSurveyMapping = () => {
           ) : (
             "Update"
           )}
-        </Button>
-        <Button
-          variant="outline"
-className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"          onClick={() => navigate("/maintenance/survey/mapping")}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
+        </button>
       </div>
     </div>
   );

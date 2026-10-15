@@ -2,11 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
-import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
+import { menuProps } from '@/components/ticket-management/fieldStyles';
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#ddd' },
+  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#C72030' },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#C72030' },
+};
 
 interface ShiftData {
   id: number;
@@ -224,22 +233,31 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
 
   return (
     <Dialog open={open} modal={false} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            Edit Shift
+      <DialogContent className="sm:max-w-lg rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-0 gap-0">
+        <DialogHeader className="px-6 pt-[22px] pb-4">
+          <DialogTitle className="flex items-center justify-between text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+            <span className="flex items-center">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: '#F5F4F0' }}
+              >
+                <Clock size={14} color="#1A1A18" />
+              </span>
+              Edit Shift
+            </span>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleClose}
-              className="h-8 w-8 p-1  text-white  rounded-none shadow-none"
+              className="h-8 w-8 p-0 rounded-md hover:bg-[#F7F6F2] shadow-none"
+              aria-label="Close"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4 text-gray-600" />
             </Button>
           </DialogTitle>
         </DialogHeader>
-        
-        <div className="space-y-6">
+
+        <div className="space-y-6 px-6 pb-6">
           <div className="grid grid-cols-[1fr_auto_1fr_minmax(140px,140px)] gap-2 items-end mt-2">
             <FormControl fullWidth variant="outlined">
               <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>From Hr *</InputLabel>
@@ -362,7 +380,7 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
               />
               <label 
                 htmlFor="check-in-margin-edit" 
-                className="text-sm font-medium text-gray-700"
+                className="text-sm font-medium text-[#1A1A18]"
               >
                 Check In Margin
               </label>
@@ -412,11 +430,11 @@ export const EditShiftDialog = ({ open, onOpenChange, shift, onShiftUpdated }: E
           </div>
 
           {/* Update Button */}
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[rgba(26,26,24,.08)]">
             <Button 
               onClick={handleUpdate}
               disabled={isLoading}
-              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white px-8 rounded-none shadow-none"
+              className="min-h-[42px] rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white shadow-none hover:bg-[#12100E] disabled:opacity-60"
             >
               {isLoading ? (
                 <>

@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Camera, X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowLeft, Camera, X, User, Paperclip, Clock } from 'lucide-react';
 import { staffService, StaffFormData, ScheduleData, StaffAttachments, StaffFilterOption, StaffFiltersResponse } from '@/services/staffService';
 import { toast } from 'sonner';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
@@ -31,6 +32,12 @@ const fieldStyles = {
     '&.Mui-focused': {
       color: '#C72030',
     },
+    '& .MuiInputLabel-asterisk': {
+      color: '#C72030 !important',
+    },
+  },
+  '& .MuiFormLabel-asterisk': {
+    color: '#C72030 !important',
   },
 };
 
@@ -349,11 +356,11 @@ export const AddStaffPage = () => {
   const minuteOptions = ['00', '15', '30', '45'];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen add-staff-page">
+    <div className="p-6 bg-[#FDFDFB] min-h-screen add-staff-page">
       <style>{`.add-staff-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {/* Camera Modal */}
       {showCameraModal && (
-        <div className="fixed top-20 left-8 z-50 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-4">
+        <div className="fixed top-20 left-8 z-50 w-80 bg-white rounded-lg shadow-xl border border-[rgba(26,26,24,.09)] p-4">
           {/* Close Button */}
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-lg font-medium">Camera</h3>
@@ -377,9 +384,7 @@ export const AddStaffPage = () => {
           {/* Camera permissions checkbox */}
           <div className="mb-4">
             <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                className="rounded border-gray-300"
+              <Checkbox
                 defaultChecked
                 aria-label="Remember camera permission decision"
               />
@@ -413,7 +418,7 @@ export const AddStaffPage = () => {
               id="camera-select"
               value={selectedCamera || ''}
               onChange={(e) => handleCameraChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030]"
+              className="w-full px-3 py-2 border border-[rgba(26,26,24,.12)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030]"
             >
               {cameras.map((camera) => (
                 <option key={camera.deviceId} value={camera.deviceId}>
@@ -427,14 +432,14 @@ export const AddStaffPage = () => {
           <div className="space-y-2">
             <Button
               onClick={handleAllowThisTime}
-              className="w-full bg-pink-200 hover:bg-pink-300 text-gray-800 rounded-full"
+              className="w-full bg-[#F5F4F0] hover:bg-[#F0EFEA] text-[#1A1A18] rounded-lg"
               disabled={!stream || !isVideoReady}
             >
               {!isVideoReady ? 'Loading Camera...' : 'Allow this time'}
             </Button>
             <Button
               onClick={handleCaptureAndClose}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full"
+              className="w-full bg-[#1A1A18] hover:bg-[#12100E] text-white rounded-lg"
               disabled={!stream || !isVideoReady}
             >
               {!isVideoReady ? 'Loading Camera...' : 'Capture & Close'}
@@ -449,7 +454,7 @@ export const AddStaffPage = () => {
                 setIsVideoReady(false);
               }}
               variant="outline"
-              className="w-full rounded-full"
+              className="w-full rounded-lg border-[rgba(26,26,24,.08)] text-[rgba(26,26,24,.68)]"
             >
               Cancel
             </Button>
@@ -459,14 +464,32 @@ export const AddStaffPage = () => {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">NEW STAFF</h1>
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Staff</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">New Staff</span>
+        </div>
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
         {/* Section 1: Staff Details */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: '#F5F4F0' }}
+              >
+                <User size={14} color="#1A1A18" />
+              </span>
               Staff Details
             </h2>
           </div>
@@ -743,16 +766,22 @@ export const AddStaffPage = () => {
         </div>
 
         {/* Section 2: Attachments */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: '#F5F4F0' }}
+              >
+                <Paperclip size={14} color="#1A1A18" />
+              </span>
               Add Attachments
             </h2>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2 block">Profile Picture Upload</Label>
+                <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-2 block">Profile Picture Upload</Label>
                 
                 {/* Camera Capture Button */}
                 <div className="mb-4">
@@ -760,7 +789,7 @@ export const AddStaffPage = () => {
                     type="button"
                     onClick={handleCameraClick}
                     variant="outline"
-                    className="w-full flex items-center justify-center gap-2 border-[#C72030] text-[#C72030]"
+                    className="w-full flex items-center justify-center gap-2 rounded-lg border-[rgba(26,26,24,.12)] text-[#1A1A18] hover:bg-[#F5F4F0]"
                   >
                     <Camera className="w-4 h-4" />
                     Capture Photo
@@ -769,15 +798,15 @@ export const AddStaffPage = () => {
 
                 {/* Camera Captured Photo Preview */}
                 {isPhotoSaved && capturedPhoto && (
-                  <div className="mb-4 p-4 border-2 border-green-500 rounded-lg">
+                  <div className="mb-4 p-4 border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] rounded-xl">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-green-600">Captured Photo</span>
+                      <span className="text-sm font-medium text-[#1A1A18]">Captured Photo</span>
                       <Button
                         type="button"
                         onClick={handleRetakePhoto}
                         variant="ghost"
                         size="sm"
-                        className="h-6 text-xs text-[#C72030] hover:bg-[#C72030]/10"
+                        className="h-6 text-xs text-[rgba(26,26,24,.55)] hover:text-[#1A1A18] hover:bg-transparent"
                       >
                         Retake
                       </Button>
@@ -791,7 +820,7 @@ export const AddStaffPage = () => {
                 )}
 
                 {/* File Upload */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
+                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-[#F5F4F0] rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
                   <input
                     type="file"
                     accept="image/*"
@@ -807,7 +836,7 @@ export const AddStaffPage = () => {
                           alt="Profile Preview"
                           className="w-16 h-16 object-cover rounded-lg mx-auto"
                         />
-                        <p className="text-xs text-red-600 font-medium">{attachments.profilePicture.name}</p>
+                        <p className="text-xs text-[#C72030] font-medium">{attachments.profilePicture.name}</p>
                         <p className="text-xs text-gray-500">Click to change</p>
                       </div>
                     ) : (
@@ -818,7 +847,7 @@ export const AddStaffPage = () => {
                           </svg>
                         </div>
                         <p className="text-sm text-gray-600">
-                          Drag & Drop or <span className="text-red-500 cursor-pointer font-medium">Choose File</span>
+                          Drag & Drop or <span className="text-[#C72030] cursor-pointer font-medium">Choose File</span>
                         </p>
                         <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB</p>
                       </>
@@ -828,8 +857,8 @@ export const AddStaffPage = () => {
               </div>
               
               <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2 block">Documents Upload</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
+                <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-2 block">Documents Upload</Label>
+                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-[#F5F4F0] rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx"
@@ -844,11 +873,11 @@ export const AddStaffPage = () => {
                       </svg>
                     </div>
                     <p className="text-sm text-gray-600">
-                      Drag & Drop or <span className="text-red-500 cursor-pointer font-medium">Choose File</span>
+                      Drag & Drop or <span className="text-[#C72030] cursor-pointer font-medium">Choose File</span>
                     </p>
                     <p className="text-xs mt-1">
                       {documents.length > 0 ? (
-                        <span className="text-red-600 font-medium">{documents.length} file(s) selected</span>
+                        <span className="text-[#C72030] font-medium">{documents.length} file(s) selected</span>
                       ) : (
                         <span className="text-gray-500">PDF, DOC up to 10MB</span>
                       )}
@@ -861,44 +890,48 @@ export const AddStaffPage = () => {
         </div>
 
         {/* Section 3: Schedule */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: '#F5F4F0' }}
+              >
+                <Clock size={14} color="#1A1A18" />
+              </span>
               Schedule Information
             </h2>
           </div>
           <div className="p-6">
             <div className="overflow-x-auto">
-              <table className="w-full border border-gray-200 rounded-lg">
+              <table className="w-full border border-[rgba(26,26,24,.09)] rounded-xl overflow-hidden">
                 <thead>
-                  <tr className="bg-gray-50">
-                    <th className="border border-gray-200 p-4 text-left font-medium text-gray-700">Day</th>
-                    <th className="border border-gray-200 p-4 text-center font-medium text-gray-700">Start Time</th>
-                    <th className="border border-gray-200 p-4 text-center font-medium text-gray-700">End Time</th>
+                  <tr className="bg-[#F5F4F0]">
+                    <th className="border border-[rgba(26,26,24,.09)] p-4 text-left text-[13px] font-semibold text-[rgba(26,26,24,.68)]">Day</th>
+                    <th className="border border-[rgba(26,26,24,.09)] p-4 text-center text-[13px] font-semibold text-[rgba(26,26,24,.68)]">Start Time</th>
+                    <th className="border border-[rgba(26,26,24,.09)] p-4 text-center text-[13px] font-semibold text-[rgba(26,26,24,.68)]">End Time</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Object.entries(schedule).map(([day, data]) => (
-                    <tr key={day} className="hover:bg-gray-50">
-                      <td className="border border-gray-200 p-4">
+                    <tr key={day} className="hover:bg-[#FDFDFB]">
+                      <td className="border border-[rgba(26,26,24,.09)] p-4">
                         <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={data.checked}
-                            onChange={(e) => handleScheduleChange(day, 'checked', e.target.checked)}
-                            className="rounded border-gray-300 text-red-600 focus:ring-red-600"
+                            onCheckedChange={(c) => handleScheduleChange(day, 'checked', c === true)}
                             aria-label={`Enable ${day}`}
                           />
-                          <span className="capitalize font-medium text-gray-700">{day}</span>
+                          <span className="capitalize text-[13px] font-semibold text-[rgba(26,26,24,.68)]">{day}</span>
                         </div>
                       </td>
-                      <td className="border border-gray-200 p-4">
+                      <td className="border border-[rgba(26,26,24,.09)] p-4">
                         <div className="flex gap-2 justify-center">
                           <Select 
                             value={data.startTime} 
                             onValueChange={(value) => handleScheduleChange(day, 'startTime', value)}
                           >
-                            <SelectTrigger className="w-16 h-8 border-gray-300">
+                            <SelectTrigger className="w-16 h-8 border-[rgba(26,26,24,.12)] rounded-lg">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -912,7 +945,7 @@ export const AddStaffPage = () => {
                             value={data.startMinute} 
                             onValueChange={(value) => handleScheduleChange(day, 'startMinute', value)}
                           >
-                            <SelectTrigger className="w-16 h-8 border-gray-300">
+                            <SelectTrigger className="w-16 h-8 border-[rgba(26,26,24,.12)] rounded-lg">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -923,13 +956,13 @@ export const AddStaffPage = () => {
                           </Select>
                         </div>
                       </td>
-                      <td className="border border-gray-200 p-4">
+                      <td className="border border-[rgba(26,26,24,.09)] p-4">
                         <div className="flex gap-2 justify-center">
                           <Select 
                             value={data.endTime} 
                             onValueChange={(value) => handleScheduleChange(day, 'endTime', value)}
                           >
-                            <SelectTrigger className="w-16 h-8 border-gray-300">
+                            <SelectTrigger className="w-16 h-8 border-[rgba(26,26,24,.12)] rounded-lg">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -943,7 +976,7 @@ export const AddStaffPage = () => {
                             value={data.endMinute} 
                             onValueChange={(value) => handleScheduleChange(day, 'endMinute', value)}
                           >
-                            <SelectTrigger className="w-16 h-8 border-gray-300">
+                            <SelectTrigger className="w-16 h-8 border-[rgba(26,26,24,.12)] rounded-lg">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -963,22 +996,22 @@ export const AddStaffPage = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 justify-center pt-6">
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white h-9 px-4 text-sm font-medium"
-          >
-            {isSubmitting ? "Creating..." : "Submit"}
-          </Button>
-          <Button
+        <div className="flex justify-end gap-3 pb-8">
+          <button
             type="button"
             onClick={handleCancel}
-            variant="outline"
-            className="!bg-white !text-[#C72030] !border !border-[#C72030] h-9 px-4 text-sm font-medium hover:!bg-gray-50"
+            disabled={isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
-          </Button>
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+          >
+            {isSubmitting ? 'Creating...' : 'Add Staff'}
+          </button>
         </div>
       </form>
     </div>

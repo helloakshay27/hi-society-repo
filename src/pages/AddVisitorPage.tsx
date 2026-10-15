@@ -18,6 +18,7 @@ import {
     Truck,
     Upload,
     FileText,
+    ArrowLeft,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ticketManagementAPI } from "@/services/ticketManagementAPI";
@@ -51,11 +52,11 @@ export const AddVisitorPage = () => {
         "& .MuiOutlinedInput-root": {
             height: "45px",
             "& fieldset": { borderColor: "#ddd" },
-            "&:hover fieldset": { borderColor: "#4d494aff" },
+            "&:hover fieldset": { borderColor: "#C72030" },
             "&.Mui-focused fieldset": { borderColor: "#C72030" },
         },
         "& .MuiInputLabel-root": {
-            "&.Mui-focused": { color: "#201f20ff" },
+            "&.Mui-focused": { color: "#C72030" },
             "& .MuiInputLabel-asterisk": {
                 color: "#C72030 !important",
             },
@@ -433,19 +434,28 @@ export const AddVisitorPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+        <div className="p-6 bg-[#FDFDFB] min-h-screen add-visitor-page">
+            <style>{`.add-visitor-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
             <div className="">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Add New Visitor</h1>
-                    <p className="text-gray-600 mt-2">
-                        Enter visitor details and complete the check-in process
-                    </p>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors mr-2"
+                            aria-label="Go back"
+                        >
+                            <ArrowLeft className="w-4 h-4 text-gray-600" />
+                        </button>
+                        <span>Visitor In</span>
+                        <span>{">"}</span>
+                        <span className="text-gray-900 font-medium">Add New Visitor</span>
+                    </div>
                 </div>
 
                 {/* Camera Modal */}
                 {showCameraModal && (
-                    <div className="fixed top-20 left-8 z-50 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-4">
+                    <div className="fixed top-20 left-8 z-50 w-80 bg-white rounded-2xl shadow-xl border border-[rgba(26,26,24,.09)] p-4">
                         <div className="flex justify-between items-center mb-2">
                             <h3 className="text-lg font-medium">Camera</h3>
                             <Button
@@ -510,7 +520,7 @@ export const AddVisitorPage = () => {
                         <div className="space-y-2">
                             <Button
                                 onClick={handleCapturePhoto}
-                                className="w-full bg-pink-200 hover:bg-pink-300 text-gray-800 rounded-full"
+                                className="w-full bg-[#1A1A18] hover:bg-[#12100E] text-white rounded-lg"
                                 disabled={!stream || !isVideoReady}
                             >
                                 {!isVideoReady ? "Loading Camera..." : "Capture Photo"}
@@ -524,7 +534,7 @@ export const AddVisitorPage = () => {
                                         setStream(null);
                                     }
                                 }}
-                                className="w-full rounded-full"
+                                className="w-full rounded-lg border-[rgba(26,26,24,.08)] text-[rgba(26,26,24,.68)]"
                             >
                                 Close
                             </Button>
@@ -537,24 +547,30 @@ export const AddVisitorPage = () => {
                 {/* Main Form */}
                 <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                     {/* Photo Section */}
-                    <div className="overflow-hidden">
-                        <div className="text-center mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800">
+                    <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+                        <div className="px-6 pt-[22px]">
+                            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+                                <span
+                                    className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                                    style={{ backgroundColor: "#F5F4F0" }}
+                                >
+                                    <Camera size={14} color="#1A1A18" />
+                                </span>
                                 Capture Image
-                            </h3>
+                            </h2>
                         </div>
-                        <div className="flex justify-center mb-6">
+                        <div className="p-6 flex justify-center">
                             {!capturedPhoto ? (
                                 <button
                                     type="button"
                                     onClick={handleCameraClick}
-                                    className="w-32 h-24 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300 transition-colors"
+                                    className="w-32 h-24 bg-[#F5F4F0] rounded-xl flex items-center justify-center hover:bg-[#F0EFEA] transition-colors"
                                 >
-                                    <Camera className="h-8 w-8 text-gray-600" />
+                                    <Camera className="h-8 w-8 text-[rgba(26,26,24,.38)]" />
                                 </button>
                             ) : (
                                 <div className="text-center">
-                                    <div className="w-32 h-24 bg-black rounded-lg mb-2 overflow-hidden relative group cursor-pointer">
+                                    <div className="w-32 h-24 bg-black rounded-xl mb-2 overflow-hidden relative group cursor-pointer">
                                         <img
                                             src={capturedPhoto}
                                             alt="Captured"
@@ -567,14 +583,14 @@ export const AddVisitorPage = () => {
                                                 type="button"
                                                 variant="outline"
                                                 onClick={handleRetakePhoto}
-                                                className="h-8 px-3 text-xs"
+                                                className="h-8 px-3 text-xs border-[rgba(26,26,24,.08)] text-[rgba(26,26,24,.68)]"
                                             >
                                                 Retake
                                             </Button>
                                             <Button
                                                 type="button"
                                                 onClick={handleSavePhoto}
-                                                className="h-8 px-3 text-xs bg-red-600 hover:bg-red-700 text-white"
+                                                className="h-8 px-3 text-xs bg-[#1A1A18] hover:bg-[#12100E] text-white"
                                             >
                                                 Save
                                             </Button>
@@ -584,7 +600,7 @@ export const AddVisitorPage = () => {
                                             type="button"
                                             variant="link"
                                             onClick={handleRetakePhoto}
-                                            className="text-xs text-gray-600"
+                                            className="text-xs text-[rgba(26,26,24,.55)] hover:text-[#1A1A18]"
                                         >
                                             Change Photo
                                         </Button>
@@ -595,14 +611,14 @@ export const AddVisitorPage = () => {
                     </div>
 
                     {/* Visitor Details Section */}
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                        <div className="px-6 py-3 border-b border-gray-200">
-                            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                    <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+                        <div className="px-6 pt-[22px]">
+                            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
                                 <span
                                     className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-                                    style={{ backgroundColor: "#E5E0D3" }}
+                                    style={{ backgroundColor: "#F5F4F0" }}
                                 >
-                                    <User size={16} color="#C72030" />
+                                    <User size={14} color="#1A1A18" />
                                 </span>
                                 Visitor Details
                             </h2>
@@ -610,8 +626,8 @@ export const AddVisitorPage = () => {
                         <div className="p-6 space-y-6">
                             {/* Visitor Type */}
                             <div>
-                                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                                    Visitor Type <span className="text-red-500">*</span>
+                                <label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-2 block">
+                                    Visitor Type <span className="text-[#C72030]">*</span>
                                 </label>
                                 <div className="flex items-center gap-6">
                                   <div className="flex items-center space-x-2">
@@ -674,7 +690,7 @@ export const AddVisitorPage = () => {
                                 </FormControl>
                             )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Flat Number */}
                                 <FormControl
                                     fullWidth
@@ -720,7 +736,7 @@ export const AddVisitorPage = () => {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Additional Visitor */}
                                 <TextField
                                     label="Additional Visitor"
@@ -759,7 +775,7 @@ export const AddVisitorPage = () => {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Vehicle Number */}
                                 <TextField
                                     label="Vehicle Number"
@@ -787,7 +803,7 @@ export const AddVisitorPage = () => {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Parking Slot */}
                                 <FormControl
                                     fullWidth
@@ -874,8 +890,8 @@ export const AddVisitorPage = () => {
                             </FormControl>
 
                             {/* Checkboxes */}
-                            <div className="space-y-4 pt-4 border-t border-gray-200">
-                                <div className="flex items-center space-x-2">
+                            <div className="space-y-4 pt-4 border-t border-[rgba(26,26,24,.08)]">
+                                <label className="flex items-center gap-3 cursor-pointer w-fit select-none">
                                     <Checkbox
                                         id="skipHostApproval"
                                         checked={formData.skipHostApproval}
@@ -883,14 +899,11 @@ export const AddVisitorPage = () => {
                                             handleInputChange("skipHostApproval", c as boolean)
                                         }
                                     />
-                                    <label
-                                        htmlFor="skipHostApproval"
-                                        className="text-sm font-medium cursor-pointer"
-                                    >
+                                    <span className="text-[13px] font-medium text-[#1A1A18]">
                                         Skip Host Approval
-                                    </label>
-                                </div>
-                                <div className="flex items-center space-x-2">
+                                    </span>
+                                </label>
+                                <label className="flex items-center gap-3 cursor-pointer w-fit select-none">
                                     <Checkbox
                                         id="goodsInGatepass"
                                         checked={formData.goodsInGatepass}
@@ -898,36 +911,33 @@ export const AddVisitorPage = () => {
                                             handleInputChange("goodsInGatepass", c as boolean)
                                         }
                                     />
-                                    <label
-                                        htmlFor="goodsInGatepass"
-                                        className="text-sm font-medium cursor-pointer"
-                                    >
+                                    <span className="text-[13px] font-medium text-[#1A1A18]">
                                         Goods In Gatepass
-                                    </label>
-                                </div>
+                                    </span>
+                                </label>
                             </div>
                         </div>
                     </div>
 
                     {/* Items Description Section */}
                     {formData.goodsInGatepass && (
-                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
-                                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-3">
+                        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+                            <div className="px-6 pt-[22px]">
+                                <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
                                     <span
-                                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm"
-                                        style={{ backgroundColor: "#E5E0D3" }}
+                                        className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                                        style={{ backgroundColor: "#F5F4F0" }}
                                     >
-                                        <Truck size={18} color="#C72030" />
+                                        <Truck size={14} color="#1A1A18" />
                                     </span>
                                     Items Description
                                 </h2>
                             </div>
-                            <div className="p-6 space-y-5">
+                            <div className="p-6 space-y-6">
                                 {/* Single Item Row */}
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
                                     <div className="md:col-span-3">
-                                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                                        <label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-1 block">
                                             Item Description
                                         </label>
                                         <TextField
@@ -956,7 +966,7 @@ export const AddVisitorPage = () => {
                                         />
                                     </div>
                                     <div className="md:col-span-1">
-                                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                                        <label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-1 block">
                                             No. of Items
                                         </label>
                                         <TextField
@@ -1079,7 +1089,7 @@ export const AddVisitorPage = () => {
                                     </div>
                                 )}
 
-                                <div className="flex items-center space-x-2">
+                                <label className="flex items-center gap-3 cursor-pointer w-fit select-none">
                                     <Checkbox
                                         id="requestSupervisorApproval"
                                         checked={formData.requestSupervisorApproval}
@@ -1087,31 +1097,30 @@ export const AddVisitorPage = () => {
                                             handleInputChange("requestSupervisorApproval", c as boolean)
                                         }
                                     />
-                                    <label
-                                        htmlFor="requestSupervisorApproval"
-                                        className="text-sm font-medium cursor-pointer"
-                                    >
+                                    <span className="text-[13px] font-medium text-[#1A1A18]">
                                         Request for Supervisor Approval
-                                    </label>
-                                </div>
+                                    </span>
+                                </label>
                             </div>
                         </div>
                     )}
 
                     {/* Submit Button */}
-                    <div className="flex gap-4 justify-center pt-6">
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="bg-[#C72030] hover:bg-[#B01C29] text-white text-base px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? "Submitting..." : "Submit"}
-                        </button>
+                    <div className="flex justify-end gap-3 pb-8">
                         <button
                             type="button"
                             onClick={() => navigate(-1)}
-className="px-6 sm:px-8 w-full sm:w-auto bg-white border border-[#da7756] text-[#da7756] hover:bg-gray-100  h-10"                        >
+                            disabled={isSubmitting}
+                            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                             Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+                        >
+                            {isSubmitting ? "Submitting..." : "Add Visitor"}
                         </button>
                     </div>
                 </form>

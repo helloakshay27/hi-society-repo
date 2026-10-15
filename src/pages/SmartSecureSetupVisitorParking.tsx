@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, X } from "lucide-react";
+import { Plus, Pencil, Filter, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -11,7 +11,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
-import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import { menuProps } from "@/components/ticket-management/fieldStyles";
+
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-notchedOutline": { borderColor: "#ddd" },
+  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
+};
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
@@ -130,17 +139,28 @@ const ParkingFilterDialog: React.FC<FilterDialogProps> = ({
 
   return (
     <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">
-        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
-          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
-            FILTER BY
+      <DialogContent className="sm:max-w-2xl bg-white rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] p-0 gap-0 [&>button]:hidden">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4">
+          <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+              style={{ backgroundColor: "#F5F4F0" }}
+            >
+              <Filter size={14} color="#1A1A18" />
+            </span>
+            Filter By
           </DialogTitle>
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
-            <X className="w-4 h-4" />
-          </Button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4 text-gray-600" />
+          </button>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 px-6 pb-6">
           <div className="grid grid-cols-2 gap-4">
             {renderSelectField(
               "Vehicle Type",
@@ -166,20 +186,21 @@ const ParkingFilterDialog: React.FC<FilterDialogProps> = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button
-            variant="outline"
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.08)]">
+          <button
+            type="button"
             onClick={handleReset}
-            className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
           >
             Reset
-          </Button>
-          <Button
+          </button>
+          <button
+            type="button"
             onClick={handleApply}
-            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E]"
           >
             Apply Filters
-          </Button>
+          </button>
         </div>
       </DialogContent>
     </Dialog>
@@ -529,7 +550,7 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
 
   // ── Slot form fields (shared by add/edit) ──────────────────────────────────
   const renderSlotFormFields = () => (
-    <div className="p-8 grid grid-cols-2 gap-6 bg-white">
+    <div className="px-6 pb-6 grid grid-cols-2 gap-6 bg-white">
       <TextField
         label={<>Slot Number <span style={{ color: '#C72030' }}>*</span></>}
         placeholder="Enter slot number"
@@ -642,21 +663,44 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
           if (!open) setIsAddModalOpen(false);
         }}
       >
-        <DialogContent className="sm:max-w-[500px] bg-white p-0">
-          <DialogHeader className="p-4 border-b">
-            <DialogTitle className="text-center font-bold text-lg">
+        <DialogContent className="sm:max-w-[500px] bg-white p-0 gap-0 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)]">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
+            <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center text-left">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: "#F5F4F0" }}
+              >
+                <Plus size={14} color="#1A1A18" />
+              </span>
               Add Parking Slot
             </DialogTitle>
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(false)}
+              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4 text-gray-600" />
+            </button>
           </DialogHeader>
           {renderSlotFormFields()}
-          <DialogFooter className="p-4 border-t flex justify-center bg-white">
-            <Button
+          <DialogFooter className="flex flex-row justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.08)] sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(false)}
+              disabled={submitting}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
               onClick={handleAddSlot}
               disabled={submitting}
-              className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {submitting ? "Saving…" : "Submit"}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -669,21 +713,44 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
           if (!open) setIsEditModalOpen(false);
         }}
       >
-        <DialogContent className="sm:max-w-[500px] bg-white p-0">
-          <DialogHeader className="p-4 border-b bg-[#F6F4EE]">
-            <DialogTitle className="text-center font-bold text-lg">
+        <DialogContent className="sm:max-w-[500px] bg-white p-0 gap-0 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)]">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
+            <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center text-left">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: "#F5F4F0" }}
+              >
+                <Pencil size={14} color="#1A1A18" />
+              </span>
               Edit Parking Slot
             </DialogTitle>
+            <button
+              type="button"
+              onClick={() => setIsEditModalOpen(false)}
+              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4 text-gray-600" />
+            </button>
           </DialogHeader>
           {renderSlotFormFields()}
-          <DialogFooter className="p-4 border-t flex justify-center bg-white">
-            <Button
+          <DialogFooter className="flex flex-row justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.08)] sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setIsEditModalOpen(false)}
+              disabled={submitting}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
               onClick={handleUpdateSlot}
               disabled={submitting}
-              className="bg-[#00A651] hover:bg-[#008f45] text-white min-w-[100px]"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {submitting ? "Saving…" : "Update"}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

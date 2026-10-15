@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { X, Plus, Type, CalendarRange, ListChecks, Clock, MapPin, Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { X, Plus, ArrowLeft, Type, CalendarRange, ListChecks, Clock, MapPin, Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { FormControl, InputLabel, Select as MuiSelect, MenuItem, TextField, InputAdornment, CircularProgress, Radio, RadioGroup, FormControlLabel, Autocomplete } from '@mui/material';
 import { toast } from 'sonner';
@@ -30,12 +31,17 @@ import { useLayout } from '@/contexts/LayoutContext';
 
 // Section component defined outside to prevent re-creation on every render
 const Section: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
-  <section className="bg-white rounded-lg border border-[#E5E7EB]">
-    <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center gap-3">
-      <div className="text-brand flex items-center justify-center">
-        {icon}
-      </div>
-      <h2 className="text-[13px] font-bold tracking-wider uppercase text-gray-900">{title}</h2>
+  <section className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+    <div className="px-6 pt-[22px]">
+      <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+        <span
+          className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+          style={{ backgroundColor: '#F5F4F0' }}
+        >
+          {icon}
+        </span>
+        {title}
+      </h2>
     </div>
     <div className="p-6">{children}</div>
   </section>
@@ -529,10 +535,12 @@ export const PatrollingCreatePage: React.FC = () => {
   };
 
   const fieldStyles = {
-    height: { xs: 28, sm: 36, md: 45 },
-    '& .MuiInputBase-input, & .MuiSelect-select': {
-      padding: { xs: '8px', sm: '10px', md: '12px' },
-    },
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#ddd' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#C72030' },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#C72030' },
   };
 
   // Fetch towers (society blocks) for the first checkpoint on mount
@@ -1216,18 +1224,30 @@ export const PatrollingCreatePage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 relative patrolling-create-page">
+    <div className="p-6 space-y-6 relative patrolling-create-page bg-[#FDFDFB] min-h-screen">
       <style>{`.patrolling-create-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {isSubmitting && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
         </div>
       )}
-      <header className="flex items-center justify-between pb-2">
-        <h1 className="text-lg font-bold tracking-wider uppercase text-gray-800">Patrolling</h1>
+      <header className="mb-2">
+        <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <button
+            type="button"
+            onClick={() => navigate('/security/patrolling')}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Patrolling</span>
+          <span>{'>'}</span>
+          <span className="text-gray-900 font-medium">Create Patrolling</span>
+        </div>
       </header>
 
-      <Section title="Patrol Details" icon={<Type className="w-[18px] h-[18px]" />}>
+      <Section title="Patrol Details" icon={<Type className="w-3.5 h-3.5" />}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <TextField
@@ -1296,7 +1316,7 @@ export const PatrollingCreatePage: React.FC = () => {
         </div>
       </Section>
 
-      <Section title="Validity" icon={<CalendarRange className="w-[18px] h-[18px]" />}>
+      <Section title="Validity" icon={<CalendarRange className="w-3.5 h-3.5" />}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <TextField
@@ -1422,24 +1442,18 @@ export const PatrollingCreatePage: React.FC = () => {
               </MuiSelect>
             </FormControl>
             {selectedChecklist && (
-              <div className="mt-2 text-xs text-gray-600">Selected: <span className="font-semibold">{selectedChecklist.name}</span></div>
+              <div className="mt-2 text-xs text-[rgba(26,26,24,.55)]">Selected: <span className="font-semibold">{selectedChecklist.name}</span></div>
             )}
           </div>
           {selectedChecklist && questions.map((q, idx) => (
-            <div key={q.id} className="relative rounded-md border border-dashed bg-muted/30 p-4">
+            <div key={q.id} className="relative rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-4">
             
               <div className="mb-6">
                 <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id={`mandatory-${idx}`}
-                    checked={q.mandatory}
-                    className="w-4 h-4 text-[#C72030] bg-white border-gray-300 rounded focus:ring-[#C72030] focus:ring-2 accent-[#C72030]"
-                    disabled
-                  />
+                  <Checkbox id={`mandatory-${idx}`} checked={q.mandatory} disabled />
                   <label 
                     htmlFor={`mandatory-${idx}`}
-                    className="text-sm font-medium text-gray-700 cursor-pointer select-none"
+                    className="text-sm font-medium text-[#1A1A18] cursor-pointer select-none"
                   >
                     Mandatory
                   </label>
@@ -1501,7 +1515,7 @@ export const PatrollingCreatePage: React.FC = () => {
                       {/* Simple comma-separated input that works */}
                       <input
                         type="text"
-                        className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                        className="w-full px-3 py-3 border border-[#ddd] bg-white rounded-[4px] focus:outline-none disabled:bg-[#F5F4F0] disabled:cursor-not-allowed text-sm"
                         placeholder="Option 1, Option 2, Option 3"
                         value={q.optionsText || ''}
                         disabled
@@ -1518,9 +1532,9 @@ export const PatrollingCreatePage: React.FC = () => {
 
                       {/* Show examples when field is empty */}
                       {(!q.options || q.options.length === 0) && (
-                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-                          <p className="font-medium text-blue-800 mb-1">💡 Examples:</p>
-                          <div className="text-blue-700 space-y-1">
+                        <div className="mt-2 p-2 bg-white border border-[rgba(26,26,24,.09)] rounded-lg text-xs">
+                          <p className="font-medium text-[#1A1A18] mb-1">Examples:</p>
+                          <div className="text-[rgba(26,26,24,.68)] space-y-1">
                             <div>• <code>Yes, No, Maybe</code></div>
                             <div>• <code>Secure, Issues Found, Needs Attention</code></div>
                           </div>
@@ -1529,15 +1543,15 @@ export const PatrollingCreatePage: React.FC = () => {
 
                       {/* Show parsed options preview */}
                       {q.options && q.options.length > 0 && (
-                        <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-xs">
+                        <div className="mt-2 p-2 bg-white border border-[rgba(26,26,24,.09)] rounded-lg text-xs">
                           <p className="font-medium text-gray-800 mb-1">
-                            ✅ Multi-Options  ({q.options.length}):
+                            Multi-Options  ({q.options.length}):
                           </p>
                           <div className="flex flex-wrap gap-1">
                             {q.options.map((option, optIdx) => (
                               <span
                                 key={optIdx}
-                                className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded group"
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-[#F5F4F0] text-[#1A1A18] rounded group"
                               >
                                 {option}
                               {/* Remove button not shown, always read-only */}
@@ -1546,7 +1560,7 @@ export const PatrollingCreatePage: React.FC = () => {
                           </div>
                           {q.options.length < 2 && (
                             <p className="text-amber-600 mt-1">
-                              ⚠️ Add at least {2 - q.options.length} more option(s)
+                              Add at least {2 - q.options.length} more option(s)
                             </p>
                           )}
                         </div>
@@ -1566,12 +1580,12 @@ export const PatrollingCreatePage: React.FC = () => {
       <Section title="Assignment" icon={<Clock className="w-3.5 h-3.5" />}>
         <div className="space-y-4">
           {shifts.map((s, idx) => (
-            <div key={s.id} className="relative rounded-md border border-dashed bg-muted/30 p-4">
+            <div key={s.id} className="relative rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-4">
               {idx > 0 && (
                 <button
                   type="button"
                   onClick={() => removeShift(idx)}
-                  className="absolute -right-2 -top-2 rounded-full p-1 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="absolute -right-2 -top-2 rounded-full p-1 bg-white border border-[rgba(26,26,24,.09)] shadow-sm hover:bg-[#F7F6F2] disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Remove shift"
                   disabled={isSubmitting}
                 >
@@ -1663,19 +1677,19 @@ export const PatrollingCreatePage: React.FC = () => {
       <Section title="Checkpoint Setup" icon={<MapPin className="w-3.5 h-3.5" />}>
         <div className="space-y-6">
           {checkpoints.map((c, idx) => (
-            <div key={c.id} className="relative rounded-md border border-dashed bg-muted/30 p-4">
+            <div key={c.id} className="relative rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-4">
               {idx > 0 && (
                 <button
                   type="button"
                   onClick={() => removeCheckpoint(idx)}
-                  className="absolute -right-2 -top-2 rounded-full p-1 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="absolute -right-2 -top-2 rounded-full p-1 bg-white border border-[rgba(26,26,24,.09)] shadow-sm hover:bg-[#F7F6F2] disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Remove checkpoint"
                   disabled={isSubmitting}
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
-              <p className="mb-3 text-sm font-medium text-muted-foreground">Checkpoint {idx + 1}</p>
+              <p className="mb-3 text-sm font-medium text-[rgba(26,26,24,.68)]">Checkpoint {idx + 1}</p>
               <div className="space-y-4">
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1724,7 +1738,7 @@ export const PatrollingCreatePage: React.FC = () => {
             <Button
               onClick={addCheckpoint}
               disabled={isSubmitting}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-[42px] items-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:bg-[#12100E] disabled:opacity-60"
             >
               <Plus className="w-4 h-4 mr-2" /> Add Checkpoint
             </Button>
@@ -1732,12 +1746,20 @@ export const PatrollingCreatePage: React.FC = () => {
         </div>
       </Section>
 
-      <div className="flex items-center gap-3 justify-center pt-2">
-        <Button
-          variant="ghost"
-          className="btn-primary h-9 px-4 text-sm font-medium"
+      <div className="flex justify-end gap-3 pb-8">
+        <button
+          type="button"
+          onClick={() => navigate('/security/patrolling')}
+          disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
         >
           {isSubmitting ? (
             <>
@@ -1747,15 +1769,7 @@ export const PatrollingCreatePage: React.FC = () => {
           ) : (
             'Submit'
           )}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => navigate('/security/patrolling')}
-          disabled={isSubmitting}
-          className="btn-cancel h-9 px-4 text-sm font-medium !bg-white !border-[#da7756] !text-[#da7756] hover:!bg-gray-100"
-        >
-          Cancel
-        </Button>
+        </button>
       </div>
     </div>
   );

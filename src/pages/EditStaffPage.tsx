@@ -4,8 +4,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, User, Paperclip, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { staffService, SocietyStaffDetails, StaffFormData, StaffFiltersResponse } from '@/services/staffService';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
@@ -31,6 +32,12 @@ const fieldStyles = {
     '&.Mui-focused': {
       color: '#C72030',
     },
+    '& .MuiInputLabel-asterisk': {
+      color: '#C72030 !important',
+    },
+  },
+  '& .MuiFormLabel-asterisk': {
+    color: '#C72030 !important',
   },
 };
 
@@ -375,17 +382,35 @@ export const EditStaffPage = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-[#FDFDFB] min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">EDIT STAFF</h1>
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Staff</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Edit Staff</span>
+        </div>
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
         {/* Section 1: Staff Details */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: '#F5F4F0' }}
+              >
+                <User size={14} color="#1A1A18" />
+              </span>
               Staff Details
             </h2>
           </div>
@@ -408,7 +433,8 @@ export const EditStaffPage = () => {
                 }}
               />
               <TextField
-                label="First Name*"
+                label="First Name"
+                required
                 value={formData.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
                 fullWidth
@@ -424,7 +450,8 @@ export const EditStaffPage = () => {
               />
               
               <TextField
-                label="Last Name*"
+                label="Last Name"
+                required
                 value={formData.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
                 fullWidth
@@ -475,7 +502,8 @@ export const EditStaffPage = () => {
               /> */}
               
               <TextField
-                label="Mobile*"
+                label="Mobile"
+                required
                 value={formData.mobile}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -598,7 +626,8 @@ export const EditStaffPage = () => {
               />
               
               <TextField
-                label="Valid From*"
+                label="Valid From"
+                required
                 type="date"
                 value={formData.validFrom}
                 onChange={(e) => handleInputChange('validFrom', e.target.value)}
@@ -615,7 +644,8 @@ export const EditStaffPage = () => {
               />
               
               <TextField
-                label="Valid Till*"
+                label="Valid Till"
+                required
                 type="date"
                 value={formData.validTill}
                 onChange={(e) => handleInputChange('validTill', e.target.value)}
@@ -658,22 +688,28 @@ export const EditStaffPage = () => {
         </div>
 
         {/* Section 2: Attachments */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: '#F5F4F0' }}
+              >
+                <Paperclip size={14} color="#1A1A18" />
+              </span>
               Add Attachments
             </h2>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2 block">Profile Picture Upload</Label>
+                <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-2 block">Profile Picture Upload</Label>
                 
                 {/* Existing profile image from API */}
                 {staff.staff_image_url && !attachments.profilePicture && (
-                  <div className="mb-4 p-4 border-2 border-blue-300 rounded-lg">
+                  <div className="mb-4 p-4 border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] rounded-xl">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-blue-600">Current Photo</span>
+                      <span className="text-sm font-medium text-[#1A1A18]">Current Photo</span>
                     </div>
                     <img
                       src={staff.staff_image_url}
@@ -685,15 +721,15 @@ export const EditStaffPage = () => {
 
                 {/* New uploaded image preview */}
                 {attachments.profilePicture && (
-                  <div className="mb-4 p-4 border-2 border-green-500 rounded-lg">
+                  <div className="mb-4 p-4 border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] rounded-xl">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-green-600">New Photo</span>
+                      <span className="text-sm font-medium text-[#1A1A18]">New Photo</span>
                       <Button
                         type="button"
                         onClick={() => handleFileUpload('profilePicture', null)}
                         variant="ghost"
                         size="sm"
-                        className="h-6 text-xs text-[#C72030] hover:bg-[#C72030]/10"
+                        className="h-6 text-xs text-[rgba(26,26,24,.55)] hover:text-[#1A1A18] hover:bg-transparent"
                       >
                         Remove
                       </Button>
@@ -706,7 +742,7 @@ export const EditStaffPage = () => {
                   </div>
                 )}
 
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
+                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-[#F5F4F0] rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
                   <input
                     type="file"
                     accept="image/*"
@@ -721,7 +757,7 @@ export const EditStaffPage = () => {
                       </svg>
                     </div>
                     <p className="text-sm text-gray-600">
-                      Drag & Drop or <span className="text-red-500 cursor-pointer font-medium">Choose File</span>
+                      Drag & Drop or <span className="text-[#C72030] cursor-pointer font-medium">Choose File</span>
                     </p>
                     <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB</p>
                   </label>
@@ -729,8 +765,8 @@ export const EditStaffPage = () => {
               </div>
               
               <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2 block">Documents Upload</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
+                <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-2 block">Documents Upload</Label>
+                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-[#F5F4F0] rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -746,11 +782,11 @@ export const EditStaffPage = () => {
                       </svg>
                     </div>
                     <p className="text-sm text-gray-600">
-                      Drag & Drop or <span className="text-red-500 cursor-pointer font-medium">Choose File</span>
+                      Drag & Drop or <span className="text-[#C72030] cursor-pointer font-medium">Choose File</span>
                     </p>
                     <p className="text-xs mt-1">
                       {documents.length > 0 ? (
-                        <span className="text-red-600 font-medium">{documents.length} file(s) selected</span>
+                        <span className="text-[#C72030] font-medium">{documents.length} file(s) selected</span>
                       ) : (
                         <span className="text-gray-500">PDF, DOC up to 10MB</span>
                       )}
@@ -760,7 +796,7 @@ export const EditStaffPage = () => {
                 {documents.length > 0 && (
                   <ul className="mt-2 space-y-1">
                     {documents.map((file, i) => (
-                      <li key={i} className="flex items-center justify-between text-xs text-gray-600 bg-gray-50 px-3 py-1 rounded">
+                      <li key={i} className="flex items-center justify-between text-xs text-gray-600 bg-[#F5F4F0] px-3 py-1 rounded-lg">
                         <span className="truncate">{file.name}</span>
                         <button
                           type="button"
@@ -779,44 +815,48 @@ export const EditStaffPage = () => {
         </div>
 
         {/* Section 3: Schedule */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: '#F5F4F0' }}
+              >
+                <Clock size={14} color="#1A1A18" />
+              </span>
               Schedule Information
             </h2>
           </div>
           <div className="p-6">
             <div className="overflow-x-auto">
-              <table className="w-full border border-gray-200 rounded-lg">
+              <table className="w-full border border-[rgba(26,26,24,.09)] rounded-xl overflow-hidden">
                 <thead>
-                  <tr className="bg-gray-50">
-                    <th className="border border-gray-200 p-4 text-left font-medium text-gray-700">Day</th>
-                    <th className="border border-gray-200 p-4 text-center font-medium text-gray-700">Start Time</th>
-                    <th className="border border-gray-200 p-4 text-center font-medium text-gray-700">End Time</th>
+                  <tr className="bg-[#F5F4F0]">
+                    <th className="border border-[rgba(26,26,24,.09)] p-4 text-left text-[13px] font-semibold text-[rgba(26,26,24,.68)]">Day</th>
+                    <th className="border border-[rgba(26,26,24,.09)] p-4 text-center text-[13px] font-semibold text-[rgba(26,26,24,.68)]">Start Time</th>
+                    <th className="border border-[rgba(26,26,24,.09)] p-4 text-center text-[13px] font-semibold text-[rgba(26,26,24,.68)]">End Time</th>
                   </tr>
                 </thead>
                 <tbody>
                   {schedule.map((scheduleDay, index) => (
-                    <tr key={scheduleDay.day} className="hover:bg-gray-50">
-                      <td className="border border-gray-200 p-4">
+                    <tr key={scheduleDay.day} className="hover:bg-[#FDFDFB]">
+                      <td className="border border-[rgba(26,26,24,.09)] p-4">
                         <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             aria-label={`Enable ${scheduleDay.day}`}
                             checked={scheduleDay.enabled}
-                            onChange={(e) => handleScheduleChange(index, 'enabled', e.target.checked)}
-                            className="rounded border-gray-300 text-red-600 focus:ring-red-600"
+                            onCheckedChange={(c) => handleScheduleChange(index, 'enabled', c === true)}
                           />
-                          <span className="capitalize font-medium text-gray-700">{scheduleDay.day}</span>
+                          <span className="capitalize text-[13px] font-semibold text-[rgba(26,26,24,.68)]">{scheduleDay.day}</span>
                         </div>
                       </td>
-                      <td className="border border-gray-200 p-4">
+                      <td className="border border-[rgba(26,26,24,.09)] p-4">
                         <div className="flex gap-2 justify-center">
                           <Select 
                             value={scheduleDay.startHour}
                             onValueChange={(value) => handleScheduleChange(index, 'startHour', value)}
                           >
-                            <SelectTrigger className="w-16 h-8 border-gray-300">
+                            <SelectTrigger className="w-16 h-8 border-[rgba(26,26,24,.12)] rounded-lg">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -830,7 +870,7 @@ export const EditStaffPage = () => {
                             value={scheduleDay.startMinute}
                             onValueChange={(value) => handleScheduleChange(index, 'startMinute', value)}
                           >
-                            <SelectTrigger className="w-16 h-8 border-gray-300">
+                            <SelectTrigger className="w-16 h-8 border-[rgba(26,26,24,.12)] rounded-lg">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -841,13 +881,13 @@ export const EditStaffPage = () => {
                           </Select>
                         </div>
                       </td>
-                      <td className="border border-gray-200 p-4">
+                      <td className="border border-[rgba(26,26,24,.09)] p-4">
                         <div className="flex gap-2 justify-center">
                           <Select 
                             value={scheduleDay.endHour}
                             onValueChange={(value) => handleScheduleChange(index, 'endHour', value)}
                           >
-                            <SelectTrigger className="w-16 h-8 border-gray-300">
+                            <SelectTrigger className="w-16 h-8 border-[rgba(26,26,24,.12)] rounded-lg">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -861,7 +901,7 @@ export const EditStaffPage = () => {
                             value={scheduleDay.endMinute}
                             onValueChange={(value) => handleScheduleChange(index, 'endMinute', value)}
                           >
-                            <SelectTrigger className="w-16 h-8 border-gray-300">
+                            <SelectTrigger className="w-16 h-8 border-[rgba(26,26,24,.12)] rounded-lg">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -881,29 +921,29 @@ export const EditStaffPage = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 justify-center pt-6">
-          <Button
-            type="submit"
-            disabled={saving}
-            className="bg-red-600 hover:bg-red-700 px-8 py-2"
-          >
-            {saving ? (
-              <span style={{ color: '#fff', display: 'inline-flex', alignItems: 'center' }}>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" style={{ color: '#fff' }} />
-                Updating...
-              </span>
-            ) : (
-              <span style={{ color: '#fff' }}>Update Staff</span>
-            )}
-          </Button>
-          <Button 
+        <div className="flex justify-end gap-3 pb-8">
+          <button
             type="button"
-            variant="outline"
             onClick={handleBack}
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            disabled={saving}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
-          </Button>
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Updating...
+              </>
+            ) : (
+              'Update Staff'
+            )}
+          </button>
         </div>
       </form>
     </div>

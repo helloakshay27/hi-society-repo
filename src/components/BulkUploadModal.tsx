@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
+import { Upload, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { API_CONFIG, getFullUrl, getAuthenticatedFetchOptions } from '@/config/apiConfig';
 import { toast } from 'sonner';
@@ -112,17 +112,38 @@ export const BulkUploadModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={resetModal}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {description && (
-            <p className="text-sm text-gray-600 mt-2">{description}</p>
-          )}
+      <DialogContent className="max-w-md rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-0 gap-0">
+        <DialogHeader className="flex flex-row items-start justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
+          <div className="flex items-start">
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0"
+              style={{ backgroundColor: '#F5F4F0' }}
+            >
+              <Upload size={14} color="#1A1A18" />
+            </span>
+            <div>
+              <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] text-left">
+                {title}
+              </DialogTitle>
+              {description && (
+                <p className="text-xs text-[rgba(26,26,24,.55)] mt-1">{description}</p>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={resetModal}
+            disabled={isImporting}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors disabled:opacity-50"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4 text-gray-600" />
+          </button>
         </DialogHeader>
-        
-        <div className="space-y-6">
+
+        <div className="space-y-6 px-6 pb-6">
           <div className="text-center">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
+            <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-[#F5F4F0] rounded-xl p-8">
               <input
                 type="file"
                 onChange={handleFileChange}
@@ -131,37 +152,37 @@ export const BulkUploadModal = ({
                 accept=".csv,.xlsx,.xls"
                 disabled={isImporting}
               />
-              <label 
-                htmlFor="file-upload" 
-                className={`text-orange-500 hover:text-orange-600 cursor-pointer ${
+              <label
+                htmlFor="file-upload"
+                className={`text-[#1A1A18] hover:text-black font-medium cursor-pointer ${
                   isImporting ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
                 Choose File
               </label>
-              <span className="ml-2 text-gray-500">
+              <span className="ml-2 text-[rgba(26,26,24,.55)]">
                 {selectedFile ? selectedFile.name : 'No file chosen'}
               </span>
             </div>
           </div>
 
-          <div className="flex justify-between">
-            <Button 
-              style={{ backgroundColor: '#C72030' }}
-              className="hover:bg-[#C72030]/90 text-white px-6"
+          <div className="flex justify-end gap-3 pt-4 border-t border-[rgba(26,26,24,.08)]">
+            <button
+              type="button"
               disabled={isImporting}
               onClick={onDownloadSample}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Download Sample Format
-            </Button>
-            <Button 
-              style={{ backgroundColor: '#C72030' }}
-              className="hover:bg-[#C72030]/90 text-white px-6"
+            </button>
+            <button
+              type="button"
               onClick={handleImport}
               disabled={!selectedFile || isImporting}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isImporting ? 'Importing...' : 'Import'}
-            </Button>
+            </button>
           </div>
         </div>
       </DialogContent>

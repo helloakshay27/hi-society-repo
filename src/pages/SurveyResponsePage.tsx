@@ -1885,27 +1885,33 @@ export const SurveyResponsePage = () => {
           if (!isExporting) setIsExportFilterOpen(open);
         }}
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader className="relative pb-2">
-            <DialogTitle className="text-xl text-slate-950 font-normal">
-              DOWNLOAD FILTER
+        <DialogContent className="max-w-md rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-0 gap-0">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4">
+            <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: "#F5F4F0" }}
+              >
+                <Download size={14} color="#1A1A18" />
+              </span>
+              Download Filter
             </DialogTitle>
             <button
               type="button"
               onClick={() => setIsExportFilterOpen(false)}
-              className="absolute right-0 top-0 p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors disabled:opacity-50"
               disabled={isExporting}
               aria-label="Close download filter"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 text-gray-600" />
             </button>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 px-6 pb-6">
             <div className="space-y-2">
               <label
                 htmlFor="export-survey-title"
-                className="text-sm font-medium text-gray-700"
+                className="text-sm font-medium text-[rgba(26,26,24,.68)]"
               >
                 Survey Title
               </label>
@@ -1950,8 +1956,12 @@ export const SurveyResponsePage = () => {
                   sx={{
                     backgroundColor: "white",
                     "& .MuiOutlinedInput-root": {
-                      height: 40,
+                      height: 45,
                       cursor: "pointer",
+                      borderRadius: "4px",
+                      "& fieldset": { borderColor: "#ddd" },
+                      "&:hover fieldset": { borderColor: "#C72030" },
+                      "&.Mui-focused fieldset": { borderColor: "#C72030" },
                     },
                     "& .MuiInputBase-input": {
                       cursor: "pointer",
@@ -2060,11 +2070,11 @@ export const SurveyResponsePage = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="export-from-date"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-[rgba(26,26,24,.68)]"
                 >
                   From Date
                 </label>
-                <Input
+                <TextField
                   id="export-from-date"
                   type="date"
                   value={exportFilters.fromDate}
@@ -2072,17 +2082,29 @@ export const SurveyResponsePage = () => {
                     handleExportFilterChange("fromDate", event.target.value)
                   }
                   disabled={isExporting}
+                  fullWidth
+                  variant="outlined"
+                  sx={{
+                    backgroundColor: "white",
+                    "& .MuiOutlinedInput-root": {
+                      height: 45,
+                      borderRadius: "4px",
+                      "& fieldset": { borderColor: "#ddd" },
+                      "&:hover fieldset": { borderColor: "#C72030" },
+                      "&.Mui-focused fieldset": { borderColor: "#C72030" },
+                    },
+                  }}
                 />
               </div>
 
               <div className="space-y-2">
                 <label
                   htmlFor="export-upto-date"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-[rgba(26,26,24,.68)]"
                 >
                   Upto Date
                 </label>
-                <Input
+                <TextField
                   id="export-upto-date"
                   type="date"
                   value={exportFilters.uptoDate}
@@ -2090,28 +2112,40 @@ export const SurveyResponsePage = () => {
                     handleExportFilterChange("uptoDate", event.target.value)
                   }
                   disabled={isExporting}
+                  fullWidth
+                  variant="outlined"
+                  sx={{
+                    backgroundColor: "white",
+                    "& .MuiOutlinedInput-root": {
+                      height: 45,
+                      borderRadius: "4px",
+                      "& fieldset": { borderColor: "#ddd" },
+                      "&:hover fieldset": { borderColor: "#C72030" },
+                      "&.Mui-focused fieldset": { borderColor: "#C72030" },
+                    },
+                  }}
                 />
               </div>
             </div>
           </div>
 
-          <DialogFooter className="flex justify-center items-center gap-3 pt-2 sm:justify-center">
-            <Button
+          <DialogFooter className="flex flex-row justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.08)] sm:justify-end">
+            <button
               type="button"
               onClick={handleResetExportFilters}
               disabled={isExporting}
-              className="bg-[#C72030] text-white hover:bg-[#A01828] px-8"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Reset
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
               onClick={handleApplyExportFilters}
               disabled={isExporting}
-              className="bg-[#C72030] text-white hover:bg-[#A01828] px-8"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {isExporting ? "Downloading..." : "Apply"}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -12,6 +12,7 @@ import {
   OutlinedInput,
 } from "@mui/material";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, ListChecks, MapPin, QrCode, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
@@ -95,12 +96,17 @@ const Section: React.FC<{
   icon: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, icon, children }) => (
-  <section className="bg-card rounded-lg border border-border shadow-sm">
-    <div className="px-6 py-4 border-b border-border flex items-center gap-3">
-      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-        {icon}
-      </div>
-      <h2 className="text-sm font-semibold tracking-wide uppercase">{title}</h2>
+  <section className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+    <div className="px-6 pt-[22px]">
+      <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+        <span
+          className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+          style={{ backgroundColor: "#F5F4F0" }}
+        >
+          {icon}
+        </span>
+        {title}
+      </h2>
     </div>
     <div className="p-6">{children}</div>
   </section>
@@ -533,23 +539,9 @@ export const UserQRSetup = () => {
     height: '45px',
     backgroundColor: '#fff',
     borderRadius: '4px',
-    '& .MuiOutlinedInput-root': {
-      height: '45px',
-      '& fieldset': {
-        borderColor: '#ddd',
-      },
-      '&:hover fieldset': {
-        borderColor: '#C72030',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: '#C72030',
-      },
-    },
-    '& .MuiInputLabel-root': {
-      '&.Mui-focused': {
-        color: '#C72030',
-      },
-    },
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#ddd' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#C72030' },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#C72030' },
   };
 
   // Handle form submission
@@ -626,7 +618,7 @@ export const UserQRSetup = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 relative">
+    <div className="p-6 space-y-6 relative bg-[#FDFDFB] min-h-screen">
       {isSubmitting && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50 rounded-lg">
           <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
@@ -634,27 +626,26 @@ export const UserQRSetup = () => {
       )}
 
       {/* Header */}
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
+      <header className="mb-2">
+        <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <button
+            type="button"
             onClick={() => navigate(-1)}
-            className="h-8 w-8 p-0 hover:bg-gray-100"
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors mr-2"
             aria-label="Go back"
           >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl font-bold tracking-wide uppercase">
-            Customer QR Setup
-          </h1>
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Survey</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Customer QR Setup</span>
         </div>
       </header>
 
       {/* Survey Selection Section */}
       <Section title="Survey Selection" icon={<ListChecks className="w-3.5 h-3.5" />}>
         <div className="space-y-6">
-          <div className="rounded-md border border-dashed bg-muted/30 p-4">
+          <div className="rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-4">
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-6">
                 <FormControl
@@ -663,7 +654,7 @@ export const UserQRSetup = () => {
                   sx={{ "& .MuiInputBase-root": fieldStyles }}
                 >
                   <InputLabel shrink>
-                    Select Survey <span className="text-red-500">*</span>
+                    Select Survey <span className="text-[#C72030]">*</span>
                   </InputLabel>
                   <Select
                     value={selectedSurveyId || ""}
@@ -739,7 +730,7 @@ export const UserQRSetup = () => {
           {locationConfigs.map((config, configIdx) => (
             <div
               key={config.id}
-              className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+              className="border border-[rgba(26,26,24,.09)] rounded-xl p-4 bg-white"
             >
               <div className="flex justify-between items-center mb-4">
                 {/* <h3 className="font-semibold text-gray-800">
@@ -761,7 +752,7 @@ export const UserQRSetup = () => {
                 {/* Society Selection */}
                 <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
                   <InputLabel shrink>
-                    Society <span className="text-red-500">*</span>
+                    Society <span className="text-[#C72030]">*</span>
                   </InputLabel>
                   <Select
                     value={config.society_id}
@@ -789,7 +780,7 @@ export const UserQRSetup = () => {
                 {/* Tower Selection */}
                 <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
                   <InputLabel shrink>
-                    Tower <span className="text-red-500">*</span>
+                    Tower <span className="text-[#C72030]">*</span>
                   </InputLabel>
                   <Select
                     value={config.building_id}
@@ -822,7 +813,7 @@ export const UserQRSetup = () => {
                 {/* Flat Selection */}
                 <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
                   <InputLabel shrink>
-                    Flat <span className="text-red-500">*</span>
+                    Flat <span className="text-[#C72030]">*</span>
                   </InputLabel>
                   <Select
                     value={config.flat_id}
@@ -854,7 +845,7 @@ export const UserQRSetup = () => {
                 {/* User Selection */}
                 <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
                   <InputLabel shrink>
-                    User <span className="text-red-500">*</span>
+                    User <span className="text-[#C72030]">*</span>
                   </InputLabel>
                   <Select
                     value={config.user_id}
@@ -910,21 +901,15 @@ export const UserQRSetup = () => {
             {selectedSurveyQuestions.map((q, idx) => (
               <div
                 key={q.id}
-                className="relative rounded-md border border-dashed bg-muted/30 p-4"
+                className="relative rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-4"
               >
                 {/* First Row - Mandatory Checkbox */}
                 <div className="mb-6">
                   <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id={`mandatory-${idx}`}
-                      checked={q.mandatory}
-                      className="w-4 h-4 text-[#C72030] bg-white border-gray-300 rounded focus:ring-[#C72030] focus:ring-2 accent-[#C72030]"
-                      disabled
-                    />
+                    <Checkbox id={`mandatory-${idx}`} checked={q.mandatory} disabled />
                     <label
                       htmlFor={`mandatory-${idx}`}
-                      className="text-sm font-medium text-gray-700 cursor-pointer select-none"
+                      className="text-sm font-medium text-[#1A1A18] cursor-pointer select-none"
                     >
                       Mandatory
                     </label>
@@ -1057,11 +1042,20 @@ export const UserQRSetup = () => {
       )}
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-3 justify-center pt-2">
-        <Button
-          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      <div className="flex justify-end gap-3 pb-8">
+        <button
+          type="button"
+          onClick={() => navigate("/maintenance/survey/mapping")}
+          disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
         >
           {isSubmitting ? (
             <>
@@ -1071,15 +1065,7 @@ export const UserQRSetup = () => {
           ) : (
             "Submit"
           )}
-        </Button>
-        <Button
-          variant="outline"
-          className="px-8"
-          onClick={() => navigate("/maintenance/survey/mapping")}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
+        </button>
       </div>
     </div>
   );

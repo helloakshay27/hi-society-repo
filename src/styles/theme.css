@@ -4623,7 +4623,7 @@ html body table tbody tr.bg-blue-50 > td {
 html body button[role="checkbox"] {
   width: 18px !important;
   height: 18px !important;
-  border-radius: 5px !important;
+  border-radius: 4px !important;
   border: 1.5px solid rgba(26, 26, 24, 0.22) !important;
   background-color: transparent !important;
   color: #ffffff !important;
@@ -5118,14 +5118,14 @@ html body [role="dialog"]:has(img[alt$="QR Code"]) button:has(svg.lucide-downloa
 /* Outlined (Cancel/Reset) buttons: white bg, black border + black text.
    Table toolbar icon buttons (Filter / Columns / Export …) are excluded — they
    use the outline variant too but take the hairline border at the end of this file. */
-html body button[class*="bg-white" i][class*="text-[#C72030]" i],
-html body button[class*="bg-white" i][class*="text-[#DA7756]" i],
-html body button[class*="bg-white" i][class*="text-[#BF213E]" i]:not(:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."])),
-html body button[class*="bg-white" i][class*="text-[#d97757]" i],
-html body button[class*="border-[#da7756]" i],
-html body button[class*="border-[#d97757]" i],
-html body button.cancel-btn,
-html body button.btn-cancel,
+html body button[class*="bg-white" i][class*="text-[#C72030]" i]:not([title="Import"]),
+html body button[class*="bg-white" i][class*="text-[#DA7756]" i]:not([title="Import"]),
+html body button[class*="bg-white" i][class*="text-[#BF213E]" i]:not(:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."])):not([title="Import"]),
+html body button[class*="bg-white" i][class*="text-[#d97757]" i]:not([title="Import"]),
+html body button[class*="border-[#da7756]" i]:not([title="Import"]),
+html body button[class*="border-[#d97757]" i]:not([title="Import"]),
+html body button.cancel-btn:not([title="Import"]),
+html body button.btn-cancel:not([title="Import"]),
 html body .btn-cancel {
   background-color: #ffffff !important;
   color: #1a1a18 !important;
@@ -6196,26 +6196,26 @@ html body .MuiPaginationItem-root.Mui-selected {
    same border as the search input (shadcn Input: border-gray-300 #d1d5db), ink icon,
    soft grey hover, same 36px height (shadcn Input is fixed at h-[36px]).
    ============================================================ */
-html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."]) {
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."], [title="Import"]) {
   background-color: #ffffff !important;
   border: 1px solid #d1d5db !important;
   color: var(--color-primary) !important;
 }
 /* Icon-only toolbar buttons: same 36px height as the table search input, square.
    (Labelled "Refresh"/"Filters" buttons elsewhere keep their own width.) */
-html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."]):is([class*="w-8"], [class*="w-9"], [class*="w-[28px]"], [class*="w-[36px]"]) {
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."], [title="Import"]):is([class*="w-8"], [class*="w-9"], [class*="w-[28px]"], [class*="w-[36px]"]) {
   height: 36px !important;
   min-height: 36px !important;
   width: 36px !important;
   min-width: 36px !important;
   padding: 0 !important;
 }
-html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."]):hover {
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."], [title="Import"]):hover {
   background-color: var(--color-hover) !important;
   border-color: rgba(26, 26, 24, 0.28) !important;
   color: var(--color-primary) !important;
 }
-html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."]) :is(svg, .lucide) {
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."], [title="Import"]) :is(svg, .lucide) {
   color: var(--color-primary) !important;
   stroke: currentColor !important;
 }
@@ -6363,4 +6363,67 @@ html body #root .MuiRadio-root .MuiTouchRipple-root {
 html body #root input[type="radio"],
 html body input[type="radio"] {
   accent-color: #1a1a18 !important;
+}
+
+/* Radix checkbox tick: always white on the filled (ink) box, 18px rounded square */
+html body #root button[role="checkbox"][data-state="checked"],
+html body #root button[role="checkbox"][data-state="indeterminate"] {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  color: #ffffff !important;
+}
+html body #root button[role="checkbox"] [data-radix-checkbox-indicator],
+html body #root button[role="checkbox"] svg,
+html body #root button[role="checkbox"] svg * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+html body #root button[role="checkbox"] svg {
+  width: 12px !important;
+  height: 12px !important;
+  stroke-width: 3 !important;
+}
+/* Radix checkboxes everywhere (incl. dialogs/portals): same 4px radius as table checkboxes */
+html body button[role="checkbox"],
+html body button[role="checkbox"][data-state="checked"],
+html body button[role="checkbox"][data-state="unchecked"],
+html body button[role="checkbox"][data-state="indeterminate"],
+html body [role="dialog"] button[role="checkbox"] {
+  border-radius: 4px !important;
+}
+
+/* Partially selected select-all checkbox: show the same white tick as a checked box */
+html body button[role="checkbox"][data-state="indeterminate"] {
+  position: relative;
+}
+html body button[role="checkbox"][data-state="indeterminate"]::after {
+  content: "";
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* Import toolbar button: keep the same light border as the Columns button, even when focused/active */
+html body button[title="Import"],
+html body button[title="Import"]:focus,
+html body button[title="Import"]:focus-visible,
+html body button[title="Import"]:active {
+  border: 1px solid #d1d5db !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+html body button[title="Import"]:hover {
+  border-color: rgba(26, 26, 24, 0.28) !important;
+}
+
+/* Import toolbar button: same corner radius as the Columns/Filter buttons */
+html body button[title="Import"] {
+  border-radius: var(--radius-md) !important;
 }
