@@ -317,25 +317,25 @@ const NewTier = () => {
                 {timeframeError && (
                   <p className="text-red-500 text-xs -mt-3 mb-4">{timeframeError}</p>
                 )}
-
-                {/* Action Buttons */}
-                <div className="flex items-center justify-end gap-2 pt-5 border-t border-[rgba(26,26,24,0.08)]">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/loyalty/loyalty-tiers-list")}
-                    className="btn-cancel h-9 px-4 text-sm font-medium"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={nextStep}
-                    className="btn-primary h-9 px-4 text-sm font-medium"
-                  >
-                    Next
-                  </button>
-                </div>
               </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-2 pt-5">
+              <button
+                type="button"
+                onClick={() => navigate("/loyalty/loyalty-tiers-list")}
+                className="btn-cancel h-9 px-4 text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={nextStep}
+                className="btn-primary h-9 px-4 text-sm font-medium"
+              >
+                Next
+              </button>
             </div>
           </>
         ) : (
