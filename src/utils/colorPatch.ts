@@ -16,9 +16,13 @@
  *     conflicts.
  */
 
-const BRAND_PRIMARY = "#da7756";
-const BRAND_HOVER = "#c9664a";
-const BRAND_LIGHT = "rgba(218,119,86,0.08)";
+// Must match --color-primary / -hover / -light in theme.css. Both inject
+// `!important` rules at equal specificity, and their order in <head> differs
+// between the dev server and the production build — if the values diverge,
+// local and deployed environments render different colours.
+const BRAND_PRIMARY = "#1a1a18";
+const BRAND_HOVER = "#12100e";
+const BRAND_LIGHT = "rgba(26, 26, 24, 0.08)";
 const RADIO_INK = "#1a1a18";
 
 // Legacy colours to replace (as they appear in inline style="" attributes)
