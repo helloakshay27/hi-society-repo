@@ -1160,6 +1160,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Checkbox, FormControlLabel } from '@mui/material';
 import { Heading } from '@/components/ui/heading';
+import { ArrowLeft, ClipboardList, ShieldCheck, Paperclip } from 'lucide-react';
 
 const fieldStyles = {
   height: {
@@ -1811,9 +1812,18 @@ export const AddIncidentPage = () => {
 
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-[#FDFDFB] min-h-screen">
       <div className="mb-6">
         <nav className="flex items-center text-sm text-gray-600 mb-4">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="mr-2 flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-[#F7F6F2]"
+            aria-label="Go back"
+            title="Go back"
+          >
+            <ArrowLeft className="h-4 w-4 text-gray-600" />
+          </button>
           <span>Home</span>
           <span className="mx-2">{'>'}</span>
           <span>Safety</span>
@@ -1826,14 +1836,14 @@ export const AddIncidentPage = () => {
       </div>
 
       {/* Basic Details */}
-      <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-        <CardHeader className='bg-[#F6F4EE] mb-4'>
-          <CardTitle className="text-lg text-black flex items-center">
-            <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">1</span>
+      <Card className="mb-6 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white shadow-none">
+        <CardHeader className="px-6 pt-[22px] pb-0">
+          <CardTitle className="flex items-center text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+            <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><ClipboardList size={14} color="#1A1A18" /></span>
             INCIDENT DETAILS
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6 bg-white">
+        <CardContent className="space-y-6 bg-white p-6">
           {/* Time & Date Section */}
           <div className="mb-6">
             <h3 className="text-sm font-medium mb-3">Time & Date <span style={{ color: '#C72030' }}>*</span></h3>
@@ -2383,14 +2393,14 @@ export const AddIncidentPage = () => {
       </Card>
 
       {/* Support and Disclaimer */}
-      <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-        <CardHeader className='bg-[#F6F4EE] mb-4'>
-          <CardTitle className="text-lg text-black flex items-center">
-            <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">2</span>
+      <Card className="mb-6 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white shadow-none">
+        <CardHeader className="px-6 pt-[22px] pb-0">
+          <CardTitle className="flex items-center text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+            <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><ShieldCheck size={14} color="#1A1A18" /></span>
             SUPPORT & DISCLAIMER
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6 bg-white">
+        <CardContent className="space-y-6 bg-white p-6">
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-medium mb-3">Support</h3>
@@ -2434,14 +2444,14 @@ export const AddIncidentPage = () => {
       </Card>
 
       {/* Attachments */}
-      <Card className="mb-6 border-[#D9D9D9] bg-[#F6F7F7]">
-        <CardHeader className='bg-[#F6F4EE] mb-4'>
-          <CardTitle className="text-lg text-black flex items-center">
-            <span className="w-6 h-6 bg-[#C72030] text-white rounded-full flex items-center justify-center text-sm mr-2">3</span>
+      <Card className="mb-6 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white shadow-none">
+        <CardHeader className="px-6 pt-[22px] pb-0">
+          <CardTitle className="flex items-center text-sm font-semibold leading-[1.4] text-[#1A1A18]">
+            <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><Paperclip size={14} color="#1A1A18" /></span>
             ATTACHMENTS
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6 bg-white">
+        <CardContent className="space-y-6 bg-white p-6">
           <div className="space-y-4">
             {/* <div>
               <input
@@ -2566,7 +2576,7 @@ export const AddIncidentPage = () => {
       </Card>
 
       {/* Submit Button */}
-      <div className="flex justify-center pt-6">
+      <div className="flex justify-end pt-6">
         <Button
           onClick={handleSubmit}
           className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white px-8 py-3 text-[18px]"

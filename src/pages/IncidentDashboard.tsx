@@ -1174,24 +1174,92 @@ export const IncidentDashboard = () => {
           />
 
           {totalPages > 0 && (
-            <div className="mt-6 flex justify-center items-center gap-4 text-sm text-gray-600">
-              <Button
-                variant="outline"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-              >
-                Previous
-              </Button>
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
-              >
-                Next
-              </Button>
+            <div className="mt-6 flex items-center justify-center border-t border-gray-200 bg-white px-4 py-3">
+              <div className="flex items-center space-x-1">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
+                  disabled={currentPage === 1 || loading}
+                  aria-label="Previous page"
+                  className="flex h-8 w-8 items-center justify-center text-gray-500 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                <div className="flex items-center space-x-1">
+                  {currentPage > 3 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage(1)}
+                        disabled={loading}
+                        className="flex h-8 w-8 items-center justify-center rounded text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      >
+                        1
+                      </button>
+                      {currentPage > 4 && <span className="px-2 text-gray-500">...</span>}
+                    </>
+                  )}
+
+                  {Array.from({ length: Math.min(3, totalPages) }, (_, index) => {
+                    let pageNumber: number;
+                    if (currentPage <= 2) {
+                      pageNumber = index + 1;
+                    } else if (currentPage >= totalPages - 1) {
+                      pageNumber = totalPages - 2 + index;
+                    } else {
+                      pageNumber = currentPage - 1 + index;
+                    }
+
+                    if (pageNumber < 1 || pageNumber > totalPages) return null;
+
+                    return (
+                      <button
+                        key={pageNumber}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNumber)}
+                        disabled={loading}
+                        aria-current={currentPage === pageNumber ? "page" : undefined}
+                        className={`flex h-8 w-8 items-center justify-center rounded text-sm disabled:opacity-50 ${
+                          currentPage === pageNumber
+                            ? "bg-[#C72030] text-white"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+
+                  {currentPage < totalPages - 2 && (
+                    <>
+                      {currentPage < totalPages - 3 && <span className="px-2 text-gray-500">...</span>}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={loading}
+                        className="flex h-8 w-8 items-center justify-center rounded text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      >
+                        {totalPages}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
+                  disabled={currentPage === totalPages || loading}
+                  aria-label="Next page"
+                  className="flex h-8 w-8 items-center justify-center text-gray-500 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
             </div>
           )}
         </TabsContent>
