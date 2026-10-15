@@ -36,14 +36,10 @@ export const StaffActionsPanel: React.FC<StaffActionsPanelProps> = ({
   }, [onClearSelection]);
 
   return (
-    <div
-      className="fixed bg-white border border-gray-200 rounded-sm shadow-lg z-50"
-      style={{ top: "50%", left: "30%", width: "max-content", height: "105px" }}
-      ref={panelRef}
-    >
+    <div className="selection-panel bg-white" ref={panelRef}>
       <div className="flex items-center h-full pr-6" style={{ width: "max-content" }}>
         <div className="flex items-center gap-3">
-          <div className="text-[#C72030] bg-[#C4B89D] rounded-lg w-[44px] h-[105px] flex items-center justify-center text-xs font-bold">
+          <div className="text-[#C72030] bg-[#C4B89D] w-[44px] h-[105px] flex items-center justify-center text-xs font-bold">
             S
           </div>
           <div className="flex flex-col justify-center px-3 py-2 min-w-[140px]">

@@ -37,12 +37,17 @@ const Section: React.FC<{
   icon: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, icon, children }) => (
-  <section className="bg-card rounded-lg border border-border shadow-sm">
-    <div className="px-6 py-4 border-b border-border flex items-center gap-3">
-      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-        {icon}
-      </div>
-      <h2 className="text-sm font-semibold tracking-wide uppercase">{title}</h2>
+  <section className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+    <div className="px-6 pt-[22px]">
+      <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+        <span
+          className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+          style={{ backgroundColor: "#F5F4F0" }}
+        >
+          {icon}
+        </span>
+        {title}
+      </h2>
     </div>
     <div className="p-6">{children}</div>
   </section>
@@ -136,22 +141,12 @@ export const RosterEditPage: React.FC = () => {
 
   // MUI select styles
   const fieldStyles = {
-    height: { xs: 28, sm: 36, md: 45 },
-    "& .MuiInputBase-input, & .MuiSelect-select": {
-      padding: { xs: "8px", sm: "10px", md: "12px" },
-    },
-    backgroundColor: "#fafbfc",
-    "& .MuiOutlinedInput-notchedOutline": {
-      borderColor: "#e1e5e9",
-      borderWidth: "1px",
-    },
-    "&:hover .MuiOutlinedInput-notchedOutline": {
-      borderColor: "#9ca3af",
-    },
-    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-      borderColor: "#C72030",
-      borderWidth: "2px",
-    },
+    height: "45px",
+    backgroundColor: "#fff",
+    borderRadius: "4px",
+    "& .MuiOutlinedInput-notchedOutline": { borderColor: "#ddd" },
+    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
   };
 
   // Fetch data on component mount
@@ -733,7 +728,7 @@ export const RosterEditPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 relative">
+    <div className="p-6 space-y-6 relative bg-[#FDFDFB] min-h-screen">
       {/* Loading overlay */}
       {isSubmitting && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
@@ -742,31 +737,26 @@ export const RosterEditPage: React.FC = () => {
       )}
 
       {/* Header */}
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <header className="mb-2">
+        <div className="flex items-center space-x-2 text-sm text-gray-600">
           <button
+            type="button"
             onClick={handleCancel}
             disabled={isSubmitting}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            title="Back to Roster Details"
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors mr-2"
+            aria-label="Back to Roster Details"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
           </button>
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-xl font-bold tracking-wide uppercase">
-                Edit Roster Template
-              </h1>
-              {(selectedSite?.name || currentLocation !== "Current Site") && (
-                <div className="flex items-center gap-2 mt-1">
-                  <Building2 className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">
-                    {selectedSite?.name || currentLocation}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+          <span>Roster</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Edit Roster Template</span>
+          {(selectedSite?.name || currentLocation !== "Current Site") && (
+            <span className="flex items-center gap-1 ml-3 text-gray-500">
+              <Building2 className="w-3.5 h-3.5" />
+              {selectedSite?.name || currentLocation}
+            </span>
+          )}
         </div>
       </header>
 
@@ -775,14 +765,14 @@ export const RosterEditPage: React.FC = () => {
         {/* Basic Information Section */}
         <Section
           title="Basic Information"
-          icon={<Calendar className="w-4 h-4" />}
+          icon={<Calendar className="w-3.5 h-3.5" />}
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <TextField
                 label={
                   <>
-                    Template Name<span className="text-red-500">*</span>
+                    Template Name<span style={{ color: "#C72030" }}>*</span>
                   </>
                 }
                 placeholder="Enter template name"
@@ -821,15 +811,15 @@ export const RosterEditPage: React.FC = () => {
                   },
                 }}
                 InputProps={{
-                  sx: { ...fieldStyles, backgroundColor: "#f5f5f5" },
+                  sx: { ...fieldStyles, backgroundColor: "#F5F4F0" },
                 }}
               />
             </div>
           </div>
 
           <div>
-            <Label className="text-sm font-medium text-gray-700 mb-4 block mt-6">
-              Working Days <span className="text-red-500">*</span>
+            <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-4 block mt-6">
+              Working Days <span style={{ color: "#C72030" }}>*</span>
             </Label>
 
             {/* Day Type Selection - Compact inline */}
@@ -845,7 +835,7 @@ export const RosterEditPage: React.FC = () => {
                     className="text-[#C72030] focus:ring-[#C72030] w-4 h-4"
                     disabled={isSubmitting}
                   />
-                  <span className="font-medium text-gray-800">Weekdays</span>
+                  <span className="font-medium text-[#1A1A18]">Weekdays</span>
                   <span className="text-sm text-gray-500">(Mon-Fri)</span>
                 </label>
 
@@ -859,7 +849,7 @@ export const RosterEditPage: React.FC = () => {
                     className="text-[#C72030] focus:ring-[#C72030] w-4 h-4"
                     disabled={isSubmitting}
                   />
-                  <span className="font-medium text-gray-800">Weekends</span>
+                  <span className="font-medium text-[#1A1A18]">Weekends</span>
                   <span className="text-sm text-gray-500">(Sat-Sun)</span>
                 </label>
 
@@ -873,7 +863,7 @@ export const RosterEditPage: React.FC = () => {
                     className="text-[#C72030] focus:ring-[#C72030] w-4 h-4"
                     disabled={isSubmitting}
                   />
-                  <span className="font-medium text-gray-800">Recurring</span>
+                  <span className="font-medium text-[#1A1A18]">Recurring</span>
                   <span className="text-sm text-gray-500">(Custom)</span>
                 </label>
               </div>
@@ -881,9 +871,9 @@ export const RosterEditPage: React.FC = () => {
 
             {/* Weekdays Selection - Compact */}
             {formData.dayType === "Weekdays" && (
-              <div className="space-y-3 p-4 bg-[#f6f4ee] border border-[#D5DbDB] rounded-lg">
+              <div className="space-y-3 p-4 bg-[#F5F4F0] border border-[rgba(26,26,24,.09)] rounded-xl">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="text-sm font-medium text-[#C72030]">
+                  <div className="text-sm font-medium text-[#1A1A18]">
                     Frequency:
                   </div>
                 </div>
@@ -899,11 +889,11 @@ export const RosterEditPage: React.FC = () => {
                     <label
                       key={week}
                       className={`
-                        flex items-center gap-2 px-3 py-1 rounded-md border-2 cursor-pointer transition-all duration-200
+                        flex items-center gap-2 px-3 py-1 rounded-md border cursor-pointer transition-all duration-200
                         ${
                           formData.weekSelection.includes(week)
-                            ? "border-[#C72030] bg-[#C72030] text-white"
-                            : "border-[#D5DbDB] bg-white text-[#1a1a1a] hover:border-[#C72030]"
+                            ? "border-[#1A1A18] bg-[#1A1A18] text-white"
+                            : "border-[rgba(26,26,24,.12)] bg-white text-[#1a1a1a] hover:border-[#1A1A18]"
                         }
                         ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}
                       `}
@@ -929,9 +919,9 @@ export const RosterEditPage: React.FC = () => {
 
             {/* Weekends Selection - Compact */}
             {formData.dayType === "Weekends" && (
-              <div className="space-y-3 p-4 bg-[#f6f4ee] border border-[#D5DbDB] rounded-lg">
+              <div className="space-y-3 p-4 bg-[#F5F4F0] border border-[rgba(26,26,24,.09)] rounded-xl">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="text-sm font-medium text-[#C72030]">
+                  <div className="text-sm font-medium text-[#1A1A18]">
                     Frequency:
                   </div>
                 </div>
@@ -947,11 +937,11 @@ export const RosterEditPage: React.FC = () => {
                     <label
                       key={weekend}
                       className={`
-                        flex items-center gap-2 px-3 py-1 rounded-md border-2 cursor-pointer transition-all duration-200
+                        flex items-center gap-2 px-3 py-1 rounded-md border cursor-pointer transition-all duration-200
                         ${
                           formData.weekSelection.includes(weekend)
-                            ? "border-[#C72030] bg-[#C72030] text-white"
-                            : "border-[#D5DbDB] bg-white text-[#1a1a1a] hover:border-[#C72030]"
+                            ? "border-[#1A1A18] bg-[#1A1A18] text-white"
+                            : "border-[rgba(26,26,24,.12)] bg-white text-[#1a1a1a] hover:border-[#1A1A18]"
                         }
                         ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}
                       `}
@@ -977,15 +967,15 @@ export const RosterEditPage: React.FC = () => {
 
             {/* Recurring Selection - Compact */}
             {formData.dayType === "Recurring" && (
-              <div className="space-y-4 p-4 bg-[#f6f4ee] border border-[#D5DbDB] rounded-lg">
-                <div className="text-sm font-medium text-[#C72030] mb-3">
+              <div className="space-y-4 p-4 bg-[#F5F4F0] border border-[rgba(26,26,24,.09)] rounded-xl">
+                <div className="text-sm font-medium text-[#1A1A18] mb-3">
                   Custom Weekly Pattern
                 </div>
 
                 {[1, 2, 3, 4, 5].map((weekNum) => (
                   <div
                     key={weekNum}
-                    className="bg-white border border-[#D5DbDB] rounded-lg p-3"
+                    className="bg-white border border-[rgba(26,26,24,.09)] rounded-lg p-3"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium">
@@ -1038,8 +1028,8 @@ export const RosterEditPage: React.FC = () => {
                                 `Week${weekNum}-${day}`
                               )
                             )
-                              ? "bg-[#C72030] text-white"
-                              : "bg-gray-100 text-gray-600 hover:bg-[#C72030] hover:text-white"
+                              ? "bg-[#1A1A18] text-white"
+                              : "bg-[#F5F4F0] text-gray-600 hover:bg-[#1A1A18] hover:text-white"
                           }
                         `}
                       >
@@ -1075,8 +1065,8 @@ export const RosterEditPage: React.FC = () => {
                               w-full h-8 rounded text-xs font-medium transition-all duration-200
                               ${
                                 isSelected
-                                  ? "bg-[#C72030] text-white"
-                                  : "bg-gray-100 text-gray-600 hover:bg-[#C72030] hover:text-white"
+                                  ? "bg-[#1A1A18] text-white"
+                                  : "bg-[#F5F4F0] text-gray-600 hover:bg-[#1A1A18] hover:text-white"
                               }
                             `}
                             title={`${day.full} - Week ${weekNum}`}
@@ -1110,7 +1100,7 @@ export const RosterEditPage: React.FC = () => {
         {/* Location Section */}
         <Section
           title="Location"
-          icon={<MapPin className="w-4 h-4" />}
+          icon={<MapPin className="w-3.5 h-3.5" />}
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
@@ -1127,7 +1117,7 @@ export const RosterEditPage: React.FC = () => {
                   },
                 }}
                 InputProps={{
-                  sx: { ...fieldStyles, backgroundColor: "#f5f5f5" },
+                  sx: { ...fieldStyles, backgroundColor: "#F5F4F0" },
                   startAdornment: (
                     <Building2 className="w-4 h-4 text-gray-400 mr-2" />
                   ),
@@ -1138,7 +1128,7 @@ export const RosterEditPage: React.FC = () => {
         </Section>
 
         {/* Shift & Employees Section */}
-        <Section title="Shift & Employees" icon={<Clock className="w-4 h-4" />}>
+        <Section title="Shift & Employees" icon={<Clock className="w-3.5 h-3.5" />}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="relative">
               <FormControl
@@ -1147,7 +1137,7 @@ export const RosterEditPage: React.FC = () => {
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               >
                 <InputLabel shrink>
-                  Shift <span className="text-red-500">*</span>
+                  Shift <span style={{ color: "#C72030" }}>*</span>
                 </InputLabel>
                 <MuiSelect
                   value={formData.shift || ""}
@@ -1188,7 +1178,7 @@ export const RosterEditPage: React.FC = () => {
               >
                 <InputLabel shrink>
                   List Of Selected Employees{" "}
-                  <span className="text-red-500">*</span>
+                  <span style={{ color: "#C72030" }}>*</span>
                 </InputLabel>
                 <MuiSelect
                   multiple
@@ -1276,16 +1266,16 @@ export const RosterEditPage: React.FC = () => {
           </div>
         </Section>
 
-        <Section title="Select Period" icon={<Calendar className="w-4 h-4" />}>
+        <Section title="Select Period" icon={<Calendar className="w-3.5 h-3.5" />}>
           <div className="space-y-6">
             <div>
-              <Label className="text-sm font-medium text-gray-700 mb-4 block">
-                Roster Period <span className="text-red-500">*</span>
+              <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-4 block">
+                Roster Period <span style={{ color: "#C72030" }}>*</span>
               </Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Start Date */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-2 block">
                     Start Date
                   </Label>
                   <input
@@ -1296,8 +1286,8 @@ export const RosterEditPage: React.FC = () => {
                       setPeriod((prev) => ({ ...prev, startDate: newDate }));
                     }}
                     disabled={isSubmitting}
-                    className="w-full px-3 py-2 border border-[#e1e5e9] rounded-md bg-[#fafbfc] 
-                             focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030]
+                    className="w-full px-3 py-2 border border-[#ddd] rounded-[4px] bg-white 
+                             focus:outline-none focus:border-[#C72030]
                              disabled:opacity-50 disabled:cursor-not-allowed
                              text-gray-900 text-sm"
                     style={{ height: "45px" }}
@@ -1306,7 +1296,7 @@ export const RosterEditPage: React.FC = () => {
 
                 {/* End Date */}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-2 block">
                     End Date
                   </Label>
                   <input
@@ -1318,8 +1308,8 @@ export const RosterEditPage: React.FC = () => {
                     }}
                     disabled={isSubmitting}
                     min={period.startDate.toISOString().split("T")[0]}
-                    className="w-full px-3 py-2 border border-[#e1e5e9] rounded-md bg-[#fafbfc] 
-                             focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030]
+                    className="w-full px-3 py-2 border border-[#ddd] rounded-[4px] bg-white 
+                             focus:outline-none focus:border-[#C72030]
                              disabled:opacity-50 disabled:cursor-not-allowed
                              text-gray-900 text-sm"
                     style={{ height: "45px" }}
@@ -1328,8 +1318,8 @@ export const RosterEditPage: React.FC = () => {
               </div>
 
               {/* Date Range Display */}
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-2 text-sm text-blue-800">
+              <div className="mt-4 p-3 bg-[#F5F4F0] border border-[rgba(26,26,24,.09)] rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-[#1A1A18]">
                   <Calendar className="w-4 h-4" />
                   <span className="font-medium">Selected Period:</span>
                   <span>
@@ -1347,7 +1337,7 @@ export const RosterEditPage: React.FC = () => {
                       year: "2-digit",
                     })}
                   </span>
-                  <span className="ml-2 text-blue-600">
+                  <span className="ml-2 text-[rgba(26,26,24,.55)]">
                     (
                     {Math.ceil(
                       (period.endDate.getTime() - period.startDate.getTime()) /
@@ -1365,11 +1355,20 @@ export const RosterEditPage: React.FC = () => {
       </div>
 
       {/* Footer Actions */}
-      <div className="flex items-center gap-3 justify-center pt-2">
-        <Button
-          className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
+      <div className="flex justify-end gap-3 pb-8">
+        <button
+          type="button"
+          onClick={handleCancel}
+          disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
         >
           {isSubmitting ? (
             <>
@@ -1382,15 +1381,7 @@ export const RosterEditPage: React.FC = () => {
               Update Template
             </>
           )}
-        </Button>
-        <Button
-          variant="outline"
-          className="px-8"
-          onClick={handleCancel}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
+        </button>
       </div>
     </div>
   );

@@ -19,6 +19,9 @@ interface DateRange {
 interface UnifiedDateRangeFilterProps {
   dateRange: DateRange | undefined;
   onDateRangeChange: (range: DateRange | undefined) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
 const fieldStyles = {
@@ -31,10 +34,23 @@ const fieldStyles = {
 export const UnifiedDateRangeFilter: React.FC<UnifiedDateRangeFilterProps> = ({
   dateRange,
   onDateRangeChange,
+  open,
+  onOpenChange,
+  hideTrigger = false,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setIsInternalOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  const isOpen = open ?? internalOpen;
+
+  const setIsOpen = (value: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(value);
+    } else {
+      setIsInternalOpen(value);
+    }
+  };
 
   // Format date to DD/MM/YYYY
   const formatDateToDDMMYYYY = (date: Date): string => {
@@ -134,13 +150,15 @@ export const UnifiedDateRangeFilter: React.FC<UnifiedDateRangeFilterProps> = ({
 
   return (
     <>
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <CalendarIcon className="mr-2 h-4 w-4" />
-        <span className="truncate">{formatDateRange()}</span>
-      </Button>
+      {!hideTrigger && (
+        <Button
+          onClick={() => setIsOpen(true)}
+          className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          <span className="truncate">{formatDateRange()}</span>
+        </Button>
+      )}
 
       <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
         <DialogContent className="max-w-2xl bg-white z-50" aria-describedby="date-range-filter-description">

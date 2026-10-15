@@ -11,13 +11,13 @@ import {
   IconButton,
   Menu,
 } from "@mui/material";
-import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
 import {
   Plus,
   Trash2,
-  CheckCircle,
   ArrowLeft,
+  Info,
+  ListChecks,
 } from "lucide-react";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
@@ -592,7 +592,8 @@ export const EditFitoutChecklistPage = () => {
   // Always show the form, but show loading overlay if initialLoading
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7', position: 'relative' }}>
+    <div className="p-6 bg-[#FDFDFB] min-h-screen fitout-checklist-edit-page" style={{ position: 'relative' }}>
+      <style>{`.fitout-checklist-edit-page .MuiFormLabel-asterisk { color: var(--color-primary, #da7756) !important; }`}</style>
       {initialLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80">
           <div className="text-center">
@@ -602,28 +603,30 @@ export const EditFitoutChecklistPage = () => {
         </div>
       )}
       {/* Header */}
-      <div className="mb-6">
-        <button
-          onClick={() => navigate("/fitout/checklists")}
-          className="flex items-center gap-1 hover:text-gray-800 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Fitout Checklists
-        </button>
-        <Heading level="h1" variant="default">
-          Edit Fitout Checklist
-        </Heading>
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            onClick={() => navigate("/fitout/checklists")}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Fitout Checklists</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Edit Fitout Checklist</span>
+        </div>
       </div>
 
       <form className="space-y-6">
         {/* Basic Information Card */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#E5E0D3] mr-3">
-                <span className="text-[#C72030] text-sm">1</span>
-              </div>
-              Basic Information
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
+            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+<span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                  <Info size={14} color="#1A1A18" />
+                </span>
+                Basic Information
             </h2>
           </div>
           <div className="p-6">
@@ -687,19 +690,19 @@ export const EditFitoutChecklistPage = () => {
         </div>
 
         {/* Questions Card */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+          <div className="px-6 pt-[22px]">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#E5E0D3] mr-3">
-                  <span className="text-[#C72030] text-sm">2</span>
-                </div>
+              <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+                <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                  <ListChecks size={14} color="#1A1A18" />
+                </span>
                 Questions
               </h2>
               <Button
                 type="button"
                 onClick={handleAddQuestion}
-                className="bg-[#C72030] hover:bg-[#A01828] text-white"
+                className="bg-[#1A1A18] hover:bg-[#12100E] text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Question
@@ -891,29 +894,23 @@ export const EditFitoutChecklistPage = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 justify-center pt-6">
-          <Button
-            variant="outline"
+        <div className="flex justify-end gap-3 pb-8">
+          <button
+            type="button"
             onClick={() => navigate("/fitout/checklists")}
             disabled={isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
           >
             Cancel
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
             onClick={handleUpdateChecklist}
             disabled={isSubmitting || loading}
-            className="bg-[#C72030] hover:bg-[#A01828] text-white"
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
           >
-            {isSubmitting ? (
-              <>Updating...</>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Update Checklist
-              </>
-            )}
-          </Button>
+            {isSubmitting ? 'Updating...' : 'Update Checklist'}
+          </button>
         </div>
       </form>
     </div>

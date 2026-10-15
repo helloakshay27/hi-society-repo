@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Edit, Briefcase, Truck, X } from "lucide-react";
+import { Edit, Plus, Pencil, Briefcase, Truck, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -13,7 +13,16 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
-import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import { menuProps } from "@/components/ticket-management/fieldStyles";
+
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-notchedOutline": { borderColor: "#ddd" },
+  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
+};
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   fetchSupportStaffSetup,
@@ -326,13 +335,13 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
     icons: IconItem[],
     radioName: string
   ) => (
-    <div className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded max-h-[300px] overflow-y-auto">
+    <div className="grid grid-cols-6 gap-3 p-4 border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] rounded-xl max-h-[300px] overflow-y-auto">
       {icons.map((icon) => (
         <label
           key={icon.id}
           className={`flex flex-col items-center cursor-pointer p-1 rounded ${
             formData.selectedIconId === icon.id
-              ? "ring-2 ring-[#C72030] bg-red-50"
+              ? "ring-2 ring-[#1A1A18] bg-white"
               : ""
           }`}
         >
@@ -680,22 +689,30 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
 
       {/* Add Modal */}
       <Dialog open={isAddModalOpen} modal={false} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-white p-0 max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="p-4 border-b bg-white relative">
-            <DialogTitle className="text-center font-bold text-lg">
+        <DialogContent className="sm:max-w-[600px] bg-white p-0 gap-0 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
+            <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center text-left">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: "#F5F4F0" }}
+              >
+                <Plus size={14} color="#1A1A18" />
+              </span>
               {activeTab === "society-staff"
                 ? "Create Staff Category"
                 : "Create Delivery Service Provider"}
             </DialogTitle>
             <button
+              type="button"
               onClick={() => setIsAddModalOpen(false)}
-              className="absolute right-4 top-4 text-red-500 hover:text-red-700"
+              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors"
+              aria-label="Close"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 text-gray-600" />
             </button>
           </DialogHeader>
 
-          <div className="p-6 bg-white space-y-4">
+          <div className="px-6 pb-6 bg-white space-y-4">
             {activeTab === "society-staff" ? (
               <>
                 <TextField
@@ -759,7 +776,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-sm font-medium text-[rgba(26,26,24,.68)]">
                     Select Icon
                   </label>
                   {renderIconGrid(staffCategoryIcons, "staffIconAdd")}
@@ -818,7 +835,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-sm font-medium text-[rgba(26,26,24,.68)]">
                     Select Icon
                   </label>
                   {renderIconGrid(deliveryProviderIcons, "deliveryIconAdd")}
@@ -827,36 +844,53 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
             )}
           </div>
 
-          <DialogFooter className="p-4 border-t flex justify-center bg-white sticky bottom-0 z-10">
-            <Button
+          <DialogFooter className="flex flex-row justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.08)] sm:justify-end sticky bottom-0 z-10 bg-white">
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(false)}
+              disabled={submitting}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
               onClick={handleAddCategory}
               disabled={submitting}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {submitting ? "Submitting..." : "Submit"}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-white p-0 max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="p-4 border-b relative">
-            <DialogTitle className="text-center font-bold text-lg">
+        <DialogContent className="sm:max-w-[600px] bg-white p-0 gap-0 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
+            <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center text-left">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: "#F5F4F0" }}
+              >
+                <Pencil size={14} color="#1A1A18" />
+              </span>
               {activeTab === "society-staff"
                 ? "Edit Staff Category"
                 : "Edit Delivery Service Provider"}
             </DialogTitle>
             <button
+              type="button"
               onClick={() => {
                 setIsEditModalOpen(false);
                 setEditingItemId(null);
                 resetForm();
               }}
-              className="absolute right-4 top-4 text-red-500 hover:text-red-700"
+              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors"
+              aria-label="Close"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 text-gray-600" />
             </button>
           </DialogHeader>
 
@@ -876,7 +910,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
               />
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-[rgba(26,26,24,.68)]">
                   Estimated Time
                 </label>
                 <div className="flex gap-4">
@@ -923,7 +957,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm font-medium text-gray-700">
+                <div className="text-sm font-medium text-[rgba(26,26,24,.68)]">
                   Selected Icon
                 </div>
                 <div className="flex items-center justify-start h-20">
@@ -936,7 +970,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm font-medium text-gray-700">
+                <div className="text-sm font-medium text-[rgba(26,26,24,.68)]">
                   Select Icon
                 </div>
                 {renderIconGrid(staffCategoryIcons, "staffIconEdit")}
@@ -995,7 +1029,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm font-medium text-gray-700">
+                <div className="text-sm font-medium text-[rgba(26,26,24,.68)]">
                   Selected Icon
                 </div>
                 <div className="flex items-center justify-start h-20">
@@ -1008,7 +1042,7 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm font-medium text-gray-700">
+                <div className="text-sm font-medium text-[rgba(26,26,24,.68)]">
                   Select Icon
                 </div>
                 {renderIconGrid(deliveryProviderIcons, "deliveryIconEdit")}
@@ -1016,14 +1050,27 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
             </div>
           )}
 
-          <DialogFooter className="p-4 border-t flex justify-center bg-white sticky bottom-0 z-10">
-            <Button
+          <DialogFooter className="flex flex-row justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.08)] sm:justify-end sticky bottom-0 z-10 bg-white">
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditModalOpen(false);
+                setEditingItemId(null);
+                resetForm();
+              }}
+              disabled={submitting}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
               onClick={handleUpdateCategory}
               disabled={submitting}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {submitting ? "Updating..." : "Update"}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

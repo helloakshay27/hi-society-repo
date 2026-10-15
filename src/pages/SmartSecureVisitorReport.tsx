@@ -1,12 +1,25 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Download } from "lucide-react";
+import { TextField } from "@mui/material";
+import { Download } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
+
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": { borderColor: "#ddd" },
+    "&:hover fieldset": { borderColor: "#C72030" },
+    "&.Mui-focused fieldset": { borderColor: "#C72030" },
+  },
+};
+
+const toInputValue = (d?: Date) => (d ? format(d, "yyyy-MM-dd") : "");
+const fromInputValue = (v: string) => (v ? new Date(`${v}T00:00:00`) : undefined);
 
 const SmartSecureVisitorReport: React.FC = () => {
   const [fromDate, setFromDate] = useState<Date>();
@@ -69,8 +82,8 @@ const SmartSecureVisitorReport: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] p-6">
       {/* Header */}
-      <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
-        <div className="px-6 py-4">
+      <div className="mb-6">
+        <div className="px-6">
           <h1 className="text-2xl font-semibold text-gray-900">Visitor Report</h1>
         </div>
       </div>
@@ -82,54 +95,28 @@ const SmartSecureVisitorReport: React.FC = () => {
             {/* Date Filters */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* From Date */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  From Date
-                </label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed w-full"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {fromDate ? format(fromDate, "dd/MM/yyyy") : <span>Select From Date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={fromDate}
-                      onSelect={setFromDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              <TextField
+                label="From Date"
+                type="date"
+                value={toInputValue(fromDate)}
+                onChange={(e) => setFromDate(fromInputValue(e.target.value))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
               {/* To Date */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  To Date
-                </label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed w-full"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {toDate ? format(toDate, "dd/MM/yyyy") : <span>Select To Date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={toDate}
-                      onSelect={setToDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              <TextField
+                label="To Date"
+                type="date"
+                value={toInputValue(toDate)}
+                onChange={(e) => setToDate(fromInputValue(e.target.value))}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
             </div>
 
             {/* Download Button */}

@@ -76,13 +76,10 @@ export const StaffSelectionPanel: React.FC<StaffSelectionPanelProps> = ({
   };
 
   return (
-    <div
-      className="fixed bg-white border border-gray-200 rounded-sm shadow-lg z-50"
-      style={{ top: "50%", left: "50%", transform: "translateX(-50%)", width: "auto" }}
-    >
+    <div className="selection-panel bg-white">
       <div className="flex items-center w-full h-full pr-4">
         <div className="flex items-center gap-2">
-          <div className="text-[#C72030] bg-[#C4B89D] rounded-lg w-[44px] h-[70px] flex items-center justify-center text-xs font-bold flex-shrink-0">
+          <div className="text-[#C72030] bg-[#C4B89D] w-[44px] h-[105px] flex items-center justify-center text-xs font-bold flex-shrink-0">
             {selectedCount}
           </div>
           <div className="flex flex-col justify-center px-3 py-2">

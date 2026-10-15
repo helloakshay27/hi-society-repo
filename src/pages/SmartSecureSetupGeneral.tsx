@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Briefcase, Truck, User, X } from "lucide-react";
+import { Plus, Pencil, Edit, Briefcase, Truck, User, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -13,7 +13,16 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
-import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import { menuProps } from "@/components/ticket-management/fieldStyles";
+
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-notchedOutline": { borderColor: "#ddd" },
+  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
+};
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import {
   fetchVisitorSetupData,
@@ -653,20 +662,28 @@ const SmartSecureSetupGeneral: React.FC = () => {
 
       {/* Add Modal */}
       <Dialog open={isAddModalOpen} modal={false} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-white p-0">
-          <DialogHeader className="p-4 border-b bg-white relative">
-            <DialogTitle className="text-center font-bold text-lg">
+        <DialogContent className="sm:max-w-[400px] bg-white p-0 gap-0 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)]">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
+            <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center text-left">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: "#F5F4F0" }}
+              >
+                <Plus size={14} color="#1A1A18" />
+              </span>
               Add {getTabLabel()}
             </DialogTitle>
             <button
+              type="button"
               onClick={() => setIsAddModalOpen(false)}
-              className="absolute right-4 top-4 text-red-500 hover:text-red-700"
+              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors"
+              aria-label="Close"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 text-gray-600" />
             </button>
           </DialogHeader>
 
-          <div className="p-6 bg-white space-y-5">
+          <div className="px-6 pb-6 bg-white space-y-5">
             <SearchableDropdown
               label="Select society"
               placeholder="Select society"
@@ -701,11 +718,11 @@ const SmartSecureSetupGeneral: React.FC = () => {
                     status: checked as boolean,
                   })
                 }
-                className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                
               />
               <label
                 htmlFor="add-active"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm font-medium leading-none text-[#1A1A18] cursor-pointer"
               >
                 Active
               </label>
@@ -725,34 +742,51 @@ const SmartSecureSetupGeneral: React.FC = () => {
             )}
           </div>
 
-          <DialogFooter className="p-4 border-t flex justify-start bg-white">
-            <Button
+          <DialogFooter className="flex flex-row justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.08)] sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(false)}
+              disabled={submitting}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
               onClick={handleAddPurpose}
               disabled={submitting}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {submitting ? "Submitting..." : "Submit"}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-white p-0">
-          <DialogHeader className="p-4 border-b bg-white relative">
-            <DialogTitle className="text-center font-bold text-lg">
+        <DialogContent className="sm:max-w-[400px] bg-white p-0 gap-0 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)]">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
+            <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center text-left">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: "#F5F4F0" }}
+              >
+                <Pencil size={14} color="#1A1A18" />
+              </span>
               Edit {getTabLabel()}
             </DialogTitle>
             <button
+              type="button"
               onClick={() => setIsEditModalOpen(false)}
-              className="absolute right-4 top-4 text-red-500 hover:text-red-700"
+              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#F7F6F2] transition-colors"
+              aria-label="Close"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 text-gray-600" />
             </button>
           </DialogHeader>
 
-          <div className="p-6 bg-white space-y-5">
+          <div className="px-6 pb-6 bg-white space-y-5">
             <TextField
               label={activeTab === "staff-type" ? "Staff Type" : "Purpose"}
               placeholder={
@@ -780,11 +814,11 @@ const SmartSecureSetupGeneral: React.FC = () => {
                     status: checked as boolean,
                   })
                 }
-                className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                
               />
               <label
                 htmlFor="active"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm font-medium leading-none text-[#1A1A18] cursor-pointer"
               >
                 Active
               </label>
@@ -806,14 +840,23 @@ const SmartSecureSetupGeneral: React.FC = () => {
             )}
           </div>
 
-          <DialogFooter className="p-4 border-t flex justify-start bg-white">
-            <Button
+          <DialogFooter className="flex flex-row justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.08)] sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setIsEditModalOpen(false)}
+              disabled={submitting}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
               onClick={handleUpdatePurpose}
               disabled={submitting}
-              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
             >
               {submitting ? "Updating..." : "Update"}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

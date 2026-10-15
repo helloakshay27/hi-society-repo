@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Eye, Settings, Mail, Users, UserCheck, Clock, XCircle } from "lucide-react";
+import { Plus, Edit, Eye, Settings, Mail, Users, UserCheck, Clock, XCircle, X } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
@@ -9,7 +9,12 @@ import { toast } from "sonner";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
-import { UnifiedDateRangeFilter } from "@/components/dashboard/UnifiedDateRangeFilter";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface FitoutRequestItem {
   id: number;
@@ -88,6 +93,9 @@ const FitoutRequests: React.FC = () => {
     return undefined;
   });
   const perPage = 20;
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
 
   const fetchFitoutRequestsData = useCallback(async (page: number = 1, statusFilter: string | null = null, search: string = "", dateRangeValue?: DateRange) => {
     try {
@@ -164,6 +172,49 @@ const FitoutRequests: React.FC = () => {
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
     setCurrentPage(1);
+  };
+
+  const formatDateToHTML = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const parseHTMLDate = (dateString: string): Date | null => {
+    if (!dateString) return null;
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  useEffect(() => {
+    if (isFilterOpen) {
+      setFilterStartDate(dateRange?.from ? formatDateToHTML(dateRange.from) : '');
+      setFilterEndDate(dateRange?.to ? formatDateToHTML(dateRange.to) : '');
+    }
+  }, [isFilterOpen, dateRange]);
+
+  const handleFilterApply = () => {
+    const fromDate = parseHTMLDate(filterStartDate);
+    const toDate = parseHTMLDate(filterEndDate);
+    if (fromDate && toDate) {
+      handleDateRangeChange({ from: fromDate, to: toDate });
+      setIsFilterOpen(false);
+    } else {
+      toast.error("Please select both start and end dates", {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
+    }
+  };
+
+  const handleFilterReset = () => {
+    setIsFilterOpen(false);
   };
 
   const handlePageChange = (page: number) => {
@@ -758,16 +809,6 @@ const FitoutRequests: React.FC = () => {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
 
-      {/* Date Range Filter */}
-      <div className="flex items-center gap-4 mb-4">
-        <div className="flex-1 max-w-md">
-          <UnifiedDateRangeFilter
-            dateRange={dateRange}
-            onDateRangeChange={handleDateRangeChange}
-          />
-        </div>
-      </div>
-
       {/* Fitout Request Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-6">
         {statCards.map((item, i) => {
@@ -812,6 +853,7 @@ const FitoutRequests: React.FC = () => {
           enableGlobalSearch={true}
           onGlobalSearch={handleGlobalSearch}
           searchPlaceholder="Search requests..."
+          onFilterClick={() => setIsFilterOpen(true)}
           pagination={false}
           leftActions={
             <div className="flex flex-wrap items-center gap-2 md:gap-4">
@@ -858,6 +900,76 @@ variant="ghost"
           </div>
         )}
       </div>
+
+      <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen} modal={false}>
+        <DialogContent
+          className="max-w-xl bg-white rounded-3xl p-7 z-50"
+          aria-describedby="fitout-filter-description"
+        >
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-5">
+            <DialogTitle className="text-[16px] font-semibold leading-6 text-[#1A1A18]">
+              Filter By
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={() => setIsFilterOpen(false)}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[rgba(26,26,24,.48)] transition-colors hover:bg-[#F5F4F0] hover:text-[#1A1A18]"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div id="fitout-filter-description" className="sr-only">
+              Filter fitout requests by date range
+            </div>
+          </DialogHeader>
+
+          <div className="pt-1">
+            <div className="text-[10px] font-bold tracking-[0.09em] uppercase text-[rgba(26,26,24,.48)] mb-3.5">
+              Date Range
+            </div>
+            <div className="grid grid-cols-2 gap-[14px]">
+              <div className="flex flex-col gap-1.5 min-w-0">
+                <label className="text-xs font-semibold text-[rgba(26,26,24,.68)]">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={filterStartDate}
+                  onChange={(e) => setFilterStartDate(e.target.value)}
+                  className="w-full min-h-[44px] border border-[rgba(26,26,24,.08)] rounded-xl bg-white text-[13.5px] font-medium text-[#1A1A18] px-3.5 outline-none transition-[border-color,box-shadow] focus:border-[#1A1A18] focus:shadow-[0_0_0_4px_rgba(26,26,24,.1)]"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 min-w-0">
+                <label className="text-xs font-semibold text-[rgba(26,26,24,.68)]">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={filterEndDate}
+                  min={filterStartDate}
+                  onChange={(e) => setFilterEndDate(e.target.value)}
+                  className="w-full min-h-[44px] border border-[rgba(26,26,24,.08)] rounded-xl bg-white text-[13.5px] font-medium text-[#1A1A18] px-3.5 outline-none transition-[border-color,box-shadow] focus:border-[#1A1A18] focus:shadow-[0_0_0_4px_rgba(26,26,24,.1)]"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2.5 mt-6">
+            <button
+              onClick={handleFilterReset}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
+            >
+              Reset
+            </button>
+            <button
+              onClick={handleFilterApply}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E]"
+            >
+              Apply Filters
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
