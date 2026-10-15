@@ -50,7 +50,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
   return (
     <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[700px] p-0 overflow-hidden bg-white rounded-2xl border border-[rgba(26,26,24,.09)] focus:outline-none focus-visible:outline-none">
-        <DialogHeader className="py-4 px-6 flex flex-row items-center justify-between space-y-0 border-b border-[rgba(26,26,24,.09)]">
+        <DialogHeader className="py-4 px-6 flex flex-row items-center justify-between space-y-0">
           <DialogTitle className="text-lg font-semibold text-[#1A1A18]">Advance Filter</DialogTitle>
           <button
             type="button"

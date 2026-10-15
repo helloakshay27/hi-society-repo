@@ -467,9 +467,9 @@ export const KYCDetailsDashboard = () => {
               InputProps={{ sx: fieldStyles }}
             />
           </div>
-          <div className="flex justify-end gap-2 border-t pt-4">
+          <div className="flex justify-end gap-2 pt-4">
             <Button
-              className="px-6 sm:px-8 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]  h-10"
+              className="px-4 sm:px-6 w-full sm:w-auto !bg-white border !border-[#da7756] !text-[#da7756]  h-10"
               onClick={() => {
                 setShowAddDialog(false);
                 setFormData({ userName: "", userEmail: "", userMobile: "" });

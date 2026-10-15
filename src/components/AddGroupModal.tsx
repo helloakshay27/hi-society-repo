@@ -174,7 +174,7 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px', border: '1px solid rgba(26,26,24,.09)' } }}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-hidden" sx={{ padding: 0 }}>
-        <div className="px-6 py-4 border-b border-[rgba(26,26,24,.09)]">
+        <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-lg font-semibold text-[#1A1A18]">{isEditing ? "Edit Group" : "Add Group"}</h1>
             <button
