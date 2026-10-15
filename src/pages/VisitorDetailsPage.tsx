@@ -503,7 +503,7 @@ export const VisitorDetailsPage = () => {
       <div className="p-6 bg-white min-h-screen">
         <div className="text-center text-red-500">
           <p>{error || "Visitor not found"}</p>
-          <Button onClick={handleBackToList}  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2 mx-auto">
+          <Button onClick={handleBackToList} className="mx-auto mt-4 min-h-[42px] rounded-lg bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white hover:bg-[#12100E]">
             Back to List
           </Button>
         </div>
@@ -512,31 +512,31 @@ export const VisitorDetailsPage = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 min-h-screen">
+    <div className="p-4 sm:p-6 min-h-screen bg-[#FDFDFB]">
       {/* Header */}
       <div className="mb-6">
         <button
           onClick={handleBackToList}
-          className="flex items-center gap-1 hover:text-gray-800 mb-4"
+          className="mb-4 flex items-center gap-1.5 text-[12.5px] font-semibold text-[rgba(26,26,24,.48)] transition-colors hover:text-[#1A1A18]"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Visitor List
         </button>
 
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="my-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Visitor Details</h1>
+            <h1 className="mb-2 text-[22px] font-semibold text-[#1A1A18]" style={{ letterSpacing: '-0.015em', lineHeight: 1.2 }}>Visitor Details</h1>
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 font-medium">Visitor Name:</span>
-                <span className="font-semibold text-gray-900">
+                <span className="font-medium text-[rgba(26,26,24,.48)]">Visitor Name:</span>
+                <span className="font-semibold text-[#1A1A18]">
                   {visitorData.guest_name || '--'}
                 </span>
               </div>
               {visitorData.pass_number && (
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500 font-medium">Pass Number:</span>
-                  <span className="font-semibold text-gray-900">{visitorData.pass_number}</span>
+                  <span className="font-medium text-[rgba(26,26,24,.48)]">Pass Number:</span>
+                  <span className="font-semibold text-[#1A1A18]">{visitorData.pass_number}</span>
                 </div>
               )}
               {visitorData.vstatus && (
@@ -562,7 +562,7 @@ export const VisitorDetailsPage = () => {
             {visitorData.approve === 0 && (
               <Button
                 onClick={handleSkipApproval}
-                className="bg-blue-600 text-white hover:bg-blue-700"
+                className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
               >
                 Skip Approval
               </Button>
@@ -573,17 +573,20 @@ export const VisitorDetailsPage = () => {
               visitorData.approve === 1 && (
                 <Button
                   onClick={handleCheckIn}
- className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"                >
-                  Check-in
+                  className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
+                style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
+                >
+                  <span style={{ color: '#FFFFFF' }}>Check-in</span>
                 </Button>
               )}
 
             {visitorData.vstatus === "checked_in" && (
               <Button
                 onClick={handleCheckOut}
-                className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
+                style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
               >
-                Check-out
+                <span style={{ color: '#FFFFFF' }}>Check-out</span>
               </Button>
             )}
 
@@ -663,52 +666,52 @@ export const VisitorDetailsPage = () => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      <div className="w-full">
         <Tabs defaultValue="profile" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-auto p-0 text-sm justify-stretch">
+          <TabsList className="flex h-auto w-fit max-w-full flex-wrap justify-start gap-1 rounded-xl bg-[#1a1a180e] p-1 text-sm">
             <TabsTrigger
               value="profile"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="min-w-0 rounded-lg border-0 bg-transparent px-4 py-2 text-[13px] font-medium text-[rgba(26,26,24,.68)] data-[state=active]:bg-white data-[state=active]:text-[#1A1A18] data-[state=active]:shadow-sm"
             >
               Basic Info
             </TabsTrigger>
             <TabsTrigger
               value="additional"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="min-w-0 rounded-lg border-0 bg-transparent px-4 py-2 text-[13px] font-medium text-[rgba(26,26,24,.68)] data-[state=active]:bg-white data-[state=active]:text-[#1A1A18] data-[state=active]:shadow-sm"
             >
               Additional Details
             </TabsTrigger>
             {/* <TabsTrigger
               value="assets"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="min-w-0 rounded-lg border-0 bg-transparent px-4 py-2 text-[13px] font-medium text-[rgba(26,26,24,.68)] data-[state=active]:bg-white data-[state=active]:text-[#1A1A18] data-[state=active]:shadow-sm"
             >
               Asset Details
             </TabsTrigger> */}
             <TabsTrigger
               value="identity"
-              className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+              className="min-w-0 rounded-lg border-0 bg-transparent px-4 py-2 text-[13px] font-medium text-[rgba(26,26,24,.68)] data-[state=active]:bg-white data-[state=active]:text-[#1A1A18] data-[state=active]:shadow-sm"
             >
               Identity Verification
             </TabsTrigger>
           </TabsList>
 
           {/* Tab 1: Basic Info */}
-          <TabsContent value="profile" className="p-6 space-y-6">
+          <TabsContent value="profile" className="mt-4 space-y-4 p-0">
             {/* Visitor Information Card */}
-            <Card className="w-full">
-              <CardHeader className="pb-4 lg:pb-6">
-                <CardTitle className="flex items-center gap-3 text-lg font-semibold text-[#1A1A1A]">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                    <User className="w-6 h-6" style={{ color: '#C72030' }} />
+            <Card className="w-full rounded-2xl border border-[rgba(26,26,24,.09)] bg-white px-6 py-5 shadow-none">
+              <CardHeader className="px-0 pb-4 pt-0">
+                <CardTitle className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                    <User className="h-[14px] w-[14px] text-[#1A1A18]" />
                   </div>
-                  <span className="uppercase tracking-wide">Visitor Information</span>
+                  <span>Visitor Information</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <CardContent className="px-0 pb-0 pt-0">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                   {/* Column 1: Profile Image */}
                   {hasData(visitorData.image) && (
-                    <div className="flex items-start justify-center lg:justify-start pl-9">
+                    <div className="flex items-start justify-center lg:justify-start">
                       <img
                         src={
                           visitorData.image?.startsWith("http")
@@ -716,7 +719,7 @@ export const VisitorDetailsPage = () => {
                             : "/placeholder.svg"
                         }
                         alt={visitorData.guest_name || "Visitor"}
-                        className="ml-9 w-40 h-40 object-cover rounded-lg border-2 border-gray-200"
+                        className="h-40 w-40 rounded-xl border border-[rgba(26,26,24,.12)] object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = "/placeholder.svg";
@@ -728,83 +731,83 @@ export const VisitorDetailsPage = () => {
                   {/* Columns 2 & 3: Information Grid */}
                   <div className={`${hasData(visitorData.image) ? 'lg:col-span-2' : 'lg:col-span-3'} grid grid-cols-1 md:grid-cols-2 gap-6 text-sm`}>
                     {hasData(visitorData.guest_name) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Visitor Name</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.guest_name}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Visitor Name</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.guest_name}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.guest_type) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Guest Type</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.guest_type}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Guest Type</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.guest_type}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.guest_number) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Mobile No.</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.guest_number}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Mobile No.</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.guest_number}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.guest_vehicle_number) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Guest Vehicle Number</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.guest_vehicle_number}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Guest Vehicle Number</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.guest_vehicle_number}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.visitor_host_name) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Person To Meet</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.visitor_host_name}</span>
-                        {/* <span className="text-gray-900 font-medium">{visitorData?.person_to_meet_name ?? visitorData?.visited_to_host_name ?? visitorData?.visitor_host_name ?? "-"}</span> */}
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Person To Meet</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.visitor_host_name}</span>
+                        {/* <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData?.person_to_meet_name ?? visitorData?.visited_to_host_name ?? visitorData?.visitor_host_name ?? "-"}</span> */}
                       </div>
                     )}
 
                     {hasData(visitorData.visitor_host_email) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Visitor Email</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.visitor_host_email}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Visitor Email</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.visitor_host_email}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.location) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">To Location</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.location}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">To Location</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.location}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.visit_purpose) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Purpose</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.visit_purpose}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Purpose</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.visit_purpose}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.pass_number) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Pass Number</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.pass_number}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Pass Number</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.pass_number}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.expected_at) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Expected Date</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Expected Date</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">
                           {(() => {
                             const raw = visitorData.expected_at;
                             if (!raw) return '-';
@@ -825,10 +828,10 @@ export const VisitorDetailsPage = () => {
                     )}
 
                     {hasData(visitorData.expected_at) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Expected Time</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Expected Time</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">
                           {visitorData.expected_at && !isNaN(new Date(visitorData.expected_at).getTime())
                             ? new Date(visitorData.expected_at).toLocaleTimeString([], {
                               hour: "2-digit",
@@ -840,131 +843,131 @@ export const VisitorDetailsPage = () => {
                     )}
 
                     {hasData(visitorData.guest_from) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Coming From</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.guest_from}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Coming From</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.guest_from}</span>
                       </div>
                     )}
 
                     {/* {hasData(visitorData.created_at) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Created Date & Time</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Created Date & Time</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">
                           {new Date(visitorData.created_at).toLocaleString()}
                         </span>
                       </div>
                     )} */}
                     {hasData(visitorData.created_at) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Created Date & Time</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.created_at}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Created Date & Time</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.created_at}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.marked_in_by) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Marked In By</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.marked_in_by}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Marked In By</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.marked_in_by}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.marked_out_by) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Marked Out By</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.marked_out_by}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Marked Out By</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.marked_out_by}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.remarks) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Remarks</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Remarks</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">
                           {visitorData.remarks}
                         </span>
                       </div>
                     )}
 
                     {hasData(visitorData.guest_entry_time_show) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Check-in Time</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Check-in Time</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">
                           {visitorData.guest_entry_time_show}
                         </span>
                       </div>
                     )}
 
                     {hasData(visitorData.master_exit_time_show) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Check-out Time</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Check-out Time</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">
                           {visitorData.master_exit_time_show}
                         </span>
                       </div>
                     )}
 
                     {/* {hasData(visitorData.entry_gate) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Entry Gate</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.entry_gate}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Entry Gate</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.entry_gate}</span>
                       </div>
                     )} */}
 
                     {hasData(visitorData.exit_gate) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Exit Gate</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.exit_gate}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Exit Gate</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.exit_gate}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.time_since_in) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Duration</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.time_since_in}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Duration</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.time_since_in}</span>
                       </div>
                     )}
 
 
                     {visitorData.additional_visitors && visitorData.additional_visitors.length > 0 && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Additional Visitor</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Additional Visitor</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">
                           {visitorData.additional_visitors.length}
                         </span>
                       </div>
                     )}
 
                     {hasData(visitorData.temperature) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Temperature</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.temperature}°C</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Temperature</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.temperature}°C</span>
                       </div>
                     )}
 
                     {hasData(visitorData.notes) && (
-                      <div className="flex items-start md:col-span-2">
-                        <span className="text-gray-500 min-w-[140px]">Notes</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.notes}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Notes</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.notes}</span>
                       </div>
                     )}
                     {hasData(visitorData.plus_person != null ? String(visitorData.plus_person) : undefined) && (
-                      <div className="flex items-start md:col-span-2">
-                        <span className="text-gray-500 min-w-[140px]">Additional Visitor Count</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.plus_person}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Additional Visitor Count</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.plus_person}</span>
                       </div>
                     )}
                   </div>
@@ -976,41 +979,41 @@ export const VisitorDetailsPage = () => {
             {(hasData(visitorData.pass_start_date) ||
               hasData(visitorData.pass_end_date) ||
               (visitorData.pass_days && visitorData.pass_days.length > 0)) && (
-                <Card className="w-full">
-                  <CardHeader className="pb-4 lg:pb-6">
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold text-[#1A1A1A]">
+                <Card className="w-full rounded-2xl border border-[rgba(26,26,24,.09)] bg-white px-6 py-5 shadow-none">
+                  <CardHeader className="px-0 pb-4 pt-0">
+                    <CardTitle className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]">
                       <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                        <CreditCard className="w-6 h-6" style={{ color: '#C72030' }} />
+                        <CreditCard className="h-7 w-7" style={{ color: '#C72030' }} />
                       </div>
-                      <span className="uppercase tracking-wide">Pass Information</span>
+                      <span>Pass Information</span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                  <CardContent className="px-0 pb-0 pt-0">
+                    <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
                       {hasData(visitorData.pass_start_date) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Pass Start Date</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Pass Start Date</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">
                             {new Date(visitorData.pass_start_date).toLocaleDateString()}
                           </span>
                         </div>
                       )}
 
                       {hasData(visitorData.pass_end_date) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Pass End Date</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Pass End Date</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">
                             {new Date(visitorData.pass_end_date).toLocaleDateString()}
                           </span>
                         </div>
                       )}
 
                       {visitorData.pass_days && visitorData.pass_days.length > 0 && (
-                        <div className="flex items-start col-span-2">
-                          <span className="text-gray-500 min-w-[140px]">Pass Days</span>
-                          <span className="text-gray-500 mx-2">:</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1 col-span-2">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Pass Days</span>
+                          <span className="hidden">:</span>
                           <div className="flex-1 flex flex-wrap gap-2">
                             {visitorData.pass_days.map((day, index) => (
                               <Badge key={index} variant="outline">
@@ -1022,9 +1025,9 @@ export const VisitorDetailsPage = () => {
                       )}
 
                       {visitorData.pass_valid !== undefined && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Pass Valid</span>
-                          <span className="text-gray-500 mx-2">:</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Pass Valid</span>
+                          <span className="hidden">:</span>
                           <Badge
                             className={
                               visitorData.pass_valid
@@ -1048,7 +1051,7 @@ export const VisitorDetailsPage = () => {
               hasData(visitorData.exit_gate)) && (
               <Card className="w-full">
                 <CardHeader className="pb-4 lg:pb-6">
-                  <CardTitle className="flex items-center gap-3 text-lg font-semibold text-[#1A1A1A]">
+                  <CardTitle className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]">
                     <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                       <MapPin className="w-6 h-6" style={{ color: '#C72030' }} />
                     </div>
@@ -1056,48 +1059,48 @@ export const VisitorDetailsPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                  <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
                     {hasData(visitorData.guest_entry_time) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Check-in Time</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Check-in Time</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">
                           {new Date(visitorData.guest_entry_time).toLocaleString()}
                         </span>
                       </div>
                     )}
 
                     {hasData(visitorData.master_exit_time) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Check-out Time</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Check-out Time</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">
                           {new Date(visitorData.master_exit_time).toLocaleString()}
                         </span>
                       </div>
                     )}
 
                     {hasData(visitorData.entry_gate) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Entry Gate</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.entry_gate}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Entry Gate</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.entry_gate}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.exit_gate) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Exit Gate</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.exit_gate}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Exit Gate</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.exit_gate}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.time_since_in) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Time Since Check-in</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.time_since_in}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Time Since Check-in</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.time_since_in}</span>
                       </div>
                     )}
                   </div>
@@ -1107,71 +1110,71 @@ export const VisitorDetailsPage = () => {
           </TabsContent>
 
           {/* Tab 2: Additional Details */}
-          <TabsContent value="additional" className="p-6 space-y-6">
+          <TabsContent value="additional" className="mt-4 space-y-4 p-0">
             {visitorData.additional_visitors && visitorData.additional_visitors.length > 0 ? (
               visitorData.additional_visitors.map((visitor: AdditionalVisitor, index: number) => (
                 <div
                   key={visitor?.id || index}
-                  className="border rounded-lg p-6 bg-gray-50 space-y-6"
+                  className="space-y-6 rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6"
                 >
                   <div>
-                    <h3 className="text-base font-semibold text-gray-900 mb-4">
+                    <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
                       Visitor {index + 1}
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
                       {hasData(visitor?.name) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Visitor Name</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{visitor.name}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Visitor Name</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitor.name}</span>
                         </div>
                       )}
 
                       {hasData(visitor?.mobile) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Mobile No.</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{visitor.mobile}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Mobile No.</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitor.mobile}</span>
                         </div>
                       )}
 
                       {hasData(visitor?.pass_number) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Pass Number</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{visitor.pass_number}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Pass Number</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitor.pass_number}</span>
                         </div>
                       )}
 
                       {hasData(visitor?.email) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Email</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{visitor.email}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Email</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitor.email}</span>
                         </div>
                       )}
 
                       {hasData(visitor?.vehicle_type) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Vehicle Type</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{visitor.vehicle_type}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Vehicle Type</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitor.vehicle_type}</span>
                         </div>
                       )}
 
                       {hasData(visitor?.vehicle_number) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Vehicle No</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{visitor.vehicle_number}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Vehicle No</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitor.vehicle_number}</span>
                         </div>
                       )}
 
                       {hasData(visitor?.parking_slot_number) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Parking Slot</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{visitor.parking_slot_number}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Parking Slot</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitor.parking_slot_number}</span>
                         </div>
                       )}
                     </div>
@@ -1186,7 +1189,7 @@ export const VisitorDetailsPage = () => {
           </TabsContent>
 
           {/* Tab 3: Asset Details */}
-          <TabsContent value="assets" className="p-6 space-y-6">
+          <TabsContent value="assets" className="mt-4 space-y-4 p-0">
             {/* MIMO Details Section (new API) */}
             {visitorData.mimo_details && visitorData.mimo_details.length > 0 && (
               <div className="space-y-6">
@@ -1194,39 +1197,39 @@ export const VisitorDetailsPage = () => {
                   Item Movements
                 </h2>
                 {visitorData.mimo_details.map((mimo: MimoDetail, index: number) => (
-                  <div key={mimo.id || index} className="border rounded-lg p-6 bg-gray-50">
+                  <div key={mimo.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
                     <h3 className="text-base font-semibold text-gray-900 mb-4">
                       Movement {index + 1}
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
                       {hasData(mimo?.type) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Movement Type</span>
-                          <span className="text-gray-500 mx-2">:</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Movement Type</span>
+                          <span className="hidden">:</span>
                           <span className="text-gray-900 font-medium capitalize">
                             {mimo.type?.replace(/_/g, " ")}
                           </span>
                         </div>
                       )}
                       {mimo?.item_number != null && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Item Count</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{mimo.item_number}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Item Count</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{mimo.item_number}</span>
                         </div>
                       )}
                       {hasData(mimo?.details) && (
-                        <div className="flex items-start md:col-span-2">
-                          <span className="text-gray-500 min-w-[140px]">Details</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{mimo.details}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Details</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{mimo.details}</span>
                         </div>
                       )}
                       {hasData(mimo?.approve_status) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Approval Status</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{mimo.approve_status}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Approval Status</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{mimo.approve_status}</span>
                         </div>
                       )}
                     </div>
@@ -1242,16 +1245,16 @@ export const VisitorDetailsPage = () => {
                   Item Movements
                 </h2>
                 {visitorData.item_movements.map((movement: ItemMovement, index: number) => (
-                  <div key={movement.id || index} className="border rounded-lg p-6 bg-gray-50">
+                  <div key={movement.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
                     <h3 className="text-base font-semibold text-gray-900 mb-4">
                       Movement {index + 1}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-4">
                       {hasData(movement?.movement_type) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Movement Type</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{movement.movement_type}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Movement Type</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{movement.movement_type}</span>
                         </div>
                       )}
                     </div>
@@ -1265,17 +1268,17 @@ export const VisitorDetailsPage = () => {
                             <div key={item.id || itemIndex} className="border-l-4 border-[#C72030] bg-white p-4 rounded">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 {hasData(item?.name) && (
-                                  <div className="flex items-start">
+                                  <div className="flex min-w-0 flex-col items-start gap-1">
                                     <span className="text-gray-500 min-w-[100px]">Item Name</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">{item.name}</span>
+                                    <span className="hidden">:</span>
+                                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{item.name}</span>
                                   </div>
                                 )}
                                 {hasData(item?.number) && (
-                                  <div className="flex items-start">
+                                  <div className="flex min-w-0 flex-col items-start gap-1">
                                     <span className="text-gray-500 min-w-[100px]">Item Number</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">{item.number}</span>
+                                    <span className="hidden">:</span>
+                                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{item.number}</span>
                                   </div>
                                 )}
                               </div>
@@ -1302,47 +1305,47 @@ export const VisitorDetailsPage = () => {
                   </span>
                 </h2>
                 {visitorData.assets.map((asset: AssetItem, index: number) => (
-                  <div key={asset.id || index} className="border rounded-lg p-6 bg-gray-50">
+                  <div key={asset.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
                     <h3 className="text-base font-semibold text-gray-900 mb-4">
                       {/* {asset?.asset_name || asset?.asset_category_name || `Asset ${index + 1}`} */}
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
                       {hasData(asset?.asset_category_name) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Asset Category</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{asset.asset_category_name}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Asset Category</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{asset.asset_category_name}</span>
                         </div>
                       )}
 
                       {hasData(asset?.asset_name) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Asset Name</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{asset.asset_name}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Asset Name</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{asset.asset_name}</span>
                         </div>
                       )}
 
                       {hasData(asset?.serial_model_number) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Serial/ Model No</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{asset.serial_model_number}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Serial/ Model No</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{asset.serial_model_number}</span>
                         </div>
                       )}
 
                       {hasData(asset?.notes) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Notes</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium">{asset.notes}</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Notes</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium text-[#1A1A18]">{asset.notes}</span>
                         </div>
                       )}
 
                       {asset?.documents && asset.documents.length > 0 && (
-                        <div className="flex items-start col-span-2">
-                          <span className="text-gray-500 min-w-[140px]">Attachments</span>
-                          <span className="text-gray-500 mx-2">:</span>
+                        <div className="flex min-w-0 flex-col items-start gap-1 col-span-2">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Attachments</span>
+                          <span className="hidden">:</span>
                           <div className="flex-1 flex flex-wrap gap-2">
                             {asset.documents.map((doc, docIndex) => (
                               <Button
@@ -1379,47 +1382,47 @@ export const VisitorDetailsPage = () => {
                       {visitor?.name ? `${visitor.name}'s Assets` : `Visitor ${visitorIndex + 1} Assets`}
                     </h2>
                     {visitor.assets.map((asset: AssetItem, assetIndex: number) => (
-                      <div key={asset.id || assetIndex} className="border rounded-lg p-6 bg-gray-50">
+                      <div key={asset.id || assetIndex} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
                         {/* <h3 className="text-base font-semibold text-gray-900 mb-4">
                           {asset?.asset_name || asset?.asset_category_name || `Asset ${assetIndex + 1}`}
                         </h3> */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                        <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
                           {hasData(asset?.asset_category_name) && (
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Asset Category</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{asset.asset_category_name}</span>
+                            <div className="flex min-w-0 flex-col items-start gap-1">
+                              <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Asset Category</span>
+                              <span className="hidden">:</span>
+                              <span className="text-[13.5px] font-medium text-[#1A1A18]">{asset.asset_category_name}</span>
                             </div>
                           )}
 
                           {hasData(asset?.asset_name) && (
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Asset Name</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{asset.asset_name}</span>
+                            <div className="flex min-w-0 flex-col items-start gap-1">
+                              <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Asset Name</span>
+                              <span className="hidden">:</span>
+                              <span className="text-[13.5px] font-medium text-[#1A1A18]">{asset.asset_name}</span>
                             </div>
                           )}
 
                           {hasData(asset?.serial_model_number) && (
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Serial/ Model No</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{asset.serial_model_number}</span>
+                            <div className="flex min-w-0 flex-col items-start gap-1">
+                              <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Serial/ Model No</span>
+                              <span className="hidden">:</span>
+                              <span className="text-[13.5px] font-medium text-[#1A1A18]">{asset.serial_model_number}</span>
                             </div>
                           )}
 
                           {hasData(asset?.notes) && (
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Notes</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{asset.notes}</span>
+                            <div className="flex min-w-0 flex-col items-start gap-1">
+                              <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Notes</span>
+                              <span className="hidden">:</span>
+                              <span className="text-[13.5px] font-medium text-[#1A1A18]">{asset.notes}</span>
                             </div>
                           )}
 
                           {asset?.documents && asset.documents.length > 0 && (
-                            <div className="flex items-start col-span-2">
-                              <span className="text-gray-500 min-w-[140px]">Attachments</span>
-                              <span className="text-gray-500 mx-2">:</span>
+                            <div className="flex min-w-0 flex-col items-start gap-1 col-span-2">
+                              <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Attachments</span>
+                              <span className="hidden">:</span>
                               <div className="flex-1 flex flex-wrap gap-2">
                                 {asset.documents.map((doc, docIndex) => (
                                   <Button
@@ -1457,7 +1460,7 @@ export const VisitorDetailsPage = () => {
           </TabsContent>
 
           {/* Tab 4: Identity Verification */}
-          <TabsContent value="identity" className="p-6 space-y-6">
+          <TabsContent value="identity" className="mt-4 space-y-4 p-0">
             {/* Main Visitor's Documents */}
             {visitorData.visitor_documents && visitorData.visitor_documents.length > 0 && (
               <div>
@@ -1467,7 +1470,7 @@ export const VisitorDetailsPage = () => {
                     (Primary Visitor)
                   </span>
                 </h2>
-                <div className="border rounded-lg p-6 bg-gray-50">
+                <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
                   <h3 className="text-base font-semibold text-gray-900 mb-4">
                     Uploaded Documents
                   </h3>
@@ -1520,24 +1523,24 @@ export const VisitorDetailsPage = () => {
                     (Primary Visitor)
                   </span>
                 </h2>
-                <div className="border rounded-lg p-6 bg-gray-50">
+                <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
                   <h3 className="text-base font-semibold text-gray-900 mb-4">
                     Identity Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-6">
                     {hasData(visitorData.visitor_identity?.identity_type) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">ID Type</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.visitor_identity.identity_type}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">ID Type</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.visitor_identity.identity_type}</span>
                       </div>
                     )}
 
                     {hasData(visitorData.visitor_identity?.government_id_number) && (
-                      <div className="flex items-start">
-                        <span className="text-gray-500 min-w-[140px]">Government ID</span>
-                        <span className="text-gray-500 mx-2">:</span>
-                        <span className="text-gray-900 font-medium">{visitorData.visitor_identity.government_id_number}</span>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Government ID</span>
+                        <span className="hidden">:</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitorData.visitor_identity.government_id_number}</span>
                       </div>
                     )}
                   </div>
@@ -1612,24 +1615,24 @@ export const VisitorDetailsPage = () => {
                     <h2 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-6">
                       {visitor?.name ? `${visitor.name}'s Identity Details` : `Visitor ${visitorIndex + 1} Identity`}
                     </h2>
-                    <div className="border rounded-lg p-6 bg-gray-50">
+                    <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
                       <h3 className="text-base font-semibold text-gray-900 mb-4">
                         Identity Information
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-6">
                         {hasData(visitor.identity?.identity_type) && (
-                          <div className="flex items-start">
-                            <span className="text-gray-500 min-w-[140px]">ID Type</span>
-                            <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{visitor.identity.identity_type}</span>
+                          <div className="flex min-w-0 flex-col items-start gap-1">
+                            <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">ID Type</span>
+                            <span className="hidden">:</span>
+                            <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitor.identity.identity_type}</span>
                           </div>
                         )}
 
                         {hasData(visitor.identity?.government_id_number) && (
-                          <div className="flex items-start">
-                            <span className="text-gray-500 min-w-[140px]">Government ID</span>
-                            <span className="text-gray-500 mx-2">:</span>
-                            <span className="text-gray-900 font-medium">{visitor.identity.government_id_number}</span>
+                          <div className="flex min-w-0 flex-col items-start gap-1">
+                            <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Government ID</span>
+                            <span className="hidden">:</span>
+                            <span className="text-[13.5px] font-medium text-[#1A1A18]">{visitor.identity.government_id_number}</span>
                           </div>
                         )}
                       </div>

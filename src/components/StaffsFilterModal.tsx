@@ -6,7 +6,7 @@ import { X } from 'lucide-react';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { StaffFilters } from '@/services/societyStaffsAPI';
-import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { TextField, FormControl, Select as MuiSelect, MenuItem } from '@mui/material';
 import { fieldStyles, menuProps } from '@/components/ticket-management/fieldStyles';
 
 interface FilterOption {
@@ -115,177 +115,112 @@ export const StaffsFilterModal = ({ isOpen, onClose, onApplyFilters }: StaffsFil
     onApplyFilters({});
   };
 
+  const renderTextField = (
+    label: string,
+    placeholder: string,
+    value: string,
+    onChange: (value: string) => void,
+  ) => (
+    <div className="space-y-2">
+      <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,.68)]">{label}</label>
+      <TextField
+        placeholder={placeholder}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        fullWidth
+        variant="outlined"
+        sx={{
+          ...fieldStyles,
+          '& .MuiOutlinedInput-root': {
+            height: 50,
+            borderRadius: '12px',
+            fontSize: '13.5px',
+            '& fieldset': { borderColor: 'rgba(26,26,24,.10)' },
+            '&:hover fieldset': { borderColor: 'rgba(26,26,24,.24)' },
+            '&.Mui-focused fieldset': { borderColor: '#1A1A18', borderWidth: 1 },
+          },
+        }}
+      />
+    </div>
+  );
+
+  const renderSelectField = (
+    label: string,
+    placeholder: string,
+    value: string,
+    onChange: (value: string) => void,
+    options: FilterOption[],
+    disabled = false,
+  ) => (
+    <div className="space-y-2">
+      <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,.68)]">{label}</label>
+      <FormControl fullWidth variant="outlined" disabled={disabled}>
+        <MuiSelect
+          value={value}
+          onChange={(event) => onChange(String(event.target.value))}
+          displayEmpty
+          sx={{
+            ...fieldStyles,
+            height: 50,
+            borderRadius: '12px',
+            color: value ? '#1A1A18' : 'rgba(26,26,24,.38)',
+            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(26,26,24,.10)' },
+            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(26,26,24,.24)' },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#1A1A18', borderWidth: 1 },
+            '& .MuiSelect-select': { padding: '14px 16px', fontSize: '13.5px' },
+          }}
+          MenuProps={menuProps}
+        >
+          <MenuItem value="">{placeholder}</MenuItem>
+          {options.map((option, index) => (
+            <MenuItem key={`${label}-${option.value}-${index}`} value={String(option.value)}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </MuiSelect>
+      </FormControl>
+    </div>
+  );
+
   return (
     <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white [&>button]:hidden">
-        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
-          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">FILTER BY</DialogTitle>
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
-            <X className="w-4 h-4" />
+      <DialogContent className="max-h-[86vh] w-[min(820px,calc(100vw-32px))] max-w-none overflow-y-auto !rounded-3xl border border-[rgba(26,26,24,.09)] bg-white p-7 shadow-[0_8px_40px_rgba(26,26,24,.16)] [&>button]:hidden">
+        <DialogHeader className="mb-1 flex flex-row items-center justify-between pb-5">
+          <DialogTitle className="text-[18px] font-semibold text-[#1A1A18]">Filter By</DialogTitle>
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close filters" className="h-8 w-8 rounded-lg p-0 text-[rgba(26,26,24,.48)] hover:bg-[#F7F6F2] hover:text-[#1A1A18]">
+            <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            {/* Name / Mobile / ID */}
-            <TextField
-              label="Name / Mobile / ID"
-              placeholder="Search by name, mobile or ID"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: fieldStyles }}
-            />
-
-            {/* Company Name */}
-            <TextField
-              label="Company Name"
-              placeholder="Enter company name"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: fieldStyles }}
-            />
-
-            {/* Work Type */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Work Type</InputLabel>
-              <MuiSelect
-                value={workType}
-                onChange={(e) => setWorkType(e.target.value)}
-                displayEmpty
-                label="Work Type"
-                sx={fieldStyles}
-                MenuProps={menuProps}
-              >
-                <MenuItem value=""><em>Select Work Type</em></MenuItem>
-                {workTypes.map((wt) => (
-                  <MenuItem key={String(wt.value)} value={String(wt.value)}>
-                    {wt.label}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-
-            {/* Staff Type */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Staff Type</InputLabel>
-              <MuiSelect
-                value={staffType}
-                onChange={(e) => setStaffType(e.target.value)}
-                displayEmpty
-                label="Staff Type"
-                sx={fieldStyles}
-                MenuProps={menuProps}
-              >
-                <MenuItem value=""><em>Select Staff Type</em></MenuItem>
-                {staffTypes.map((st) => (
-                  <MenuItem key={String(st.value)} value={String(st.value)}>
-                    {st.label}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-
-            {/* Function */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Function</InputLabel>
-              <MuiSelect
-                value={functionId}
-                onChange={(e) => setFunctionId(e.target.value)}
-                displayEmpty
-                label="Function"
-                sx={fieldStyles}
-                MenuProps={menuProps}
-              >
-                <MenuItem value=""><em>Select Function</em></MenuItem>
-                {functions.map((fn) => (
-                  <MenuItem key={String(fn.value)} value={String(fn.value)}>
-                    {fn.label}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-
-            {/* Status */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Status</InputLabel>
-              <MuiSelect
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                displayEmpty
-                label="Select Status"
-                sx={fieldStyles}
-                MenuProps={menuProps}
-              >
-                <MenuItem value=""><em>Select Status</em></MenuItem>
-                {statuses.map((s, idx) => (
-                  <MenuItem key={idx} value={s.value === '' ? '__empty__' : String(s.value)}>
-                    {s.label}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-
-            {/* Select Tower */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Tower</InputLabel>
-              <MuiSelect
-                value={tower}
-                onChange={(e) => { setTower(e.target.value); setFlat(''); }}
-                displayEmpty
-                label="Select Tower"
-                sx={fieldStyles}
-                MenuProps={menuProps}
-              >
-                <MenuItem value=""><em>Select Tower</em></MenuItem>
-                {towers.map((t) => (
-                  <MenuItem key={String(t.value)} value={String(t.value)}>
-                    {t.label}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-
-            {/* Select Flat */}
-            <FormControl fullWidth variant="outlined" disabled={!tower || loadingFlats}>
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Flat</InputLabel>
-              <MuiSelect
-                value={flat}
-                onChange={(e) => setFlat(e.target.value)}
-                displayEmpty
-                label="Select Flat"
-                sx={fieldStyles}
-                MenuProps={menuProps}
-              >
-                <MenuItem value=""><em>{!tower ? 'Select tower first' : loadingFlats ? 'Loading...' : flats.length === 0 ? 'No flats available' : 'Select Flat'}</em></MenuItem>
-                {flats.map((f) => (
-                  <MenuItem key={String(f.value)} value={String(f.value)}>
-                    {f.label}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-          </div>
+        <div className="grid grid-cols-1 gap-x-4 gap-y-5 py-1 sm:grid-cols-2">
+          {renderTextField('Name / Mobile / ID', 'Search by name, mobile or ID', search, setSearch)}
+          {renderTextField('Company Name', 'Enter company name', companyName, setCompanyName)}
+          {renderSelectField('Work Type', 'Select Work Type', workType, setWorkType, workTypes)}
+          {renderSelectField('Staff Type', 'Select Staff Type', staffType, setStaffType, staffTypes)}
+          {renderSelectField('Function', 'Select Function', functionId, setFunctionId, functions)}
+          {renderSelectField('Select Status', 'Select Status', status, setStatus, statuses.map((option) => ({
+            ...option,
+            value: option.value === '' ? '__empty__' : option.value,
+          })))}
+          {renderSelectField('Select Tower', 'Select Tower', tower, (value) => { setTower(value); setFlat(''); }, towers)}
+          {renderSelectField('Select Flat', !tower ? 'Select tower first' : loadingFlats ? 'Loading...' : flats.length === 0 ? 'No flats available' : 'Select Flat', flat, setFlat, flats, !tower || loadingFlats)}
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t">
+        <div className="flex justify-end gap-2.5 pt-2">
           <Button
             variant="outline"
             onClick={handleReset}
-            className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
+            className="min-h-[42px] rounded-lg !border-[rgba(26,26,24,.18)] bg-white px-[22px] text-[13px] font-semibold !text-[#1A1A18] hover:bg-[#F7F6F2]"
+            style={{ color: '#1A1A18', border: '1px solid rgba(26,26,24,.18)' }}
           >
             Reset
           </Button>
           <Button
             onClick={handleApply}
-            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+            className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
+            style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
           >
-            Apply Filters
+            <span style={{ color: '#FFFFFF' }}>Apply Filters</span>
           </Button>
         </div>
       </DialogContent>

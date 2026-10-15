@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/pagination";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { FormControl, InputLabel, MenuItem, Select as MuiSelect, TextField } from "@mui/material";
+import { FormControl, MenuItem, Select as MuiSelect, TextField } from "@mui/material";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
@@ -194,85 +194,105 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
     key: keyof FilterState,
     items: FilterOption[] = [],
   ) => (
-    <FormControl fullWidth variant="outlined">
-      <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
-        {label}
-      </InputLabel>
-      <MuiSelect
-        value={value}
-        onChange={(e) => set(key, e.target.value)}
-        displayEmpty
-        label={label}
-        sx={fieldStyles}
-        MenuProps={menuProps}
-      >
-        <MenuItem value="">
-          <em>{placeholder}</em>
-        </MenuItem>
-        {items.map((item) => (
-          <MenuItem key={`${label}-${item.value}`} value={String(item.value)}>
-            {item.label}
-          </MenuItem>
-        ))}
-      </MuiSelect>
-    </FormControl>
+    <div className="space-y-2">
+      <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,.68)]">{label}</label>
+      <FormControl fullWidth variant="outlined">
+        <MuiSelect
+          value={value}
+          onChange={(e) => set(key, e.target.value)}
+          displayEmpty
+          sx={{
+            ...fieldStyles,
+            height: 50,
+            borderRadius: '12px',
+            color: value ? '#1A1A18' : 'rgba(26,26,24,.38)',
+            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(26,26,24,.10)' },
+            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(26,26,24,.24)' },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#1A1A18', borderWidth: 1 },
+            '& .MuiSelect-select': { padding: '14px 16px', fontSize: '13.5px' },
+          }}
+          MenuProps={menuProps}
+        >
+          <MenuItem value="">{placeholder}</MenuItem>
+          {items.map((item) => (
+            <MenuItem key={`${label}-${item.value}`} value={String(item.value)}>
+              {item.label}
+            </MenuItem>
+          ))}
+        </MuiSelect>
+      </FormControl>
+    </div>
   );
 
   return (
     <Dialog open={open} modal={false} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">
-        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
-          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
-            FILTER BY
+      <DialogContent className="max-h-[86vh] w-[min(700px,calc(100vw-32px))] max-w-none overflow-y-auto !rounded-3xl border border-[rgba(26,26,24,.09)] bg-white p-7 shadow-[0_8px_40px_rgba(26,26,24,.16)] [&>button]:hidden">
+        <DialogHeader className="mb-1 flex flex-row items-center justify-between pb-5">
+          <DialogTitle className="text-[18px] font-semibold text-[#1A1A18]">
+            Filter By
           </DialogTitle>
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
-            <X className="w-4 h-4" />
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 rounded-lg p-0 text-[rgba(26,26,24,.48)] hover:bg-[#F7F6F2] hover:text-[#1A1A18]">
+            <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            {renderSelectField("Building", "Select Building", local.building, "building", options?.buildings)}
-            {renderSelectField("Tower", "Select Tower", local.tower, "tower", options?.towers)}
-            {renderSelectField("Flat", "Select Flat", local.flat, "flat", options?.flats)}
-            {renderSelectField("Visitor Type", "Select Visitor Type", local.visitor_type, "visitor_type", options?.visitor_types)}
-            {renderSelectField("Approval Status", "Select Approval Status", local.approval_status, "approval_status", options?.approval_statuses)}
-            <TextField
-              label="From Date"
-              type="date"
-              value={local.from_date}
-              onChange={(e) => set("from_date", e.target.value)}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: fieldStyles }}
-            />
-            <TextField
-              label="To Date"
-              type="date"
-              value={local.to_date}
-              onChange={(e) => set("to_date", e.target.value)}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: fieldStyles }}
-            />
+        <div className="space-y-5 py-1">
+          <div>
+            <div className="mb-3 text-[10.5px] font-bold uppercase tracking-[.09em] text-[rgba(26,26,24,.48)]">Visitor Details</div>
+            <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+              {renderSelectField("Building", "Select Building", local.building, "building", options?.buildings)}
+              {renderSelectField("Tower", "Select Tower", local.tower, "tower", options?.towers)}
+              {renderSelectField("Flat", "Select Flat", local.flat, "flat", options?.flats)}
+              {renderSelectField("Visitor Type", "Select Visitor Type", local.visitor_type, "visitor_type", options?.visitor_types)}
+              {renderSelectField("Approval Status", "Select Approval Status", local.approval_status, "approval_status", options?.approval_statuses)}
+            </div>
+          </div>
+          <div className="pt-1">
+            <div className="mb-3 text-[10.5px] font-bold uppercase tracking-[.09em] text-[rgba(26,26,24,.48)]">Date Range</div>
+            <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,.68)]">From Date</label>
+                <TextField
+                  type="date"
+                  value={local.from_date}
+                  onChange={(e) => set("from_date", e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  sx={{ '& .MuiOutlinedInput-root': { height: 50, borderRadius: '12px', fontSize: '13.5px', '& fieldset': { borderColor: 'rgba(26,26,24,.10)' }, '&:hover fieldset': { borderColor: 'rgba(26,26,24,.24)' }, '&.Mui-focused fieldset': { borderColor: '#1A1A18' } } }}
+                  inputProps={{ 'aria-label': 'From Date' }}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,.68)]">To Date</label>
+                <TextField
+                  type="date"
+                  value={local.to_date}
+                  onChange={(e) => set("to_date", e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  sx={{ '& .MuiOutlinedInput-root': { height: 50, borderRadius: '12px', fontSize: '13.5px', '& fieldset': { borderColor: 'rgba(26,26,24,.10)' }, '&:hover fieldset': { borderColor: 'rgba(26,26,24,.24)' }, '&.Mui-focused fieldset': { borderColor: '#1A1A18' } } }}
+                  inputProps={{ 'aria-label': 'To Date' }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t">
+        <div className="flex justify-end gap-2.5 pt-2">
           <Button
             variant="outline"
             onClick={() => { setLocal(defaultFilters); onReset(); }}
-            className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
+            className="min-h-[42px] rounded-lg !border-[rgba(26,26,24,.18)] bg-white px-[22px] text-[13px] font-semibold !text-[#1A1A18] hover:bg-[#F7F6F2]"
+            style={{ color: '#1A1A18', border: '1px solid rgba(26,26,24,.18)' }}
           >
             Reset
           </Button>
           <Button
             onClick={() => onApply(local)}
-            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+            className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
+            style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
           >
-            Apply Filters
+            <span style={{ color: '#FFFFFF' }}>Apply Filters</span>
           </Button>
         </div>
       </DialogContent>

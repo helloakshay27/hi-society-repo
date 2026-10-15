@@ -707,7 +707,7 @@ export const EditStaffPage = () => {
                 
                 {/* Existing profile image from API */}
                 {staff.staff_image_url && !attachments.profilePicture && (
-                  <div className="mb-4 p-4 border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] rounded-xl">
+                  <div className="mb-4 p-4 border border-[rgba(26,26,24,.09)] bg-white rounded-xl">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-[#1A1A18]">Current Photo</span>
                     </div>
@@ -721,7 +721,7 @@ export const EditStaffPage = () => {
 
                 {/* New uploaded image preview */}
                 {attachments.profilePicture && (
-                  <div className="mb-4 p-4 border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] rounded-xl">
+                  <div className="mb-4 p-4 border border-[rgba(26,26,24,.09)] bg-white rounded-xl">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-[#1A1A18]">New Photo</span>
                       <Button
@@ -742,7 +742,7 @@ export const EditStaffPage = () => {
                   </div>
                 )}
 
-                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-[#F5F4F0] rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
+                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-white rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
                   <input
                     type="file"
                     accept="image/*"
@@ -766,7 +766,7 @@ export const EditStaffPage = () => {
               
               <div>
                 <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-2 block">Documents Upload</Label>
-                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-[#F5F4F0] rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
+                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-white rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
