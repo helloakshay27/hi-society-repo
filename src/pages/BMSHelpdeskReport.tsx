@@ -1,23 +1,30 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Download } from "lucide-react";
-import { format } from "date-fns";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon, Download, SlidersHorizontal } from "lucide-react";
+import { format, startOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { HelpdeskExportDialog } from "@/components/HelpdeskExportDialog";
 
 const BMSHelpdeskReport: React.FC = () => {
-  // Page-level date filter
-  const DEFAULT_START_DATE = new Date(2026, 3, 1);
-  const DEFAULT_END_DATE = new Date(2026, 3, 23);
-  const [startDate, setStartDate] = useState<Date | undefined>(DEFAULT_START_DATE);
+  // Page-level date filter — defaults to the current month so far (1st → today)
+  const [DEFAULT_START_DATE] = useState(() => startOfMonth(new Date()));
+  const [DEFAULT_END_DATE] = useState(() => new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    DEFAULT_START_DATE
+  );
   const [endDate, setEndDate] = useState<Date | undefined>(DEFAULT_END_DATE);
   const [startOpen, setStartOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
   // Dates committed via Apply — passed to the export dialog
-  const [appliedStartDate, setAppliedStartDate] = useState<Date>(DEFAULT_START_DATE);
+  const [appliedStartDate, setAppliedStartDate] =
+    useState<Date>(DEFAULT_START_DATE);
   const [appliedEndDate, setAppliedEndDate] = useState<Date>(DEFAULT_END_DATE);
 
   // Export dialog
@@ -59,12 +66,21 @@ const BMSHelpdeskReport: React.FC = () => {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Start Date
+            </label>
             <Popover open={startOpen} onOpenChange={setStartOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={triggerClassName(startDate)}>
+                <Button
+                  variant="outline"
+                  className={triggerClassName(startDate)}
+                >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "dd/MM/yyyy") : <span>Pick start date</span>}
+                  {startDate ? (
+                    format(startDate, "dd/MM/yyyy")
+                  ) : (
+                    <span>Pick start date</span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -83,12 +99,18 @@ const BMSHelpdeskReport: React.FC = () => {
             </Popover>
           </div>
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              End Date
+            </label>
             <Popover open={endOpen} onOpenChange={setEndOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className={triggerClassName(endDate)}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "dd/MM/yyyy") : <span>Pick end date</span>}
+                  {endDate ? (
+                    format(endDate, "dd/MM/yyyy")
+                  ) : (
+                    <span>Pick end date</span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -107,7 +129,10 @@ const BMSHelpdeskReport: React.FC = () => {
             </Popover>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleApply} className="bg-[#C72030] hover:bg-[#A01828] !text-white">
+            <Button
+              onClick={handleApply}
+              className="bg-[#C72030] hover:bg-[#A01828] !text-white"
+            >
               Apply
             </Button>
             <Button
