@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Award, Package, Calendar, Tag, FileText } from 'lucide-react'
+import { ArrowLeft, User, Award, Package, Tag, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import axios from 'axios'
@@ -244,12 +244,16 @@ const ClaimsDetails = () => {
             {/* Main Content */}
             <div className="space-y-6">
                 {/* User Information */}
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-                    <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                        <User className="w-5 h-5 text-[#C72030]" />
-                        User Information
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+                    <div className="px-6 pt-[22px]">
+                        <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+                            <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                                <User size={14} color="#1A1A18" />
+                            </span>
+                            User Information
+                        </h2>
+                    </div>
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                         <div className="flex items-start">
                             <span className="text-gray-500 min-w-[140px]">Full Name</span>
                             <span className="text-gray-500 mx-2">:</span>
@@ -306,12 +310,16 @@ const ClaimsDetails = () => {
                 </div>
 
                 {/* Contest Information */}
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-                    <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                        <Award className="w-5 h-5 text-[#C72030]" />
-                        Contest Information
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+                    <div className="px-6 pt-[22px]">
+                        <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+                            <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                                <Award size={14} color="#1A1A18" />
+                            </span>
+                            Contest Information
+                        </h2>
+                    </div>
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                         <div className="flex items-start">
                             <span className="text-gray-500 min-w-[140px]">Contest Name</span>
                             <span className="text-gray-500 mx-2">:</span>
@@ -353,12 +361,16 @@ const ClaimsDetails = () => {
                 </div>
 
                 {/* Prize Information */}
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-                    <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                        <Tag className="w-5 h-5 text-[#C72030]" />
-                        Prize Information
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+                    <div className="px-6 pt-[22px]">
+                        <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+                            <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                                <Tag size={14} color="#1A1A18" />
+                            </span>
+                            Prize Information
+                        </h2>
+                    </div>
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                         <div className="flex items-start">
                             <span className="text-gray-500 min-w-[140px]">Prize Title</span>
                             <span className="text-gray-500 mx-2">:</span>
@@ -408,12 +420,16 @@ const ClaimsDetails = () => {
 
                 {/* Product Information */}
                 {claim.prize.product && (
-                    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-                        <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                            <Package className="w-5 h-5 text-[#C72030]" />
-                            Product Information
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+                        <div className="px-6 pt-[22px]">
+                            <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+                                <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                                    <Package size={14} color="#1A1A18" />
+                                </span>
+                                Product Information
+                            </h2>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                             <div className="flex items-start">
                                 <span className="text-gray-500 min-w-[140px]">Product Name</span>
                                 <span className="text-gray-500 mx-2">:</span>
@@ -475,12 +491,16 @@ const ClaimsDetails = () => {
                 )}
 
                 {/* Claim Details */}
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-                    <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                        <FileText className="w-5 h-5 text-[#C72030]" />
-                        Claim Details
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+                    <div className="px-6 pt-[22px]">
+                        <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+                            <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#F5F4F0' }}>
+                                <FileText size={14} color="#1A1A18" />
+                            </span>
+                            Claim Details
+                        </h2>
+                    </div>
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                         <div className="flex items-start">
                             <span className="text-gray-500 min-w-[140px]">Claim ID</span>
                             <span className="text-gray-500 mx-2">:</span>

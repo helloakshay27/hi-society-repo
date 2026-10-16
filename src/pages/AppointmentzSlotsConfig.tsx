@@ -797,19 +797,19 @@ const AppointmentzSlotsConfig = () => {
 
           <DialogFooter className="p-4 flex flex-row justify-end gap-2 bg-white rounded-b-lg">
             <Button
+              variant="outline"
+              onClick={() => setIsAddModalOpen(false)}
+              className="border-[#D5DbDB] text-gray-700 hover:bg-white text-xs h-9 px-4"
+            >
+              Cancel
+            </Button>
+            <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
               className="bg-[#C72030] hover:bg-[#a81a28] text-white text-xs h-9 px-5 shadow-xs"
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
               <span>{isEditMode ? "Update" : "Submit"}</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setIsAddModalOpen(false)}
-              className="border-[#D5DbDB] text-gray-700 hover:bg-white text-xs h-9 px-4"
-            >
-              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

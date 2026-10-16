@@ -568,17 +568,27 @@ variant="ghost"
           sx={{
             p: 2,
             justifyContent: "flex-end",
+            gap: "12px",
             backgroundColor: "#fff",
           }}
         >
-          <Button
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(false)}
+            disabled={isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60 cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="min-w-[100px] bg-[#C72030] text-white hover:bg-[#C72030]/90"
+            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60 cursor-pointer"
           >
             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
             {isSubmitting ? "Submitting..." : "Submit"}
-          </Button>
+          </button>
         </DialogActions>
       </Dialog>
     </div>

@@ -578,8 +578,7 @@ export const AppointmentzVirtualRequests: React.FC = () => {
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl">
           <DialogHeader className="bg-white px-6 py-4">
-            <DialogTitle className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
-              <Video className="w-5 h-5 text-[#DA7756]" />
+            <DialogTitle className="text-lg font-bold text-[#1A1A1A]">
               Details
             </DialogTitle>
           </DialogHeader>
@@ -673,19 +672,19 @@ export const AppointmentzVirtualRequests: React.FC = () => {
 
           <DialogFooter className="bg-white px-6 py-3 flex gap-2 sm:justify-end">
             <Button
+              variant="outline"
+              onClick={() => setIsAddModalOpen(false)}
+              className="border-[#D5DbDB] hover:bg-[#DBC2A9] text-[#1A1A1A]"
+            >
+              Cancel
+            </Button>
+            <Button
               variant="ghost"
               className="btn-primary"
               onClick={handleCreateVirtualRequest}
               disabled={isSubmittingAdd}
             >
               {isSubmittingAdd ? "Submitting..." : "Submit"}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setIsAddModalOpen(false)}
-              className="border-[#D5DbDB] hover:bg-[#DBC2A9] text-[#1A1A1A]"
-            >
-              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -694,9 +693,8 @@ export const AppointmentzVirtualRequests: React.FC = () => {
       {/* Filter Modal Popup */}
       <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
         <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl">
-          <DialogHeader className="bg-[#f6f4ee] px-6 py-4 border-b border-[#D5DbDB]">
-            <DialogTitle className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
-              <Filter className="w-5 h-5 text-[#DA7756]" />
+          <DialogHeader className="px-6 py-4 border-b border-[#D5DbDB]">
+            <DialogTitle className="text-lg font-bold text-[#1A1A1A]">
               Filter Virtual Requests
             </DialogTitle>
           </DialogHeader>
@@ -777,7 +775,7 @@ export const AppointmentzVirtualRequests: React.FC = () => {
             </div>
           </div>
 
-          <DialogFooter className="bg-[#f6f4ee] px-6 py-3 border-t border-[#D5DbDB] flex gap-2 sm:justify-end">
+          <DialogFooter className="px-6 py-3 border-t border-[#D5DbDB] flex gap-2 sm:justify-end">
             <Button
               variant="outline"
               onClick={handleResetFilter}

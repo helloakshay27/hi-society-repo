@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Edit, Plus, Pencil, Briefcase, Truck, X } from "lucide-react";
+import { Edit, Briefcase, Truck, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -692,12 +692,6 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
         <DialogContent className="sm:max-w-[600px] bg-white p-0 gap-0 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
             <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center text-left">
-              <span
-                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-                style={{ backgroundColor: "#F5F4F0" }}
-              >
-                <Plus size={14} color="#1A1A18" />
-              </span>
               {activeTab === "society-staff"
                 ? "Create Staff Category"
                 : "Create Delivery Service Provider"}
@@ -870,12 +864,6 @@ const SmartSecureSetupSupportStaff: React.FC = () => {
         <DialogContent className="sm:max-w-[600px] bg-white p-0 gap-0 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
             <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center text-left">
-              <span
-                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-                style={{ backgroundColor: "#F5F4F0" }}
-              >
-                <Pencil size={14} color="#1A1A18" />
-              </span>
               {activeTab === "society-staff"
                 ? "Edit Staff Category"
                 : "Edit Delivery Service Provider"}

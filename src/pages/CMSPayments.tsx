@@ -720,7 +720,15 @@ const CMSPayments = () => {
             </FormControl>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: "flex-end", p: "24px" }}>
+        <DialogActions sx={{ justifyContent: "flex-end", gap: "12px", p: "24px" }}>
+          <button
+            type="button"
+            onClick={() => setIsEditDialogOpen(false)}
+            disabled={isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
           <Button
             onClick={handleEditSubmit}
             disabled={isSubmitting}

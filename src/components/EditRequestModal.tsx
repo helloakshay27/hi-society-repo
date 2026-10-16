@@ -13,7 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Loader2, X } from "lucide-react";
 
 interface EditRequestModalProps {
@@ -56,7 +55,7 @@ export const EditRequestModal: React.FC<EditRequestModalProps> = ({
       onOpenChange={(open) => !open && !isSubmitting && onClose()}
     >
       <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none shadow-2xl">
-        <DialogHeader className="bg-[#f6f4ee] px-4 py-2.5 flex flex-row items-center justify-between border-b border-[#D5DbDB]">
+        <DialogHeader className="px-4 py-2.5 flex flex-row items-center justify-between border-b border-[#D5DbDB]">
           <div className="flex-1 text-center">
             <DialogTitle className="text-[#1a1a1a] font-bold text-lg inline-block">
               Edit Request
@@ -107,15 +106,24 @@ export const EditRequestModal: React.FC<EditRequestModalProps> = ({
           </div>
         </div>
 
-        <div className="bg-white px-6 py-4 flex justify-center border-t border-[#D5DbDB]">
-          <Button
+        <div className="bg-white px-6 py-4 flex justify-end gap-3 border-t border-[#D5DbDB]">
+          <button
+            type="button"
+            onClick={() => !isSubmitting && onClose()}
+            disabled={isSubmitting}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="bg-[#00A65A] hover:bg-[#008D4C] text-white px-10 h-10 font-semibold rounded-md transition-all active:scale-95"
+            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
           >
             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
             {isSubmitting ? "Submitting..." : "Submit"}
-          </Button>
+          </button>
         </div>
       </DialogContent>
     </Dialog>
