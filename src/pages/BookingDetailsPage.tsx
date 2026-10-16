@@ -79,6 +79,15 @@ const BookingDetailsPage = () => {
     reason: "",
   });
 
+  // Statuses an admin can set on a request booking. The booking's current
+  // status is prepended when it isn't one of them (e.g. Cancelled) so the
+  // select can display it instead of rendering blank.
+  const EDITABLE_STATUSES = ["Pending", "Confirmed", "Rejected"];
+  const matchStatusOption = (status?: string) =>
+    EDITABLE_STATUSES.find((s) => s.toLowerCase() === (status || "").toLowerCase()) ||
+    status ||
+    "";
+
   useEffect(() => {
     if (bookings) {
       setCaptureFormData((prev) => ({
@@ -109,7 +118,7 @@ const BookingDetailsPage = () => {
       const response = await dispatch(getLogs({ baseUrl, token, id })).unwrap();
       setLogs(
         response.logs.map((log, index) => ({
-          id: index,
+          id: String(index),
           description: log.text,
           timestamp: log.date + " " + log.time,
         }))
@@ -425,7 +434,7 @@ const BookingDetailsPage = () => {
                     variant="outline"
                     onClick={() => {
                       setEditStatusFormData({
-                        status: bookings?.current_status || "",
+                        status: matchStatusOption(bookings?.current_status),
                         reason: "",
                       });
                       setIsEditStatusDialogOpen(true);
@@ -934,6 +943,12 @@ const BookingDetailsPage = () => {
     );
   }
 
+  const currentStatusOption = matchStatusOption(bookings?.current_status);
+  const editStatusOptions =
+    currentStatusOption && !EDITABLE_STATUSES.includes(currentStatusOption)
+      ? [currentStatusOption, ...EDITABLE_STATUSES]
+      : EDITABLE_STATUSES;
+
   return (
     <div className="p-[30px] min-h-screen bg-transparent">
       <div className="flex items-center gap-2 text-sm text-gray-600 mb-2 cursor-pointer">
@@ -1354,8 +1369,11 @@ const BookingDetailsPage = () => {
                   <MenuItem value="" disabled>
                     Select Status
                   </MenuItem>
-                  <MenuItem value="Confirmed">Confirmed</MenuItem>
-                  <MenuItem value="Rejected">Rejected</MenuItem>
+                  {editStatusOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
                 </MuiSelect>
               </FormControl>
             </div>
