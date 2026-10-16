@@ -62,12 +62,14 @@ export const IncidentPieCard: React.FC<IncidentPieCardProps> = ({ metric, dateRa
               k.total_incidents - k.open - k.closed - k.under_investigation,
               0
             );
-            setSegments([
-              { name: 'Open', value: k.open, color: getPieChartColor(0) },
-              { name: 'Closed', value: k.closed, color: getPieChartColor(1) },
-              { name: 'Under Investigation', value: k.under_investigation, color: getPieChartColor(3) },
-              { name: 'Other', value: other, color: getPieChartColor(4) },
-            ]);
+            setSegments(
+              [
+                { name: 'Open', value: k.open, color: getPieChartColor(0) },
+                { name: 'Closed', value: k.closed, color: getPieChartColor(1) },
+                { name: 'Under Investigation', value: k.under_investigation, color: getPieChartColor(3) },
+                { name: 'Other', value: other, color: getPieChartColor(4) },
+              ].filter((segment) => segment.value > 0)
+            );
           });
 
     request

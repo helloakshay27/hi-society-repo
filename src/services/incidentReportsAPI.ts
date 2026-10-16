@@ -124,6 +124,11 @@ const normalizeKpis = (raw: Record<string, unknown>): IncidentKpis => {
     ])
   );
   const totalRaw = pick({ ...r, ...status }, ['total_incidents', 'total', 'totalIncidents', 'count']);
+  const rateRaw = pick(r, ['incident_rate', 'incidentRate', 'incident_per_sqft', 'incidentPerSqft', 'rate']);
+  const rate =
+    rateRaw && typeof rateRaw === 'object'
+      ? toNumber((rateRaw as Record<string, unknown>).value)
+      : toNumber(rateRaw);
 
   return {
     total_incidents: totalRaw != null ? toNumber(totalRaw) : open + closed + underInvestigation,
@@ -133,9 +138,7 @@ const normalizeKpis = (raw: Record<string, unknown>): IncidentKpis => {
     zero_incident_days: toNumber(
       pick(r, ['zero_incident_days', 'zeroIncidentDays', 'zero_incident_day', 'zero_days'])
     ),
-    incident_rate: toNumber(
-      pick(r, ['incident_rate', 'incidentRate', 'incident_per_sqft', 'incidentPerSqft', 'rate'])
-    ),
+    incident_rate: rate,
     ltir: toNumber(pick(r, ['ltir', 'LTIR', 'lost_time_injury_rate'])),
   };
 };

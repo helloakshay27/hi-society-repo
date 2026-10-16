@@ -18,15 +18,18 @@ import { API_CONFIG } from '@/config/apiConfig';
  * Two things make this module deliberately separate from the existing
  * `src/services/assetAnalyticsAPI.ts` (which serves the legacy `/maintenance/asset`
  * page and must keep using the tenant's own base URL):
- *   1. the base URL below is HARDCODED — per requirement, only the dashboard's asset
- *      section is pinned to this host; every other dashboard tab still uses the
- *      tenant base URL via `apiClient`.
+ *   1. In dev the call goes through the Vite proxy `/gophygital-api`. A direct
+ *      browser call to lockated-api.gophygital.work gets HTTP 200 with
+ *      `Access-Control-Allow-Origin` set twice, which Chrome reports as a CORS
+ *      error and drops, so the cards render as zeros. The proxy is same-origin.
  *   2. `site_id` is resolved from the signed-in user's account payload, the same way
  *      the Checklist cards do it (see `checklistDashboardAnalyticsAPI`), rather than
  *      from `localStorage.selectedSiteId` alone. The shared `reportScopeParams` helper
  *      is society-scoped only, so it can't be used here.
  */
-const ASSET_ANALYTICS_BASE_URL = 'https://lockated-api.gophygital.work';
+const ASSET_ANALYTICS_BASE_URL = import.meta.env.DEV
+  ? '/gophygital-api'
+  : 'https://lockated-api.gophygital.work';
 
 const STATISTICS_PATH = '/pms/assets/assets_statistics.json';
 
@@ -134,16 +137,24 @@ const getAuthToken = (): string | null => {
   }
 };
 
-/** `?site_id=…&from_date=…&to_date=…` plus whichever metric flags the caller needs. */
+/**
+ * `site_id` plus metric flags.
+ * Stock figures (total, in use, status, groups, …) are the current register.
+ * Sending the dashboard's short date window makes the API count only assets
+ * touched in that window, which comes back as 0 even when the site has assets.
+ * PPM is the exception: it is activity in the selected range, so it keeps the dates.
+ */
 const buildUrl = (
-  { fromDate, toDate }: AssetAnalyticsDateRange,
+  range: AssetAnalyticsDateRange | null,
   flags: Record<string, string | number | boolean>
 ): string => {
   const params = new URLSearchParams();
   const siteId = getAssetSiteId();
   if (siteId) params.set('site_id', siteId);
-  params.set('from_date', formatDateForAPI(fromDate));
-  params.set('to_date', formatDateForAPI(toDate));
+  if (range) {
+    params.set('from_date', formatDateForAPI(range.fromDate));
+    params.set('to_date', formatDateForAPI(range.toDate));
+  }
   for (const [key, value] of Object.entries(flags)) {
     if (value !== undefined && value !== null && value !== '') params.set(key, String(value));
   }
@@ -156,7 +167,6 @@ const getJson = async (url: string): Promise<Record<string, unknown>> => {
     method: 'GET',
     headers: {
       Accept: 'application/json',
-      'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
@@ -234,17 +244,20 @@ const normalizeNamedCounts = (
 export const assetDashboardAnalyticsAPI = {
   /** KPI numbers behind the Total / In Use / Breakdown / Critical / PPM / AMC cards. */
   async getStatistics(range: AssetAnalyticsDateRange): Promise<AssetStatisticsSummary> {
-    const data = await getJson(
-      buildUrl(range, {
-        total_assets: true,
-        assets_in_use: true,
-        assets_in_breakdown: true,
-        critical_assets_breakdown: true,
-        ppm_overdue_assets: true,
-        amc_assets: true,
-      })
-    );
-    const s = statisticsOf(data) as AssetStatisticsPayload;
+    const [stockRaw, ppmRaw] = await Promise.all([
+      getJson(
+        buildUrl(null, {
+          total_assets: true,
+          assets_in_use: true,
+          assets_in_breakdown: true,
+          critical_assets_breakdown: true,
+          amc_assets: true,
+        })
+      ),
+      getJson(buildUrl(range, { ppm_overdue_assets: true })),
+    ]);
+    const s = statisticsOf(stockRaw) as AssetStatisticsPayload;
+    const ppm = statisticsOf(ppmRaw) as AssetStatisticsPayload;
 
     return {
       total_assets: toNumber(
@@ -256,7 +269,7 @@ export const assetDashboardAnalyticsAPI = {
         s.critical_assets_breakdown?.critical_assets_breakdown_total
       ),
       ppm_conduct_assets: toNumber(
-        s.ppm_overdue_assets?.ppm_conduct_assets_count ?? s.ppm_conduct_assets_count?.total
+        ppm.ppm_overdue_assets?.ppm_conduct_assets_count ?? ppm.ppm_conduct_assets_count?.total
       ),
       assets_under_amc: toNumber(s.amc_assets?.assets_under_amc),
       assets_missing_amc: toNumber(s.amc_assets?.assets_missing_amc),
@@ -264,8 +277,8 @@ export const assetDashboardAnalyticsAPI = {
   },
 
   /** `assets_status=true` — In Use / Breakdown / In Store / In Disposed donut. */
-  async getStatus(range: AssetAnalyticsDateRange): Promise<AssetNamedCountsResponse> {
-    const data = await getJson(buildUrl(range, { assets_status: true }));
+  async getStatus(_range: AssetAnalyticsDateRange): Promise<AssetNamedCountsResponse> {
+    const data = await getJson(buildUrl(null, { assets_status: true }));
     const stats = statisticsOf(data);
     const status = (stats.status ?? stats) as Record<string, unknown>;
 
@@ -280,8 +293,8 @@ export const assetDashboardAnalyticsAPI = {
   },
 
   /** `assets_distribution=true` — IT vs Non-IT donut. */
-  async getDistribution(range: AssetAnalyticsDateRange): Promise<AssetNamedCountsResponse> {
-    const data = await getJson(buildUrl(range, { assets_distribution: true }));
+  async getDistribution(_range: AssetAnalyticsDateRange): Promise<AssetNamedCountsResponse> {
+    const data = await getJson(buildUrl(null, { assets_distribution: true }));
     const stats = statisticsOf(data);
     const distribution = (stats.assets_distribution ?? {}) as Record<string, unknown>;
 
@@ -294,8 +307,8 @@ export const assetDashboardAnalyticsAPI = {
   },
 
   /** `asset_categorywise=true` — category split donut. */
-  async getCategoryWise(range: AssetAnalyticsDateRange): Promise<AssetNamedCountsResponse> {
-    const data = await getJson(buildUrl(range, { asset_categorywise: true }));
+  async getCategoryWise(_range: AssetAnalyticsDateRange): Promise<AssetNamedCountsResponse> {
+    const data = await getJson(buildUrl(null, { asset_categorywise: true }));
     const stats = statisticsOf(data);
     const source = stats.asset_categorywise ?? data.asset_type_category_counts ?? stats.categories ?? [];
 
@@ -310,8 +323,8 @@ export const assetDashboardAnalyticsAPI = {
   },
 
   /** `assets_group_count_by_name=true` — group-wise bar chart. */
-  async getGroupWise(range: AssetAnalyticsDateRange): Promise<AssetNamedCountsResponse> {
-    const data = await getJson(buildUrl(range, { assets_group_count_by_name: true }));
+  async getGroupWise(_range: AssetAnalyticsDateRange): Promise<AssetNamedCountsResponse> {
+    const data = await getJson(buildUrl(null, { assets_group_count_by_name: true }));
     const stats = statisticsOf(data);
     const source = stats.assets_group_count_by_name ?? data.group_wise_assets ?? [];
 
@@ -342,7 +355,8 @@ export const assetDashboardAnalyticsAPI = {
       distribution: { assets_distribution: true },
     };
 
-    const url = buildUrl(range, { ...EXPORT_FLAGS[exportType], export: exportType });
+    const dated = exportType === 'ppm_overdue';
+    const url = buildUrl(dated ? range : null, { ...EXPORT_FLAGS[exportType], export: exportType });
     const token = getAuthToken();
 
     const response = await fetch(url, {

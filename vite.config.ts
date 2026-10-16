@@ -30,6 +30,15 @@ export default defineConfig(({ mode }) => ({
         secure: false,
         rewrite: (path) => path.replace(/^\/posthog-api/, ''),
       },
+      // Asset statistics live on the FM host. That host answers 200 but sends
+      // Access-Control-Allow-Origin twice, which the browser rejects as a CORS
+      // error. Proxying keeps the call same-origin so the body can be read.
+      '/gophygital-api': {
+        target: 'https://lockated-api.gophygital.work',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/gophygital-api/, ''),
+      },
     }
   },
   optimizeDeps: {

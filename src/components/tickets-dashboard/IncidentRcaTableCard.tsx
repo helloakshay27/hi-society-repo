@@ -10,7 +10,34 @@ interface IncidentRcaTableCardProps {
   className?: string;
 }
 
-const PILL_BASE = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-brand-body-5 font-semibold';
+const PILL_BASE = 'inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-brand-body-5 font-semibold';
+
+/** Short fields stay on one line; narrative fields get a readable width and clamp. */
+const COLUMN_WIDTH: Record<string, { minWidth: string; clamp?: boolean }> = {
+  sr_no: { minWidth: '4.5rem' },
+  incident_id: { minWidth: '7rem' },
+  site_name: { minWidth: '10rem' },
+  site: { minWidth: '10rem' },
+  area: { minWidth: '9rem' },
+  occurrence_date: { minWidth: '9rem' },
+  date: { minWidth: '8rem' },
+  occurrence_time: { minWidth: '8rem' },
+  time: { minWidth: '7rem' },
+  category_name: { minWidth: '9rem' },
+  category: { minWidth: '9rem' },
+  loss: { minWidth: '6rem' },
+  rca_category_name: { minWidth: '11rem' },
+  current_status: { minWidth: '8rem' },
+  status: { minWidth: '8rem' },
+  assigned_to_user_name: { minWidth: '10rem' },
+  level_name: { minWidth: '7rem' },
+  level: { minWidth: '7rem' },
+  description: { minWidth: '18rem', clamp: true },
+  rca_text: { minWidth: '18rem', clamp: true },
+  rca: { minWidth: '18rem', clamp: true },
+  corrective_action: { minWidth: '18rem', clamp: true },
+  preventive_action: { minWidth: '18rem', clamp: true },
+};
 
 const levelPillClass = (value: string): string => {
   const v = value.toLowerCase();
@@ -77,19 +104,29 @@ export const IncidentRcaTableCard: React.FC<IncidentRcaTableCardProps> = ({ date
   const visibleRows = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return rows;
-    return rows.filter((row) => String(row[srKey] ?? '').toLowerCase().includes(term));
-  }, [rows, search, srKey]);
+    return rows.filter((row) =>
+      Object.values(row).some((value) => String(value ?? '').toLowerCase().includes(term))
+    );
+  }, [rows, search]);
 
   const renderCell = (row: IncidentRcaRow, key: string, label: string) => {
     const value = row[key];
     if (value == null || value === '') return '—';
+    const text = String(value);
     if (/level/i.test(label) || /level/i.test(key)) {
-      return <span className={levelPillClass(String(value))}>{value}</span>;
+      return <span className={levelPillClass(text)}>{text}</span>;
     }
     if (/status/i.test(label) || /status/i.test(key)) {
-      return <span className={statusPillClass(String(value))}>{value}</span>;
+      return <span className={statusPillClass(text)}>{text}</span>;
     }
-    return value;
+    if (COLUMN_WIDTH[key]?.clamp) {
+      return (
+        <span className="line-clamp-4 whitespace-normal" title={text}>
+          {text}
+        </span>
+      );
+    }
+    return <span className="whitespace-nowrap">{text}</span>;
   };
 
   return (
@@ -105,7 +142,7 @@ export const IncidentRcaTableCard: React.FC<IncidentRcaTableCardProps> = ({ date
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by Sr. No..."
+              placeholder="Search RCA..."
               className="h-8 w-44 rounded-md border border-brand-border bg-white pl-8 pr-2 text-brand-body-5 text-brand-text placeholder:text-brand-text-light focus:outline-none focus:ring-1 focus:ring-brand"
             />
           </div>
@@ -124,33 +161,48 @@ export const IncidentRcaTableCard: React.FC<IncidentRcaTableCardProps> = ({ date
         </div>
       ) : (
         <>
-          <div className="max-h-96 overflow-auto">
-            <table className="tickets-ageing-matrix-table w-full min-w-[900px] border-separate border-spacing-0 overflow-hidden rounded-2xl border border-[#d5dbdb] text-brand-body-5">
+          <div className="max-h-[28rem] overflow-auto">
+            <table
+              style={{ width: 'max-content', minWidth: '100%' }}
+              className="border-separate border-spacing-0 text-left text-brand-body-5"
+            >
               <thead>
                 <tr>
-                  {columns.map((col) => (
-                    <th
-                      key={col.key}
-                      className="sticky top-0 bg-brand px-3 py-2.5 text-left font-bold text-white"
-                    >
-                      {col.label}
-                    </th>
-                  ))}
+                  {columns.map((col) => {
+                    const width = COLUMN_WIDTH[col.key]?.minWidth ?? '8rem';
+                    return (
+                      <th
+                        key={col.key}
+                        style={{
+                          minWidth: width,
+                          width: COLUMN_WIDTH[col.key]?.clamp ? width : undefined,
+                        }}
+                        className="sticky top-0 whitespace-nowrap border-b border-[#c4b89d] bg-brand px-3 py-2.5 text-left font-bold text-white"
+                      >
+                        {col.label}
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
                 {visibleRows.map((row, index) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-[#f6f4ee]'}>
-                    {columns.map((col) => (
-                      <td
-                        key={col.key}
-                        className={`border-b border-[#d5dbdb] px-3 py-2.5 text-brand-text ${
-                          col.key === srKey ? 'font-semibold' : ''
-                        }`}
-                      >
-                        {renderCell(row, col.key, col.label)}
-                      </td>
-                    ))}
+                    {columns.map((col) => {
+                      const width = COLUMN_WIDTH[col.key]?.minWidth ?? '8rem';
+                      const clamp = COLUMN_WIDTH[col.key]?.clamp;
+                      return (
+                        <td
+                          key={col.key}
+                          style={{ minWidth: width, maxWidth: clamp ? width : undefined, width: clamp ? width : undefined }}
+                          className={`border-b border-[#d5dbdb] px-3 py-2.5 align-top text-brand-text ${
+                            col.key === srKey ? 'font-semibold' : ''
+                          }`}
+                        >
+                          {renderCell(row, col.key, col.label)}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
