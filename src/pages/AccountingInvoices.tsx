@@ -108,6 +108,16 @@ const columns: ColumnConfig[] = [
   { key: "mailSent", label: "Mail sent", sortable: true },
 ];
 
+// Theme status pills — theme.css restyles these legacy bg/border pairs into soft tinted pills.
+const invoiceStatusPillClass = (status: string): string => {
+  const s = status.toLowerCase();
+  if (s === "paid") return "bg-[#C7EDDA] border-[#C7EDDA]";
+  if (s.includes("part")) return "bg-[#DBE7FF] border-[#DBE7FF]";
+  if (s.includes("cancel") || s.includes("revers")) return "bg-[#F2C8C4] border-[#F2C8C4]";
+  if (s.includes("pend") || s.includes("unpaid") || s.includes("overdue")) return "bg-[#F2EBC9] border-[#F2EBC9]";
+  return "bg-[#D5DbDB] border-[#D5DbDB]";
+};
+
 const toRow = (bill: LockAccountBill): InvoiceRow => ({
   id: bill.id,
   billNumber: bill.bill_number,
@@ -512,11 +522,7 @@ const AccountingInvoices: React.FC = () => {
         return item.billCycle || "-";
       case "status":
         return (
-          <span className="flex items-center gap-1">
-            <span
-              className={`inline-block h-3 w-1 rounded ${item.status.toLowerCase() === "paid" ? "bg-green-500" : "bg-orange-400"
-                }`}
-            />
+          <span className={`inline-flex items-center border ${invoiceStatusPillClass(item.status)}`}>
             {item.status}
           </span>
         );

@@ -140,7 +140,7 @@ const AccountingCharges: React.FC = () => {
         return item.value ?? "";
       case "gst_applicable":
         return item.gst_applicable ? (
-          <span className="font-medium text-green-600">Yes</span>
+          <span className="font-medium text-red-600">Yes</span>
         ) : (
           <span className="font-medium text-red-600">No</span>
         );

@@ -10,7 +10,23 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Checkbox from "@mui/material/Checkbox";
 import ListItemText from "@mui/material/ListItemText";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormHelperText from "@mui/material/FormHelperText";
 import { Button } from "@/components/ui/button";
+import {
+  LateFeeRuleFields,
+  LateFeeToggle,
+} from "@/components/accounting/LateFeeRule";
+import {
+  BACKDATE_CONFIRM_MESSAGE,
+  LATE_FEE_CHARGE_CATEGORY_ID,
+  LateFeeState,
+  buildOverduePayload,
+  emptyLateFee,
+  needsBackdateConfirm,
+  validateLateFee,
+  withLateFeeField,
+} from "@/components/accounting/lateFeeRuleUtils";
 import { menuProps } from "@/components/ticket-management/fieldStyles";
 import { API_CONFIG } from "@/config/apiConfig";
 import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
@@ -128,6 +144,9 @@ const AccountingChargeCreation: React.FC = () => {
   const [flatTypeAmounts, setFlatTypeAmounts] = useState<Record<string, string>>({});
   const [ledgerOptions, setLedgerOptions] = useState<LedgerOption[]>([]);
   const [ledgerIds, setLedgerIds] = useState<number[]>([]);
+  const [gstApplicable, setGstApplicable] = useState(false);
+  const [lateFee, setLateFee] = useState(emptyLateFee);
+  const [showLateFeeErrors, setShowLateFeeErrors] = useState(false);
 
   // charge_type_options.json bundles charge_categories, flat_types, and
   // expense_ledgers into a single response — fetch once and derive whichever
@@ -191,22 +210,38 @@ const AccountingChargeCreation: React.FC = () => {
     setLedgerIds([]);
   };
 
+  const updateLateFee = <K extends keyof LateFeeState>(field: K, value: LateFeeState[K]) => {
+    setLateFee((prev) => withLateFeeField(prev, field, value));
+  };
+
+  const isLateFee = lateFee.enabled;
+  const visibleLateFeeErrors = showLateFeeErrors && isLateFee ? validateLateFee(lateFee) : {};
+
   const save = async (): Promise<boolean> => {
     if (!form.chargeName.trim()) {
       toast.error("Charge Name is required");
       return false;
     }
-    if (!form.chargeCategoryId) {
-      toast.error("Charge Type is required");
-      return false;
-    }
-    if (isAmountCategory && !form.value.trim()) {
-      toast.error("Value is required");
-      return false;
-    }
-    if (isExpenseBasedCategory && ledgerIds.length === 0) {
-      toast.error("Please select at least one Ledger");
-      return false;
+    if (isLateFee) {
+      const firstError = Object.values(validateLateFee(lateFee))[0];
+      if (firstError) {
+        setShowLateFeeErrors(true);
+        toast.error(`Late fee rule: ${firstError}`);
+        return false;
+      }
+    } else {
+      if (!form.chargeCategoryId) {
+        toast.error("Charge Type is required");
+        return false;
+      }
+      if (isAmountCategory && !form.value.trim()) {
+        toast.error("Value is required");
+        return false;
+      }
+      if (isExpenseBasedCategory && ledgerIds.length === 0) {
+        toast.error("Please select at least one Ledger");
+        return false;
+      }
     }
 
     setSubmitting(true);
@@ -221,22 +256,25 @@ const AccountingChargeCreation: React.FC = () => {
               amount: Number(amount),
             }))
         : [];
+      const chargeSetup: Record<string, unknown> = {
+        name: form.chargeName,
+        description: form.description,
+        value: isLateFee ? 0 : isAmountCategory && form.value !== "" ? Number(form.value) : null,
+        charge_category_id: isLateFee ? LATE_FEE_CHARGE_CATEGORY_ID : Number(form.chargeCategoryId),
+        igst_rate: Number(form.igstRate) || 0,
+        cgst_rate: Number(form.cgstRate) || 0,
+        sgst_rate: Number(form.sgstRate) || 0,
+        hsn_code: form.hsnCode,
+        gst_applicable: gstApplicable,
+        basis: form.basis,
+        uom: form.uom,
+        active: 1,
+      };
+      Object.assign(chargeSetup, buildOverduePayload(lateFee));
       const payload = {
-        charge_setup: {
-          name: form.chargeName,
-          description: form.description,
-          value: isAmountCategory && form.value !== "" ? Number(form.value) : null,
-          charge_category_id: Number(form.chargeCategoryId),
-          igst_rate: Number(form.igstRate) || 0,
-          cgst_rate: Number(form.cgstRate) || 0,
-          sgst_rate: Number(form.sgstRate) || 0,
-          basis: form.basis,
-          hsn_code: form.hsnCode,
-          uom: form.uom,
-          active: 1,
-        },
-        ...(isUnitTypeCategory ? { charge_setup_flat: chargeSetupFlat } : {}),
-        ...(isExpenseBasedCategory ? { ledger_ids: ledgerIds } : {}),
+        charge_setup: chargeSetup,
+        ...(!isLateFee && isUnitTypeCategory ? { charge_setup_flat: chargeSetupFlat } : {}),
+        ...(!isLateFee && isExpenseBasedCategory ? { ledger_ids: ledgerIds } : {}),
       };
       await axios.post(`${baseUrl}/account/charge_setups.json`, payload, {
         params: { ...(lockAccountId ? { lock_account_id: lockAccountId } : {}) },
@@ -266,6 +304,10 @@ const AccountingChargeCreation: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    // A recurring late fee back-charges older unpaid invoices — confirm before saving.
+    if (needsBackdateConfirm(lateFee) && form.chargeName.trim() && !window.confirm(BACKDATE_CONFIRM_MESSAGE)) {
+      return;
+    }
     const ok = await save();
     if (ok) navigate("/accounting/charges");
   };
@@ -316,9 +358,26 @@ const AccountingChargeCreation: React.FC = () => {
             </div>
           </div>
 
+          <div>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={gstApplicable}
+                  onChange={(e) => setGstApplicable(e.target.checked)}
+                  sx={{ "&.Mui-checked": { color: "#C72030" } }}
+                />
+              }
+              label={<span className="text-sm font-medium text-[#1A1A18]">GST Applicable</span>}
+            />
+            <p className="text-xs text-gray-500">
+              GST is added to this charge only when ticked. The rate and HSN fields unlock when it is on.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <TextField
               label="Igst Rate (%)"
+              disabled={!gstApplicable}
               type="number"
               placeholder="Enter Igst Rate"
               value={form.igstRate}
@@ -335,6 +394,7 @@ const AccountingChargeCreation: React.FC = () => {
             />
             <TextField
               label="Cgst Rate (%)"
+              disabled={!gstApplicable}
               type="number"
               placeholder="Enter Cgst Rate"
               value={form.cgstRate}
@@ -351,6 +411,7 @@ const AccountingChargeCreation: React.FC = () => {
             />
             <TextField
               label="Sgst Rate (%)"
+              disabled={!gstApplicable}
               type="number"
               placeholder="Enter Sgst Rate"
               value={form.sgstRate}
@@ -381,6 +442,7 @@ const AccountingChargeCreation: React.FC = () => {
             />
             <TextField
               label="HSN Code"
+              disabled={!gstApplicable}
               placeholder="Enter HSN Code"
               value={form.hsnCode}
               onChange={(e) => updateField("hsnCode", e.target.value)}
@@ -393,10 +455,15 @@ const AccountingChargeCreation: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-            <FormControl fullWidth required sx={{ "& .MuiInputBase-root": fieldStyles }}>
+            <FormControl
+              fullWidth
+              required={!isLateFee}
+              disabled={isLateFee}
+              sx={{ "& .MuiInputBase-root": fieldStyles }}
+            >
               <InputLabel shrink>Charge Type</InputLabel>
               <Select
-                value={form.chargeCategoryId}
+                value={isLateFee ? "" : form.chargeCategoryId}
                 onChange={(e) => handleChargeCategoryChange(e.target.value as string)}
                 label="Charge Type"
                 notched
@@ -410,9 +477,10 @@ const AccountingChargeCreation: React.FC = () => {
                   </MenuItem>
                 ))}
               </Select>
+              {isLateFee && <FormHelperText>Not used for late fee rules. Saved as Fixed with value 0.</FormHelperText>}
             </FormControl>
 
-            {isAmountCategory && (
+            {!isLateFee && isAmountCategory && (
               <TextField
                 label="Value"
                 required
@@ -432,7 +500,7 @@ const AccountingChargeCreation: React.FC = () => {
               />
             )}
 
-            {isExpenseBasedCategory && (
+            {!isLateFee && isExpenseBasedCategory && (
               <FormControl fullWidth required sx={{ "& .MuiInputBase-root": fieldStyles }}>
                 <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
                   Select Ledger
@@ -491,7 +559,15 @@ const AccountingChargeCreation: React.FC = () => {
             )}
           </div>
 
-          {isUnitTypeCategory && (
+          <LateFeeToggle
+            checked={lateFee.enabled}
+            onCheckedChange={(checked) => {
+              setLateFee((prev) => ({ ...prev, enabled: checked }));
+              setShowLateFeeErrors(false);
+            }}
+          />
+
+          {!isLateFee && isUnitTypeCategory && (
             <div className="overflow-x-auto">
               {flatTypeOptions.length === 0 ? (
                 <p className="text-sm text-gray-500">
@@ -542,6 +618,15 @@ const AccountingChargeCreation: React.FC = () => {
                 </table>
               )}
             </div>
+          )}
+
+          {isLateFee && (
+            <LateFeeRuleFields
+              lateFee={lateFee}
+              onChange={updateLateFee}
+              errors={visibleLateFeeErrors}
+              fieldStyles={fieldStyles}
+            />
           )}
         </SectionCard>
 
