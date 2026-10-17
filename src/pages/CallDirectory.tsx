@@ -597,7 +597,7 @@ variant="ghost"
           className="sm:max-w-[600px] max-h-[85vh] overflow-hidden"
           sx={{ padding: 0 }}
         >
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <h1 className="text-lg font-medium text-gray-900">
                 {editingId ? "Edit Quick Call" : "Add Quick Call"}

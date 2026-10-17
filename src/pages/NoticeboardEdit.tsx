@@ -528,7 +528,7 @@ const NoticeboardEdit = () => {
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
         {/* Section: Communication Information */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200 bg-white">
+          <div className="px-6 py-3 bg-white">
             <h2 className="text-sm font-semibold text-gray-900 flex items-center">
               <span className="w-7 h-7 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: "#F6F4EE" }}>
                 <FileText size={14} color="#2C2C2C" />
