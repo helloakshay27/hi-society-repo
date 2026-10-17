@@ -2549,6 +2549,7 @@ const PosthogRunwalCpDashboard = lazy(
 const PosthogGodrejDashboard = lazy(
   () => import("./pages/posthog-godrej-dashboard/PosthogGodrejDashboard")
 );
+const PosthogAccountingDashboard = lazy(() => import("./pages/posthog-accounting-dashboard/PosthogAccountingDashboard"));
 const PosthogKRahejaDashboard = lazy(
   () => import("./pages/posthog-kraheja-dashboard/PosthogKRahejaDashboard")
 );
@@ -3710,6 +3711,10 @@ function App() {
                       <Route
                         path="/posthog-godrej-dashboard"
                         element={<PosthogGodrejDashboard />}
+                      />
+                      <Route
+                        path="/accounting-dashboard"
+                        element={<PosthogAccountingDashboard />}
                       />
                       <Route
                         path="/posthog-kraheja-dashboard"

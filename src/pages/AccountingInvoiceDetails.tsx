@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { API_CONFIG } from "@/config/apiConfig";
-import { ArrowLeft, Download, Printer, FileText, Receipt, Wallet, X } from "lucide-react";
+import { ArrowLeft, Clock, Download, Printer, FileText, Receipt, Wallet, X } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
@@ -65,6 +65,106 @@ interface LockAccountBillDetail {
   payments?: Payment[];
   bill_actions?: BillActions;
 }
+
+type LateFeeStatus = "pending" | "part_payment" | "paid" | "reversed";
+
+interface LateFeeRow {
+  id: number | string;
+  chargeName: string;
+  period: string;
+  amount: number;
+  gst: number;
+  total: number;
+  paid: number;
+  due: number;
+  status: LateFeeStatus;
+  /** false for pending_charges — calculated by the API but not posted to the invoice yet (no id to waive). */
+  applied: boolean;
+}
+
+// Theme status pills — theme.css restyles these legacy bg/border pairs into soft tinted pills.
+const LATE_FEE_STATUS: Record<LateFeeStatus, { label: string; className: string }> = {
+  pending: { label: "Pending", className: "bg-[#F2EBC9] border-[#F2EBC9]" },
+  part_payment: { label: "Part Payment", className: "bg-[#DBE7FF] border-[#DBE7FF]" },
+  paid: { label: "Paid", className: "bg-[#C7EDDA] border-[#C7EDDA]" },
+  reversed: { label: "Reversed", className: "bg-[#D5DbDB] border-[#D5DbDB]" },
+};
+
+const toNumber = (...values: unknown[]): number => {
+  for (const v of values) {
+    if (v !== undefined && v !== null && v !== "" && Number.isFinite(Number(v))) return Number(v);
+  }
+  return 0;
+};
+
+// "Part Payment" / "part_payment" / "partially_paid" -> "part_payment"
+const normalizeLateFeeStatus = (value: unknown, due: number, paid: number): LateFeeStatus => {
+  const s = String(value ?? "").toLowerCase().replace(/[\s-]+/g, "_");
+  if (s.includes("revers") || s.includes("waive") || s.includes("cancel")) return "reversed";
+  if (s.includes("part")) return "part_payment";
+  if (s === "paid") return "paid";
+  if (s.includes("pend") || s.includes("unpaid") || s.includes("due")) return "pending";
+  // No usable status from the API — derive it from the amounts.
+  if (due <= 0 && paid > 0) return "paid";
+  if (paid > 0) return "part_payment";
+  return "pending";
+};
+
+const formatLateFeePeriod = (item: Record<string, unknown>): string => {
+  const label = item.period ?? item.period_label ?? item.bill_period;
+  if (label) return String(label);
+  const from = (item.period_start ?? item.period_from ?? item.from_date ?? item.start_date) as string | undefined;
+  const to = (item.period_end ?? item.period_to ?? item.to_date ?? item.end_date) as string | undefined;
+  if (from && to) return from === to ? formatDateDMY(from) : `${formatDateDMY(from)} – ${formatDateDMY(to)}`;
+  return from || to ? formatDateDMY(from || to) : "-";
+};
+
+const toLateFeeRow = (item: Record<string, unknown>, applied: boolean, idx: number): LateFeeRow => {
+  // Pending rows carry no amount (base_amount is null), so amount comes first.
+  const amount = toNumber(item.amount, item.overdue_amount, item.base_amount);
+  const gst = toNumber(item.tax_amount, item.gst_amount, item.gst);
+  const total = toNumber(item.total_amount, item.total, amount + gst);
+  const paid = toNumber(item.paid_amount, item.paid);
+  const due = toNumber(item.due_amount, item.balance_amount, item.due, total - paid);
+  return {
+    id: (item.id as number | string) ?? `pending-${item.charge_setup_id ?? ""}-${item.period_start ?? idx}`,
+    chargeName: String(item.name ?? item.charge_name ?? item.charge_setup_name ?? "Late Fee"),
+    period: formatLateFeePeriod(item),
+    amount,
+    gst,
+    total,
+    paid,
+    due,
+    status: normalizeLateFeeStatus(item.status, due, paid),
+    applied,
+  };
+};
+
+// GET /lock_account_bills/:id/overdue_charges.json →
+//   overdue_charges: late fees already posted to the invoice
+//   pending_charges: late fees calculated as of today but not posted yet
+//   total_outstanding: principal + posted late fees; skipped: [{ reason }]
+const normalizeLateFees = (
+  data: unknown
+): { rows: LateFeeRow[]; totalDue: number | null; skippedReasons: string[] } => {
+  const obj = (data ?? {}) as Record<string, unknown>;
+  const asList = (v: unknown) => (Array.isArray(v) ? (v as Record<string, unknown>[]) : []);
+  const rows = [
+    ...asList(obj.overdue_charges).map((item, idx) => toLateFeeRow(item, true, idx)),
+    ...asList(obj.pending_charges).map((item, idx) => toLateFeeRow(item, false, idx)),
+  ];
+  // total_outstanding only covers posted fees — add the pending ones so the line includes every late fee shown.
+  const pendingDue = rows.filter((r) => !r.applied).reduce((sum, r) => sum + r.due, 0);
+  const rawTotal = obj.total_outstanding != null ? toNumber(obj.total_outstanding) + pendingDue : obj.total_due;
+  const skippedReasons = (Array.isArray(obj.skipped) ? obj.skipped : [])
+    .map((s) => (typeof s === "string" ? s : (s as Record<string, unknown>)?.reason))
+    .filter((r): r is string => typeof r === "string" && r.trim() !== "");
+  return {
+    rows,
+    totalDue: rawTotal != null && Number.isFinite(Number(rawTotal)) ? Number(rawTotal) : null,
+    skippedReasons,
+  };
+};
 
 // "2026-09-18" -> "18/09/2026"
 const formatDateDMY = (value?: string | null): string => {
@@ -163,6 +263,65 @@ const AccountingInvoiceDetails: React.FC = () => {
     fetchBill();
   }, [fetchBill]);
 
+  const [lateFees, setLateFees] = useState<LateFeeRow[]>([]);
+  const [lateFeesTotalDue, setLateFeesTotalDue] = useState<number | null>(null);
+  const [lateFeesLoading, setLateFeesLoading] = useState(true);
+  const [lateFeeSkippedReasons, setLateFeeSkippedReasons] = useState<string[]>([]);
+  const [waivingId, setWaivingId] = useState<number | string | null>(null);
+
+  const fetchLateFees = useCallback(async () => {
+    setLateFeesLoading(true);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      const response = await axios.get(`${baseUrl}/lock_account_bills/${id}/overdue_charges.json`, {
+        params: { lock_account_id: lockAccountId },
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      const { rows, totalDue, skippedReasons } = normalizeLateFees(response.data);
+      setLateFees(rows);
+      setLateFeesTotalDue(totalDue);
+      setLateFeeSkippedReasons(skippedReasons);
+    } catch (error) {
+      console.error("Error fetching late fees:", error);
+      setLateFees([]);
+      setLateFeesTotalDue(null);
+      setLateFeeSkippedReasons([]);
+    } finally {
+      setLateFeesLoading(false);
+    }
+  }, [id, lockAccountId]);
+
+  useEffect(() => {
+    fetchLateFees();
+  }, [fetchLateFees]);
+
+  // ASSUMED endpoint — the late fee spec doesn't name the waive API yet.
+  const handleWaiveLateFee = async (row: LateFeeRow) => {
+    if (!window.confirm(`Waive ${row.chargeName} (${row.period}) of ₹${row.due.toFixed(2)}?`)) return;
+    setWaivingId(row.id);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+      await axios.post(
+        `${baseUrl}/lock_account_bills/${id}/overdue_charges/${row.id}/waive.json`,
+        {},
+        {
+          params: { lock_account_id: lockAccountId },
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
+      );
+      toast.success("Late fee waived");
+      fetchLateFees();
+      fetchBill();
+    } catch (error) {
+      console.error("Error waiving late fee:", error);
+      toast.error("Failed to waive late fee");
+    } finally {
+      setWaivingId(null);
+    }
+  };
+
   const charges = bill?.charges || bill?.lock_account_bill_charges || [];
   const payments = bill?.payments || [];
 
@@ -176,6 +335,9 @@ const AccountingInvoiceDetails: React.FC = () => {
   // Amount pre-filled/validated in the Receive Payment modal — prefer the
   // outstanding balance due over the full bill total when the API provides it.
   const payableAmount = hasBalanceDue ? balanceDue : totalAmount;
+  // Prefer the API's own total; otherwise invoice balance due + outstanding (non-reversed) late fees.
+  const lateFeesDue = lateFees.reduce((sum, row) => (row.status === "reversed" ? sum : sum + row.due), 0);
+  const totalDueInclLateFee = lateFeesTotalDue ?? payableAmount + lateFeesDue;
   const amountInWords = useMemo(
     () => `${numberToWords(totalAmount)} Rupees Only`,
     [totalAmount]
@@ -230,6 +392,9 @@ const AccountingInvoiceDetails: React.FC = () => {
           : prev
       );
       toast.success("Invoice published successfully");
+      // Publishing makes the invoice eligible for late fees — reload the bill and its late fees.
+      fetchBill();
+      fetchLateFees();
     } catch (error) {
       console.error("Error publishing invoice:", error);
       toast.error("Failed to publish invoice");
@@ -346,6 +511,7 @@ const AccountingInvoiceDetails: React.FC = () => {
       setTransactionNumber("");
       setPaymentNotes("");
       fetchBill();
+      fetchLateFees();
     } catch (error) {
       console.error("Error recording payment:", error);
       const responseData = axios.isAxiosError(error) ? error.response?.data : undefined;
@@ -584,6 +750,106 @@ const AccountingInvoiceDetails: React.FC = () => {
               {bill.note}
             </div>
           )}
+        </div>
+
+        {/* Late Fees */}
+        <div className="overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white">
+          <div className="px-6 pt-[22px]">
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded-full"
+                style={{ backgroundColor: "#F5F4F0" }}
+              >
+                <Clock size={14} color="#1A1A18" />
+              </div>
+              <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18]">Late Fees</h2>
+            </div>
+          </div>
+          <div className="overflow-x-auto p-5">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-xs text-gray-600">
+                  <th className="px-4 py-2 font-medium">Charge</th>
+                  <th className="px-4 py-2 font-medium">Period</th>
+                  <th className="px-4 py-2 text-right font-medium">Amount</th>
+                  <th className="px-4 py-2 text-right font-medium">GST</th>
+                  <th className="px-4 py-2 text-right font-medium">Total</th>
+                  <th className="px-4 py-2 text-right font-medium">Paid</th>
+                  <th className="px-4 py-2 text-right font-medium">Due</th>
+                  <th className="px-4 py-2 font-medium">Status</th>
+                  <th className="px-4 py-2 font-medium no-print">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lateFeesLoading ? (
+                  <tr className="border-t border-gray-200">
+                    <td colSpan={9} className="px-4 py-4 text-center text-gray-500">
+                      Loading late fees...
+                    </td>
+                  </tr>
+                ) : lateFees.length === 0 ? (
+                  <tr className="border-t border-gray-200">
+                    <td colSpan={9} className="px-4 py-4 text-center text-gray-500">
+                      No late fees on this invoice
+                    </td>
+                  </tr>
+                ) : (
+                  lateFees.map((row) => {
+                    const status = LATE_FEE_STATUS[row.status];
+                    const canWaive =
+                      row.applied &&
+                      row.status !== "paid" &&
+                      row.status !== "reversed" &&
+                      row.due > 0 &&
+                      shouldShow("Invoices", "update");
+                    return (
+                      <tr key={row.id} className="border-t border-gray-200">
+                        <td className="px-4 py-2">{row.chargeName}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{row.period}</td>
+                        <td className="px-4 py-2 text-right">{row.amount.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right">{row.gst.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right">{row.total.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right">{row.paid.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right font-medium">{row.due.toFixed(2)}</td>
+                        <td className="px-4 py-2">
+                          <span className={`inline-flex items-center whitespace-nowrap border ${status.className}`}>
+                            {status.label}
+                          </span>
+                          {!row.applied && (
+                            <span className="mt-1 block text-[11px] text-gray-400">not posted yet</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 no-print">
+                          {canWaive ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={waivingId === row.id}
+                              onClick={() => handleWaiveLateFee(row)}
+                              className="h-7 border-[#C72030] px-3 text-xs text-[#C72030] hover:bg-[#C72030]/10"
+                            >
+                              {waivingId === row.id ? "Waiving..." : "Waive"}
+                            </Button>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+            {!lateFeesLoading && lateFeeSkippedReasons.length > 0 && (
+              <p className="mt-3 rounded-md bg-[#F5F4F0] px-4 py-2 text-xs text-gray-600">
+                Late fee not applied: {lateFeeSkippedReasons.join("; ")}
+              </p>
+            )}
+            <div className="mt-3 flex justify-end border-t border-gray-200 px-4 pt-3 text-sm font-semibold">
+              <span className="mr-6">Total Due (incl. late fee)</span>
+              <span>{totalDueInclLateFee.toFixed(2)}</span>
+            </div>
+          </div>
         </div>
 
         {/* Payment Details */}

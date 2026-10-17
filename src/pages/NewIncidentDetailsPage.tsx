@@ -739,8 +739,6 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions,
-    Button as MuiButton,
     IconButton,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -1631,7 +1629,7 @@ export const NewIncidentDetailsPage = () => {
                 fullWidth
                 maxWidth="sm"
             >
-                <DialogTitle sx={{ color: '#C72030', fontWeight: 600 }}>
+                <DialogTitle sx={{ color: '#1A1A18', fontWeight: 600 }}>
                     Update Status
                 </DialogTitle>
 
@@ -1677,32 +1675,25 @@ export const NewIncidentDetailsPage = () => {
                     </div>
                 </DialogContent>
 
-                <DialogActions sx={{ px: 3, pb: 3 }}>
-                    <MuiButton
+                <div className="flex justify-end gap-3 px-3 pb-6">
+                    <button
+                        type="button"
                         onClick={() => setUpdateStatusOpen(false)}
                         disabled={submitting}
-                        variant="outlined"
-                        sx={{
-                            color: '#C72030',
-                            borderColor: '#C72030',
-                            '&:hover': { borderColor: '#C72030', backgroundColor: '#C7203010' },
-                        }}
+                        className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
                     >
                         Cancel
-                    </MuiButton>
+                    </button>
 
-                    <MuiButton
+                    <button
+                        type="button"
                         onClick={handleUpdateStatusSubmit}
                         disabled={submitting}
-                        variant="contained"
-                        sx={{
-                            backgroundColor: '#C72030',
-                            '&:hover': { backgroundColor: '#a91b28' },
-                        }}
+                        className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                     >
                         {submitting ? 'Submitting…' : 'Submit'}
-                    </MuiButton>
-                </DialogActions>
+                    </button>
+                </div>
             </Dialog>
         </div >
     );

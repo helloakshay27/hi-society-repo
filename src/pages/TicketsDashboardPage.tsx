@@ -18,14 +18,18 @@ import {
   AssetBarCard,
   AssetAmcCard,
   useAssetStatistics,
-  ChecklistStatusCard,
-  ChecklistTopTenCard,
+  ChecklistSummaryDonut,
+  ChecklistSummaryBars,
+  useChecklistSummary,
   DEFAULT_CHECKLIST_GRID_LAYOUT,
   IncidentPieCard,
   IncidentBarCard,
+  CauseWiseIncidentsCard,
+  ServicePartnerEvaluationCard,
   IncidentRcaTableCard,
   BodyInjuryChartCard,
   useIncidentOverview,
+  useLegacyIncidentMetrics,
   DEFAULT_INCIDENT_GRID_LAYOUT,
   ManageUsersPieCard,
   useManageUsersOverview,
@@ -45,7 +49,9 @@ import { manageUsersDashboardAPI } from '@/services/manageUsersDashboardAPI';
 const getDefaultDateRange = (): TicketsDashboardDateRange => {
   const endDate = new Date();
   const startDate = new Date();
-  startDate.setMonth(startDate.getMonth() - 1);
+  // A one-month window hides the site's incidents (the latest is months back)
+  // and makes the Incident tab look empty. A year still follows the date picker.
+  startDate.setFullYear(startDate.getFullYear() - 1);
   return { startDate, endDate };
 };
 
@@ -62,6 +68,8 @@ const TicketsDashboardPage: React.FC = () => {
   const visitorStaffKpi = useVisitorStaffKpi(dateRange, activeTab === 'visitor');
   const assetStatistics = useAssetStatistics(dateRange, activeTab === 'assets');
   const incidentOverview = useIncidentOverview(dateRange, activeTab === 'incident');
+  const legacyIncident = useLegacyIncidentMetrics(activeTab === 'incident');
+  const checklistSummary = useChecklistSummary(dateRange, activeTab === 'checklist');
   const manageUsersOverview = useManageUsersOverview(dateRange, activeTab === 'manage-users');
 
   const handleStartDateChange = (value: string) => {
@@ -544,27 +552,57 @@ const TicketsDashboardPage: React.FC = () => {
 
         {activeTab === 'checklist' && (
           <TicketsDashboardGrid
-            storageKey="checklist-dashboard-grid-layout-v3"
+            storageKey="checklist-dashboard-grid-layout-v4"
             defaultLayout={DEFAULT_CHECKLIST_GRID_LAYOUT}
           >
-            <div key="checklist-technical">
-              <ChecklistStatusCard variant="technical" dateRange={dateRange} />
+            <div key="kpi-checklist-closed">
+              <TicketsKpiTile
+                label="Closed"
+                value={checklistSummary.loading ? undefined : checklistSummary.summary?.closed}
+                tone="teal"
+              />
             </div>
-            <div key="checklist-non-technical">
-              <ChecklistStatusCard variant="non-technical" dateRange={dateRange} />
+            <div key="kpi-checklist-open">
+              <TicketsKpiTile
+                label="Open"
+                value={checklistSummary.loading ? undefined : checklistSummary.summary?.open}
+                tone="purple"
+              />
             </div>
-            <div key="checklist-top-ten">
-              <ChecklistTopTenCard dateRange={dateRange} />
+            <div key="kpi-checklist-wip">
+              <TicketsKpiTile
+                label="Work in progress"
+                value={checklistSummary.loading ? undefined : checklistSummary.summary?.workInProgress}
+                tone="peach"
+              />
             </div>
-            <div key="checklist-site-wise">
-              <ChecklistStatusCard variant="site-wise" dateRange={dateRange} />
+            <div key="kpi-checklist-overdue">
+              <TicketsKpiTile
+                label="Overdue"
+                value={checklistSummary.loading ? undefined : checklistSummary.summary?.overdue}
+                tone="blue"
+              />
+            </div>
+            <div key="checklist-status">
+              <ChecklistSummaryDonut
+                summary={checklistSummary.summary}
+                loading={checklistSummary.loading}
+                error={checklistSummary.error}
+              />
+            </div>
+            <div key="checklist-status-bars">
+              <ChecklistSummaryBars
+                summary={checklistSummary.summary}
+                loading={checklistSummary.loading}
+                error={checklistSummary.error}
+              />
             </div>
           </TicketsDashboardGrid>
         )}
 
         {activeTab === 'incident' && (
           <TicketsDashboardGrid
-            storageKey="incident-dashboard-grid-layout-v3"
+            storageKey="incident-dashboard-grid-layout-v4"
             defaultLayout={DEFAULT_INCIDENT_GRID_LAYOUT}
           >
             <div key="kpi-total-incidents">
@@ -604,8 +642,34 @@ const TicketsDashboardPage: React.FC = () => {
             <div key="kpi-ltir">
               <TicketsKpiTile
                 label="LTIR"
-                value={incidentOverview?.ltir != null ? incidentOverview.ltir.toFixed(2) : undefined}
+                value={
+                  legacyIncident.loading
+                    ? undefined
+                    : legacyIncident.ltir != null
+                      ? legacyIncident.ltir.toFixed(2)
+                      : undefined
+                }
                 tone="peach"
+              />
+            </div>
+            <div key="kpi-safe-man-hours">
+              <TicketsKpiTile
+                label="Safe Man Hours"
+                value={legacyIncident.loading ? undefined : (legacyIncident.safeManHours ?? undefined)}
+                tone="teal"
+              />
+            </div>
+            <div key="kpi-near-miss">
+              <TicketsKpiTile
+                label="Near Miss / Good Catch"
+                value={
+                  legacyIncident.loading
+                    ? undefined
+                    : legacyIncident.nearMiss != null
+                      ? legacyIncident.nearMiss.toFixed(2)
+                      : undefined
+                }
+                tone="purple"
               />
             </div>
 
@@ -617,6 +681,12 @@ const TicketsDashboardPage: React.FC = () => {
             </div>
             <div key="bar-level-wise">
               <IncidentBarCard dateRange={dateRange} />
+            </div>
+            <div key="bar-cause-wise">
+              <CauseWiseIncidentsCard dateRange={dateRange} />
+            </div>
+            <div key="bar-service-partner">
+              <ServicePartnerEvaluationCard dateRange={dateRange} />
             </div>
 
             <div key="rca-table">

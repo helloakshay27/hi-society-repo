@@ -30,7 +30,6 @@ import {
   Mail,
   Eye,
   X,
-  SlidersHorizontal,
   Loader2,
   Building2,
   CheckCircle2,
@@ -739,8 +738,7 @@ export const AppointmentzManageFlats: React.FC = () => {
       <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-[#D5DbDB] shadow-2xl bg-white">
           <DialogHeader className="bg-white px-6 py-4 flex flex-row items-center justify-between">
-            <DialogTitle className="text-base font-bold text-[#1A1A1A] flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-[#DA7756]" />
+            <DialogTitle className="text-base font-bold text-[#1A1A1A]">
               Filter Flats
             </DialogTitle>
           </DialogHeader>
@@ -842,17 +840,17 @@ export const AppointmentzManageFlats: React.FC = () => {
 
           <DialogFooter className="bg-white px-6 py-3 flex flex-row items-center justify-end gap-2">
             <Button
-              onClick={handleApplyFilter}
-              className="btn-primary text-xs font-semibold px-5 h-9 shadow-xs"
-            >
-              Apply Filter
-            </Button>
-            <Button
               variant="outline"
               onClick={handleResetFilter}
               className="border-[#DA7756] text-[#DA7756] hover:bg-[#fbeeed] text-xs font-semibold px-4 h-9"
             >
               Reset
+            </Button>
+            <Button
+              onClick={handleApplyFilter}
+              className="btn-primary text-xs font-semibold px-5 h-9 shadow-xs"
+            >
+              Apply Filter
             </Button>
           </DialogFooter>
         </DialogContent>

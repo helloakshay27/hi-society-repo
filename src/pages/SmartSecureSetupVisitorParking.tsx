@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Filter, X } from "lucide-react";
+import { Plus, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -142,12 +142,6 @@ const ParkingFilterDialog: React.FC<FilterDialogProps> = ({
       <DialogContent className="sm:max-w-2xl bg-white rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] p-0 gap-0 [&>button]:hidden">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4">
           <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
-            <span
-              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-              style={{ backgroundColor: "#F5F4F0" }}
-            >
-              <Filter size={14} color="#1A1A18" />
-            </span>
             Filter By
           </DialogTitle>
           <button
@@ -666,12 +660,6 @@ const SmartSecureSetupVisitorParking: React.FC = () => {
         <DialogContent className="sm:max-w-[500px] bg-white p-0 gap-0 rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)]">
           <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4 text-left">
             <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center text-left">
-              <span
-                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-                style={{ backgroundColor: "#F5F4F0" }}
-              >
-                <Plus size={14} color="#1A1A18" />
-              </span>
               Add Parking Slot
             </DialogTitle>
             <button

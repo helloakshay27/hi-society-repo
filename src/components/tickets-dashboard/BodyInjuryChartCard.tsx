@@ -154,6 +154,8 @@ export const BodyInjuryChartCard: React.FC<BodyInjuryChartCardProps> = ({
   className = '',
 }) => {
   const [percentages, setPercentages] = useState<Record<string, number>>({});
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageFailed, setImageFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -161,6 +163,7 @@ export const BodyInjuryChartCard: React.FC<BodyInjuryChartCardProps> = ({
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setImageFailed(false);
 
     incidentReportsAPI
       .getBodyInjuryChart({ fromDate: dateRange.startDate, toDate: dateRange.endDate })
@@ -168,12 +171,15 @@ export const BodyInjuryChartCard: React.FC<BodyInjuryChartCardProps> = ({
         if (cancelled) return;
         // Failures arrive as 200 + success:0 (missing filters, image build failed),
         // so surface the server's message rather than a generic empty state.
-        if (res.success !== 1 && Object.keys(res.percentages).length === 0) {
+        // A rendered chart URL is still shown when percentages are empty.
+        if (res.success !== 1 && Object.keys(res.percentages).length === 0 && !res.imageUrl) {
           setPercentages({});
+          setImageUrl(null);
           setError(res.message || 'Could not load the body injury chart.');
           return;
         }
         setPercentages(res.percentages);
+        setImageUrl(res.imageUrl);
       })
       .catch(() => {
         if (!cancelled) {
@@ -206,9 +212,23 @@ export const BodyInjuryChartCard: React.FC<BodyInjuryChartCardProps> = ({
       error={error}
       className={className}
     >
-      {!hasData ? (
-        <div className="flex h-full min-h-40 items-center justify-center text-brand-body-5 text-brand-text-light">
-          No injury data for the selected date range.
+      {!hasData && imageUrl && !imageFailed ? (
+        <img
+          src={imageUrl}
+          alt="Body injury chart"
+          className="mx-auto max-h-[640px] w-full object-contain"
+          onError={() => setImageFailed(true)}
+        />
+      ) : !hasData ? (
+        <div className="flex h-full min-h-40 flex-col items-center justify-center gap-3 py-4">
+          <img
+            src={humanBodyImg}
+            alt="Body injury map"
+            className="max-h-[360px] w-auto object-contain"
+          />
+          <p className="text-center text-brand-body-5 text-brand-text-light">
+            No body-part injuries recorded for this date range.
+          </p>
         </div>
       ) : (
         <div>

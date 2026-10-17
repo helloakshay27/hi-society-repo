@@ -6,6 +6,7 @@ import { ArrowLeft, Pencil, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_CONFIG } from "@/config/apiConfig";
 import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
+import { describeLateFee } from "@/components/accounting/lateFeeRuleUtils";
 
 interface ChargeSetupDetail {
   name: string;
@@ -20,8 +21,15 @@ interface ChargeSetupDetail {
   uom?: string;
   gst_applicable?: boolean;
   created_by?: string | number;
+  created_by_name?: string;
   created_at?: string;
   active?: number;
+  overdue_trigger?: string | null;
+  overdue_calculation_type?: string | null;
+  overdue_calculation_base?: string | null;
+  overdue_rate?: number | string | null;
+  overdue_frequency?: string | null;
+  overdue_grace_days?: number | null;
 }
 
 const formatDateTime = (value?: string) => {
@@ -67,6 +75,7 @@ const AccountingChargeDetails: React.FC = () => {
   const lockAccountId = localStorage.getItem("lock_account_id");
   const [detail, setDetail] = useState<ChargeSetupDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const lateFee = detail ? describeLateFee(detail as unknown as Record<string, unknown>) : null;
 
   useEffect(() => {
     if (!id) return;
@@ -123,11 +132,24 @@ const AccountingChargeDetails: React.FC = () => {
               <Row label="Cgst Rate (%)" value={detail.cgst_rate ?? "-"} />
               <Row label="Sgst Rate (%)" value={detail.sgst_rate ?? "-"} />
               <Row label="GST Applicable" value={detail.gst_applicable ? "Yes" : "No"} />
+              <Row label="Late Fee Rule" value={lateFee?.enabled ? "Yes" : "No"} />
               <Row label="Created By" value={detail.created_by_name} />
               <Row label="Created At" value={formatDateTime(detail.created_at)} />
               <Row label="Status" value={detail.active ? "Active" : "Inactive"} />
             </div>
           </SectionCard>
+
+          {lateFee?.enabled && (
+            <SectionCard title="Late Fee Rule">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <Row label="Late Fee Type" value={lateFee.type} />
+                <Row label={lateFee.rateLabel} value={lateFee.rate} />
+                {lateFee.calculateOn && <Row label="Calculate On" value={lateFee.calculateOn} />}
+                <Row label="Charge Frequency" value={lateFee.frequency} />
+                <Row label="Grace Period (days)" value={lateFee.graceDays} />
+              </div>
+            </SectionCard>
+          )}
 
           {/* <div className="flex justify-start gap-3">
             <Button

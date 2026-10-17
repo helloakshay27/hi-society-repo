@@ -1268,20 +1268,20 @@ const CampaignsOtherProjectConfig: React.FC = () => {
 
       <div className="mt-4 flex gap-3 justify-end">
         <Button
-          type="submit"
-          form="campaigns-other-project-config-form"
-          disabled={isLoading}
-          className="!bg-[#C72030] !text-white px-8 border-0 flex items-center gap-2"
-        >
-          {isLoading ? "Submitting..." : "Submit"}
-        </Button>
-        <Button
           type="button"
           variant="outline"
           disabled={isLoading}
           onClick={() => navigate("/campaigns/other-project")}
         >
           Cancel
+        </Button>
+        <Button
+          type="submit"
+          form="campaigns-other-project-config-form"
+          disabled={isLoading}
+          className="!bg-[#C72030] !text-white px-8 border-0 flex items-center gap-2"
+        >
+          {isLoading ? "Submitting..." : "Submit"}
         </Button>
       </div>
     </div>

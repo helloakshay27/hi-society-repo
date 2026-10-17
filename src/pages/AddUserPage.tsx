@@ -1,7 +1,21 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { countries } from "country-data";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { User as UserIcon, ArrowLeft, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile, Upload, Video, Check, ShieldCheck, ShieldAlert } from "lucide-react";
+import {
+  User as UserIcon,
+  ArrowLeft,
+  Info,
+  Plus,
+  X,
+  FileText,
+  FileSpreadsheet,
+  File as GenericFile,
+  Upload,
+  Video,
+  Check,
+  ShieldCheck,
+  ShieldAlert,
+} from "lucide-react";
 import {
   Box,
   Paper,
@@ -27,65 +41,65 @@ import { toast } from "sonner";
 
 // Styled Components
 const SectionCard = styled(Paper)(({ theme }) => ({
-  backgroundColor: 'white',
-  boxShadow: 'none',
-  border: '1px solid rgba(26,26,24,.09)',
-  borderRadius: '16px',
-  overflow: 'hidden',
-  marginBottom: '24px',
+  backgroundColor: "white",
+  boxShadow: "none",
+  border: "1px solid rgba(26,26,24,.09)",
+  borderRadius: "16px",
+  overflow: "hidden",
+  marginBottom: "24px",
 }));
 
 const SectionHeader = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px',
-  padding: '22px 24px 0',
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+  padding: "22px 24px 0",
 }));
 
 const fieldStyles = {
-  '& .MuiOutlinedInput-root': {
-    fontSize: '14px',
-    backgroundColor: '#fff',
-    '& fieldset': {
-      borderColor: '#ddd',
+  "& .MuiOutlinedInput-root": {
+    fontSize: "14px",
+    backgroundColor: "#fff",
+    "& fieldset": {
+      borderColor: "#ddd",
     },
-    '&:hover fieldset': {
-      borderColor: '#1A1A18',
+    "&:hover fieldset": {
+      borderColor: "#1A1A18",
     },
-    '&.Mui-focused fieldset': {
-      borderColor: '#1A1A18',
-    },
-  },
-  '& .MuiInputLabel-root': {
-    fontSize: '14px',
-    '&.Mui-focused': {
-      color: '#1A1A18',
+    "&.Mui-focused fieldset": {
+      borderColor: "#1A1A18",
     },
   },
-  '& .MuiFormLabel-asterisk': {
-    color: '#1A1A18',
+  "& .MuiInputLabel-root": {
+    fontSize: "14px",
+    "&.Mui-focused": {
+      color: "#1A1A18",
+    },
+  },
+  "& .MuiFormLabel-asterisk": {
+    color: "#1A1A18",
   },
 };
 
 const ProfileAvatar = styled(Avatar)(({ theme }) => ({
   width: 128,
   height: 128,
-  backgroundColor: '#F5F4F0',
-  fontSize: '48px',
-  color: '#1A1A18',
-  border: '1px solid rgba(26,26,24,.09)',
+  backgroundColor: "#F5F4F0",
+  fontSize: "48px",
+  color: "#1A1A18",
+  border: "1px solid rgba(26,26,24,.09)",
 }));
 
 const CameraButton = styled(IconButton)(({ theme }) => ({
-  position: 'absolute',
+  position: "absolute",
   bottom: 0,
   right: 0,
-  backgroundColor: '#1A1A18',
-  color: 'white',
-  width: '32px',
-  height: '32px',
-  '&:hover': {
-    backgroundColor: '#12100E',
+  backgroundColor: "#1A1A18",
+  color: "white",
+  width: "32px",
+  height: "32px",
+  "&:hover": {
+    backgroundColor: "#12100E",
   },
 }));
 
@@ -98,41 +112,67 @@ const PASSWORD_REQUIREMENTS: {
   label: string;
   test: (pwd: string) => boolean;
 }[] = [
-    { key: "length", label: "At least 8 characters", test: (p) => p.length >= 8 },
-    { key: "upper", label: "At least one uppercase letter (A-Z)", test: (p) => /[A-Z]/.test(p) },
-    { key: "lower", label: "At least one lowercase letter (a-z)", test: (p) => /[a-z]/.test(p) },
-    { key: "number", label: "At least one number (0-9)", test: (p) => /[0-9]/.test(p) },
-    {
-      key: "notCommon",
-      label: "Not a common or easily guessable password",
-      test: (p) => !COMMON_PASSWORDS.has(p.toLowerCase()),
-    },
-  ];
+  { key: "length", label: "At least 8 characters", test: (p) => p.length >= 8 },
+  {
+    key: "upper",
+    label: "At least one uppercase letter (A-Z)",
+    test: (p) => /[A-Z]/.test(p),
+  },
+  {
+    key: "lower",
+    label: "At least one lowercase letter (a-z)",
+    test: (p) => /[a-z]/.test(p),
+  },
+  {
+    key: "number",
+    label: "At least one number (0-9)",
+    test: (p) => /[0-9]/.test(p),
+  },
+  {
+    key: "notCommon",
+    label: "Not a common or easily guessable password",
+    test: (p) => !COMMON_PASSWORDS.has(p.toLowerCase()),
+  },
+];
 
 // A small set of the most common/dictionary passwords — best-effort check for
 // the "must not contain dictionary words" requirement (a full dictionary
 // lookup isn't practical client-side).
 const COMMON_PASSWORDS = new Set([
-  "password", "password1", "password123", "12345678", "123456789",
-  "welcome1", "admin1234", "iloveyou1", "1234567890",
-  "abc123456", "passw0rd", "welcome123",
+  "password",
+  "password1",
+  "password123",
+  "12345678",
+  "123456789",
+  "welcome1",
+  "admin1234",
+  "iloveyou1",
+  "1234567890",
+  "abc123456",
+  "passw0rd",
+  "welcome123",
 ]);
 
 const getCreateApiUrl = () => {
-  const baseUrl = localStorage.getItem('baseUrl') || '';
-  const token = localStorage.getItem('token') || '';
+  const baseUrl = localStorage.getItem("baseUrl") || "";
+  const token = localStorage.getItem("token") || "";
   return `https://${baseUrl}/crm/admin/user_societies.json?token=${token}`;
 };
 
 const getEditApiUrl = (id: string) => {
-  const baseUrl = localStorage.getItem('baseUrl') || '';
-  const token = localStorage.getItem('token') || '';
+  const baseUrl = localStorage.getItem("baseUrl") || "";
+  const token = localStorage.getItem("token") || "";
   return `https://${baseUrl}/crm/admin/user_societies/${id}.json?token=${token}`;
 };
 
-const mapFormDataToApiPayload = (formData: any, flatOptions: { id: number; flat_no: string }[]) => {
+const mapFormDataToApiPayload = (
+  formData: any,
+  flatOptions: { id: number; flat_no: string }[]
+) => {
   // Find the flat name from flatOptions using the flat ID
-  const selectedFlat = flatOptions.find(f => f.id.toString() === formData.flat.toString());
+  const selectedFlat = flatOptions.find(
+    (f) => f.id.toString() === formData.flat.toString()
+  );
   const flatName = selectedFlat ? selectedFlat.flat_no : formData.flat;
 
   const payload: any = {
@@ -158,7 +198,8 @@ const mapFormDataToApiPayload = (formData: any, flatOptions: { id: number; flat_
     landline_number: formData.landlineNumber,
     agreement_start_date: formData.agreementStartDate || "",
     agreement_expire_date: formData.agreementExpireDate || "",
-    approve: formData.status === "1" ? true : (formData.status === "0" ? false : null),
+    approve:
+      formData.status === "1" ? true : formData.status === "0" ? false : null,
     is_primary: formData.membershipType === "Primary" ? 1 : 0,
     birthday: formData.birthDate,
     anniversary: formData.anniversary,
@@ -213,10 +254,10 @@ const defaultFormData = {
   agreementStartDate: "",
   agreementExpireDate: "",
   agreementDocuments: [] as File[],
-  existingDocuments: [] as { id: number; document_url: string }[]
+  existingDocuments: [] as { id: number; document_url: string }[],
 };
 
-const todayStr = new Date().toISOString().split('T')[0];
+const todayStr = new Date().toISOString().split("T")[0];
 
 // Helper function to detect file type from URL
 const getFileType = (url: string): string => {
@@ -241,14 +282,22 @@ export const AddUserPage = () => {
   const { userId } = useParams<{ userId?: string }>();
   const location = useLocation();
   const isEdit = Boolean(userId);
-  const orgId = localStorage.getItem('org_id');
-  const isSupervisorOrg = orgId === '10';
+  const orgId = localStorage.getItem("org_id");
+  const isSupervisorOrg = orgId === "10";
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState(defaultFormData);
-  const [towerOptions, setTowerOptions] = useState<{ id: number; name: string }[]>([]);
-  const [flatOptions, setFlatOptions] = useState<{ id: number; flat_no: string }[]>([]);
-  const [categoryOptions, setCategoryOptions] = useState<{ id: number; name: string }[]>([]);
-  const [roleOptions, setRoleOptions] = useState<{ id: number; name: string }[]>([]);
+  const [towerOptions, setTowerOptions] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [flatOptions, setFlatOptions] = useState<
+    { id: number; flat_no: string }[]
+  >([]);
+  const [categoryOptions, setCategoryOptions] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [roleOptions, setRoleOptions] = useState<
+    { id: number; name: string }[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
@@ -269,26 +318,32 @@ export const AddUserPage = () => {
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
-  const [selectedCamera, setSelectedCamera] = useState<string | undefined>(undefined);
+  const [selectedCamera, setSelectedCamera] = useState<string | undefined>(
+    undefined
+  );
   const [isVideoReady, setIsVideoReady] = useState(false);
 
   // Get society_id from localStorage (set by header)
   const getSocietyId = () => {
-    return localStorage.getItem('selectedSocietyId') || '';
+    return localStorage.getItem("selectedSocietyId") || "";
   };
 
   // Fetch flats when tower changes
   const fetchFlats = async (blockId: number) => {
     try {
       const societyId = getSocietyId();
-      const token = localStorage.getItem('token') || '';
+      const token = localStorage.getItem("token") || "";
       if (!societyId || !token) {
         setFlatOptions([]);
         return;
       }
-      const url = getFullUrl(`/get_society_flats.json?token=${token}&society_id=${societyId}&society_block_id=${blockId}`);
+      const url = getFullUrl(
+        `/get_society_flats.json?token=${token}&society_id=${societyId}&society_block_id=${blockId}`
+      );
       const res = await axios.get(url);
-      setFlatOptions(Array.isArray(res.data.society_flats) ? res.data.society_flats : []);
+      setFlatOptions(
+        Array.isArray(res.data.society_flats) ? res.data.society_flats : []
+      );
     } catch (e) {
       setFlatOptions([]);
     }
@@ -296,8 +351,8 @@ export const AddUserPage = () => {
 
   const fetchCategories = async () => {
     try {
-      const baseUrl = localStorage.getItem('baseUrl') || '';
-      const token = localStorage.getItem('token') || '';
+      const baseUrl = localStorage.getItem("baseUrl") || "";
+      const token = localStorage.getItem("token") || "";
       if (!baseUrl || !token) return;
       const url = `https://${baseUrl}/crm/admin/user_categories.json?token=${token}`;
       const res = await axios.get(url);
@@ -310,12 +365,16 @@ export const AddUserPage = () => {
 
   const fetchRoles = async () => {
     try {
-      const baseUrl = localStorage.getItem('baseUrl') || '';
-      const token = localStorage.getItem('token') || '';
+      const baseUrl = localStorage.getItem("baseUrl") || "";
+      const token = localStorage.getItem("token") || "";
       if (!baseUrl || !token) return;
       const url = `https://${baseUrl}/admin/roles/roles_for_dropdown.json?token=${token}`;
       const res = await axios.get(url);
-      const roles = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.roles) ? res.data.roles : []);
+      const roles = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.roles)
+          ? res.data.roles
+          : [];
       setRoleOptions(roles);
     } catch (e) {
       console.error("Error fetching roles:", e);
@@ -329,14 +388,18 @@ export const AddUserPage = () => {
     const fetchTowers = async () => {
       try {
         const societyId = getSocietyId();
-        const token = localStorage.getItem('token') || '';
+        const token = localStorage.getItem("token") || "";
         if (!societyId || !token) {
           setTowerOptions([]);
           return;
         }
-        const url = getFullUrl(`/get_society_blocks.json?token=${token}&society_id=${societyId}`);
+        const url = getFullUrl(
+          `/get_society_blocks.json?token=${token}&society_id=${societyId}`
+        );
         const res = await axios.get(url);
-        setTowerOptions(Array.isArray(res.data.society_blocks) ? res.data.society_blocks : []);
+        setTowerOptions(
+          Array.isArray(res.data.society_blocks) ? res.data.society_blocks : []
+        );
       } catch (e) {
         setTowerOptions([]);
       }
@@ -347,9 +410,12 @@ export const AddUserPage = () => {
 
     if (isEdit && userId) {
       setLoading(true);
-      const editToken = localStorage.getItem('token') || '';
-      axios.get(getEditApiUrl(userId), { headers: { Authorization: `Bearer ${editToken}` } })
-        .then(response => {
+      const editToken = localStorage.getItem("token") || "";
+      axios
+        .get(getEditApiUrl(userId), {
+          headers: { Authorization: `Bearer ${editToken}` },
+        })
+        .then((response) => {
           const data = response.data;
           // Map API response to formData shape - using correct API key names
           const user = data || {};
@@ -357,14 +423,24 @@ export const AddUserPage = () => {
             ...defaultFormData,
             title: user.title || "",
             firstName: user.full_name?.split(" ")[0] || user.firstname || "",
-            lastName: user.full_name?.split(" ").slice(1).join(" ") || user.lastname || "",
+            lastName:
+              user.full_name?.split(" ").slice(1).join(" ") ||
+              user.lastname ||
+              "",
             email: user.email || "",
             countryCode: user.country_code || "+91",
             mobile: user.mobile_number || "",
             password: "", // don't prefill password
             phase: user.display_view || "",
-            status: user.approved === true ? "1" : (user.approved === false ? "0" : "null"),
-            tower: user.society_block_id ? user.society_block_id.toString() : "",
+            status:
+              user.approved === true
+                ? "1"
+                : user.approved === false
+                  ? "0"
+                  : "null",
+            tower: user.society_block_id
+              ? user.society_block_id.toString()
+              : "",
             flat: user.society_flat_id || "",
             category: user.user_category_id || "",
             role: user.role_id ? user.role_id.toString() : "",
@@ -388,8 +464,10 @@ export const AddUserPage = () => {
             noOfChildren: user.children?.toString() || "",
             differentlyAbled: user.differently_abled ? "Yes" : "No",
             companyName: user.company_name || "",
-            agreementStartDate: user.user_flat?.agreement_start_date?.split("T")[0] || "",
-            agreementExpireDate: user.user_flat?.agreement_expire_date?.split("T")[0] || "",
+            agreementStartDate:
+              user.user_flat?.agreement_start_date?.split("T")[0] || "",
+            agreementExpireDate:
+              user.user_flat?.agreement_expire_date?.split("T")[0] || "",
             agreementDocuments: [], // Set appropriately if editing
             existingDocuments: user.user_flat_documents || [],
           };
@@ -464,7 +542,10 @@ export const AddUserPage = () => {
       if (!formData.agreementExpireDate) {
         return "Agreement Expire Date is required for tenants";
       }
-      if (formData.existingDocuments.length === 0 && formData.agreementDocuments.length === 0) {
+      if (
+        formData.existingDocuments.length === 0 &&
+        formData.agreementDocuments.length === 0
+      ) {
         return "Please upload at least one attachment for tenants";
       }
     }
@@ -490,7 +571,10 @@ export const AddUserPage = () => {
     Object.keys(payload).forEach((key) => {
       const value = payload[key];
       if (value !== null && value !== undefined) {
-        formDataToSubmit.append(key, typeof value === 'boolean' ? String(value) : value);
+        formDataToSubmit.append(
+          key,
+          typeof value === "boolean" ? String(value) : value
+        );
       }
     });
 
@@ -515,7 +599,7 @@ export const AddUserPage = () => {
         data: formDataToSubmit,
         headers: { "Content-Type": "multipart/form-data" },
       });
-      navigate("/settings/manage-users");
+      navigate(-1);
     } catch (e) {
       console.error("Submission error:", e);
       toast.error("Failed to submit. Please try again.");
@@ -530,7 +614,7 @@ export const AddUserPage = () => {
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith("image/")) {
       const previewUrl = URL.createObjectURL(file);
       setProfileImage(previewUrl);
       setProfileImageFile(file);
@@ -608,7 +692,9 @@ export const AddUserPage = () => {
         fetch(imageData)
           .then((res) => res.blob())
           .then((blob) => {
-            const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+            const file = new File([blob], "camera-capture.jpg", {
+              type: "image/jpeg",
+            });
             setProfileImage(imageData);
             setProfileImageFile(file);
           });
@@ -636,10 +722,9 @@ export const AddUserPage = () => {
   const countryCodes = countries.all
     .map((country) => ({
       name: country.alpha3,
-      code: country.countryCallingCodes[0]
+      code: country.countryCallingCodes[0],
     }))
     .filter((c) => c.code);
-
 
   if (loading) {
     return (
@@ -655,9 +740,9 @@ export const AddUserPage = () => {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        backgroundColor: '#FDFDFB',
-        padding: '24px',
+        minHeight: "100vh",
+        backgroundColor: "#FDFDFB",
+        padding: "24px",
       }}
     >
       <Box>
@@ -678,15 +763,18 @@ export const AddUserPage = () => {
         {/* Primary Details Section */}
         <SectionCard>
           <SectionHeader>
-            <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: "#F5F4F0" }}
+            >
               <UserIcon size={14} color="#1A1A18" />
             </span>
             <h2
               style={{
-                fontSize: '14px',
+                fontSize: "14px",
                 fontWeight: 600,
                 lineHeight: 1.4,
-                color: '#1A1A18',
+                color: "#1A1A18",
                 margin: 0,
               }}
             >
@@ -694,17 +782,29 @@ export const AddUserPage = () => {
             </h2>
           </SectionHeader>
 
-          <Box sx={{ padding: '24px' }}>
-            <Box sx={{ display: 'flex', gap: '24px' }}>
+          <Box sx={{ padding: "24px" }}>
+            <Box sx={{ display: "flex", gap: "24px" }}>
               {/* Profile Photo */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                <Box sx={{ position: 'relative' }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <Box sx={{ position: "relative" }}>
                   <ProfileAvatar>
                     {profileImage ? (
                       <img
                         src={profileImage}
                         alt="profile"
-                        style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                        }}
                       />
                     ) : (
                       <UserIcon size={64} />
@@ -713,7 +813,7 @@ export const AddUserPage = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    style={{ display: 'none' }}
+                    style={{ display: "none" }}
                     id="profile-upload"
                     title="Upload profile image"
                     onChange={handleImageUpload}
@@ -722,22 +822,24 @@ export const AddUserPage = () => {
                     <IconButton
                       size="small"
                       sx={{
-                        position: 'absolute',
-                        top: '-8px',
-                        left: '-8px',
-                        backgroundColor: '#1A1A18',
-                        color: 'white',
-                        width: '24px',
-                        height: '24px',
-                        '&:hover': {
-                          backgroundColor: '#12100E',
+                        position: "absolute",
+                        top: "-8px",
+                        left: "-8px",
+                        backgroundColor: "#1A1A18",
+                        color: "white",
+                        width: "24px",
+                        height: "24px",
+                        "&:hover": {
+                          backgroundColor: "#12100E",
                         },
                       }}
                       onClick={() => {
                         setProfileImage(null);
                         setProfileImageFile(null);
-                        const input = document.getElementById('profile-upload') as HTMLInputElement;
-                        if (input) input.value = '';
+                        const input = document.getElementById(
+                          "profile-upload"
+                        ) as HTMLInputElement;
+                        if (input) input.value = "";
                       }}
                     >
                       <X size={14} />
@@ -745,17 +847,17 @@ export const AddUserPage = () => {
                   )}
                 </Box>
                 {/* Camera & Upload Buttons */}
-                <Box sx={{ display: 'flex', gap: '8px', mt: '4px' }}>
+                <Box sx={{ display: "flex", gap: "8px", mt: "4px" }}>
                   <IconButton
                     size="small"
                     title="Capture from camera"
                     onClick={handleOpenCamera}
                     sx={{
-                      backgroundColor: '#1A1A18',
-                      color: 'white',
-                      width: '36px',
-                      height: '36px',
-                      '&:hover': { backgroundColor: '#12100E' },
+                      backgroundColor: "#1A1A18",
+                      color: "white",
+                      width: "36px",
+                      height: "36px",
+                      "&:hover": { backgroundColor: "#12100E" },
                     }}
                   >
                     <Video size={18} />
@@ -764,15 +866,17 @@ export const AddUserPage = () => {
                     size="small"
                     title="Upload image"
                     onClick={() => {
-                      const input = document.getElementById('profile-upload') as HTMLInputElement;
+                      const input = document.getElementById(
+                        "profile-upload"
+                      ) as HTMLInputElement;
                       input?.click();
                     }}
                     sx={{
-                      backgroundColor: '#1A1A18',
-                      color: 'white',
-                      width: '36px',
-                      height: '36px',
-                      '&:hover': { backgroundColor: '#12100E' },
+                      backgroundColor: "#1A1A18",
+                      color: "white",
+                      width: "36px",
+                      height: "36px",
+                      "&:hover": { backgroundColor: "#12100E" },
                     }}
                   >
                     <Upload size={18} />
@@ -784,48 +888,81 @@ export const AddUserPage = () => {
               {showCameraModal && (
                 <Box
                   sx={{
-                    position: 'fixed',
-                    top: '80px',
-                    left: '24px',
+                    position: "fixed",
+                    top: "80px",
+                    left: "24px",
                     zIndex: 1300,
-                    width: '340px',
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-                    border: '1px solid #e5e7eb',
+                    width: "340px",
+                    backgroundColor: "white",
+                    borderRadius: "8px",
+                    boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+                    border: "1px solid #e5e7eb",
                     p: 2,
                   }}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Camera</h3>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1,
+                    }}
+                  >
+                    <h3
+                      style={{ fontSize: "16px", fontWeight: 600, margin: 0 }}
+                    >
+                      Camera
+                    </h3>
                     <IconButton size="small" onClick={closeCameraModal}>
                       <X size={16} />
                     </IconButton>
                   </Box>
 
-                  <Box sx={{ position: 'relative', mb: 2, backgroundColor: '#111', borderRadius: '8px', overflow: 'hidden' }}>
+                  <Box
+                    sx={{
+                      position: "relative",
+                      mb: 2,
+                      backgroundColor: "#111",
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                    }}
+                  >
                     <video
                       ref={videoRef}
                       autoPlay
                       playsInline
                       muted
-                      style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                      style={{
+                        width: "100%",
+                        height: "200px",
+                        objectFit: "cover",
+                      }}
                     />
-                    <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-                      <span style={{
-                        backgroundColor: '#f97316', color: 'white', padding: '2px 8px',
-                        borderRadius: '4px', fontSize: '12px', fontWeight: 500
-                      }}>
+                    <Box sx={{ position: "absolute", top: 8, right: 8 }}>
+                      <span
+                        style={{
+                          backgroundColor: "#f97316",
+                          color: "white",
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                          fontSize: "12px",
+                          fontWeight: 500,
+                        }}
+                      >
                         📹 Preview
                       </span>
                     </Box>
                   </Box>
 
                   {cameras.length > 1 && (
-                    <FormControl fullWidth size="small" sx={{ mb: 2, ...fieldStyles }}>
+                    <FormControl
+                      fullWidth
+                      size="small"
+                      sx={{ mb: 2, ...fieldStyles }}
+                    >
                       <InputLabel>Select Camera</InputLabel>
                       <Select
-                        value={selectedCamera || ''}
+                        value={selectedCamera || ""}
                         onChange={(e) => handleCameraChange(e.target.value)}
                         label="Select Camera"
                       >
@@ -838,38 +975,52 @@ export const AddUserPage = () => {
                     </FormControl>
                   )}
 
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
                     <MuiButton
                       fullWidth
                       variant="contained"
                       onClick={handleCapturePhoto}
                       disabled={!cameraStream || !isVideoReady}
                       sx={{
-                        backgroundColor: '#1A1A18',
-                        borderRadius: '8px',
-                        textTransform: 'none',
-                        '&:hover': { backgroundColor: '#12100E' },
-                        '&.Mui-disabled': { backgroundColor: '#e5e7eb' },
+                        backgroundColor: "#1A1A18",
+                        borderRadius: "8px",
+                        textTransform: "none",
+                        "&:hover": { backgroundColor: "#12100E" },
+                        "&.Mui-disabled": { backgroundColor: "#e5e7eb" },
                       }}
                     >
-                      {!isVideoReady ? 'Loading Camera...' : 'Capture Photo'}
+                      {!isVideoReady ? "Loading Camera..." : "Capture Photo"}
                     </MuiButton>
                     <MuiButton
                       fullWidth
                       variant="outlined"
                       onClick={closeCameraModal}
-                      sx={{ borderRadius: '8px', textTransform: 'none', borderColor: 'rgba(26,26,24,.08)', color: 'rgba(26,26,24,.68)' }}
+                      sx={{
+                        borderRadius: "8px",
+                        textTransform: "none",
+                        borderColor: "rgba(26,26,24,.08)",
+                        color: "rgba(26,26,24,.68)",
+                      }}
                     >
                       Close
                     </MuiButton>
                   </Box>
 
-                  <canvas ref={canvasRef} style={{ display: 'none' }} />
+                  <canvas ref={canvasRef} style={{ display: "none" }} />
                 </Box>
               )}
 
               {/* Form Fields */}
-              <Box sx={{ flex: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: '16px' }}>
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
+                  gap: "16px",
+                }}
+              >
                 {/* Title */}
                 <FormControl fullWidth size="small" sx={fieldStyles}>
                   <InputLabel required={!isEdit}>Select Title</InputLabel>
@@ -892,7 +1043,9 @@ export const AddUserPage = () => {
                   size="small"
                   label="First Name"
                   value={formData.firstName}
-                  onChange={(e) => handleInputChange("firstName", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("firstName", e.target.value)
+                  }
                   sx={fieldStyles}
                 />
 
@@ -903,7 +1056,9 @@ export const AddUserPage = () => {
                   size="small"
                   label="Last Name"
                   value={formData.lastName}
-                  onChange={(e) => handleInputChange("lastName", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("lastName", e.target.value)
+                  }
                   sx={fieldStyles}
                 />
 
@@ -920,13 +1075,18 @@ export const AddUserPage = () => {
                 />
 
                 {/* Mobile */}
-                <Box sx={{ display: 'flex', gap: '8px' }}>
-                  <FormControl size="small" sx={{ ...fieldStyles, width: '100px' }}>
+                <Box sx={{ display: "flex", gap: "8px" }}>
+                  <FormControl
+                    size="small"
+                    sx={{ ...fieldStyles, width: "100px" }}
+                  >
                     <InputLabel>Code</InputLabel>
                     <Select
                       value={formData.countryCode}
                       label="Code"
-                      onChange={(e) => handleInputChange("countryCode", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("countryCode", e.target.value)
+                      }
                       renderValue={(selected) => selected}
                     >
                       {countryCodes.map((country, index) => (
@@ -942,7 +1102,9 @@ export const AddUserPage = () => {
                     label="Mobile Number"
                     value={formData.mobile}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      const val = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 10);
                       handleInputChange("mobile", val);
                     }}
                     inputProps={{ maxLength: 10, inputMode: "numeric" }}
@@ -958,7 +1120,9 @@ export const AddUserPage = () => {
                   label="Password"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("password", e.target.value)
+                  }
                   sx={fieldStyles}
                   InputProps={{
                     endAdornment: (
@@ -968,7 +1132,11 @@ export const AddUserPage = () => {
                           edge="end"
                           size="small"
                         >
-                          {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                          {showPassword ? (
+                            <VisibilityOff fontSize="small" />
+                          ) : (
+                            <Visibility fontSize="small" />
+                          )}
                         </IconButton>
                       </InputAdornment>
                     ),
@@ -978,11 +1146,12 @@ export const AddUserPage = () => {
                 {/* Password Requirements — live-checked as the user types; spans the full
                     row so it doesn't stretch the height of the Email/Mobile cells beside it */}
                 {formData.password && (
-                  <Box sx={{ gridColumn: 'span 3', mt: '-8px' }}>
+                  <Box sx={{ gridColumn: "span 3", mt: "-8px" }}>
                     <div className="px-4 py-3 bg-gray-50 rounded-lg border">
                       <div
-                        className={`flex items-center gap-2 mb-2 text-xs font-medium ${isPasswordStrong ? "text-green-700" : "text-amber-700"
-                          }`}
+                        className={`flex items-center gap-2 mb-2 text-xs font-medium ${
+                          isPasswordStrong ? "text-green-700" : "text-amber-700"
+                        }`}
                       >
                         {isPasswordStrong ? (
                           <ShieldCheck size={14} />
@@ -997,10 +1166,15 @@ export const AddUserPage = () => {
                         {passwordChecks.map((check) => (
                           <div
                             key={check.key}
-                            className={`flex items-center gap-2 text-xs ${check.passed ? "text-green-600" : "text-gray-400"
-                              }`}
+                            className={`flex items-center gap-2 text-xs ${
+                              check.passed ? "text-green-600" : "text-gray-400"
+                            }`}
                           >
-                            {check.passed ? <Check size={12} /> : <X size={12} />}
+                            {check.passed ? (
+                              <Check size={12} />
+                            ) : (
+                              <X size={12} />
+                            )}
                             {check.label}
                           </div>
                         ))}
@@ -1029,7 +1203,9 @@ export const AddUserPage = () => {
                   <Select
                     value={formData.status}
                     label="Select Status"
-                    onChange={(e) => handleInputChange("status", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("status", e.target.value)
+                    }
                   >
                     <MenuItem value="null">Pending</MenuItem>
                     <MenuItem value="1">Approve</MenuItem>
@@ -1044,7 +1220,9 @@ export const AddUserPage = () => {
                     value={formData.tower}
                     label="Select Tower"
                     onChange={(e) => {
-                      const selectedTower = towerOptions.find(t => t.id.toString() === e.target.value);
+                      const selectedTower = towerOptions.find(
+                        (t) => t.id.toString() === e.target.value
+                      );
                       handleInputChange("tower", e.target.value);
                       handleInputChange("flat", ""); // Reset flat when tower changes
                       if (selectedTower) {
@@ -1056,7 +1234,9 @@ export const AddUserPage = () => {
                   >
                     <MenuItem value="">Select Tower</MenuItem>
                     {towerOptions.map((block) => (
-                      <MenuItem key={block.id} value={block.id.toString()}>{block.name}</MenuItem>
+                      <MenuItem key={block.id} value={block.id.toString()}>
+                        {block.name}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -1071,7 +1251,9 @@ export const AddUserPage = () => {
                   >
                     <MenuItem value="">Select Flat</MenuItem>
                     {flatOptions.map((flat) => (
-                      <MenuItem key={flat.id} value={flat.id}>{flat.flat_no}</MenuItem>
+                      <MenuItem key={flat.id} value={flat.id}>
+                        {flat.flat_no}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -1082,11 +1264,15 @@ export const AddUserPage = () => {
                   <Select
                     value={formData.category}
                     label="Select Category"
-                    onChange={(e) => handleInputChange("category", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("category", e.target.value)
+                    }
                   >
                     <MenuItem value="">Select Category</MenuItem>
                     {categoryOptions.map((cat) => (
-                      <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                      <MenuItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -1101,20 +1287,27 @@ export const AddUserPage = () => {
                   >
                     <MenuItem value="">Select Role</MenuItem>
                     {roleOptions.map((role) => (
-                      <MenuItem key={role.id} value={role.id.toString()}>{role.name}</MenuItem>
+                      <MenuItem key={role.id} value={role.id.toString()}>
+                        {role.name}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
 
                 {/* Alternate Address */}
-                <div className="mb-8 mt-8 relative" style={{ gridColumn: 'span 3' }}>
+                <div
+                  className="mb-8 mt-8 relative"
+                  style={{ gridColumn: "span 3" }}
+                >
                   <label className="absolute -top-3 left-3 bg-white px-2 text-sm text-[rgba(0, 0, 0, 0.6)]">
                     Alternate Address
                   </label>
                   <textarea
                     id="alternate-address"
                     value={formData.alternateAddress}
-                    onChange={(e) => handleInputChange('alternateAddress', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("alternateAddress", e.target.value)
+                    }
                     className="w-full px-4 py-3 border border-[#D5DbDB] rounded-lg focus:outline-none focus:border-[#D97757] resize-vertical"
                     placeholder="Enter alternate address"
                     rows={3}
@@ -1122,14 +1315,17 @@ export const AddUserPage = () => {
                 </div>
 
                 {/* Resident Type */}
-                <FormControl component="fieldset" sx={{ gridColumn: { md: 'span 1' } }}>
+                <FormControl
+                  component="fieldset"
+                  sx={{ gridColumn: { md: "span 1" } }}
+                >
                   <FormLabel
                     component="legend"
                     sx={{
-                      fontSize: '14px',
-                      color: 'rgba(0, 0, 0, 0.6)',
-                      marginBottom: '8px',
-                      '&.Mui-focused': { color: '#C72030' },
+                      fontSize: "14px",
+                      color: "rgba(0, 0, 0, 0.6)",
+                      marginBottom: "8px",
+                      "&.Mui-focused": { color: "#C72030" },
                     }}
                   >
                     Resident Type:
@@ -1137,22 +1333,35 @@ export const AddUserPage = () => {
                   <RadioGroup
                     row
                     value={formData.residentType}
-                    onChange={(e) => handleInputChange("residentType", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("residentType", e.target.value)
+                    }
                   >
-                    <FormControlLabel value="owner" control={<Radio size="small" />} label="Owner" />
-                    <FormControlLabel value="tenant" control={<Radio size="small" />} label="Tenant" />
+                    <FormControlLabel
+                      value="owner"
+                      control={<Radio size="small" />}
+                      label="Owner"
+                    />
+                    <FormControlLabel
+                      value="tenant"
+                      control={<Radio size="small" />}
+                      label="Tenant"
+                    />
                   </RadioGroup>
                 </FormControl>
 
                 {/* Membership Type */}
-                <FormControl component="fieldset" sx={{ gridColumn: { md: 'span 1' } }}>
+                <FormControl
+                  component="fieldset"
+                  sx={{ gridColumn: { md: "span 1" } }}
+                >
                   <FormLabel
                     component="legend"
                     sx={{
-                      fontSize: '14px',
-                      color: 'rgba(0, 0, 0, 0.6)',
-                      marginBottom: '8px',
-                      '&.Mui-focused': { color: '#C72030' },
+                      fontSize: "14px",
+                      color: "rgba(0, 0, 0, 0.6)",
+                      marginBottom: "8px",
+                      "&.Mui-focused": { color: "#C72030" },
                     }}
                   >
                     Membership Type:
@@ -1160,22 +1369,35 @@ export const AddUserPage = () => {
                   <RadioGroup
                     row
                     value={formData.membershipType}
-                    onChange={(e) => handleInputChange("membershipType", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("membershipType", e.target.value)
+                    }
                   >
-                    <FormControlLabel value="Primary" control={<Radio size="small" />} label="Primary" />
-                    <FormControlLabel value="Secondary" control={<Radio size="small" />} label="Secondary" />
+                    <FormControlLabel
+                      value="Primary"
+                      control={<Radio size="small" />}
+                      label="Primary"
+                    />
+                    <FormControlLabel
+                      value="Secondary"
+                      control={<Radio size="small" />}
+                      label="Secondary"
+                    />
                   </RadioGroup>
                 </FormControl>
 
                 {/* Lives Here */}
-                <FormControl component="fieldset" sx={{ gridColumn: { md: 'span 1' } }}>
+                <FormControl
+                  component="fieldset"
+                  sx={{ gridColumn: { md: "span 1" } }}
+                >
                   <FormLabel
                     component="legend"
                     sx={{
-                      fontSize: '14px',
-                      color: 'rgba(0, 0, 0, 0.6)',
-                      marginBottom: '8px',
-                      '&.Mui-focused': { color: '#C72030' },
+                      fontSize: "14px",
+                      color: "rgba(0, 0, 0, 0.6)",
+                      marginBottom: "8px",
+                      "&.Mui-focused": { color: "#C72030" },
                     }}
                   >
                     Lives Here:
@@ -1183,22 +1405,35 @@ export const AddUserPage = () => {
                   <RadioGroup
                     row
                     value={formData.livesHere}
-                    onChange={(e) => handleInputChange("livesHere", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("livesHere", e.target.value)
+                    }
                   >
-                    <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
-                    <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+                    <FormControlLabel
+                      value="Yes"
+                      control={<Radio size="small" />}
+                      label="Yes"
+                    />
+                    <FormControlLabel
+                      value="No"
+                      control={<Radio size="small" />}
+                      label="No"
+                    />
                   </RadioGroup>
                 </FormControl>
 
                 {/* Allow Fitout */}
-                <FormControl component="fieldset" sx={{ gridColumn: { md: 'span 1' } }}>
+                <FormControl
+                  component="fieldset"
+                  sx={{ gridColumn: { md: "span 1" } }}
+                >
                   <FormLabel
                     component="legend"
                     sx={{
-                      fontSize: '14px',
-                      color: 'rgba(0, 0, 0, 0.6)',
-                      marginBottom: '8px',
-                      '&.Mui-focused': { color: '#C72030' },
+                      fontSize: "14px",
+                      color: "rgba(0, 0, 0, 0.6)",
+                      marginBottom: "8px",
+                      "&.Mui-focused": { color: "#C72030" },
                     }}
                   >
                     Allow Fitout:
@@ -1206,25 +1441,38 @@ export const AddUserPage = () => {
                   <RadioGroup
                     row
                     value={formData.allowFitout}
-                    onChange={(e) => handleInputChange("allowFitout", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("allowFitout", e.target.value)
+                    }
                   >
-                    <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
-                    <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+                    <FormControlLabel
+                      value="Yes"
+                      control={<Radio size="small" />}
+                      label="Yes"
+                    />
+                    <FormControlLabel
+                      value="No"
+                      control={<Radio size="small" />}
+                      label="No"
+                    />
                   </RadioGroup>
                 </FormControl>
 
                 {formData.residentType === "tenant" && (
                   <>
-                    <Box sx={{ gridColumn: { md: 'span 1' } }}>
+                    <Box sx={{ gridColumn: { md: "span 1" } }}>
                       <FormLabel
                         sx={{
-                          fontSize: '14px',
-                          color: 'rgba(0, 0, 0, 0.6)',
-                          marginBottom: '8px',
-                          display: 'block',
+                          fontSize: "14px",
+                          color: "rgba(0, 0, 0, 0.6)",
+                          marginBottom: "8px",
+                          display: "block",
                         }}
                       >
-                        Agreement Start Date{isSupervisorOrg && <span style={{ color: '#C72030' }}> *</span>}
+                        Agreement Start Date
+                        {isSupervisorOrg && (
+                          <span style={{ color: "#C72030" }}> *</span>
+                        )}
                       </FormLabel>
                       <TextField
                         fullWidth
@@ -1232,22 +1480,30 @@ export const AddUserPage = () => {
                         type="date"
                         required={isSupervisorOrg}
                         value={formData.agreementStartDate}
-                        onChange={(e) => handleInputChange("agreementStartDate", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "agreementStartDate",
+                            e.target.value
+                          )
+                        }
                         sx={fieldStyles}
                         InputLabelProps={{ shrink: true }}
                       />
                     </Box>
 
-                    <Box sx={{ gridColumn: { md: 'span 1' } }}>
+                    <Box sx={{ gridColumn: { md: "span 1" } }}>
                       <FormLabel
                         sx={{
-                          fontSize: '14px',
-                          color: 'rgba(0, 0, 0, 0.6)',
-                          marginBottom: '8px',
-                          display: 'block',
+                          fontSize: "14px",
+                          color: "rgba(0, 0, 0, 0.6)",
+                          marginBottom: "8px",
+                          display: "block",
                         }}
                       >
-                        Agreement Expire Date{isSupervisorOrg && <span style={{ color: '#C72030' }}> *</span>}
+                        Agreement Expire Date
+                        {isSupervisorOrg && (
+                          <span style={{ color: "#C72030" }}> *</span>
+                        )}
                       </FormLabel>
                       <TextField
                         fullWidth
@@ -1255,7 +1511,12 @@ export const AddUserPage = () => {
                         type="date"
                         required={isSupervisorOrg}
                         value={formData.agreementExpireDate}
-                        onChange={(e) => handleInputChange("agreementExpireDate", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "agreementExpireDate",
+                            e.target.value
+                          )
+                        }
                         sx={fieldStyles}
                         InputLabelProps={{ shrink: true }}
                       />
@@ -1263,19 +1524,27 @@ export const AddUserPage = () => {
                   </>
                 )}
 
-                {(formData.residentType === "tenant" || formData.existingDocuments.length > 0 || formData.agreementDocuments.length > 0) && (
-                  <Box sx={{ gridColumn: 'span 3', mt: 2 }}>
+                {(formData.residentType === "tenant" ||
+                  formData.existingDocuments.length > 0 ||
+                  formData.agreementDocuments.length > 0) && (
+                  <Box sx={{ gridColumn: "span 3", mt: 2 }}>
                     <FormLabel
                       sx={{
-                        fontSize: '14px',
-                        color: 'rgba(0, 0, 0, 0.6)',
-                        marginBottom: '8px',
-                        display: 'block',
+                        fontSize: "14px",
+                        color: "rgba(0, 0, 0, 0.6)",
+                        marginBottom: "8px",
+                        display: "block",
                       }}
                     >
-                      Attachments{isSupervisorOrg && formData.residentType === "tenant" && <span style={{ color: '#C72030' }}> *</span>}
+                      Attachments
+                      {isSupervisorOrg &&
+                        formData.residentType === "tenant" && (
+                          <span style={{ color: "#C72030" }}> *</span>
+                        )}
                     </FormLabel>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                    <Box
+                      sx={{ display: "flex", flexWrap: "wrap", gap: "12px" }}
+                    >
                       {/* Existing Documents */}
                       {formData.existingDocuments.map((doc, index) => {
                         const fileType = getFileType(doc.document_url);
@@ -1288,38 +1557,45 @@ export const AddUserPage = () => {
                           <Box
                             key={`existing-${doc.id || index}`}
                             sx={{
-                              width: '80px',
-                              height: '80px',
-                              border: '1px solid #ddd',
-                              borderRadius: '4px',
-                              position: 'relative',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              backgroundColor: '#fff',
-                              overflow: 'hidden',
-                              cursor: 'pointer',
+                              width: "80px",
+                              height: "80px",
+                              border: "1px solid #ddd",
+                              borderRadius: "4px",
+                              position: "relative",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "#fff",
+                              overflow: "hidden",
+                              cursor: "pointer",
                             }}
-                            onClick={() => window.open(doc.document_url, '_blank')}
+                            onClick={() =>
+                              window.open(doc.document_url, "_blank")
+                            }
                             title={filename}
                           >
                             <IconButton
                               size="small"
                               sx={{
-                                position: 'absolute',
+                                position: "absolute",
                                 top: 0,
                                 right: 0,
-                                backgroundColor: '#fff',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                                padding: '2px',
-                                '&:hover': { backgroundColor: '#f5f5f5' },
+                                backgroundColor: "#fff",
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                                padding: "2px",
+                                "&:hover": { backgroundColor: "#f5f5f5" },
                                 zIndex: 1,
                               }}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const newExisting = [...formData.existingDocuments];
+                                const newExisting = [
+                                  ...formData.existingDocuments,
+                                ];
                                 newExisting.splice(index, 1);
-                                setFormData(prev => ({ ...prev, existingDocuments: newExisting }));
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  existingDocuments: newExisting,
+                                }));
                               }}
                             >
                               <X size={12} color="#C72030" />
@@ -1329,7 +1605,11 @@ export const AddUserPage = () => {
                               <img
                                 src={doc.document_url}
                                 alt="preview"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
                               />
                             ) : isExcel ? (
                               <FileSpreadsheet size={32} color="#1D6F42" />
@@ -1344,40 +1624,45 @@ export const AddUserPage = () => {
 
                       {/* New Agreement Documents */}
                       {formData.agreementDocuments.map((file, index) => {
-                        const isImage = file.type.startsWith('image/');
-                        const isExcel = file.name.includes('.xls') || file.name.includes('.xlsx') || file.name.includes('.csv');
-                        const isPDF = file.name.includes('.pdf');
+                        const isImage = file.type.startsWith("image/");
+                        const isExcel =
+                          file.name.includes(".xls") ||
+                          file.name.includes(".xlsx") ||
+                          file.name.includes(".csv");
+                        const isPDF = file.name.includes(".pdf");
 
                         return (
                           <Box
                             key={`new-${index}`}
                             sx={{
-                              width: '80px',
-                              height: '80px',
-                              border: '1px solid #ddd',
-                              borderRadius: '4px',
-                              position: 'relative',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              backgroundColor: '#fff',
-                              overflow: 'hidden',
+                              width: "80px",
+                              height: "80px",
+                              border: "1px solid #ddd",
+                              borderRadius: "4px",
+                              position: "relative",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "#fff",
+                              overflow: "hidden",
                             }}
                           >
                             <IconButton
                               size="small"
                               sx={{
-                                position: 'absolute',
+                                position: "absolute",
                                 top: 0,
                                 right: 0,
-                                backgroundColor: '#fff',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                                padding: '2px',
-                                '&:hover': { backgroundColor: '#f5f5f5' },
+                                backgroundColor: "#fff",
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                                padding: "2px",
+                                "&:hover": { backgroundColor: "#f5f5f5" },
                                 zIndex: 1,
                               }}
                               onClick={() => {
-                                const newDocs = [...formData.agreementDocuments];
+                                const newDocs = [
+                                  ...formData.agreementDocuments,
+                                ];
                                 newDocs.splice(index, 1);
                                 handleFileChange(newDocs);
                               }}
@@ -1389,7 +1674,11 @@ export const AddUserPage = () => {
                               <img
                                 src={URL.createObjectURL(file)}
                                 alt="preview"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
                               />
                             ) : isExcel ? (
                               <FileSpreadsheet size={32} color="#1D6F42" />
@@ -1404,21 +1693,25 @@ export const AddUserPage = () => {
 
                       <Box
                         sx={{
-                          width: '80px',
-                          height: '80px',
-                          border: '1px dashed #ccc',
-                          borderRadius: '4px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          backgroundColor: '#fff',
-                          '&:hover': {
-                            borderColor: '#C72030',
-                            backgroundColor: '#fafafa',
+                          width: "80px",
+                          height: "80px",
+                          border: "1px dashed #ccc",
+                          borderRadius: "4px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          backgroundColor: "#fff",
+                          "&:hover": {
+                            borderColor: "#C72030",
+                            backgroundColor: "#fafafa",
                           },
                         }}
-                        onClick={() => document.getElementById('agreement-document-upload').click()}
+                        onClick={() =>
+                          document
+                            .getElementById("agreement-document-upload")
+                            .click()
+                        }
                       >
                         <Plus size={24} color="#666" />
                       </Box>
@@ -1426,15 +1719,18 @@ export const AddUserPage = () => {
                     <input
                       type="file"
                       id="agreement-document-upload"
-                      style={{ display: 'none' }}
+                      style={{ display: "none" }}
                       multiple
                       onChange={(e) => {
                         const files = Array.from(e.target.files || []);
                         if (files.length > 0) {
-                          handleFileChange([...formData.agreementDocuments, ...files]);
+                          handleFileChange([
+                            ...formData.agreementDocuments,
+                            ...files,
+                          ]);
                         }
                         // Reset input so same file can be selected again if removed
-                        e.target.value = '';
+                        e.target.value = "";
                       }}
                     />
                   </Box>
@@ -1447,15 +1743,18 @@ export const AddUserPage = () => {
         {/* Additional Info Section */}
         <SectionCard>
           <SectionHeader>
-            <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F5F4F0' }}>
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: "#F5F4F0" }}
+            >
               <Info size={14} color="#1A1A18" />
             </span>
             <h2
               style={{
-                fontSize: '14px',
+                fontSize: "14px",
                 fontWeight: 600,
                 lineHeight: 1.4,
-                color: '#1A1A18',
+                color: "#1A1A18",
                 margin: 0,
               }}
             >
@@ -1463,8 +1762,14 @@ export const AddUserPage = () => {
             </h2>
           </SectionHeader>
 
-          <Box sx={{ padding: '24px' }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: '16px' }}>
+          <Box sx={{ padding: "24px" }}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
+                gap: "16px",
+              }}
+            >
               {/* Birth Date */}
               <TextField
                 fullWidth
@@ -1485,7 +1790,9 @@ export const AddUserPage = () => {
                 label="Anniversary"
                 type="date"
                 value={formData.anniversary}
-                onChange={(e) => handleInputChange("anniversary", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("anniversary", e.target.value)
+                }
                 InputLabelProps={{ shrink: true }}
                 inputProps={{ max: todayStr }}
                 sx={fieldStyles}
@@ -1498,7 +1805,9 @@ export const AddUserPage = () => {
                 label="Spouse Birth Date"
                 type="date"
                 value={formData.spouseBirthDate}
-                onChange={(e) => handleInputChange("spouseBirthDate", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("spouseBirthDate", e.target.value)
+                }
                 InputLabelProps={{ shrink: true }}
                 inputProps={{ max: todayStr }}
                 sx={fieldStyles}
@@ -1511,7 +1820,9 @@ export const AddUserPage = () => {
                 label="Alternate Email-1"
                 type="email"
                 value={formData.alternateEmail1}
-                onChange={(e) => handleInputChange("alternateEmail1", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("alternateEmail1", e.target.value)
+                }
                 sx={fieldStyles}
               />
 
@@ -1522,7 +1833,9 @@ export const AddUserPage = () => {
                 label="Alternate Email-2"
                 type="email"
                 value={formData.alternateEmail2}
-                onChange={(e) => handleInputChange("alternateEmail2", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("alternateEmail2", e.target.value)
+                }
                 sx={fieldStyles}
               />
 
@@ -1532,7 +1845,9 @@ export const AddUserPage = () => {
                 size="small"
                 label="Landline Number"
                 value={formData.landlineNumber}
-                onChange={(e) => handleInputChange("landlineNumber", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("landlineNumber", e.target.value)
+                }
                 sx={fieldStyles}
               />
 
@@ -1542,7 +1857,9 @@ export const AddUserPage = () => {
                 size="small"
                 label="Intercom Number"
                 value={formData.intercomNumber}
-                onChange={(e) => handleInputChange("intercomNumber", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("intercomNumber", e.target.value)
+                }
                 sx={fieldStyles}
               />
 
@@ -1572,7 +1889,9 @@ export const AddUserPage = () => {
                 <Select
                   value={formData.evConnection}
                   label="EV Connection"
-                  onChange={(e) => handleInputChange("evConnection", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("evConnection", e.target.value)
+                  }
                 >
                   <MenuItem value="NA">NA</MenuItem>
                   <MenuItem value="Yes">Yes</MenuItem>
@@ -1587,7 +1906,9 @@ export const AddUserPage = () => {
                 label="No. of Adult Family Members Residing"
                 type="number"
                 value={formData.noOfAdults}
-                onChange={(e) => handleInputChange("noOfAdults", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("noOfAdults", e.target.value)
+                }
                 sx={fieldStyles}
               />
 
@@ -1598,7 +1919,9 @@ export const AddUserPage = () => {
                 label="No. of Children Residing"
                 type="number"
                 value={formData.noOfChildren}
-                onChange={(e) => handleInputChange("noOfChildren", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("noOfChildren", e.target.value)
+                }
                 sx={fieldStyles}
               />
 
@@ -1618,10 +1941,10 @@ export const AddUserPage = () => {
                 <FormLabel
                   component="legend"
                   sx={{
-                    fontSize: '14px',
-                    color: 'rgba(0, 0, 0, 0.6)',
-                    marginBottom: '8px',
-                    '&.Mui-focused': { color: '#C72030' },
+                    fontSize: "14px",
+                    color: "rgba(0, 0, 0, 0.6)",
+                    marginBottom: "8px",
+                    "&.Mui-focused": { color: "#C72030" },
                   }}
                 >
                   Differently Abled:
@@ -1629,15 +1952,24 @@ export const AddUserPage = () => {
                 <RadioGroup
                   row
                   value={formData.differentlyAbled}
-                  onChange={(e) => handleInputChange("differentlyAbled", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("differentlyAbled", e.target.value)
+                  }
                 >
-                  <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
-                  <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+                  <FormControlLabel
+                    value="Yes"
+                    control={<Radio size="small" />}
+                    label="Yes"
+                  />
+                  <FormControlLabel
+                    value="No"
+                    control={<Radio size="small" />}
+                    label="No"
+                  />
                 </RadioGroup>
               </FormControl>
             </Box>
           </Box>
-
         </SectionCard>
 
         {/* Submit Button */}
@@ -1656,7 +1988,13 @@ export const AddUserPage = () => {
             disabled={loading}
             className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
           >
-            {loading ? (isEdit ? "Saving..." : "Submitting...") : (isEdit ? "Save" : "Submit")}
+            {loading
+              ? isEdit
+                ? "Saving..."
+                : "Submitting..."
+              : isEdit
+                ? "Save"
+                : "Submit"}
           </button>
         </div>
       </Box>

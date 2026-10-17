@@ -453,7 +453,7 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
   return (
     <Dialog open={open} modal={false} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl bg-white [&>button]:hidden">
-        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+        <DialogHeader className="flex flex-row items-center justify-between pb-4">
           <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
             FILTER BY
           </DialogTitle>

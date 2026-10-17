@@ -964,8 +964,7 @@ export const AppointmentzRequest: React.FC = () => {
       <Dialog open={showFilterBar} onOpenChange={setShowFilterBar}>
         <DialogContent className="sm:max-w-[560px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl">
           <DialogHeader className="bg-white px-6 py-4">
-            <DialogTitle className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
-              <Filter className="w-5 h-5 text-[#DA7756]" />
+            <DialogTitle className="text-lg font-bold text-[#1A1A1A]">
               Filter Requests
             </DialogTitle>
           </DialogHeader>
@@ -1097,16 +1096,6 @@ export const AppointmentzRequest: React.FC = () => {
 
           <DialogFooter className="bg-white px-6 py-3 flex gap-2 sm:justify-end">
             <Button
-              variant="ghost"
-              className="btn-primary"
-              onClick={() => {
-                handleApplyFilter();
-                setShowFilterBar(false);
-              }}
-            >
-              Apply
-            </Button>
-            <Button
               variant="outline"
               onClick={() => {
                 handleResetFilter();
@@ -1115,6 +1104,16 @@ export const AppointmentzRequest: React.FC = () => {
               className="border-[#D5DbDB] hover:bg-[#DBC2A9] text-[#1A1A1A]"
             >
               Reset
+            </Button>
+            <Button
+              variant="ghost"
+              className="btn-primary"
+              onClick={() => {
+                handleApplyFilter();
+                setShowFilterBar(false);
+              }}
+            >
+              Apply
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1142,11 +1141,14 @@ export const AppointmentzRequest: React.FC = () => {
       {/* Schedule Visit Modal (Enhanced Step/Group Structure) */}
       <Dialog open={isScheduleVisitOpen} onOpenChange={setIsScheduleVisitOpen}>
         <DialogContent className="sm:max-w-[780px] p-0 overflow-hidden border-[#D5DbDB] shadow-2xl bg-white rounded-xl">
-          <DialogHeader className="bg-[#f6f4ee] px-6 py-4 border-b border-[#D5DbDB] flex flex-row items-center justify-between">
+          <DialogHeader className="px-6 py-4 border-b border-[#D5DbDB] flex flex-row items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#DA7756]/10 flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-[#DA7756]" />
-              </div>
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: '#F5F4F0' }}
+              >
+                <Calendar size={14} color="#1A1A18" />
+              </span>
               <div>
                 <DialogTitle className="text-base font-bold text-[#1A1A1A]">
                   Schedule New Visit
@@ -1169,9 +1171,12 @@ export const AppointmentzRequest: React.FC = () => {
                 {/* Section 1: Property & Person Information */}
                 <div className="border border-[#E5E7EB] rounded-lg p-4 bg-[#FDFCFB]">
                   <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-[#EFEFEF]">
-                    <div className="w-6 h-6 rounded-md bg-[#DA7756]/15 flex items-center justify-center">
-                      <Building2 className="w-3.5 h-3.5 text-[#DA7756]" />
-                    </div>
+                    <span
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: '#F5F4F0' }}
+                    >
+                      <Building2 size={14} color="#1A1A18" />
+                    </span>
                     <div>
                       <h4 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider">
                         1. Property & Resident Information
@@ -1302,9 +1307,12 @@ export const AppointmentzRequest: React.FC = () => {
                 {/* Section 2: Visit & Schedule Details */}
                 <div className="border border-[#E5E7EB] rounded-lg p-4 bg-[#FDFCFB]">
                   <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-[#EFEFEF]">
-                    <div className="w-6 h-6 rounded-md bg-[#DA7756]/15 flex items-center justify-center">
-                      <Clock className="w-3.5 h-3.5 text-[#DA7756]" />
-                    </div>
+                    <span
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: '#F5F4F0' }}
+                    >
+                      <Clock size={14} color="#1A1A18" />
+                    </span>
                     <div>
                       <h4 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider">
                         2. Schedule Date & Slot Selection
@@ -1415,7 +1423,7 @@ export const AppointmentzRequest: React.FC = () => {
           </div>
 
           {/* Dialog Footer */}
-          <DialogFooter className="bg-[#f6f4ee] px-6 py-3 border-t border-[#D5DbDB] flex items-center justify-between sm:justify-between">
+          <DialogFooter className="px-6 py-3 border-t border-[#D5DbDB] flex justify-end gap-3">
             <Button
               variant="outline"
               type="button"

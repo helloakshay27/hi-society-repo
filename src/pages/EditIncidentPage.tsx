@@ -1443,22 +1443,23 @@ export const EditIncidentPage = () => {
                     )}
                 </DialogContent>
             </Dialog>
-            <div className="flex justify-end gap-4 pt-6">
-                <Button
-                    variant="outline"
+            <div className="flex justify-end gap-3 pt-6 pb-8">
+                <button
+                    type="button"
                     onClick={() => navigate(-1)}
                     disabled={submitting}
-                    className="!border-[#C72030] !text-[#C72030] px-8 py-3 text-[18px]"
+                    className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
                 >
                     Cancel
-                </Button>
-                <Button
+                </button>
+                <button
+                    type="button"
                     onClick={handleSubmit}
                     disabled={submitting}
-                    className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white px-8 py-3 text-[18px]"
+                    className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
                 >
                     {submitting ? 'Updating…' : 'Update Incident'}
-                </Button>
+                </button>
             </div>
         </div>
     );

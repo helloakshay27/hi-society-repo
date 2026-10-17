@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Banknote, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { TextField, MenuItem } from '@mui/material';
@@ -205,7 +204,20 @@ export const AddPaymentPlan = () => {
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-lg shadow border-2 p-6 space-y-6">
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden">
+        <div className="px-6 pt-[22px]">
+          <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+              style={{ backgroundColor: '#F5F4F0' }}
+            >
+              <Banknote size={14} color="#1A1A18" />
+            </span>
+            Plan Details
+          </h2>
+        </div>
+
+        <div className="p-6 space-y-6">
         {/* Plan Name */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -331,24 +343,28 @@ export const AddPaymentPlan = () => {
             </div>
           </div>
         )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 justify-center pt-4">
-          <Button
-            onClick={() => navigate('/settings/payment-plan/setup')}
-            disabled={loading}
-            className="disabled:opacity-60 !border-[1px] !border-[#DA7756] !text-[#DA7756] !bg-white hover:!bg-gray-50"
-          >
-            Cancel
-          </Button>
-          <Button
-            className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {isEditMode ? 'Update Plan' : 'Create Plan'}
-          </Button>
         </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-3 mt-6 pb-8">
+        <button
+          type="button"
+          onClick={() => navigate('/settings/payment-plan/setup')}
+          disabled={loading}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:opacity-60"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={loading}
+          className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E] disabled:opacity-60"
+        >
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          {isEditMode ? 'Update Plan' : 'Create Plan'}
+        </button>
       </div>
     </div>
   );

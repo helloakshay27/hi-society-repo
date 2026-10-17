@@ -1304,7 +1304,7 @@ export const PatrollingResponsePage = () => {
           {/* Filter Dialog */}
           <Dialog open={isFilterOpen} modal={false} onOpenChange={setIsFilterOpen}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white [&>button]:hidden" aria-describedby="patrolling-filter-description">
-              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+              <DialogHeader className="flex flex-row items-center justify-between pb-4">
                 <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">
                   FILTER BY
                 </DialogTitle>

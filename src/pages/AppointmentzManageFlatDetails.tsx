@@ -124,7 +124,8 @@ export const AppointmentzManageFlatDetails: React.FC = () => {
             <Button
               onClick={handleRefetch}
               disabled={isRefetching}
-              className="bg-[#fdf3ef] hover:bg-[#fbe7df] border border-[#f5cfbf] text-[#1A1A1A] px-3.5 py-1.5 rounded text-xs font-medium shadow-2xs transition-colors h-8 flex items-center gap-2"
+              variant="ghost"
+              className="border border-[#f5cfbf] text-[#1A1A1A] px-3.5 py-1.5 rounded text-xs font-medium shadow-2xs transition-colors h-8 flex items-center gap-2 hover:bg-transparent [&_svg]:text-[#da5677]"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-[#da5677] ${isRefetching ? "animate-spin" : ""}`} />
               <span>Refetch Data</span>

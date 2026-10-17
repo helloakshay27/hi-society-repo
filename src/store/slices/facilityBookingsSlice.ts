@@ -45,6 +45,12 @@ export interface FacilityBookingDetails {
     paid_amount?: number;
     total_amount?: number;
     notes?: string;
+    refunded_amount?: number;
+    refund_mode?: string;
+    refund_transaction_no?: string;
+    refunded_by_user?: string;
+    refunded_on?: string;
+    refund_note?: string;
   };
 }
 
