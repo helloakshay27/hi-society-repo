@@ -6,7 +6,15 @@ import { BulkUploadModal } from '@/components/BulkUploadModal';
 import { ExportModal } from '@/components/ExportModal';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
-import { TicketPagination } from '@/components/TicketPagination';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -340,6 +348,44 @@ export const RosterDashboard = ({
     }
   };
 
+  const renderPaginationItems = () => {
+    const pageLink = (i: number) => (
+      <PaginationItem key={i}>
+        <PaginationLink
+          className="cursor-pointer"
+          onClick={() => goToPage(i)}
+          isActive={currentPage === i}
+        >
+          {i}
+        </PaginationLink>
+      </PaginationItem>
+    );
+    const ellipsis = (key: string) => (
+      <PaginationItem key={key}>
+        <PaginationEllipsis />
+      </PaginationItem>
+    );
+
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => pageLink(i + 1));
+    }
+
+    const items = [pageLink(1)];
+    if (currentPage <= 3) {
+      for (let i = 2; i <= 4; i++) items.push(pageLink(i));
+      items.push(ellipsis('ellipsis1'));
+    } else if (currentPage >= totalPages - 2) {
+      items.push(ellipsis('ellipsis1'));
+      for (let i = totalPages - 3; i < totalPages; i++) items.push(pageLink(i));
+    } else {
+      items.push(ellipsis('ellipsis1'));
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) items.push(pageLink(i));
+      items.push(ellipsis('ellipsis2'));
+    }
+    items.push(pageLink(totalPages));
+    return items;
+  };
+
   // Handle search
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -460,88 +506,26 @@ variant="ghost"
             emptyMessage="No rosters found. Create your first roster to get started."
           />
 
-          {/* Pagination Controls - matching BuildingPage style */}
-          {allRosterData.length > 0 && (
-            <div className="flex items-center justify-between mt-4">
-              {/* <div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} rosters
-              </div> */}
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToPrevious}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-
-                <div className="flex items-center space-x-1">
-                  {/* Show first page */}
-                  {currentPage > 3 && (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => goToPage(1)}
-                        className="w-8 h-8 p-0"
-                      >
-                        1
-                      </Button>
-                      {currentPage > 4 && <span className="px-2">...</span>}
-                    </>
-                  )}
-
-                  {/* Show pages around current page */}
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(page => page >= currentPage - 2 && page <= currentPage + 2)
-                    .map((page) => (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => goToPage(page)}
-                        className={
-                          currentPage === page
-                            ? "w-8 h-8 p-0 !bg-[#da7756] hover:!bg-[#da7756]"
-                            : "w-8 h-8 p-0"
-                        }
-                      >
-                        {currentPage === page ? (
-                          <span style={{ color: '#fff' }}>{page}</span>
-                        ) : (
-                          page
-                        )}
-                      </Button>
-                    ))}
-
-                  {/* Show last page */}
-                  {currentPage < totalPages - 2 && (
-                    <>
-                      {currentPage < totalPages - 3 && <span className="px-2">...</span>}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => goToPage(totalPages)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {totalPages}
-                      </Button>
-                    </>
-                  )}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToNext}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+          {/* Pagination - same as Visitors dashboard */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-6">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={goToPrevious}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  {renderPaginationItems()}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={goToNext}
+                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
           )}
           </div>

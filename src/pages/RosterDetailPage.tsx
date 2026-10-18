@@ -2,25 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, MapPin, Building2, Clock, Users, Edit, Download, Trash2, Eye } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, Calendar, MapPin, Building2, Clock, Users, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { RootState } from '@/store/store';
 
-// Section component for consistent layout matching TaskDetailsPage
+// Section card matching the Visitor Details page
 const Section: React.FC<{ title: string; icon: React.ElementType; children: React.ReactNode }> = ({ title, icon: Icon, children }) => (
-  <section className="bg-transparent border-none shadow-none rounded-lg">
-    <div className="figma-card-header">
-      <div className="flex items-center gap-3">
-        <div className="figma-card-icon-wrapper">
-          <Icon className="figma-card-icon" />
+  <Card className="w-full rounded-2xl border border-[rgba(26,26,24,.09)] bg-white px-6 py-5 shadow-none">
+    <CardHeader className="px-0 pb-4 pt-0">
+      <CardTitle className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+          <Icon className="h-[14px] w-[14px] text-[#1A1A18]" />
         </div>
-        <h3 className="figma-card-title">{title}</h3>
-      </div>
-    </div>
-    <div className="figma-card-content">{children}</div>
-  </section>
+        <span>{title}</span>
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="px-0 pb-0 pt-0">{children}</CardContent>
+  </Card>
 );
+
+const LABEL = 'text-[11px] font-medium text-[rgba(26,26,24,.48)] block mb-1';
+const VALUE = 'text-[13.5px] font-medium text-[#1A1A18]';
 
 // Types
 interface FMUser {
@@ -409,47 +414,47 @@ export const RosterDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 min-h-screen bg-[#FDFDFB] space-y-6">
       {/* Header */}
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(rosterBasePath)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            title="Back to Roster Management"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#C72030]/10 text-[#C72030] flex items-center justify-center">
-              <Eye className="w-5 h-5" style={{ color: '#fff' }} />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-wide uppercase">Roster Template Details</h1>
-              <div className="flex items-center gap-2 mt-1">
-                <Building2 className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">{currentLocation}</span>
-                <span className="text-sm text-gray-400">•</span>
-                <span className={`text-sm px-2 py-1 rounded-full ${rosterTemplate.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                  {rosterTemplate.active ? 'Active' : 'Inactive'}
-                </span>
+      <div className="mb-6">
+        <button
+          onClick={() => navigate(rosterBasePath)}
+          className="mb-4 flex items-center gap-1.5 text-[12.5px] font-semibold text-[rgba(26,26,24,.48)] transition-colors hover:text-[#1A1A18]"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Roster List
+        </button>
+
+        <div className="my-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="mb-2 text-[22px] font-semibold text-[#1A1A18]" style={{ letterSpacing: '-0.015em', lineHeight: 1.2 }}>Roster Template Details</h1>
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-[rgba(26,26,24,.48)]">Template Name:</span>
+                <span className="font-semibold text-[#1A1A18]">{rosterTemplate.name || '--'}</span>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-[rgba(26,26,24,.48)]">Location:</span>
+                <span className="font-semibold text-[#1A1A18]">{rosterTemplate.location || currentLocation}</span>
+              </div>
+              <Badge className={rosterTemplate.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                {rosterTemplate.active ? 'ACTIVE' : 'INACTIVE'}
+              </Badge>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-         
-          <Button onClick={handleEdit} variant="outline" size="sm">
-            <Edit className="w-4 h-4 mr-2" style={{ color: '#da7756' }} />
-            Edit
-          </Button>
-          {/* <Button onClick={handleDelete} variant="destructive" size="sm">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete
-          </Button> */}
+          <div className="flex gap-2">
+            <Button
+              onClick={handleEdit}
+              className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
+              style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
+            >
+              <Edit className="w-4 h-4 mr-2" style={{ color: '#FFFFFF' }} />
+              <span style={{ color: '#FFFFFF' }}>Edit</span>
+            </Button>
+          </div>
         </div>
-      </header>
+      </div>
 
       {/* Content */}
       <div className="space-y-6">
@@ -457,18 +462,18 @@ export const RosterDetailPage: React.FC = () => {
         <Section title="Basic Information" icon={Calendar}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Template Name</label>
-              <p className="text-gray-900 font-medium">{rosterTemplate.name}</p>
+              <label className={LABEL}>Template Name</label>
+              <p className={VALUE}>{rosterTemplate.name}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Roster Type</label>
-              <p className="text-gray-900">{rosterTemplate.allocation_type}</p>
+              <label className={LABEL}>Roster Type</label>
+              <p className={VALUE}>{rosterTemplate.allocation_type}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Status</label>
-              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${rosterTemplate.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                {rosterTemplate.active ? 'Active' : 'Inactive'}
-              </span>
+              <label className={LABEL}>Status</label>
+              <Badge className={rosterTemplate.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                {rosterTemplate.active ? 'ACTIVE' : 'INACTIVE'}
+              </Badge>
             </div>
           </div>
         </Section>
@@ -478,20 +483,20 @@ export const RosterDetailPage: React.FC = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">Day Type</label>
+                <label className={LABEL}>Day Type</label>
                 <div className="flex items-center gap-2">
-                  <span className="inline-block w-3 h-3 rounded-full bg-[#C72030]"></span>
-                  <span className="font-medium text-gray-900">{rosterTemplate.roaster_type}</span>
+                  <span className="inline-block w-3 h-3 rounded-full bg-[#da7756]"></span>
+                  <span className={VALUE}>{rosterTemplate.roaster_type}</span>
                   <span className="text-sm text-gray-500">({formatWorkingDays()})</span>
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">Frequency</label>
+                <label className={LABEL}>Frequency</label>
                 <div className="flex flex-wrap gap-2">
                   {getWeekSelectionDisplay().map((week, index) => (
                     <span
                       key={index}
-                      className="inline-block px-2 py-1 bg-[#C72030] text-white text-xs rounded-md"
+                      className="inline-block px-2 py-1 bg-[#1A1A18] text-white text-xs rounded-md"
                     >
                       {week}
                     </span>
@@ -502,12 +507,12 @@ export const RosterDetailPage: React.FC = () => {
 
             {rosterTemplate.roaster_type === 'Recurring' && getCustomWorkingDays().length > 0 && (
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">Custom Days Selected</label>
+                <label className={LABEL}>Custom Days Selected</label>
                 <div className="flex flex-wrap gap-2">
                   {getCustomWorkingDays().map((day, index) => (
                     <span
                       key={index}
-                      className="inline-block px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-md border"
+                      className="inline-block px-2 py-1 bg-[#F5F4F0] text-[#1A1A18] text-xs rounded-md border border-[rgba(26,26,24,.09)]"
                     >
                       {day}
                     </span>
@@ -522,10 +527,10 @@ export const RosterDetailPage: React.FC = () => {
         <Section title="Location" icon={MapPin}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Location</label>
+              <label className={LABEL}>Location</label>
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-900">{rosterTemplate.location || currentLocation}</span>
+                <span className={VALUE}>{rosterTemplate.location || currentLocation}</span>
               </div>
             </div>
           </div>
@@ -535,11 +540,11 @@ export const RosterDetailPage: React.FC = () => {
         <Section title="Shift & Employees" icon={Clock}>
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Assigned Shift</label>
+              <label className={LABEL}>Assigned Shift</label>
               {(rosterTemplate.shift || getSelectedShift()) && (
-                <div className="flex items-center gap-2 p-3 bg-[#f6f4ee] border border-[#D5DbDB] rounded-lg">
-                  <Clock className="w-4 h-4 text-[#C72030]" />
-                  <span className="font-medium text-gray-900">
+                <div className="flex items-center gap-2 p-3 bg-[#F5F4F0] border border-[rgba(26,26,24,.09)] rounded-lg">
+                  <Clock className="w-4 h-4 text-[#da7756]" />
+                  <span className={VALUE}>
                     {rosterTemplate.shift || getSelectedShift()?.timings}
                   </span>
                   {getSelectedShift()?.total_hour && (
@@ -555,16 +560,16 @@ export const RosterDetailPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">
+              <label className={LABEL}>
                 Assigned Employees ({getSelectedEmployees().length})
               </label>
               {getSelectedEmployees().length > 0 ? (
                 <div className="space-y-2">
                   {getSelectedEmployees().map((employee, index) => (
-                    <div key={employee.id || index} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div key={employee.id || index} className="flex items-center gap-3 p-3 bg-white border border-[rgba(26,26,24,.09)] rounded-lg">
                       <Users className="w-4 h-4 text-gray-400" />
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">{employee.name || 'No name available'}</div>
+                        <div className="text-[13.5px] font-medium text-[#1A1A18]">{employee.name || 'No name available'}</div>
                         <div className="text-sm text-gray-600">{employee.email}</div>
                       </div>
                     </div>
@@ -581,28 +586,17 @@ export const RosterDetailPage: React.FC = () => {
         <Section title="Date Range" icon={Calendar}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Start Date</label>
-              <p className="text-gray-900">{new Date(rosterTemplate.start_date).toLocaleDateString()}</p>
+              <label className={LABEL}>Start Date</label>
+              <p className={VALUE}>{new Date(rosterTemplate.start_date).toLocaleDateString()}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">End Date</label>
-              <p className="text-gray-900">{new Date(rosterTemplate.end_date).toLocaleDateString()}</p>
+              <label className={LABEL}>End Date</label>
+              <p className={VALUE}>{new Date(rosterTemplate.end_date).toLocaleDateString()}</p>
             </div>
           </div>
         </Section>
 
     
-      </div>
-
-      {/* Footer Actions */}
-      <div className="flex items-center gap-3 justify-center pt-2 border-t border-gray-200">
-        <Button onClick={handleEdit} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2">
-          <Edit className="w-4 h-4 mr-2" />
-          Edit Template
-        </Button>
-        <Button onClick={() => navigate(rosterBasePath)} variant="outline" className="px-8">
-          Back to Roster List
-        </Button>
       </div>
     </div>
   );

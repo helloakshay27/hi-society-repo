@@ -217,7 +217,7 @@ export const ShiftDashboard = () => {
   const renderRow = (shift: ShiftItem) => ({
     actions: (
       <div className="flex items-center gap-2">
-        {shouldShow("Shift", "show") && (
+        {/* {shouldShow("Shift", "show") && (
           <button
             onClick={() => handleView(shift.id)}
             className="p-1 text-black hover:bg-gray-100 rounded"
@@ -225,7 +225,7 @@ export const ShiftDashboard = () => {
           >
             <Eye className="w-4 h-4" />
           </button>
-        )}
+        )} */}
         {shouldShow("Shift", "update") && (
           <button 
             onClick={() => handleEdit(shift.id)} 

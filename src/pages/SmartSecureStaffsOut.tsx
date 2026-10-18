@@ -202,21 +202,11 @@ const SmartSecureStaffsOut: React.FC = () => {
         case "photo":
           return (
             <div className="flex justify-center">
-              <button
-                onClick={() => {
-                  // Generate initials from staff name
-                  const initials = getInitials(record.staff.first_name, record.staff.last_name);
-                  setPreviewImageUrl(`data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23fb923c" width="100" height="100"/><text x="50" y="50" font-size="40" fill="white" text-anchor="middle" dy=".3em" font-weight="bold">${initials}</text></svg>`);
-                  setPreviewImageName(`${record.staff.first_name} ${record.staff.last_name}`.trim());
-                  setPreviewImageOpen(true);
-                }}
-                className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-orange-300 to-orange-400 flex items-center justify-center flex-shrink-0 hover:ring-2 hover:ring-[#C72030] cursor-pointer transition-all"
-                title="Click to preview"
-              >
-                <span className="text-white font-semibold text-sm">
-                  {getInitials(record.staff.first_name, record.staff.last_name)}
-                </span>
-              </button>
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
+              </div>
             </div>
           );
 

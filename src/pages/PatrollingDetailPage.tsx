@@ -856,6 +856,61 @@ export const PatrollingDetailPage: React.FC = () => {
     }
   };
 
+  const questionColumns: ColumnConfig[] = [
+    { key: "qnumber", label: "Q#", sortable: true, hideable: false, draggable: false, defaultVisible: true },
+    { key: "task", label: "Question", sortable: true, hideable: true, draggable: true, defaultVisible: true },
+    { key: "type", label: "Type", sortable: true, hideable: true, draggable: true, defaultVisible: true },
+    { key: "mandatory", label: "Mandatory", sortable: true, hideable: true, draggable: true, defaultVisible: true },
+    { key: "options", label: "Options", sortable: false, hideable: true, draggable: true, defaultVisible: true },
+    { key: "created_at", label: "Created On", sortable: true, hideable: true, draggable: true, defaultVisible: true },
+  ];
+
+  const renderQuestionCell = (question: QuestionData, columnKey: string): React.ReactNode => {
+    switch (columnKey) {
+      case "qnumber":
+        return <Badge variant="outline" className="text-xs">Q{question.qnumber}</Badge>;
+      case "task":
+        return <span className="font-medium">{question.task || "--"}</span>;
+      case "type":
+        return <Badge variant="outline" className="text-xs">{question.type}</Badge>;
+      case "mandatory":
+        return question.mandatory ? (
+          <Badge className="text-xs !bg-[#1A1A18] !text-white border-transparent hover:!bg-[#1A1A18]">Required</Badge>
+        ) : (
+          <Badge variant="secondary" className="text-xs">Optional</Badge>
+        );
+      case "options":
+        return question.options?.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {question.options.map((option, index) => (
+              <span key={index} className="text-xs bg-[#F5F4F0] px-2 py-1 rounded">{option}</span>
+            ))}
+          </div>
+        ) : (
+          "—"
+        );
+      case "created_at":
+        return <span className="text-sm">{formatDateTime(question.created_at)}</span>;
+      default:
+        return "--";
+    }
+  };
+
+  const renderQuestionsTable = (questions: QuestionData[], storageKey: string) => (
+    <EnhancedTable
+      data={questions}
+      columns={questionColumns}
+      renderCell={renderQuestionCell}
+      storageKey={storageKey}
+      pagination={false}
+      enableSearch={false}
+      hideTableSearch
+      hideTableExport
+      hideColumnsButton
+      emptyMessage="No questions available."
+    />
+  );
+
   const renderCheckpointCell = (item: CheckpointTableItem, columnKey: string): React.ReactNode => {
     switch (columnKey) {
       case "order_sequence":
@@ -1434,14 +1489,14 @@ export const PatrollingDetailPage: React.FC = () => {
             {patrolling.checklist && checklistQuestions.length > 0 ? (
               // Show checklist questions
               <>
-                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mb-4 p-4 bg-[#F5F4F0] border border-[rgba(26,26,24,.09)] rounded-lg">
                   <div className="flex items-center gap-2">
-                    <Info className="w-5 h-5 text-blue-600" />
+                    <Info className="w-5 h-5 text-[rgba(26,26,24,.48)]" />
                     <div>
-                      <p className="text-sm font-medium text-blue-800">
+                      <p className="text-sm font-medium text-[#1A1A18]">
                         Questions from Checklist
                       </p>
-                      <p className="text-xs text-blue-600">
+                      <p className="text-xs text-[rgba(26,26,24,.48)]">
                         Questions are loaded from the selected checklist:{" "}
                         <strong>{patrolling.checklist.name}</strong>
                       </p>
@@ -1458,81 +1513,12 @@ export const PatrollingDetailPage: React.FC = () => {
                       <h3 className="text-[14px] font-semibold text-[#1A1A18]">
                         Checklist Questions ({checklistQuestions.length})
                         {loadingChecklistQuestions && (
-                          <Loader2 className="w-4 h-4 animate-spin ml-2 text-[#C72030]" />
+                          <Loader2 className="w-4 h-4 animate-spin ml-2 text-[#da7756]" />
                         )}
                       </h3>
                     </div>
                   </div>
-                  <div>
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Q#</TableHead>
-                            <TableHead>ID</TableHead>
-                            <TableHead>Task</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Mandatory</TableHead>
-                            <TableHead>Options</TableHead>
-                            <TableHead>Created on</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody className="bg-white">
-                          {checklistQuestions.map((question) => (
-                            <TableRow key={question.id}>
-                              <TableCell>
-                                <Badge variant="outline" className="text-xs">
-                                  Q{question.qnumber}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{question.id}</TableCell>
-                              <TableCell>{question.task}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="text-xs">
-                                  {question.type}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                {question.mandatory ? (
-                                  <Badge
-                                    className="text-xs bg-[#C72030] hover:bg-[#B01C29] text-white border-transparent"
-                                  >
-                                    Required
-                                  </Badge>
-                                ) : (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    Optional
-                                  </Badge>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {question.options.length > 0 ? (
-                                  <div className="flex flex-wrap gap-1">
-                                    {question.options.map((option, index) => (
-                                      <span
-                                        key={index}
-                                        className="text-xs bg-gray-100 px-2 py-1 rounded"
-                                      >
-                                        {option}
-                                      </span>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  "—"
-                                )}
-                              </TableCell>
-                              <TableCell className="text-xs text-gray-600">
-                                {formatDateTime(question.created_at)}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
+                  {renderQuestionsTable(checklistQuestions, "patrolling-checklist-questions")}
                 </Card>
               </>
             ) : (
@@ -1546,93 +1532,12 @@ export const PatrollingDetailPage: React.FC = () => {
                     <h3 className="text-[14px] font-semibold text-[#1A1A18]">
                       Questions ({patrolling.questions?.length || 0})
                       {patrolling.checklist && loadingChecklistQuestions && (
-                        <Loader2 className="w-4 h-4 animate-spin ml-2 text-[#C72030]" />
+                        <Loader2 className="w-4 h-4 animate-spin ml-2 text-[#da7756]" />
                       )}
                     </h3>
                   </div>
                 </div>
-                <div>
-         
-
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Q#</TableHead>
-                          <TableHead>Question</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Mandatory</TableHead>
-                          <TableHead>Options</TableHead>
-                          <TableHead>Created on</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody className="bg-white">
-                        {patrolling.questions &&
-                        patrolling.questions.length > 0 ? (
-                          patrolling.questions.map((question) => (
-                            <TableRow key={question.id}>
-                              <TableCell>
-                                <Badge variant="outline" className="text-xs">
-                                  Q{question.qnumber}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{question.task}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="text-xs">
-                                  {question.type}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                {question.mandatory ? (
-                                  <Badge
-                                    className="text-xs bg-[#C72030] hover:bg-[#B01C29] text-white border-transparent"
-                                  >
-                                    Required
-                                  </Badge>
-                                ) : (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    Optional
-                                  </Badge>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {question.options.length > 0 ? (
-                                  <div className="flex flex-wrap gap-1">
-                                    {question.options.map((option, index) => (
-                                      <span
-                                        key={index}
-                                        className="text-xs bg-gray-100 px-2 py-1 rounded"
-                                      >
-                                        {option}
-                                      </span>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  "—"
-                                )}
-                              </TableCell>
-                              <TableCell className="text-xs text-gray-600">
-                                {formatDateTime(question.created_at)}
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell
-                              colSpan={7}
-                              className="text-center text-gray-600"
-                            >
-                              No questions available.
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
+                {renderQuestionsTable(patrolling.questions || [], "patrolling-questions")}
               </Card>
             )}
           </TabsContent>
@@ -1640,212 +1545,151 @@ export const PatrollingDetailPage: React.FC = () => {
           {/* Schedules */}
           <TabsContent value="schedules" className="mt-4 space-y-4 p-0">
             <Card className="mb-4 overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6 shadow-none">
-              <div className="mb-5">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
-                      <Calendar className="h-[14px] w-[14px] text-[#1A1A18]" />
-                    </div>
-                    <h3 className="text-[14px] font-semibold text-[#1A1A18]">Schedules ({patrolling.schedules?.length || 0})</h3>
+              <div className="mb-5 flex w-full items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]">
+                    <Calendar className="h-[14px] w-[14px] text-[#1A1A18]" />
                   </div>
-                  {patrolling.schedules && patrolling.schedules.length > 0 && (
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-[#C72030] rounded-full animate-pulse"></div>
-                        <span className="text-[#C72030] font-medium">
-                          Active: {patrolling.schedules.filter(s => s.active).length}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                        <span className="text-gray-600 font-medium">
-                          Inactive: {patrolling.schedules.filter(s => !s.active).length}
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                  <h3 className="text-[14px] font-semibold text-[#1A1A18]">Schedules ({patrolling.schedules?.length || 0})</h3>
                 </div>
+                {patrolling.schedules && patrolling.schedules.length > 0 && (
+                  <div className="flex items-center gap-4 text-[12px] font-medium">
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-[#798c5e]" />
+                      <span className="text-[#1A1A18]">Active: {patrolling.schedules.filter(s => s.active).length}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-[#d3d1c7]" />
+                      <span className="text-[rgba(26,26,24,.48)]">Inactive: {patrolling.schedules.filter(s => !s.active).length}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div>
-                {patrolling.schedules && patrolling.schedules.length > 0 ? (
-                  <div className="space-y-6">
-                    {patrolling.schedules.map((schedule) => (
-                      <div key={schedule.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300">
-                        {/* Schedule Header */}
-                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+
+              {patrolling.schedules && patrolling.schedules.length > 0 ? (
+                <div className="space-y-4">
+                  {patrolling.schedules.map((schedule) => {
+                    const cronData = schedule.cron_setting?.cron_expression
+                      ? formatCronExpression(schedule.cron_setting.cron_expression)
+                      : null;
+                    const timing = cronData
+                      ? [
+                          { label: "Hours", value: cronData.hours },
+                          { label: "Minutes", value: cronData.minutes },
+                          { label: "Day of Week", value: cronData.dayOfWeek },
+                          { label: "Month", value: cronData.months },
+                        ]
+                      : [];
+                    const people = [
+                      { label: "Guard", icon: Shield, name: schedule.assigned_guard_name, id: schedule.assigned_guard_id },
+                      { label: "Supervisor", icon: Eye, name: schedule.supervisor_name, id: schedule.supervisor_id },
+                    ];
+                    return (
+                      <div key={schedule.id} className="rounded-xl border border-[rgba(26,26,24,.09)] bg-white p-5">
+                        {/* Header */}
+                        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(26,26,24,.09)] pb-4">
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 ${schedule.active ? 'bg-[#C72030]' : 'bg-gray-400'} text-white rounded-full flex items-center justify-center font-semibold shadow-sm`}>
+                            <div className="flex h-10 min-w-10 items-center justify-center rounded-full bg-[#F5F4F0] px-2 text-[12px] font-semibold text-[#1A1A18]">
                               #{schedule.id}
                             </div>
                             <div>
-                              <h3 className="font-semibold text-gray-900 text-lg">
-                                Schedule #{schedule.id}
-                              </h3>
-                              <div className="flex items-center gap-3 mt-1">
-                                <p className="text-sm text-gray-500 flex items-center">
-                                  <Calendar className="w-3 h-3 mr-1" />
+                              <h4 className="text-[14px] font-semibold text-[#1A1A18]">Schedule #{schedule.id}</h4>
+                              <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-[rgba(26,26,24,.48)]">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
                                   Created {formatDateTime(schedule.created_at)}
-                                </p>
+                                </span>
                                 {schedule.cron_setting?.cron_expression && (
-                                  <Badge variant="outline" className="text-xs px-2 py-0.5">
-                                    <Clock className="w-3 h-3 mr-1" />
+                                  <Badge variant="outline" className="px-2 py-0.5 text-[11px]">
+                                    <Clock className="mr-1 h-3 w-3" />
                                     Scheduled
                                   </Badge>
                                 )}
                               </div>
                             </div>
                           </div>
-                          <Badge
-                            variant={schedule.active ? "default" : "secondary"}
-                            className={`px-3 py-1 ${schedule.active ? 'bg-red-100 text-red-800 border-red-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}
-                          >
-                            {schedule.active ? (
-                              <>
-                                <div className="w-2 h-2 bg-[#C72030] rounded-full mr-2 animate-pulse" />
-                                Active
-                              </>
-                            ) : (
-                              <>
-                                <div className="w-2 h-2 bg-gray-400 rounded-full mr-2" />
-                                Inactive
-                              </>
-                            )}
+                          <Badge className={schedule.active ? "bg-green-100 text-green-800 hover:bg-green-100" : "bg-gray-100 text-gray-600 hover:bg-gray-100"}>
+                            {schedule.active ? "ACTIVE" : "INACTIVE"}
                           </Badge>
                         </div>
 
-                        {/* Schedule Details Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                          {/* Personnel Information */}
-                          <div className="space-y-4">
-                            <div className="border-l-4 pl-4">
-                              <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                                <Users className="w-4 h-4 mr-2 text-gray-600" />
-                                Personnel Assignment
-                              </h4>
-                              <div className="space-y-3">
-                                <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <Shield className="w-4 h-4 text-gray-600" />
-                                    <span className="text-sm font-medium text-gray-900">Guard</span>
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                          {/* Personnel */}
+                          <div>
+                            <h5 className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[#1A1A18]">
+                              <Users className="h-4 w-4 text-[rgba(26,26,24,.48)]" />
+                              Personnel Assignment
+                            </h5>
+                            <div className="space-y-3">
+                              {people.map(({ label, icon: Icon, name, id: personId }) => (
+                                <div key={label} className="rounded-lg border border-[rgba(26,26,24,.09)] bg-[#FDFDFB] p-3">
+                                  <div className="mb-1 flex items-center gap-2 text-[11px] font-medium text-[rgba(26,26,24,.48)]">
+                                    <Icon className="h-3.5 w-3.5" />
+                                    {label}
                                   </div>
-                                  <p className="text-sm text-gray-800 font-medium">
-                                    {schedule.assigned_guard_name || 
-                                      <span className="text-gray-600 bg-gray-100 px-2 py-1 rounded text-xs">
-                                        ID: {schedule.assigned_guard_id}
-                                      </span>
-                                    }
+                                  <p className="text-[13.5px] font-medium text-[#1A1A18]">
+                                    {name || (personId ? `ID: ${personId}` : "--")}
                                   </p>
                                 </div>
-                                <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <Eye className="w-4 h-4 text-gray-600" />
-                                    <span className="text-sm font-medium text-gray-900">Supervisor</span>
-                                  </div>
-                                  <p className="text-sm text-gray-800 font-medium">
-                                    {schedule.supervisor_name || 
-                                      <span className="text-gray-600 bg-gray-100 px-2 py-1 rounded text-xs">
-                                        ID: {schedule.supervisor_id}
-                                      </span>
-                                    }
-                                  </p>
-                                </div>
-                              </div>
+                              ))}
                             </div>
                           </div>
 
-                          {/* Schedule Timing */}
-                          <div className="space-y-4">
-                            <div className="border-l-4 border-gray-500 pl-4">
-                              <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                                <Clock className="w-4 h-4 mr-2 text-gray-600" />
-                                Schedule Timing
-                              </h4>
-                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                                {schedule.cron_setting?.cron_expression ? (
-                                  <div className="space-y-3">
-                                    {(() => {
-                                      const cronData = formatCronExpression(
-                                        schedule.cron_setting.cron_expression
-                                      );
-                                      return cronData ? (
-                                        <>
-                                          <div className="grid grid-cols-2 gap-3">
-                                            <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                                              <div className="text-xs text-gray-700 font-medium mb-1">Hours</div>
-                                              <div className="text-sm font-bold text-gray-900">
-                                                {cronData.hours}
-                                              </div>
-                                            </div>
-                                            <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                                              <div className="text-xs text-gray-700 font-medium mb-1">Minutes</div>
-                                              <div className="text-sm font-bold text-gray-900">
-                                                {cronData.minutes}
-                                              </div>
-                                            </div>
-                                            <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                                              <div className="text-xs text-gray-700 font-medium mb-1">Day of Week</div>
-                                              <div className="text-sm font-bold text-gray-900">
-                                                {cronData.dayOfWeek}
-                                              </div>
-                                            </div>
-                                            <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                                              <div className="text-xs text-gray-700 font-medium mb-1">Month</div>
-                                              <div className="text-sm font-bold text-gray-900">
-                                                {cronData.months}
-                                              </div>
-                                            </div>
-                                          </div>
-                                        
-                                        </>
-                                      ) : (
-                                        <div className="space-y-2">
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                                              <AlertCircle className="w-3 h-3 mr-1" />
-                                              Custom Schedule
-                                            </Badge>
-                                          </div>
-                                          <div className="bg-gray-900 text-green-400 p-3 rounded-lg text-xs font-mono border overflow-x-auto shadow-inner">
-                                            {schedule.cron_setting.cron_expression}
-                                          </div>
-                                        </div>
-                                      );
-                                    })()}
+                          {/* Timing */}
+                          <div>
+                            <h5 className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[#1A1A18]">
+                              <Clock className="h-4 w-4 text-[rgba(26,26,24,.48)]" />
+                              Schedule Timing
+                            </h5>
+                            {schedule.cron_setting?.cron_expression ? (
+                              cronData ? (
+                                <div className="grid grid-cols-2 gap-3">
+                                  {timing.map((t) => (
+                                    <div key={t.label} className="rounded-lg border border-[rgba(26,26,24,.09)] bg-[#FDFDFB] p-3">
+                                      <div className="mb-1 text-[11px] font-medium text-[rgba(26,26,24,.48)]">{t.label}</div>
+                                      <div className="text-[13.5px] font-medium text-[#1A1A18]">{t.value}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    <AlertCircle className="mr-1 h-3 w-3" />
+                                    Custom Schedule
+                                  </Badge>
+                                  <div className="overflow-x-auto rounded-lg border bg-[#F5F4F0] p-3 font-mono text-xs text-[#1A1A18]">
+                                    {schedule.cron_setting.cron_expression}
                                   </div>
-                                ) : (
-                                  <div className="text-center text-gray-400 py-6">
-                                    <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                    <p className="text-sm font-medium">No schedule timing configured</p>
-                                  </div>
-                                )}
+                                </div>
+                              )
+                            ) : (
+                              <div className="rounded-lg border border-[rgba(26,26,24,.09)] bg-[#FDFDFB] py-6 text-center text-[rgba(26,26,24,.48)]">
+                                <Clock className="mx-auto mb-2 h-6 w-6 opacity-50" />
+                                <p className="text-[13px] font-medium">No schedule timing configured</p>
                               </div>
-                            </div>
+                            )}
                           </div>
                         </div>
-
-                    
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
-                    <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      No Schedules Configured
-                    </h3>
-                    <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                      No patrol schedules have been set up yet. Schedules define when and how often patrols should be conducted.
-                    </p>
-                    <Button 
-                      onClick={() => navigate(`/security/patrolling/edit/${id}`)}
-                      className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Schedule
-                    </Button>
-                  </div>
-                )}
-              </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-[rgba(26,26,24,.15)] bg-white py-12 text-center">
+                  <Calendar className="mx-auto mb-4 h-12 w-12 text-[#d3d1c7]" />
+                  <h3 className="mb-2 text-[14px] font-semibold text-[#1A1A18]">No Schedules Configured</h3>
+                  <p className="mx-auto mb-6 max-w-md text-[13px] text-[rgba(26,26,24,.48)]">
+                    No patrol schedules have been set up yet. Schedules define when and how often patrols should be conducted.
+                  </p>
+                  <Button
+                    onClick={() => navigate(`/security/patrolling/edit/${id}`)}
+                    className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
+                  >
+                    <Plus className="mr-2 h-4 w-4" style={{ color: "#FFFFFF" }} />
+                    <span style={{ color: "#FFFFFF" }}>Add Schedule</span>
+                  </Button>
+                </div>
+              )}
             </Card>
           </TabsContent>
 
