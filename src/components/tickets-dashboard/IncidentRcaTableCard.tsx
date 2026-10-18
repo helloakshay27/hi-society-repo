@@ -10,54 +10,33 @@ interface IncidentRcaTableCardProps {
   className?: string;
 }
 
-const PILL_BASE = 'inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-brand-body-5 font-semibold';
+const RCA_PAGE_SIZE = 20;
+const SR_NO_KEY = '__sr_no';
 
-/** Short fields stay on one line; narrative fields get a readable width and clamp. */
-const COLUMN_WIDTH: Record<string, { minWidth: string; clamp?: boolean }> = {
-  sr_no: { minWidth: '4.5rem' },
-  incident_id: { minWidth: '7rem' },
-  site_name: { minWidth: '10rem' },
-  site: { minWidth: '10rem' },
-  area: { minWidth: '9rem' },
-  occurrence_date: { minWidth: '9rem' },
-  date: { minWidth: '8rem' },
-  occurrence_time: { minWidth: '8rem' },
-  time: { minWidth: '7rem' },
-  category_name: { minWidth: '9rem' },
-  category: { minWidth: '9rem' },
-  loss: { minWidth: '6rem' },
-  rca_category_name: { minWidth: '11rem' },
-  current_status: { minWidth: '8rem' },
-  status: { minWidth: '8rem' },
-  assigned_to_user_name: { minWidth: '10rem' },
-  level_name: { minWidth: '7rem' },
-  level: { minWidth: '7rem' },
-  description: { minWidth: '18rem', clamp: true },
-  rca_text: { minWidth: '18rem', clamp: true },
-  rca: { minWidth: '18rem', clamp: true },
-  corrective_action: { minWidth: '18rem', clamp: true },
-  preventive_action: { minWidth: '18rem', clamp: true },
-};
+/**
+ * Legacy "Incident Summary" column order + labels. Each entry lists the API keys it can come from;
+ * API columns not listed here are appended after these, so no data is dropped.
+ */
+const SUMMARY_COLUMNS: { label: string; keys: string[]; wide?: boolean }[] = [
+  { label: 'Name of the site', keys: ['site_name', 'site'] },
+  { label: 'Location', keys: ['area', 'location'] },
+  { label: 'Incident date', keys: ['occurrence_date', 'date'] },
+  { label: 'Time of incidence', keys: ['occurrence_time', 'time'] },
+  { label: 'Incident Category', keys: ['category_name', 'category'] },
+  { label: 'Incident Brief', keys: ['description'], wide: true },
+  { label: 'Loss/Damage Evaluation', keys: ['loss'] },
+  { label: 'RCA', keys: ['rca_text', 'rca'], wide: true },
+  { label: 'Level', keys: ['level_name', 'level'] },
+  { label: 'Primary RCA Category', keys: ['rca_category_name'] },
+  { label: 'Corrective Actions', keys: ['corrective_action', 'corrective_actions'], wide: true },
+  { label: 'Preventive Actions', keys: ['preventive_action', 'preventive_actions'], wide: true },
+  { label: 'Status', keys: ['current_status', 'status'] },
+];
 
-const levelPillClass = (value: string): string => {
-  const v = value.toLowerCase();
-  if (v.includes('high') || v.includes('critical') || v.includes('severe')) return `${PILL_BASE} bg-[#F2C8C4] text-black`;
-  if (v.includes('moderate') || v.includes('medium')) return `${PILL_BASE} bg-[#F2EBC9] text-black`;
-  if (v.includes('low')) return `${PILL_BASE} bg-[#C7EDDA] text-black`;
-  return `${PILL_BASE} bg-brand-bg text-brand-text`;
-};
+/** Columns the summary view replaces with its own Sr. No. */
+const HIDDEN_KEYS = new Set(['sr_no', 'serial_no', 'incident_id', 'id']);
 
-const statusPillClass = (value: string): string => {
-  const v = value.toLowerCase();
-  if (v.includes('final')) return `${PILL_BASE} bg-[#CECBF6] text-black`;
-  if (v.includes('provisional') || v.includes('pending') || v.includes('progress'))
-    return `${PILL_BASE} bg-[#F2EBC9] text-black`;
-  if (v.includes('open') || v.includes('active')) return `${PILL_BASE} bg-[#C7EDDA] text-black`;
-  if (v.includes('closed') || v.includes('reject')) return `${PILL_BASE} bg-[#EDEAE3] text-black`;
-  return `${PILL_BASE} bg-brand-bg text-brand-text`;
-};
-
-/** "RCA Data" — paginated incident RCA rows with client-side Sr. No. search and CSV export. */
+/** "RCA Data" — paginated incident RCA rows with client-side search and CSV export. */
 export const IncidentRcaTableCard: React.FC<IncidentRcaTableCardProps> = ({ dateRange, className }) => {
   const [columns, setColumns] = useState<{ key: string; label: string }[]>([]);
   const [rows, setRows] = useState<IncidentRcaRow[]>([]);
@@ -96,37 +75,40 @@ export const IncidentRcaTableCard: React.FC<IncidentRcaTableCardProps> = ({ date
     };
   }, [dateRange.startDate, dateRange.endDate, page]);
 
-  const srKey = useMemo(
-    () => columns.find((c) => /sr\.?\s*no|serial|^#$/i.test(c.label) || /sr_no|serial/i.test(c.key))?.key ?? 'sr_no',
-    [columns]
+  const tableColumns = useMemo(() => {
+    const available = new Set(columns.map((c) => c.key));
+    const used = new Set<string>();
+    const ordered: { key: string; label: string; wide?: boolean }[] = [{ key: SR_NO_KEY, label: 'Sr. No.' }];
+    SUMMARY_COLUMNS.forEach(({ label, keys, wide }) => {
+      const key = keys.find((k) => available.has(k));
+      if (!key) return;
+      used.add(key);
+      ordered.push({ key, label, wide });
+    });
+    columns.forEach((col) => {
+      if (used.has(col.key) || HIDDEN_KEYS.has(col.key)) return;
+      ordered.push(col);
+    });
+    return ordered;
+  }, [columns]);
+
+  const numberedRows = useMemo(
+    () => rows.map((row, index) => ({ ...row, [SR_NO_KEY]: (page - 1) * RCA_PAGE_SIZE + index + 1 })),
+    [rows, page]
   );
 
   const visibleRows = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return rows;
-    return rows.filter((row) =>
+    if (!term) return numberedRows;
+    return numberedRows.filter((row) =>
       Object.values(row).some((value) => String(value ?? '').toLowerCase().includes(term))
     );
-  }, [rows, search]);
+  }, [numberedRows, search]);
 
-  const renderCell = (row: IncidentRcaRow, key: string, label: string) => {
+  const renderCell = (row: IncidentRcaRow, key: string) => {
     const value = row[key];
     if (value == null || value === '') return '—';
-    const text = String(value);
-    if (/level/i.test(label) || /level/i.test(key)) {
-      return <span className={levelPillClass(text)}>{text}</span>;
-    }
-    if (/status/i.test(label) || /status/i.test(key)) {
-      return <span className={statusPillClass(text)}>{text}</span>;
-    }
-    if (COLUMN_WIDTH[key]?.clamp) {
-      return (
-        <span className="line-clamp-4 whitespace-normal" title={text}>
-          {text}
-        </span>
-      );
-    }
-    return <span className="whitespace-nowrap">{text}</span>;
+    return String(value);
   };
 
   return (
@@ -160,49 +142,36 @@ export const IncidentRcaTableCard: React.FC<IncidentRcaTableCardProps> = ({ date
           No Data Available
         </div>
       ) : (
-        <>
-          <div className="max-h-[28rem] overflow-auto">
-            <table
-              style={{ width: 'max-content', minWidth: '100%' }}
-              className="border-separate border-spacing-0 text-left text-brand-body-5"
-            >
+        <div className="flex h-full min-h-48 flex-col">
+          {/* Fills the card so the table shell never sits half-empty inside the grid cell. */}
+          <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-[#d5dbdb] bg-white">
+            <table className="item-table-no-hover w-full border-separate border-spacing-0 text-brand-body-5">
               <thead>
                 <tr>
-                  {columns.map((col) => {
-                    const width = COLUMN_WIDTH[col.key]?.minWidth ?? '8rem';
-                    return (
-                      <th
-                        key={col.key}
-                        style={{
-                          minWidth: width,
-                          width: COLUMN_WIDTH[col.key]?.clamp ? width : undefined,
-                        }}
-                        className="sticky top-0 whitespace-nowrap border-b border-[#c4b89d] bg-brand px-3 py-2.5 text-left font-bold text-white"
-                      >
-                        {col.label}
-                      </th>
-                    );
-                  })}
+                  {tableColumns.map((col) => (
+                    <th
+                      key={col.key}
+                      style={{ minWidth: col.wide ? '14rem' : col.key === SR_NO_KEY ? '4.5rem' : '7.5rem' }}
+                      className="sticky top-0 z-10 px-3 py-2.5 text-center align-middle"
+                    >
+                      {col.label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {visibleRows.map((row, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-[#f6f4ee]'}>
-                    {columns.map((col) => {
-                      const width = COLUMN_WIDTH[col.key]?.minWidth ?? '8rem';
-                      const clamp = COLUMN_WIDTH[col.key]?.clamp;
-                      return (
-                        <td
-                          key={col.key}
-                          style={{ minWidth: width, maxWidth: clamp ? width : undefined, width: clamp ? width : undefined }}
-                          className={`border-b border-[#d5dbdb] px-3 py-2.5 align-top text-brand-text ${
-                            col.key === srKey ? 'font-semibold' : ''
-                          }`}
-                        >
-                          {renderCell(row, col.key, col.label)}
-                        </td>
-                      );
-                    })}
+                {visibleRows.map((row) => (
+                  <tr key={row[SR_NO_KEY]}>
+                    {tableColumns.map((col) => (
+                      <td
+                        key={col.key}
+                        className={`whitespace-normal break-words px-3 py-2.5 text-center align-top text-brand-text ${
+                          col.key === SR_NO_KEY ? 'font-semibold' : ''
+                        }`}
+                      >
+                        {renderCell(row, col.key)}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -210,7 +179,7 @@ export const IncidentRcaTableCard: React.FC<IncidentRcaTableCardProps> = ({ date
           </div>
 
           {totalPages > 1 && (
-            <div className="mt-3 flex items-center justify-end gap-2 text-brand-body-5 text-brand-text">
+            <div className="mt-3 flex shrink-0 items-center justify-end gap-2 text-brand-body-5 text-brand-text">
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -234,7 +203,7 @@ export const IncidentRcaTableCard: React.FC<IncidentRcaTableCardProps> = ({ date
               </button>
             </div>
           )}
-        </>
+        </div>
       )}
     </ChartCardShell>
   );
