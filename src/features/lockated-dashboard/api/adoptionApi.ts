@@ -1,0 +1,1 @@
+export * from '@/features/smartsecure-dashboard/api/adoptionApi';

@@ -1,0 +1,1632 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap');
+
+/* ============================================================
+   Lockated · Analytics Dashboard
+   Design system ported verbatim from FM Matrix v2:
+   warm off-white ground, pure-white cards, hairline borders,
+   no shadows, colour used only as signal. Scoped cleanly under
+   .lockated-app.
+   ============================================================ */
+
+.lockated-app {
+  color-scheme: light;
+
+  /* --- surfaces & ink --- */
+  --bg: #faf9f7;
+  --surface: #ffffff;
+  --surface-2: #f5f4f1;
+  --surface-3: #edebe6;
+  --border: #e6e4de;
+  --border-2: #d9d6ce;
+  --ink: #141413;
+  --ink-2: #3f3e3a;
+  --muted: #6f6e68;
+  --faint: #9b9990;
+  --on-ink: #ffffff;
+
+  /* --- data palette (sparse, signal only) --- */
+  --blue: #2c7be5;
+  --blue-tint: #e7effc;
+  --blue-fill: #cfe1f8;
+  --green: #0f8a3d;
+  --green-tint: #e2efe6;
+  --mint: #3daf7d;
+  --mint-tint: #e0f1e9;
+  --amber: #c98a12;
+  --amber-ink: #8a6210;
+  --amber-tint: #f7ecd2;
+  --red: #b3402c;
+  --red-tint: #f6e2dd;
+  --pos: #17803d;
+  --neg: #b3402c;
+
+  /* --- chart palette --- */
+  --chart-grid: #e6e4de;
+  --chart-line: #d9d6ce;
+  --chart-blue: #2c7be5;
+  --chart-fill: #d3e3f9;
+  --chart-mint: #3daf7d;
+  --chart-amber: #c98a12;
+  --chart-red: #b3402c;
+  --chart-violet: #7c6fd6;
+  --chart-violet-tint: #e7e4f8;
+  --heat-rgb: 44, 123, 229;
+  --heat-a0: 0.09;
+  --heat-a1: 0.78;
+  --on-heat: #ffffff;
+
+  /* --- depth (used sparingly: popovers & drawers only) --- */
+  --scrim: rgba(20, 20, 19, 0.16);
+  --shadow-pop: 0 10px 34px rgba(20, 20, 19, 0.13);
+  --shadow-panel: -10px 0 34px rgba(20, 20, 19, 0.10);
+  --shadow-spot: 0 24px 64px -24px rgba(20, 20, 19, 0.34);
+  --focus-ring: 0 0 0 3px rgba(44, 123, 229, 0.13);
+
+  --r: 12px;
+  --r-sm: 8px;
+  --r-xs: 6px;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: 'Newsreader', 'Tiempos Headline', Georgia, 'Times New Roman', serif;
+  --sidebar-w: 252px;
+  --sidebar-rail: 64px;
+  --topbar-h: 56px;
+
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv05" 1, "cv11" 1;
+}
+
+.lockated-app[data-theme="dark"],
+html[data-theme="dark"] .lockated-app {
+  color-scheme: dark;
+
+  --bg: #1a1917;
+  --surface: #211f1d;
+  --surface-2: #2a2825;
+  --surface-3: #35322d;
+  --border: #33302a;
+  --border-2: #474339;
+  --ink: #f2f0eb;
+  --ink-2: #d3d0c8;
+  --muted: #a09d94;
+  --faint: #7b7871;
+  --on-ink: #1a1917;
+
+  --blue: #5f9df6;
+  --blue-tint: #1b2a3e;
+  --blue-fill: #233448;
+  --green: #4fc07f;
+  --green-tint: #1a2c21;
+  --mint: #57c496;
+  --mint-tint: #1a2d26;
+  --amber: #dfa63e;
+  --amber-ink: #dfa63e;
+  --amber-tint: #332918;
+  --red: #e4735c;
+  --red-tint: #37211c;
+  --pos: #4fc07f;
+  --neg: #e4735c;
+
+  --chart-grid: #33302a;
+  --chart-line: #4a463d;
+  --chart-blue: #5f9df6;
+  --chart-fill: #22344b;
+  --chart-mint: #57c496;
+  --chart-amber: #dfa63e;
+  --chart-red: #e4735c;
+  --chart-violet: #9d90e8;
+  --chart-violet-tint: #292440;
+  --heat-rgb: 95, 157, 246;
+  --heat-a0: 0.12;
+  --heat-a1: 0.80;
+  --on-heat: #101820;
+
+  --scrim: rgba(0, 0, 0, 0.52);
+  --shadow-pop: 0 10px 34px rgba(0, 0, 0, 0.52);
+  --shadow-panel: -10px 0 34px rgba(0, 0, 0, 0.42);
+  --shadow-spot: 0 24px 64px -24px rgba(0, 0, 0, 0.72);
+  --focus-ring: 0 0 0 3px rgba(95, 157, 246, 0.22);
+}
+
+.lockated-app * {
+  box-sizing: border-box;
+}
+
+.lockated-app a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.lockated-app button {
+  font-family: inherit;
+}
+
+.lockated-app ::selection {
+  background: var(--blue-tint);
+}
+
+/* ============ TOP BAR ============ */
+.lockated-app .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px 0 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.lockated-app .topbar .back {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: none;
+  color: var(--ink-2);
+  font-size: 17px;
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.lockated-app .topbar .back:hover {
+  background: var(--surface-2);
+}
+
+.lockated-app .topbar-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.lockated-app .topbar .spacer {
+  flex: 1;
+}
+
+.lockated-app .topbar .badge-sample {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.lockated-app .avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--on-ink);
+  display: grid;
+  place-items: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  flex: none;
+}
+
+.lockated-app .topbar .rule {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  flex: none;
+}
+
+.lockated-app .iconbtn {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: none;
+  color: var(--muted);
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.lockated-app .iconbtn:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.lockated-app .iconbtn svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+
+.lockated-app .iconbtn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ============ SHELL ============ */
+.lockated-app .shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  align-items: start;
+  max-width: 1560px;
+  margin: 0 auto;
+  transition: grid-template-columns 0.2s ease;
+}
+
+.lockated-app.nav-collapsed .shell {
+  grid-template-columns: var(--sidebar-rail) 1fr;
+}
+
+.lockated-app .sidebar {
+  position: sticky;
+  top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 34px 14px 48px 26px;
+  border-right: 1px solid var(--border);
+}
+
+.lockated-app .brandmark {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.012em;
+  line-height: 1.15;
+  margin: 0 0 4px;
+  padding-left: 10px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.lockated-app .brandmark .bm-mini {
+  display: none;
+}
+
+.lockated-app .brandmark-sub {
+  font-size: 12px;
+  color: var(--faint);
+  padding-left: 10px;
+  margin: 0 0 26px;
+  white-space: nowrap;
+}
+
+.lockated-app .nav-group {
+  margin-bottom: 20px;
+}
+
+.lockated-app .nav-label {
+  font-size: 12px;
+  color: var(--faint);
+  font-weight: 400;
+  padding: 0 10px 7px;
+  white-space: nowrap;
+}
+
+.lockated-app .nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-2);
+  background: none;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.lockated-app .nav-item:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.lockated-app .nav-item.on {
+  background: var(--surface-3);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.lockated-app .nav-item:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.lockated-app .nav-item .ni-ic {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+}
+
+.lockated-app .nav-item .ni-ic svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+
+.lockated-app .nav-item.on .ni-ic {
+  color: var(--ink);
+}
+
+.lockated-app .nav-item .ni-t {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Nav Collapsed state */
+.lockated-app.nav-collapsed .sidebar {
+  padding: 34px 11px 48px;
+  overflow: visible;
+}
+
+.lockated-app.nav-collapsed .brandmark {
+  font-size: 21px;
+  padding: 0;
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+.lockated-app.nav-collapsed .brandmark .bm-full {
+  display: none;
+}
+
+.lockated-app.nav-collapsed .brandmark .bm-mini {
+  display: inline;
+}
+
+.lockated-app.nav-collapsed .brandmark-sub,
+.lockated-app.nav-collapsed .nav-label,
+.lockated-app.nav-collapsed .nav-item .ni-t {
+  display: none;
+}
+
+.lockated-app.nav-collapsed .nav-item {
+  justify-content: center;
+  padding: 10px 0;
+  gap: 0;
+}
+
+.lockated-app.nav-collapsed .nav-group {
+  margin-bottom: 10px;
+}
+
+.lockated-app.nav-collapsed .nav-group + .nav-group {
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.lockated-app.nav-collapsed .nav-item:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 90;
+  pointer-events: none;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  padding: 6px 9px;
+  border-radius: var(--r-xs);
+  white-space: nowrap;
+  box-shadow: var(--shadow-pop);
+}
+
+/* ============ MAIN ============ */
+.lockated-app .main {
+  padding: 34px 40px 90px;
+  min-width: 0;
+}
+
+.lockated-app .page-head {
+  margin-bottom: 22px;
+}
+
+.lockated-app .page-head h2 {
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.lockated-app .page-head .page-sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 5px 0 0;
+}
+
+.lockated-app .filterbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  row-gap: 8px;
+  margin-bottom: 24px;
+}
+
+.lockated-app .filterbar .spacer {
+  flex: 1;
+}
+
+.lockated-app .section {
+  margin-top: 38px;
+}
+
+.lockated-app .section:first-child {
+  margin-top: 0;
+}
+
+.lockated-app .section-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+
+.lockated-app .section-head h2 {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.008em;
+  margin: 0;
+}
+
+.lockated-app .section-head .sd {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.lockated-app .section-head .layerpill {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 2px 9px;
+  border-radius: 20px;
+}
+
+.lockated-app .section-head .spacer {
+  flex: 1;
+}
+
+.lockated-app .qbox {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 15px;
+  margin: 12px 0 0;
+}
+
+.lockated-app .qbox b {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.lockated-app .qbox ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.lockated-app .qbox li {
+  margin: 2px 0;
+}
+
+/* ============ CONTROLS ============ */
+.lockated-app .ctrl {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 6px 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.lockated-app .ctrl:hover {
+  background: var(--surface-2);
+}
+
+.lockated-app .ctrl .ic {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.lockated-app .ctrl .chev {
+  color: var(--faint);
+  font-size: 10px;
+  margin-left: 1px;
+}
+
+.lockated-app .ctrl select {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  border: none;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 2px;
+}
+
+.lockated-app .ctrl.toggle-on {
+  border-color: var(--border-2);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* ============ DATE RANGE CONTROL ============ */
+.lockated-app .daterange {
+  position: relative;
+  display: inline-block;
+}
+
+.lockated-app .daterange-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 60;
+  width: 250px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-pop);
+  padding: 10px;
+  display: none;
+}
+
+.lockated-app .daterange.open .daterange-pop {
+  display: block;
+}
+
+.lockated-app .dr-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.lockated-app .dr-preset {
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-radius: var(--r-xs);
+  padding: 7px 9px;
+  cursor: pointer;
+}
+
+.lockated-app .dr-preset:hover {
+  background: var(--surface-2);
+}
+
+.lockated-app .dr-preset.on {
+  background: var(--surface-2);
+  font-weight: 500;
+}
+
+.lockated-app .dr-custom-label {
+  font-size: 11.5px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+}
+
+.lockated-app .dr-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.lockated-app .dr-custom-row input[type="date"] {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  padding: 5px 6px;
+}
+
+.lockated-app .dr-custom-row input[type="date"]:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: var(--focus-ring);
+}
+
+.lockated-app .dr-to {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.lockated-app .dr-apply {
+  width: 100%;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--on-ink);
+  background: var(--ink);
+  border: none;
+  border-radius: var(--r-xs);
+  padding: 8px;
+  cursor: pointer;
+}
+
+.lockated-app .dr-apply:hover {
+  opacity: 0.9;
+}
+
+.lockated-app .dr-apply.applied {
+  background: var(--mint);
+  color: var(--ink);
+}
+
+.lockated-app .seg,
+.lockated-app .charttabs,
+.lockated-app .devtoggle,
+.lockated-app .scopetoggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-3);
+  border: none;
+  border-radius: var(--r-sm);
+}
+
+.lockated-app .seg button,
+.lockated-app .charttabs button,
+.lockated-app .devtoggle button,
+.lockated-app .scopetoggle button {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 400;
+  padding: 5px 12px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: var(--r-xs);
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+
+.lockated-app .seg button:hover:not(.on),
+.lockated-app .charttabs button:hover:not(.on),
+.lockated-app .devtoggle button:hover:not(.on),
+.lockated-app .scopetoggle button:hover:not(.on) {
+  color: var(--ink);
+}
+
+.lockated-app .seg button.on,
+.lockated-app .charttabs button.on,
+.lockated-app .devtoggle button.on,
+.lockated-app .scopetoggle button.on {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.lockated-app .devtoggle button {
+  padding: 5px 9px;
+  font-size: 13px;
+}
+
+.lockated-app .scopetoggle button {
+  padding: 5px 10px;
+  font-size: 12.5px;
+}
+
+.lockated-app .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+
+.lockated-app .pill b {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.lockated-app .pill .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mint);
+  display: inline-block;
+  animation: lk-pulse 2s infinite;
+}
+
+@keyframes lk-pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* ============ CARDS ============ */
+.lockated-app .grid {
+  display: grid;
+  gap: 12px;
+}
+
+.lockated-app .card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+}
+
+.lockated-app .card-head {
+  padding: 18px 20px 8px;
+  border: 0;
+}
+
+.lockated-app .card-head .cr {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--faint);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.lockated-app .card-head .ct {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 3px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.005em;
+}
+
+.lockated-app .card-head .cd {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 5px 0 0;
+  line-height: 1.45;
+}
+
+.lockated-app .card-body {
+  padding: 8px 20px 20px;
+}
+
+.lockated-app .grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.lockated-app .grid32 {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 1100px) {
+  .lockated-app .grid2,
+  .lockated-app .grid32 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============ KPI TILES ============ */
+.lockated-app .tiles {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+@media (max-width: 1600px) {
+  .lockated-app .tiles {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .lockated-app .tiles {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+.lockated-app .tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 18px 16px;
+  text-align: left;
+}
+
+.lockated-app .tile .tophead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lockated-app .tile .val {
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+.lockated-app .tile .delta {
+  font-size: 12.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  margin-top: 4px;
+}
+
+.lockated-app .delta.up {
+  color: var(--pos);
+}
+
+.lockated-app .delta.dn {
+  color: var(--neg);
+}
+
+.lockated-app .delta.flat {
+  color: var(--faint);
+}
+
+.lockated-app .tile .lbl {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-top: 9px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.lockated-app .tile .sub2 {
+  font-size: 12.5px;
+  color: var(--faint);
+  margin-top: 2px;
+}
+
+.lockated-app .bmnote,
+.lockated-app .scope-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 15px;
+  margin: 0 0 14px;
+}
+
+.lockated-app .bmnote b,
+.lockated-app .scope-note b {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.lockated-app .bmnote > span:first-child,
+.lockated-app .scope-note > span:first-child {
+  color: var(--faint);
+}
+
+.lockated-app .bmnote.crashnote {
+  background: var(--amber-tint);
+  border-color: var(--amber);
+  margin-top: 12px;
+}
+
+.lockated-app .bmnote.crashnote > span:first-child {
+  color: var(--amber-ink);
+}
+
+.lockated-app .bmnote.crashnote b {
+  color: var(--amber-ink);
+}
+
+/* ============ LAYOUT HELPERS & CHARTS ============ */
+.lockated-app .two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.lockated-app .two-32 {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 1100px) {
+  .lockated-app .two,
+  .lockated-app .two-32 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lockated-app .charthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.lockated-app .charthead .gb {
+  font-size: 12.5px;
+  color: var(--faint);
+}
+
+.lockated-app svg.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.lockated-app .legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+
+.lockated-app .legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.lockated-app .legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.lockated-app .legend i.dash {
+  height: 0;
+  border-top: 2px dashed var(--border-2);
+  width: 16px;
+  border-radius: 0;
+}
+
+/* ============ RETENTION COHORT ============ */
+.lockated-app .rt {
+  border-collapse: separate;
+  border-spacing: 3px;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+.lockated-app .rt th {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--faint);
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 2px 3px;
+}
+
+.lockated-app .rt td {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 400;
+  border-radius: 5px;
+  padding: 9px 4px;
+  color: var(--ink);
+}
+
+.lockated-app .rt td.lbl {
+  background: none;
+  text-align: left;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ============ FUNNEL ============ */
+.lockated-app .funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 4px;
+}
+
+.lockated-app .funnel .fstep {
+  position: relative;
+  color: var(--on-ink);
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 10px 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
+
+.lockated-app .funnel .fsub {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.86;
+  margin-top: 2px;
+}
+
+.lockated-app .funnel .fdrop {
+  font-size: 11.5px;
+  color: var(--neg);
+  font-weight: 400;
+  padding-left: 2px;
+}
+
+/* ============ HORIZONTAL BARS ============ */
+.lockated-app .hbars {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  margin-top: 4px;
+}
+
+.lockated-app .role {
+  display: grid;
+  grid-template-columns: 150px 1fr 46px;
+  gap: 12px;
+  align-items: center;
+}
+
+.lockated-app .role .rn {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.lockated-app .role .rbar {
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.lockated-app .role .rbar i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.lockated-app .role .rv {
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============ TABLES ============ */
+.lockated-app .tbl-wrap {
+  overflow-x: auto;
+}
+
+.lockated-app table.league,
+.lockated-app table.pathtbl {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+
+.lockated-app table.league th,
+.lockated-app table.league td,
+.lockated-app table.pathtbl th,
+.lockated-app table.pathtbl td {
+  padding: 11px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.lockated-app table.league thead th,
+.lockated-app table.pathtbl thead th {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--faint);
+  letter-spacing: 0;
+  text-transform: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.lockated-app table.league tbody td,
+.lockated-app table.pathtbl tbody td {
+  border-bottom: 1px solid var(--surface-2);
+  transition: background 0.12s;
+}
+
+.lockated-app table.league tbody tr:last-child td,
+.lockated-app table.pathtbl tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.lockated-app table.league tbody tr:hover,
+.lockated-app table.pathtbl tbody tr:hover {
+  background: var(--surface-2);
+}
+
+.lockated-app .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+
+.lockated-app .strong {
+  font-weight: 500;
+}
+
+.lockated-app .arrow {
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.lockated-app .arrow.up {
+  color: var(--pos);
+}
+
+.lockated-app .arrow.dn {
+  color: var(--neg);
+}
+
+.lockated-app .arrow.flat {
+  color: var(--faint);
+}
+
+.lockated-app .status {
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  padding: 3px 9px;
+  border-radius: 20px;
+  text-transform: none;
+}
+
+.lockated-app .st-healthy {
+  background: var(--green-tint);
+  color: var(--green);
+}
+
+.lockated-app .st-watch {
+  background: var(--amber-tint);
+  color: var(--amber-ink);
+}
+
+.lockated-app .st-drop {
+  background: var(--red-tint);
+  color: var(--red);
+}
+
+/* ============ KEY VALUES ============ */
+.lockated-app .kv {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.lockated-app .kv .k {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.lockated-app .kv .v {
+  font-size: 22px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin-top: 3px;
+}
+
+.lockated-app .kv .u {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--faint);
+}
+
+/* ============ ADMIN TIERS ============ */
+.lockated-app .admrow {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.lockated-app .admrow .k {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.lockated-app .admrow .v {
+  font-size: 18px;
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+/* ============ (i) EXPLAIN POPOVER ============ */
+.lockated-app .info-wrap {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 20;
+}
+
+.lockated-app .info-wrap:hover,
+.lockated-app .info-wrap:focus-within,
+.lockated-app .info-wrap.is-open {
+  z-index: 1000;
+}
+
+.lockated-app .info-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  color: var(--faint);
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.lockated-app .info-btn:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.lockated-app .info-pop {
+  position: absolute;
+  top: 24px;
+  right: 0;
+  max-width: 320px;
+  width: max-content;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  box-shadow: var(--shadow-pop);
+  z-index: 1000;
+  display: none;
+  pointer-events: auto;
+}
+
+/* Invisible hover bridge to allow cursor to smoothly move from button into popover */
+.lockated-app .info-pop::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  right: 0;
+  left: 0;
+  height: 12px;
+}
+
+.lockated-app .info-wrap:hover .info-pop,
+.lockated-app .info-wrap:focus-within .info-pop,
+.lockated-app .info-wrap.is-open .info-pop {
+  display: block;
+  animation: lk-pop-in 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes lk-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lockated-app .info-pop b {
+  color: var(--ink);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.lockated-app .info-pop .sep {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+/* ============ MODULE NAV ============ */
+.lockated-app .mnav {
+  margin: 16px 0 16px;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.lockated-app .mnav-buckets {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  padding: 0 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.lockated-app .mnav-buckets button {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0 0 10px;
+  margin-bottom: -1px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.lockated-app .mnav-buckets button:hover:not(.on) {
+  color: var(--ink);
+}
+
+.lockated-app .mnav-buckets button.on {
+  color: var(--ink);
+  font-weight: 500;
+  border-bottom-color: var(--ink);
+}
+
+.lockated-app .mnav-buckets .mcount {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--faint);
+  margin-left: 5px;
+}
+
+.lockated-app .mnav-mods {
+  display: flex;
+  padding: 13px 0 0;
+}
+
+.lockated-app .mnav-mods .segbar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border: 0;
+  background: none;
+  border-radius: 0;
+}
+
+.lockated-app .mnav-mods button {
+  font-size: 12.5px;
+  font-weight: 400;
+  padding: 5px 13px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s;
+}
+
+.lockated-app .mnav-mods button:hover:not(.on) {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.lockated-app .mnav-mods button.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+}
+
+/* ============ FOOTER ============ */
+.lockated-app .footer {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--faint);
+}
+
+.lockated-app .footer b {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.lockated-app .footer code {
+  font-size: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1080px) {
+  .lockated-app .topbar .badge-sample {
+    display: none;
+  }
+  .lockated-app .topbar-title {
+    display: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .lockated-app .shell,
+  .lockated-app.nav-collapsed .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .lockated-app .nav-toggle {
+    display: none;
+  }
+
+  .lockated-app .sidebar,
+  .lockated-app.nav-collapsed .sidebar {
+    position: static;
+    height: auto;
+    padding: 24px 22px 0;
+    overflow: visible;
+  }
+
+  .lockated-app .sidebar nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .lockated-app .nav-group,
+  .lockated-app.nav-collapsed .nav-group {
+    margin: 0 0 8px;
+    padding-top: 0;
+    border-top: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .lockated-app .nav-label,
+  .lockated-app.nav-collapsed .nav-label {
+    display: block;
+    padding: 0 4px 0 0;
+  }
+
+  .lockated-app .nav-item,
+  .lockated-app.nav-collapsed .nav-item {
+    width: auto;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 7px 11px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .lockated-app.nav-collapsed .nav-item .ni-t {
+    display: inline;
+  }
+
+  .lockated-app.nav-collapsed .nav-item:hover::after {
+    display: none;
+  }
+
+  .lockated-app .brandmark,
+  .lockated-app.nav-collapsed .brandmark {
+    font-size: 22px;
+    text-align: left;
+    padding-left: 0;
+    margin-bottom: 2px;
+  }
+
+  .lockated-app.nav-collapsed .brandmark .bm-full {
+    display: inline;
+  }
+
+  .lockated-app.nav-collapsed .brandmark .bm-mini {
+    display: none;
+  }
+
+  .lockated-app.nav-collapsed .brandmark-sub {
+    display: block;
+  }
+
+  .lockated-app .brandmark-sub {
+    padding-left: 0;
+    margin-bottom: 18px;
+  }
+
+  .lockated-app .main {
+    padding: 22px 22px 70px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lockated-app *,
+  .lockated-app *::before,
+  .lockated-app *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
