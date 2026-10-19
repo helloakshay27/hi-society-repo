@@ -276,13 +276,16 @@ const AccountingTaxSetup: React.FC = () => {
           }
         `}</style>
         {/* ── GST Info Section ──────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 space-y-6 col-span-2 mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-              <User className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">GST Info</h3>
-          </div>
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] px-6 pt-[22px] pb-6 space-y-6 col-span-2 mb-6">
+          <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+              style={{ backgroundColor: "#F5F4F0" }}
+            >
+              <User size={14} color="#1A1A18" />
+            </span>
+            GST Info
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-6">
             <div>
               <TextField
@@ -331,13 +334,16 @@ const AccountingTaxSetup: React.FC = () => {
         </div>
 
         {/* ── GST Options Section ───────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 space-y-6 col-span-2 mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-              <FileCog className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">GST Options</h3>
-          </div>
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] px-6 pt-[22px] pb-6 space-y-6 col-span-2 mb-6">
+          <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+              style={{ backgroundColor: "#F5F4F0" }}
+            >
+              <FileCog size={14} color="#1A1A18" />
+            </span>
+            GST Options
+          </h2>
           <div className="flex flex-col gap-4">
             {/* Composition Scheme */}
             {/* <div>
@@ -415,13 +421,16 @@ const AccountingTaxSetup: React.FC = () => {
         </div>
 
         {/* ── Direct Filing Settings Section ────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 space-y-6 col-span-2 mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-              <NotepadText className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Direct Filing Settings</h3>
-          </div>
+        <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] px-6 pt-[22px] pb-6 space-y-6 col-span-2 mb-6">
+          <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+              style={{ backgroundColor: "#F5F4F0" }}
+            >
+              <NotepadText size={14} color="#1A1A18" />
+            </span>
+            Direct Filing Settings
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-6">
             {/* GSTIN Username */}
             <div>

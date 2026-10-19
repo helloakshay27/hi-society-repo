@@ -91,13 +91,16 @@ const AccountingTaxSummary: React.FC = () => {
 
   return (
     <div className="w-full  p-6" style={{ minHeight: "100vh", boxSizing: "border-box" }}>
-      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-            <NotepadText className="w-6 h-6" />
-          </div>
-          <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Tax Summary</h3>
-        </div>
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] px-6 pt-[22px] pb-6 mb-6">
+        <h2 className="mb-6 text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+          <span
+            className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+            style={{ backgroundColor: "#F5F4F0" }}
+          >
+            <NotepadText size={14} color="#1A1A18" />
+          </span>
+          Tax Summary
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
           <TextField
