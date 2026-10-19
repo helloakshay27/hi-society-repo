@@ -77,6 +77,23 @@ function densifyUsageData(
   return result;
 }
 
+function previousPeriodFor(fromStr: string, toStr: string) {
+  const from = Date.parse(`${fromStr}T00:00:00Z`);
+  const to = Date.parse(`${toStr}T00:00:00Z`);
+  if (!Number.isFinite(from) || !Number.isFinite(to) || from > to) {
+    return { from: '', to: '' };
+  }
+
+  const dayMs = 24 * 60 * 60 * 1000;
+  const duration = Math.round((to - from) / dayMs);
+  const previousTo = new Date(from - dayMs);
+  const previousFrom = new Date(previousTo.getTime() - duration * dayMs);
+  return {
+    from: previousFrom.toISOString().slice(0, 10),
+    to: previousTo.toISOString().slice(0, 10),
+  };
+}
+
 export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
   filters,
   showPrev,
@@ -103,6 +120,20 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
     refetch: refetchUsage,
   } = useUsageAndDistribution(filters, sitesSettled);
 
+  const serverPreviousDays = usageData?.usage_over_time?.previous || [];
+  const previousRange = useMemo(
+    () => previousPeriodFor(filters.from, filters.to),
+    [filters.from, filters.to]
+  );
+  const previousFilters = useMemo(
+    () => ({ ...filters, ...previousRange }),
+    [filters, previousRange]
+  );
+  const previousUsageQuery = useUsageAndDistribution(
+    previousFilters,
+    sitesSettled && showPrev && !!usageData && serverPreviousDays.length === 0 && !!previousRange.from
+  );
+
   const isTrafficActiveLoading = isTrafficLoading || isRefreshing;
   const isUsageActiveLoading = isUsageLoading || isRefreshing;
 
@@ -122,10 +153,12 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
   }, [filters.from, filters.to, usageData?.usage_over_time?.current]);
 
   const previousUsageDays = useMemo(() => {
-    const raw = usageData?.usage_over_time?.previous || [];
+    const raw = serverPreviousDays.length > 0
+      ? serverPreviousDays
+      : previousUsageQuery.data?.usage_over_time?.current || [];
     if (raw.length === 0) return [];
-    return raw;
-  }, [usageData?.usage_over_time?.previous]);
+    return densifyUsageData(previousRange.from, previousRange.to, raw);
+  }, [serverPreviousDays, previousUsageQuery.data?.usage_over_time?.current, previousRange]);
 
   const chartLabels = currentUsageDays.map((d) => {
     const parts = d.day.split('-');
@@ -336,6 +369,23 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
             <EmptyState message="No usage data recorded for this period" />
           ) : (
             <>
+              {showPrev && previousUsageQuery.isError && (
+                <div style={{ marginBottom: '12px' }}>
+                  <ErrorState
+                    title="Failed to load previous-period usage"
+                    error={previousUsageQuery.error}
+                    onRetry={() => previousUsageQuery.refetch()}
+                  />
+                </div>
+              )}
+              {showPrev && previousUsageQuery.isSuccess && prevVisitors.length === 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <EmptyState
+                    message="No usage data is available for the previous period"
+                    sub={`${previousRange.from} through ${previousRange.to}`}
+                  />
+                </div>
+              )}
               <div className="charttabs" style={{ marginBottom: '10px' }}>
                 <button
                   type="button"

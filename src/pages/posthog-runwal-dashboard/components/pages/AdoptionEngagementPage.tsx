@@ -502,7 +502,10 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           ) : isRolesActiveLoading ? (
             <BarsSkeleton count={4} />
           ) : rolesList.length === 0 ? (
-            <EmptyState message="No role data returned" />
+            <EmptyState
+              message={`No role data returned for ${filters.projectCode ? `project ${filters.projectCode}` : `app ${filters.appId || 'selection'}`}`}
+              sub={`The API reported ${rolesData?.total_users ?? 0} users for ${filters.from} through ${filters.to}. Role distribution requires active users with a tracked user_role value.`}
+            />
           ) : (
             <div className="hbars">
               {rolesList.map((r, idx) => {

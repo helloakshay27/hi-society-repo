@@ -3250,6 +3250,9 @@ const SunteckDashboardPage = lazy(
 const SuncityDashboardPage = lazy(
   () => import("./features/usage-dashboard/SuncityDashboardPage")
 );
+const LockatedDashboardPage = lazy(
+  () => import("./features/lockated-dashboard/LockatedDashboardPage")
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -3747,6 +3750,18 @@ function App() {
                       <Route
                         path="/suncity-usage-analytics"
                         element={<SuncityDashboardPage />}
+                      />
+                      <Route
+                        path="/lockated-dashboard"
+                        element={<LockatedDashboardPage />}
+                      />
+                      <Route
+                        path="/lockated-analytics"
+                        element={<LockatedDashboardPage />}
+                      />
+                      <Route
+                        path="/lockated-usage-analytics"
+                        element={<LockatedDashboardPage />}
                       />
 
                       {/* Post Possession admin dashboard (standalone — own header/tabs) */}
