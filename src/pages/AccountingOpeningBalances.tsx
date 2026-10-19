@@ -207,14 +207,19 @@ const AccountingOpeningBalances: React.FC = () => {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Opening Balance</h1>
 
       {/* Opening Balance Date Section */}
-      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 space-y-6 mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-            <CalendarDays className="w-6 h-6" />
-          </div>
-          <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Opening Balance Date</h3>
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden mb-6">
+        <div className="px-6 pt-[22px]">
+          <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+              style={{ backgroundColor: "#F5F4F0" }}
+            >
+              <CalendarDays size={14} color="#1A1A18" />
+            </span>
+            Opening Balance Date
+          </h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-6">
+        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               Opening Balance Date <span className="text-black">*</span>
@@ -230,14 +235,19 @@ const AccountingOpeningBalances: React.FC = () => {
       </div>
 
       {/* Accounts Section */}
-      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] p-6 space-y-4 mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-            <Wallet className="w-6 h-6" />
-          </div>
-          <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Accounts</h3>
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,24,.09)] overflow-hidden mb-6">
+        <div className="px-6 pt-[22px]">
+          <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18] flex items-center">
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+              style={{ backgroundColor: "#F5F4F0" }}
+            >
+              <Wallet size={14} color="#1A1A18" />
+            </span>
+            Accounts
+          </h2>
         </div>
-
+        <div className="p-6 space-y-4">
         <div className="border border-gray-200 rounded-md overflow-hidden">
           <div className="flex items-center py-2 px-3 border-b border-gray-300 bg-gray-50 text-sm font-semibold text-gray-800">
             <div className="flex-1">Accounts</div>
@@ -320,6 +330,7 @@ const AccountingOpeningBalances: React.FC = () => {
         <p className="text-xs text-gray-500 italic">
           including Opening Balance Adjustment account
         </p>
+        </div>
       </div>
 
       {/* Action Buttons */}

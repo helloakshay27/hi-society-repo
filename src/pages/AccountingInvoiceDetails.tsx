@@ -338,6 +338,8 @@ const AccountingInvoiceDetails: React.FC = () => {
   // Prefer the API's own total; otherwise invoice balance due + outstanding (non-reversed) late fees.
   const lateFeesDue = lateFees.reduce((sum, row) => (row.status === "reversed" ? sum : sum + row.due), 0);
   const totalDueInclLateFee = lateFeesTotalDue ?? payableAmount + lateFeesDue;
+  const hasOutstandingLateFee = lateFees.some((row) => row.status !== "reversed" && row.due > 0);
+  const paymentTotalAmount = hasOutstandingLateFee ? totalDueInclLateFee : payableAmount;
   const amountInWords = useMemo(
     () => `${numberToWords(totalAmount)} Rupees Only`,
     [totalAmount]
@@ -467,7 +469,7 @@ const AccountingInvoiceDetails: React.FC = () => {
       toast.error("Paid amount should be greater than 0.");
       return;
     }
-    if (Number(paymentAmount) > payableAmount) {
+    if (Number(paymentAmount) > paymentTotalAmount) {
       toast.error("Amount paid cannot be greater than the total amount.");
       return;
     }
@@ -591,9 +593,7 @@ const AccountingInvoiceDetails: React.FC = () => {
               <Button
                 onClick={() => handleDownloadReceipt(payments[payments.length - 1].id)}
                 size="sm"
-                variant="outline"
-                // className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
-                 className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020]"
+                className="!bg-[#C72030] px-4 py-2 !text-white hover:!bg-[#A01020] [&_svg]:!text-white"
               >
                 <Download className="mr-2 h-4 w-4" /> Download Receipt
               </Button>
@@ -777,7 +777,7 @@ const AccountingInvoiceDetails: React.FC = () => {
                   <th className="px-4 py-2 text-right font-medium">Paid</th>
                   <th className="px-4 py-2 text-right font-medium">Due</th>
                   <th className="px-4 py-2 font-medium">Status</th>
-                  <th className="px-4 py-2 font-medium no-print">Action</th>
+                  {/* <th className="px-4 py-2 font-medium no-print">Action</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -815,11 +815,11 @@ const AccountingInvoiceDetails: React.FC = () => {
                           <span className={`inline-flex items-center whitespace-nowrap border ${status.className}`}>
                             {status.label}
                           </span>
-                          {!row.applied && (
+                          {/* {!row.applied && (
                             <span className="mt-1 block text-[11px] text-gray-400">not posted yet</span>
-                          )}
+                          )} */}
                         </td>
-                        <td className="px-4 py-2 no-print">
+                        {/* <td className="px-4 py-2 no-print">
                           {canWaive ? (
                             <Button
                               size="sm"
@@ -833,7 +833,7 @@ const AccountingInvoiceDetails: React.FC = () => {
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
-                        </td>
+                        </td> */}
                       </tr>
                     );
                   })
@@ -931,7 +931,7 @@ const AccountingInvoiceDetails: React.FC = () => {
           <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-4">
             <TextField
               label="Total Amount"
-              value={payableAmount.toFixed(1)}
+              value={paymentTotalAmount.toFixed(1)}
               fullWidth
               variant="outlined"
               disabled
@@ -947,7 +947,7 @@ const AccountingInvoiceDetails: React.FC = () => {
               onChange={(e) => setPaymentAmount(e.target.value)}
               fullWidth
               variant="outlined"
-              inputProps={{ min: 0, max: payableAmount, step: "0.01" }}
+              inputProps={{ min: 0, max: paymentTotalAmount, step: "0.01" }}
               InputLabelProps={{ shrink: true }}
               InputProps={{ sx: fieldStyles }}
             />

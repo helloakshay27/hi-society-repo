@@ -176,37 +176,43 @@ const SmartSecureStaffsIn: React.FC = () => {
         );
       }
 
-      case "photo":
+      case "photo": {
+        const hasImage = !isDefaultImage(staff.image_url);
         return (
           <div className="flex justify-center">
             <button
+              type="button"
               onClick={() => {
-                if (!isDefaultImage(staff.image_url)) {
+                if (hasImage) {
                   setPreviewImageUrl(staff.image_url);
                   setPreviewImageName(staff.name || "Staff");
                   setPreviewImageOpen(true);
                 }
               }}
-              className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 hover:ring-2 hover:ring-green-600 cursor-pointer transition-all"
-              title={!isDefaultImage(staff.image_url) ? "Click to preview" : "No image"}
-              disabled={isDefaultImage(staff.image_url)}
+              disabled={!hasImage}
+              title={hasImage ? "Click to preview" : "No image"}
+              className={`w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center flex-shrink-0 ${
+                hasImage ? "cursor-pointer hover:ring-2 hover:ring-[#da7756] transition-all" : "cursor-default"
+              }`}
             >
-              {!isDefaultImage(staff.image_url) ? (
+              {hasImage ? (
                 <img
                   src={staff.image_url}
                   alt={staff.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">
-                    {getInitials(staff.name)}
-                  </span>
-                </div>
+                <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
               )}
             </button>
           </div>
         );
+      }
 
       case "name":
         return (

@@ -184,15 +184,21 @@ export const StaffsFilterModal = ({ isOpen, onClose, onApplyFilters }: StaffsFil
 
   return (
     <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
-      <DialogContent className="max-h-[86vh] w-[min(820px,calc(100vw-32px))] max-w-none overflow-y-auto !rounded-3xl border border-[rgba(26,26,24,.09)] bg-white p-7 shadow-[0_8px_40px_rgba(26,26,24,.16)] [&>button]:hidden">
-        <DialogHeader className="mb-1 flex flex-row items-center justify-between pb-5">
-          <DialogTitle className="text-[18px] font-semibold text-[#1A1A18]">Filter By</DialogTitle>
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close filters" className="h-8 w-8 rounded-lg p-0 text-[rgba(26,26,24,.48)] hover:bg-[#F7F6F2] hover:text-[#1A1A18]">
-            <X className="h-4 w-4" />
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] p-0 gap-0 [&>button]:hidden">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4">
+          <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18]">Filter By</DialogTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 w-8 p-0 rounded-md hover:bg-[#F7F6F2]"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4 text-gray-600" />
           </Button>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 gap-x-4 gap-y-5 py-1 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-4 gap-y-5 px-6 pb-6 sm:grid-cols-2">
           {renderTextField('Name / Mobile / ID', 'Search by name, mobile or ID', search, setSearch)}
           {renderTextField('Company Name', 'Enter company name', companyName, setCompanyName)}
           {renderSelectField('Work Type', 'Select Work Type', workType, setWorkType, workTypes)}
@@ -206,22 +212,21 @@ export const StaffsFilterModal = ({ isOpen, onClose, onApplyFilters }: StaffsFil
           {renderSelectField('Select Flat', !tower ? 'Select tower first' : loadingFlats ? 'Loading...' : flats.length === 0 ? 'No flats available' : 'Select Flat', flat, setFlat, flats, !tower || loadingFlats)}
         </div>
 
-        <div className="flex justify-end gap-2.5 pt-2">
-          <Button
-            variant="outline"
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.08)]">
+          <button
+            type="button"
             onClick={handleReset}
-            className="min-h-[42px] rounded-lg !border-[rgba(26,26,24,.18)] bg-white px-[22px] text-[13px] font-semibold !text-[#1A1A18] hover:bg-[#F7F6F2]"
-            style={{ color: '#1A1A18', border: '1px solid rgba(26,26,24,.18)' }}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
           >
             Reset
-          </Button>
-          <Button
+          </button>
+          <button
+            type="button"
             onClick={handleApply}
-            className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
-            style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E]"
           >
-            <span style={{ color: '#FFFFFF' }}>Apply Filters</span>
-          </Button>
+            Apply Filters
+          </button>
         </div>
       </DialogContent>
     </Dialog>

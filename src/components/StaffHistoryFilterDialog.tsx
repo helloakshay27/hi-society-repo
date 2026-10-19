@@ -126,15 +126,21 @@ export const StaffHistoryFilterDialog = ({ isOpen, onClose, onApplyFilters }: St
 
   return (
     <Dialog open={isOpen} modal={false} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white [&>button]:hidden">
-        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
-          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">FILTER BY</DialogTitle>
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
-            <X className="w-4 h-4" />
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl sm:rounded-2xl border border-[rgba(26,26,24,.09)] p-0 gap-0 [&>button]:hidden">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-[22px] pb-4">
+          <DialogTitle className="text-sm font-semibold leading-[1.4] text-[#1A1A18]">Filter By</DialogTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 w-8 p-0 rounded-md hover:bg-[#F7F6F2]"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4 text-gray-600" />
           </Button>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 px-6 pb-6">
           <div className="grid grid-cols-2 gap-4">
 
             {/* Work Type */}
@@ -256,20 +262,21 @@ export const StaffHistoryFilterDialog = ({ isOpen, onClose, onApplyFilters }: St
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button
-            variant="outline"
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-[rgba(26,26,24,.08)]">
+          <button
+            type="button"
             onClick={handleReset}
-            className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18]"
           >
             Reset
-          </Button>
-          <Button
+          </button>
+          <button
+            type="button"
             onClick={handleApply}
-            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+            className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-[#1A1A18] bg-[#1A1A18] px-[22px] text-[13px] font-semibold text-white transition-colors hover:bg-[#12100E]"
           >
             Apply Filters
-          </Button>
+          </button>
         </div>
       </DialogContent>
     </Dialog>
