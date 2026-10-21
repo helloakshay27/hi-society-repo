@@ -3581,7 +3581,7 @@ const FitoutRequestDetails: React.FC = () => {
       {/* Checklist Modal */}
       <Dialog open={checklistModalOpen} onOpenChange={setChecklistModalOpen}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-white">
-          <DialogHeader className="border-b pb-4" style={{ backgroundColor: '#F6F4EE' }}>
+          <DialogHeader className="border-b pb-4">
             <div className="flex items-center justify-between px-6 py-3">
               <DialogTitle className="text-lg font-semibold text-gray-900">
                 Checklist
@@ -3789,7 +3789,7 @@ className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacit
       {/* Logs Modal */}
       <Dialog open={logsModalOpen} onOpenChange={setLogsModalOpen}>
         <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto bg-white">
-          <DialogHeader className="border-b pb-4" style={{ backgroundColor: '#F6F4EE' }}>
+          <DialogHeader className="border-b pb-4">
             <div className="flex items-center justify-between px-6 py-3">
               <DialogTitle className="text-lg font-semibold text-gray-900">
                 LOGS
@@ -3817,19 +3817,45 @@ className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacit
               <div className="space-y-4">
                 {/* Date Header */}
                 {logs.map((logEntry, index) => {
-                  const showDateHeader = index === 0 || 
-                    (index > 0 && new Date(logEntry.created_at).toDateString() !== new Date(logs[index - 1].created_at).toDateString());
+                  const rawDate = logEntry.date || logEntry.created_at;
+                  const parsedDate = rawDate ? new Date(rawDate) : null;
+                  const currentDateKey = parsedDate && !Number.isNaN(parsedDate.getTime())
+                    ? parsedDate.toDateString()
+                    : rawDate || "unknown-date";
+                  const previousLog = logs[index - 1];
+                  const previousRawDate = previousLog?.date || previousLog?.created_at;
+                  const previousParsedDate = previousRawDate ? new Date(previousRawDate) : null;
+                  const previousDateKey = previousParsedDate && !Number.isNaN(previousParsedDate.getTime())
+                    ? previousParsedDate.toDateString()
+                    : previousRawDate || "unknown-date";
+                  const showDateHeader = index === 0 || currentDateKey !== previousDateKey;
+                  const displayDate = logEntry.date || (
+                    parsedDate && !Number.isNaN(parsedDate.getTime())
+                      ? parsedDate.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: '2-digit',
+                          year: 'numeric',
+                        })
+                      : "Date unavailable"
+                  );
+                  const displayTime = logEntry.time || (
+                    parsedDate && !Number.isNaN(parsedDate.getTime())
+                      ? parsedDate.toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true,
+                        })
+                      : ""
+                  );
+                  const logTitle = logEntry.title || logEntry.user_name || "System";
+                  const logMessage = logEntry.message || logEntry.action || logEntry.description || "made changes";
                   
                   return (
                     <React.Fragment key={logEntry.id || index}>
                       {showDateHeader && (
                         <div className="text-center py-2">
                           <span className="text-sm font-medium text-gray-600">
-                            {new Date(logEntry.created_at).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: '2-digit',
-                              year: 'numeric'
-                            })}
+                            {displayDate}
                           </span>
                         </div>
                       )}
@@ -3845,21 +3871,15 @@ className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacit
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           {/* Time */}
-                          <div className="text-xs text-gray-500 mb-1">
-                            {new Date(logEntry.created_at).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              hour12: true
-                            })}
-                          </div>
+                          {displayTime && <div className="text-xs text-gray-500 mb-1">{displayTime}</div>}
                           
-                          {/* User and Action */}
+                          {/* Feed title and message */}
                           <div className="text-sm">
                             <span className="font-semibold text-gray-900">
-                              {logEntry.user_name || 'System'}
+                              {logTitle}
                             </span>
                             <span className="text-gray-700 ml-1">
-                              {logEntry.action || logEntry.description || 'made changes'}
+                              {logMessage}
                             </span>
                           </div>
                           
