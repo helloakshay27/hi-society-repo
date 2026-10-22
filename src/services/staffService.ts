@@ -166,6 +166,7 @@ export interface SocietyStaffDetails {
   blocked_by_user_name?: string | null;
   block_reason?: string | null;
   staff_image_url: string;
+  face_added?: boolean | null;
   qr_code_present: boolean;
   qr_code_url: string | null;
   helpdesk_operations: HelpdeskOperation[];
@@ -229,6 +230,7 @@ export interface StaffDetailsApiResponse {
     created_at_formatted: string;
     staff_type: string;
     image_url: string;
+    face_added?: boolean | null;
     qr_code_url: string;
     qr_code_page_url: string;
     documents: unknown[];
@@ -535,6 +537,7 @@ export const staffService = {
         blocked_by_user_name: staff.blocked_by_user_name ?? null,
         block_reason: staff.block_reason ?? null,
         staff_image_url: staff.image_url,
+        face_added: staff.face_added ?? null,
         qr_code_present: !!staff.qr_code_url,
         qr_code_url: staff.qr_code_url,
         helpdesk_operations: staff.helpdesk_operations || [],

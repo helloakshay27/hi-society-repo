@@ -558,6 +558,14 @@ export const StaffDetailsPage = () => {
           </div>
 
           <div className="space-y-4">
+            {typeof staff.face_added === 'boolean' && (
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Face Added</span>
+                <span className="text-[13.5px] font-medium text-[#1A1A18]">
+                  {staff.face_added ? 'Yes' : 'No'}
+                </span>
+              </div>
+            )}
            
             
             {hasData(staff.department_name) && (
