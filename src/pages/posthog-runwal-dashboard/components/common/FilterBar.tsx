@@ -256,14 +256,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             className={residentSegment === "pre" ? "on" : ""}
             onClick={() => onSelectResidentSegment?.("pre")}
           >
-            Pre Sales
+            Post Sales
           </button>
           <button
             type="button"
             className={residentSegment === "post" ? "on" : ""}
             onClick={() => onSelectResidentSegment?.("post")}
           >
-            Post Sales
+            Post Possession
           </button>
         </div>
       )}
