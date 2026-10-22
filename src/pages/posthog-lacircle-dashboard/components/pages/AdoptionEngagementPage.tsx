@@ -30,6 +30,7 @@ interface AdoptionEngagementPageProps {
   benchmarks: Record<string, number | null>;
   onBenchmarkChange: (id: string, value: number | null) => void;
   sitesSettled?: boolean;
+  showPrev: boolean;
 }
 
 function formatDelta(d: number | null | undefined): { text: string | null; dir: 'up' | 'dn' | 'flat' } {
@@ -45,6 +46,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   benchmarks,
   onBenchmarkChange,
   sitesSettled = true,
+  showPrev,
 }) => {
   // PostHog Adoption Hooks — the only data sources this page needs.
   const {
@@ -262,11 +264,11 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           <>
             <LineChart
               cur={trendSeriesCurrent}
-              prev={trendSeriesPrev}
+              prev={showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1 ? trendSeriesPrev : []}
               labels={trendLabels}
               color="var(--chart-blue)"
               fill="var(--chart-fill)"
-              showPrev={weeklyPrevious.length > 0}
+              showPrev={showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1}
               curLabel="Weekly active residents"
               prevLabel="Prior 8W WAU"
             />
@@ -274,7 +276,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               <span>
                 <i style={{ background: 'var(--chart-blue)' }}></i> Weekly active residents
               </span>
-              {weeklyPrevious.length > 0 && (
+              {showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1 && (
                 <span>
                   <i className="dash"></i> Previous 8-Week Period
                 </span>

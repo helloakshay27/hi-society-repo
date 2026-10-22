@@ -310,6 +310,7 @@ function PosthogAccountingDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              showPrev={showPrev}
             />
           )}
 

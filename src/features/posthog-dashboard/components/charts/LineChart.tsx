@@ -38,8 +38,8 @@ export function LineChart({ cur, prev, showPrev = true, labels, height = 250, ma
     );
   }
 
-  const usePrev = !!prev && prev.length > 1 && showPrev;
-  const all = [...cur, ...(usePrev ? prev! : [])];
+  const usePrev = !!prev && prev.length === cur.length && prev.length > 1 && showPrev;
+  const all = [...cur, ...(usePrev && prev ? prev : [])];
   const mx = Math.max(...all) * 1.14 || 1;
   const n = cur.length;
   const xw = (W - pl - pr) / (n - 1);

@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { DevicePlatform } from '../../types';
-import { SiteLookupItem } from '../../api/types';
+import React, { useState, useRef, useEffect } from "react";
+import { DevicePlatform } from "../../types";
+import { SiteLookupItem } from "../../api/types";
 // import { LiveApiBadge } from './DashboardStates';
 
 interface FilterBarProps {
@@ -9,7 +9,12 @@ interface FilterBarProps {
   rangeFrom: string;
   rangeTo: string;
   onSetRange: (days: number, label: string) => void;
-  onSetCustomRange: (from: string, to: string, days: number, label: string) => void;
+  onSetCustomRange: (
+    from: string,
+    to: string,
+    days: number,
+    label: string
+  ) => void;
   sites: SiteLookupItem[];
   selectedSiteId: string;
   onSelectSite: (siteId: string) => void;
@@ -24,14 +29,14 @@ interface FilterBarProps {
   generatedAt?: string;
   // Resident/sales-stage segment — only shown when the URL carries ?app_id=35.
   showResidentSegment?: boolean;
-  residentSegment?: 'all' | 'pre' | 'post';
-  onSelectResidentSegment?: (segment: 'all' | 'pre' | 'post') => void;
+  residentSegment?: "all" | "pre" | "post";
+  onSelectResidentSegment?: (segment: "all" | "pre" | "post") => void;
   // Admin scope (Tower Admin vs Super Admin) — Godrej-only, UI display filter.
   // PROPOSED: there is no confirmed backend field to scope real data by this
   // dimension yet, so selecting a tier here does not change the numbers shown.
   showAdminScope?: boolean;
-  adminScope?: 'all' | 'tower' | 'super';
-  onSelectAdminScope?: (scope: 'all' | 'tower' | 'super') => void;
+  adminScope?: "all" | "tower" | "super";
+  onSelectAdminScope?: (scope: "all" | "tower" | "super") => void;
   // Manual refresh — re-fetches live data for whichever page is on screen.
   showRefresh?: boolean;
   onRefresh?: () => void;
@@ -58,10 +63,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   isError,
   generatedAt,
   showResidentSegment = false,
-  residentSegment = 'all',
+  residentSegment = "all",
   onSelectResidentSegment,
   showAdminScope = false,
-  adminScope = 'all',
+  adminScope = "all",
   onSelectAdminScope,
   showRefresh = true,
   onRefresh,
@@ -80,12 +85,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (datePopRef.current && !datePopRef.current.contains(event.target as Node)) {
+      if (
+        datePopRef.current &&
+        !datePopRef.current.contains(event.target as Node)
+      ) {
         setIsDateOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleApplyCustom = () => {
@@ -93,12 +101,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     const days = Math.max(
       1,
       Math.round(
-        (new Date(customTo).getTime() - new Date(customFrom).getTime()) / 86400000
+        (new Date(customTo).getTime() - new Date(customFrom).getTime()) /
+          86400000
       ) + 1
     );
     const fmt = (d: string) => {
       const dt = new Date(d);
-      return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     };
     const label = `${fmt(customFrom)} – ${fmt(customTo)}`;
     setIsCustomApplied(true);
@@ -114,7 +123,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
   return (
     <div className="filterbar">
-      <div className={`daterange ${isDateOpen ? 'open' : ''}`} ref={datePopRef}>
+      <div className={`daterange ${isDateOpen ? "open" : ""}`} ref={datePopRef}>
         <button
           type="button"
           className="ctrl"
@@ -131,22 +140,22 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <div className="dr-presets">
               <button
                 type="button"
-                className={`dr-preset ${range === 7 && !isCustomApplied ? 'on' : ''}`}
-                onClick={() => handlePresetSelect(7, 'Last 7 days')}
+                className={`dr-preset ${range === 7 && !isCustomApplied ? "on" : ""}`}
+                onClick={() => handlePresetSelect(7, "Last 7 days")}
               >
                 Last 7 days
               </button>
               <button
                 type="button"
-                className={`dr-preset ${range === 30 && !isCustomApplied ? 'on' : ''}`}
-                onClick={() => handlePresetSelect(30, 'Last 30 days')}
+                className={`dr-preset ${range === 30 && !isCustomApplied ? "on" : ""}`}
+                onClick={() => handlePresetSelect(30, "Last 30 days")}
               >
                 Last 30 days
               </button>
               <button
                 type="button"
-                className={`dr-preset ${range === 90 && !isCustomApplied ? 'on' : ''}`}
-                onClick={() => handlePresetSelect(90, 'Last 90 days')}
+                className={`dr-preset ${range === 90 && !isCustomApplied ? "on" : ""}`}
+                onClick={() => handlePresetSelect(90, "Last 90 days")}
               >
                 Last 90 days
               </button>
@@ -174,10 +183,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               </div>
               <button
                 type="button"
-                className={`dr-apply ${isCustomApplied ? 'applied' : ''}`}
+                className={`dr-apply ${isCustomApplied ? "applied" : ""}`}
                 onClick={handleApplyCustom}
               >
-                {isCustomApplied ? 'Range applied ✓' : 'Apply custom range'}
+                {isCustomApplied ? "Range applied ✓" : "Apply custom range"}
               </button>
             </div>
           </div>
@@ -237,24 +246,24 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <div className="devtoggle" id="residentToggle" title="Resident Segment">
           <button
             type="button"
-            className={residentSegment === 'all' ? 'on' : ''}
-            onClick={() => onSelectResidentSegment?.('all')}
+            className={residentSegment === "all" ? "on" : ""}
+            onClick={() => onSelectResidentSegment?.("all")}
           >
             All residents
           </button>
           <button
             type="button"
-            className={residentSegment === 'pre' ? 'on' : ''}
-            onClick={() => onSelectResidentSegment?.('pre')}
+            className={residentSegment === "pre" ? "on" : ""}
+            onClick={() => onSelectResidentSegment?.("pre")}
           >
-            Pre Sales
+            Post Sales
           </button>
           <button
             type="button"
-            className={residentSegment === 'post' ? 'on' : ''}
-            onClick={() => onSelectResidentSegment?.('post')}
+            className={residentSegment === "post" ? "on" : ""}
+            onClick={() => onSelectResidentSegment?.("post")}
           >
-            Post Sales
+            Post Possession
           </button>
         </div>
       )}
@@ -263,16 +272,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <button
           type="button"
           data-dev="all"
-          className={dev === 'all' ? 'on' : ''}
-          onClick={() => onSelectDev('all')}
+          className={dev === "all" ? "on" : ""}
+          onClick={() => onSelectDev("all")}
         >
           All
         </button>
         <button
           type="button"
           data-dev="ios"
-          className={dev === 'ios' ? 'on' : ''}
-          onClick={() => onSelectDev('ios')}
+          className={dev === "ios" ? "on" : ""}
+          onClick={() => onSelectDev("ios")}
           title="iOS"
         >
           iOS
@@ -280,22 +289,22 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <button
           type="button"
           data-dev="android"
-          className={dev === 'android' ? 'on' : ''}
-          onClick={() => onSelectDev('android')}
+          className={dev === "android" ? "on" : ""}
+          onClick={() => onSelectDev("android")}
           title="Android"
         >
           Android
         </button>
       </div>
 
-      <button
+      {/* <button
         type="button"
         className={`ctrl ${prev ? 'toggle-on' : ''}`}
         id="prevBtn"
         onClick={onTogglePrev}
       >
         <span className="ic">↺</span> Previous period {prev ? '✓' : ''}
-      </button>
+      </button> */}
 
       {showRefresh && (
         <>
@@ -313,11 +322,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           >
             <span
               className="ic"
-              style={isRefreshing ? { display: 'inline-block', animation: 'filterbar-refresh-spin 0.8s linear infinite' } : undefined}
+              style={
+                isRefreshing
+                  ? {
+                      display: "inline-block",
+                      animation: "filterbar-refresh-spin 0.8s linear infinite",
+                    }
+                  : undefined
+              }
             >
               ⟳
-            </span>{' '}
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </span>{" "}
+            {isRefreshing ? "Refreshing..." : "Refresh"}
           </button>
         </>
       )}
@@ -335,7 +351,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <span id="liveCount">
           {recentlyOnlineCount > 0
             ? `${recentlyOnlineCount.toLocaleString()} recently online`
-            : 'Live Activity Active'}
+            : "Live Activity Active"}
         </span>
       </span>
     </div>

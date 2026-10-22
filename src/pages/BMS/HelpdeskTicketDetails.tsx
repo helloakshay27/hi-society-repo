@@ -7343,6 +7343,10 @@ export const TicketDetailsPage = () => {
                               value: ticketData.created_by_name || "-",
                             },
                             {
+                              label: "Created By Mobile",
+                              value: ticketData.created_by_mobile || "-",
+                            },
+                            {
                               label: "Updated By",
                               value: ticketData.updated_by || "-",
                             },
@@ -11284,6 +11288,10 @@ export const TicketDetailsPage = () => {
                         {
                           label: "Created By",
                           value: ticketData.created_by_name || "-",
+                        },
+                        {
+                          label: "Created By Mobile",
+                          value: ticketData.created_by_mobile || "-",
                         },
                         {
                           label: "Updated By",

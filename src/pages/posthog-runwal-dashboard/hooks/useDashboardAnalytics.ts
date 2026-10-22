@@ -119,7 +119,7 @@ export function useUserAccountSiteId() {
 }
 
 // ==========================================
-// PostHog Analytics Hooks (9 Endpoints)
+// Usage Analytics Hooks (9 Endpoints)
 // ==========================================
 
 export function useTrafficSession(filters: DashboardFilters, enabled: boolean = true) {

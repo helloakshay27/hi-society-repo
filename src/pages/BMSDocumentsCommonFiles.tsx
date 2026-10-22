@@ -25,20 +25,22 @@ interface TreeNode {
   icon?: string;
   a_attr?: {
     href: string;
+    target?: string;
   };
 }
 
 const FILE_EXTENSION_PATTERN =
   /\.(avi|bmp|csv|doc|docx|gif|jpeg|jpg|mkv|mov|mp4|pdf|png|ppt|pptx|rar|svg|txt|webm|webp|xls|xlsx|zip)$/i;
 
-const isFileNode = (node: TreeNode): boolean => {
-  if (String(node.parent) === "#") return false;
-  return (
-    String(node.id).startsWith("documents_") ||
-    Boolean(node.a_attr?.href) ||
-    FILE_EXTENSION_PATTERN.test(node.text ?? "")
-  );
-};
+const isAbsoluteUrl = (href: string | undefined): boolean =>
+  /^https?:\/\//i.test(href ?? "");
+
+// Files (inside or outside folders) come as `documents_*` ids; root-level
+// files have parent "#", so parent must not be used to detect folders.
+const isFileNode = (node: TreeNode): boolean =>
+  String(node.id).startsWith("documents_") ||
+  isAbsoluteUrl(node.a_attr?.href) ||
+  FILE_EXTENSION_PATTERN.test(node.text ?? "");
 
 const ALL_ROOT_NODE: TreeNode = { id: "All", parent: "#", text: "All" };
 
@@ -220,14 +222,28 @@ const BMSDocumentsCommonFiles: React.FC = () => {
     toast.success("Folder refreshed");
   };
 
-  const handleDownload = (fileName: string, nodeId: string | number) => {
+  const handleDownload = (node: TreeNode) => {
+    const fileName = node.text ?? "file";
     try {
-      const authHeader = getAuthHeader();
-      const token = authHeader.replace("Bearer ", "").replace("Token ", "");
-      const baseUrl = getFullUrl("/crm/admin/attachments_common");
-      const downloadUrl = `${baseUrl}?id=${nodeId}&token=${token}`;
+      const href = node.a_attr?.href ?? "";
+      let downloadUrl: string;
 
-      window.open(downloadUrl, "_blank");
+      if (!node.text && (!href || href === "#")) {
+        toast.error("File is not available.");
+        return;
+      }
+
+      if (isAbsoluteUrl(href)) {
+        // API already provides the direct (S3/uploads) file URL
+        downloadUrl = href;
+      } else {
+        const authHeader = getAuthHeader();
+        const token = authHeader.replace("Bearer ", "").replace("Token ", "");
+        const baseUrl = getFullUrl("/crm/admin/attachments_common");
+        downloadUrl = `${baseUrl}?id=${node.id}&token=${token}`;
+      }
+
+      window.open(downloadUrl, "_blank", "noopener,noreferrer");
       toast.success(`Opening ${fileName}...`);
     } catch (downloadError) {
       console.error("Error opening file:", downloadError);
@@ -289,13 +305,13 @@ const BMSDocumentsCommonFiles: React.FC = () => {
           className="relative flex h-[20px] cursor-pointer items-center whitespace-nowrap text-[12px] leading-none text-[#333] hover:bg-[#eef6fb]"
           style={{ paddingLeft: `${16 + depth * 18}px` }}
           title={node.text ?? ""}
-          onClick={() => handleDownload(node.text ?? "file", node.id)}
+          onClick={() => handleDownload(node)}
         >
           {renderConnectorLines(depth, isLast, ancestorHasNextSibling)}
           <span className="relative z-[1] flex h-full items-center gap-[5px]">
             <span className="h-[14px] w-[13px] shrink-0" aria-hidden="true" />
             <FileIcon fileType={inferFileType(node.text ?? "")} />
-            <span>{node.text ?? ""}</span>
+            <span>{node.text ?? "Untitled file"}</span>
           </span>
         </div>
       );

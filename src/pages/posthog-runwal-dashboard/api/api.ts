@@ -149,7 +149,7 @@ async function getPosthog<T>(endpoint: string, queryStr: string): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`PostHog API error (${response.status}): ${response.statusText || 'Failed to fetch'}`);
+    throw new Error(`Usage API error (${response.status}): ${response.statusText || 'Failed to fetch'}`);
   }
 
   return response.json() as Promise<T>;
@@ -208,7 +208,7 @@ export const fetchRecentActiveUsers = (filters: DashboardFilters, limit = 10) =>
  * elsewhere in the app (see WalletTopup.tsx's handleExport).
  */
 export async function downloadActiveUsersExport(
-  filters: Pick<DashboardFilters, 'appId' | 'from' | 'to'>,
+  filters: Pick<DashboardFilters, 'appId' | 'projectCode' | 'from' | 'to'>,
 ): Promise<void> {
   const base = getPosthogApiBase();
   const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
@@ -217,8 +217,13 @@ export async function downloadActiveUsersExport(
     from: filters.from,
     to: filters.to,
   });
-  const appId = filters.appId || getAppIdFromUrl();
-  if (appId) params.set('app_id', appId);
+  const projectCode = filters.projectCode || getProjectCodeFromUrl();
+  if (projectCode) {
+    params.set('project_code', projectCode);
+  } else {
+    const appId = filters.appId || getAppIdFromUrl();
+    if (appId) params.set('app_id', appId);
+  }
   const url = `${cleanBase}/fm/adoption/active_users_export.json?${params.toString()}`;
 
   const response = await fetch(url, {
@@ -338,10 +343,10 @@ async function getFm<T>(
     if (appId) query.set('app_id', appId);
   }
 
-  const baseUrl = getApiBaseUrl();
-  const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  const url = `${cleanBase}${cleanPath}?${query.toString()}`;
+  // const baseUrl = getApiBaseUrl();
+  // const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  // const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const url = `https://posthog-api.lockated.com/fm${path}?${query.toString()}`;
 
   const response = await fetch(url, {
     method: 'GET',

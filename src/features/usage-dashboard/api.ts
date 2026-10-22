@@ -161,10 +161,52 @@ const dayLabel = (day: string): string => {
 /* ---------------- consolidated live payload (all fields optional) ---------------- */
 
 export interface LiveUsageDay {
+  date: string;
   label: string;
   visitors: number;
   views: number;
   sessions: number;
+}
+
+export function densifyUsageDays(
+  days: LiveUsageDay[],
+  from: string,
+  to: string,
+): LiveUsageDay[] {
+  const start = Date.parse(`${from}T00:00:00Z`);
+  const end = Date.parse(`${to}T00:00:00Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start > end) return days;
+
+  const byDate = new Map(days.map((day) => [day.date.slice(0, 10), day]));
+  const result: LiveUsageDay[] = [];
+  for (let time = start; time <= end; time += 24 * 60 * 60 * 1000) {
+    const date = new Date(time).toISOString().slice(0, 10);
+    const existing = byDate.get(date);
+    result.push(existing ?? {
+      date,
+      label: dayLabel(date),
+      visitors: 0,
+      views: 0,
+      sessions: 0,
+    });
+  }
+  return result;
+}
+
+export function previousUsageRange(from: string, to: string): { from: string; to: string } {
+  const start = Date.parse(`${from}T00:00:00Z`);
+  const end = Date.parse(`${to}T00:00:00Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start > end) {
+    return { from: '', to: '' };
+  }
+
+  const dayMs = 24 * 60 * 60 * 1000;
+  const previousTo = start - dayMs;
+  const previousFrom = previousTo - (end - start);
+  return {
+    from: new Date(previousFrom).toISOString().slice(0, 10),
+    to: new Date(previousTo).toISOString().slice(0, 10),
+  };
 }
 
 export interface LiveDashboard {
@@ -281,12 +323,14 @@ export async function fetchTrafficSection(input: QueryInput): Promise<TrafficSli
     usage: usage
       ? {
           current: (usage.usage_over_time?.current ?? []).map((d) => ({
+            date: d.day,
             label: dayLabel(d.day),
             visitors: num(d.visitors),
             views: num(d.views),
             sessions: num(d.sessions),
           })),
           previous: (usage.usage_over_time?.previous ?? []).map((d) => ({
+            date: d.day,
             label: dayLabel(d.day),
             visitors: num(d.visitors),
             views: num(d.views),

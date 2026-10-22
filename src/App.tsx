@@ -2549,7 +2549,10 @@ const PosthogRunwalCpDashboard = lazy(
 const PosthogGodrejDashboard = lazy(
   () => import("./pages/posthog-godrej-dashboard/PosthogGodrejDashboard")
 );
-const PosthogAccountingDashboard = lazy(() => import("./pages/posthog-accounting-dashboard/PosthogAccountingDashboard"));
+const PosthogAccountingDashboard = lazy(
+  () =>
+    import("./pages/posthog-accounting-dashboard/PosthogAccountingDashboard")
+);
 const PosthogKRahejaDashboard = lazy(
   () => import("./pages/posthog-kraheja-dashboard/PosthogKRahejaDashboard")
 );
@@ -3253,6 +3256,8 @@ const SuncityDashboardPage = lazy(
 const LockatedDashboardPage = lazy(
   () => import("./features/lockated-dashboard/LockatedDashboardPage")
 );
+const LoyaltyDashboard = lazy(() => import("./pages/LoyaltyDashboard"));
+const LoyaltyDashboardNew = lazy(() => import("./pages/LoyaltyDashboardNew"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -3699,12 +3704,12 @@ function App() {
 
                       {/* Standalone Posthog Runwal Dashboard (No HiSociety header/sidebar) */}
                       <Route
-                        path="/posthog-runwal-dashboard"
+                        path="/runwal-usage-dashboard"
                         element={<PosthogRunwalDashboard />}
                       />
                       {/* Runwal CP variant — identical UI/data, scoped by project_code=RE-CP01 instead of app_id */}
                       <Route
-                        path="/posthog-runwal-cp-dashboard"
+                        path="/runwal-cp-usage-dashboard"
                         element={<PosthogRunwalCpDashboard />}
                       />
                       <Route
@@ -3762,6 +3767,23 @@ function App() {
                       <Route
                         path="/lockated-usage-analytics"
                         element={<LockatedDashboardPage />}
+                      />
+                      {/* Standalone Loyalty Dashboards (No HiSociety header/sidebar) */}
+                      <Route
+                        path="/loyalty/dashboard"
+                        element={<LoyaltyDashboardNew />}
+                      />
+                      <Route
+                        path="/loyalty/dashboard-new"
+                        element={<LoyaltyDashboard />}
+                      />
+                      <Route
+                        path="/loyalty-dashboard"
+                        element={<LoyaltyDashboardNew />}
+                      />
+                      <Route
+                        path="/loyalty-dashboard-new"
+                        element={<LoyaltyDashboard />}
                       />
 
                       {/* Post Possession admin dashboard (standalone — own header/tabs) */}

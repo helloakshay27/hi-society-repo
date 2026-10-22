@@ -23,6 +23,7 @@ interface AdoptionEngagementPageProps {
   benchmarks: Record<string, number | null>;
   onBenchmarkChange: (id: string, value: number | null) => void;
   sitesSettled?: boolean;
+  showPrev: boolean;
 }
 
 const MODULE_COLORS = ['var(--chart-blue)', 'var(--chart-mint)', 'var(--chart-violet)', 'var(--green)', 'var(--chart-amber)', 'var(--chart-red)'];
@@ -47,6 +48,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   benchmarks,
   onBenchmarkChange,
   sitesSettled = true,
+  showPrev,
 }) => {
   const { data: adoptData, isLoading: isAdoptLoading, isError: isAdoptError, error: adoptError, refetch: refetchAdopt } =
     useAdoptionEngagement(filters, sitesSettled);
@@ -202,11 +204,13 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           <>
             <LineChart
               cur={weeklyCurrent.map((w) => w.wau || 0)}
-              prev={weeklyPrevious.map((w) => w.wau || 0)}
+              prev={showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1
+                ? weeklyPrevious.map((w) => w.wau || 0)
+                : []}
               labels={trendLabels}
               color="var(--chart-blue)"
               fill="var(--chart-fill)"
-              showPrev={weeklyPrevious.length > 0}
+              showPrev={showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1}
               curLabel="Weekly active users"
               prevLabel="Prior 8W"
             />
@@ -214,6 +218,9 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               <span>
                 <i style={{ background: 'var(--chart-blue)' }}></i> Weekly active users
               </span>
+              {showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1 && (
+                <span><i className="dash"></i> Prior 8 weeks</span>
+              )}
             </div>
           </>
         )}

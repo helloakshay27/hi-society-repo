@@ -330,6 +330,7 @@ function PosthogMyPiramalDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              showPrev={showPrev}
               subtitle="Measure how effectively residents adopt and engage with the app’s major modules, and whether they keep coming back day over day."
               questions={[
                 'Which modules and community services receive the highest engagement and adoption?',
@@ -371,4 +372,3 @@ export const PosthogMyPiramalDashboard: React.FC = () => {
 };
 
 export default PosthogMyPiramalDashboard;
-

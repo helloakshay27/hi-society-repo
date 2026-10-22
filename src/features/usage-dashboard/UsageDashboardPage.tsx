@@ -11,6 +11,8 @@ import {
   fetchSitesLeague,
   siteByKey,
   EMPTY_DASHBOARD,
+  densifyUsageDays,
+  previousUsageRange,
 } from "./api";
 import type {
   LeagueRow,
@@ -781,7 +783,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     if (fixedSite) setSite(fixedSite);
   }, [fixedSite]);
   const [dev, setDev] = useState<"all" | "ios" | "android">("all");
-  const [prev, setPrev] = useState<boolean>(true);
+  const [showPrev, setShowPrev] = useState<boolean>(true);
 
   // Live API state — fetched layer-wise: the open sidebar layer decides
   // which endpoints fire. Merged into `live` as each layer resolves.
@@ -1060,36 +1062,48 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
 
   // Derived Series for Traffic (live usage_and_distribution only — no mock data)
   const liveUsage = live?.usage ?? null;
+  const currentUsageDays = useMemo(
+    () => liveUsage?.current.length
+      ? densifyUsageDays(liveUsage.current, effRange.from, effRange.to)
+      : [],
+    [liveUsage, effRange.from, effRange.to]
+  );
+  const previousRange = useMemo(
+    () => previousUsageRange(effRange.from, effRange.to),
+    [effRange.from, effRange.to]
+  );
+  const previousUsageDays = useMemo(
+    () => densifyUsageDays(liveUsage?.previous ?? [], previousRange.from, previousRange.to),
+    [liveUsage, previousRange.from, previousRange.to]
+  );
+  const hasPreviousUsage = (liveUsage?.previous.length ?? 0) > 0;
   const usageLabels = useMemo(
-    () => (liveUsage ? liveUsage.current.map((d) => d.label) : []),
-    [liveUsage]
+    () => currentUsageDays.map((d) => d.label),
+    [currentUsageDays]
   );
   const activeUsersSeries = useMemo(
-    () =>
-      liveUsage && liveUsage.current.length > 0
-        ? liveUsage.current.map((d) => d.visitors)
-        : [],
-    [liveUsage]
+    () => currentUsageDays.map((d) => d.visitors),
+    [currentUsageDays]
   );
   const prevActiveUsersSeries = useMemo(
-    () => liveUsage?.previous?.map((d) => d.visitors) || [],
-    [liveUsage]
+    () => previousUsageDays.map((d) => d.visitors),
+    [previousUsageDays]
   );
   const sessionsSeries = useMemo(
-    () => liveUsage?.current?.map((d) => d.sessions) || [],
-    [liveUsage]
+    () => currentUsageDays.map((d) => d.sessions),
+    [currentUsageDays]
   );
   const prevSessionsSeries = useMemo(
-    () => liveUsage?.previous?.map((d) => d.sessions) || [],
-    [liveUsage]
+    () => previousUsageDays.map((d) => d.sessions),
+    [previousUsageDays]
   );
   const viewsSeries = useMemo(
-    () => liveUsage?.current?.map((d) => d.views) || [],
-    [liveUsage]
+    () => currentUsageDays.map((d) => d.views),
+    [currentUsageDays]
   );
   const prevViewsSeries = useMemo(
-    () => liveUsage?.previous?.map((d) => d.views) || [],
-    [liveUsage]
+    () => previousUsageDays.map((d) => d.views),
+    [previousUsageDays]
   );
   const fmtDur = (sec: number) =>
     `${Math.floor(sec / 60)}m ${String(Math.round(sec % 60)).padStart(2, "0")}s`;
@@ -1714,12 +1728,12 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
 
             {/* Previous period toggle */}
             <label
-              className={`ctrl ${prev ? "toggle-on" : ""}`}
+              className={`ctrl ${showPrev ? "toggle-on" : ""}`}
               id="prevBtn"
-              onClick={() => setPrev(!prev)}
+              onClick={() => setShowPrev((enabled) => !enabled)}
             >
               <span className="ic">&#8634;</span> Previous period{" "}
-              {prev ? "✓" : ""}
+              {showPrev ? "✓" : ""}
             </label>
 
             {/* Refresh current layer only (re-queries its APIs, no page reload) */}
@@ -1897,13 +1911,18 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                         if (curSeries.length === 0) {
                           return <NoData label="usage trend" />;
                         }
-                        const prevCurSeries = prev
-                          ? usageTab === "visitors"
+                        const availablePrevSeries =
+                          usageTab === "visitors"
                             ? prevActiveUsersSeries
                             : usageTab === "views"
                               ? prevViewsSeries
-                              : prevSessionsSeries
-                          : null;
+                              : prevSessionsSeries;
+                        const prevCurSeries =
+                          showPrev &&
+                          hasPreviousUsage &&
+                          availablePrevSeries.length === curSeries.length
+                            ? availablePrevSeries
+                            : null;
                         const curTabLabel =
                           usageTab === "visitors"
                             ? "Visitors"
@@ -1934,7 +1953,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                               prevColor={colors.line}
                               gridColor={colors.grid}
                               faintColor={colors.faint}
-                              showPrev={prev}
+                              showPrev={showPrev}
                               curLabel={curTabLabel}
                               prevLabel="Previous period"
                             />
@@ -1943,7 +1962,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                                 <i style={{ background: curColor }} />{" "}
                                 {curTabLabel}
                               </span>
-                              {prev && (
+                              {prevCurSeries && (
                                 <span>
                                   <i className="dash" /> Previous period
                                 </span>

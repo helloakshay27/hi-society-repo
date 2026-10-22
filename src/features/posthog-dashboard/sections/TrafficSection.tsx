@@ -61,10 +61,12 @@ export function TrafficSection() {
               }
             >
               <Guard status={status.traffic} empty={!hasUsage}>
-                <LineChart cur={traffic.chart.cur} prev={traffic.chart.prev} showPrev={state.prev} labels={traffic.chart.labels} />
+                <LineChart cur={traffic.chart.cur} prev={state.prev ? traffic.chart.prev : []} showPrev={state.prev} labels={traffic.chart.labels} />
                 <div className="legend">
                   <span><i style={{ background: 'var(--blue)' }} /> Current period</span>
-                  <span><i className="dash" /> Previous period</span>
+                  {traffic.chart.prev.length === traffic.chart.cur.length && traffic.chart.prev.length > 1 && state.prev && (
+                    <span><i className="dash" /> Previous period</span>
+                  )}
                   <span><i style={{ background: 'var(--border-2)' }} /> Latest (partial day)</span>
                 </div>
               </Guard>

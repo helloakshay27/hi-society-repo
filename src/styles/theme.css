@@ -189,6 +189,54 @@
   --z-tooltip: 1070;
 }
 
+/* Loyalty dashboard aliases keep its utility-based styles on the shared theme. */
+.loyalty-dashboard-theme {
+  color: var(--color-text);
+  font-family: var(--font-family);
+  --loyalty-bg: #fdfdfb;
+  --loyalty-surface: #f5f4f0;
+  --loyalty-text: #1a1a18;
+  --loyalty-subtle: #666666;
+  --loyalty-muted: rgba(0, 0, 0, 0.48);
+  --loyalty-accent: #1a1a18;
+  --loyalty-accent-rgb: 26, 26, 24;
+  --loyalty-accent-hover: #12100e;
+  --loyalty-green: #666666;
+  --loyalty-success: #666666;
+  --loyalty-success-light: #f5f4f0;
+  --loyalty-warning: #1a1a18;
+  --loyalty-warning-text: #666666;
+  --loyalty-danger: #666666;
+  --loyalty-danger-text: #1a1a18;
+  --loyalty-info: #666666;
+  --loyalty-info-light: #f5f4f0;
+  --loyalty-purple: #666666;
+  --loyalty-purple-light: #f5f4f0;
+  --loyalty-border: #e5e5e5;
+  --loyalty-divider: #ebe9e2;
+  --loyalty-surface-alt: #f5f4f0;
+  --loyalty-surface-card: #ffffff;
+  --loyalty-warning-bg: #f5f4f0;
+  --loyalty-warning-border: #ebe9e2;
+  --loyalty-danger-bg: #f5f4f0;
+  --loyalty-success-tint: #f5f4f0;
+  --loyalty-success-bg: #f5f4f0;
+  --loyalty-success-border: #ebe9e2;
+  --loyalty-accent-tint: #f5f4f0;
+  --loyalty-accent-bg: #f5f4f0;
+  --loyalty-danger-tint: #f5f4f0;
+  --loyalty-danger-border: #ebe9e2;
+  --loyalty-danger-border-strong: #ebe9e2;
+  --loyalty-warning-tint: #f5f4f0;
+  --loyalty-warning-bg-soft: #f5f4f0;
+  --loyalty-warning-border-soft: #ebe9e2;
+  --loyalty-shadow-accent: 0 2px 8px rgba(26, 26, 24, 0.08);
+}
+
+.loyalty-dashboard-theme .bg-white {
+  background-color: var(--color-card-bg);
+}
+
 /* ===========================================
    TABLET TYPOGRAPHY (768px - 1023px)
    =========================================== */

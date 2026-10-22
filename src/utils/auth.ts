@@ -169,11 +169,11 @@ export const getBaseUrl = (): string | null => {
   const savedUrl = localStorage.getItem(AUTH_KEYS.BASE_URL);
   if (!savedUrl) return null;
 
-  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-    const apiHost = savedUrl.replace(/^https?:\/\//i, "").split("/")[0].toLowerCase();
-    if (/(^|\.)(lockated\.com|gophygital\.work)$/.test(apiHost)) {
-      return `/fm-api/${encodeURIComponent(apiHost)}`;
-    }
+  if (
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") &&
+    savedUrl.includes("runwal-cp-api.lockated.com")
+  ) {
+    return "/runwal-api";
   }
 
   // Add https:// prefix if not present

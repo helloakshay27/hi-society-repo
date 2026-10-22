@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Device, AdminScope } from '../data/types';
-import { PROJECTS, RANGE_LABELS } from '../data/constants';
-import type { Site } from '../api/queries';
+import type { Device } from '../data/types';
+import { RANGE_LABELS } from '../data/constants';
 
 interface FilterBarProps {
   range: number;
@@ -10,16 +9,11 @@ interface FilterBarProps {
   rangeTo: string;
   onSelectRange: (days: number, label: string) => void;
   onApplyCustomRange: (from: string, to: string, days: number, label: string) => void;
-  project: string;
-  onChangeProject: (project: string) => void;
   dev: Device;
   onChangeDev: (dev: Device) => void;
-  scope: AdminScope;
-  onChangeScope: (scope: AdminScope) => void;
   prev: boolean;
   onTogglePrev: () => void;
   recentlyOnlineCount: number;
-  sites?: Site[];
   isRefreshing?: boolean;
   onRefresh?: () => void;
 }
@@ -31,16 +25,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   rangeTo,
   onSelectRange,
   onApplyCustomRange,
-  project,
-  onChangeProject,
   dev,
   onChangeDev,
-  scope,
-  onChangeScope,
   prev,
   onTogglePrev,
   recentlyOnlineCount,
-  sites,
   isRefreshing,
   onRefresh
 }) => {
@@ -75,14 +64,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     onApplyCustomRange(customFrom, customTo, days, label);
     setIsDateOpen(false);
   };
-
-  // Build project options list
-  const projectOptions = React.useMemo(() => {
-    if (sites && sites.length > 0) {
-      return ['All Projects', ...sites.map((s) => s.name)];
-    }
-    return PROJECTS;
-  }, [sites]);
 
   return (
     <div className="filterbar">
@@ -152,23 +133,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
       </div>
 
-      {/* Project Selector */}
-      <label className="ctrl">
-        <span className="ic">&#127959;</span>
-        <select
-          id="projectSel"
-          value={project}
-          onChange={(e) => onChangeProject(e.target.value)}
-        >
-          {projectOptions.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-        <span className="chev">&#9662;</span>
-      </label>
-
       {/* Platform Toggle */}
       <div className="devtoggle" id="devToggle" title="Platform">
         <button
@@ -196,36 +160,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           onClick={() => onChangeDev('android')}
         >
           Android
-        </button>
-      </div>
-
-      {/* Admin Scope Toggle */}
-      <div className="scopetoggle" id="scopeToggle" title="Admin Scope (proposed)">
-        <button
-          type="button"
-          data-scope="all"
-          className={scope === 'all' ? 'on' : ''}
-          onClick={() => onChangeScope('all')}
-        >
-          All
-        </button>
-        <button
-          type="button"
-          data-scope="tower"
-          title="Tower Admin"
-          className={scope === 'tower' ? 'on' : ''}
-          onClick={() => onChangeScope('tower')}
-        >
-          Tower
-        </button>
-        <button
-          type="button"
-          data-scope="super"
-          title="Super Admin"
-          className={scope === 'super' ? 'on' : ''}
-          onClick={() => onChangeScope('super')}
-        >
-          Super
         </button>
       </div>
 

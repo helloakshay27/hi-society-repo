@@ -7,6 +7,7 @@ import { LineChart } from '../../../posthog-runwal-dashboard/components/charts/L
 import { ErrorState, EmptyState } from '../../../posthog-runwal-dashboard/components/common/DashboardStates';
 import { useTrafficSession, useUsageAndDistribution } from '../../../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
 import { pct } from '../../../posthog-runwal-dashboard/data/constants';
+import { previousPeriodFor } from '../../../posthog-runwal-dashboard/api/usageDateRange';
 
 interface TrafficSessionPageProps {
   filters: DashboardFilters;
@@ -106,7 +107,17 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
     () => densifyUsageData(filters.from, filters.to, rawCurrentDays || []),
     [filters.from, filters.to, rawCurrentDays]
   );
-  const previousUsageDays = usageData?.usage_over_time?.previous || [];
+  const rawPreviousDays = usageData?.usage_over_time?.previous;
+  const previousRange = useMemo(
+    () => previousPeriodFor(filters.from, filters.to),
+    [filters.from, filters.to]
+  );
+  const previousUsageDays = useMemo(
+    () => rawPreviousDays?.length
+      ? densifyUsageData(previousRange.from, previousRange.to, rawPreviousDays)
+      : [],
+    [previousRange, rawPreviousDays]
+  );
 
   const chartLabels = currentUsageDays.map((d) => {
     const parts = d.day.split('-');
@@ -116,7 +127,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
   const tab = USAGE_TABS.find((t) => t.key === usageTab) || USAGE_TABS[0];
   const curSeries = currentUsageDays.map((d) => d[tab.key] || 0);
   const prevSeries = previousUsageDays.map((d) => d[tab.key] || 0);
-  const hasPrev = showPrev && prevSeries.length > 0;
+  const hasPrev = showPrev && prevSeries.length === curSeries.length && prevSeries.length > 1;
 
   const deviceList = usageData?.device_split?.devices || [];
   const viewsPerSession =
@@ -254,7 +265,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
               </div>
               <LineChart
                 cur={curSeries}
-                prev={prevSeries.length > 0 ? prevSeries : null}
+                prev={hasPrev ? prevSeries : null}
                 labels={chartLabels}
                 color={tab.color}
                 fill={tab.fill}
