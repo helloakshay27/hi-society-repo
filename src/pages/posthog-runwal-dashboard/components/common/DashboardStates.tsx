@@ -159,7 +159,7 @@ export const LiveApiBadge: React.FC<LiveApiBadgeProps> = ({
   isFetching,
   isError,
   generatedAt,
-  source = 'PostHog API',
+  source = 'Usage API',
 }) => {
   return (
     <div

@@ -149,7 +149,7 @@ async function getPosthog<T>(endpoint: string, queryStr: string): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`PostHog API error (${response.status}): ${response.statusText || 'Failed to fetch'}`);
+    throw new Error(`Usage API error (${response.status}): ${response.statusText || 'Failed to fetch'}`);
   }
 
   return response.json() as Promise<T>;

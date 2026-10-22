@@ -131,7 +131,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 }) => {
   const [opsTab, setOpsTab] = useState<"crm" | "finance">("crm");
 
-  // PostHog Adoption Hooks
+  // Usage Adoption Hooks
   const {
     data: adoptData,
     isLoading: isAdoptLoading,
@@ -429,9 +429,9 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       <Card
         id="card-adoptionTrend"
         infoKey="chart.adoptionTrend"
-        eyebrow="Trend · Live 8-week PostHog data"
+        eyebrow="Trend · Live 8-week usage data"
         title="Adoption trend (weekly active users, last 8 weeks)"
-        purpose="Weekly active users over the last 8 weeks from PostHog adoption_trend endpoint."
+        purpose="Weekly active users over the last 8 weeks from the usage adoption_trend endpoint."
         style={{ marginTop: "12px" }}
       >
         {isTrendError ? (
@@ -557,7 +557,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           infoKey="chart.roles"
           eyebrow="Adoption by role / audience"
           title="User roles distribution"
-          purpose="Active share and user counts by role from PostHog roles API."
+          purpose="Active share and user counts by role from the usage roles API."
         >
           {isRolesError ? (
             <ErrorState
@@ -603,7 +603,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           infoKey="chart.dormant"
           eyebrow="Dormant users"
           title="Inactive account summary"
-          purpose="Customers with no activity in the dormancy window from PostHog."
+          purpose="Customers with no activity in the dormancy window, based on usage data."
         >
           {isAdoptError ? (
             <ErrorState

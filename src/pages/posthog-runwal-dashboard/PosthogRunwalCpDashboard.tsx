@@ -152,7 +152,7 @@ function PosthogRunwalCpDashboardContent() {
       return window.location.hostname;
     }
 
-    // 4. Default Runwal tenant domain tracked in PostHog
+    // 4. Default Runwal tenant domain tracked in usage analytics
     return "runwal-cp.lockated.com";
   }, []);
 
@@ -274,7 +274,7 @@ function PosthogRunwalCpDashboardContent() {
 
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
-  // Refetch every active query on this dashboard (PostHog adoption + FM
+  // Refetch every active query on this dashboard (usage adoption + FM
   // Matrix) with the current filters, instead of waiting for cache staleness.
   const handleRefresh = async () => {
     if (isRefreshing) return;
@@ -483,7 +483,7 @@ function PosthogRunwalCpDashboardContent() {
           )}
 
           {/* <div className="footer">
-            <b>Live Analytics Integration.</b> Connected directly to PostHog
+            <b>Live Analytics Integration.</b> Connected directly to Usage
             Adoption Analytics (<code>https://posthog-api.lockated.com</code>)
             and Hi-Society Backend endpoints. All metrics dynamically update
             based on selected sites, date ranges, and device platforms.

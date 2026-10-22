@@ -44,7 +44,7 @@ export const BM_DEFAULTS: Record<string, number> = {
 export const KPI_INFO: Record<string, KpiInfo> = {
   'Active Users': {
     f: 'Unique customers (user_id) who fired at least one event with journey = post_sales during the selected period.',
-    m: "Shows the reach of the app among booked homebuyers — pulled directly from PostHog's person-level activity.",
+    m: "Shows the reach of the app among booked homebuyers — pulled directly from person-level usage activity.",
   },
   'Screen Views': {
     f: 'Count of all screen-viewed style events across modules (e.g. home_page_viewed, document_viewed, project_details_viewed).',

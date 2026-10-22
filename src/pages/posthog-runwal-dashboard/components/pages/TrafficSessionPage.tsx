@@ -248,7 +248,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
       <div className="section-head">
         <h2>Traffic &amp; Session</h2>
         <span className="sd">
-          Monitor overall application traffic, customer activity, and session behavior from PostHog.
+          Monitor overall application traffic, customer activity, and session behavior from usage data.
         </span>
       </div>
 
@@ -353,9 +353,9 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
         <Card
           id="card-trafficActive"
           infoKey="chart.usage"
-          eyebrow="Usage over time · Live PostHog data"
+          eyebrow="Usage over time · Live usage data"
           title="Usage over time"
-          purpose="Visitors, screen views, and sessions over time, with previous period comparison from PostHog usage_and_distribution API."
+          purpose="Visitors, screen views, and sessions over time, with previous period comparison from the usage_and_distribution API."
         >
           {isUsageError ? (
             <ErrorState
@@ -495,7 +495,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           infoKey="chart.devices"
           eyebrow="Device / platform split"
           title="Device platform distribution"
-          purpose="Share of sessions and active users by device_type from PostHog."
+          purpose="Share of sessions and active users by device_type from usage data."
         >
           {isUsageError ? (
             <ErrorState

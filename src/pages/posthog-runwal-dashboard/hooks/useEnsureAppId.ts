@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 /**
  * Pins the current URL's `app_id` query param to a fixed value for a
- * dedicated single-tenant dashboard route. Every PostHog/FM Matrix API call
+ * dedicated single-tenant dashboard route. Every Usage/FM Matrix API call
  * in this product family reads `app_id` straight off `window.location.search`
  * (see `getAppIdFromUrl()` in `api/api.ts`), so the URL must carry the right
  * value *before* any data-fetching hook mounts. Returns `false` (render
