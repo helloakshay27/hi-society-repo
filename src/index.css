@@ -8,6 +8,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Higher specificity than react-remove-scroll-bar's runtime-injected
+   `body[data-scroll-locked]` rule, so this margin-right always wins. */
+html body[data-scroll-locked] {
+    margin-right: 0px !important;
+}
+
 /* Mobile-friendly scrollbar styling */
 .scrollbar-thin {
   scrollbar-width: thin;
