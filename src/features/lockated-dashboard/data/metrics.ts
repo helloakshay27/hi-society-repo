@@ -138,19 +138,23 @@ export function buildTraffic(
         ? dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
         : u.day;
     });
+    // Previous period aligned day-by-day to the current one; missing days
+    // (or no previous data at all) are shown as 0 rather than dropped.
+    const prevOf = (key: 'visitors' | 'views' | 'sessions') =>
+      usageCurrent.map((_, i) => usagePrev[i]?.[key] || 0);
     visitorsSeries = {
       cur: usageCurrent.map((u) => u.visitors || 0),
-      prev: usagePrev.map((u) => u.visitors || 0),
+      prev: prevOf('visitors'),
       labels
     };
     viewsSeries = {
       cur: usageCurrent.map((u) => u.views || 0),
-      prev: usagePrev.map((u) => u.views || 0),
+      prev: prevOf('views'),
       labels
     };
     sessionsSeries = {
       cur: usageCurrent.map((u) => u.sessions || 0),
-      prev: usagePrev.map((u) => u.sessions || 0),
+      prev: prevOf('sessions'),
       labels
     };
   } else {

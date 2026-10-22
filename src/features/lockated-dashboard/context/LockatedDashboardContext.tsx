@@ -50,6 +50,10 @@ interface LockatedDashboardContextValue {
   flows?: WorkflowMetrics;
   sites: Site[];
   modules: ModuleNode[];
+  appId: string;
+  projectCode: string;
+  /** True once the sites lookup has finished (even if it failed or was empty). */
+  sitesReady: boolean;
   isRefreshing: boolean;
   isTrafficLoading: boolean;
   isAdoptLoading: boolean;
@@ -121,6 +125,9 @@ export function LockatedDashboardProvider({
   const sitesQ = useAllSites();
   const sites = useMemo(() => sitesQ.data ?? [], [sitesQ.data]);
   const sitesSettled = sitesQ.isSuccess && sites.length > 0;
+  // Wait for the sites lookup to finish (success or failure) before firing
+  // analytics queries, so a selected project resolves to its site_id first.
+  const queryEnabled = !sitesQ.isLoading;
 
   // Resolve active site ID if a specific project was selected
   const activeSiteId = useMemo(() => {
@@ -151,7 +158,7 @@ export function LockatedDashboardProvider({
 
   // Device & OS mapping
   const filters = useMemo(() => {
-    let devices: ('Mobile' | 'Desktop')[] = ['Mobile'];
+    const devices: ('Mobile' | 'Desktop')[] = ['Mobile'];
     let os: string | undefined;
 
     if (state.dev === 'ios') os = 'ios';
@@ -167,30 +174,35 @@ export function LockatedDashboardProvider({
       url: dynamicUrl,
       token: '',
       appId: effectiveAppId,
-      projectCode: effectiveProjectCode
+      // project_code disabled for now — only app_id is sent.
+      // projectCode: effectiveProjectCode
+      projectCode: undefined as string | undefined
     };
-  }, [state.rangeFrom, state.rangeTo, state.dev, activeSiteId, dynamicUrl, sitesSettled, effectiveAppId, effectiveProjectCode]);
+  }, [state.rangeFrom, state.rangeTo, state.dev, activeSiteId, dynamicUrl, sitesSettled, effectiveAppId]);
 
   // API Queries via React Query
   const trafficQ = useQuery({
     queryKey: ['lockated-traffic', filters],
     queryFn: () => fetchTrafficSession(filters),
     staleTime: 5 * 60_000,
-    retry: false
+    retry: false,
+    enabled: queryEnabled
   });
 
   const usageQ = useQuery({
     queryKey: ['lockated-usage', filters],
     queryFn: () => fetchUsageAndDistribution(filters),
     staleTime: 5 * 60_000,
-    retry: false
+    retry: false,
+    enabled: queryEnabled
   });
 
   const engagementQ = useQuery({
     queryKey: ['lockated-engagement', filters],
     queryFn: () => fetchAdoptionEngagement(filters),
     staleTime: 5 * 60_000,
-    retry: false
+    retry: false,
+    enabled: queryEnabled
   });
 
   const trendQ = useQuery({
@@ -206,7 +218,8 @@ export function LockatedDashboardProvider({
         os: filters.os
       }),
     staleTime: 5 * 60_000,
-    retry: false
+    retry: false,
+    enabled: queryEnabled
   });
 
   const growthQ = useQuery({
@@ -222,7 +235,8 @@ export function LockatedDashboardProvider({
         os: filters.os
       }),
     staleTime: 5 * 60_000,
-    retry: false
+    retry: false,
+    enabled: queryEnabled
   });
 
   const retentionQ = useQuery({
@@ -238,28 +252,32 @@ export function LockatedDashboardProvider({
         os: filters.os
       }),
     staleTime: 5 * 60_000,
-    retry: false
+    retry: false,
+    enabled: queryEnabled
   });
 
   const rolesQ = useQuery({
     queryKey: ['lockated-roles', filters],
     queryFn: () => fetchRoles(filters),
     staleTime: 5 * 60_000,
-    retry: false
+    retry: false,
+    enabled: queryEnabled
   });
 
   const modulesQ = useQuery({
     queryKey: ['lockated-modules', filters],
     queryFn: () => fetchModules(filters),
     staleTime: 5 * 60_000,
-    retry: false
+    retry: false,
+    enabled: queryEnabled
   });
 
   const workflowQ = useQuery({
     queryKey: ['lockated-workflow', filters, state.wf],
     queryFn: () => fetchWorkflowUsage({ ...filters, module: state.wf }),
     staleTime: 5 * 60_000,
-    retry: false
+    retry: false,
+    enabled: queryEnabled
   });
 
   // Refresh mechanism
@@ -283,6 +301,7 @@ export function LockatedDashboardProvider({
         queryClient.invalidateQueries({
           predicate: (q) => {
             const k = q.queryKey[0];
+            if (k === 'fm-adoption') return q.queryKey[1] === 'recent_active_users';
             return typeof k === 'string' && (k.startsWith('lockated-') || k === 'all-sites');
           },
           refetchType: 'active'
@@ -330,6 +349,9 @@ export function LockatedDashboardProvider({
     flows,
     sites,
     modules: modulesQ.data?.tree ?? [],
+    appId: effectiveAppId,
+    projectCode: effectiveProjectCode,
+    sitesReady: queryEnabled,
     isRefreshing,
     isTrafficLoading,
     isAdoptLoading,

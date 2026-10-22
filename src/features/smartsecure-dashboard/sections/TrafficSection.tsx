@@ -63,7 +63,7 @@ export function TrafficSection() {
               <LineChart cur={series.cur} prev={series.prev} showPrev={state.prev} labels={series.labels} />
               <div className="legend">
                 <span><i style={{ background: series.color }} /> {series.legendLabel}</span>
-                <span><i className="dash" /> Previous period</span>
+                {state.prev && <span><i className="dash" /> Previous period</span>}
               </div>
             </>
           )}

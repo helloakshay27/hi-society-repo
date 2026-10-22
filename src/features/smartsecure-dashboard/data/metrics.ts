@@ -12,6 +12,7 @@ import { TOTAL_MODULES, KNOWN_DEAD_AREAS, type DeadAreaItem } from './constants'
 import { WORKFLOWS, type Workflow } from './workflows';
 import { fmtC, pct } from './format';
 import type { DashboardState, TileSpec } from './types';
+import { previousPeriodFor } from '../../../pages/posthog-runwal-dashboard/api/usageDateRange';
 
 function densifyUsageData(
   fromStr: string,
@@ -163,7 +164,10 @@ export function buildTraffic(
   const rawCurrent = usageQ?.usage_over_time?.current || [];
   const rawPrev = usageQ?.usage_over_time?.previous || [];
   const densifiedCur = densifyUsageData(state.rangeFrom, state.rangeTo, rawCurrent);
-  const densifiedPrev = rawPrev.length > 0 ? rawPrev : [];
+  const previousRange = previousPeriodFor(state.rangeFrom, state.rangeTo);
+  const densifiedPrev = usageQ
+    ? densifyUsageData(previousRange.from, previousRange.to, rawPrev)
+    : [];
 
   const labels = densifiedCur.map((dayObj) => {
     const parts = dayObj.day.split('-');

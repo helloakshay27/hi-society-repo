@@ -35,6 +35,7 @@ interface AdoptionEngagementPageProps {
   benchmarks: Record<string, number | null>;
   onBenchmarkChange: (id: string, value: number | null) => void;
   sitesSettled?: boolean;
+  showPrev: boolean;
   subtitle?: string;
   questions?: string[];
   isRefreshing?: boolean;
@@ -125,6 +126,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   benchmarks,
   onBenchmarkChange,
   sitesSettled = true,
+  showPrev,
   subtitle,
   questions,
   isRefreshing = false,
@@ -448,11 +450,11 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           <>
             <LineChart
               cur={trendSeriesCurrent}
-              prev={trendSeriesPrev}
+              prev={showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1 ? trendSeriesPrev : []}
               labels={trendLabels}
               color="var(--chart-blue)"
               fill="var(--chart-fill)"
-              showPrev={weeklyPrevious.length > 0}
+              showPrev={showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1}
               curLabel="Current WAU"
               prevLabel="Prior 8W WAU"
             />
@@ -460,7 +462,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               <span>
                 <i style={{ background: "var(--chart-blue)" }}></i> Current WAU
               </span>
-              {weeklyPrevious.length > 0 && (
+              {showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1 && (
                 <span>
                   <i className="dash"></i> Previous 8-Week Period
                 </span>

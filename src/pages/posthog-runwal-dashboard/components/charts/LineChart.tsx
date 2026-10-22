@@ -48,7 +48,8 @@ export const LineChart: React.FC<LineChartProps> = ({
     );
   }
 
-  const all = cur.concat(prev && showPrev ? prev : []);
+  const usePrev = !!prev && showPrev && prev.length === cur.length && prev.length > 1;
+  const all = cur.concat(usePrev && prev ? prev : []);
   const validAll = all.filter((x) => typeof x === 'number' && !isNaN(x));
   const rawMin = validAll.length > 0 ? Math.min(...validAll) : 0;
   const rawMax = validAll.length > 0 ? Math.max(...validAll) : 1;
@@ -172,7 +173,7 @@ export const LineChart: React.FC<LineChartProps> = ({
     const hx = X(hoverIdx);
     const curVal = typeof cur[hoverIdx] === 'number' && !isNaN(cur[hoverIdx]) ? cur[hoverIdx] : 0;
     const hyCur = Y(curVal);
-    const hasPrev = Boolean(prev && showPrev && prev.length === n && typeof prev[hoverIdx] === 'number' && !isNaN(prev[hoverIdx]));
+    const hasPrev = Boolean(usePrev && prev && typeof prev[hoverIdx] === 'number' && !isNaN(prev[hoverIdx]));
     const prevVal = hasPrev && prev ? prev[hoverIdx] : null;
     const hyPrev = prevVal != null ? Y(prevVal) : null;
     const pointLabel = labels && labels[hoverIdx] ? labels[hoverIdx] : `Point ${hoverIdx + 1}`;
@@ -360,7 +361,7 @@ export const LineChart: React.FC<LineChartProps> = ({
       {xLabels}
       <line x1={pl} y1={base} x2={W - pr} y2={base} stroke={gridColor} />
       <path d={areaD} fill={fill} />
-      {prev && showPrev && prev.length === n && (
+      {usePrev && prev && (
         <path
           d={path(prev)}
           fill="none"
@@ -391,4 +392,3 @@ export const LineChart: React.FC<LineChartProps> = ({
     </svg>
   );
 };
-

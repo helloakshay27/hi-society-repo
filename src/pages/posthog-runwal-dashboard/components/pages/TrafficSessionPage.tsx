@@ -11,6 +11,7 @@ import {
   useUsageAndDistribution,
 } from '../../hooks/useDashboardAnalytics';
 import { pct } from '../../data/constants';
+import { previousPeriodFor } from '../../api/usageDateRange';
 
 interface TrafficSessionPageProps {
   filters: DashboardFilters;
@@ -77,23 +78,6 @@ function densifyUsageData(
   return result;
 }
 
-function previousPeriodFor(fromStr: string, toStr: string) {
-  const from = Date.parse(`${fromStr}T00:00:00Z`);
-  const to = Date.parse(`${toStr}T00:00:00Z`);
-  if (!Number.isFinite(from) || !Number.isFinite(to) || from > to) {
-    return { from: '', to: '' };
-  }
-
-  const dayMs = 24 * 60 * 60 * 1000;
-  const duration = Math.round((to - from) / dayMs);
-  const previousTo = new Date(from - dayMs);
-  const previousFrom = new Date(previousTo.getTime() - duration * dayMs);
-  return {
-    from: previousFrom.toISOString().slice(0, 10),
-    to: previousTo.toISOString().slice(0, 10),
-  };
-}
-
 export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
   filters,
   showPrev,
@@ -131,7 +115,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
   );
   const previousUsageQuery = useUsageAndDistribution(
     previousFilters,
-    sitesSettled && showPrev && !!usageData && serverPreviousDays.length === 0 && !!previousRange.from
+    sitesSettled && !!usageData && serverPreviousDays.length === 0 && !!previousRange.from
   );
 
   const isTrafficActiveLoading = isTrafficLoading || isRefreshing;
@@ -156,9 +140,9 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
     const raw = serverPreviousDays.length > 0
       ? serverPreviousDays
       : previousUsageQuery.data?.usage_over_time?.current || [];
-    if (raw.length === 0) return [];
+    if (raw.length === 0 && !previousUsageQuery.isSuccess) return [];
     return densifyUsageData(previousRange.from, previousRange.to, raw);
-  }, [serverPreviousDays, previousUsageQuery.data?.usage_over_time?.current, previousRange]);
+  }, [serverPreviousDays, previousUsageQuery.data?.usage_over_time?.current, previousUsageQuery.isSuccess, previousRange]);
 
   const chartLabels = currentUsageDays.map((d) => {
     const parts = d.day.split('-');
@@ -378,14 +362,6 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                   />
                 </div>
               )}
-              {showPrev && previousUsageQuery.isSuccess && prevVisitors.length === 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <EmptyState
-                    message="No usage data is available for the previous period"
-                    sub={`${previousRange.from} through ${previousRange.to}`}
-                  />
-                </div>
-              )}
               <div className="charttabs" style={{ marginBottom: '10px' }}>
                 <button
                   type="button"
@@ -415,11 +391,11 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                   <>
                     <LineChart
                       cur={curVisitors}
-                      prev={prevVisitors.length > 0 ? prevVisitors : null}
+                      prev={showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1 ? prevVisitors : null}
                       labels={chartLabels}
                       color="var(--chart-blue)"
                       fill="var(--chart-fill)"
-                      showPrev={showPrev && prevVisitors.length > 0}
+                      showPrev={showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1}
                       curLabel="Visitors"
                       prevLabel="Prev Period"
                     />
@@ -427,7 +403,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                       <span>
                         <i style={{ background: 'var(--chart-blue)' }}></i> Current Visitors
                       </span>
-                      {showPrev && prevVisitors.length > 0 && (
+                      {showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1 && (
                         <span>
                           <i className="dash"></i> Previous Period
                         </span>
@@ -440,11 +416,11 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                   <>
                     <LineChart
                       cur={curViews}
-                      prev={prevViews.length > 0 ? prevViews : null}
+                      prev={showPrev && prevViews.length === curViews.length && prevViews.length > 1 ? prevViews : null}
                       labels={chartLabels}
                       color="var(--chart-violet)"
                       fill="var(--chart-violet-tint)"
-                      showPrev={showPrev && prevViews.length > 0}
+                      showPrev={showPrev && prevViews.length === curViews.length && prevViews.length > 1}
                       curLabel="Views"
                       prevLabel="Prev Period"
                     />
@@ -452,7 +428,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                       <span>
                         <i style={{ background: 'var(--chart-violet)' }}></i> Current Views
                       </span>
-                      {showPrev && prevViews.length > 0 && (
+                      {showPrev && prevViews.length === curViews.length && prevViews.length > 1 && (
                         <span>
                           <i className="dash"></i> Previous Period
                         </span>
@@ -465,11 +441,11 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                   <>
                     <LineChart
                       cur={curSessions}
-                      prev={prevSessions.length > 0 ? prevSessions : null}
+                      prev={showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1 ? prevSessions : null}
                       labels={chartLabels}
                       color="var(--green)"
                       fill="var(--green-tint)"
-                      showPrev={showPrev && prevSessions.length > 0}
+                      showPrev={showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1}
                       curLabel="Sessions"
                       prevLabel="Prev Period"
                     />
@@ -477,7 +453,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                       <span>
                         <i style={{ background: 'var(--green)' }}></i> Current Sessions
                       </span>
-                      {showPrev && prevSessions.length > 0 && (
+                      {showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1 && (
                         <span>
                           <i className="dash"></i> Previous Period
                         </span>

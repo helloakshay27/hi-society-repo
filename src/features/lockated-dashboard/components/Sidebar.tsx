@@ -1,12 +1,21 @@
 import React from 'react';
 import type { ActivePage } from '../data/types';
+import { RecentActivitySidebar } from '../../../pages/posthog-runwal-dashboard/components/common/RecentActivitySidebar';
+import type { DashboardFilters } from '../../../pages/posthog-runwal-dashboard/api/types';
 
 interface SidebarProps {
   currentPage: ActivePage;
   onSelectPage: (page: ActivePage) => void;
+  recentActivityFilters: DashboardFilters;
+  sitesSettled: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onSelectPage }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  currentPage,
+  onSelectPage,
+  recentActivityFilters,
+  sitesSettled
+}) => {
   return (
     <aside className="sidebar">
       <h1 className="brandmark">
@@ -97,6 +106,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onSelectPage }) =
           </button>
         </div>
       </nav>
+
+      <RecentActivitySidebar filters={recentActivityFilters} sitesSettled={sitesSettled} />
     </aside>
   );
 };

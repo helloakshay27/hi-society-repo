@@ -3256,6 +3256,8 @@ const SuncityDashboardPage = lazy(
 const LockatedDashboardPage = lazy(
   () => import("./features/lockated-dashboard/LockatedDashboardPage")
 );
+const LoyaltyDashboard = lazy(() => import("./pages/LoyaltyDashboard"));
+const LoyaltyDashboardNew = lazy(() => import("./pages/LoyaltyDashboardNew"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -3765,6 +3767,23 @@ function App() {
                       <Route
                         path="/lockated-usage-analytics"
                         element={<LockatedDashboardPage />}
+                      />
+                      {/* Standalone Loyalty Dashboards (No HiSociety header/sidebar) */}
+                      <Route
+                        path="/loyalty/dashboard"
+                        element={<LoyaltyDashboardNew />}
+                      />
+                      <Route
+                        path="/loyalty/dashboard-new"
+                        element={<LoyaltyDashboard />}
+                      />
+                      <Route
+                        path="/loyalty-dashboard"
+                        element={<LoyaltyDashboardNew />}
+                      />
+                      <Route
+                        path="/loyalty-dashboard-new"
+                        element={<LoyaltyDashboard />}
                       />
 
                       {/* Post Possession admin dashboard (standalone — own header/tabs) */}

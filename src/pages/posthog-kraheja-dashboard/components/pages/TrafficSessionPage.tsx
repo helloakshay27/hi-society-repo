@@ -10,6 +10,7 @@ import {
   useUsageAndDistribution,
 } from '../../../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
 import { pct } from '../../../posthog-runwal-dashboard/data/constants';
+import { previousPeriodFor } from '../../../posthog-runwal-dashboard/api/usageDateRange';
 
 interface TrafficSessionPageProps {
   filters: DashboardFilters;
@@ -83,11 +84,22 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
   const avgSessionDelta = formatDelta(deltas?.avg_session_seconds);
   const bounceDelta = formatDelta(deltas?.bounce_rate);
 
+  const rawCurrentDays = usageData?.usage_over_time?.current;
   const currentUsageDays = useMemo(
-    () => densifyUsageData(filters.from, filters.to, usageData?.usage_over_time?.current || []),
-    [filters.from, filters.to, usageData?.usage_over_time?.current]
+    () => densifyUsageData(filters.from, filters.to, rawCurrentDays || []),
+    [filters.from, filters.to, rawCurrentDays]
   );
-  const previousUsageDays = useMemo(() => usageData?.usage_over_time?.previous || [], [usageData?.usage_over_time?.previous]);
+  const rawPreviousDays = usageData?.usage_over_time?.previous;
+  const previousRange = useMemo(
+    () => previousPeriodFor(filters.from, filters.to),
+    [filters.from, filters.to]
+  );
+  const previousUsageDays = useMemo(
+    () => usageData
+      ? densifyUsageData(previousRange.from, previousRange.to, rawPreviousDays || [])
+      : [],
+    [usageData, previousRange, rawPreviousDays]
+  );
 
   const chartLabels = currentUsageDays.map((d) => {
     const parts = d.day.split('-');
@@ -254,11 +266,11 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
                 <>
                   <LineChart
                     cur={curVisitors}
-                    prev={prevVisitors.length > 0 ? prevVisitors : null}
+                    prev={showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1 ? prevVisitors : null}
                     labels={chartLabels}
                     color="var(--chart-blue)"
                     fill="var(--chart-fill)"
-                    showPrev={showPrev && prevVisitors.length > 0}
+                    showPrev={showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1}
                     curLabel="Users"
                     prevLabel="Previous period"
                   />
@@ -266,7 +278,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
                     <span>
                       <i style={{ background: 'var(--chart-blue)' }}></i> Users
                     </span>
-                    {showPrev && prevVisitors.length > 0 && (
+                    {showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1 && (
                       <span>
                         <i className="dash"></i> Previous period
                       </span>
@@ -278,11 +290,11 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
                 <>
                   <LineChart
                     cur={curViews}
-                    prev={prevViews.length > 0 ? prevViews : null}
+                    prev={showPrev && prevViews.length === curViews.length && prevViews.length > 1 ? prevViews : null}
                     labels={chartLabels}
                     color="var(--chart-violet)"
                     fill="var(--chart-violet-tint)"
-                    showPrev={showPrev && prevViews.length > 0}
+                    showPrev={showPrev && prevViews.length === curViews.length && prevViews.length > 1}
                     curLabel="Views"
                     prevLabel="Previous period"
                   />
@@ -290,7 +302,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
                     <span>
                       <i style={{ background: 'var(--chart-violet)' }}></i> Views
                     </span>
-                    {showPrev && prevViews.length > 0 && (
+                    {showPrev && prevViews.length === curViews.length && prevViews.length > 1 && (
                       <span>
                         <i className="dash"></i> Previous period
                       </span>
@@ -302,11 +314,11 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
                 <>
                   <LineChart
                     cur={curSessions}
-                    prev={prevSessions.length > 0 ? prevSessions : null}
+                    prev={showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1 ? prevSessions : null}
                     labels={chartLabels}
                     color="var(--green)"
                     fill="var(--green-tint)"
-                    showPrev={showPrev && prevSessions.length > 0}
+                    showPrev={showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1}
                     curLabel="Sessions"
                     prevLabel="Previous period"
                   />
@@ -314,7 +326,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
                     <span>
                       <i style={{ background: 'var(--green)' }}></i> Sessions
                     </span>
-                    {showPrev && prevSessions.length > 0 && (
+                    {showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1 && (
                       <span>
                         <i className="dash"></i> Previous period
                       </span>
