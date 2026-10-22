@@ -172,7 +172,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         infoKey="chart.funnel"
         eyebrow="Workflow funnel (real event sequence)"
         title={`${selectedModule ? formatModuleName(selectedModule) : 'All Workflows'} — completion funnel`}
-        purpose="Shows step-by-step completion and drop-off for the selected workflow, using real instrumented PostHog event sequences."
+        purpose="Shows step-by-step completion and drop-off for the selected workflow, using real instrumented usage event sequences."
         style={{ margin: '16px 0' }}
       >
         {isWfActiveLoading ? (
