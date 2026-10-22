@@ -478,12 +478,12 @@ function PosthogRunwalDashboardContent() {
             />
           )}
 
-          <div className="footer">
+          {/* <div className="footer">
             <b>Live Analytics Integration.</b> Connected directly to PostHog
             Adoption Analytics (<code>https://posthog-api.lockated.com</code>)
             and Hi-Society Backend endpoints. All metrics dynamically update
             based on selected sites, date ranges, and device platforms.
-          </div>
+          </div> */}
         </main>
       </div>
 

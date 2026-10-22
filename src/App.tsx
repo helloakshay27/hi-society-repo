@@ -2549,7 +2549,10 @@ const PosthogRunwalCpDashboard = lazy(
 const PosthogGodrejDashboard = lazy(
   () => import("./pages/posthog-godrej-dashboard/PosthogGodrejDashboard")
 );
-const PosthogAccountingDashboard = lazy(() => import("./pages/posthog-accounting-dashboard/PosthogAccountingDashboard"));
+const PosthogAccountingDashboard = lazy(
+  () =>
+    import("./pages/posthog-accounting-dashboard/PosthogAccountingDashboard")
+);
 const PosthogKRahejaDashboard = lazy(
   () => import("./pages/posthog-kraheja-dashboard/PosthogKRahejaDashboard")
 );
@@ -3699,12 +3702,12 @@ function App() {
 
                       {/* Standalone Posthog Runwal Dashboard (No HiSociety header/sidebar) */}
                       <Route
-                        path="/posthog-runwal-dashboard"
+                        path="/runwal-usage-dashboard"
                         element={<PosthogRunwalDashboard />}
                       />
                       {/* Runwal CP variant — identical UI/data, scoped by project_code=RE-CP01 instead of app_id */}
                       <Route
-                        path="/posthog-runwal-cp-dashboard"
+                        path="/runwal-cp-usage-dashboard"
                         element={<PosthogRunwalCpDashboard />}
                       />
                       <Route
