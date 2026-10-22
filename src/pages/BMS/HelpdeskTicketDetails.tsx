@@ -5887,7 +5887,7 @@ export const TicketDetailsPage = () => {
               // Show Job Sheet button when on Details tab OR when on Analytics > Ticket Details sub-tab
               <Button
                 onClick={handleJobSheet}
-                className="btn-primary h-9 px-4 text-sm font-medium"
+                className="btn-primary !bg-brand hover:!bg-brand-hover !text-white h-9 px-4 text-sm font-medium"
               >
                 Job Sheet
               </Button>
