@@ -62,6 +62,7 @@ const AddFacilityBookingPage = () => {
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsMessage, setSlotsMessage] = useState("");
   const [selectedSubFacility, setSelectedSubFacility] = useState("");
   const [subFacilityDetails, setSubFacilityDetails] = useState<any>(null);
 
@@ -252,6 +253,7 @@ const AddFacilityBookingPage = () => {
     setNumOfPersons("");
     setPaymentMethod("");
     setAvailableSlots([]);
+    setSlotsMessage("");
     setSelectedSlotIds([]);
     setSelectedSubFacility("");
     setSubFacilityDetails(null);
@@ -279,6 +281,10 @@ const AddFacilityBookingPage = () => {
     // If booking rule says user cannot book, all slots are disabled
     if (bookingRuleData && bookingRuleData.can_book === false) return false;
 
+    // Slots already booked are not selectable
+    const slot = availableSlots.find((s) => s.id?.toString() === slotId);
+    if (slot?.booked === true) return false;
+
     if (selectedSlotIds.includes(slotId)) return true;
 
     // Enforce max selectable slots from booking rule
@@ -288,42 +294,14 @@ const AddFacilityBookingPage = () => {
 
     // if (selectedSlotIds.length >= maxSelectableSlots) return false;
 
-    // Determine max concurrent slots: rule overrides facility setting
-    let maxConcurrentSlots = 1;
-    if (bookingRuleData && typeof bookingRuleData.concurrent_slots === 'number') {
-      maxConcurrentSlots = bookingRuleData.concurrent_slots;
-    } else if (facilityDetails?.consecutive_slot) {
-      maxConcurrentSlots = facilityDetails?.concurrent_slots || 99; // Assume high number if consecutive is allowed but count not specified
-    }
-
-    if (selectedSlotIds.length > 0) {
-      const allIds = [...selectedSlotIds, slotId].map(id => parseInt(id)).sort((a, b) => a - b);
-      let maxConsec = 1, curr = 1;
-      for (let i = 1; i < allIds.length; i++) {
-        if (allIds[i] === allIds[i - 1] + 1) {
-          curr++;
-          maxConsec = Math.max(maxConsec, curr);
-        } else {
-          curr = 1;
-        }
-      }
-      if (maxConsec > maxConcurrentSlots) return false;
-    }
-
     if (selectedSlotIds.length === 0) return true;
 
     if (facilityDetails?.fac_type !== "bookable") return true;
 
-    // If no booking rule for concurrent slots, respect the original consecutive_slot setting
-    if (!(bookingRuleData && typeof bookingRuleData.concurrent_slots === 'number')) {
-      if (facilityDetails?.consecutive_slot) {
-        return true;
-      } else {
-        return selectedSlotIds.every(id => Math.abs(parseInt(id) - parseInt(slotId)) !== 1);
-      }
-    }
+    // Respect the facility's consecutive_slot setting
+    if (facilityDetails?.consecutive_slot) return true;
 
-    return true;
+    return selectedSlotIds.every(id => Math.abs(parseInt(id) - parseInt(slotId)) !== 1);
   };
 
   // Fetch Towers
@@ -500,6 +478,7 @@ const AddFacilityBookingPage = () => {
     if (!selectedFacilitySetup || !bookingDate) return;
 
     setLoadingSlots(true);
+    setSlotsMessage("");
     try {
       const formattedDate = bookingDate.replace(/-/g, "/");
       let url = "";
@@ -519,6 +498,7 @@ const AddFacilityBookingPage = () => {
         setAvailableSlots(
           response.data.slots || response.data.requestable_slots || []
         );
+        setSlotsMessage(response.data.booking_message || "");
       }
     } catch (error) {
       console.log("Error fetching slots:", error);
@@ -914,7 +894,7 @@ const AddFacilityBookingPage = () => {
                       !loadingSlots && (
                         <div className="rounded-lg">
                           <p className="text-sm text-gray-500">
-                            No slots available for the selected date.
+                            {slotsMessage || "No slots available for the selected date."}
                           </p>
                         </div>
                       )
