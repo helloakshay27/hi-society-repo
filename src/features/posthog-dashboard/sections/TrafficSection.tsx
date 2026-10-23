@@ -4,7 +4,7 @@ import { Guard } from '../components/Guard';
 import { LineChart } from '../components/charts/LineChart';
 import { HorizontalBars } from '../components/charts/HorizontalBars';
 import { useDashboard } from '../context/DashboardContext';
-import { BenchmarkNote } from '../components/TierNote';
+// import { BenchmarkNote } from '../components/TierNote'; // benchmarks note card temporarily hidden
 import { CanvasGrid } from '../components/CanvasGrid';
 import { CanvasTile } from '../components/CanvasTile';
 
@@ -21,7 +21,7 @@ export function TrafficSection() {
 
   return (
     <section className="page on" id="pgTraffic">
-      <BenchmarkNote />
+      {/* <BenchmarkNote /> */}
 
       <div className="section" id="secTraffic">
         <div className="section-head">
@@ -47,7 +47,7 @@ export function TrafficSection() {
               aiKey="chart.usage"
               head={
                 <>
-                  <div className="cr">Last {state.date} days{state.prev ? ' · vs previous period' : ''}</div>
+                  <div className="cr">{vm.dateLabel}{state.prev ? ' · vs previous period' : ''}</div>
                   <div className="charthead">
                     <CardHead ct="Usage over time" />
                     <div className="charttabs">
@@ -61,12 +61,10 @@ export function TrafficSection() {
               }
             >
               <Guard status={status.traffic} empty={!hasUsage}>
-                <LineChart cur={traffic.chart.cur} prev={state.prev ? traffic.chart.prev : []} showPrev={state.prev} labels={traffic.chart.labels} />
+                <LineChart cur={traffic.chart.cur} prev={traffic.chart.prev} showPrev={state.prev} labels={traffic.chart.labels} />
                 <div className="legend">
                   <span><i style={{ background: 'var(--blue)' }} /> Current period</span>
-                  {traffic.chart.prev.length === traffic.chart.cur.length && traffic.chart.prev.length > 1 && state.prev && (
-                    <span><i className="dash" /> Previous period</span>
-                  )}
+                  <span><i className="dash" /> Previous period</span>
                   <span><i style={{ background: 'var(--border-2)' }} /> Latest (partial day)</span>
                 </div>
               </Guard>

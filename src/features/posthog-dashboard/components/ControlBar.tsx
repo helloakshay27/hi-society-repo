@@ -36,24 +36,39 @@ function SiteMultiSelect({
     s.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  // An empty selection still means "all sites" to the rest of the dashboard; here it is
+  // shown as every site ticked, and an explicit list that covers every site collapses
+  // back to "all".
+  const isChecked = (id: string) => all || selectedIds.includes(id);
+  const commit = (ids: string[]) => onChange(ids.length === sites.length ? [] : ids);
+
   const toggle = (id: string) => {
-    if (selectedIds.includes(id)) {
-      const next = selectedIds.filter((x) => x !== id);
-      onChange(next); // empty = "all"
+    const current = all ? sites.map((s) => s.id) : selectedIds;
+    if (current.includes(id)) {
+      const next = current.filter((x) => x !== id);
+      // Keep at least one site — an empty list would silently flip back to "all".
+      if (next.length > 0) commit(next);
     } else {
-      onChange([...selectedIds, id]);
+      commit([...current, id]);
     }
   };
 
-  const selectAll = () => onChange([]);
+  /** Clear: drop the selection and fall back to the first site only. */
+  const clear = () => {
+    if (sites.length > 0) commit([sites[0].id]);
+  };
 
-  // Label shown on the trigger button — shows IDs comma-separated when multiple selected
-  const label =
-    all
-      ? `All sites (${sites.length})`
-      : selectedIds.length === 1
-        ? sites.find((s) => s.id === selectedIds[0])?.name ?? selectedIds[0]
-        : selectedIds.join(',');
+  // Ticking "All sites" selects every site; unticking it behaves like Clear.
+  const toggleAll = () => (all ? clear() : onChange([]));
+
+  // Label shown on the trigger button — site names, not IDs. Beyond two selections the
+  // rest collapse into "+N", matching the scope subtitle ("Dadar, Dombiwali +1").
+  const selectedNames = selectedIds.map((id) => sites.find((s) => s.id === id)?.name ?? id);
+  const label = all
+    ? `All sites (${sites.length})`
+    : selectedNames.length > 2
+      ? `${selectedNames.slice(0, 2).join(', ')} +${selectedNames.length - 2}`
+      : selectedNames.join(', ');
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
@@ -63,7 +78,7 @@ function SiteMultiSelect({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        title={all ? 'All sites' : selectedIds.join(', ')}
+        title={all ? 'All sites' : selectedNames.join(', ')}
       >
         <span className="ic">◎</span>
         <span style={{ maxWidth: 190, overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
@@ -94,11 +109,20 @@ function SiteMultiSelect({
             />
           </div>
 
-          {/* Select all */}
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', cursor: 'pointer' }}>
-            <input type="checkbox" checked={all} onChange={selectAll} />
-            <span style={{ fontSize: 13, color: 'var(--ink-2)' }}>All sites ({sites.length})</span>
-          </label>
+          {/* Select all + Clear on one row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', cursor: 'pointer' }}>
+              <input type="checkbox" checked={all} onChange={toggleAll} />
+              <span style={{ fontSize: 13, color: 'var(--ink-2)' }}>All sites ({sites.length})</span>
+            </label>
+            <button
+              type="button"
+              onClick={clear}
+              style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, color: 'var(--blue)', cursor: 'pointer' }}
+            >
+              Clear
+            </button>
+          </div>
 
           <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
 
@@ -108,7 +132,7 @@ function SiteMultiSelect({
               <div style={{ fontSize: 13, color: 'var(--faint)' }}>No sites match</div>
             )}
             {filtered.map((s) => {
-              const checked = selectedIds.includes(s.id);
+              const checked = isChecked(s.id);
               return (
                 <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', cursor: 'pointer' }}>
                   <input type="checkbox" checked={checked} onChange={() => toggle(s.id)} />
@@ -118,17 +142,6 @@ function SiteMultiSelect({
             })}
           </div>
 
-          {/* Footer */}
-          {selectedIds.length > 0 && (
-            <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)',
-              fontSize: 12
-            }}>
-              <button type="button" onClick={selectAll} style={{ background: 'none', border: 'none', color: 'var(--blue)', cursor: 'pointer' }}>Clear</button>
-              <span style={{ color: 'var(--faint)' }}>{selectedIds.length} selected</span>
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -136,8 +149,30 @@ function SiteMultiSelect({
 }
 
 export function ControlBar() {
-  const { vm, setScope, setDate, setToken, setDev, togglePrev, refreshAll, isRefreshing } = useDashboard();
+  const { vm, setScope, setDate, setCustomDateRange, setToken, setDev, togglePrev, refreshAll, isRefreshing } = useDashboard();
   const { state, sites, groups, sitesLoading, traffic } = vm;
+  const [dateOpen, setDateOpen] = useState(false);
+  const [draftFrom, setDraftFrom] = useState(vm.range.from);
+  const [draftTo, setDraftTo] = useState(vm.range.to);
+  const dateControlRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!dateOpen) return;
+    const handlePointerDown = (event: MouseEvent) => {
+      if (dateControlRef.current && !dateControlRef.current.contains(event.target as Node)) {
+        setDateOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setDateOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [dateOpen]);
 
   const selectedSiteIds = state.tier === 't1' && state.scope !== 'all'
     ? state.scope.split(',')
@@ -182,15 +217,76 @@ export function ControlBar() {
       {renderScopeSelect()}
 
       {/* Date range */}
-      <label className="ctrl">
-        <span className="ic">▤</span>
-        <select value={state.date} onChange={(e) => setDate(Number(e.target.value) as DateRange)}>
-          <option value={7}>Last 7 days</option>
-          <option value={30}>Last 30 days</option>
-          <option value={90}>Last 90 days</option>
-        </select>
-        <span className="chev">▼</span>
-      </label>
+      <div className="date-range-control" ref={dateControlRef}>
+        <button
+          type="button"
+          className="ctrl date-range-trigger"
+          onClick={() => {
+            if (!dateOpen) {
+              setDraftFrom(vm.range.from);
+              setDraftTo(vm.range.to);
+            }
+            setDateOpen((open) => !open);
+          }}
+          aria-haspopup="dialog"
+          aria-expanded={dateOpen}
+        >
+          <span className="ic">▤</span>
+          <span>{vm.dateLabel}</span>
+          <span className="chev">▼</span>
+        </button>
+        {dateOpen && (
+          <div className="date-range-panel" role="dialog" aria-label="Date range filter">
+            <div className="date-range-presets" role="group" aria-label="Quick date ranges">
+              {([7, 30, 90] as DateRange[]).map((days) => (
+                <button
+                  key={days}
+                  type="button"
+                  className={`date-range-option ${!state.customDateRange && state.date === days ? 'selected' : ''}`}
+                  onClick={() => {
+                    setDate(days);
+                    setDateOpen(false);
+                  }}
+                >
+                  Last {days} days
+                </button>
+              ))}
+            </div>
+            <div className="date-range-custom-label">Custom range</div>
+            <div className="date-range-inputs">
+              <label>
+                <span>From</span>
+                <input
+                  type="date"
+                  value={draftFrom}
+                  max={draftTo || undefined}
+                  onChange={(event) => setDraftFrom(event.target.value)}
+                />
+              </label>
+              <label>
+                <span>To</span>
+                <input
+                  type="date"
+                  value={draftTo}
+                  min={draftFrom || undefined}
+                  onChange={(event) => setDraftTo(event.target.value)}
+                />
+              </label>
+            </div>
+            <button
+              type="button"
+              className="date-range-apply"
+              disabled={!draftFrom || !draftTo || draftFrom > draftTo}
+              onClick={() => {
+                setCustomDateRange({ from: draftFrom, to: draftTo });
+                setDateOpen(false);
+              }}
+            >
+              Apply custom range
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Device */}
       <div className="devtoggle" title="Platform (device_type)">

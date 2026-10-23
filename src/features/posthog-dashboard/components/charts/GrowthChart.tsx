@@ -11,14 +11,8 @@ export function GrowthChart({ weeks }: { weeks: GrowthWeek[] }) {
   const [tipIdx, setTipIdx] = useState<number | null>(null);
 
   const W = 600, H = 250, pl = 36, pr = 12, pt = 18, pb = 28;
-  const n = weeks?.length ?? 0;
-  if (!n) {
-    return (
-      <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--ss-text-sub, #6b7280)', fontSize: 13 }}>
-        No growth accounting data available for this period.
-      </div>
-    );
-  }
+  const n = weeks.length;
+  if (!n) return null;
 
   const maxUp = Math.max(0, ...weeks.map((w) => w.nw + w.ret + w.res));
   const maxDn = Math.max(0, ...weeks.map((w) => w.dorm));
@@ -36,14 +30,36 @@ export function GrowthChart({ weeks }: { weeks: GrowthWeek[] }) {
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
     const mouseX = (e.clientX - rect.left) * scaleX;
+    const mouseY = (e.clientY - rect.top) * scaleY;
+    
+    // Check X bounds
     if (mouseX < pl || mouseX > W - pr) {
       setTipIdx(null);
       return;
     }
+    
+    // Check Y bounds: only show tooltip when hovering over chart area (bars)
+    if (mouseY < pt || mouseY > H - pb) {
+      setTipIdx(null);
+      return;
+    }
+    
     const idx = Math.floor((mouseX - pl) / gap);
     if (idx >= 0 && idx < n) {
-      setTipIdx(idx);
+      const week = weeks[idx];
+      
+      // Calculate the bar bounds for this week
+      const barTopY = zero - (week.nw + week.ret + week.res) * scaleUp;
+      const barBottomY = zero + week.dorm * scaleDn;
+      
+      // Only show tooltip if mouseY is within the actual bars (above zero OR below zero)
+      if ((mouseY >= barTopY && mouseY <= zero) || (mouseY >= zero && mouseY <= barBottomY)) {
+        setTipIdx(idx);
+      } else {
+        setTipIdx(null);
+      }
     } else {
       setTipIdx(null);
     }

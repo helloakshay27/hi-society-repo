@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import '../features/posthog-dashboard/posthog-dashboard.css';
 import { DashboardProvider, useDashboard } from '../features/posthog-dashboard/context/DashboardContext';
 import { CanvasProvider } from '../features/posthog-dashboard/context/CanvasContext';
@@ -5,15 +6,16 @@ import { Header } from '../features/posthog-dashboard/components/Header';
 import { ControlBar } from '../features/posthog-dashboard/components/ControlBar';
 import { InfoPopover } from '../features/posthog-dashboard/components/InfoPopover';
 import { AiPanel } from '../features/posthog-dashboard/components/AiPanel';
-import { TierNote } from '../features/posthog-dashboard/components/TierNote';
+// import { TierNote } from '../features/posthog-dashboard/components/TierNote'; // tier note card temporarily hidden
+// import { Footer } from '../features/posthog-dashboard/components/Footer'; // "Data note" footer temporarily hidden
 import { TrafficSection } from '../features/posthog-dashboard/sections/TrafficSection';
 import { AdoptionSection } from '../features/posthog-dashboard/sections/AdoptionSection';
 import { WorkflowSection } from '../features/posthog-dashboard/sections/WorkflowSection';
-import { RecentActivitySidebar } from '../pages/posthog-runwal-dashboard/components/common/RecentActivitySidebar';
-import type { DashboardFilters } from '../pages/posthog-runwal-dashboard/api/types';
+import { RecentActivitySidebar } from '../features/posthog-dashboard/components/RecentActivitySidebar';
 import type { DashboardState } from '../features/posthog-dashboard/data/metrics';
 
 const PAGES: { key: DashboardState['activePage']; title: string; icon: JSX.Element }[] = [
+  // { key: 'pgFm', title: 'FM Matrix dashboards', icon: <span aria-hidden="true">▦</span> },
   {
     key: 'pgTraffic',
     title: 'Traffic & Session',
@@ -48,17 +50,6 @@ function DashboardLayout() {
   const { vm, setActivePage } = useDashboard();
   const { activePage } = vm.state;
   const page = PAGES.find((p) => p.key === activePage) ?? PAGES[0];
-  const recentActivityFilters: DashboardFilters = {
-    siteIds: vm.scopedSites.map((site) => site.id),
-    from: vm.range.from,
-    to: vm.range.to,
-    token: vm.token,
-    devPlatform: 'all',
-    licensedSeats: vm.state.licensedSeats,
-    module: vm.state.module,
-    subModule: vm.state.subModule,
-    projectCode: 'HS-01',
-  };
 
   return (
     <>
@@ -86,21 +77,24 @@ function DashboardLayout() {
               ))}
             </div>
           </nav>
-          <RecentActivitySidebar filters={recentActivityFilters} sitesSettled={!vm.sitesLoading && vm.sites.length > 0} />
+          <RecentActivitySidebar filters={vm.filters} filtersSettled={vm.filtersSettled} />
         </aside>
 
         <main className="main">
           <div className="page-head">
             <h2>{page.title}</h2>
-            <p className="page-sub">{vm.scopeLabel} · last {vm.state.date} days</p>
+            <p className="page-sub">{vm.scopeLabel} · {vm.dateLabel}</p>
           </div>
 
           <ControlBar />
-          <TierNote />
+          {/* <TierNote /> */}
 
           {activePage === 'pgTraffic' && <TrafficSection />}
           {activePage === 'pgAdopt' && <AdoptionSection />}
           {activePage === 'pgFlows' && <WorkflowSection />}
+          {/* {activePage === 'pgFm' && <FmDashboardSection />} */}
+
+          {/* <Footer /> */}
         </main>
       </div>
       <InfoPopover />
@@ -109,9 +103,30 @@ function DashboardLayout() {
   );
 }
 
+/**
+ * Hi Society's global CSS sets `overflow-x: hidden` on html/body, which turns body into a
+ * scroll container and breaks the sticky topbar/sidebar. FM Matrix uses `overflow-x: clip`
+ * there, so match it while this page is mounted.
+ */
+function useStickyFriendlyOverflow() {
+  useEffect(() => {
+    const els = [document.documentElement, document.body];
+    const previous = els.map((el) => el.style.overflowX);
+    els.forEach((el) => {
+      el.style.overflowX = 'clip';
+    });
+    return () => {
+      els.forEach((el, i) => {
+        el.style.overflowX = previous[i];
+      });
+    };
+  }, []);
+}
+
 export function HiSocietyUsageDashboard() {
+  useStickyFriendlyOverflow();
   return (
-    <DashboardProvider projectCode="HS-01">
+    <DashboardProvider>
       <CanvasProvider>
         <DashboardLayout />
       </CanvasProvider>

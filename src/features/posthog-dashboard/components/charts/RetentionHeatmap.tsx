@@ -8,13 +8,6 @@ interface RetentionHeatmapProps {
  * expressed against the `--heat-*` tokens so a theme flip re-colours it with no JS.
  */
 export function RetentionHeatmap({ cohorts, rowLabels }: RetentionHeatmapProps) {
-  if (!cohorts || cohorts.length === 0) {
-    return (
-      <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--ss-text-sub, #6b7280)', fontSize: 13 }}>
-        No weekly cohort retention data available.
-      </div>
-    );
-  }
   const cols = cohorts[0]?.length ?? 8;
   return (
     <table className="rt">
