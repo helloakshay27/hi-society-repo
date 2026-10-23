@@ -1,9 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarIcon, Download, ChevronsRight, ChevronRight, ChevronLeft, ChevronsLeft, ChevronDown, Check } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  CalendarIcon,
+  Download,
+  ChevronsRight,
+  ChevronRight,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { format, startOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -12,10 +30,52 @@ import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
 
 type ExportType = "all" | "open" | "completed" | "updated";
 
-interface TowerOption { id: number; name: string; }
-interface FlatOption { id: number; flat_no: string; society_block_id: number; }
-interface CategoryOption { id: number; name: string; }
-interface StatusOption { id: number; name: string; color_code: string; }
+interface TowerOption {
+  id: number;
+  name: string;
+}
+interface FlatOption {
+  id: number;
+  flat_no: string;
+  society_block_id: number;
+}
+interface CategoryOption {
+  id: number;
+  name: string;
+}
+interface StatusOption {
+  id: number;
+  name: string;
+  color_code: string;
+}
+
+interface StreamReportResponse {
+  status: string;
+  report_id?: number | string;
+  message?: string;
+  download_url?: string;
+}
+
+const isStreamReportResponse = (
+  value: unknown
+): value is StreamReportResponse => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("status" in value) ||
+    typeof value.status !== "string"
+  ) {
+    return false;
+  }
+
+  return (
+    (!("report_id" in value) ||
+      typeof value.report_id === "string" ||
+      typeof value.report_id === "number") &&
+    (!("message" in value) || typeof value.message === "string") &&
+    (!("download_url" in value) || typeof value.download_url === "string")
+  );
+};
 
 // Matches the date fields on the Helpdesk Report page
 const dateTriggerClass =
@@ -88,28 +148,37 @@ interface MultiSelectProps {
 }
 
 const MultiSelectDropdown: React.FC<MultiSelectProps> = ({
-  options, selected, onChange, placeholder, disabled,
+  options,
+  selected,
+  onChange,
+  placeholder,
+  disabled,
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   const toggle = (val: string) => {
-    onChange(selected.includes(val) ? selected.filter((v) => v !== val) : [...selected, val]);
+    onChange(
+      selected.includes(val)
+        ? selected.filter((v) => v !== val)
+        : [...selected, val]
+    );
   };
 
   const label =
     selected.length === 0
       ? placeholder
       : selected.length === 1
-        ? options.find((o) => o.value === selected[0])?.label ?? placeholder
+        ? (options.find((o) => o.value === selected[0])?.label ?? placeholder)
         : `${selected.length} selected`;
 
   return (
@@ -120,10 +189,16 @@ const MultiSelectDropdown: React.FC<MultiSelectProps> = ({
         onClick={() => setOpen((p) => !p)}
         className={cn(
           "w-full h-[40px] flex items-center justify-between border border-gray-200 rounded-md px-3 text-sm bg-white",
-          disabled ? "opacity-50 cursor-not-allowed" : "hover:border-gray-400 cursor-pointer"
+          disabled
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:border-gray-400 cursor-pointer"
         )}
       >
-        <span className={selected.length === 0 ? "text-gray-400" : "text-gray-800"}>{label}</span>
+        <span
+          className={selected.length === 0 ? "text-gray-400" : "text-gray-800"}
+        >
+          {label}
+        </span>
         <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 ml-2" />
       </button>
       {open && (
@@ -134,11 +209,17 @@ const MultiSelectDropdown: React.FC<MultiSelectProps> = ({
               onClick={() => toggle(opt.value)}
               className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer"
             >
-              <div className={cn(
-                "w-4 h-4 border rounded flex items-center justify-center shrink-0",
-                selected.includes(opt.value) ? "bg-cyan-500 border-cyan-500" : "border-gray-300"
-              )}>
-                {selected.includes(opt.value) && <Check className="w-3 h-3 text-white" />}
+              <div
+                className={cn(
+                  "w-4 h-4 border rounded flex items-center justify-center shrink-0",
+                  selected.includes(opt.value)
+                    ? "bg-cyan-500 border-cyan-500"
+                    : "border-gray-300"
+                )}
+              >
+                {selected.includes(opt.value) && (
+                  <Check className="w-3 h-3 text-white" />
+                )}
               </div>
               {opt.label}
             </div>
@@ -183,7 +264,7 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterCategory, setFilterCategory] = useState<string[]>([]);
   const [filterTower, setFilterTower] = useState<string[]>([]); // tower (society_block) ids
-  const [filterFlat, setFilterFlat] = useState<string[]>([]);   // flat (society_flat) ids
+  const [filterFlat, setFilterFlat] = useState<string[]>([]); // flat (society_flat) ids
 
   // API data
   const [towers, setTowers] = useState<TowerOption[]>([]);
@@ -213,7 +294,12 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
         const headers = { Authorization: getAuthHeader() };
 
         const [towersRes, categoriesRes, statusesRes] = await Promise.all([
-          fetch(getFullUrl(`/get_society_blocks.json?token=${token}&society_id=${societyId}`), { headers }),
+          fetch(
+            getFullUrl(
+              `/get_society_blocks.json?token=${token}&society_id=${societyId}`
+            ),
+            { headers }
+          ),
           fetch(getFullUrl("/dropdown/categories"), { headers }),
           fetch(getFullUrl("/crm/admin/complaint_statuses.json"), { headers }),
         ]);
@@ -256,7 +342,9 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
         const results = await Promise.all(
           filterTower.map(async (towerId) => {
             const res = await fetch(
-              getFullUrl(`/get_society_flats.json?token=${token}&society_id=${societyId}&society_block_id=${towerId}`),
+              getFullUrl(
+                `/get_society_flats.json?token=${token}&society_id=${societyId}&society_block_id=${towerId}`
+              ),
               { headers: { Authorization: getAuthHeader() } }
             );
             if (!res.ok) return [];
@@ -295,7 +383,9 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
   const moveOneToSelected = () => {
     if (availableHighlight.length === 0) return;
     setSelectedCols([...selectedCols, ...availableHighlight]);
-    setAvailableCols(availableCols.filter((c) => !availableHighlight.includes(c)));
+    setAvailableCols(
+      availableCols.filter((c) => !availableHighlight.includes(c))
+    );
     setAvailableHighlight([]);
   };
 
@@ -351,7 +441,7 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
         if (g.length > 0) q.g = g;
       }
 
-      const response = await fetch(getFullUrl("/stream_reports.csv"), {
+      const response = await fetch(getFullUrl("/stream_reports"), {
         method: "POST",
         headers: {
           Authorization: getAuthHeader(),
@@ -362,18 +452,84 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `helpdesk_report_${format(new Date(), "ddMMyyyy")}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      const fileName = `helpdesk_report_${format(new Date(), "ddMMyyyy")}.csv`;
+      const contentType = response.headers.get("content-type") ?? "";
 
-      toast.success("Helpdesk report exported successfully!");
-      onClose();
+      if (!contentType.includes("json")) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        toast.success("Helpdesk report exported successfully!");
+        onClose();
+        return;
+      }
+
+      const responseData: unknown = await response.json();
+      if (!isStreamReportResponse(responseData)) {
+        throw new Error("Invalid report response");
+      }
+
+      let report = responseData;
+      if (report.status === "processing") {
+        const reportId = report.report_id;
+        if (reportId === undefined || reportId === "") {
+          throw new Error("Missing report ID in processing response");
+        }
+
+        toast.info(
+          report.message ??
+            "The report is still being generated, it will download automatically once it is ready."
+        );
+
+        do {
+          await new Promise((resolve) => window.setTimeout(resolve, 5000));
+          const statusResponse = await fetch(
+            getFullUrl(
+              `/stream_report_status?report_id=${encodeURIComponent(reportId)}`
+            ),
+            {
+              headers: { Authorization: getAuthHeader() },
+            }
+          );
+
+          if (!statusResponse.ok) {
+            throw new Error(`HTTP ${statusResponse.status}`);
+          }
+
+          const statusData: unknown = await statusResponse.json();
+          if (!isStreamReportResponse(statusData)) {
+            throw new Error("Invalid report status response");
+          }
+
+          report = statusData;
+        } while (report.status === "processing");
+      }
+
+      if (report.status === "completed") {
+        if (!report.download_url) {
+          throw new Error("Missing download URL in completed response");
+        }
+
+        const link = document.createElement("a");
+        link.href = report.download_url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success(report.message ?? "Helpdesk report exported successfully!");
+        onClose();
+      } else if (report.status === "failed" || report.status === "not_started") {
+        toast.error(report.message ?? "Failed to export report. Please try again.");
+      } else {
+        throw new Error(`Unexpected report status: ${report.status}`);
+      }
     } catch (err) {
       console.error("Export error:", err);
       toast.error("Failed to export report. Please try again.");
@@ -386,7 +542,9 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 py-4 border-b">
-          <DialogTitle className="text-center text-base font-semibold">Export</DialogTitle>
+          <DialogTitle className="text-center text-base font-semibold">
+            Export
+          </DialogTitle>
         </DialogHeader>
 
         <div className="px-6 py-5 space-y-5">
@@ -400,7 +558,10 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
                 { value: "updated", label: "Updated At" },
               ] as { value: ExportType; label: string }[]
             ).map((opt) => (
-              <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-sm">
+              <label
+                key={opt.value}
+                className="flex items-center gap-2 cursor-pointer text-sm"
+              >
                 <input
                   type="radio"
                   name="exportType"
@@ -417,15 +578,22 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
           {/* Start / End date — same fields as the Helpdesk Report page */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block mb-2 text-xs font-semibold text-[rgba(26,26,24,0.68)]">Start Date</label>
+              <label className="block mb-2 text-xs font-semibold text-[rgba(26,26,24,0.68)]">
+                Start Date
+              </label>
               <Popover open={startPickerOpen} onOpenChange={setStartPickerOpen}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className={cn(dateTriggerClass, !exportDate?.from && "text-[rgba(26,26,24,0.3)]")}
+                    className={cn(
+                      dateTriggerClass,
+                      !exportDate?.from && "text-[rgba(26,26,24,0.3)]"
+                    )}
                   >
                     <CalendarIcon className="h-4 w-4 text-[rgba(26,26,24,0.48)] shrink-0" />
-                    {exportDate?.from ? format(exportDate.from, "dd/MM/yyyy") : "Pick start date"}
+                    {exportDate?.from
+                      ? format(exportDate.from, "dd/MM/yyyy")
+                      : "Pick start date"}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -438,21 +606,30 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
                       setExportDate((prev) => ({ from: day, to: prev?.to }));
                       setStartPickerOpen(false);
                     }}
-                    disabled={(day) => (exportDate?.to ? day > exportDate.to : false)}
+                    disabled={(day) =>
+                      exportDate?.to ? day > exportDate.to : false
+                    }
                   />
                 </PopoverContent>
               </Popover>
             </div>
             <div>
-              <label className="block mb-2 text-xs font-semibold text-[rgba(26,26,24,0.68)]">End Date</label>
+              <label className="block mb-2 text-xs font-semibold text-[rgba(26,26,24,0.68)]">
+                End Date
+              </label>
               <Popover open={endPickerOpen} onOpenChange={setEndPickerOpen}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className={cn(dateTriggerClass, !exportDate?.to && "text-[rgba(26,26,24,0.3)]")}
+                    className={cn(
+                      dateTriggerClass,
+                      !exportDate?.to && "text-[rgba(26,26,24,0.3)]"
+                    )}
                   >
                     <CalendarIcon className="h-4 w-4 text-[rgba(26,26,24,0.48)] shrink-0" />
-                    {exportDate?.to ? format(exportDate.to, "dd/MM/yyyy") : "Pick end date"}
+                    {exportDate?.to
+                      ? format(exportDate.to, "dd/MM/yyyy")
+                      : "Pick end date"}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -465,7 +642,9 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
                       setExportDate((prev) => ({ from: prev?.from, to: day }));
                       setEndPickerOpen(false);
                     }}
-                    disabled={(day) => (exportDate?.from ? day < exportDate.from : false)}
+                    disabled={(day) =>
+                      exportDate?.from ? day < exportDate.from : false
+                    }
                   />
                 </PopoverContent>
               </Popover>
@@ -475,11 +654,16 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
           {/* Advanced Filter */}
           {showAdvancedFilter && (
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-gray-800">Advanced Filter</p>
+              <p className="text-sm font-semibold text-gray-800">
+                Advanced Filter
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 {/* Status — multi-select */}
                 <MultiSelectDropdown
-                  options={statuses.map((s) => ({ label: s.name, value: String(s.id) }))}
+                  options={statuses.map((s) => ({
+                    label: s.name,
+                    value: String(s.id),
+                  }))}
                   selected={filterStatus}
                   onChange={setFilterStatus}
                   placeholder={loadingFilters ? "Loading..." : "Select Status"}
@@ -488,16 +672,24 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
 
                 {/* Category — multi-select */}
                 <MultiSelectDropdown
-                  options={categories.map((c) => ({ label: c.name, value: String(c.id) }))}
+                  options={categories.map((c) => ({
+                    label: c.name,
+                    value: String(c.id),
+                  }))}
                   selected={filterCategory}
                   onChange={setFilterCategory}
-                  placeholder={loadingFilters ? "Loading..." : "Select Category"}
+                  placeholder={
+                    loadingFilters ? "Loading..." : "Select Category"
+                  }
                   disabled={loadingFilters}
                 />
 
                 {/* Tower — multi-select */}
                 <MultiSelectDropdown
-                  options={towers.map((t) => ({ label: t.name, value: String(t.id) }))}
+                  options={towers.map((t) => ({
+                    label: t.name,
+                    value: String(t.id),
+                  }))}
                   selected={filterTower}
                   onChange={setFilterTower}
                   placeholder={loadingFilters ? "Loading..." : "All Tower"}
@@ -532,14 +724,18 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
           <div className="flex gap-3 items-start">
             {/* All Values */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-700 mb-1">All Values</p>
+              <p className="text-sm font-medium text-gray-700 mb-1">
+                All Values
+              </p>
               <select
                 title="All Values"
                 multiple
                 className="w-full h-48 border border-gray-300 rounded text-sm p-1 focus:outline-none focus:ring-1 focus:ring-cyan-400"
                 value={availableHighlight}
                 onChange={(e) =>
-                  setAvailableHighlight(Array.from(e.target.selectedOptions, (o) => o.value))
+                  setAvailableHighlight(
+                    Array.from(e.target.selectedOptions, (o) => o.value)
+                  )
                 }
               >
                 {availableCols.map((col) => (
@@ -584,14 +780,18 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
 
             {/* Selected Values */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-700 mb-1">Selected Values</p>
+              <p className="text-sm font-medium text-gray-700 mb-1">
+                Selected Values
+              </p>
               <select
                 title="Selected Values"
                 multiple
                 className="w-full h-48 border border-gray-300 rounded text-sm p-1 focus:outline-none focus:ring-1 focus:ring-cyan-400"
                 value={selectedHighlight}
                 onChange={(e) =>
-                  setSelectedHighlight(Array.from(e.target.selectedOptions, (o) => o.value))
+                  setSelectedHighlight(
+                    Array.from(e.target.selectedOptions, (o) => o.value)
+                  )
                 }
               >
                 {selectedCols.map((col) => (
