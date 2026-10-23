@@ -456,7 +456,7 @@ const LoyaltyTiersList = () => {
         <>
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between px-6 py-5 border-b border-[rgba(26,26,24,0.08)]">
+              <div className="flex items-center justify-between px-6 py-5">
                 <h3 className="text-lg font-semibold text-[#1A1A18]">Edit Tier</h3>
                 <button
                   type="button"

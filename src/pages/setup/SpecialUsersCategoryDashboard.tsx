@@ -437,7 +437,7 @@ variant="ghost"
         {/* Add Category Dialog */}
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogContent className="max-w-md bg-white rounded-2xl border border-[rgba(26,26,24,.09)] focus:outline-none focus-visible:outline-none">
-            <DialogHeader className="border-b border-[rgba(26,26,24,.09)] pb-4">
+            <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-lg font-semibold text-[#1A1A18]">Add Category</DialogTitle>
                 <button
@@ -494,7 +494,7 @@ variant="ghost"
         {/* Edit Category Dialog */}
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
           <DialogContent className="max-w-md bg-white rounded-2xl border border-[rgba(26,26,24,.09)] focus:outline-none focus-visible:outline-none">
-            <DialogHeader className="border-b border-[rgba(26,26,24,.09)] pb-4">
+            <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-lg font-semibold text-[#1A1A18]">Edit Category</DialogTitle>
                 <button

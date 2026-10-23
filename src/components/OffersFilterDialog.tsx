@@ -96,7 +96,7 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
                     <X className="h-4 w-4" />
                 </Button>
             </DialogTitle>
-            <DialogContent dividers>
+            <DialogContent>
                 <div className="space-y-4">
 
                     {/* Start Date Range */}

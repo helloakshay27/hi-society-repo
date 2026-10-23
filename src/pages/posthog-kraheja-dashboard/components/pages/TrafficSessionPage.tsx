@@ -1,16 +1,19 @@
-import React, { useMemo, useState } from 'react';
-import { DashboardFilters } from '../../../posthog-runwal-dashboard/api/types';
-import { QuestionBox } from '../../../posthog-runwal-dashboard/components/common/QuestionBox';
-import { KpiTile } from '../../../posthog-runwal-dashboard/components/common/KpiTile';
-import { Card } from '../../../posthog-runwal-dashboard/components/common/Card';
-import { LineChart } from '../../../posthog-runwal-dashboard/components/charts/LineChart';
-import { ErrorState, EmptyState } from '../../../posthog-runwal-dashboard/components/common/DashboardStates';
+import React, { useMemo, useState } from "react";
+import { DashboardFilters } from "../../../posthog-runwal-dashboard/api/types";
+import { QuestionBox } from "../../../posthog-runwal-dashboard/components/common/QuestionBox";
+import { KpiTile } from "../../../posthog-runwal-dashboard/components/common/KpiTile";
+import { Card } from "../../../posthog-runwal-dashboard/components/common/Card";
+import { LineChart } from "../../../posthog-runwal-dashboard/components/charts/LineChart";
+import {
+  ErrorState,
+  EmptyState,
+} from "../../../posthog-runwal-dashboard/components/common/DashboardStates";
 import {
   useTrafficSession,
   useUsageAndDistribution,
-} from '../../../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
-import { pct } from '../../../posthog-runwal-dashboard/data/constants';
-import { previousPeriodFor } from '../../../posthog-runwal-dashboard/api/usageDateRange';
+} from "../../../posthog-runwal-dashboard/hooks/useDashboardAnalytics";
+import { pct } from "../../../posthog-runwal-dashboard/data/constants";
+import { previousPeriodFor } from "../../../posthog-runwal-dashboard/api/usageDateRange";
 
 interface TrafficSessionPageProps {
   filters: DashboardFilters;
@@ -21,39 +24,60 @@ interface TrafficSessionPageProps {
 }
 
 function formatSeconds(sec: number | null | undefined): string {
-  if (sec == null || isNaN(sec) || sec <= 0) return '—';
+  if (sec == null || isNaN(sec) || sec <= 0) return "—";
   const m = Math.floor(sec / 60);
   const s = Math.round(sec % 60);
   if (m === 0) return `${s}s`;
-  return `${m}m ${s.toString().padStart(2, '0')}s`;
+  return `${m}m ${s.toString().padStart(2, "0")}s`;
 }
 
-function formatDelta(d: number | null | undefined): { text: string | null; dir: 'up' | 'dn' | 'flat' } {
-  if (d == null || isNaN(d)) return { text: null, dir: 'flat' };
+function formatDelta(d: number | null | undefined): {
+  text: string | null;
+  dir: "up" | "dn" | "flat";
+} {
+  if (d == null || isNaN(d)) return { text: null, dir: "flat" };
   const abs = Math.abs(d).toFixed(1);
-  if (d > 0) return { text: `${abs}% vs prev. period`, dir: 'up' };
-  if (d < 0) return { text: `${abs}% vs prev. period`, dir: 'dn' };
-  return { text: '0% vs prev. period', dir: 'flat' };
+  if (d > 0) return { text: `${abs}% vs prev. period`, dir: "up" };
+  if (d < 0) return { text: `${abs}% vs prev. period`, dir: "dn" };
+  return { text: "0% vs prev. period", dir: "flat" };
 }
 
 function densifyUsageData(
   fromStr: string,
   toStr: string,
-  rawDays: { day: string; visitors: number; views: number; sessions: number }[] = []
+  rawDays: {
+    day: string;
+    visitors: number;
+    views: number;
+    sessions: number;
+  }[] = []
 ) {
-  const map = new Map<string, { visitors: number; views: number; sessions: number }>();
+  const map = new Map<
+    string,
+    { visitors: number; views: number; sessions: number }
+  >();
   for (const r of rawDays) {
     if (r && r.day) {
-      map.set(r.day, { visitors: r.visitors || 0, views: r.views || 0, sessions: r.sessions || 0 });
+      map.set(r.day, {
+        visitors: r.visitors || 0,
+        views: r.views || 0,
+        sessions: r.sessions || 0,
+      });
     }
   }
-  const result: { day: string; visitors: number; views: number; sessions: number }[] = [];
+  const result: {
+    day: string;
+    visitors: number;
+    views: number;
+    sessions: number;
+  }[] = [];
   const start = new Date(fromStr);
   const end = new Date(toStr);
-  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return rawDays;
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end)
+    return rawDays;
   const cur = new Date(start);
   while (cur <= end) {
-    const ymd = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
+    const ymd = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, "0")}-${String(cur.getDate()).padStart(2, "0")}`;
     const existing = map.get(ymd);
     result.push({
       day: ymd,
@@ -67,13 +91,31 @@ function densifyUsageData(
 }
 
 /** K Raheja Corp Homes — Traffic & Session tab, matching the wireframe's pgTraffic section, wired to live Runwal-family PostHog APIs. */
-export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters, showPrev, benchmarks, onBenchmarkChange, sitesSettled = true }) => {
-  const [usageTab, setUsageTab] = useState<'visitors' | 'views' | 'sessions'>('visitors');
+export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
+  filters,
+  showPrev,
+  benchmarks,
+  onBenchmarkChange,
+  sitesSettled = true,
+}) => {
+  const [usageTab, setUsageTab] = useState<"visitors" | "views" | "sessions">(
+    "visitors"
+  );
 
-  const { data: trafficData, isLoading: isTrafficLoading, isError: isTrafficError, error: trafficError, refetch: refetchTraffic } =
-    useTrafficSession(filters, sitesSettled);
-  const { data: usageData, isLoading: isUsageLoading, isError: isUsageError, error: usageError, refetch: refetchUsage } =
-    useUsageAndDistribution(filters, sitesSettled);
+  const {
+    data: trafficData,
+    isLoading: isTrafficLoading,
+    isError: isTrafficError,
+    error: trafficError,
+    refetch: refetchTraffic,
+  } = useTrafficSession(filters, sitesSettled);
+  const {
+    data: usageData,
+    isLoading: isUsageLoading,
+    isError: isUsageError,
+    error: usageError,
+    refetch: refetchUsage,
+  } = useUsageAndDistribution(filters, sitesSettled);
 
   const tiles = trafficData?.tiles;
   const deltas = trafficData?.delta_pct;
@@ -95,66 +137,89 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
     [filters.from, filters.to]
   );
   const previousUsageDays = useMemo(
-    () => usageData
-      ? densifyUsageData(previousRange.from, previousRange.to, rawPreviousDays || [])
-      : [],
+    () =>
+      usageData
+        ? densifyUsageData(
+            previousRange.from,
+            previousRange.to,
+            rawPreviousDays || []
+          )
+        : [],
     [usageData, previousRange, rawPreviousDays]
   );
 
   const chartLabels = currentUsageDays.map((d) => {
-    const parts = d.day.split('-');
-    return parts.length === 3 ? `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}` : d.day;
+    const parts = d.day.split("-");
+    return parts.length === 3
+      ? `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`
+      : d.day;
   });
-  const getSeries = (days: typeof currentUsageDays, key: 'visitors' | 'views' | 'sessions') => days.map((d) => d[key] || 0);
-  const curVisitors = getSeries(currentUsageDays, 'visitors');
-  const prevVisitors = getSeries(previousUsageDays, 'visitors');
-  const curViews = getSeries(currentUsageDays, 'views');
-  const prevViews = getSeries(previousUsageDays, 'views');
-  const curSessions = getSeries(currentUsageDays, 'sessions');
-  const prevSessions = getSeries(previousUsageDays, 'sessions');
+  const getSeries = (
+    days: typeof currentUsageDays,
+    key: "visitors" | "views" | "sessions"
+  ) => days.map((d) => d[key] || 0);
+  const curVisitors = getSeries(currentUsageDays, "visitors");
+  const prevVisitors = getSeries(previousUsageDays, "visitors");
+  const curViews = getSeries(currentUsageDays, "views");
+  const prevViews = getSeries(previousUsageDays, "views");
+  const curSessions = getSeries(currentUsageDays, "sessions");
+  const prevSessions = getSeries(previousUsageDays, "sessions");
 
   const deviceList = usageData?.device_split?.devices || [];
   const deviceColors: Record<string, string> = {
-    Desktop: 'var(--chart-blue)',
-    Mobile: 'var(--green)',
-    iOS: 'var(--chart-violet)',
-    Android: 'var(--chart-mint)',
-    Tablet: 'var(--chart-amber)',
+    Desktop: "var(--chart-blue)",
+    Mobile: "var(--green)",
+    iOS: "var(--chart-violet)",
+    Android: "var(--chart-mint)",
+    Tablet: "var(--chart-amber)",
   };
 
   const viewsPerSession =
     usageData?.views_per_session != null
       ? usageData.views_per_session.toFixed(1)
       : tiles && tiles.sessions > 0
-      ? (tiles.screen_views / tiles.sessions).toFixed(1)
-      : '—';
+        ? (tiles.screen_views / tiles.sessions).toFixed(1)
+        : "—";
 
   return (
     <section className="page on" id="pgTraffic">
       <div className="section-head">
         <h2>Traffic &amp; Session</h2>
-        <span className="sd">Monitor overall application traffic, resident/prospect activity, and session behavior.</span>
+        <span className="sd">
+          Monitor overall application traffic, resident/prospect activity, and
+          session behavior.
+        </span>
       </div>
 
       <QuestionBox
         questions={[
-          'How many residents and prospects are actively using the app, and how frequently?',
-          'Which sites generate the highest traffic, and are users staying active day over day?',
+          "How many residents and prospects are actively using the app, and how frequently?",
+          "Which sites generate the highest traffic, and are users staying active day over day?",
         ]}
       />
 
       {isTrafficError && (
-        <div style={{ marginBottom: '16px' }}>
-          <ErrorState title="Failed to load Traffic & Session metrics" error={trafficError} onRetry={() => refetchTraffic()} />
+        <div style={{ marginBottom: "16px" }}>
+          <ErrorState
+            title="Failed to load Traffic & Session metrics"
+            error={trafficError}
+            onRetry={() => refetchTraffic()}
+          />
         </div>
       )}
 
-      <div className="tiles" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="tiles" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
         <KpiTile
           id="activeUsers"
           infoKey="U1"
           label="Active Users"
-          val={tiles ? tiles.active_users.toLocaleString() : isTrafficLoading ? '...' : '0'}
+          val={
+            tiles
+              ? tiles.active_users.toLocaleString()
+              : isTrafficLoading
+                ? "..."
+                : "0"
+          }
           dir={activeUsersDelta.dir}
           delta={activeUsersDelta.text}
           sub="unique residents/prospects this period"
@@ -172,7 +237,13 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
           id="screenViews"
           infoKey="U2"
           label="Screen Views"
-          val={tiles ? tiles.screen_views.toLocaleString() : isTrafficLoading ? '...' : '0'}
+          val={
+            tiles
+              ? tiles.screen_views.toLocaleString()
+              : isTrafficLoading
+                ? "..."
+                : "0"
+          }
           dir={screenViewsDelta.dir}
           delta={screenViewsDelta.text}
           sub="total across modules"
@@ -184,7 +255,13 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
           id="totalSessions"
           infoKey="U3"
           label="Sessions"
-          val={tiles ? tiles.sessions.toLocaleString() : isTrafficLoading ? '...' : '0'}
+          val={
+            tiles
+              ? tiles.sessions.toLocaleString()
+              : isTrafficLoading
+                ? "..."
+                : "0"
+          }
           dir={sessionsDelta.dir}
           delta={sessionsDelta.text}
           sub="app sessions started"
@@ -196,7 +273,13 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
           id="avgSessionDur"
           infoKey="U4"
           label="Session Duration"
-          val={tiles ? formatSeconds(tiles.avg_session_seconds) : isTrafficLoading ? '...' : '—'}
+          val={
+            tiles
+              ? formatSeconds(tiles.avg_session_seconds)
+              : isTrafficLoading
+                ? "..."
+                : "—"
+          }
           dir={avgSessionDelta.dir}
           delta={avgSessionDelta.text}
           sub="per session"
@@ -208,7 +291,13 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
           id="bounceRate"
           infoKey="U5"
           label="Bounce Rate"
-          val={tiles ? `${Math.round(tiles.bounce_rate)}%` : isTrafficLoading ? '...' : '0%'}
+          val={
+            tiles
+              ? `${Math.round(tiles.bounce_rate)}%`
+              : isTrafficLoading
+                ? "..."
+                : "0%"
+          }
           dir={bounceDelta.dir}
           delta={bounceDelta.text}
           sub="lower is better"
@@ -224,7 +313,13 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
           id="recentlyOnline"
           infoKey="U6"
           label="Recently Online"
-          val={tiles ? tiles.recently_online.toLocaleString() : isTrafficLoading ? '...' : '0'}
+          val={
+            tiles
+              ? tiles.recently_online.toLocaleString()
+              : isTrafficLoading
+                ? "..."
+                : "0"
+          }
           dir="flat"
           delta={null}
           sub="active in last 30 min"
@@ -237,100 +332,161 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
         <Card
           id="card-trafficActive"
           infoKey="chart.usage"
-          eyebrow="Usage over time · Live PostHog data"
+          eyebrow="Usage over time · Live Usage data"
           title="Usage over time"
           purpose="Residents/prospects, screen views, and sessions over time, across all projects, with the previous period overlaid for comparison."
         >
           {isUsageError ? (
-            <ErrorState title="Failed to load usage trend" error={usageError} onRetry={() => refetchUsage()} />
+            <ErrorState
+              title="Failed to load usage trend"
+              error={usageError}
+              onRetry={() => refetchUsage()}
+            />
           ) : isUsageLoading ? (
-            <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
+            <div
+              style={{
+                height: "220px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--muted)",
+              }}
+            >
               Loading usage trend...
             </div>
           ) : currentUsageDays.length === 0 ? (
             <EmptyState message="No usage data recorded for this period" />
           ) : (
             <>
-              <div className="charttabs" style={{ marginBottom: '10px' }}>
-                <button type="button" className={usageTab === 'visitors' ? 'on' : ''} onClick={() => setUsageTab('visitors')}>
+              <div className="charttabs" style={{ marginBottom: "10px" }}>
+                <button
+                  type="button"
+                  className={usageTab === "visitors" ? "on" : ""}
+                  onClick={() => setUsageTab("visitors")}
+                >
                   Users
                 </button>
-                <button type="button" className={usageTab === 'views' ? 'on' : ''} onClick={() => setUsageTab('views')}>
+                <button
+                  type="button"
+                  className={usageTab === "views" ? "on" : ""}
+                  onClick={() => setUsageTab("views")}
+                >
                   Views
                 </button>
-                <button type="button" className={usageTab === 'sessions' ? 'on' : ''} onClick={() => setUsageTab('sessions')}>
+                <button
+                  type="button"
+                  className={usageTab === "sessions" ? "on" : ""}
+                  onClick={() => setUsageTab("sessions")}
+                >
                   Sessions
                 </button>
               </div>
-              {usageTab === 'visitors' && (
+              {usageTab === "visitors" && (
                 <>
                   <LineChart
                     cur={curVisitors}
-                    prev={showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1 ? prevVisitors : null}
+                    prev={
+                      showPrev &&
+                      prevVisitors.length === curVisitors.length &&
+                      prevVisitors.length > 1
+                        ? prevVisitors
+                        : null
+                    }
                     labels={chartLabels}
                     color="var(--chart-blue)"
                     fill="var(--chart-fill)"
-                    showPrev={showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1}
+                    showPrev={
+                      showPrev &&
+                      prevVisitors.length === curVisitors.length &&
+                      prevVisitors.length > 1
+                    }
                     curLabel="Users"
                     prevLabel="Previous period"
                   />
                   <div className="legend">
                     <span>
-                      <i style={{ background: 'var(--chart-blue)' }}></i> Users
+                      <i style={{ background: "var(--chart-blue)" }}></i> Users
                     </span>
-                    {showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1 && (
-                      <span>
-                        <i className="dash"></i> Previous period
-                      </span>
-                    )}
+                    {showPrev &&
+                      prevVisitors.length === curVisitors.length &&
+                      prevVisitors.length > 1 && (
+                        <span>
+                          <i className="dash"></i> Previous period
+                        </span>
+                      )}
                   </div>
                 </>
               )}
-              {usageTab === 'views' && (
+              {usageTab === "views" && (
                 <>
                   <LineChart
                     cur={curViews}
-                    prev={showPrev && prevViews.length === curViews.length && prevViews.length > 1 ? prevViews : null}
+                    prev={
+                      showPrev &&
+                      prevViews.length === curViews.length &&
+                      prevViews.length > 1
+                        ? prevViews
+                        : null
+                    }
                     labels={chartLabels}
                     color="var(--chart-violet)"
                     fill="var(--chart-violet-tint)"
-                    showPrev={showPrev && prevViews.length === curViews.length && prevViews.length > 1}
+                    showPrev={
+                      showPrev &&
+                      prevViews.length === curViews.length &&
+                      prevViews.length > 1
+                    }
                     curLabel="Views"
                     prevLabel="Previous period"
                   />
                   <div className="legend">
                     <span>
-                      <i style={{ background: 'var(--chart-violet)' }}></i> Views
+                      <i style={{ background: "var(--chart-violet)" }}></i>{" "}
+                      Views
                     </span>
-                    {showPrev && prevViews.length === curViews.length && prevViews.length > 1 && (
-                      <span>
-                        <i className="dash"></i> Previous period
-                      </span>
-                    )}
+                    {showPrev &&
+                      prevViews.length === curViews.length &&
+                      prevViews.length > 1 && (
+                        <span>
+                          <i className="dash"></i> Previous period
+                        </span>
+                      )}
                   </div>
                 </>
               )}
-              {usageTab === 'sessions' && (
+              {usageTab === "sessions" && (
                 <>
                   <LineChart
                     cur={curSessions}
-                    prev={showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1 ? prevSessions : null}
+                    prev={
+                      showPrev &&
+                      prevSessions.length === curSessions.length &&
+                      prevSessions.length > 1
+                        ? prevSessions
+                        : null
+                    }
                     labels={chartLabels}
                     color="var(--green)"
                     fill="var(--green-tint)"
-                    showPrev={showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1}
+                    showPrev={
+                      showPrev &&
+                      prevSessions.length === curSessions.length &&
+                      prevSessions.length > 1
+                    }
                     curLabel="Sessions"
                     prevLabel="Previous period"
                   />
                   <div className="legend">
                     <span>
-                      <i style={{ background: 'var(--green)' }}></i> Sessions
+                      <i style={{ background: "var(--green)" }}></i> Sessions
                     </span>
-                    {showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1 && (
-                      <span>
-                        <i className="dash"></i> Previous period
-                      </span>
-                    )}
+                    {showPrev &&
+                      prevSessions.length === curSessions.length &&
+                      prevSessions.length > 1 && (
+                        <span>
+                          <i className="dash"></i> Previous period
+                        </span>
+                      )}
                   </div>
                 </>
               )}
@@ -346,9 +502,21 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
           purpose="Share of active users by platform, from the device_platform property stamped on every event — shows where release testing and support effort should concentrate."
         >
           {isUsageError ? (
-            <ErrorState title="Failed to load device split" error={usageError} onRetry={() => refetchUsage()} />
+            <ErrorState
+              title="Failed to load device split"
+              error={usageError}
+              onRetry={() => refetchUsage()}
+            />
           ) : isUsageLoading ? (
-            <div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
+            <div
+              style={{
+                height: "180px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--muted)",
+              }}
+            >
               Loading device distribution...
             </div>
           ) : deviceList.length === 0 ? (
@@ -357,23 +525,33 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({ filters,
             <>
               <div className="hbars">
                 {deviceList.map((d, idx) => {
-                  const sharePct = Math.round(d.session_share <= 1 ? d.session_share * 100 : d.session_share);
-                  const barColor = deviceColors[d.device] || 'var(--chart-blue)';
+                  const sharePct = Math.round(
+                    d.session_share <= 1
+                      ? d.session_share * 100
+                      : d.session_share
+                  );
+                  const barColor =
+                    deviceColors[d.device] || "var(--chart-blue)";
                   return (
                     <div className="role" key={idx}>
                       <div className="rn">{d.device}</div>
                       <div className="rbar">
-                        <i style={{ width: `${Math.min(100, Math.max(0, sharePct))}%`, background: barColor }}></i>
+                        <i
+                          style={{
+                            width: `${Math.min(100, Math.max(0, sharePct))}%`,
+                            background: barColor,
+                          }}
+                        ></i>
                       </div>
                       <div className="rv">{pct(sharePct)}</div>
                     </div>
                   );
                 })}
               </div>
-              <div className="kv" style={{ marginTop: '14px' }}>
+              <div className="kv" style={{ marginTop: "14px" }}>
                 <div>
                   <div className="k">Views / session</div>
-                  <div className="v" style={{ fontSize: '18px' }}>
+                  <div className="v" style={{ fontSize: "18px" }}>
                     {viewsPerSession}
                   </div>
                   <div className="u">screens per visit</div>
