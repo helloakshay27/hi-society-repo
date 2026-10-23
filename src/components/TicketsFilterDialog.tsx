@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   TextField,
@@ -288,14 +284,7 @@ export const TicketsFilterDialog = ({
   const loadIssueTypes = async () => {
     try {
       const userData = localStorage.getItem("user");
-      let societyId = "";
-      if (userData) {
-        const parsedUser = JSON.parse(userData);
-        societyId =
-          parsedUser.society?.id ||
-          parsedUser.selected_user_society ||
-          parsedUser.site_id;
-      }
+      const societyId = localStorage.getItem("selectedSocietyId");
 
       const response = await apiClient.get("/user/issue_type.json", {
         params: societyId ? { society_id: societyId } : undefined,
@@ -801,7 +790,6 @@ export const TicketsFilterDialog = ({
               />
             </div>
           </div>
-
         </div>
 
         {/* Action Buttons */}
