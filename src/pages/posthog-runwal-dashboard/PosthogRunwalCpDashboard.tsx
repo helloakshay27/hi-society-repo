@@ -468,6 +468,7 @@ function PosthogRunwalCpDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              showPrev={showPrev}
               isRefreshing={isRefreshing}
             />
           )}

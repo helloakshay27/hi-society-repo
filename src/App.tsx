@@ -2549,6 +2549,10 @@ const PosthogRunwalCpDashboard = lazy(
 const PosthogGodrejDashboard = lazy(
   () => import("./pages/posthog-godrej-dashboard/PosthogGodrejDashboard")
 );
+const PosthogAccountingDashboard = lazy(
+  () =>
+    import("./pages/posthog-accounting-dashboard/PosthogAccountingDashboard")
+);
 const PosthogKRahejaDashboard = lazy(
   () => import("./pages/posthog-kraheja-dashboard/PosthogKRahejaDashboard")
 );
@@ -3240,6 +3244,18 @@ const QuickgateDashboardPage = lazy(
 const HiSocietyUsageDashboard = lazy(
   () => import("./pages/HiSocietyUsageDashboard")
 );
+const UsageDashboardPage = lazy(
+  () => import("./features/usage-dashboard/UsageDashboardPage")
+);
+const SunteckDashboardPage = lazy(
+  () => import("./features/usage-dashboard/SunteckDashboardPage")
+);
+const SuncityDashboardPage = lazy(
+  () => import("./features/usage-dashboard/SuncityDashboardPage")
+);
+const LockatedDashboardPage = lazy(
+  () => import("./features/lockated-dashboard/LockatedDashboardPage")
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -3695,19 +3711,23 @@ function App() {
                         element={<PosthogRunwalCpDashboard />}
                       />
                       <Route
-                        path="/posthog-my-piramal-dashboard"
+                        path="/my-piramal-usage-dashboard"
                         element={<PosthogMyPiramalDashboard />}
                       />
                       <Route
-                        path="/posthog-godrej-dashboard"
+                        path="/godrej-usage-dashboard"
                         element={<PosthogGodrejDashboard />}
                       />
                       <Route
-                        path="/posthog-kraheja-dashboard"
+                        path="/accounting-dashboard"
+                        element={<PosthogAccountingDashboard />}
+                      />
+                      <Route
+                        path="/kraheja-usage-dashboard"
                         element={<PosthogKRahejaDashboard />}
                       />
                       <Route
-                        path="/posthog-lacircle-dashboard"
+                        path="/lacircle-usage-dashboard"
                         element={<PosthogLacircleDashboard />}
                       />
                       <Route
@@ -3721,6 +3741,30 @@ function App() {
                       <Route
                         path="/hi-society-usage-dashboard"
                         element={<HiSocietyUsageDashboard />}
+                      />
+                      <Route
+                        path="/artesia-usage-analytics"
+                        element={<UsageDashboardPage fixedSite="artesia" />}
+                      />
+                      <Route
+                        path="/sunteck-usage-analytics"
+                        element={<SunteckDashboardPage />}
+                      />
+                      <Route
+                        path="/suncity-usage-analytics"
+                        element={<SuncityDashboardPage />}
+                      />
+                      <Route
+                        path="/lockated-dashboard"
+                        element={<LockatedDashboardPage />}
+                      />
+                      <Route
+                        path="/lockated-analytics"
+                        element={<LockatedDashboardPage />}
+                      />
+                      <Route
+                        path="/lockated-usage-analytics"
+                        element={<LockatedDashboardPage />}
                       />
 
                       {/* Post Possession admin dashboard (standalone — own header/tabs) */}

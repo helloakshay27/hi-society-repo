@@ -104,8 +104,6 @@ function DashboardLayout() {
           {activePage === 'pgAdopt' && <AdoptionSection />}
           {activePage === 'pgFlows' && <WorkflowSection />}
           {activePage === 'pgFm' && <FmDashboardSection />}
-
-          <Footer />
         </main>
       </div>
       <InfoPopover />

@@ -111,11 +111,7 @@ export async function fetchAllSites(): Promise<Site[]> {
     }
   } catch {}
 
-  // Return fallback mock sites so dashboard can load in local dev despite CORS/500 backend errors
-  return [
-    { id: '2189', name: 'Fallback Site A' },
-    { id: '2190', name: 'Fallback Site B' }
-  ];
+  return [];
 }
 
 interface ApiCompany {
