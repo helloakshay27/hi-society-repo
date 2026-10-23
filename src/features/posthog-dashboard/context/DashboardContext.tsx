@@ -31,9 +31,8 @@ import {
   type Site,
   type SiteGroup,
 } from "../data/constants";
-import type { DateRange, Device, Tier } from "../data/constants";
+import type { CustomDateRange, DateRange, Device, Tier } from "../data/constants";
 import type { DeviceType } from "../api/adoptionApi";
-import { getDynamicTenantUrl } from "../api/adoptionApi";
 import { getToken, saveToken } from '@/utils/auth';
 import {
   dateRangeFor,
@@ -50,7 +49,6 @@ import {
   useTrafficSession,
   useUsageAndDistribution,
   useWorkflowUsage,
-  useFmDashboardQueries,
   type QueryFilters,
 } from "../api/queries";
 
@@ -94,8 +92,9 @@ export interface ViewModel {
   /** `generated_at` of the Layer-1 response — the freshness stamp shown in the header. */
   generatedAt: string | null;
   range: { from: string; to: string };
-  fm: ReturnType<typeof useFmDashboardQueries>;
-  fmStatus: SectionStatus;
+  dateLabel: string;
+  filters: QueryFilters;
+  filtersSettled: boolean;
 }
 
 interface InfoPopoverState {
@@ -111,6 +110,7 @@ interface DashboardContextValue {
   setTier: (tier: Tier) => void;
   setScope: (scope: string) => void;
   setDate: (date: DateRange) => void;
+  setCustomDateRange: (range: CustomDateRange) => void;
   setToken: (token: string) => void;
   setDev: (dev: Device) => void;
   setModule: (module: string) => void;
@@ -136,13 +136,7 @@ interface DashboardContextValue {
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
 
-interface DashboardProviderProps {
-  children: ReactNode;
-  projectCode?: string;
-  tenantUrl?: string;
-}
-
-export function DashboardProvider({ children, projectCode, tenantUrl }: DashboardProviderProps) {
+export function DashboardProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DashboardState>(DEFAULT_STATE);
   const [token, setTokenState] = useState(() => getToken() ?? '');
   const [benchmarks, setBenchmarks] = useState<Record<string, number | null>>(
@@ -178,7 +172,22 @@ export function DashboardProvider({ children, projectCode, tenantUrl }: Dashboar
     });
   }, [sites, groups]);
 
-  const { from, to } = useMemo(() => dateRangeFor(state.date), [state.date]);
+  const { from, to } = useMemo(
+    () => state.customDateRange ?? dateRangeFor(state.date),
+    [state.customDateRange, state.date]
+  );
+  const dateLabel = useMemo(() => {
+    if (!state.customDateRange) return `Last ${state.date} days`;
+    const format = (value: string) => {
+      const [year, month, day] = value.split('-').map(Number);
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }).format(new Date(year, month - 1, day));
+    };
+    return `${format(from)} – ${format(to)}`;
+  }, [from, to, state.customDateRange, state.date]);
 
   // Sync theme and nav to HTML tag
   useEffect(() => {
@@ -237,8 +246,6 @@ export function DashboardProvider({ children, projectCode, tenantUrl }: Dashboar
     [scopedSites]
   );
 
-  const dynamicUrl = tenantUrl || getDynamicTenantUrl();
-
   const filters = useMemo<QueryFilters>(
     () => ({
       enabled: sitesSettled,
@@ -250,10 +257,8 @@ export function DashboardProvider({ children, projectCode, tenantUrl }: Dashboar
       module: state.module,
       subModule: state.subModule,
       token,
-      url: dynamicUrl,
-      projectCode,
     }),
-    [sitesSettled, from, to, siteIds, state.dev, state.licensedSeats, state.module, state.subModule, token, dynamicUrl, projectCode]
+    [sitesSettled, from, to, siteIds, state.dev, state.licensedSeats, state.module, state.subModule, token]
   );
 
   /** A disabled query reports isLoading=false, so treat "not started yet" as loading too. */
@@ -270,15 +275,32 @@ export function DashboardProvider({ children, projectCode, tenantUrl }: Dashboar
   const rolesQ = useRoles(filters);
   const moduleTreeQ = useModuleTree(filters);
   const subModuleTreeQ = useSubModuleTree(filters);
-  const workflowQ = useWorkflowUsage(filters);
-  const fm = useFmDashboardQueries(filters);
-
-  const league = useSiteLeague(filters, leagueSiteIds, scopedSites.length > 1);
 
   const modules = useMemo(() => toModuleOptions(moduleTreeQ.data?.tree), [moduleTreeQ.data]);
   const subModules = useMemo(
     () => toModuleOptions(subModuleTreeQ.data?.tree),
     [subModuleTreeQ.data]
+  );
+
+  // Hold workflow_usage until the sub-module default has been applied (or the module has
+  // none). Otherwise it fires once with no sub_module and again a moment later with one,
+  // and the first response is thrown away.
+  const subModuleReady =
+    !!state.module &&
+    subModuleTreeQ.isFetched &&
+    (subModules.length === 0 || subModules.some((m) => m.name === state.subModule));
+  const workflowFilters = useMemo<QueryFilters>(
+    () => ({ ...filters, enabled: filters.enabled && subModuleReady }),
+    [filters, subModuleReady]
+  );
+  const workflowQ = useWorkflowUsage(workflowFilters);
+
+  // The per-site traffic_session fan-out only feeds the site breakdown table on the
+  // Adoption tab, so don't fire one call per site while another tab is open.
+  const league = useSiteLeague(
+    filters,
+    leagueSiteIds,
+    scopedSites.length > 1 && state.activePage === 'pgAdopt'
   );
 
   // The module list is dynamic, so the initial selection has to wait for the tree.
@@ -350,7 +372,8 @@ export function DashboardProvider({ children, projectCode, tenantUrl }: Dashboar
             pending ||
             moduleTreeQ.isLoading ||
             workflowQ.isLoading ||
-            (!state.module && modules.length > 0),
+            (!state.module && modules.length > 0) ||
+            (!!state.module && !subModuleReady),
           error: (sitesQ.error ?? moduleTreeQ.error ?? workflowQ.error) as Error | null,
         },
         siteHealth: {
@@ -366,11 +389,9 @@ export function DashboardProvider({ children, projectCode, tenantUrl }: Dashboar
       },
       generatedAt: trafficQ.data?.meta.generated_at ?? null,
       range: { from, to },
-      fm,
-      fmStatus: {
-        loading: pending || Object.values(fm).some((query) => query.isLoading),
-        error: (Object.values(fm).find((query) => query.error)?.error ?? null) as Error | null,
-      },
+      dateLabel,
+      filters,
+      filtersSettled: sitesSettled,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -382,6 +403,9 @@ export function DashboardProvider({ children, projectCode, tenantUrl }: Dashboar
       sitesQ.error,
       from,
       to,
+      dateLabel,
+      filters,
+      sitesSettled,
       modules,
       subModules,
       trafficQ.data,
@@ -411,7 +435,6 @@ export function DashboardProvider({ children, projectCode, tenantUrl }: Dashboar
       workflowQ.data,
       workflowQ.isLoading,
       workflowQ.error,
-      fm,
       league.entries,
       league.isLoading,
       league.error,
@@ -431,8 +454,16 @@ export function DashboardProvider({ children, projectCode, tenantUrl }: Dashboar
     const minDelay = new Promise((resolve) => setTimeout(resolve, 650));
     try {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["fm-adoption"], refetchType: "all" }),
-        queryClient.refetchQueries({ queryKey: ["fm-adoption"], type: "active" }),
+        // One pass: refetch only the queries on screen (inactive ones are just marked
+        // stale and reload when next used), and leave the site/company lists alone —
+        // they don't change when analytics are refreshed.
+        queryClient.invalidateQueries({
+          predicate: ({ queryKey }) =>
+            queryKey[0] === 'fm-adoption' &&
+            queryKey[1] !== 'all-sites' &&
+            queryKey[1] !== 'company-names',
+          refetchType: 'active',
+        }),
         minDelay,
       ]);
     } catch {
@@ -447,7 +478,9 @@ export function DashboardProvider({ children, projectCode, tenantUrl }: Dashboar
     setTier: (tier) =>
       setState((s) => ({ ...s, tier, scope: normalizeScope(tier, s.scope, sites, groups) })),
     setScope: (scope) => setState((s) => ({ ...s, scope })),
-    setDate: (date) => setState((s) => ({ ...s, date })),
+    setDate: (date) => setState((s) => ({ ...s, date, customDateRange: null })),
+    setCustomDateRange: (customDateRange) =>
+      setState((s) => ({ ...s, customDateRange })),
     setToken: (nextToken) => {
       setTokenState(nextToken);
       saveToken(nextToken);

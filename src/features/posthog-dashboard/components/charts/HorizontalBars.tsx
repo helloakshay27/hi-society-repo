@@ -8,13 +8,6 @@ export interface BarRow {
 
 /** Generic labelled horizontal-bar row group, used for device split and role-adoption bars. */
 export function HorizontalBars({ rows }: { rows: BarRow[] }) {
-  if (!rows || rows.length === 0) {
-    return (
-      <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--ss-text-sub, #6b7280)', fontSize: 13 }}>
-        No breakdown data available.
-      </div>
-    );
-  }
   return (
     <div className="hbars">
       {rows.map((r) => (
