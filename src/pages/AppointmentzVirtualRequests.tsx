@@ -693,7 +693,7 @@ export const AppointmentzVirtualRequests: React.FC = () => {
       {/* Filter Modal Popup */}
       <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
         <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-[#D5DbDB] shadow-xl">
-          <DialogHeader className="px-6 py-4 border-b border-[#D5DbDB]">
+          <DialogHeader className="px-6 py-4">
             <DialogTitle className="text-lg font-bold text-[#1A1A1A]">
               Filter Virtual Requests
             </DialogTitle>

@@ -55,8 +55,8 @@ export const EditRequestModal: React.FC<EditRequestModalProps> = ({
       onOpenChange={(open) => !open && !isSubmitting && onClose()}
     >
       <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none shadow-2xl">
-        <DialogHeader className="px-4 py-2.5 flex flex-row items-center justify-between border-b border-[#D5DbDB]">
-          <div className="flex-1 text-center">
+        <DialogHeader className="px-4 py-2.5 flex flex-row items-center justify-between">
+          <div className="flex-1">
             <DialogTitle className="text-[#1a1a1a] font-bold text-lg inline-block">
               Edit Request
             </DialogTitle>

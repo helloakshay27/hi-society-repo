@@ -116,7 +116,7 @@ export const AppointmentzManageFlatDetails: React.FC = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/appointmentz/manage-flats")}
-              className="p-1.5 rounded-md hover:bg-[#f6f4ee] border border-[#D5DbDB] bg-white text-[#1A1A1A] transition-colors"
+              className="p-1.5 rounded-md border border-[#D5DbDB] text-[#1A1A1A] transition-colors"
               title="Back to Manage Flats"
             >
               <ArrowLeft className="w-4 h-4" />
