@@ -79,15 +79,19 @@ const PAGES: { key: ActivePage; title: string; icon: JSX.Element }[] = [
 ];
 
 function DashboardLayout() {
-  const { state, setPage, sites, appId, projectCode } = useSmartSecureDashboard();
+  const { state, setPage, sites, appId, projectCode } =
+    useSmartSecureDashboard();
   const page = PAGES.find((p) => p.key === state.page) ?? PAGES[0];
   const recentActivityFilters: DashboardFilters = {
-    siteIds: state.society === 'All Societies' ? sites.map((site) => site.id) : [state.society],
+    siteIds:
+      state.society === "All Societies"
+        ? sites.map((site) => site.id)
+        : [state.society],
     from: state.rangeFrom,
     to: state.rangeTo,
-    token: '',
-    deviceType: 'Mobile',
-    devPlatform: state.dev || 'all',
+    token: "",
+    deviceType: "Mobile",
+    devPlatform: state.dev || "all",
     licensedSeats: null,
     module: null,
     subModule: null,
@@ -123,7 +127,10 @@ function DashboardLayout() {
               ))}
             </div>
           </nav>
-          <RecentActivitySidebar filters={recentActivityFilters} sitesSettled={sites.length > 0} />
+          <RecentActivitySidebar
+            filters={recentActivityFilters}
+            sitesSettled={sites.length > 0}
+          />
         </aside>
 
         <main className="main">
@@ -141,7 +148,7 @@ function DashboardLayout() {
           {state.page === "pgAdopt" && <AdoptionSection />}
           {state.page === "pgFlows" && <WorkflowSection />}
 
-          <Footer />
+          {/* <Footer /> */}
         </main>
       </div>
       <InfoPopover />

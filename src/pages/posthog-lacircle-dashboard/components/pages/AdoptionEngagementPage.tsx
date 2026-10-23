@@ -1,20 +1,26 @@
-import React from 'react';
-import { DashboardFilters } from '../../../posthog-runwal-dashboard/api/types';
-import { QuestionBox } from '../../../posthog-runwal-dashboard/components/common/QuestionBox';
-import { KpiTile } from '../../../posthog-runwal-dashboard/components/common/KpiTile';
-import { Card } from '../../../posthog-runwal-dashboard/components/common/Card';
-import { LineChart } from '../../../posthog-runwal-dashboard/components/charts/LineChart';
-import { StackedBarChart } from '../../../posthog-runwal-dashboard/components/charts/StackedBarChart';
-import { RetentionCohortTable } from '../../../posthog-runwal-dashboard/components/charts/RetentionCohortTable';
-import { ErrorState, EmptyState } from '../../../posthog-runwal-dashboard/components/common/DashboardStates';
+import React from "react";
+import { DashboardFilters } from "../../../posthog-runwal-dashboard/api/types";
+import { QuestionBox } from "../../../posthog-runwal-dashboard/components/common/QuestionBox";
+import { KpiTile } from "../../../posthog-runwal-dashboard/components/common/KpiTile";
+import { Card } from "../../../posthog-runwal-dashboard/components/common/Card";
+import { LineChart } from "../../../posthog-runwal-dashboard/components/charts/LineChart";
+import { StackedBarChart } from "../../../posthog-runwal-dashboard/components/charts/StackedBarChart";
+import { RetentionCohortTable } from "../../../posthog-runwal-dashboard/components/charts/RetentionCohortTable";
+import {
+  ErrorState,
+  EmptyState,
+} from "../../../posthog-runwal-dashboard/components/common/DashboardStates";
 import {
   useAdoptionEngagement,
   useAdoptionTrend,
   useGrowth,
   useRetention,
   useRoles,
-} from '../../../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
-import { pct, fmtDateShort } from '../../../posthog-runwal-dashboard/data/constants';
+} from "../../../posthog-runwal-dashboard/hooks/useDashboardAnalytics";
+import {
+  pct,
+  fmtDateShort,
+} from "../../../posthog-runwal-dashboard/data/constants";
 
 // Lacircle's Adoption & Engagement page — unlike Runwal's own version of this
 // page, the HTML mockup (Lacircle_Dashboard_v1_FM_structure.html,
@@ -33,12 +39,15 @@ interface AdoptionEngagementPageProps {
   showPrev: boolean;
 }
 
-function formatDelta(d: number | null | undefined): { text: string | null; dir: 'up' | 'dn' | 'flat' } {
-  if (d == null || isNaN(d)) return { text: null, dir: 'flat' };
+function formatDelta(d: number | null | undefined): {
+  text: string | null;
+  dir: "up" | "dn" | "flat";
+} {
+  if (d == null || isNaN(d)) return { text: null, dir: "flat" };
   const abs = Math.abs(d).toFixed(1);
-  if (d > 0) return { text: `${abs}% vs prev`, dir: 'up' };
-  if (d < 0) return { text: `${abs}% vs prev`, dir: 'dn' };
-  return { text: '0% vs prev', dir: 'flat' };
+  if (d > 0) return { text: `${abs}% vs prev`, dir: "up" };
+  if (d < 0) return { text: `${abs}% vs prev`, dir: "dn" };
+  return { text: "0% vs prev", dir: "flat" };
 }
 
 export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
@@ -95,18 +104,19 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
     stickinessVal != null
       ? pct(stickinessVal <= 1 ? stickinessVal * 100 : stickinessVal)
       : isAdoptLoading
-      ? '...'
-      : '—';
+        ? "..."
+        : "—";
   const stickinessDelta = formatDelta(adoptData?.stickiness?.delta_pct);
 
   // Adoption Trend KPI
-  const adoptTrendVal = adoptData?.adoption_trend?.value ?? trendData?.trend_pct;
+  const adoptTrendVal =
+    adoptData?.adoption_trend?.value ?? trendData?.trend_pct;
   const adoptTrendDisplay =
     adoptTrendVal != null
-      ? `${adoptTrendVal > 0 ? '+' : ''}${adoptTrendVal.toFixed(1)}%`
+      ? `${adoptTrendVal > 0 ? "+" : ""}${adoptTrendVal.toFixed(1)}%`
       : isAdoptLoading
-      ? '...'
-      : '—';
+        ? "..."
+        : "—";
 
   // 14-Day Activation
   const activationVal = adoptData?.activation?.value;
@@ -114,8 +124,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
     activationVal != null
       ? `${Math.round(activationVal <= 1 ? activationVal * 100 : activationVal)}%`
       : isAdoptLoading
-      ? '...'
-      : '—';
+        ? "..."
+        : "—";
   const activationDelta = formatDelta(adoptData?.activation?.delta_pct);
 
   // Module Breadth
@@ -125,22 +135,26 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
     modInUse != null && modTotal != null
       ? `${modInUse} / ${modTotal}`
       : isAdoptLoading
-      ? '...'
-      : '—';
+        ? "..."
+        : "—";
 
   // Dormant count
   const dormantCount = adoptData?.dormant_users?.value;
-  const dormantBand = adoptData?.dormant_users?.band || 'no activity 14+ days';
+  const dormantBand = adoptData?.dormant_users?.band || "no activity 14+ days";
 
   // 8-Week Trend Line Chart Series
   const weeklyCurrent = trendData?.weekly?.current || [];
   const weeklyPrevious = trendData?.weekly?.previous || [];
-  const trendLabels = weeklyCurrent.map((w) => (w.week ? fmtDateShort(w.week) : 'W'));
+  const trendLabels = weeklyCurrent.map((w) =>
+    w.week ? fmtDateShort(w.week) : "W"
+  );
   const trendSeriesCurrent = weeklyCurrent.map((w) => w.wau || 0);
   const trendSeriesPrev = weeklyPrevious.map((w) => w.wau || 0);
 
   // Growth Accounting Series
-  const growthWeeks = (growthData?.weeks || []).map((w) => (w.week ? fmtDateShort(w.week) : 'W'));
+  const growthWeeks = (growthData?.weeks || []).map((w) =>
+    w.week ? fmtDateShort(w.week) : "W"
+  );
   const growthNew = (growthData?.weeks || []).map((w) => w.new || 0);
   const growthRet = (growthData?.weeks || []).map((w) => w.returning || 0);
   const growthRes = (growthData?.weeks || []).map((w) => w.resurrected || 0);
@@ -149,12 +163,12 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   // Audience Roles
   const rolesList = rolesData?.roles || [];
   const roleColors = [
-    'var(--chart-blue)',
-    'var(--chart-violet)',
-    'var(--chart-mint)',
-    'var(--green)',
-    'var(--chart-amber)',
-    'var(--chart-red)',
+    "var(--chart-blue)",
+    "var(--chart-violet)",
+    "var(--chart-mint)",
+    "var(--green)",
+    "var(--chart-amber)",
+    "var(--chart-red)",
   ];
 
   return (
@@ -162,21 +176,22 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       <div className="section-head">
         <h2>Adoption &amp; Engagement</h2>
         <span className="sd">
-          Measure how effectively residents adopt and engage with the app&rsquo;s major modules, and whether they
-          keep coming back day over day.
+          Measure how effectively residents adopt and engage with the
+          app&rsquo;s major modules, and whether they keep coming back day over
+          day.
         </span>
       </div>
 
       <QuestionBox
         questions={[
-          'Which modules and community services receive the highest engagement and adoption?',
-          'Which modules need UX improvements, and where do residents spend the most time?',
-          'Are residents returning to the application, and is retention improving over time?',
+          "Which modules and community services receive the highest engagement and adoption?",
+          "Which modules need UX improvements, and where do residents spend the most time?",
+          "Are residents returning to the application, and is retention improving over time?",
         ]}
       />
 
       {isAdoptError && (
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: "16px" }}>
           <ErrorState
             title="Failed to load Adoption metrics"
             error={adoptError}
@@ -185,7 +200,10 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         </div>
       )}
 
-      <div className="tiles" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginTop: '16px' }}>
+      <div
+        className="tiles"
+        style={{ gridTemplateColumns: "repeat(3, 1fr)", marginTop: "16px" }}
+      >
         <KpiTile
           id="stickiness"
           infoKey="A2"
@@ -194,7 +212,13 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           dir={stickinessDelta.dir}
           delta={stickinessDelta.text}
           sub="avg DAU/MAU"
-          raw={stickinessVal != null ? (stickinessVal <= 1 ? stickinessVal * 100 : stickinessVal) : undefined}
+          raw={
+            stickinessVal != null
+              ? stickinessVal <= 1
+                ? stickinessVal * 100
+                : stickinessVal
+              : undefined
+          }
           unit="%"
           goodUp={true}
           benchmark={benchmarks.stickiness}
@@ -206,7 +230,13 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           infoKey="A3"
           label="Adoption Trend"
           val={adoptTrendDisplay}
-          dir={adoptTrendVal && adoptTrendVal > 0 ? 'up' : adoptTrendVal && adoptTrendVal < 0 ? 'dn' : 'flat'}
+          dir={
+            adoptTrendVal && adoptTrendVal > 0
+              ? "up"
+              : adoptTrendVal && adoptTrendVal < 0
+                ? "dn"
+                : "flat"
+          }
           delta="vs prior 8 weeks"
           sub="weekly active users"
           noTarget={true}
@@ -220,7 +250,13 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           dir={activationDelta.dir}
           delta={activationDelta.text}
           sub="of new bookings"
-          raw={activationVal != null ? (activationVal <= 1 ? activationVal * 100 : activationVal) : undefined}
+          raw={
+            activationVal != null
+              ? activationVal <= 1
+                ? activationVal * 100
+                : activationVal
+              : undefined
+          }
           unit="%"
           goodUp={true}
           benchmark={benchmarks.activation14}
@@ -243,10 +279,10 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       <Card
         id="card-adoptionTrend"
         infoKey="chart.adoptionTrend"
-        eyebrow="Trend · Live 8-week PostHog data"
+        eyebrow="Trend · Live 8-week Usage data"
         title="Adoption trend (weekly active residents, last 8 weeks)"
         purpose="Weekly active residents over the last 8 weeks — the trend line behind the Adoption Trend tile above."
-        style={{ marginTop: '12px' }}
+        style={{ marginTop: "12px" }}
       >
         {isTrendError ? (
           <ErrorState
@@ -255,7 +291,15 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
             onRetry={() => refetchTrend()}
           />
         ) : isTrendLoading ? (
-          <div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
+          <div
+            style={{
+              height: "180px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--muted)",
+            }}
+          >
             Loading 8-week adoption trend...
           </div>
         ) : trendSeriesCurrent.length === 0 ? (
@@ -264,23 +308,36 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           <>
             <LineChart
               cur={trendSeriesCurrent}
-              prev={showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1 ? trendSeriesPrev : []}
+              prev={
+                showPrev &&
+                weeklyPrevious.length === weeklyCurrent.length &&
+                weeklyPrevious.length > 1
+                  ? trendSeriesPrev
+                  : []
+              }
               labels={trendLabels}
               color="var(--chart-blue)"
               fill="var(--chart-fill)"
-              showPrev={showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1}
+              showPrev={
+                showPrev &&
+                weeklyPrevious.length === weeklyCurrent.length &&
+                weeklyPrevious.length > 1
+              }
               curLabel="Weekly active residents"
               prevLabel="Prior 8W WAU"
             />
             <div className="legend">
               <span>
-                <i style={{ background: 'var(--chart-blue)' }}></i> Weekly active residents
+                <i style={{ background: "var(--chart-blue)" }}></i> Weekly
+                active residents
               </span>
-              {showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1 && (
-                <span>
-                  <i className="dash"></i> Previous 8-Week Period
-                </span>
-              )}
+              {showPrev &&
+                weeklyPrevious.length === weeklyCurrent.length &&
+                weeklyPrevious.length > 1 && (
+                  <span>
+                    <i className="dash"></i> Previous 8-Week Period
+                  </span>
+                )}
             </div>
           </>
         )}
@@ -301,7 +358,15 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               onRetry={() => refetchGrowth()}
             />
           ) : isGrowthLoading ? (
-            <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
+            <div
+              style={{
+                height: "220px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--muted)",
+              }}
+            >
               Loading growth accounting...
             </div>
           ) : growthWeeks.length === 0 ? (
@@ -311,24 +376,37 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               <StackedBarChart
                 labels={growthWeeks}
                 series={[
-                  { label: 'New', data: growthNew, color: 'var(--chart-blue)' },
-                  { label: 'Returning', data: growthRet, color: 'var(--green)' },
-                  { label: 'Resurrecting', data: growthRes, color: 'var(--chart-mint)' },
+                  { label: "New", data: growthNew, color: "var(--chart-blue)" },
+                  {
+                    label: "Returning",
+                    data: growthRet,
+                    color: "var(--green)",
+                  },
+                  {
+                    label: "Resurrecting",
+                    data: growthRes,
+                    color: "var(--chart-mint)",
+                  },
                 ]}
-                negSeries={{ label: 'Dormant', data: growthDorm, color: 'var(--chart-red)' }}
+                negSeries={{
+                  label: "Dormant",
+                  data: growthDorm,
+                  color: "var(--chart-red)",
+                }}
               />
               <div className="legend">
                 <span>
-                  <i style={{ background: 'var(--chart-blue)' }}></i> New
+                  <i style={{ background: "var(--chart-blue)" }}></i> New
                 </span>
                 <span>
-                  <i style={{ background: 'var(--green)' }}></i> Returning
+                  <i style={{ background: "var(--green)" }}></i> Returning
                 </span>
                 <span>
-                  <i style={{ background: 'var(--chart-mint)' }}></i> Resurrecting
+                  <i style={{ background: "var(--chart-mint)" }}></i>{" "}
+                  Resurrecting
                 </span>
                 <span>
-                  <i style={{ background: 'var(--chart-red)' }}></i> Dormant
+                  <i style={{ background: "var(--chart-red)" }}></i> Dormant
                 </span>
               </div>
             </>
@@ -349,7 +427,15 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               onRetry={() => refetchRetention()}
             />
           ) : isRetentionLoading ? (
-            <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
+            <div
+              style={{
+                height: "220px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--muted)",
+              }}
+            >
               Loading retention cohorts...
             </div>
           ) : (
@@ -373,7 +459,15 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               onRetry={() => refetchRoles()}
             />
           ) : isRolesLoading ? (
-            <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
+            <div
+              style={{
+                height: "160px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--muted)",
+              }}
+            >
               Loading role breakdown...
             </div>
           ) : rolesList.length === 0 ? (
@@ -381,12 +475,17 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           ) : (
             <div className="hbars">
               {rolesList.map((r, idx) => {
-                const sharePct = Math.round(r.active_share <= 1 ? r.active_share * 100 : r.active_share);
+                const sharePct = Math.round(
+                  r.active_share <= 1 ? r.active_share * 100 : r.active_share
+                );
                 const color = roleColors[idx % roleColors.length];
                 return (
                   <div className="role" key={idx}>
-                    <div className="rn" title={`${r.users || 0} users · ${r.events || 0} events`}>
-                      {r.role || 'Unspecified'}
+                    <div
+                      className="rn"
+                      title={`${r.users || 0} users · ${r.events || 0} events`}
+                    >
+                      {r.role || "Unspecified"}
                     </div>
                     <div className="rbar">
                       <i
@@ -418,15 +517,23 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               onRetry={() => refetchAdopt()}
             />
           ) : isAdoptLoading ? (
-            <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
+            <div
+              style={{
+                height: "100px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--muted)",
+              }}
+            >
               Loading dormant summary...
             </div>
           ) : (
             <div className="kv">
               <div>
                 <div className="k">Dormant residents</div>
-                <div className="v" style={{ fontSize: '22px' }}>
-                  {dormantCount != null ? dormantCount.toLocaleString() : '—'}
+                <div className="v" style={{ fontSize: "22px" }}>
+                  {dormantCount != null ? dormantCount.toLocaleString() : "—"}
                 </div>
                 <div className="u">{dormantBand}</div>
               </div>

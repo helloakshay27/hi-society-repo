@@ -3713,11 +3713,11 @@ function App() {
                         element={<PosthogRunwalCpDashboard />}
                       />
                       <Route
-                        path="/posthog-my-piramal-dashboard"
+                        path="/my-piramal-usage-dashboard"
                         element={<PosthogMyPiramalDashboard />}
                       />
                       <Route
-                        path="/posthog-godrej-dashboard"
+                        path="/godrej-usage-dashboard"
                         element={<PosthogGodrejDashboard />}
                       />
                       <Route
@@ -3725,11 +3725,11 @@ function App() {
                         element={<PosthogAccountingDashboard />}
                       />
                       <Route
-                        path="/posthog-kraheja-dashboard"
+                        path="/kraheja-usage-dashboard"
                         element={<PosthogKRahejaDashboard />}
                       />
                       <Route
-                        path="/posthog-lacircle-dashboard"
+                        path="/lacircle-usage-dashboard"
                         element={<PosthogLacircleDashboard />}
                       />
                       <Route
