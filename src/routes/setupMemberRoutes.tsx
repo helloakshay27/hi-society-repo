@@ -644,8 +644,8 @@ export const setupMemberRoutes = (
     />
 
     {/* Loyalty dashboard routes moved to standalone top-level routes in App.tsx (no sidebar/header) */}
-    {/* <Route path="/loyalty/dashboard" element={<LoyaltyDashboardNew />} /> */}
-    {/* <Route path="/loyalty/dashboard-new" element={<LoyaltyDashboard />} /> */}
+    {/* <Route path="/loyalty/home-dashboard" element={<LoyaltyDashboardNew />} /> */}
+    {/* <Route path="/loyalty/details-dashboard" element={<LoyaltyDashboard />} /> */}
     <Route path="/loyalty/rule-engine" element={<LoyaltyRuleEngine />} />
     <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
     <Route

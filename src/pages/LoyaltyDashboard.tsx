@@ -1313,7 +1313,7 @@ export function LoyaltyDashboard() {
         {/* ── LEFT GROUP ── */}
         <div className="flex items-center gap-3 min-w-0">
           <button
-            onClick={() => navigate('/loyalty/dashboard')}
+            onClick={() => navigate('/loyalty/home-dashboard')}
             title="Back to Loyalty home"
             className="flex items-center justify-center w-8 h-8 rounded-lg border border-[var(--loyalty-border)] text-[var(--loyalty-text)] bg-white cursor-pointer transition-colors hover:border-[var(--loyalty-accent)] shrink-0"
           >

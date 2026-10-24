@@ -38,13 +38,13 @@ export const LoyaltySidebar: React.FC = () => {
     //   id: "loyalty-dashboard",
     //   label: "Dashboard",
     //   icon: BarChart3,
-    //   path: "/loyalty/dashboard",
+    //   path: "/loyalty/home-dashboard",
     // },
     // {
     //   id: "loyalty-dashboard-new",
     //   label: "Dashboard New",
     //   icon: BarChart3,
-    //   path: "/loyalty/dashboard-new",
+    //   path: "/loyalty/details-dashboard",
     // },
     {
       id: "wallet-management",
