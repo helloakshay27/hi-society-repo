@@ -3770,11 +3770,11 @@ function App() {
                       />
                       {/* Standalone Loyalty Dashboards (No HiSociety header/sidebar) */}
                       <Route
-                        path="/loyalty/dashboard"
+                        path="/loyalty/home-dashboard"
                         element={<LoyaltyDashboardNew />}
                       />
                       <Route
-                        path="/loyalty/dashboard-new"
+                        path="/loyalty/details-dashboard"
                         element={<LoyaltyDashboard />}
                       />
                       <Route

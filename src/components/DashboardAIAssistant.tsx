@@ -305,7 +305,7 @@ export const DashboardAIAssistant: React.FC<DashboardAIAssistantProps> = ({ modu
             {!isOpen && (
                 <Button
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 bg-[#C72030] hover:bg-[#a81c29] z-50 group border-none"
+                    className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 !bg-black hover:!bg-black z-50 group border-none"
                     size="icon"
                 >
                     <Bot className="h-7 w-7 text-white group-hover:scale-110 transition-transform" />

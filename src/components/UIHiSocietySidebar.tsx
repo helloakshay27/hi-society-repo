@@ -399,13 +399,13 @@ export const UIHiSocietySidebar: React.FC = () => {
             //   id: "loyalty-dashboard",
             //   label: "Dashboard",
             //   icon: LayoutDashboard,
-            //   path: "/loyalty/dashboard",
+            //   path: "/loyalty/home-dashboard",
             // },
             // {
             //   id: "loyalty-dashboard-new",
             //   label: "Dashboard New",
             //   icon: LayoutDashboard,
-            //   path: "/loyalty/dashboard-new",
+            //   path: "/loyalty/details-dashboard",
             // },
             {
               id: "wallet-management",

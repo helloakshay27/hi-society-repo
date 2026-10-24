@@ -544,7 +544,7 @@ window.addEventListener('load',()=>{
       <div><div className="tb-name">Loyalty Rule Engine</div><div className="tb-sub">Lockated · GoPhygital.work</div></div>
     </div>
     <div className="tb-div"></div>
-    <a className="tb-home" onClick={(e) => { e.preventDefault(); navigate("/loyalty/dashboard"); }} href="#">
+    <a className="tb-home" onClick={(e) => { e.preventDefault(); navigate("/loyalty/home-dashboard"); }} href="#">
       <span style={{ fontSize: "10px" }}>←</span>
       <span className="tb-home-lbl">Home</span>
     </a>

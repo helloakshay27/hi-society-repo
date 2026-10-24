@@ -22,6 +22,7 @@ import {
   InputLabel,
   TextField,
   ListItemText,
+  Checkbox,
 } from "@mui/material";
 import {
   fieldStyles,
@@ -1555,14 +1556,11 @@ const ManageUsersPage = () => {
                     value={filters.status.map((s: any) => s.value)}
                     onChange={(e) => {
                       const values = e.target.value as string[];
-                      const options = [
-                        { label: "Approved", value: "1" },
-                        { label: "Rejected", value: "0" },
-                        { label: "Pending", value: "null" },
-                      ];
                       setFilters({
                         ...filters,
-                        status: options.filter((o) => values.includes(o.value)),
+                        status: STATUS_OPTIONS.filter((o) =>
+                          values.includes(o.value)
+                        ),
                       });
                     }}
                     displayEmpty
@@ -1571,18 +1569,27 @@ const ManageUsersPage = () => {
                     MenuProps={menuProps}
                     renderValue={(selected: string[]) =>
                       selected.length ? (
-                        selected.join(", ")
+                        STATUS_OPTIONS.filter((o) => selected.includes(o.value))
+                          .map((o) => o.label)
+                          .join(", ")
                       ) : (
                         <span className="text-gray-400">Select Status</span>
                       )
                     }
                   >
-                    {[
-                      { label: "Approved", value: "1" },
-                      { label: "Rejected", value: "0" },
-                      { label: "Pending", value: "null" },
-                    ].map((opt) => (
+                    {STATUS_OPTIONS.map((opt) => (
                       <MenuItem key={opt.value} value={opt.value}>
+                        <Checkbox
+                          size="small"
+                          checked={filters.status.some(
+                            (s: Option) => s.value === opt.value
+                          )}
+                          sx={{
+                            p: 0,
+                            mr: 1,
+                            "&.Mui-checked": { color: "#da7756" },
+                          }}
+                        />
                         <ListItemText primary={opt.label} />
                       </MenuItem>
                     ))}

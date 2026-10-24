@@ -12,7 +12,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { ArrowUp, Bot, Sparkles, X } from "lucide-react";
 import { API_CONFIG } from "@/config/apiConfig";
+import "@/styles/theme.css";
 import {
   DATE_PRESETS,
   DatePreset,
@@ -59,20 +61,20 @@ type Member = {
 type StuckOrder = { id: string | number; customer_name?: string; customer?: string; amount?: number | string; created_at?: string; status?: string };
 
 /* ── Palette ──────────────────────────────────────────────────────
-   terra:#DA7756 · bg:#F6F4EE · dark:#2C2C2C · sage:#798C5E
-   ok:#108C72 · warn:#EDC488 · err:#E7848E · border:#C4B89D · div:#E0D8CC */
+   Uses the shared --loyalty-* tokens from theme.css (.loyalty-dashboard-theme),
+   same as the Programme Detail page (/loyalty/details-dashboard). Chart series use a neutral grey ramp. */
 const FONT = { fontFamily: "'Poppins', sans-serif" };
-const STATUS_COLORS = ["#DA7756", "#108C72", "#EDC488", "#6B9BCC", "#E7848E", "#798C5E", "#2C2C2C"];
-const AV_COLORS = ["#DA7756", "#798C5E", "#108C72", "#6B9BCC", "#B8694A"];
+const STATUS_COLORS = ["#1a1a18", "#666666", "#999999", "#4d4d4d", "#b3b3b3", "#808080", "#cccccc"];
+const AV_COLORS = ["#1a1a18", "#4d4d4d", "#666666", "#808080", "#999999"];
 
 const tierColor = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes("diamond")) return "#6B9BCC";
-  if (n.includes("titanium")) return "#9BA8B5";
-  if (n.includes("gold")) return "#D9A441";
-  if (n.includes("silver")) return "#798C5E";
-  if (n.includes("bronze")) return "#B8694A";
-  return "#C4B89D";
+  if (n.includes("diamond")) return "#1a1a18";
+  if (n.includes("titanium")) return "#4d4d4d";
+  if (n.includes("gold")) return "#666666";
+  if (n.includes("silver")) return "#808080";
+  if (n.includes("bronze")) return "#999999";
+  return "#b3b3b3";
 };
 
 const initialsOf = (name: string) =>
@@ -80,40 +82,40 @@ const initialsOf = (name: string) =>
 
 /* ── Small building blocks ── */
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`rounded-[10px] border border-[#E0D8CC] bg-white p-3 ${className}`}>{children}</div>
+  <div className={`flex flex-col rounded-[10px] border border-[var(--loyalty-divider)] bg-white p-3 ${className}`}>{children}</div>
 );
 
 const CardHead = ({ title, info, sub, action }: { title: string; info: string; sub?: React.ReactNode; action?: React.ReactNode }) => (
   <div className="mb-2 flex items-start justify-between gap-2">
     <div className="min-w-0">
-      <div className="flex items-center gap-1 text-[11px] font-semibold text-[#2C2C2C]">
+      <div className="flex items-center gap-1 text-[11px] font-semibold text-[var(--loyalty-text)]">
         {title} <InfoIcon details={info} />
       </div>
-      {sub && <div className="mt-0.5 text-[9px] text-[#798C5E]">{sub}</div>}
+      {sub && <div className="mt-0.5 text-[9px] text-[var(--loyalty-subtle)]">{sub}</div>}
     </div>
     {action}
   </div>
 );
 
 const Empty = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex h-full min-h-[80px] items-center justify-center rounded-md bg-[#F6F4EE] px-3 py-4 text-center text-[11px] text-[#798C5E]">
+  <div className="flex min-h-[80px] flex-1 items-center justify-center rounded-md bg-[var(--loyalty-surface)] px-3 py-4 text-center text-[11px] text-[var(--loyalty-subtle)]">
     {children}
   </div>
 );
 
 const Dk = ({ val, lbl, color }: { val: React.ReactNode; lbl: string; color?: string }) => (
-  <div className="min-w-[72px] flex-1 rounded-lg bg-[#F6F4EE] p-2.5 text-center">
-    <div className="text-[18px] font-bold text-[#2C2C2C]" style={color ? { color } : undefined}>{val}</div>
-    <div className="mt-0.5 text-[9px] text-[#798C5E]">{lbl}</div>
+  <div className="min-w-[72px] flex-1 rounded-lg bg-[var(--loyalty-surface)] p-2.5 text-center">
+    <div className="text-[18px] font-bold text-[var(--loyalty-text)]" style={color ? { color } : undefined}>{val}</div>
+    <div className="mt-0.5 text-[9px] text-[var(--loyalty-subtle)]">{lbl}</div>
   </div>
 );
 
 const DSec = ({ children }: { children: React.ReactNode }) => (
-  <div className="mb-[5px] mt-3 text-[9px] font-bold uppercase tracking-[.07em] text-[#798C5E]">{children}</div>
+  <div className="mb-[5px] mt-3 text-[9px] font-bold uppercase tracking-[.07em] text-[var(--loyalty-subtle)]">{children}</div>
 );
 
 const DSl = ({ l, r }: { l: React.ReactNode; r: React.ReactNode }) => (
-  <div className="flex items-center justify-between gap-3 border-b border-[#E0D8CC] py-1.5 text-[11px] last:border-b-0">
+  <div className="flex items-center justify-between gap-3 border-b border-[var(--loyalty-divider)] py-1.5 text-[11px] last:border-b-0">
     <span>{l}</span>
     <span className="text-right font-semibold">{r}</span>
   </div>
@@ -122,7 +124,7 @@ const DSl = ({ l, r }: { l: React.ReactNode; r: React.ReactNode }) => (
 const ChartTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-md bg-[#2C2C2C] px-2.5 py-1.5 text-white shadow-md" style={FONT}>
+    <div className="rounded-md bg-[var(--loyalty-text)] px-2.5 py-1.5 text-white shadow-md" style={FONT}>
       <div className="text-[10px] font-semibold">{label}</div>
       <div className="text-[10px]">{fmtNum(payload[0].value)} orders</div>
     </div>
@@ -226,7 +228,7 @@ export const LoyaltyDashboardNew = () => {
 
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
-  }, [messages]);
+  }, [messages, aiOpen]);
 
   /* ── alerts derived from data ── */
   type Alert = { key: string; icon: string; title: string; sub: string; tone: "err" | "warn"; onClick: () => void };
@@ -275,8 +277,8 @@ export const LoyaltyDashboardNew = () => {
         <>
           <div className="mb-3 flex flex-wrap gap-2">
             <Dk val={fmtNum(home?.active_members)} lbl="Active" />
-            <Dk val={fmtNum(membersData?.new_members_this_month)} lbl="New (period)" color="#108C72" />
-            <Dk val={fmtNum(membersData?.lapsed_members)} lbl="Lapsed" color="#E7848E" />
+            <Dk val={fmtNum(membersData?.new_members_this_month)} lbl="New (period)" color="var(--loyalty-success)" />
+            <Dk val={fmtNum(membersData?.lapsed_members)} lbl="Lapsed" color="var(--loyalty-danger-text)" />
           </div>
           <DSec>By Tier</DSec>
           {tiers.length ? tiers.map((t) => <DSl key={t.id ?? t.name} l={t.name} r={`${fmtNum(t.member_count)} members`} />) : <Empty>No tiers configured.</Empty>}
@@ -287,8 +289,8 @@ export const LoyaltyDashboardNew = () => {
       body = (
         <>
           <div className="mb-3 flex flex-wrap gap-2">
-            <Dk val={fmtNum(home?.points_outstanding)} lbl="Outstanding" color="#B8694A" />
-            <Dk val={fmtNum(liveInStore)} lbl="Items live in store" color={liveInStore ? "#108C72" : "#E7848E"} />
+            <Dk val={fmtNum(home?.points_outstanding)} lbl="Outstanding" color="var(--loyalty-accent-hover)" />
+            <Dk val={fmtNum(liveInStore)} lbl="Items live in store" color={liveInStore ? "var(--loyalty-success)" : "var(--loyalty-danger-text)"} />
           </div>
           <DSec>Top Balances</DSec>
           {members.length ? members.slice(0, 8).map((m, i) => <DSl key={i} l={m.name} r={`${fmtNum(m.points_balance)} pts`} />) : <Empty>No member balances returned.</Empty>}
@@ -300,7 +302,7 @@ export const LoyaltyDashboardNew = () => {
         <>
           <div className="mb-3 flex flex-wrap gap-2">
             <Dk val={fmtNum(orders?.total_orders)} lbl="Total" />
-            <Dk val={fmtNum(orders?.stuck_orders)} lbl="Stuck" color="#E7848E" />
+            <Dk val={fmtNum(orders?.stuck_orders)} lbl="Stuck" color="var(--loyalty-danger-text)" />
             <Dk val={orders?.oldest_stuck_days != null ? fmtNum(orders.oldest_stuck_days) : "—"} lbl="Oldest stuck (days)" />
           </div>
           {key === "orders" && (
@@ -319,8 +321,8 @@ export const LoyaltyDashboardNew = () => {
       body = (
         <>
           <div className="mb-3 flex flex-wrap gap-2">
-            <Dk val={fmtNum(liveInStore)} lbl="Live in store" color={liveInStore ? "#108C72" : "#E7848E"} />
-            <Dk val={fmtNum(inAggregator)} lbl="In aggregator" color="#108C72" />
+            <Dk val={fmtNum(liveInStore)} lbl="Live in store" color={liveInStore ? "var(--loyalty-success)" : "var(--loyalty-danger-text)"} />
+            <Dk val={fmtNum(inAggregator)} lbl="In aggregator" color="var(--loyalty-success)" />
           </div>
           <DSec>Available by Category</DSec>
           {byCat.length ? byCat.map((c) => <DSl key={c.category} l={c.category} r={`${fmtNum(c.count)} items`} />) : <Empty>No category data.</Empty>}
@@ -412,41 +414,41 @@ export const LoyaltyDashboardNew = () => {
   const loadError = homeQuery.error || membersQuery.error || storeQuery.error || ordersQuery.error;
   const retryAll = () => [homeQuery, membersQuery, storeQuery, ordersQuery].forEach((q) => q.isError && q.refetch());
   const loading = homeQuery.isLoading;
-  const val = (v: React.ReactNode) => (loading ? <span className="inline-block h-[20px] w-14 animate-pulse rounded bg-[#F0D9B0]" /> : v);
+  const val = (v: React.ReactNode) => (loading ? <span className="inline-block h-[20px] w-14 animate-pulse rounded bg-[var(--loyalty-divider)]" /> : v);
 
   const kpis = [
-    { key: "members", label: "Active Members", info: "Members with an active loyalty account.", value: fmtNum(home?.active_members), sub: `${tiers.length} tiers configured`, color: "#2C2C2C" },
-    { key: "points", label: "Points Outstanding", info: "Points currently held by members and not yet redeemed.", value: fmtNum(home?.points_outstanding), sub: "Unredeemed member balances", color: "#B8694A" },
-    { key: "orders", label: "Total Orders", info: "All redemption orders placed through the store.", value: fmtNum(orders?.total_orders), sub: `${statusData.length} statuses`, color: "#2C2C2C" },
-    { key: "stuck", label: "Stuck Orders", info: "Orders that are paid but not yet fulfilled.", value: fmtNum(orders?.stuck_orders), sub: orders?.oldest_stuck_days != null ? `Oldest ${fmtNum(orders.oldest_stuck_days)} days` : "None waiting", color: orders?.stuck_orders ? "#E7848E" : "#108C72" },
+    { key: "members", label: "Active Members", info: "Members with an active loyalty account.", value: fmtNum(home?.active_members), sub: `${tiers.length} tiers configured`, color: "var(--loyalty-text)" },
+    { key: "points", label: "Points Outstanding", info: "Points currently held by members and not yet redeemed.", value: fmtNum(home?.points_outstanding), sub: "Unredeemed member balances", color: "var(--loyalty-accent-hover)" },
+    { key: "orders", label: "Total Orders", info: "All redemption orders placed through the store.", value: fmtNum(orders?.total_orders), sub: `${statusData.length} statuses`, color: "var(--loyalty-text)" },
+    { key: "stuck", label: "Stuck Orders", info: "Orders that are paid but not yet fulfilled.", value: fmtNum(orders?.stuck_orders), sub: orders?.oldest_stuck_days != null ? `Oldest ${fmtNum(orders.oldest_stuck_days)} days` : "None waiting", color: orders?.stuck_orders ? "var(--loyalty-danger-text)" : "var(--loyalty-success)" },
   ];
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#F6F4EE] text-[12px] text-[#2C2C2C]" style={FONT}>
+    <div className="loyalty-dashboard-theme min-h-screen overflow-x-hidden bg-[var(--loyalty-bg)] text-[12px] text-[var(--loyalty-text)]" style={FONT}>
       {/* ── TOPBAR ── */}
-      <div className="sticky top-0 z-[300] flex min-h-[50px] flex-wrap items-center justify-between gap-2 bg-[#2C2C2C] px-4 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:px-5">
+      <div className="sticky top-0 z-[300] flex min-h-[50px] flex-wrap items-center justify-between gap-2 border-b border-[var(--loyalty-border)] bg-white px-4 py-2 shadow-[0_1px_6px_rgba(var(--color-text-rgb),.08)] md:px-5">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md bg-[#DA7756]">
+          <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md bg-[var(--loyalty-accent)]">
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-white" strokeWidth="2.2">
               <path d="M12 2L3 7v10l9 5 9-5V7L12 2zm0 2.8L19.2 8.5v7L12 19.2 4.8 15.5v-7L12 4.8z" />
             </svg>
           </div>
-          <div className="text-[13px] font-bold text-white">Loyalty Dashboard</div>
+          <div className="text-[13px] font-bold text-[var(--loyalty-text)]">Loyalty Dashboard</div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* Date filter */}
           <div className="relative shrink-0" ref={filterWrapRef}>
             <button
-              className="flex items-center gap-[5px] rounded-full border border-white/[.15] bg-white/[.08] px-2.5 py-1 transition-all hover:bg-white/[.14]"
+              className="flex items-center gap-[5px] rounded-full border border-[var(--loyalty-border)] bg-white px-2.5 py-1 transition-all hover:border-[var(--loyalty-accent)]"
               style={FONT}
               onClick={() => { setDraftRange(customRange); setFilterOpen((o) => !o); }}
             >
               <span className="text-[11px]">📅</span>
-              <span className="text-[10px] font-semibold text-white/[.85]">{filterLabel}</span>
-              <span className="text-[8px] text-white/40">▾</span>
+              <span className="text-[10px] font-semibold text-[var(--loyalty-text)]">{filterLabel}</span>
+              <span className="text-[8px] text-[var(--loyalty-subtle)]">▾</span>
             </button>
             {filterOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-[400] w-[260px] rounded-[10px] border border-[#C4B89D] bg-white p-2.5 shadow-[0_6px_24px_rgba(44,44,44,0.16)]">
+              <div className="absolute right-0 top-[calc(100%+8px)] z-[400] w-[260px] rounded-[10px] border border-[var(--loyalty-border)] bg-white p-2.5 shadow-[0_6px_24px_rgba(var(--color-text-rgb),0.16)]">
                 <div className="mb-2 flex flex-wrap gap-1">
                   {DATE_PRESETS.filter((p) => p !== "Custom").map((p) => (
                     <button
@@ -455,26 +457,26 @@ export const LoyaltyDashboardNew = () => {
                       onClick={() => { setPreset(p); setFilterOpen(false); }}
                       className={`whitespace-nowrap rounded-full border px-[9px] py-[3px] text-[10px] transition-all ${
                         preset === p
-                          ? "border-[#DA7756] bg-[#FFF7EB] font-semibold text-[#DA7756]"
-                          : "border-[#C4B89D] font-medium text-[#798C5E] hover:border-[#DA7756] hover:text-[#DA7756]"
+                          ? "border-[var(--loyalty-accent)] bg-[var(--loyalty-surface)] font-semibold text-[var(--loyalty-accent)]"
+                          : "border-[var(--loyalty-border)] font-medium text-[var(--loyalty-subtle)] hover:border-[var(--loyalty-accent)] hover:text-[var(--loyalty-accent)]"
                       }`}
                     >
                       {p}
                     </button>
                   ))}
                 </div>
-                <div className="border-t border-[#E0D8CC] pt-2">
-                  <div className="mb-1.5 text-[9px] font-bold uppercase tracking-[.07em] text-[#798C5E]">Custom range</div>
+                <div className="border-t border-[var(--loyalty-divider)] pt-2">
+                  <div className="mb-1.5 text-[9px] font-bold uppercase tracking-[.07em] text-[var(--loyalty-subtle)]">Custom range</div>
                   <div className="flex items-center gap-1.5">
-                    <input type="date" value={draftRange.from} max={draftRange.to} onChange={(e) => setDraftRange((r) => ({ ...r, from: e.target.value }))} className="h-[26px] min-w-0 flex-1 rounded-full border border-[#C4B89D] px-2 text-[10px] outline-none focus:border-[#DA7756]" style={FONT} />
-                    <span className="text-[10px] text-[#798C5E]">→</span>
-                    <input type="date" value={draftRange.to} min={draftRange.from} onChange={(e) => setDraftRange((r) => ({ ...r, to: e.target.value }))} className="h-[26px] min-w-0 flex-1 rounded-full border border-[#C4B89D] px-2 text-[10px] outline-none focus:border-[#DA7756]" style={FONT} />
+                    <input type="date" value={draftRange.from} max={draftRange.to} onChange={(e) => setDraftRange((r) => ({ ...r, from: e.target.value }))} className="h-[26px] min-w-0 flex-1 rounded-full border border-[var(--loyalty-border)] px-2 text-[10px] outline-none focus:border-[var(--loyalty-accent)]" style={FONT} />
+                    <span className="text-[10px] text-[var(--loyalty-subtle)]">→</span>
+                    <input type="date" value={draftRange.to} min={draftRange.from} onChange={(e) => setDraftRange((r) => ({ ...r, to: e.target.value }))} className="h-[26px] min-w-0 flex-1 rounded-full border border-[var(--loyalty-border)] px-2 text-[10px] outline-none focus:border-[var(--loyalty-accent)]" style={FONT} />
                   </div>
                   <button
                     style={FONT}
                     disabled={!draftRange.from || !draftRange.to || draftRange.from > draftRange.to}
                     onClick={() => { setCustomRange(draftRange); setPreset("Custom"); setFilterOpen(false); }}
-                    className="mt-2 h-[26px] w-full rounded-full bg-[#DA7756] text-[10px] font-semibold text-white disabled:opacity-40"
+                    className="mt-2 h-[26px] w-full rounded-full bg-[var(--loyalty-accent)] text-[10px] font-semibold text-white disabled:opacity-40"
                   >
                     Apply
                   </button>
@@ -484,15 +486,15 @@ export const LoyaltyDashboardNew = () => {
           </div>
 
           <button
-            className="flex items-center gap-[5px] rounded-full bg-[#DA7756] px-2.5 py-1 transition-opacity hover:opacity-[.85]"
-            style={{ ...FONT, background: "#DA7756" }}
-            onClick={() => navigate("/loyalty/dashboard-new")}
+            className="flex items-center gap-[5px] rounded-full bg-[var(--loyalty-accent)] px-2.5 py-1 transition-opacity hover:opacity-[.85]"
+            style={FONT}
+            onClick={() => navigate("/loyalty/details-dashboard")}
           >
             <span className="whitespace-nowrap text-[10px] font-semibold text-white">Programme Detail →</span>
           </button>
-          <div className="hidden text-[10px] text-white/40 md:block">{liveDate}</div>
+          <div className="hidden text-[10px] text-[var(--loyalty-subtle)] md:block">{liveDate}</div>
           {getUserInitials() && (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#DA7756] text-[10px] font-bold text-white">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--loyalty-accent)] text-[10px] font-bold text-white">
               {getUserInitials()}
             </div>
           )}
@@ -502,9 +504,9 @@ export const LoyaltyDashboardNew = () => {
       {/* ── PAGE ── */}
       <div className="mx-auto max-w-[1400px] px-4 pb-24 pt-3 md:px-5">
         {loadError && (
-          <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#E7848E50] bg-[#FFF3F3] px-3 py-2 text-[11px]">
+          <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--loyalty-danger-border)] bg-[var(--loyalty-danger-bg)] px-3 py-2 text-[11px]">
             <span>⚠️ Some dashboard data couldn't be loaded. {getLoyaltyErrorMessage(loadError)}</span>
-            <button onClick={retryAll} className="rounded-full border border-[#DA7756] px-3 py-0.5 text-[10px] font-semibold text-[#DA7756] hover:bg-[#DA775610]" style={FONT}>
+            <button onClick={retryAll} className="rounded-full border border-[var(--loyalty-accent)] px-3 py-0.5 text-[10px] font-semibold text-[var(--loyalty-accent)] hover:bg-[var(--loyalty-accent-tint)]" style={FONT}>
               Retry
             </button>
           </div>
@@ -516,40 +518,40 @@ export const LoyaltyDashboardNew = () => {
             <button
               key={k.key}
               onClick={() => openDrill(k.key)}
-              className="rounded-[10px] border border-[#F0D9B0] bg-[#FFF7EB] px-3.5 py-[11px] text-left transition-shadow hover:shadow-[0_3px_10px_rgba(218,119,86,0.18)]"
+              className="rounded-[10px] border border-[var(--loyalty-divider)] bg-white px-3.5 py-[11px] text-left transition-all hover:border-[var(--loyalty-accent)] hover:shadow-[0_2px_8px_rgba(var(--loyalty-accent-rgb),.14)]"
               style={FONT}
             >
-              <div className="mb-[5px] flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[.06em] text-[#798C5E]">
+              <div className="mb-[5px] flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[.06em] text-[var(--loyalty-subtle)]">
                 {k.label} <InfoIcon details={k.info} />
               </div>
               <div className="text-[22px] font-bold leading-none" style={{ color: k.color }}>{val(k.value)}</div>
-              <div className="mt-[5px] text-[10px] text-[#798C5E]">{loading ? " " : k.sub}</div>
+              <div className="mt-[5px] text-[10px] text-[var(--loyalty-subtle)]">{loading ? " " : k.sub}</div>
             </button>
           ))}
         </div>
 
         {/* STORE PIPELINE */}
         <button
-          className="mb-2.5 flex w-full flex-wrap items-center gap-2.5 rounded-[10px] border border-[#E0D8CC] bg-white px-4 py-3 text-left transition-shadow hover:shadow-[0_2px_8px_rgba(44,44,44,0.07)]"
+          className="mb-2.5 flex w-full flex-wrap items-center gap-2.5 rounded-[10px] border border-[var(--loyalty-divider)] bg-white px-4 py-3 text-left transition-shadow hover:shadow-[0_2px_8px_rgba(var(--color-text-rgb),0.07)]"
           onClick={() => openDrill("store")}
           style={FONT}
         >
-          <div className="min-w-[110px] border-l-[3px] border-[#108C72] px-3.5 py-1 text-center">
-            <div className="text-[20px] font-bold leading-none text-[#2C2C2C]">{storeQuery.isLoading ? "…" : fmtNum(inAggregator)}</div>
-            <div className="mt-[3px] whitespace-nowrap text-[9px] text-[#798C5E]">Items in aggregator</div>
+          <div className="min-w-[110px] border-l-[3px] border-[var(--loyalty-success)] px-3.5 py-1 text-center">
+            <div className="text-[20px] font-bold leading-none text-[var(--loyalty-text)]">{storeQuery.isLoading ? "…" : fmtNum(inAggregator)}</div>
+            <div className="mt-[3px] whitespace-nowrap text-[9px] text-[var(--loyalty-subtle)]">Items in aggregator</div>
           </div>
-          <div className="shrink-0 text-base text-[#C4B89D]">→</div>
-          <div className={`min-w-[110px] border-l-[3px] px-3.5 py-1 text-center ${liveInStore ? "border-[#108C72]" : "border-[#E7848E]"}`}>
-            <div className="text-[20px] font-bold leading-none" style={{ color: liveInStore ? "#2C2C2C" : "#E7848E" }}>{storeQuery.isLoading ? "…" : fmtNum(liveInStore)}</div>
-            <div className="mt-[3px] whitespace-nowrap text-[9px] text-[#798C5E]">Items live in store</div>
+          <div className="shrink-0 text-base text-[var(--loyalty-border)]">→</div>
+          <div className={`min-w-[110px] border-l-[3px] px-3.5 py-1 text-center ${liveInStore ? "border-[var(--loyalty-success)]" : "border-[var(--loyalty-danger-text)]"}`}>
+            <div className="text-[20px] font-bold leading-none" style={{ color: liveInStore ? "var(--loyalty-text)" : "var(--loyalty-danger-text)" }}>{storeQuery.isLoading ? "…" : fmtNum(liveInStore)}</div>
+            <div className="mt-[3px] whitespace-nowrap text-[9px] text-[var(--loyalty-subtle)]">Items live in store</div>
           </div>
-          <div className="shrink-0 text-base text-[#C4B89D]">→</div>
-          <div className="min-w-[110px] border-l-[3px] border-[#EDC488] px-3.5 py-1 text-center">
-            <div className="text-[20px] font-bold leading-none text-[#B8694A]">{loading ? "…" : fmtNum(home?.points_outstanding)}</div>
-            <div className="mt-[3px] whitespace-nowrap text-[9px] text-[#798C5E]">Points waiting to be spent</div>
+          <div className="shrink-0 text-base text-[var(--loyalty-border)]">→</div>
+          <div className="min-w-[110px] border-l-[3px] border-[var(--loyalty-border)] px-3.5 py-1 text-center">
+            <div className="text-[20px] font-bold leading-none text-[var(--loyalty-accent-hover)]">{loading ? "…" : fmtNum(home?.points_outstanding)}</div>
+            <div className="mt-[3px] whitespace-nowrap text-[9px] text-[var(--loyalty-subtle)]">Points waiting to be spent</div>
           </div>
           {store && (
-            <div className={`ml-auto min-w-[180px] flex-1 text-right text-[10px] font-semibold ${liveInStore ? "text-[#108C72]" : "text-[#E7848E]"}`}>
+            <div className={`ml-auto min-w-[180px] flex-1 text-right text-[10px] font-semibold ${liveInStore ? "text-[var(--loyalty-success)]" : "text-[var(--loyalty-danger-text)]"}`}>
               {liveInStore
                 ? `${fmtNum(liveInStore)} items available for members to redeem`
                 : inAggregator
@@ -569,20 +571,20 @@ export const LoyaltyDashboardNew = () => {
                   onClick={a.onClick}
                   style={FONT}
                   className={`flex items-center gap-2 rounded-lg border border-l-[3px] px-2.5 py-[9px] text-left transition-opacity hover:opacity-[.88] ${
-                    a.tone === "err" ? "border-[#E7848E30] border-l-[#E7848E] bg-[#FFF3F3]" : "border-[#EDC48840] border-l-[#EDC488] bg-[#FFFAF0]"
+                    a.tone === "err" ? "border-[var(--loyalty-danger-border)] border-l-[var(--loyalty-danger-text)] bg-[var(--loyalty-danger-bg)]" : "border-[var(--loyalty-warning-border)] border-l-[var(--loyalty-subtle)] bg-[var(--loyalty-warning-bg)]"
                   }`}
                 >
                   <div className="shrink-0 text-[17px]">{a.icon}</div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[11px] font-semibold text-[#2C2C2C]">{a.title}</div>
-                    <div className="mt-px truncate text-[10px] text-[#798C5E]">{a.sub}</div>
+                    <div className="truncate text-[11px] font-semibold text-[var(--loyalty-text)]">{a.title}</div>
+                    <div className="mt-px truncate text-[10px] text-[var(--loyalty-subtle)]">{a.sub}</div>
                   </div>
-                  <div className="shrink-0 whitespace-nowrap text-[9px] font-bold text-[#DA7756]">View →</div>
+                  <div className="shrink-0 whitespace-nowrap text-[9px] font-bold text-[var(--loyalty-accent)]">View →</div>
                 </button>
               ))}
             </div>
           ) : !loadError && (
-            <div className="mb-2.5 rounded-lg border border-[#108C7230] bg-[#108C720D] px-3 py-2 text-[11px] font-medium text-[#108C72]">
+            <div className="mb-2.5 rounded-lg border border-[var(--loyalty-success-border)] bg-[var(--loyalty-success-bg)] px-3 py-2 text-[11px] font-medium text-[var(--loyalty-success)]">
               ✓ Nothing needs attention right now.
             </div>
           )
@@ -595,18 +597,18 @@ export const LoyaltyDashboardNew = () => {
               title="Orders by Status"
               info="Count of redemption orders in each fulfilment status."
               sub={orders ? `${fmtNum(orders.total_orders)} orders · ${fmtNum(orders.stuck_orders)} stuck` : undefined}
-              action={<button onClick={() => openDrill("orders")} className="text-[10px] text-[#DA7756]" style={FONT}>Details →</button>}
+              action={<button onClick={() => openDrill("orders")} className="text-[10px] text-[var(--loyalty-accent)]" style={FONT}>Details →</button>}
             />
-            <div className="h-[190px]">
+            <div className="flex h-[190px] flex-col">
               {loading ? (
-                <div className="h-full animate-pulse rounded-md bg-[#F6F4EE]" />
+                <div className="h-full animate-pulse rounded-md bg-[var(--loyalty-surface)]" />
               ) : statusData.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={statusData} barSize={28} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke="rgba(224,216,204,0.5)" />
-                    <XAxis dataKey="label" tickLine={false} axisLine={false} interval={0} tick={{ fontSize: 9, fontWeight: 600, fill: "#2C2C2C", ...FONT }} />
-                    <YAxis tickLine={false} axisLine={false} allowDecimals={false} tick={{ fontSize: 9, fill: "#798C5E", ...FONT }} />
-                    <Tooltip cursor={{ fill: "rgba(218,119,86,0.06)" }} content={<ChartTooltip />} />
+                    <CartesianGrid vertical={false} stroke="var(--loyalty-divider)" />
+                    <XAxis dataKey="label" tickLine={false} axisLine={false} interval={0} tick={{ fontSize: 9, fontWeight: 600, fill: "var(--loyalty-text)", ...FONT }} />
+                    <YAxis tickLine={false} axisLine={false} allowDecimals={false} tick={{ fontSize: 9, fill: "var(--loyalty-subtle)", ...FONT }} />
+                    <Tooltip cursor={{ fill: "rgba(var(--loyalty-accent-rgb),0.06)" }} content={<ChartTooltip />} />
                     <Bar dataKey="value" radius={[6, 6, 0, 0]} isAnimationActive={false}>
                       {statusData.map((_, i) => <Cell key={i} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />)}
                     </Bar>
@@ -625,23 +627,23 @@ export const LoyaltyDashboardNew = () => {
               sub={home ? `${fmtNum(home.active_members)} active members across ${tiers.length} tiers` : undefined}
             />
             {loading ? (
-              <div className="h-[150px] animate-pulse rounded-md bg-[#F6F4EE]" />
+              <div className="h-[150px] animate-pulse rounded-md bg-[var(--loyalty-surface)]" />
             ) : tiers.length ? (
               <div className="pt-1">
                 {tiers.map((t) => (
                   <button key={t.id ?? t.name} onClick={() => openDrill("tier", t)} className="group flex w-full items-center gap-2 py-1 text-left" style={FONT}>
-                    <div className="w-20 shrink-0 truncate text-[10px] font-medium text-[#798C5E] group-hover:text-[#DA7756]">{t.name}</div>
-                    <div className="relative h-[18px] flex-1 overflow-hidden rounded bg-[#F6F4EE]">
+                    <div className="w-20 shrink-0 truncate text-[10px] font-medium text-[var(--loyalty-subtle)] group-hover:text-[var(--loyalty-accent)]">{t.name}</div>
+                    <div className="relative h-[18px] flex-1 overflow-hidden rounded bg-[var(--loyalty-surface)]">
                       <div
                         className="h-[18px] rounded transition-[width] duration-[400ms]"
                         style={{ width: `${t.member_count ? Math.max(4, (t.member_count / maxTier) * 100) : 0}%`, background: tierColor(t.name) }}
                       />
                     </div>
-                    <div className="w-8 shrink-0 text-right text-[10px] font-bold text-[#2C2C2C]">{fmtNum(t.member_count)}</div>
+                    <div className="w-8 shrink-0 text-right text-[10px] font-bold text-[var(--loyalty-text)]">{fmtNum(t.member_count)}</div>
                   </button>
                 ))}
                 {tiers.some((t) => t.exit_points != null) && (
-                  <div className="mt-2.5 rounded-md bg-[#F6F4EE] p-2 text-[10px] leading-[1.6] text-[#798C5E]">
+                  <div className="mt-2.5 rounded-md bg-[var(--loyalty-surface)] p-2 text-[10px] leading-[1.6] text-[var(--loyalty-subtle)]">
                     Exit points: {tiers.filter((t) => t.exit_points != null).map((t) => `${t.name} ${fmtNum(t.exit_points)}`).join(" · ")}
                   </div>
                 )}
@@ -661,12 +663,12 @@ export const LoyaltyDashboardNew = () => {
               sub={membersData ? `${fmtNum(members.length)} members · sorted by balance` : undefined}
             />
             {membersQuery.isLoading ? (
-              <div className="h-[150px] animate-pulse rounded-md bg-[#F6F4EE]" />
+              <div className="h-[150px] animate-pulse rounded-md bg-[var(--loyalty-surface)]" />
             ) : members.length ? (
               members.slice(0, 6).map((m, i) => (
                 <button
                   key={`${m.name}-${i}`}
-                  className="group flex w-full items-center gap-2.5 border-b border-[#E0D8CC] py-[7px] text-left last:border-b-0"
+                  className="group flex w-full items-center gap-2.5 border-b border-[var(--loyalty-divider)] py-[7px] text-left last:border-b-0"
                   onClick={() => openDrill("member", m)}
                   style={FONT}
                 >
@@ -674,12 +676,12 @@ export const LoyaltyDashboardNew = () => {
                     {initialsOf(m.name)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[11px] font-semibold text-[#2C2C2C] group-hover:text-[#DA7756]">{m.name}</div>
-                    <div className="mt-px truncate text-[9px] text-[#798C5E]">{[m.tier, m.society].filter(Boolean).join(" · ") || "—"}</div>
+                    <div className="truncate text-[11px] font-semibold text-[var(--loyalty-text)] group-hover:text-[var(--loyalty-accent)]">{m.name}</div>
+                    <div className="mt-px truncate text-[9px] text-[var(--loyalty-subtle)]">{[m.tier, m.society].filter(Boolean).join(" · ") || "—"}</div>
                   </div>
                   <div>
-                    <div className="text-right text-[11px] font-bold text-[#2C2C2C]">{fmtNum(m.points_balance)}</div>
-                    <div className="text-right text-[8px] text-[#798C5E]">pts balance</div>
+                    <div className="text-right text-[11px] font-bold text-[var(--loyalty-text)]">{fmtNum(m.points_balance)}</div>
+                    <div className="text-right text-[8px] text-[var(--loyalty-subtle)]">pts balance</div>
                   </div>
                 </button>
               ))
@@ -693,16 +695,17 @@ export const LoyaltyDashboardNew = () => {
               title="Stuck Orders"
               info="Orders that are paid but not yet fulfilled, oldest first."
               sub={ordersData ? `${fmtNum(stuckList.length)} orders waiting for fulfilment` : undefined}
+              action={<button onClick={() => navigate("/loyalty/details-dashboard")} className="shrink-0 whitespace-nowrap text-[10px] text-[var(--loyalty-accent)]" style={FONT}>Open Programme Detail →</button>}
             />
             {ordersQuery.isLoading ? (
-              <div className="h-[150px] animate-pulse rounded-md bg-[#F6F4EE]" />
+              <div className="h-[150px] animate-pulse rounded-md bg-[var(--loyalty-surface)]" />
             ) : stuckList.length ? (
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-[10.5px]">
                   <thead>
                     <tr>
                       {["Order", "Customer", "Amount", "Created", "Status"].map((h) => (
-                        <th key={h} className="whitespace-nowrap border-b border-[#E0D8CC] bg-[#F6F4EE] px-2 py-[5px] text-left text-[9px] font-semibold uppercase tracking-[.05em] text-[#798C5E]">
+                        <th key={h} className="whitespace-nowrap border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-surface)] px-2 py-[5px] text-left text-[9px] font-semibold uppercase tracking-[.05em] text-[var(--loyalty-subtle)]">
                           {h}
                         </th>
                       ))}
@@ -710,15 +713,15 @@ export const LoyaltyDashboardNew = () => {
                   </thead>
                   <tbody>
                     {stuckList.slice(0, 6).map((o, i) => (
-                      <tr key={o.id ?? i} className="cursor-pointer transition-colors hover:bg-[#DA775608]" onClick={() => openDrill("order", o)}>
-                        <td className="border-b border-[#E0D8CC] px-2 py-1.5 font-semibold">{o.id}</td>
-                        <td className="border-b border-[#E0D8CC] px-2 py-1.5">{o.customer_name || o.customer || "N/A"}</td>
-                        <td className="border-b border-[#E0D8CC] px-2 py-1.5">₹{fmtNum(o.amount)}</td>
-                        <td className="whitespace-nowrap border-b border-[#E0D8CC] px-2 py-1.5 text-[#798C5E]">
+                      <tr key={o.id ?? i} className="cursor-pointer transition-colors hover:bg-[var(--loyalty-surface)]" onClick={() => openDrill("order", o)}>
+                        <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5 font-semibold">{o.id}</td>
+                        <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5">{o.customer_name || o.customer || "N/A"}</td>
+                        <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5">₹{fmtNum(o.amount)}</td>
+                        <td className="whitespace-nowrap border-b border-[var(--loyalty-divider)] px-2 py-1.5 text-[var(--loyalty-subtle)]">
                           {o.created_at ? new Date(o.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                         </td>
-                        <td className="border-b border-[#E0D8CC] px-2 py-1.5">
-                          <span className="inline-flex items-center rounded-[20px] bg-[#EDC48825] px-1.5 py-0.5 text-[9px] font-semibold text-[#8A5A00]">{o.status || "Pending"}</span>
+                        <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5">
+                          <span className="inline-flex items-center rounded-[20px] bg-[var(--loyalty-surface)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--loyalty-text)]">{o.status || "Pending"}</span>
                         </td>
                       </tr>
                     ))}
@@ -728,88 +731,106 @@ export const LoyaltyDashboardNew = () => {
             ) : (
               <Empty>{ordersQuery.isError ? "Order data unavailable." : "✓ No stuck orders."}</Empty>
             )}
-            <button className="mt-2 w-full text-right text-[10px] text-[#DA7756]" onClick={() => navigate("/loyalty/dashboard-new")} style={FONT}>
-              Open Programme Detail →
-            </button>
           </Card>
         </div>
       </div>
 
       {/* ── DRILL PANEL ── */}
-      {drill && <div className="fixed inset-0 z-[500] bg-[#2C2C2C4D] backdrop-blur-[2px]" onClick={() => setDrill(null)} />}
+      {drill && <div className="fixed inset-0 z-[500] bg-[rgba(var(--color-text-rgb),0.3)] backdrop-blur-[2px]" onClick={() => setDrill(null)} />}
       <div
-        className={`fixed top-0 z-[501] flex h-screen w-full max-w-[460px] flex-col border-l border-[#C4B89D] bg-white shadow-[-4px_0_20px_rgba(44,44,44,0.12)] transition-[right] duration-[250ms] ease-[cubic-bezier(.4,0,.2,1)] ${
+        className={`fixed top-0 z-[501] flex h-screen w-full max-w-[460px] flex-col border-l border-[var(--loyalty-border)] bg-white shadow-[-4px_0_20px_rgba(var(--color-text-rgb),0.12)] transition-[right] duration-[250ms] ease-[cubic-bezier(.4,0,.2,1)] ${
           drill ? "right-0" : "right-[-480px]"
         }`}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-[#E0D8CC] px-4 py-3.5">
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--loyalty-divider)] px-4 py-3.5">
           <div className="text-[13px] font-semibold">{drill?.title}</div>
-          <button className="px-1 text-[20px] leading-none text-[#798C5E] hover:text-[#DA7756]" onClick={() => setDrill(null)}>×</button>
+          <button className="px-1 text-[20px] leading-none text-[var(--loyalty-subtle)] hover:text-[var(--loyalty-accent)]" onClick={() => setDrill(null)}>×</button>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-3.5 [scrollbar-width:thin]">{drill?.body}</div>
       </div>
 
-      {/* ── AI CHAT ── */}
-      <div
-        className={`fixed bottom-[84px] right-4 z-[401] flex h-[min(500px,70vh)] w-[min(370px,calc(100vw-32px))] origin-bottom-right flex-col overflow-hidden rounded-[14px] border border-[#C4B89D] bg-white shadow-[0_8px_36px_rgba(44,44,44,0.18)] transition-all duration-200 ${
-          aiOpen ? "visible translate-y-0 scale-100 opacity-100" : "invisible translate-y-2.5 scale-95 opacity-0"
-        }`}
-      >
-        <div className="flex shrink-0 items-center gap-2.5 bg-gradient-to-br from-[#DA7756] to-[#B8694A] px-4 py-3">
-          <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/20 text-[14px] text-white">✦</div>
-          <div className="flex-1">
-            <div className="text-[12px] font-bold text-white">Loyalty Assistant</div>
-            <div className="text-[9px] text-white/70">Answers from the data on this page</div>
-          </div>
-          <button className="px-1 py-0.5 text-[18px] text-white/80" onClick={() => setAiOpen(false)}>×</button>
-        </div>
-        <div ref={msgsRef} className="flex flex-1 flex-col gap-2 overflow-y-auto bg-[#F6F4EE] p-3 [scrollbar-width:thin]">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`max-w-[88%] break-words rounded-[11px] px-[11px] py-2 text-[11px] leading-[1.6] ${
-                m.role === "user" ? "self-end rounded-br-[3px] bg-[#DA7756] text-white" : "self-start rounded-bl-[3px] border border-[#E0D8CC] bg-white text-[#2C2C2C]"
-              }`}
-            >
-              {m.text}
+      {/* ── AI CHAT ── (same look as the Programme Detail assistant) */}
+      {!aiOpen && (
+        <button
+          onClick={() => setAiOpen(true)}
+          title="Ask the assistant"
+          className="fixed bottom-5 right-5 z-[400] flex h-12 w-12 items-center justify-center rounded-full bg-[var(--loyalty-accent)] text-white shadow-[0_4px_12px_rgba(var(--loyalty-accent-rgb),.35)] transition-opacity hover:opacity-90"
+        >
+          <Sparkles className="h-5 w-5" />
+        </button>
+      )}
+
+      {aiOpen && (
+        <div className="fixed bottom-5 right-5 z-[401] flex h-[min(520px,calc(100vh-40px))] w-[min(360px,calc(100vw-40px))] flex-col overflow-hidden rounded-[12px] border border-[var(--loyalty-border)] bg-white shadow-[0_8px_32px_rgba(var(--color-text-rgb),.15)]" style={FONT}>
+          <div className="flex shrink-0 items-center justify-between bg-[var(--loyalty-text)] p-[14px] text-white">
+            <div className="flex min-w-0 items-center gap-2">
+              <Bot className="h-4 w-4 shrink-0" />
+              <div className="min-w-0">
+                <div className="text-[12px] font-bold leading-tight">Loyalty Assistant</div>
+                <div className="truncate text-[9px] text-white/60">Answers from the data on this page</div>
+              </div>
             </div>
-          ))}
-        </div>
-        {showSugs && (
-          <div className="flex shrink-0 flex-wrap gap-1 border-t border-[#E0D8CC] px-2.5 py-[7px]">
-            {AI_SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                className="whitespace-nowrap rounded-full border border-[#C4B89D] bg-[#F6F4EE] px-[9px] py-[3px] text-[10px] text-[#798C5E] transition-all hover:border-[#DA7756] hover:text-[#DA7756]"
-                style={FONT}
-                onClick={() => ask(s)}
+            <button className="rounded-full p-1 text-white/70 transition-colors hover:bg-white/10" onClick={() => setAiOpen(false)} title="Close">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div ref={msgsRef} className="flex flex-1 flex-col gap-3 overflow-y-auto bg-[var(--loyalty-bg)] p-[14px] [scrollbar-width:thin]">
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                className={`max-w-[85%] whitespace-pre-line break-words px-3 py-2.5 text-[11px] leading-relaxed ${
+                  m.role === "user"
+                    ? "self-end rounded-[12px_12px_0_12px] bg-[var(--loyalty-accent)] text-white"
+                    : "self-start rounded-[12px_12px_12px_0] border border-[var(--loyalty-divider)] bg-white text-[var(--loyalty-text)] shadow-sm"
+                }`}
               >
-                {s}
-              </button>
+                {m.text}
+              </div>
             ))}
           </div>
-        )}
-        <form
-          className="flex shrink-0 items-center gap-[7px] border-t border-[#E0D8CC] px-2.5 py-2"
-          onSubmit={(e) => { e.preventDefault(); ask(aiInput.trim()); setAiInput(""); }}
-        >
-          <input
-            className="flex-1 rounded-lg border border-[#C4B89D] bg-[#F6F4EE] px-2.5 py-[7px] text-[11px] text-[#2C2C2C] outline-none focus:border-[#DA7756]"
-            style={FONT}
-            placeholder="Ask about your loyalty programme…"
-            value={aiInput}
-            onChange={(e) => setAiInput(e.target.value)}
-          />
-          <button type="submit" className="flex h-8 w-8 items-center justify-center rounded-full bg-[#DA7756] text-[13px] text-white">→</button>
-        </form>
-      </div>
-      <button
-        className="fixed bottom-[22px] right-[22px] z-[400] flex h-[50px] w-[50px] items-center justify-center rounded-full bg-gradient-to-br from-[#DA7756] to-[#B8694A] text-[20px] text-white shadow-[0_4px_16px_rgba(218,119,86,0.45)] transition-transform hover:scale-[1.08]"
-        onClick={() => setAiOpen((o) => !o)}
-        title="Ask the assistant"
-      >
-        {aiOpen ? "×" : "✦"}
-      </button>
+
+          {showSugs && (
+            <div className="flex shrink-0 flex-wrap gap-1.5 border-t border-[var(--loyalty-divider)] bg-white px-3 py-2">
+              {AI_SUGGESTIONS.map((sug) => (
+                <button
+                  key={sug}
+                  className="whitespace-nowrap rounded-full border border-[var(--loyalty-border)] bg-[var(--loyalty-bg)] px-2.5 py-1 text-[10px] text-[var(--loyalty-subtle)] transition-colors hover:border-[var(--loyalty-accent)] hover:text-[var(--loyalty-accent)]"
+                  style={FONT}
+                  onClick={() => ask(sug)}
+                >
+                  {sug}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="shrink-0 border-t border-[var(--loyalty-divider)] bg-white p-3">
+            <form
+              className="relative"
+              onSubmit={(e) => { e.preventDefault(); ask(aiInput.trim()); setAiInput(""); }}
+            >
+              <input
+                type="text"
+                autoFocus
+                className="w-full rounded-full border border-[var(--loyalty-border)] bg-[var(--loyalty-bg)] py-2 pl-[14px] pr-10 text-[11px] text-[var(--loyalty-text)] outline-none transition-colors focus:border-[var(--loyalty-accent)] focus:bg-white"
+                style={FONT}
+                placeholder="Ask about members, points, orders…"
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+              />
+              <button
+                type="submit"
+                disabled={!aiInput.trim()}
+                className="absolute bottom-1 right-1 top-1 flex w-7 items-center justify-center rounded-full bg-[var(--loyalty-accent)] text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+                title="Send"
+              >
+                <ArrowUp className="h-3.5 w-3.5" />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

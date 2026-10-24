@@ -114,7 +114,7 @@ const Index = () => {
     const isWebSite = hostname.includes("web.lockated.com");
 
     if (isUIHiSocietySite) {
-      navigate("/loyalty/dashboard", { replace: true });
+      navigate("/loyalty/home-dashboard", { replace: true });
       return;
     }
 

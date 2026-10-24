@@ -1,64 +1,60 @@
 import axios from 'axios';
 
-/**
- * Dynamically resolves the PostHog Adoption Analytics API host.
- */
-export function getApiBaseUrl(): string {
-  return (
-    (import.meta.env.VITE_FM_ADOPTION_API_URL as string | undefined) ??
-    (import.meta.env.VITE_POSTHOG_API_URL as string | undefined) ??
-    localStorage.getItem('posthog_api_url') ??
-    'https://posthog-api.lockated.com'
-  );
-}
+/* ---------------------------------------------------------------------------
+ * Hi Society Adoption Analytics API client (ported from FM Matrix).
+ *
+ * Base URL : VITE_FM_ADOPTION_API_URL (default https://posthog-api.lockated.com)
+ * Scope    : Hi Society analytics are scoped by `project_code` only — no `url`
+ *            tenant and no `site_id` are sent (see commit 494a9e523).
+ * Auth     : a Bearer token is attached at request time only when present.
+ * ------------------------------------------------------------------------- */
 
-/**
- * Tenant URL to query PostHog analytics for.
- * Checks explicit tenant override, then org baseUrl, then hostname fallback.
- */
-export function getDynamicTenantUrl(): string {
-  // 1. Explicit override in localStorage
-  const explicit =
-    localStorage.getItem('posthog_tenant_url') ||
-    localStorage.getItem('tenant_url') ||
-    localStorage.getItem('hi_society_tenant_url');
-  if (explicit) {
-    return explicit.replace(/^https?:\/\//, '').replace(/\/+$/, '');
-  }
+export const ANALYTICS_BASE_URL =
+  (import.meta.env.VITE_FM_ADOPTION_API_URL as string | undefined) ??
+  (import.meta.env.VITE_POSTHOG_API_URL as string | undefined) ??
+  'https://posthog-api.lockated.com';
 
-  // 2. Base URL stored during login
-  const baseUrl = localStorage.getItem('baseUrl') || localStorage.getItem('base_url') || '';
-  if (baseUrl) {
-    let cleaned = baseUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
-    // If backend returns an api subdomain (e.g. hisociety-api.lockated.com), normalize to tenant web domain
-    if (cleaned.includes('-api.')) {
-      cleaned = cleaned.replace('-api.', '.');
-    }
-    if (cleaned && cleaned !== 'localhost' && cleaned !== '127.0.0.1') {
-      return cleaned;
-    }
-  }
+/** Hi Society project code sent as `project_code` on every request. */
+export const ANALYTICS_PROJECT_CODE =
+  (import.meta.env.VITE_HS_ADOPTION_PROJECT_CODE as string | undefined)?.trim() ||
+  'HS-01';
 
-  // 3. Current window hostname if on live domain
-  if (typeof window !== 'undefined' && window.location.hostname) {
-    const host = window.location.hostname;
-    if (host !== 'localhost' && host !== '127.0.0.1') {
-      return host;
-    }
-  }
+const analyticsClient = axios.create({
+  baseURL: ANALYTICS_BASE_URL,
+  timeout: 60000,
+  headers: { 'Content-Type': 'application/json' },
+});
 
-  // 4. Default Hi-Society tenant domain
-  return 'web.hisociety.lockated.com';
-}
-
-const client = axios.create({ timeout: 60_000 });
-
-client.interceptors.request.use((config) => {
-  if (!config.baseURL) {
-    config.baseURL = getApiBaseUrl();
+/* Bearer token attached at REQUEST time, only when present. The read prefers
+   the same keys the app's other clients use (see src/utils/auth.ts and the
+   sign-in flow). */
+analyticsClient.interceptors.request.use((config) => {
+  const token =
+    localStorage.getItem('access_token') ||
+    sessionStorage.getItem('access_token') ||
+    '';
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+/* Response interceptor: when a backend endpoint returns 404 (or any non-JSON
+   like a Rails HTML error page), silently return null instead of throwing so
+   React Query treats it as "no data" and the UI falls back to sample/empty
+   state — exactly the same graceful degradation pattern the other layers
+   (traffic, adoption, workflow) use. */
+analyticsClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const contentType = error.response?.headers?.['content-type'] || '';
+    if (status === 404 || (status >= 400 && !contentType.includes('application/json'))) {
+      return Promise.resolve({ data: null });
+    }
+    return Promise.reject(error);
+  },
+);
 
 /** `device_type` is case-sensitive server-side (`Desktop` / `Mobile`). */
 export type DeviceType = 'Desktop' | 'Mobile';
@@ -67,53 +63,131 @@ export type DeviceType = 'Desktop' | 'Mobile';
 export interface RangeFilters {
   from: string; // YYYY-MM-DD
   to: string; // YYYY-MM-DD
+  /** Optional product scoping for dashboards that share these endpoints. */
+  projectCode?: string;
+  /** Optional analytics tenant override; the tenant is independent of projectCode. */
+  tenantUrl?: string;
+  signal?: AbortSignal;
   siteIds?: string[];
   devices?: DeviceType[];
-  url?: string;
-  projectCode?: string;
+  /** Raw platform/device selection ("all" | "ios" | "android"). */
+  dev?: string;
+  /** Optional app/platform scope used by the recent active users endpoint. */
+  appId?: number | string;
+  recentDeviceType?: string;
+}
+
+export interface RecentActiveUser {
+  user_id: string;
+  display_name: string;
+  path: string | null;
+  last_event: string | null;
+  minutes_ago: number | null;
+  site_name: string | null;
+}
+
+export interface RecentActiveUsersResponse {
+  users: RecentActiveUser[];
 }
 
 /** Filters for the three look-back endpoints (adoption_trend / growth / retention). */
 export interface WeeklyFilters {
   to: string; // YYYY-MM-DD
   weeks: number;
+  /** Optional product scoping for dashboards that share these endpoints. */
+  projectCode?: string;
+  /** Optional analytics tenant override; the tenant is independent of projectCode. */
+  tenantUrl?: string;
+  signal?: AbortSignal;
   siteIds?: string[];
   devices?: DeviceType[];
-  url?: string;
-  projectCode?: string;
+  dev?: string;
 }
 
-function baseParams(siteIds?: string[], devices?: DeviceType[], customUrl?: string, projectCode?: string) {
-  const p: Record<string, string> = {};
-  if (devices?.length) p.device_type = devices.join(',');
-  if (projectCode) p.project_code = projectCode;
-  return p;
-}
+/* ---------------------------------------------------------------------------
+ * Query-string builder.
+ *
+ * `site_id` must be joined with RAW commas in the query string — never
+ * percent-encoded to %2C. Axios would encode array values, so we build the
+ * query string manually from an ordered list of [key, value] pairs and append
+ * it directly to the URL. Non-array string values are kept as-is.
+ * ------------------------------------------------------------------------- */
 
-function rangeParams(f: RangeFilters) {
-  return { ...baseParams(f.siteIds, f.devices, f.url, f.projectCode), from: f.from, to: f.to };
-}
-
-function weeklyParams(f: WeeklyFilters) {
-  return { ...baseParams(f.siteIds, f.devices, f.url, f.projectCode), to: f.to, weeks: String(f.weeks) };
-}
-
-async function get<T>(path: string, params: Record<string, string>): Promise<T> {
-  // Build query string manually so site_id commas are NOT percent-encoded (%2C),
-  // matching the format the server expects: site_id=2189,2190,2191,...
-  const base = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    if (k === 'site_id') continue; // handle below
-    base.append(k, v);
+/**
+ * @param {Array<[string, string | string[] | number | undefined | null]>} pairs
+ */
+const buildQuery = (pairs: Array<[string, string | string[] | number | undefined | null]>) => {
+  const parts: string[] = [];
+  for (const [key, value] of pairs) {
+    if (value === undefined || value === null || value === '') continue;
+    if (Array.isArray(value)) {
+      if (value.length === 0) continue;
+      // join with raw commas, e.g. site_id=2189,2190
+      parts.push(`${key}=${value.join(',')}`);
+    } else {
+      parts.push(`${key}=${encodeURIComponent(String(value))}`);
+    }
   }
-  let qs = base.toString();
-  if (params.site_id) {
-    // Append site_id with literal commas, not encoded
-    qs += (qs ? '&' : '') + 'site_id=' + params.site_id;
-  }
-  const res = await client.get<T>(`/fm/adoption/${path}?${qs}`);
-  return res.data;
+  return parts.join('&');
+};
+
+/**
+ * GET helper: appends a manually built query string (raw commas preserved for
+ * site_id) to the endpoint and returns the parsed response.
+ */
+const get = async <T>(endpoint: string, pairs: Array<[string, string | string[] | number | undefined | null]>, signal?: AbortSignal): Promise<T> => {
+  const qs = buildQuery(pairs);
+  const url = `/fm/adoption/${endpoint}${qs ? `?${qs}` : ''}`;
+  const { data } = await analyticsClient.get<T>(url, { signal });
+  return data;
+};
+
+export const RECENT_ACTIVE_USERS_EXPORT_ENDPOINT = '/fm/adoption/active_users_export.json';
+
+export const fetchRecentActiveUsers = (f: RangeFilters) =>
+  get<RecentActiveUsersResponse>('recent_active_users', [
+    ...(f.appId != null
+      ? ([
+          ['app_id', f.appId],
+          ['device_type', f.recentDeviceType],
+          ['from', f.from],
+          ['to', f.to],
+        ] as QueryPairs)
+      : rangeParams(f)),
+    ['limit', 10],
+  ], f.signal);
+
+export async function downloadRecentActiveUsers(f: RangeFilters): Promise<Blob> {
+  const qs = buildQuery([...rangeParams(f), ['limit', 10]]);
+  const response = await analyticsClient.get<Blob>(
+    `${RECENT_ACTIVE_USERS_EXPORT_ENDPOINT}${qs ? `?${qs}` : ''}`,
+    { responseType: 'blob' },
+  );
+  return response.data;
 }
+
+/* Shared param slices ---------------------------------------------------- */
+
+type QueryPairs = Array<[string, string | string[] | number | undefined | null]>;
+
+const scopeParams = (projectCode?: string, tenantUrl?: string): QueryPairs => [
+  ['url', tenantUrl],
+  ['project_code', projectCode || ANALYTICS_PROJECT_CODE],
+];
+
+const rangeParams = ({ from, to, devices, projectCode, tenantUrl }: RangeFilters): QueryPairs => [
+  ...scopeParams(projectCode, tenantUrl),
+  ['from', from],
+  ['to', to],
+  ['device_type', devices],
+];
+
+const weeklyParams = ({ to, weeks, devices, projectCode, tenantUrl }: WeeklyFilters): QueryPairs => [
+  ...scopeParams(projectCode, tenantUrl),
+  ['to', to],
+  ['weeks', weeks],
+  ['device_type', devices],
+];
 
 /* ------------------------------------------------------------------ shared */
 
@@ -173,7 +247,7 @@ export interface TrafficSessionResponse {
 }
 
 export const fetchTrafficSession = (f: RangeFilters) =>
-  get<TrafficSessionResponse>('traffic_session', rangeParams(f));
+  get<TrafficSessionResponse>('traffic_session', rangeParams(f), f.signal);
 
 /* ------------------------------------------ Layer 1 · usage_and_distribution */
 
@@ -201,7 +275,7 @@ export interface UsageDistributionResponse {
 }
 
 export const fetchUsageAndDistribution = (f: RangeFilters) =>
-  get<UsageDistributionResponse>('usage_and_distribution', rangeParams(f));
+  get<UsageDistributionResponse>('usage_and_distribution', rangeParams(f), f.signal);
 
 /* ---------------------------------------- Layer 2 · adoption_engagement (A*) */
 
@@ -222,13 +296,14 @@ export interface AdoptionEngagementResponse {
 }
 
 /** `licensedSeats` is billing data (not in events) — omit it and A1's % comes back null. */
-export const fetchAdoptionEngagement = (f: RangeFilters & { licensedSeats?: number | null }) =>
-  get<AdoptionEngagementResponse>('adoption_engagement', {
-    ...rangeParams(f),
-    ...(f.licensedSeats != null && f.licensedSeats > 0
-      ? { licensed_seats: String(f.licensedSeats) }
-      : {}),
-  });
+export const fetchAdoptionEngagement = (f: RangeFilters & { licensedSeats?: number | null }) => {
+  const { licensedSeats, ...rest } = f;
+  const pairs = rangeParams(rest);
+  if (licensedSeats != null && licensedSeats > 0) {
+    pairs.push(['licensed_seats', Number(licensedSeats)]);
+  }
+  return get<AdoptionEngagementResponse>('adoption_engagement', pairs, f.signal);
+};
 
 /* -------------------------------------------- Layer 2 · adoption_trend (A3) */
 
@@ -247,7 +322,7 @@ export interface AdoptionTrendResponse {
 }
 
 export const fetchAdoptionTrend = (f: WeeklyFilters) =>
-  get<AdoptionTrendResponse>('adoption_trend', weeklyParams(f));
+  get<AdoptionTrendResponse>('adoption_trend', weeklyParams(f), f.signal);
 
 /* ------------------------------------------------------- Layer 2 · growth */
 
@@ -265,7 +340,7 @@ export interface GrowthResponse {
   info?: AdoptionInfo;
 }
 
-export const fetchGrowth = (f: WeeklyFilters) => get<GrowthResponse>('growth', weeklyParams(f));
+export const fetchGrowth = (f: WeeklyFilters) => get<GrowthResponse>('growth', weeklyParams(f), f.signal);
 
 /* ---------------------------------------------------- Layer 2 · retention */
 
@@ -283,7 +358,7 @@ export interface RetentionResponse {
 }
 
 export const fetchRetention = (f: WeeklyFilters) =>
-  get<RetentionResponse>('retention', weeklyParams(f));
+  get<RetentionResponse>('retention', weeklyParams(f), f.signal);
 
 /* ------------------------------------------------------ Layer 2 · roles (A8) */
 
@@ -294,7 +369,7 @@ export interface RolesResponse {
   info?: AdoptionInfo;
 }
 
-export const fetchRoles = (f: RangeFilters) => get<RolesResponse>('roles', rangeParams(f));
+export const fetchRoles = (f: RangeFilters) => get<RolesResponse>('roles', rangeParams(f), f.signal);
 
 /* ----------------------------------------------------- Layer 3 · modules */
 
@@ -312,11 +387,11 @@ export interface ModulesResponse {
 }
 
 /** Omit `module` for the top-level tree (path segment 1); pass it for sub-modules (segment 2). */
-export const fetchModules = (f: RangeFilters & { module?: string }) =>
-  get<ModulesResponse>('modules', {
-    ...rangeParams(f),
-    ...(f.module ? { module: f.module } : {}),
-  });
+export const fetchModules = (f: RangeFilters & { module?: string }) => {
+  const pairs = rangeParams(f);
+  if (f.module) pairs.push(['module', f.module]);
+  return get<ModulesResponse>('modules', pairs, f.signal);
+};
 
 /* ---------------------------------------------- Layer 3 · workflow_usage */
 
@@ -367,9 +442,9 @@ export interface WorkflowUsageResponse {
 /** Defaults server-side to maintenance / ticket (helpdesk) when module/sub_module are omitted. */
 export const fetchWorkflowUsage = (
   f: RangeFilters & { module?: string; subModule?: string }
-) =>
-  get<WorkflowUsageResponse>('workflow_usage', {
-    ...rangeParams(f),
-    ...(f.module ? { module: f.module } : {}),
-    ...(f.subModule ? { sub_module: f.subModule } : {}),
-  });
+) => {
+  const pairs = rangeParams(f);
+  if (f.module) pairs.push(['module', f.module]);
+  if (f.subModule) pairs.push(['sub_module', f.subModule]);
+  return get<WorkflowUsageResponse>('workflow_usage', pairs, f.signal);
+};
