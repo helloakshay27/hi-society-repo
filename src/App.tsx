@@ -3256,6 +3256,8 @@ const SuncityDashboardPage = lazy(
 const LockatedDashboardPage = lazy(
   () => import("./features/lockated-dashboard/LockatedDashboardPage")
 );
+const LoyaltyDashboard = lazy(() => import("./pages/LoyaltyDashboard"));
+const LoyaltyDashboardNew = lazy(() => import("./pages/LoyaltyDashboardNew"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
