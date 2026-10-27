@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import axios from "axios";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
@@ -48,6 +50,9 @@ export const MemberFilterPanel = ({
   const [towers, setTowers]       = useState<Tower[]>([]);
   const [towerSearch, setTowerSearch] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<CSSProperties>({});
 
   // ── fetch towers ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -71,12 +76,52 @@ export const MemberFilterPanel = ({
   // ── close on outside click ────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(target) &&
+        !dropdownRef.current?.contains(target)
+      ) {
         setOpen(false);
       }
     };
     if (open) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  // Render the dropdown above page overflow containers and keep it in view.
+  useEffect(() => {
+    if (!open || !triggerRef.current) return;
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current?.getBoundingClientRect();
+      if (!trigger) return;
+
+      const panelHeight = Math.min(560, window.innerHeight - 32);
+      const spaceBelow = window.innerHeight - trigger.bottom - 8;
+      const placeAbove = spaceBelow < Math.min(panelHeight, 360) && trigger.top > spaceBelow;
+      const top = placeAbove
+        ? Math.max(16, trigger.top - Math.min(panelHeight, trigger.top - 16) - 8)
+        : trigger.bottom + 8;
+      const width = 288;
+      const left = Math.max(16, Math.min(trigger.right - width, window.innerWidth - width - 16));
+
+      setDropdownPosition({
+        position: "fixed",
+        top,
+        left,
+        width,
+        maxHeight: `min(560px, calc(100vh - ${top + 16}px))`,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
   }, [open]);
 
   // ── draft (applied on "Apply") ───────────────────────────────────────────
@@ -140,6 +185,7 @@ export const MemberFilterPanel = ({
     <div className={`relative inline-block ${className}`} ref={panelRef}>
       {/* ── Trigger button ── */}
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((p) => !p)}
         className={`flex items-center gap-1.5 h-10 px-3 rounded-md border text-sm font-medium transition-colors
@@ -201,8 +247,12 @@ export const MemberFilterPanel = ({
       )}
 
       {/* ── Dropdown panel ── */}
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 p-5">
+      {open && createPortal(
+        <div
+          ref={dropdownRef}
+          style={dropdownPosition}
+          className="z-[1100] overflow-y-auto overscroll-contain bg-white rounded-2xl shadow-xl border border-gray-200 p-5"
+        >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <span className="text-base font-semibold text-gray-900 uppercase tracking-wide">
@@ -317,7 +367,8 @@ export const MemberFilterPanel = ({
               Apply
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

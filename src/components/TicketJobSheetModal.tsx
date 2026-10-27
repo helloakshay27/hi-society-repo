@@ -477,8 +477,9 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
               .text-xs { font-size: 12px; }
 
               /* Job Card header center alignment for PDF */
-              .bg-\\[\\#C4B89D\\] { 
-                background-color: #C4B89D !important; 
+              .bg-\\[\\#C72030\\] {
+                background-color: #C72030 !important;
+                color: #ffffff !important;
                 text-align: center !important; 
                 padding: 6px 8px 6px 8px !important; 
                 font-weight: bold !important; 
@@ -488,7 +489,7 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
 
               /* Header cells styling */
               .header-cell {
-                background-color: #C4B89D59 !important;
+                background-color: #F6F4EE !important;
                 font-weight: bold !important;
                 border: 1px solid #000 !important;
                 padding: 8px !important;
@@ -598,20 +599,23 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-7xl max-h-[95vh] overflow-y-auto"
+        className="max-w-7xl max-h-[95vh] overflow-hidden p-0 flex flex-col"
         aria-describedby="ticket-job-sheet-dialog-description"
       >
         <span id="ticket-job-sheet-dialog-description" className="sr-only">
           View and manage job sheet details for the ticket with PDF download functionality.
         </span>
-        <DialogHeader className="flex flex-row items-center justify-between">
+        <DialogHeader className="sticky top-0 z-20 flex shrink-0 flex-row items-center justify-between gap-4 border-b border-gray-200 bg-white px-6 py-4">
           <DialogTitle className="text-xl font-semibold text-[#C72030]">
-            {/* Job Sheet - Ticket #{ticketData?.ticket_number || ticketData?.ticket_id || ticketData?.id} */}
+            Job Sheet
+            {ticketData?.ticket_number || ticketData?.ticket_id || ticketData?.id
+              ? ` · #${ticketData.ticket_number || ticketData.ticket_id || ticketData.id}`
+              : ''}
           </DialogTitle>
           <div className="flex items-center gap-3">
             <Button
               onClick={handleDownloadPDF}
-              className="bg-[#1e40af] hover:bg-[#1e40af]/90 text-white px-4 py-2"
+              className="!inline-flex !h-11 !min-w-[160px] !items-center !justify-center !border-0 !bg-[#C72030] !px-5 !py-2.5 !font-semibold !text-white shadow-sm hover:!bg-[#a91b28] focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-[#C72030]"
               disabled={isDownloading}
             >
               {isDownloading ? (
@@ -628,7 +632,8 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
             </Button>
             <button
               onClick={onClose}
-              className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+              aria-label="Close job sheet"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 opacity-100 transition-colors hover:bg-gray-100"
             >
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
@@ -636,7 +641,7 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
           </div>
         </DialogHeader>
 
-        <div className="p-6 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
           {jobSheetLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030]"></div>
@@ -645,7 +650,15 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
           ) : (
             <div ref={contentRef} className="">
               {/* Job Card Header */}
-              <div className="bg-[#C4B89D] text-center py-3 font-bold text-lg border border-gray-400">
+              <div
+                className="text-center py-3 font-bold text-lg border"
+                style={{
+                  backgroundColor: "#C72030",
+                  color: "#FFFFFF",
+                  WebkitTextFillColor: "#FFFFFF",
+                  borderColor: "#C72030",
+                }}
+              >
                 Job Card
               </div>
 
