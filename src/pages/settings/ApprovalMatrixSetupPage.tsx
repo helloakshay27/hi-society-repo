@@ -20,7 +20,6 @@ const ApprovalMatrixSetupPage = () => {
   const navigate = useNavigate();
   const [approvalData, setApprovalData] = useState<ApprovalData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchApprovalData = async () => {
@@ -37,7 +36,13 @@ const ApprovalMatrixSetupPage = () => {
         }
 
         const response = await apiClient.get(`/pms/admin/invoice_approvals.json?society_id=${societyId}`);
-        setApprovalData(response.data);
+        const payload = response.data;
+        const approvals = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.invoice_approvals)
+            ? payload.invoice_approvals
+            : [];
+        setApprovalData(approvals);
       } catch (error) {
         console.error('Error fetching approval data:', error);
       } finally {
@@ -46,7 +51,7 @@ const ApprovalMatrixSetupPage = () => {
     };
 
     fetchApprovalData();
-  }, [searchQuery]);
+  }, []);
 
   const formatDate = (dateString: string) => {
     try {
@@ -123,23 +128,23 @@ variant="ghost"
         { key: 'created_at', label: 'Created On' },
         { key: 'created_by', label: 'Created by' },
       ]}
-      renderCell={(item, column) => {
-        if (column.key === 'edit') {
+      renderCell={(item, columnKey) => {
+        if (columnKey === 'edit') {
           return shouldShow("ApprovalMatrix", "update") ? (
             <Button
               variant="ghost"
               size="sm"
-              className="p-1 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              className="p-1 text-white"
               onClick={() => navigate(`/settings/approval-matrix/setup/edit/${item.id}`)}
             >
               <Edit className="w-4 h-4 text-[#1a1a1a]" />
             </Button>
           ) : null;
         }
-        if (column.key === 'created_at') {
+        if (columnKey === 'created_at') {
           return formatDate(item.created_at);
         }
-        return item[column.key];
+        return item[columnKey];
       }}
       loading={loading}
       pagination={false}
