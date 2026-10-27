@@ -871,6 +871,7 @@ const BookingListDashboard = () => {
         />
       )}
 
+      <div className="[&>div>div:first-child]:mb-2">
       <EnhancedTable
         data={bookingData}
         columns={enhancedTableColumns}
@@ -905,6 +906,7 @@ const BookingListDashboard = () => {
           </div>
         }
       />
+      </div>
 
       <div className="flex justify-center mt-6">
         <Pagination>

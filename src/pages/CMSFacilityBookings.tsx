@@ -41,11 +41,11 @@ const CMSFacilityBookings = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="calender">
+        <TabsContent value="calender" className="mt-4">
           <BookingCalenderView />
         </TabsContent>
 
-        <TabsContent value="list">
+        <TabsContent value="list" className="mt-4">
           <BookingListDashboard />
         </TabsContent>
       </Tabs>
