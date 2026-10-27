@@ -6515,3 +6515,28 @@ html body [role="dialog"] button.survey-apply-btn {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
 }
+
+/* Keep checkbox hover states from inheriting dark button/theme fills globally. */
+html body #root input[type="checkbox"],
+html body #root input[type="checkbox"]:hover {
+  accent-color: #1a1a18 !important;
+}
+html body #root button[role="checkbox"][data-state="unchecked"]:hover,
+html body #root [role="checkbox"][data-state="unchecked"]:hover {
+  background-color: #F6F4EE !important;
+  border-color: #1a1a18 !important;
+}
+html body #root button[role="checkbox"][data-state="checked"],
+html body #root button[role="checkbox"][data-state="checked"]:hover,
+html body #root button[role="checkbox"][data-state="indeterminate"],
+html body #root button[role="checkbox"][data-state="indeterminate"]:hover {
+  background-color: #1a1a18 !important;
+  border-color: #1a1a18 !important;
+}
+html body #root .MuiCheckbox-root:hover {
+  background-color: rgba(199, 32, 48, 0.08) !important;
+}
+html body #root .MuiCheckbox-root.Mui-checked,
+html body #root .MuiCheckbox-root.Mui-checked:hover {
+  color: #1a1a18 !important;
+}

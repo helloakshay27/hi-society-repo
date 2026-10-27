@@ -29,7 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchWithSuggestions } from "./SearchWithSuggestions";
-import { getUser, clearAuth } from "@/utils/auth";
+import { getUser, clearAuth, saveBaseUrl } from "@/utils/auth";
 import { permissionService } from "@/services/permissionService";
 import { is } from "date-fns/locale";
 import { Dashboard } from "@mui/icons-material";
@@ -39,6 +39,7 @@ import { useLayout } from "@/contexts/LayoutContext";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { UIHiSocietyNavigation } from "@asset";
 import RunwalLogo from "@/assets/Runwal Logo - A Subodh Runwal Group-01 1.png";
+import { useFmProductForSelectedOrganization } from "@/hooks/useFmProductForSelectedOrganization";
 
 export interface HiSocietySociety {
   id: number;
@@ -93,6 +94,7 @@ export const HiSocietyHeader = () => {
   const isCSUser = accountUserType === "cs_user";
   // Layout mode
   const { layoutMode, toggleLayoutMode, isMobileSidebarOpen, setIsMobileSidebarOpen } = useLayout();
+  const fmProduct = useFmProductForSelectedOrganization();
 
   const currentPath = window.location.pathname;
 
@@ -612,33 +614,24 @@ export const HiSocietyHeader = () => {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-3">
-          {/* Layout Mode Toggle Button */}
-          {!isUIHiSocietySite && (
+          {/* Show FM only when the selected organization includes an FM product */}
+          {fmProduct && (
             <Button
               onClick={() => {
-                if (layoutMode === 'hi-society') {
-                  toggleLayoutMode();
-                  navigate('/maintenance/asset');
-                } else {
-                  toggleLayoutMode();
-                  navigate('/maintenance/project-details-list');
-                }
+                // Keep the current tab and frontend host; switch the API
+                // backend and render the FM layout route in place.
+                saveBaseUrl(fmProduct.backendUrl);
+                if (layoutMode !== "fm-matrix") toggleLayoutMode();
+                navigate("/maintenance/asset");
               }}
               variant="outline"
               size="sm"
               className="flex items-center gap-1 sm:gap-2 text-xs font-medium border-[#D5DbDB] hover:bg-[#f6f4ee] hover:text-[#C72030] transition-colors px-2 sm:px-3"
             >
-              {layoutMode === 'fm-matrix' ? (
-                <>
-                  <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="hidden sm:inline">Switch to Hi-Society</span>
-                </>
-              ) : (
-                <>
-                  <Home className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="hidden sm:inline">Switch to FM Matrix</span>
-                </>
-              )}
+              <>
+                <Home className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline">Switch to FM Matrix</span>
+              </>
             </Button>
           )}
 

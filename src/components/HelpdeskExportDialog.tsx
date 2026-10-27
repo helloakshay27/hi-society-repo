@@ -213,7 +213,7 @@ const MultiSelectDropdown: React.FC<MultiSelectProps> = ({
                 className={cn(
                   "w-4 h-4 border rounded flex items-center justify-center shrink-0",
                   selected.includes(opt.value)
-                    ? "bg-cyan-500 border-cyan-500"
+                    ? "bg-[#1a1a18] border-[#1a1a18]"
                     : "border-gray-300"
                 )}
               >

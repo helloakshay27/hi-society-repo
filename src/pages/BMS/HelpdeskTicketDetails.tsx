@@ -847,7 +847,7 @@ export const TicketDetailsPage = () => {
     assigned_to: "",
     asset_service: "",
     visit_date: "",
-    expected_completion_date: "",
+    closure_date: "",
     issue_related_to: "",
     complaint_mode_id: "",
     rca_template_ids: [] as number[],
@@ -3230,8 +3230,8 @@ export const TicketDetailsPage = () => {
     console.log("ticketData:", ticketData);
     console.log("visit_date from API:", ticketData?.visit_date);
     console.log(
-      "expected_completion_date from API:",
-      ticketData?.expected_completion_date
+      "closure_date from API:",
+      ticketData?.closure_date
     );
 
     // Find the status ID by matching status name with complaintStatus
@@ -3285,13 +3285,13 @@ export const TicketDetailsPage = () => {
     // Convert dates to proper format for HTML date inputs
     const convertedVisitDate = convertDateFormat(ticketData?.visit_date);
     const convertedCompletionDate = convertDateFormat(
-      ticketData?.expected_completion_date
+      ticketData?.closure_date
     );
 
     console.log("Date conversion:", {
       original_visit_date: ticketData?.visit_date,
       converted_visit_date: convertedVisitDate,
-      original_completion_date: ticketData?.expected_completion_date,
+      original_completion_date: ticketData?.closure_date,
       converted_completion_date: convertedCompletionDate,
     });
 
@@ -3311,7 +3311,7 @@ export const TicketDetailsPage = () => {
       assigned_to: findAssignedUserId(),
       asset_service: ticketData?.asset_service || "",
       visit_date: convertedVisitDate,
-      expected_completion_date: convertedCompletionDate,
+      closure_date: convertedCompletionDate,
       issue_related_to: ticketData?.issue_related_to || "FM",
       complaint_mode_id: findModeId(),
       rca_template_ids: ticketData?.rca_template_ids || [],
@@ -3549,10 +3549,10 @@ export const TicketDetailsPage = () => {
         );
       }
 
-      if (ticketMgmtFormData.expected_completion_date) {
+      if (ticketMgmtFormData.closure_date) {
         formDataToSend.append(
-          "complaint[expected_completion_date]",
-          ticketMgmtFormData.expected_completion_date
+          "complaint[closure_date]",
+          ticketMgmtFormData.closure_date
         );
       }
 
@@ -7744,8 +7744,8 @@ export const TicketDetailsPage = () => {
                           },
                           {
                             label: "Expected Completion Date",
-                            value: ticketData.expected_completion_date
-                              ? formatDate(ticketData.expected_completion_date)
+                            value: ticketData.closure_date
+                              ? formatDate(ticketData.closure_date)
                               : "-",
                           },
                           {
@@ -8054,11 +8054,11 @@ export const TicketDetailsPage = () => {
                               type="date"
                               label="Expected Completion Date"
                               value={
-                                ticketMgmtFormData.expected_completion_date
+                                ticketMgmtFormData.closure_date
                               }
                               onChange={(e) =>
                                 handleTicketMgmtInputChange(
-                                  "expected_completion_date",
+                                  "closure_date",
                                   e.target.value
                                 )
                               }
@@ -11691,8 +11691,8 @@ export const TicketDetailsPage = () => {
                       },
                       {
                         label: "Expected Completion Date",
-                        value: ticketData.expected_completion_date
-                          ? formatDate(ticketData.expected_completion_date)
+                        value: ticketData.closure_date
+                          ? formatDate(ticketData.closure_date)
                           : "-",
                       },
                       {
@@ -11998,10 +11998,10 @@ export const TicketDetailsPage = () => {
                           size="small"
                           type="date"
                           label="Expected Completion Date"
-                          value={ticketMgmtFormData.expected_completion_date}
+                          value={ticketMgmtFormData.closure_date}
                           onChange={(e) =>
                             handleTicketMgmtInputChange(
-                              "expected_completion_date",
+                              "closure_date",
                               e.target.value
                             )
                           }
