@@ -38,6 +38,32 @@ export const LateFeeToggle: React.FC<{ checked: boolean; onCheckedChange: (check
   </label>
 );
 
+/** "Late fee" badge for a charge setup, with the "Not active" / "Off" variants. */
+export const LateFeeBadge: React.FC<{ state: "active" | "inactive" | "off" }> = ({ state }) => (
+  <span className="inline-flex flex-wrap items-center gap-1.5">
+    <span
+      className={`inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${
+        state === "off" ? "bg-gray-100 text-gray-600" : "bg-[#F2EBC9] text-[#7A5B00]"
+      }`}
+    >
+      {state === "off" ? "Late fee – Off" : "Late fee"}
+    </span>
+    {state === "inactive" && (
+      <span className="text-xs font-medium text-red-600">Not active – set an effective date</span>
+    )}
+  </span>
+);
+
+/** The API's 422 messages, shown under the charge form. */
+export const ServerErrorList: React.FC<{ messages: string[] }> = ({ messages }) =>
+  messages.length === 0 ? null : (
+    <ul role="alert" className="list-disc space-y-1 rounded-lg border border-red-200 bg-red-50 py-3 pl-8 pr-4 text-sm text-red-700">
+      {messages.map((message) => (
+        <li key={message}>{message}</li>
+      ))}
+    </ul>
+  );
+
 interface LateFeeRuleFieldsProps {
   lateFee: LateFeeState;
   onChange: <K extends keyof LateFeeState>(field: K, value: LateFeeState[K]) => void;
@@ -50,7 +76,7 @@ const blockMinus = (e: React.KeyboardEvent) => {
   if (e.key === "-") e.preventDefault();
 };
 
-/** The 5-field "Late Fee Rule" section shown while the toggle is on. */
+/** The 6-field "Late Fee Rule" section shown while the toggle is on. */
 export const LateFeeRuleFields: React.FC<LateFeeRuleFieldsProps> = ({ lateFee, onChange, errors, fieldStyles }) => {
   const isInterest = lateFee.calculationType === "percentage";
   const sx = { "& .MuiInputBase-root": fieldStyles };
@@ -127,10 +153,9 @@ export const LateFeeRuleFields: React.FC<LateFeeRuleFieldsProps> = ({ lateFee, o
             notched
             MenuProps={menuProps}
           >
-            {FREQUENCY_OPTIONS.map((option) => (
-              <MenuItem key={option.value} value={option.value} disabled={isInterest && option.fixedOnly}>
+            {FREQUENCY_OPTIONS.filter((option) => !(isInterest && option.fixedOnly)).map((option) => (
+              <MenuItem key={option.value} value={option.value}>
                 {option.label}
-                {isInterest && option.fixedOnly ? " (Fixed Amount only)" : ""}
               </MenuItem>
             ))}
           </Select>
@@ -147,7 +172,7 @@ export const LateFeeRuleFields: React.FC<LateFeeRuleFieldsProps> = ({ lateFee, o
             onChange("graceDays", e.target.value);
           }}
           error={!!errors.graceDays}
-          helperText={errors.graceDays}
+          helperText={errors.graceDays || "Late fee starts on due date + grace days + 1"}
           variant="outlined"
           fullWidth
           InputLabelProps={{ shrink: true }}
@@ -159,6 +184,22 @@ export const LateFeeRuleFields: React.FC<LateFeeRuleFieldsProps> = ({ lateFee, o
               if (e.key === "-" || e.key === ".") e.preventDefault();
             },
           }}
+          sx={sx}
+        />
+
+        <TextField
+          label="Late Fee Effective From"
+          type="date"
+          value={lateFee.effectiveFrom}
+          onChange={(e) => onChange("effectiveFrom", e.target.value)}
+          error={!!errors.effectiveFrom}
+          helperText={
+            errors.effectiveFrom || "Late fees are charged only from this date. Leave empty to start today."
+          }
+          variant="outlined"
+          fullWidth
+          InputLabelProps={{ shrink: true }}
+          InputProps={{ notched: true }}
           sx={sx}
         />
       </div>

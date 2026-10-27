@@ -15,7 +15,6 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
-
 const CHARGE_COLUMNS: ColumnConfig[] = [
   { key: "ledgerId", label: "Ledger", sortable: false },
   { key: "description", label: "Description", sortable: false },
@@ -106,6 +105,7 @@ interface UnitOption extends SelectOption {
 }
 
 interface LedgerChargeOption extends SelectOption {
+  chargeSetupId: string;
   description: string;
   chargeCategory: string;
   igstRate: string;
@@ -126,6 +126,7 @@ const normalizeLedgerOptions = (list: unknown): LedgerChargeOption[] => {
     return {
       id: String(rawId ?? ""),
       label: String(rawLabel),
+      chargeSetupId: String(obj.charge_setup_id ?? ""),
       description: String(obj.description ?? ""),
       chargeCategory: String(obj.charge_category ?? obj.chargeCategory ?? ""),
       igstRate: String(obj.igst_rate ?? obj.igstRate ?? "0"),

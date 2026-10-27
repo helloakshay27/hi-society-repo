@@ -3496,6 +3496,11 @@ export const TicketDetailsPage = () => {
 
   // Handle Ticket Management Form Submit
   const handleTicketMgmtSubmit = async () => {
+    if (!ticketMgmtFormData.assigned_to) {
+      toast.error("Please select Assigned To");
+      return;
+    }
+
     try {
       setSubmittingTicketMgmt(true);
 
@@ -7930,7 +7935,10 @@ export const TicketDetailsPage = () => {
                             </FormControl>
 
                             <FormControl fullWidth size="small">
-                              <InputLabel>Assigned To</InputLabel>
+                              <InputLabel>
+                                Assigned To{" "}
+                                <span className="text-[#d32f2f]">*</span>
+                              </InputLabel>
                               <MuiSelect
                                 value={ticketMgmtFormData.assigned_to}
                                 onChange={(e) =>
@@ -11873,7 +11881,7 @@ export const TicketDetailsPage = () => {
                           </MuiSelect>
                         </FormControl>
 
-                        <FormControl fullWidth size="small">
+                        <FormControl fullWidth size="small" required>
                           <InputLabel>Assigned To</InputLabel>
                           <MuiSelect
                             value={ticketMgmtFormData.assigned_to}

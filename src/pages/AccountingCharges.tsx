@@ -9,6 +9,8 @@ import { API_CONFIG } from "@/config/apiConfig";
 import { ArrowLeft, Edit, Eye, Plus } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
+import { LateFeeBadge } from "@/components/accounting/LateFeeRule";
+import { lateFeeRuleState, lateFeeSummary } from "@/components/accounting/lateFeeRuleUtils";
 
 interface ChargeSetup {
   id: number;
@@ -22,6 +24,13 @@ interface ChargeSetup {
   uom: string;
   created_by: string | number;
   created_at: string;
+  overdue_trigger?: string | null;
+  overdue_calculation_type?: string | null;
+  overdue_calculation_base?: string | null;
+  overdue_rate?: number | string | null;
+  overdue_frequency?: string | null;
+  overdue_grace_days?: number | null;
+  overdue_effective_from?: string | null;
 }
 
 const columns: ColumnConfig[] = [
@@ -32,6 +41,7 @@ const columns: ColumnConfig[] = [
   // { key: "basis", label: "Basis", sortable: true },
   // { key: "hsn_code", label: "HSN Code", sortable: true },
   // { key: "uom", label: "UOM", sortable: true },
+  { key: "late_fee", label: "Late Fee", sortable: false },
   { key: "gst_applicable", label: "GST Applicable", sortable: true },
   { key: "created_by_name", label: "Created By", sortable: true },
   { key: "created_at", label: "Created At", sortable: true },
@@ -138,6 +148,17 @@ const AccountingCharges: React.FC = () => {
         );
       case "value":
         return item.value ?? "";
+      case "late_fee": {
+        const charge = item as unknown as Record<string, unknown>;
+        const state = lateFeeRuleState(charge);
+        if (!state) return "-";
+        return (
+          <div className="flex flex-col gap-0.5">
+            <LateFeeBadge state={state} />
+            {state === "active" && <span className="text-xs text-gray-600">{lateFeeSummary(charge)}</span>}
+          </div>
+        );
+      }
       case "gst_applicable":
         return item.gst_applicable ? (
           <span className="font-medium text-red-600">Yes</span>

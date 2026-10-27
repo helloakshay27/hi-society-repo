@@ -13,11 +13,12 @@ import ListItemText from "@mui/material/ListItemText";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
 import { Button } from "@/components/ui/button";
-import { LateFeeRuleFields, LateFeeToggle } from "@/components/accounting/LateFeeRule";
+import { LateFeeRuleFields, LateFeeToggle, ServerErrorList } from "@/components/accounting/LateFeeRule";
 import {
   BACKDATE_CONFIRM_MESSAGE,
   LATE_FEE_CHARGE_CATEGORY_ID,
   LateFeeState,
+  apiErrorMessages,
   buildOverduePayload,
   emptyLateFee,
   lateFeeFromCharge,
@@ -186,6 +187,9 @@ const AccountingChargeEdit: React.FC = () => {
   const [gstApplicable, setGstApplicable] = useState(false);
   const [lateFee, setLateFee] = useState<LateFeeState>(emptyLateFee);
   const [showLateFeeErrors, setShowLateFeeErrors] = useState(false);
+  const [serverErrors, setServerErrors] = useState<string[]>([]);
+  // The charge_setup as loaded — the late fee payload only sends overdue_* fields that differ from it.
+  const [originalCharge, setOriginalCharge] = useState<Record<string, unknown> | null>(null);
 
   // charge_type_options.json bundles charge_categories, flat_types, and
   // expense_ledgers into a single response — fetch once and derive whichever
@@ -263,6 +267,7 @@ const AccountingChargeEdit: React.FC = () => {
             : [charge.igst_rate, charge.cgst_rate, charge.sgst_rate].some((r) => Number(r) > 0)
         );
         setLateFee(lateFeeFromCharge(charge));
+        setOriginalCharge(charge);
       } catch (error) {
         console.error("Error fetching charge for edit:", error);
         toast.error("Failed to load charge for editing");
@@ -316,6 +321,10 @@ const AccountingChargeEdit: React.FC = () => {
         toast.error(`Late fee rule: ${firstError}`);
         return;
       }
+      if (!lateFee.effectiveFrom && originalCharge?.overdue_effective_from) {
+        toast.error("Effective date can't be removed while the late fee rule is on - switch the rule off instead");
+        return;
+      }
       if (needsBackdateConfirm(lateFee) && !window.confirm(BACKDATE_CONFIRM_MESSAGE)) return;
     } else {
       if (!form.chargeCategoryId) {
@@ -333,6 +342,7 @@ const AccountingChargeEdit: React.FC = () => {
     }
 
     setSubmitting(true);
+    setServerErrors([]);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
@@ -357,14 +367,14 @@ const AccountingChargeEdit: React.FC = () => {
         basis: form.basis,
         uom: form.uom,
       };
-      // On edit, turning the toggle off sends overdue_trigger "" to switch an existing rule off.
-      Object.assign(chargeSetup, buildOverduePayload(lateFee, true));
+      // Only changed overdue_* fields go out; turning the toggle off sends overdue_trigger "" to switch the rule off.
+      Object.assign(chargeSetup, buildOverduePayload(lateFee, originalCharge ?? {}));
       const payload = {
         charge_setup: chargeSetup,
         ...(!isLateFee && isUnitTypeCategory ? { charge_setup_flat: chargeSetupFlat } : {}),
         ...(!isLateFee && isExpenseBasedCategory ? { ledger_ids: ledgerIds } : {}),
       };
-      await axios.put(`${baseUrl}/account/charge_setups/${id}.json`, payload, {
+      await axios.patch(`${baseUrl}/account/charge_setups/${id}.json`, payload, {
         params: { ...(lockAccountId ? { lock_account_id: lockAccountId } : {}) },
         headers: {
           Accept: "application/json",
@@ -381,7 +391,9 @@ const AccountingChargeEdit: React.FC = () => {
       navigate("/accounting/charges");
     } catch (error) {
       console.error("Error updating charge:", error);
-      toast.error("Failed to update charge");
+      const messages = apiErrorMessages(error);
+      setServerErrors(messages);
+      toast.error(messages[0] || "Failed to update charge");
     } finally {
       setSubmitting(false);
     }
@@ -733,6 +745,8 @@ const AccountingChargeEdit: React.FC = () => {
               />
             )}
           </SectionCard>
+
+          <ServerErrorList messages={serverErrors} />
 
           <div className="flex justify-end gap-3">
             <Button
