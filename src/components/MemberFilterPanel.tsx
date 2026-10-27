@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import axios from "axios";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getHiSocietyBaseUrl, getAuthHeader } from "@/config/apiConfig";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -43,11 +43,10 @@ export const MemberFilterPanel = ({
   onChange,
   className = "",
 }: MemberFilterPanelProps) => {
-  const baseURL = API_CONFIG.BASE_URL;
-
   const [open, setOpen]           = useState(false);
   const [draft, setDraft]         = useState<MemberFilterState>(value);
   const [towers, setTowers]       = useState<Tower[]>([]);
+  const [loadingTowers, setLoadingTowers] = useState(false);
   const [towerSearch, setTowerSearch] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -57,21 +56,78 @@ export const MemberFilterPanel = ({
   // ── fetch towers ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!open) return;
-    const societyId = localStorage.getItem("selectedSocietyId") || "";
-    if (!societyId) return;
+    let societyId =
+      localStorage.getItem("selectedSocietyId") ||
+      sessionStorage.getItem("selectedSocietyId") ||
+      localStorage.getItem("society_id") ||
+      sessionStorage.getItem("society_id") ||
+      "";
 
+    // selectedUserSociety is an association ID; resolve it to id_society
+    // before passing it as the API's society_id.
+    if (!societyId) {
+      const selectedUserSociety =
+        localStorage.getItem("selectedUserSociety") ||
+        sessionStorage.getItem("selectedUserSociety");
+      if (selectedUserSociety) {
+        try {
+          const approvedSocieties = JSON.parse(
+            localStorage.getItem("hiSocietyApprovedSocieties") ||
+              sessionStorage.getItem("hiSocietyApprovedSocieties") ||
+              "[]"
+          );
+          const selected = Array.isArray(approvedSocieties)
+            ? approvedSocieties.find(
+                (society: any) => String(society?.id) === selectedUserSociety
+              )
+            : null;
+          societyId = String(selected?.id_society ?? selected?.society?.id ?? "");
+        } catch (error) {
+          console.error("Unable to resolve selected society for tower filter:", error);
+        }
+      }
+    }
+
+    if (!societyId) {
+      setTowers([]);
+      setLoadingTowers(false);
+      return;
+    }
+
+    let active = true;
+    setLoadingTowers(true);
     axios
-      .get(`${baseURL}/get_society_blocks.json?society_id=${societyId}`, {
-        headers: { Authorization: getAuthHeader() },
+      .get(`${getHiSocietyBaseUrl().replace(/\/+$/, "")}/get_society_blocks.json`, {
+        params: { society_id: societyId },
+        headers: { Authorization: getAuthHeader(), Accept: "application/json" },
       })
       .then((res) => {
-        const blocks: Tower[] = (res.data?.society_blocks || []).map(
-          (b: { id: number; name: string }) => ({ id: b.id, name: b.name })
+        if (!active) return;
+        const data = res.data;
+        const blocks = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.society_blocks)
+            ? data.society_blocks
+            : [];
+        setTowers(
+          blocks
+            .filter((block: any) => block?.id != null)
+            .map((block: any) => ({ id: Number(block.id), name: String(block.name ?? "") }))
         );
-        setTowers(blocks);
       })
-      .catch(() => {/* silently ignore – towers are optional */});
-  }, [open, baseURL]);
+      .catch((error) => {
+        if (!active) return;
+        console.error("Error fetching society towers:", error);
+        setTowers([]);
+      })
+      .finally(() => {
+        if (active) setLoadingTowers(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [open]);
 
   // ── close on outside click ────────────────────────────────────────────────
   useEffect(() => {
@@ -317,9 +373,11 @@ export const MemberFilterPanel = ({
               </div>
             )}
 
-            {filteredTowers.length === 0 ? (
+            {loadingTowers ? (
+              <p className="text-xs text-gray-400 px-2 py-1">Loading towers…</p>
+            ) : filteredTowers.length === 0 ? (
               <p className="text-xs text-gray-400 px-2 py-1">
-                {towers.length === 0 ? "Loading towers…" : "No towers found"}
+                {towers.length === 0 ? "No towers available" : "No towers found"}
               </p>
             ) : (
               <div className="max-h-40 overflow-y-auto space-y-0.5">
