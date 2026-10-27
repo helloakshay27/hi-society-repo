@@ -49,6 +49,7 @@ const HiSocNoticeCreate = () => {
     broadcast_images_16_by_9: [],
     attached_files: [],
   });
+  
 
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState([]);
