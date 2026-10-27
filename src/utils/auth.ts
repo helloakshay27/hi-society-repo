@@ -175,6 +175,7 @@ export const getBaseUrl = (): string | null => {
   const savedUrl = localStorage.getItem(AUTH_KEYS.BASE_URL);
   if (!savedUrl) return null;
 
+  // Use local Vite proxy for runwal API to bypass CORS during development
   if (
     (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") &&
     savedUrl.includes("runwal-cp-api.lockated.com")
@@ -234,8 +235,8 @@ export const fetchLockAccount = async (): Promise<void> => {
 
 // Clear all auth data
 export const clearAuth = (): void => {
-  // Save layout preferences before clearing
-  const layoutMode = localStorage.getItem('layoutMode');
+  // Save layout preferences before clearing. layoutMode (FM / Hi-Society
+  // switch) is intentionally not preserved, so each login starts fresh.
   const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
 
   localStorage.removeItem(AUTH_KEYS.USER);
@@ -246,10 +247,6 @@ export const clearAuth = (): void => {
   localStorage.clear();
 
   // Restore layout preferences after clearing
-  if (layoutMode) {
-    localStorage.setItem('layoutMode', layoutMode);
-    console.log('🎨 Preserved layoutMode during auth clear:', layoutMode);
-  }
   if (sidebarCollapsed) {
     localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
   }
@@ -400,7 +397,6 @@ const OPS_CONSOLE_ALLOWED_EMAILS = [
   "tejas.chaudhari@lockated.com",
   "dinesh.shinde@lockated.com",
   "runwalcpadmin@gmail.com",
-  "ajay.pihulkar@lockated.com"
 ].map((email) => email.toLowerCase());
 
 export const isOpsConsoleAllowedUser = (
