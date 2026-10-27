@@ -83,6 +83,12 @@ export interface Organization {
   logo_url?: string | null;
   backend_url?: string;
   backend_domain?: string;
+  products?: Array<{
+    product_name: string;
+    product_code: string;
+    backend_url?: string;
+    frontend_url?: string;
+  }>;
 }
 
 // Local storage keys
@@ -201,8 +207,8 @@ export const isAuthenticated = (): boolean => {
 // Fetch lock account and store lock_account_id in localStorage
 export const fetchLockAccount = async (): Promise<void> => {
   try {
-    const baseUrl = localStorage.getItem(AUTH_KEYS.BASE_URL);
-    const token = localStorage.getItem(AUTH_KEYS.TOKEN);
+    const baseUrl = getBaseUrl();
+    const token = getToken();
 
     if (!baseUrl || !token) return;
 

@@ -40,7 +40,7 @@ import {
   changeSite,
   clearSites,
 } from "@/store/slices/siteSlice";
-import { getUser, saveUser, clearAuth, fetchLockAccount } from "@/utils/auth";
+import { getUser, saveUser, clearAuth, fetchLockAccount, saveBaseUrl } from "@/utils/auth";
 import { permissionService } from "@/services/permissionService";
 import { is } from "date-fns/locale";
 import { Dashboard } from "@mui/icons-material";
@@ -50,6 +50,7 @@ import axios from "axios";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Button } from "@/components/ui/button";
 import { useNotification } from "@/contexts/NotificationContext";
+import { useHiSocietyProductForSelectedOrganization } from "@/hooks/useHiSocietyProductForSelectedOrganization";
 
 export interface Company {
   id: number;
@@ -109,6 +110,7 @@ export const Header = () => {
 
   const dispatch = useDispatch<AppDispatch>();
   const { layoutMode, toggleLayoutMode } = useLayout();
+  const hiSocietyProduct = useHiSocietyProductForSelectedOrganization();
   console.log("layoutMode:-", layoutMode);
 
 
@@ -880,33 +882,38 @@ export const Header = () => {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-3">
-          {/* Layout Mode Toggle Button */}
-          <Button
-            onClick={() => {
-              if (layoutMode === 'hi-society') {
-                toggleLayoutMode();
-                navigate('/maintenance/asset');
-              } else {
-                toggleLayoutMode();
-                navigate('/maintenance/project-details-list');
-              }
-            }}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1 sm:gap-2 text-xs font-medium border-[#D5DbDB] hover:bg-[#f6f4ee] hover:text-[#C72030] transition-colors px-2 sm:px-3"
-          >
-            {layoutMode === 'fm-matrix' ? (
-              <>
-                <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="hidden sm:inline">Switch to Hi-Society</span>
-              </>
-            ) : (
-              <>
-                <Home className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="hidden sm:inline">Switch to FM Matrix</span>
-              </>
-            )}
-          </Button>
+          {/* Switch products only when the target product is available */}
+          {(layoutMode === 'hi-society' || hiSocietyProduct) && (
+            <Button
+              onClick={() => {
+                if (layoutMode === 'hi-society') {
+                  toggleLayoutMode();
+                  navigate('/maintenance/asset');
+                } else {
+                  if (hiSocietyProduct?.backendUrl) {
+                    saveBaseUrl(hiSocietyProduct.backendUrl);
+                  }
+                  toggleLayoutMode();
+                  navigate('/maintenance/project-details-list');
+                }
+              }}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 sm:gap-2 text-xs font-medium border-[#D5DbDB] hover:bg-[#f6f4ee] hover:text-[#C72030] transition-colors px-2 sm:px-3"
+            >
+              {layoutMode === 'fm-matrix' ? (
+                <>
+                  <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="hidden sm:inline">Switch to Hi-Society</span>
+                </>
+              ) : (
+                <>
+                  <Home className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="hidden sm:inline">Switch to FM Matrix</span>
+                </>
+              )}
+            </Button>
+          )}
 
           {/* Hi-Society Mode: Society Dropdown */}
           {layoutMode === 'hi-society' && (
