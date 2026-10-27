@@ -15,7 +15,6 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
-
 const CHARGE_COLUMNS: ColumnConfig[] = [
   { key: "ledgerId", label: "Ledger", sortable: false },
   { key: "description", label: "Description", sortable: false },

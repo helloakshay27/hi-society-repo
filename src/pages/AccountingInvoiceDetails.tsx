@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { API_CONFIG } from "@/config/apiConfig";
-import { ArrowLeft, Clock, Download, Printer, FileText, Receipt, Wallet, X } from "lucide-react";
+import { ArrowLeft, Ban, Clock, Download, Printer, FileText, Receipt, Wallet, X } from "lucide-react";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 
@@ -64,106 +64,93 @@ interface LockAccountBillDetail {
   lock_account_bill_charges?: BillCharge[];
   payments?: Payment[];
   bill_actions?: BillActions;
+  // Late fee keys — the backend calculates all of these; never add them together here.
+  principal_amount?: number;
+  principal_paid?: number;
+  principal_balance_due?: number;
+  late_fee_payable_total?: number;
+  total_payable_with_late_fees?: number;
+  overdue_charges?: OverdueCharge[];
+  previous_late_fees?: PreviousLateFee[];
+  previous_late_fee_total?: number;
+  late_fee_carried_forward_to?: BillRef | null;
 }
 
-type LateFeeStatus = "pending" | "part_payment" | "paid" | "reversed";
+interface BillRef {
+  lock_account_bill_id: number;
+  bill_number: string | null;
+}
 
-interface LateFeeRow {
-  id: number | string;
-  chargeName: string;
-  period: string;
-  amount: number;
-  gst: number;
-  total: number;
-  paid: number;
-  due: number;
-  status: LateFeeStatus;
-  /** false for pending_charges — calculated by the API but not posted to the invoice yet (no id to waive). */
-  applied: boolean;
+/** A late fee posted on this invoice. */
+interface OverdueCharge {
+  id: number;
+  name: string;
+  period_start?: string | null;
+  period_end?: string | null;
+  amount?: number;
+  tax_amount?: number;
+  total_amount: number;
+  paid_amount: number;
+  outstanding_amount: number;
+  /** null on a reversed fee. */
+  payment_status?: string | null;
+  status?: string;
+  reverse_reason?: string | null;
+  /** Set when the fee is payable on a newer invoice of the flat. */
+  carried_to?: BillRef | null;
+}
+
+/** An unpaid late fee of an older invoice, payable on this (latest) invoice. Has no `id`. */
+interface PreviousLateFee {
+  overdue_charge_id: number;
+  lock_account_bill_id: number;
+  bill_number: string | null;
+  name: string;
+  period_start?: string | null;
+  period_end?: string | null;
+  total_amount: number;
+  paid_amount: number;
+  outstanding_amount: number;
+}
+
+/** Preview from GET /lock_account_bills/:id/overdue_charges.json — not saved, never part of a total. */
+interface PendingCharge {
+  name: string;
+  period_start?: string | null;
+  total_amount?: number | null;
+}
+
+/** The fee being waived: the invoice it belongs to and its overdue charge id. */
+interface WaiveTarget {
+  invoiceId: number | string;
+  overdueChargeId: number;
+  label: string;
 }
 
 // Theme status pills — theme.css restyles these legacy bg/border pairs into soft tinted pills.
-const LATE_FEE_STATUS: Record<LateFeeStatus, { label: string; className: string }> = {
-  pending: { label: "Pending", className: "bg-[#F2EBC9] border-[#F2EBC9]" },
-  part_payment: { label: "Part Payment", className: "bg-[#DBE7FF] border-[#DBE7FF]" },
-  paid: { label: "Paid", className: "bg-[#C7EDDA] border-[#C7EDDA]" },
-  reversed: { label: "Reversed", className: "bg-[#D5DbDB] border-[#D5DbDB]" },
+const LATE_FEE_STATUS_CLASS: Record<string, string> = {
+  Pending: "bg-[#F2EBC9] border-[#F2EBC9]",
+  "Part Payment": "bg-[#DBE7FF] border-[#DBE7FF]",
+  Paid: "bg-[#C7EDDA] border-[#C7EDDA]",
 };
 
-const toNumber = (...values: unknown[]): number => {
-  for (const v of values) {
-    if (v !== undefined && v !== null && v !== "" && Number.isFinite(Number(v))) return Number(v);
-  }
-  return 0;
+const money = (value: unknown) => (Number(value) || 0).toFixed(2);
+
+const formatLateFeePeriod = (start?: string | null, end?: string | null): string => {
+  if (start && end) return start === end ? formatDateDMY(start) : `${formatDateDMY(start)} – ${formatDateDMY(end)}`;
+  return formatDateDMY(start || end);
 };
 
-// "Part Payment" / "part_payment" / "partially_paid" -> "part_payment"
-const normalizeLateFeeStatus = (value: unknown, due: number, paid: number): LateFeeStatus => {
-  const s = String(value ?? "").toLowerCase().replace(/[\s-]+/g, "_");
-  if (s.includes("revers") || s.includes("waive") || s.includes("cancel")) return "reversed";
-  if (s.includes("part")) return "part_payment";
-  if (s === "paid") return "paid";
-  if (s.includes("pend") || s.includes("unpaid") || s.includes("due")) return "pending";
-  // No usable status from the API — derive it from the amounts.
-  if (due <= 0 && paid > 0) return "paid";
-  if (paid > 0) return "part_payment";
-  return "pending";
-};
+// order_number for bill_payment — the backend uses it to drop duplicate submits.
+const newRequestId = (): string =>
+  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-const formatLateFeePeriod = (item: Record<string, unknown>): string => {
-  const label = item.period ?? item.period_label ?? item.bill_period;
-  if (label) return String(label);
-  const from = (item.period_start ?? item.period_from ?? item.from_date ?? item.start_date) as string | undefined;
-  const to = (item.period_end ?? item.period_to ?? item.to_date ?? item.end_date) as string | undefined;
-  if (from && to) return from === to ? formatDateDMY(from) : `${formatDateDMY(from)} – ${formatDateDMY(to)}`;
-  return from || to ? formatDateDMY(from || to) : "-";
-};
-
-const toLateFeeRow = (item: Record<string, unknown>, applied: boolean, idx: number): LateFeeRow => {
-  // Pending rows carry no amount (base_amount is null), so amount comes first.
-  const amount = toNumber(item.amount, item.overdue_amount, item.base_amount);
-  const gst = toNumber(item.tax_amount, item.gst_amount, item.gst);
-  const total = toNumber(item.total_amount, item.total, amount + gst);
-  const paid = toNumber(item.paid_amount, item.paid);
-  const due = toNumber(item.due_amount, item.balance_amount, item.due, total - paid);
-  return {
-    id: (item.id as number | string) ?? `pending-${item.charge_setup_id ?? ""}-${item.period_start ?? idx}`,
-    chargeName: String(item.name ?? item.charge_name ?? item.charge_setup_name ?? "Late Fee"),
-    period: formatLateFeePeriod(item),
-    amount,
-    gst,
-    total,
-    paid,
-    due,
-    status: normalizeLateFeeStatus(item.status, due, paid),
-    applied,
-  };
-};
-
-// GET /lock_account_bills/:id/overdue_charges.json →
-//   overdue_charges: late fees already posted to the invoice
-//   pending_charges: late fees calculated as of today but not posted yet
-//   total_outstanding: principal + posted late fees; skipped: [{ reason }]
-const normalizeLateFees = (
-  data: unknown
-): { rows: LateFeeRow[]; totalDue: number | null; skippedReasons: string[] } => {
-  const obj = (data ?? {}) as Record<string, unknown>;
-  const asList = (v: unknown) => (Array.isArray(v) ? (v as Record<string, unknown>[]) : []);
-  const rows = [
-    ...asList(obj.overdue_charges).map((item, idx) => toLateFeeRow(item, true, idx)),
-    ...asList(obj.pending_charges).map((item, idx) => toLateFeeRow(item, false, idx)),
-  ];
-  // total_outstanding only covers posted fees — add the pending ones so the line includes every late fee shown.
-  const pendingDue = rows.filter((r) => !r.applied).reduce((sum, r) => sum + r.due, 0);
-  const rawTotal = obj.total_outstanding != null ? toNumber(obj.total_outstanding) + pendingDue : obj.total_due;
-  const skippedReasons = (Array.isArray(obj.skipped) ? obj.skipped : [])
-    .map((s) => (typeof s === "string" ? s : (s as Record<string, unknown>)?.reason))
-    .filter((r): r is string => typeof r === "string" && r.trim() !== "");
-  return {
-    rows,
-    totalDue: rawTotal != null && Number.isFinite(Number(rawTotal)) ? Number(rawTotal) : null,
-    skippedReasons,
-  };
+const apiErrors = (error: unknown): string[] => {
+  const errors = axios.isAxiosError(error) ? error.response?.data?.errors : undefined;
+  if (Array.isArray(errors)) return errors.filter((m): m is string => typeof m === "string");
+  return typeof errors === "string" ? [errors] : [];
 };
 
 // "2026-09-18" -> "18/09/2026"
@@ -218,6 +205,38 @@ const numberToWords = (num: number): string => {
   return result.trim();
 };
 
+const InvoiceLink: React.FC<{ target: BillRef }> = ({ target }) => (
+  <Link
+    to={`/accounting/invoices/${target.lock_account_bill_id}`}
+    className="font-medium text-[#C72030] hover:underline"
+  >
+    {target.bill_number || `#${target.lock_account_bill_id}`}
+  </Link>
+);
+
+const LateFeeStatusPill: React.FC<{ status?: string | null }> = ({ status }) =>
+  status ? (
+    <span className={`inline-flex items-center whitespace-nowrap border ${LATE_FEE_STATUS_CLASS[status] ?? ""}`}>
+      {status}
+    </span>
+  ) : (
+    <span className="text-gray-400">-</span>
+  );
+
+const WaiveButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+  <Button
+    size="sm"
+    variant="ghost"
+    onClick={onClick}
+    title="Waive late fee"
+    aria-label="Waive late fee"
+    className="h-8 gap-1.5 whitespace-nowrap px-2 text-xs font-medium !text-[#C72030] hover:!bg-[#C72030]/10 hover:!text-[#A01020] [&_svg]:!text-[#C72030]"
+  >
+    <Ban className="h-4 w-4" />
+    Waive
+  </Button>
+);
+
 const AccountingInvoiceDetails: React.FC = () => {
   const { onAccountingViewed } = useAccountingEvents();
   useEffect(() => {
@@ -263,14 +282,10 @@ const AccountingInvoiceDetails: React.FC = () => {
     fetchBill();
   }, [fetchBill]);
 
-  const [lateFees, setLateFees] = useState<LateFeeRow[]>([]);
-  const [lateFeesTotalDue, setLateFeesTotalDue] = useState<number | null>(null);
-  const [lateFeesLoading, setLateFeesLoading] = useState(true);
-  const [lateFeeSkippedReasons, setLateFeeSkippedReasons] = useState<string[]>([]);
-  const [waivingId, setWaivingId] = useState<number | string | null>(null);
+  // Optional "upcoming late fee" hint — only pending_charges is used from this API, never in a total.
+  const [pendingCharges, setPendingCharges] = useState<PendingCharge[]>([]);
 
-  const fetchLateFees = useCallback(async () => {
-    setLateFeesLoading(true);
+  const fetchPendingCharges = useCallback(async () => {
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
@@ -278,68 +293,94 @@ const AccountingInvoiceDetails: React.FC = () => {
         params: { lock_account_id: lockAccountId },
         headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       });
-      const { rows, totalDue, skippedReasons } = normalizeLateFees(response.data);
-      setLateFees(rows);
-      setLateFeesTotalDue(totalDue);
-      setLateFeeSkippedReasons(skippedReasons);
+      const list = response.data?.pending_charges;
+      setPendingCharges(Array.isArray(list) ? list : []);
     } catch (error) {
-      console.error("Error fetching late fees:", error);
-      setLateFees([]);
-      setLateFeesTotalDue(null);
-      setLateFeeSkippedReasons([]);
-    } finally {
-      setLateFeesLoading(false);
+      console.error("Error fetching upcoming late fees:", error);
+      setPendingCharges([]);
     }
   }, [id, lockAccountId]);
 
   useEffect(() => {
-    fetchLateFees();
-  }, [fetchLateFees]);
+    fetchPendingCharges();
+  }, [fetchPendingCharges]);
 
-  // ASSUMED endpoint — the late fee spec doesn't name the waive API yet.
-  const handleWaiveLateFee = async (row: LateFeeRow) => {
-    if (!window.confirm(`Waive ${row.chargeName} (${row.period}) of ₹${row.due.toFixed(2)}?`)) return;
-    setWaivingId(row.id);
+  const reloadInvoice = () => {
+    fetchBill();
+    fetchPendingCharges();
+  };
+
+  const [waiveTarget, setWaiveTarget] = useState<WaiveTarget | null>(null);
+  const [waiveReason, setWaiveReason] = useState("");
+  const [waiving, setWaiving] = useState(false);
+  const [confirmWaiveOpen, setConfirmWaiveOpen] = useState(false);
+
+  // Step 1: the reason modal's Waive button — check the reason, then ask for confirmation.
+  const requestWaive = () => {
+    if (!waiveReason.trim()) {
+      toast.error("Please enter a reason for waiving this late fee.");
+      return;
+    }
+    setConfirmWaiveOpen(true);
+  };
+
+  const openWaive = (target: WaiveTarget) => {
+    setWaiveReason("");
+    setWaiveTarget(target);
+  };
+
+  // POST /lock_account_bills/:invoiceId/reverse_overdue_charge.json — :invoiceId is the invoice the fee was
+  // posted on (the current one for this invoice's fees, the older one for "earlier invoices" rows).
+  const handleWaiveLateFee = async () => {
+    if (!waiveTarget) return;
+    const reason = waiveReason.trim();
+    if (!reason) {
+      toast.error("Please enter a reason for waiving this late fee.");
+      return;
+    }
+    setWaiving(true);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
       await axios.post(
-        `${baseUrl}/lock_account_bills/${id}/overdue_charges/${row.id}/waive.json`,
-        {},
+        `${baseUrl}/lock_account_bills/${waiveTarget.invoiceId}/reverse_overdue_charge.json`,
+        { overdue_charge_id: waiveTarget.overdueChargeId, reason },
         {
-          params: { lock_account_id: lockAccountId },
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
         }
       );
       toast.success("Late fee waived");
-      fetchLateFees();
-      fetchBill();
+      setConfirmWaiveOpen(false);
+      setWaiveTarget(null);
+      reloadInvoice();
     } catch (error) {
       console.error("Error waiving late fee:", error);
-      toast.error("Failed to waive late fee");
+      setConfirmWaiveOpen(false);
+      toast.error(apiErrors(error)[0] || "Failed to waive late fee");
     } finally {
-      setWaivingId(null);
+      setWaiving(false);
     }
   };
 
   const charges = bill?.charges || bill?.lock_account_bill_charges || [];
   const payments = bill?.payments || [];
+  const overdueCharges = bill?.overdue_charges || [];
+  const previousLateFees = bill?.previous_late_fees || [];
 
   const totalAmount = Number(bill?.total_amount) || 0;
-  const balanceAmount = Number(bill?.balance_amount) || 0;
-  const hasPaidAmount = bill?.paid_amount !== undefined && bill?.paid_amount !== null;
-  const paidAmount = Number(bill?.paid_amount) || 0;
-  const hasBalanceDue = bill?.balance_due !== undefined && bill?.balance_due !== null;
-  const balanceDue = Number(bill?.balance_due) || 0;
   const totalReceivable = Number(bill?.total_receivable_amount ?? totalAmount);
-  // Amount pre-filled/validated in the Receive Payment modal — prefer the
-  // outstanding balance due over the full bill total when the API provides it.
-  const payableAmount = hasBalanceDue ? balanceDue : totalAmount;
-  // Prefer the API's own total; otherwise invoice balance due + outstanding (non-reversed) late fees.
-  const lateFeesDue = lateFees.reduce((sum, row) => (row.status === "reversed" ? sum : sum + row.due), 0);
-  const totalDueInclLateFee = lateFeesTotalDue ?? payableAmount + lateFeesDue;
-  const hasOutstandingLateFee = lateFees.some((row) => row.status !== "reversed" && row.due > 0);
-  const paymentTotalAmount = hasOutstandingLateFee ? totalDueInclLateFee : payableAmount;
+  const principalAmount = Number(bill?.principal_amount ?? totalAmount) || 0;
+  const principalPaid = Number(bill?.principal_paid ?? bill?.paid_amount) || 0;
+  const principalBalanceDue = Number(bill?.principal_balance_due ?? bill?.balance_due) || 0;
+  const lateFeePayable = Number(bill?.late_fee_payable_total) || 0;
+  // The invoice's payable amount and the payment prefill. Already includes every late fee — never add to it.
+  const totalPayable = Number(bill?.total_payable_with_late_fees ?? principalBalanceDue) || 0;
+  const canReceivePayment = Boolean(bill?.bill_actions?.can_receive_payment);
+  const canWaive = shouldShow("Invoices", "update");
   const amountInWords = useMemo(
     () => `${numberToWords(totalAmount)} Rupees Only`,
     [totalAmount]
@@ -395,8 +436,7 @@ const AccountingInvoiceDetails: React.FC = () => {
       );
       toast.success("Invoice published successfully");
       // Publishing makes the invoice eligible for late fees — reload the bill and its late fees.
-      fetchBill();
-      fetchLateFees();
+      reloadInvoice();
     } catch (error) {
       console.error("Error publishing invoice:", error);
       toast.error("Failed to publish invoice");
@@ -464,12 +504,36 @@ const AccountingInvoiceDetails: React.FC = () => {
     }
   };
 
+  // One request id per payment: kept across retries after a timeout / network error so the
+  // backend can drop the duplicate, and replaced only once a payment went through or was rejected.
+  const [orderNumber, setOrderNumber] = useState("");
+  const [retryPending, setRetryPending] = useState(false);
+
+  const openPaymentDialog = () => {
+    if (!retryPending || !orderNumber) {
+      setOrderNumber(newRequestId());
+      setPaymentAmount(totalPayable > 0 ? totalPayable.toFixed(2) : "");
+    }
+    setIsPaymentOpen(true);
+  };
+
+  const resetPaymentForm = () => {
+    setIsPaymentOpen(false);
+    setPaymentDate("");
+    setPaymentAmount("");
+    setPaymentMode("");
+    setTransactionNumber("");
+    setPaymentNotes("");
+    setOrderNumber("");
+    setRetryPending(false);
+  };
+
   const handleRecordPayment = async () => {
     if (!paymentAmount || Number(paymentAmount) <= 0) {
       toast.error("Paid amount should be greater than 0.");
       return;
     }
-    if (Number(paymentAmount) > paymentTotalAmount) {
+    if (Number(paymentAmount) > totalPayable) {
       toast.error("Amount paid cannot be greater than the total amount.");
       return;
     }
@@ -487,12 +551,15 @@ const AccountingInvoiceDetails: React.FC = () => {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
 
-      await axios.post(
-        `${baseUrl}/lock_accounts/${lockAccountId}/lock_account_bills/${id}/bill_payment.json`,
+      const requestId = orderNumber || newRequestId();
+      if (!orderNumber) setOrderNumber(requestId);
+      const response = await axios.post(
+        `${baseUrl}/lock_account_bills/${id}/bill_payment.json`,
         {
           lock_payment: {
-            total_amount: Number(paymentAmount),
+            paid_amount: Number(paymentAmount),
             payment_method: paymentMode,
+            order_number: requestId,
             pg_transaction_id: transactionNumber,
             cheque_date: paymentDate,
             notes: paymentNotes,
@@ -500,30 +567,36 @@ const AccountingInvoiceDetails: React.FC = () => {
         },
         {
           headers: {
+            Accept: "application/json",
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         }
       );
-      toast.success("Payment recorded successfully");
-      setIsPaymentOpen(false);
-      setPaymentDate("");
-      setPaymentAmount("");
-      setPaymentMode("");
-      setTransactionNumber("");
-      setPaymentNotes("");
-      fetchBill();
-      fetchLateFees();
+      const data = response.data || {};
+      if (data.duplicate_request) {
+        toast.success("This payment was already recorded");
+      } else {
+        toast.success("Payment recorded successfully");
+        const applied = Array.isArray(data.late_fees_applied) ? data.late_fees_applied : [];
+        applied.forEach((fee: { name?: string; total_amount?: number }) =>
+          toast.info(`Late fee ₹${money(fee.total_amount)} was added${fee.name ? ` (${fee.name})` : ""}`)
+        );
+      }
+      resetPaymentForm();
+      reloadInvoice();
     } catch (error) {
       console.error("Error recording payment:", error);
-      const responseData = axios.isAxiosError(error) ? error.response?.data : undefined;
-      const errors = responseData?.errors;
-      const apiError = Array.isArray(errors)
-        ? errors.filter((message): message is string => typeof message === "string").join(" ")
-        : typeof errors === "string"
-          ? errors
-          : undefined;
-      toast.error(apiError || "Failed to record payment");
+      // No response (timeout / network): the payment may have gone through — keep the same
+      // order_number so pressing Submit again can't record it twice.
+      const noResponse = axios.isAxiosError(error) && !error.response;
+      setRetryPending(noResponse);
+      if (!noResponse) setOrderNumber(newRequestId());
+      toast.error(
+        noResponse
+          ? "Network error – please submit again; the payment won't be recorded twice."
+          : apiErrors(error)[0] || "Failed to record payment"
+      );
     } finally {
       setSubmittingPayment(false);
     }
@@ -572,6 +645,14 @@ const AccountingInvoiceDetails: React.FC = () => {
             >
               {bill.status || "Pending"}
             </Badge>
+            {isPaid && lateFeePayable > 0 && (
+              <span className="ml-2 inline-flex flex-wrap items-center gap-2 text-xs">
+                <span className="rounded-full bg-[#C7EDDA] px-2 py-0.5 font-medium text-[#1A6B44]">Principal paid</span>
+                <span className="rounded-full bg-[#F2EBC9] px-2 py-0.5 font-medium text-[#7A5B00]">
+                  Late fees due ₹{money(lateFeePayable)}
+                </span>
+              </span>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
@@ -599,9 +680,10 @@ const AccountingInvoiceDetails: React.FC = () => {
               </Button>
             )}
             <div className="flex flex-wrap gap-2">
-              {!isPaid && shouldShow("Invoices", "update") && (
+              {/* From bill_actions only — stays true on a Paid invoice while late fees are due. */}
+              {canReceivePayment && shouldShow("Invoices", "update") && (
                 <Button
-                  onClick={() => setIsPaymentOpen(true)}
+                  onClick={openPaymentDialog}
                   size="sm"
                   className="bg-[#C72030] px-4 py-2 text-white hover:bg-[#A01020]"
                 >
@@ -710,31 +792,31 @@ const AccountingInvoiceDetails: React.FC = () => {
                   <td className="px-6 py-2 text-right font-semibold">{totalAmount.toFixed(1)}</td>
                 </tr>
                 <tr className="border-t border-gray-200">
-                  <td className="px-6 py-2 text-right font-semibold">Balance Amount</td>
-                  <td className="px-6 py-2 text-right font-semibold">{balanceAmount.toFixed(1)}</td>
-                </tr>
-                <tr className="border-t border-gray-200">
                   <td className="px-6 py-2 text-right font-semibold">Total Receivable Amount</td>
                   <td className="px-6 py-2 text-right font-semibold">
                     {totalReceivable.toFixed(1)}
                   </td>
                 </tr>
-                {hasPaidAmount && (
-                  <tr className="border-t border-gray-200">
-                    <td className="px-6 py-2 text-right font-semibold">Paid Amount</td>
-                    <td className="px-6 py-2 text-right font-semibold">
-                      {paidAmount.toFixed(1)}
-                    </td>
-                  </tr>
-                )}
-                {hasBalanceDue && (
-                  <tr className="border-t border-gray-200">
-                    <td className="px-6 py-2 text-right font-semibold">Balance Due</td>
-                    <td className="px-6 py-2 text-right font-semibold">
-                      {balanceDue.toFixed(1)}
-                    </td>
-                  </tr>
-                )}
+                <tr className="border-t border-gray-200">
+                  <td className="px-6 py-2 text-right font-semibold">Invoice Amount</td>
+                  <td className="px-6 py-2 text-right font-semibold">{money(principalAmount)}</td>
+                </tr>
+                <tr className="border-t border-gray-200">
+                  <td className="px-6 py-2 text-right font-semibold">Principal Paid</td>
+                  <td className="px-6 py-2 text-right font-semibold">{money(principalPaid)}</td>
+                </tr>
+                <tr className="border-t border-gray-200">
+                  <td className="px-6 py-2 text-right font-semibold">Principal Outstanding</td>
+                  <td className="px-6 py-2 text-right font-semibold">{money(principalBalanceDue)}</td>
+                </tr>
+                <tr className="border-t border-gray-200">
+                  <td className="px-6 py-2 text-right font-semibold">Late Fees Payable</td>
+                  <td className="px-6 py-2 text-right font-semibold">{money(lateFeePayable)}</td>
+                </tr>
+                <tr className="border-t-2 border-gray-300 bg-[#F5F4F0]">
+                  <td className="px-6 py-3 text-right text-base font-bold">Total Payable</td>
+                  <td className="px-6 py-3 text-right text-base font-bold">₹{money(totalPayable)}</td>
+                </tr>
                 <tr className="border-t border-gray-200">
                   <td className="px-6 py-2 text-right font-semibold" colSpan={2}>
                     Amt. in word: {amountInWords}
@@ -752,105 +834,177 @@ const AccountingInvoiceDetails: React.FC = () => {
           )}
         </div>
 
-        {/* Late Fees */}
-        <div className="overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white">
-          <div className="px-6 pt-[22px]">
-            <div className="flex items-center gap-3">
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-full"
-                style={{ backgroundColor: "#F5F4F0" }}
-              >
-                <Clock size={14} color="#1A1A18" />
+        {/* Late Fees — every amount comes from GET /lock_account_bills/:id.json as is. */}
+        {(overdueCharges.length > 0 || previousLateFees.length > 0 || pendingCharges.length > 0 || bill.late_fee_carried_forward_to) && (
+          <div className="overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white">
+            <div className="px-6 pt-[22px]">
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-full"
+                  style={{ backgroundColor: "#F5F4F0" }}
+                >
+                  <Clock size={14} color="#1A1A18" />
+                </div>
+                <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18]">Late Fees</h2>
               </div>
-              <h2 className="text-sm font-semibold leading-[1.4] text-[#1A1A18]">Late Fees</h2>
             </div>
-          </div>
-          <div className="overflow-x-auto p-5">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 text-left text-xs text-gray-600">
-                  <th className="px-4 py-2 font-medium">Charge</th>
-                  <th className="px-4 py-2 font-medium">Period</th>
-                  <th className="px-4 py-2 text-right font-medium">Amount</th>
-                  <th className="px-4 py-2 text-right font-medium">GST</th>
-                  <th className="px-4 py-2 text-right font-medium">Total</th>
-                  <th className="px-4 py-2 text-right font-medium">Paid</th>
-                  <th className="px-4 py-2 text-right font-medium">Due</th>
-                  <th className="px-4 py-2 font-medium">Status</th>
-                  {/* <th className="px-4 py-2 font-medium no-print">Action</th> */}
-                </tr>
-              </thead>
-              <tbody>
-                {lateFeesLoading ? (
-                  <tr className="border-t border-gray-200">
-                    <td colSpan={9} className="px-4 py-4 text-center text-gray-500">
-                      Loading late fees...
-                    </td>
-                  </tr>
-                ) : lateFees.length === 0 ? (
-                  <tr className="border-t border-gray-200">
-                    <td colSpan={9} className="px-4 py-4 text-center text-gray-500">
-                      No late fees on this invoice
-                    </td>
-                  </tr>
-                ) : (
-                  lateFees.map((row) => {
-                    const status = LATE_FEE_STATUS[row.status];
-                    const canWaive =
-                      row.applied &&
-                      row.status !== "paid" &&
-                      row.status !== "reversed" &&
-                      row.due > 0 &&
-                      shouldShow("Invoices", "update");
-                    return (
-                      <tr key={row.id} className="border-t border-gray-200">
-                        <td className="px-4 py-2">{row.chargeName}</td>
-                        <td className="px-4 py-2 whitespace-nowrap">{row.period}</td>
-                        <td className="px-4 py-2 text-right">{row.amount.toFixed(2)}</td>
-                        <td className="px-4 py-2 text-right">{row.gst.toFixed(2)}</td>
-                        <td className="px-4 py-2 text-right">{row.total.toFixed(2)}</td>
-                        <td className="px-4 py-2 text-right">{row.paid.toFixed(2)}</td>
-                        <td className="px-4 py-2 text-right font-medium">{row.due.toFixed(2)}</td>
-                        <td className="px-4 py-2">
-                          <span className={`inline-flex items-center whitespace-nowrap border ${status.className}`}>
-                            {status.label}
-                          </span>
-                          {/* {!row.applied && (
-                            <span className="mt-1 block text-[11px] text-gray-400">not posted yet</span>
-                          )} */}
-                        </td>
-                        {/* <td className="px-4 py-2 no-print">
-                          {canWaive ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={waivingId === row.id}
-                              onClick={() => handleWaiveLateFee(row)}
-                              className="h-7 border-[#C72030] px-3 text-xs text-[#C72030] hover:bg-[#C72030]/10"
-                            >
-                              {waivingId === row.id ? "Waiving..." : "Waive"}
-                            </Button>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td> */}
+            <div className="space-y-6 p-5">
+              {bill.late_fee_carried_forward_to && (
+                <p className="rounded-md border border-[#F2EBC9] bg-[#FBF7E6] px-4 py-2 text-sm text-gray-700">
+                  Unpaid late fees of this invoice are payable on invoice{" "}
+                  <InvoiceLink target={bill.late_fee_carried_forward_to} />
+                </p>
+              )}
+
+              {overdueCharges.length > 0 && (
+                <div className="overflow-x-auto">
+                  <h3 className="mb-2 text-sm font-semibold text-[#1A1A18]">Late fees on this invoice</h3>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 text-left text-xs text-gray-600">
+                        <th className="px-4 py-2 font-medium">Fee</th>
+                        <th className="px-4 py-2 font-medium">Period</th>
+                        <th className="px-4 py-2 text-right font-medium">Amount</th>
+                        <th className="px-4 py-2 text-right font-medium">Paid</th>
+                        <th className="px-4 py-2 text-right font-medium">Outstanding</th>
+                        <th className="px-4 py-2 font-medium">Status</th>
+                        {canWaive && <th className="px-4 py-2 font-medium no-print">Action</th>}
                       </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-            {!lateFeesLoading && lateFeeSkippedReasons.length > 0 && (
-              <p className="mt-3 rounded-md bg-[#F5F4F0] px-4 py-2 text-xs text-gray-600">
-                Late fee not applied: {lateFeeSkippedReasons.join("; ")}
-              </p>
-            )}
-            <div className="mt-3 flex justify-end border-t border-gray-200 px-4 pt-3 text-sm font-semibold">
-              <span className="mr-6">Total Due (incl. late fee)</span>
-              <span>{totalDueInclLateFee.toFixed(2)}</span>
+                    </thead>
+                    <tbody>
+                      {overdueCharges.map((fee) => {
+                        const reversed = fee.status === "reversed";
+                        const tax = Number(fee.tax_amount) || 0;
+                        const period = formatLateFeePeriod(fee.period_start, fee.period_end);
+                        const showWaive =
+                          canWaive && !reversed && !fee.carried_to && fee.payment_status !== "Paid";
+                        return (
+                          <tr
+                            key={fee.id}
+                            className={`border-t border-gray-200 ${reversed ? "text-gray-400" : ""}`}
+                          >
+                            <td className={`px-4 py-2 ${reversed ? "line-through" : ""}`}>{fee.name}</td>
+                            <td className={`px-4 py-2 whitespace-nowrap ${reversed ? "line-through" : ""}`}>{period}</td>
+                            <td className={`px-4 py-2 text-right ${reversed ? "line-through" : ""}`}>
+                              {money(fee.total_amount)}
+                              {tax > 0 && (
+                                <span className="block text-[11px] text-gray-400">
+                                  {money(fee.amount)} + {money(tax)} tax
+                                </span>
+                              )}
+                            </td>
+                            <td className={`px-4 py-2 text-right ${reversed ? "line-through" : ""}`}>{money(fee.paid_amount)}</td>
+                            <td className={`px-4 py-2 text-right font-medium ${reversed ? "line-through" : ""}`}>
+                              {money(fee.outstanding_amount)}
+                            </td>
+                            <td className="px-4 py-2">
+                              {reversed ? (
+                                <span className="text-xs text-gray-500">
+                                  Waived{fee.reverse_reason ? ` – ${fee.reverse_reason}` : ""}
+                                </span>
+                              ) : fee.carried_to ? (
+                                <span className="text-xs text-gray-600">
+                                  Payable on invoice <InvoiceLink target={fee.carried_to} />
+                                </span>
+                              ) : (
+                                <LateFeeStatusPill status={fee.payment_status} />
+                              )}
+                            </td>
+                            {canWaive && (
+                              <td className="px-4 py-2 no-print">
+                                {showWaive ? (
+                                  <WaiveButton
+                                    onClick={() =>
+                                      openWaive({
+                                        invoiceId: bill.id,
+                                        overdueChargeId: fee.id,
+                                        label: `${fee.name} (${period}) of ₹${money(fee.outstanding_amount)}`,
+                                      })
+                                    }
+                                  />
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {previousLateFees.length > 0 && (
+                <div className="overflow-x-auto">
+                  <h3 className="mb-2 text-sm font-semibold text-[#1A1A18]">Late fees from earlier invoices</h3>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 text-left text-xs text-gray-600">
+                        <th className="px-4 py-2 font-medium">Invoice</th>
+                        <th className="px-4 py-2 font-medium">Fee</th>
+                        <th className="px-4 py-2 font-medium">Period</th>
+                        <th className="px-4 py-2 text-right font-medium">Amount</th>
+                        <th className="px-4 py-2 text-right font-medium">Paid</th>
+                        <th className="px-4 py-2 text-right font-medium">Outstanding</th>
+                        <th className="px-4 py-2 font-medium">Status</th>
+                        {canWaive && <th className="px-4 py-2 font-medium no-print">Action</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {previousLateFees.map((fee) => {
+                        const period = formatLateFeePeriod(fee.period_start, fee.period_end);
+                        return (
+                          <tr key={fee.overdue_charge_id} className="border-t border-gray-200">
+                            <td className="px-4 py-2">
+                              <InvoiceLink target={fee} />
+                            </td>
+                            <td className="px-4 py-2">{fee.name}</td>
+                            <td className="px-4 py-2 whitespace-nowrap">{period}</td>
+                            <td className="px-4 py-2 text-right">{money(fee.total_amount)}</td>
+                            <td className="px-4 py-2 text-right">{money(fee.paid_amount)}</td>
+                            <td className="px-4 py-2 text-right font-medium">{money(fee.outstanding_amount)}</td>
+                            <td className="px-4 py-2">
+                              <LateFeeStatusPill status={Number(fee.paid_amount) > 0 ? "Part Payment" : "Pending"} />
+                            </td>
+                            {canWaive && (
+                              <td className="px-4 py-2 no-print">
+                                <WaiveButton
+                                  onClick={() =>
+                                    openWaive({
+                                      invoiceId: fee.lock_account_bill_id,
+                                      overdueChargeId: fee.overdue_charge_id,
+                                      label: `${fee.name} (${period}) of ₹${money(fee.outstanding_amount)}`,
+                                    })
+                                  }
+                                />
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  <div className="mt-3 flex justify-end border-t border-gray-200 px-4 pt-3 text-sm font-semibold">
+                    <span className="mr-6">Earlier late fees total</span>
+                    <span>{money(bill.previous_late_fee_total)}</span>
+                  </div>
+                </div>
+              )}
+
+              {pendingCharges.length > 0 && (
+                <ul className="space-y-1 text-xs text-gray-400">
+                  {pendingCharges.map((fee, idx) => (
+                    <li key={`${fee.name}-${fee.period_start ?? idx}`}>
+                      {fee.name}: late fee ₹{money(fee.total_amount)} will be added from{" "}
+                      {formatDateDMY(fee.period_start)}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
-        </div>
+        )}
 
         {/* Payment Details */}
         <div className="overflow-hidden rounded-2xl border border-[rgba(26,26,24,.09)] bg-white">
@@ -930,8 +1084,8 @@ const AccountingInvoiceDetails: React.FC = () => {
 
           <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-4">
             <TextField
-              label="Total Amount"
-              value={paymentTotalAmount.toFixed(1)}
+              label="Total Payable (incl. late fees)"
+              value={money(totalPayable)}
               fullWidth
               variant="outlined"
               disabled
@@ -947,7 +1101,7 @@ const AccountingInvoiceDetails: React.FC = () => {
               onChange={(e) => setPaymentAmount(e.target.value)}
               fullWidth
               variant="outlined"
-              inputProps={{ min: 0, max: paymentTotalAmount, step: "0.01" }}
+              inputProps={{ min: 0, max: totalPayable, step: "0.01" }}
               InputLabelProps={{ shrink: true }}
               InputProps={{ sx: fieldStyles }}
             />
@@ -1032,6 +1186,100 @@ const AccountingInvoiceDetails: React.FC = () => {
               className="!rounded-lg bg-[#C72030] hover:bg-[#B8252F] px-8 text-white"
             >
               {submittingPayment ? "Submitting..." : "Submit"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!waiveTarget} onOpenChange={(open) => !open && !waiving && setWaiveTarget(null)}>
+        <DialogContent className="sm:max-w-md overflow-hidden p-0 [&>button]:hidden">
+          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+            <h2 className="text-lg font-medium text-gray-900">Waive Late Fee</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setWaiveTarget(null)}
+              disabled={waiving}
+              className="h-6 w-6 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="space-y-4 px-6 py-4">
+            <p className="text-sm text-gray-700">{waiveTarget?.label}</p>
+            <div>
+              <div className="relative">
+                <textarea
+                  className="peer w-full rounded-md border border-gray-300 p-3 focus:border-[#DA7756] focus:outline-none focus:ring-1 focus:ring-[#DA7756] resize-y"
+                  rows={4}
+                  value={waiveReason}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 500) setWaiveReason(e.target.value);
+                  }}
+                  placeholder="Enter Reason"
+                  maxLength={500}
+                />
+                <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-normal text-black/60 peer-focus:text-[#DA7756]">
+                  Reason <span style={{ color: "#000000" }}>*</span>
+                </label>
+              </div>
+              <div className="mt-1 text-right text-xs text-gray-400">{waiveReason.length}/500</div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
+            <Button
+              onClick={() => setWaiveTarget(null)}
+              disabled={waiving}
+              className="h-10 px-6 !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={requestWaive}
+              disabled={waiving || !waiveReason.trim()}
+              className="!rounded-lg bg-[#C72030] hover:bg-[#B8252F] px-8 text-white"
+            >
+              Waive
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation popup before the waive request is sent. */}
+      <Dialog open={confirmWaiveOpen} onOpenChange={(open) => !open && !waiving && setConfirmWaiveOpen(false)}>
+        <DialogContent className="sm:max-w-sm overflow-hidden p-0 [&>button]:hidden">
+          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+            <h2 className="text-lg font-medium text-gray-900">Confirm Waive</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setConfirmWaiveOpen(false)}
+              disabled={waiving}
+              className="h-6 w-6 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="space-y-2 px-6 py-4 text-sm text-gray-700">
+            <p>
+              Are you sure you want to waive <span className="font-medium">{waiveTarget?.label}</span>?
+            </p>
+            <p className="text-xs text-gray-500">This cannot be undone.</p>
+          </div>
+          <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
+            <Button
+              onClick={() => setConfirmWaiveOpen(false)}
+              disabled={waiving}
+              className="h-10 px-6 !rounded-lg !border !border-black/10 !bg-white !text-black/70 hover:!border-black/30 hover:!text-black"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleWaiveLateFee}
+              disabled={waiving}
+              className="!rounded-lg bg-[#C72030] hover:bg-[#B8252F] px-8 text-white"
+            >
+              {waiving ? "Waiving..." : "Yes, Waive"}
             </Button>
           </div>
         </DialogContent>

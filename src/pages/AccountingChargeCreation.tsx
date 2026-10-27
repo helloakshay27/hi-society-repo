@@ -16,11 +16,13 @@ import { Button } from "@/components/ui/button";
 import {
   LateFeeRuleFields,
   LateFeeToggle,
+  ServerErrorList,
 } from "@/components/accounting/LateFeeRule";
 import {
   BACKDATE_CONFIRM_MESSAGE,
   LATE_FEE_CHARGE_CATEGORY_ID,
   LateFeeState,
+  apiErrorMessages,
   buildOverduePayload,
   emptyLateFee,
   needsBackdateConfirm,
@@ -147,6 +149,7 @@ const AccountingChargeCreation: React.FC = () => {
   const [gstApplicable, setGstApplicable] = useState(false);
   const [lateFee, setLateFee] = useState(emptyLateFee);
   const [showLateFeeErrors, setShowLateFeeErrors] = useState(false);
+  const [serverErrors, setServerErrors] = useState<string[]>([]);
 
   // charge_type_options.json bundles charge_categories, flat_types, and
   // expense_ledgers into a single response — fetch once and derive whichever
@@ -245,6 +248,7 @@ const AccountingChargeCreation: React.FC = () => {
     }
 
     setSubmitting(true);
+    setServerErrors([]);
     try {
       const baseUrl = API_CONFIG.BASE_URL;
       const token = API_CONFIG.TOKEN;
@@ -295,7 +299,9 @@ const AccountingChargeCreation: React.FC = () => {
       return true;
     } catch (error) {
       console.error("Error creating charge:", error);
-      toast.error("Failed to create charge");
+      const messages = apiErrorMessages(error);
+      setServerErrors(messages);
+      toast.error(messages[0] || "Failed to create charge");
       return false;
     } finally {
       setSubmitting(false);
@@ -629,6 +635,8 @@ const AccountingChargeCreation: React.FC = () => {
             />
           )}
         </SectionCard>
+
+        <ServerErrorList messages={serverErrors} />
 
         <div className="flex justify-end gap-3">
           <Button

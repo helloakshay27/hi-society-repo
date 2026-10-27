@@ -172,7 +172,7 @@ const AccountingReceipts: React.FC = () => {
       const token = API_CONFIG.TOKEN;
       const formData = new FormData();
       formData.append("upl_file", importFile);
-      await axios.post(
+      const response = await axios.post(
         `${baseUrl}/lock_account_bills/import_receipts`,
         formData,
         {
@@ -180,7 +180,17 @@ const AccountingReceipts: React.FC = () => {
           headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         }
       );
-      toast.success("Receipts imported successfully");
+      // Rows the API skipped (e.g. "Duplicate receipt: ...") come back in not_found[].error.
+      const notFound: { error?: string }[] = Array.isArray(response.data?.not_found) ? response.data.not_found : [];
+      const rowErrors = notFound.map((row) => row?.error).filter((m): m is string => typeof m === "string" && !!m);
+      if (rowErrors.length > 0) {
+        toast.warning(`${rowErrors.length} receipt${rowErrors.length === 1 ? "" : "s"} not imported`, {
+          description: rowErrors.join("\n"),
+          duration: 10000,
+        });
+      } else {
+        toast.success("Receipts imported successfully");
+      }
       setIsImportOpen(false);
       setImportFile(null);
       fetchReceipts();
