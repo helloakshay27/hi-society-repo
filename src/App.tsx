@@ -3766,6 +3766,23 @@ function App() {
                         path="/lockated-usage-analytics"
                         element={<LockatedDashboardPage />}
                       />
+                      {/* Standalone Loyalty Dashboards (No HiSociety header/sidebar) */}
+                      <Route
+                        path="/loyalty/home-dashboard"
+                        element={<LoyaltyDashboardNew />}
+                      />
+                      <Route
+                        path="/loyalty/details-dashboard"
+                        element={<LoyaltyDashboard />}
+                      />
+                      <Route
+                        path="/loyalty-dashboard"
+                        element={<LoyaltyDashboardNew />}
+                      />
+                      <Route
+                        path="/loyalty-dashboard-new"
+                        element={<LoyaltyDashboard />}
+                      />
 
                       {/* Post Possession admin dashboard (standalone — own header/tabs) */}
                       <Route
