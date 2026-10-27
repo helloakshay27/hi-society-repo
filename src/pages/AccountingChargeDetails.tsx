@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { API_CONFIG } from "@/config/apiConfig";
 import { useAccountingEvents } from '@/components/PostHogAccountingEvents';
 import { describeLateFee } from "@/components/accounting/lateFeeRuleUtils";
+import { LateFeeBadge } from "@/components/accounting/LateFeeRule";
 
 interface ChargeSetupDetail {
   name: string;
@@ -30,6 +31,7 @@ interface ChargeSetupDetail {
   overdue_rate?: number | string | null;
   overdue_frequency?: string | null;
   overdue_grace_days?: number | null;
+  overdue_effective_from?: string | null;
 }
 
 const formatDateTime = (value?: string) => {
@@ -132,21 +134,23 @@ const AccountingChargeDetails: React.FC = () => {
               <Row label="Cgst Rate (%)" value={detail.cgst_rate ?? "-"} />
               <Row label="Sgst Rate (%)" value={detail.sgst_rate ?? "-"} />
               <Row label="GST Applicable" value={detail.gst_applicable ? "Yes" : "No"} />
-              <Row label="Late Fee Rule" value={lateFee?.enabled ? "Yes" : "No"} />
+              <Row label="Late Fee Rule" value={lateFee?.state ? <LateFeeBadge state={lateFee.state} /> : "No"} />
               <Row label="Created By" value={detail.created_by_name} />
               <Row label="Created At" value={formatDateTime(detail.created_at)} />
               <Row label="Status" value={detail.active ? "Active" : "Inactive"} />
             </div>
           </SectionCard>
 
-          {lateFee?.enabled && (
+          {lateFee?.state && (
             <SectionCard title="Late Fee Rule">
+              <p className="text-sm text-gray-700">{lateFee.summary}</p>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <Row label="Late Fee Type" value={lateFee.type} />
                 <Row label={lateFee.rateLabel} value={lateFee.rate} />
                 {lateFee.calculateOn && <Row label="Calculate On" value={lateFee.calculateOn} />}
                 <Row label="Charge Frequency" value={lateFee.frequency} />
                 <Row label="Grace Period (days)" value={lateFee.graceDays} />
+                <Row label="Effective From" value={lateFee.effectiveFrom ?? "-"} />
               </div>
             </SectionCard>
           )}

@@ -40,6 +40,8 @@ export interface LateFeeState {
   rate: string;
   frequency: OverdueFrequency;
   graceDays: string;
+  /** YYYY-MM-DD; "" = not set (the API then starts the rule today). */
+  effectiveFrom: string;
 }
 
 export const emptyLateFee: LateFeeState = {
@@ -49,9 +51,10 @@ export const emptyLateFee: LateFeeState = {
   rate: "",
   frequency: "one_time",
   graceDays: "",
+  effectiveFrom: "",
 };
 
-export type LateFeeErrors = { rate?: string; frequency?: string; graceDays?: string };
+export type LateFeeErrors = { rate?: string; frequency?: string; graceDays?: string; effectiveFrom?: string };
 
 const isOneOf = <T extends string>(value: unknown, options: { value: T }[]): value is T =>
   options.some((o) => o.value === value);
@@ -68,6 +71,7 @@ export const lateFeeFromCharge = (charge: Record<string, unknown>): LateFeeState
   rate: charge.overdue_rate != null ? String(charge.overdue_rate) : "",
   frequency: isOneOf(charge.overdue_frequency, FREQUENCY_OPTIONS) ? charge.overdue_frequency : emptyLateFee.frequency,
   graceDays: charge.overdue_grace_days != null ? String(charge.overdue_grace_days) : "",
+  effectiveFrom: typeof charge.overdue_effective_from === "string" ? charge.overdue_effective_from.slice(0, 10) : "",
 });
 
 /** Applies one field change, keeping the rule consistent (Interest can't be charged "Once"). */
@@ -94,32 +98,118 @@ export const validateLateFee = (lateFee: LateFeeState): LateFeeErrors => {
     const grace = Number(lateFee.graceDays);
     if (!Number.isInteger(grace) || grace < 0) errors.graceDays = "Use a whole number, 0 or more";
   }
+  if (lateFee.effectiveFrom !== "" && !/^\d{4}-\d{2}-\d{2}$/.test(lateFee.effectiveFrom)) {
+    errors.effectiveFrom = "Use a valid date";
+  }
   return errors;
 };
 
-/** A recurring rule back-charges older unpaid invoices, so saving it needs a confirmation. */
-export const needsBackdateConfirm = (lateFee: LateFeeState) =>
-  lateFee.enabled && lateFee.frequency !== "one_time" && Object.keys(validateLateFee(lateFee)).length === 0;
+const todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 /**
- * overdue_* fields for the charge_setup payload. When the rule is off, `clearWhenOff`
- * sends overdue_trigger "" so an existing rule is switched off on edit.
+ * Fees are only charged from the effective date, so only a recurring rule with a
+ * past effective date back-charges older unpaid invoices — that needs a confirmation.
  */
-export const buildOverduePayload = (lateFee: LateFeeState, clearWhenOff = false): Record<string, unknown> => {
-  if (!lateFee.enabled) return clearWhenOff ? { overdue_trigger: "" } : {};
+export const needsBackdateConfirm = (lateFee: LateFeeState) =>
+  lateFee.enabled &&
+  lateFee.frequency !== "one_time" &&
+  lateFee.effectiveFrom !== "" &&
+  lateFee.effectiveFrom < todayISO() &&
+  Object.keys(validateLateFee(lateFee)).length === 0;
+
+/** True for a charge setup that is a late-fee rule — it must never be used as an invoice line. */
+export const isLateFeeRule = (charge: Record<string, unknown>) =>
+  charge.overdue_trigger != null && charge.overdue_trigger !== "";
+
+const sameValue = (a: unknown, b: unknown) => {
+  if (a == null || a === "") return b == null || b === "";
+  if (typeof a === "number" || typeof b === "number") return Number(a) === Number(b);
+  return String(a) === String(b);
+};
+
+/**
+ * overdue_* fields for the charge_setup payload.
+ * - Create (no `original`): a switched-off rule sends nothing; an empty effective date is left out.
+ * - Edit (`original` = the charge_setup GET response): only changed fields are sent, so
+ *   overdue_effective_from goes out only when the user changed it, and switching the rule off
+ *   sends just overdue_trigger "". The API rejects "" for the date while the rule is on.
+ */
+export const buildOverduePayload = (
+  lateFee: LateFeeState,
+  original?: Record<string, unknown>
+): Record<string, unknown> => {
+  if (!lateFee.enabled) return original && isLateFeeRule(original) ? { overdue_trigger: "" } : {};
   const isInterest = lateFee.calculationType === "percentage";
-  return {
+  const full: Record<string, unknown> = {
     overdue_trigger: OVERDUE_TRIGGER,
     overdue_calculation_type: lateFee.calculationType,
     ...(isInterest ? { overdue_calculation_base: lateFee.calculationBase } : {}),
     overdue_rate: Number(lateFee.rate),
     overdue_frequency: lateFee.frequency,
     overdue_grace_days: lateFee.graceDays === "" ? 0 : Number(lateFee.graceDays),
+    ...(lateFee.effectiveFrom !== "" ? { overdue_effective_from: lateFee.effectiveFrom } : {}),
   };
+  if (!original) return full;
+  const originalDate =
+    typeof original.overdue_effective_from === "string" ? original.overdue_effective_from.slice(0, 10) : "";
+  return Object.fromEntries(
+    Object.entries(full).filter(([key, value]) =>
+      key === "overdue_effective_from" ? value !== originalDate : !sameValue(value, original[key])
+    )
+  );
+};
+
+/** Messages from a 422 body: `{ errors: [...] }` or `{ error: "..." }`. */
+export const apiErrorMessages = (error: unknown): string[] => {
+  const data = (error as { response?: { data?: unknown } })?.response?.data;
+  if (!data || typeof data !== "object") return [];
+  const { errors, error: single } = data as Record<string, unknown>;
+  if (Array.isArray(errors)) return errors.filter((m): m is string => typeof m === "string" && m.trim() !== "");
+  if (typeof errors === "string" && errors.trim()) return [errors];
+  if (typeof single === "string" && single.trim()) return [single];
+  return [];
 };
 
 const labelOf = <T extends string>(options: { value: T; label: string }[], value: unknown) =>
   options.find((o) => o.value === value)?.label;
+
+const formatEffectiveDate = (value: unknown): string | null => {
+  if (typeof value !== "string" || !value) return null;
+  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+};
+
+/**
+ * Late fee state of a charge setup for the list/details pages:
+ * - "active": rule on with an effective date
+ * - "inactive": rule on but no effective date — it charges nothing
+ * - "off": rule switched off but its overdue_* fields are still filled
+ * - null: a normal charge
+ */
+export const lateFeeRuleState = (charge: Record<string, unknown>): "active" | "inactive" | "off" | null => {
+  if (isLateFeeRule(charge)) return charge.overdue_effective_from ? "active" : "inactive";
+  const hasRuleFields = ["overdue_calculation_type", "overdue_rate", "overdue_frequency"].some(
+    (key) => charge[key] != null && charge[key] !== ""
+  );
+  return hasRuleFields ? "off" : null;
+};
+
+const FREQUENCY_SUMMARY: Record<string, string> = { one_time: "once", daily: "daily", monthly: "monthly" };
+
+/** e.g. "₹100 once after 1 grace day, from 01 Nov 2026" / "18% p.a. monthly after 5 grace days, from …". */
+export const lateFeeSummary = (charge: Record<string, unknown>): string => {
+  const isInterest = charge.overdue_calculation_type === "percentage";
+  const rate = charge.overdue_rate;
+  const amount = rate == null || rate === "" ? "-" : isInterest ? `${rate}% p.a.` : `₹${rate}`;
+  const grace = Number(charge.overdue_grace_days) || 0;
+  const from = formatEffectiveDate(charge.overdue_effective_from);
+  const parts = [amount, FREQUENCY_SUMMARY[String(charge.overdue_frequency)], `after ${grace} grace ${grace === 1 ? "day" : "days"}`];
+  return parts.filter(Boolean).join(" ") + (from ? `, from ${from}` : "");
+};
 
 /** Display labels for the details page. */
 export const describeLateFee = (charge: Record<string, unknown>) => {
@@ -127,6 +217,9 @@ export const describeLateFee = (charge: Record<string, unknown>) => {
   const rate = charge.overdue_rate;
   return {
     enabled: charge.overdue_trigger === OVERDUE_TRIGGER,
+    state: lateFeeRuleState(charge),
+    summary: lateFeeSummary(charge),
+    effectiveFrom: formatEffectiveDate(charge.overdue_effective_from),
     type: labelOf(LATE_FEE_TYPE_OPTIONS, charge.overdue_calculation_type) ?? "-",
     rateLabel: isInterest ? "Interest Rate (% per year)" : "Amount (₹)",
     rate: rate != null && rate !== "" ? (isInterest ? `${rate}%` : `₹${rate}`) : "-",
