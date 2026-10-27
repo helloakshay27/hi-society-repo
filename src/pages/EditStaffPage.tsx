@@ -580,7 +580,7 @@ export const EditStaffPage = () => {
                 }}
               />
               
-              <TextField
+              {/* <TextField
                 label="Vendor Name"
                 placeholder="Vendor Name"
                 value={formData.vendorName}
@@ -595,7 +595,7 @@ export const EditStaffPage = () => {
                 InputProps={{
                   sx: fieldStyles,
                 }}
-              />
+              /> */}
               
               <TextField
                 label="Valid From*"

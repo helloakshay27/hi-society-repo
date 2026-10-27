@@ -67,6 +67,29 @@ const fixedStates = [
   { value: 'customer action pending', label: 'Customer Action Pending' },
 ];
 
+const getApiErrorMessage = (payload: unknown): string | undefined => {
+  if (typeof payload === 'string') return payload.trim() || undefined;
+  if (!payload || typeof payload !== 'object') return undefined;
+
+  const data = payload as Record<string, unknown>;
+  const collectMessages = (value: unknown): string[] => {
+    if (typeof value === 'string') return value.trim() ? [value.trim()] : [];
+    if (Array.isArray(value)) return value.flatMap(collectMessages);
+    if (value && typeof value === 'object') {
+      return Object.values(value as Record<string, unknown>).flatMap(collectMessages);
+    }
+    return [];
+  };
+
+  for (const key of ['message', 'error', 'error_description', 'detail', 'errors']) {
+    const messages = collectMessages(data[key]);
+    if (messages.length) return messages.join(', ');
+  }
+
+  const messages = collectMessages(data);
+  return messages.length ? messages.join(', ') : undefined;
+};
+
 export const StatusTab: React.FC = () => {
   const { shouldShow } = useDynamicPermissions();
   const dispatch = useDispatch<any>();
@@ -150,8 +173,15 @@ export const StatusTab: React.FC = () => {
       if (response.ok) {
         toast.success('Ticket settings updated successfully!');
       } else {
-        const errorData = await response.json().catch(() => null);
-        toast.error(errorData?.message || errorData?.error || 'Failed to update ticket settings');
+        const responseBody = await response.text().catch(() => '');
+        let errorData: unknown = responseBody;
+        try {
+          errorData = responseBody ? JSON.parse(responseBody) : null;
+        } catch {
+          // The API may return a plain-text validation error.
+        }
+        const errorMessage = getApiErrorMessage(errorData);
+        toast.error(errorMessage || `Failed to update ticket settings (${response.status})`);
       }
     } catch (error: any) {
       const msg = error?.response?.data?.message
