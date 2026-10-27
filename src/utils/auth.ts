@@ -235,8 +235,8 @@ export const fetchLockAccount = async (): Promise<void> => {
 
 // Clear all auth data
 export const clearAuth = (): void => {
-  // Save layout preferences before clearing
-  const layoutMode = localStorage.getItem('layoutMode');
+  // Save layout preferences before clearing. layoutMode (FM / Hi-Society
+  // switch) is intentionally not preserved, so each login starts fresh.
   const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
 
   localStorage.removeItem(AUTH_KEYS.USER);
@@ -247,10 +247,6 @@ export const clearAuth = (): void => {
   localStorage.clear();
 
   // Restore layout preferences after clearing
-  if (layoutMode) {
-    localStorage.setItem('layoutMode', layoutMode);
-    console.log('🎨 Preserved layoutMode during auth clear:', layoutMode);
-  }
   if (sidebarCollapsed) {
     localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
   }
