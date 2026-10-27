@@ -28,7 +28,6 @@ import { ViewSelectionModal } from "./ViewSelectionModal";
 
 import { ActionSidebar } from "./ActionSidebar";
 import { ActionHeader } from "./ActionHeader";
-import { useActionLayout } from "../contexts/ActionLayoutContext";
 import { UIHiSocietySidebar } from "./UIHiSocietySidebar";
 import { UIHiSocietyNavigation } from "./UIHiSocietyNavigation";
 import { ZxSidebar } from "./ZxSidebar";
@@ -50,7 +49,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     isMobileSidebarOpen,
     setIsMobileSidebarOpen,
   } = useLayout();
-  const { isActionSidebarVisible } = useActionLayout();
   const { selectedCompany } = useSelector((state: RootState) => state.project);
   const { selectedSite } = useSelector((state: RootState) => state.site);
   const location = useLocation();
@@ -176,6 +174,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     userEmail === "megipow156@aixind.com" ||
     userEmail === "jevosak839@cimario.com";
 
+  // Action sidebar/header orgs only apply in Hi-Society mode; switching to
+  // FM Matrix falls through to the regular FM sidebar + dynamic header.
+  const isActionLayoutAccount =
+    layoutMode === "hi-society" &&
+    (userEmail === "dineshshinde6666@gmail.com" ||
+      org_id === "109" ||
+      org_id === "324" ||
+      org_id === "10" ||
+      org_id === "5" ||
+      org_id === "9");
+
   // Layout behavior:
   // - Company ID 189 (Lockated HO): Default layout (Sidebar + DynamicHeader)
   // - Company ID 199 (Customer Support): Default layout (Sidebar + DynamicHeader)
@@ -194,12 +203,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     const hasToken = hasTokenParam || storedToken;
 
     if (
-      userEmail === "dineshshinde6666@gmail.com" ||
-      org_id === "109" ||
-      org_id === "324" ||
-      org_id === "10" ||
-      org_id === "5" ||
-      org_id === "9"
+      isActionLayoutAccount
     ) {
       console.log("✅ Rendering ActionSidebar (company-specific)");
       return <ActionSidebar />;
@@ -290,12 +294,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     // Company-specific logic (Admin layout)
 
     if (
-      userEmail === "dineshshinde6666@gmail.com" ||
-      org_id === "109" ||
-      org_id === "324" ||
-      org_id === "10" ||
-      org_id === "5" ||
-      org_id === "9"
+      isActionLayoutAccount
     ) {
       return <ActionHeader />;
     }
@@ -403,34 +402,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [activeNavMenu, setActiveNavMenu] = useState<string | null>(null);
   const isNewEmpHubRoute = location.pathname === "/employee/company-hub-new";
 
-  // Effect to set the current section based on the route
-  useEffect(() => {
-    const path = location.pathname;
-
-    if (path.startsWith('/setup')) { // Covers KYC details and other setup routes
-      setCurrentSection('settings');
-    } else if (path.startsWith('/dashboard')) {
-      setCurrentSection('dashboard');
-    } else if (path.startsWith('/tickets')) {
-      setCurrentSection('tickets');
-    } else if (path.startsWith('/maintenance')) {
-      setCurrentSection('maintenance');
-    } else if (path.startsWith('/incidents')) {
-      setCurrentSection('incidents');
-    } else if (path.startsWith('/inventory')) {
-      setCurrentSection('inventory');
-    } else if (path.startsWith('/fitout')) {
-      setCurrentSection('fitout');
-    } else if (path.startsWith('/snagging')) {
-      setCurrentSection('snagging');
-    } else if (path.startsWith('/club-management')) {
-      setCurrentSection('club-management');
-    } else if (path.startsWith('/events')) {
-      setCurrentSection('events');
-    }
-    // Add more routes here if needed to ensure correct section highlighting
-  }, [location.pathname, setCurrentSection]);
-
   return (
     <div
       className="min-h-screen bg-[#fafafa]"
@@ -490,11 +461,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   ? "md:ml-16 ml-0"
                   : "md:ml-64 ml-0"
                 : // FM Matrix mode - always show sidebar margin for admin users
-                isActionSidebarVisible
-                  ? "md:ml-64 ml-0 pt-28"
-                  : isSidebarCollapsed
-                    ? "md:ml-16 ml-0"
-                    : "md:ml-64 ml-0"
+                isSidebarCollapsed
+                  ? "md:ml-16 ml-0"
+                  : "md:ml-64 ml-0"
               } ${
               // Top padding based on mode
               layoutMode === "hi-society"
@@ -503,9 +472,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 isCSUser || isRMUser
                   ? "pt-16"
                   : "pt-28"
-                : isActionSidebarVisible
-                  ? ""
-                  : "pt-28"
+                : "pt-28"
               }`}
           >
             <RouteErrorBoundary locationKey={location.key}>

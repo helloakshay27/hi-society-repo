@@ -152,6 +152,7 @@ export const Header = () => {
 
   const isClubSite = hostname === "club.lockated.com" || "recess-club.panchshil.com";
   const org_id = localStorage.getItem("org_id");
+  const orgLogoUrl = localStorage.getItem("org_logo_url");
 
   const isPulseSite =
     hostname === "pulse.lockated.com" ||
@@ -539,7 +540,13 @@ export const Header = () => {
           >
             <Menu className="w-5 h-5" />
           </button>
-          {isOmanSite ? (
+          {orgLogoUrl ? (
+            <img
+              src={orgLogoUrl}
+              alt="Organization Logo"
+              className="h-10 w-auto max-w-[200px] object-contain"
+            />
+          ) : isOmanSite ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
               xmlnsXlink="http://www.w3.org/1999/xlink"
