@@ -2707,6 +2707,7 @@ import ProjectTaskDetailsMobile from "./components/ProjectTaskDetailsMobile";
 import MilestoneDetailsMobile from "./components/MilestoneDetailsMobile";
 import VisitorSharingFormWeb from "./components/VisitorSharingFormWeb";
 import { ActionLayoutProvider } from "./contexts/ActionLayoutContext";
+import { SpeechProvider } from "./contexts/SpeechContext";
 const EventUserDetailsPage = lazy(() => import("./pages/EventUserDetailsPage"));
 const OnlyOfficePublicEditorPage = lazy(() =>
   import("./pages/OnlyOfficePublicEditorPage").then((m) => ({
@@ -3410,6 +3411,7 @@ function App() {
           <EnhancedSelectProvider>
             <LayoutProvider>
               <PermissionsProvider>
+                <SpeechProvider>
                 <ActionLayoutProvider>
                   <Suspense
                     fallback={
@@ -9684,6 +9686,7 @@ function App() {
                   {/* Toast position/styling is defined globally in components/ui/sonner.tsx */}
                   <SonnerToaster />
                 </ActionLayoutProvider>
+                </SpeechProvider>
               </PermissionsProvider>
             </LayoutProvider>
           </EnhancedSelectProvider>
