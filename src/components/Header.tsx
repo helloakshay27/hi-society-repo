@@ -48,6 +48,7 @@ import { AnalyticsGrid } from "./dashboard/AnalyticsGrid";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import axios from "axios";
 import { useLayout } from "@/contexts/LayoutContext";
+import { usePermissions } from "@/contexts/PermissionsContext";
 import { Button } from "@/components/ui/button";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useHiSocietyProductForSelectedOrganization } from "@/hooks/useHiSocietyProductForSelectedOrganization";
@@ -110,6 +111,7 @@ export const Header = () => {
 
   const dispatch = useDispatch<AppDispatch>();
   const { layoutMode, toggleLayoutMode } = useLayout();
+  const { refreshPermissions } = usePermissions();
   const hiSocietyProduct = useHiSocietyProductForSelectedOrganization();
   console.log("layoutMode:-", layoutMode);
 
@@ -892,13 +894,16 @@ export const Header = () => {
           {/* Switch products only when the target product is available */}
           {(layoutMode === 'hi-society' || hiSocietyProduct) && (
             <Button
-              onClick={() => {
+              onClick={async () => {
                 if (layoutMode === 'hi-society') {
                   toggleLayoutMode();
                   navigate('/maintenance/asset');
                 } else {
                   if (hiSocietyProduct?.backendUrl) {
                     saveBaseUrl(hiSocietyProduct.backendUrl);
+                    // Cached role belongs to the FM backend; reload it from the
+                    // Hi-Society backend so ActionSidebar can match the route
+                    await refreshPermissions();
                   }
                   toggleLayoutMode();
                   navigate('/maintenance/project-details-list');

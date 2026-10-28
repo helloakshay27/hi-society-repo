@@ -149,7 +149,7 @@ export const HiSocietyHeader = () => {
     "53815",
   ];
 
-  const { userRole } = usePermissions();
+  const { userRole, refreshPermissions } = usePermissions();
 
   // Load user display name and role name from localStorage for immediate paint
   useEffect(() => {
@@ -617,10 +617,12 @@ export const HiSocietyHeader = () => {
           {/* Show FM only when the selected organization includes an FM product */}
           {fmProduct && (
             <Button
-              onClick={() => {
+              onClick={async () => {
                 // Keep the current tab and frontend host; switch the API
                 // backend and render the FM layout route in place.
                 saveBaseUrl(fmProduct.backendUrl);
+                // Reload the role from the FM backend (cached one is Hi-Society's)
+                await refreshPermissions();
                 if (layoutMode !== "fm-matrix") toggleLayoutMode();
                 navigate("/maintenance/asset");
               }}
