@@ -370,7 +370,7 @@ export function LoyaltyDashboard() {
         const ruleCatChartData = firesByCategory.length > 0 ? {
           labels: firesByCategory.map((c: any) => c.category || c.name || 'Unknown'),
           values: firesByCategory.map((c: any) => c.fires_mtd || c.count || c.fires || 0),
-          colors: ['var(--loyalty-accent)', 'var(--loyalty-success)', 'var(--loyalty-warning)', 'var(--loyalty-info)', 'var(--loyalty-danger)', 'var(--loyalty-text)'].slice(0, firesByCategory.length),
+          colors: CHART_COLORS.slice(0, firesByCategory.length),
           h: false,
           def: 'bar'
         } : undefined;
@@ -383,7 +383,7 @@ export function LoyaltyDashboard() {
             return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
           }),
           values: dailyFires.map((d: any) => d.fires || 0),
-          colors: ['var(--loyalty-accent)'],
+          colors: [CHART_COLORS[0]],
           h: false,
           def: 'line'
         } : undefined;
@@ -572,7 +572,7 @@ export function LoyaltyDashboard() {
         const memTiersChartData = memTierDist.length > 0 ? {
           labels: memTierDist.map((t: any) => t.name || 'Unknown'),
           values: memTierDist.map((t: any) => t.member_count || 0),
-          colors: ['var(--loyalty-border)','var(--loyalty-subtle)','var(--loyalty-warning)', 'var(--loyalty-info)', 'var(--loyalty-danger)', 'var(--loyalty-text)'].slice(0, memTierDist.length),
+          colors: CHART_COLORS.slice(0, memTierDist.length),
           h: false,
           def: 'doughnut'
         } : undefined;
@@ -581,7 +581,7 @@ export function LoyaltyDashboard() {
         const newMemChartData = newMemData.length > 0 ? {
           labels: newMemData.map((d: any) => formatMonth(d.month)),
           values: newMemData.map((d: any) => d.count),
-          colors: ['var(--loyalty-info)'],
+          colors: [CHART_COLORS[0]],
           label: 'New Members',
           h: false,
           def: 'bar'
@@ -694,7 +694,7 @@ export function LoyaltyDashboard() {
         const redTypeChartData = redByType.length > 0 ? {
           labels: redByType.map((r: any) => r.type),
           values: redByType.map((r: any) => r.count),
-          colors: ['var(--loyalty-accent)', 'var(--loyalty-success)', 'var(--loyalty-warning)', 'var(--loyalty-info)'],
+          colors: CHART_COLORS.slice(0, redByType.length),
           h: false,
           def: 'doughnut'
         } : undefined;
@@ -706,7 +706,7 @@ export function LoyaltyDashboard() {
             return formatMonth(r.month);
           }),
           values: redTrend.map((r: any) => r.redemption_rate_pct ?? 0),
-          colors: ['var(--loyalty-accent)'],
+          colors: [CHART_COLORS[0]],
           label: 'Redemption Rate (%)',
           h: false,
           def: 'line'
@@ -858,9 +858,9 @@ export function LoyaltyDashboard() {
           def: 'bar',
           h: false,
           datasets: [
-            { label: 'Issued', data: flowData.map((d: any) => d.issued), bg: 'var(--loyalty-success)', bc: 'var(--loyalty-success)' },
-            { label: 'Redeemed', data: flowData.map((d: any) => d.redeemed), bg: 'var(--loyalty-danger-text)', bc: 'var(--loyalty-danger-text)' },
-            { label: 'Balance', data: flowData.map((d: any) => d.balance), bg: 'var(--loyalty-info)', bc: 'var(--loyalty-info)' }
+            { label: 'Issued', data: flowData.map((d: any) => d.issued), bg: CHART_COLORS[1], bc: CHART_COLORS[1] },
+            { label: 'Redeemed', data: flowData.map((d: any) => d.redeemed), bg: CHART_COLORS[0], bc: CHART_COLORS[0] },
+            { label: 'Balance', data: flowData.map((d: any) => d.balance), bg: CHART_COLORS[2], bc: CHART_COLORS[2] }
           ]
         } : undefined;
 
@@ -1053,7 +1053,7 @@ export function LoyaltyDashboard() {
         const orderAgeChartData = orderAgeDist.length > 0 ? {
           labels: orderAgeDist.map((d: any) => d.bucket),
           values: orderAgeDist.map((d: any) => d.count),
-          colors: ['var(--loyalty-info)', 'var(--loyalty-info)', 'var(--loyalty-info)', 'var(--loyalty-info)'], // Provide enough colors for the bars
+          colors: CHART_COLORS.slice(0, orderAgeDist.length),
           h: false,
           def: 'bar'
         } : undefined;
@@ -1062,7 +1062,7 @@ export function LoyaltyDashboard() {
         const fVsSChartData = {
           labels: ['Fulfilled', 'Stuck'],
           values: [fVsS.fulfilled, fVsS.stuck],
-          colors: ['var(--loyalty-success)', 'var(--loyalty-danger)'],
+          colors: [CHART_COLORS[1], CHART_COLORS[0]],
           h: false,
           def: 'doughnut'
         };
@@ -1185,8 +1185,8 @@ export function LoyaltyDashboard() {
         const funnelChartData = funnelLabels.length > 0 ? {
           labels: funnelLabels,
           datasets: [
-            { label: 'Catalog', data: funnelCatalog, bg: 'var(--loyalty-divider)', bc: 'var(--loyalty-border)' },
-            { label: 'Added to Store', data: funnelAdded, bg: 'var(--loyalty-accent)', bc: 'var(--loyalty-accent-hover)' }
+            { label: 'Catalog', data: funnelCatalog, bg: CHART_COLORS[0], bc: CHART_COLORS[0] },
+            { label: 'Added to Store', data: funnelAdded, bg: CHART_COLORS[1], bc: CHART_COLORS[1] }
           ],
           h: false,
           def: 'bar',
@@ -1198,7 +1198,7 @@ export function LoyaltyDashboard() {
         const catMixChartData = catMixLabels.length > 0 ? {
           labels: catMixLabels,
           values: catMixValues,
-          colors: ['var(--loyalty-accent)', 'var(--loyalty-success)', 'var(--loyalty-warning)', 'var(--loyalty-info)', 'var(--loyalty-warning)', 'var(--loyalty-danger)'],
+          colors: CHART_COLORS.slice(0, catMixLabels.length),
           h: false,
           def: 'doughnut'
         } : undefined;
@@ -1322,20 +1322,20 @@ export function LoyaltyDashboard() {
   return (
     <div className="loyalty-dashboard-theme min-h-screen bg-[var(--loyalty-bg)] font-[Poppins] text-[var(--loyalty-text)]">
       {/* Topbar */}
-      <div className="flex flex-wrap items-center justify-between gap-y-2 bg-white border-b border-[var(--loyalty-border)] px-4 md:px-5 py-2.5 min-h-[60px] sticky top-0 z-[300] shadow-[0_1px_6px_rgba(var(--color-text-rgb),.08)]">
+      <div className="loyalty-detail-header flex flex-wrap items-center justify-between gap-y-2 bg-white border-b border-[var(--loyalty-border)] px-4 md:px-5 py-2.5 min-h-[60px] sticky top-0 z-[300] shadow-[0_1px_6px_rgba(var(--color-text-rgb),.08)]">
 
         {/* ── LEFT GROUP ── */}
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => navigate('/loyalty/home-dashboard')}
             title="Back to Loyalty home"
-            className="flex items-center justify-center w-8 h-8 rounded-lg border border-[var(--loyalty-border)] text-[var(--loyalty-text)] bg-white cursor-pointer transition-colors hover:border-[var(--loyalty-accent)] shrink-0"
+            className="loyalty-detail-header-control flex items-center justify-center w-8 h-8 rounded-lg border border-[var(--loyalty-border)] !text-[#1a1a18] bg-white cursor-pointer transition-colors hover:border-[var(--loyalty-accent)] shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="min-w-0">
-            <div className="text-[13.5px] font-bold text-[var(--loyalty-text)] leading-tight truncate">Loyalty Programme Detail</div>
-            <div className="text-[10px] text-[var(--loyalty-subtle)] font-medium truncate">Rules, members, redemption, wallet, orders &amp; store</div>
+            <div className="loyalty-detail-header-title text-[13.5px] font-bold !text-[#1a1a18] leading-tight truncate">Loyalty Programme Detail</div>
+            <div className="loyalty-detail-header-subtitle text-[10px] !text-[#666666] font-medium truncate">Rules, members, redemption, wallet, orders &amp; store</div>
           </div>
         </div>
 
@@ -1345,7 +1345,7 @@ export function LoyaltyDashboard() {
           <div className="relative" ref={filterRef}>
             <button
               onClick={() => { setDraftRange(customRange); setIsFilterOpen((o) => !o); }}
-              className="flex items-center gap-1.5 border border-[var(--loyalty-border)] rounded-[7px] px-2.5 py-[6px] text-[11px] font-semibold text-[var(--loyalty-text)] bg-white cursor-pointer hover:border-[var(--loyalty-accent)] transition-colors whitespace-nowrap"
+              className="loyalty-detail-header-control flex items-center gap-1.5 border border-[var(--loyalty-border)] rounded-[7px] px-2.5 py-[6px] text-[11px] font-semibold !text-[#1a1a18] bg-white cursor-pointer hover:border-[var(--loyalty-accent)] transition-colors whitespace-nowrap"
             >
               <Calendar className="w-3.5 h-3.5" />
               {dateLabel}
@@ -1401,11 +1401,11 @@ export function LoyaltyDashboard() {
       </div>
 
       {/* TabNav */}
-      <div className="flex gap-0 px-4 md:px-5 bg-white border-b border-[var(--loyalty-border)] md:sticky md:top-[60px] z-[299] overflow-x-auto overflow-y-hidden scrollbar-hide">
+      <div className="loyalty-detail-tabs flex gap-0 px-4 md:px-5 bg-white border-b border-[var(--loyalty-border)] md:sticky md:top-[60px] z-[299] overflow-x-auto overflow-y-hidden scrollbar-hide">
         {tabs.map(tab => (
           <div 
             key={tab}
-            className={`flex items-center gap-[5px] px-[14px] py-[10px] border-b-2 text-[10.5px] cursor-pointer whitespace-nowrap transition-all duration-150 mb-[-1px] ${activeTab === tab ? 'text-[var(--loyalty-accent)] border-[var(--loyalty-accent)] font-semibold' : 'border-transparent font-medium text-[var(--loyalty-green)] hover:text-[var(--loyalty-accent)]'}`}
+            className={`loyalty-detail-tab flex items-center gap-[5px] px-[14px] py-[10px] border-b-2 text-[10.5px] !text-[#1a1a18] cursor-pointer whitespace-nowrap transition-all duration-150 mb-[-1px] ${activeTab === tab ? 'border-[var(--loyalty-accent)] font-semibold' : 'border-transparent font-medium'}`}
             onClick={() => setActiveTab(tab)}
           >
             <span className="flex items-center gap-[5px]">
