@@ -5297,11 +5297,11 @@ html body #root header button[class*="border-[#D5DbDB]" i] svg {
   stroke: currentColor !important;
 }
 
-html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-building-2):has(svg.lucide-chevron-down),
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg:is(.lucide-building2, .lucide-building-2)):has(svg.lucide-chevron-down),
 html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-map-pin):has(svg.lucide-chevron-down),
-html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-building-2):has(svg.lucide-chevron-down):hover,
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg:is(.lucide-building2, .lucide-building-2)):has(svg.lucide-chevron-down):hover,
 html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-map-pin):has(svg.lucide-chevron-down):hover,
-html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-building-2):has(svg.lucide-chevron-down):focus-visible,
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg:is(.lucide-building2, .lucide-building-2)):has(svg.lucide-chevron-down):focus-visible,
 html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-map-pin):has(svg.lucide-chevron-down):focus-visible {
   display: inline-flex !important;
   align-items: center !important;
@@ -5316,7 +5316,7 @@ html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-map-pin):h
   box-shadow: none !important;
 }
 
-html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-building-2):has(svg.lucide-chevron-down) svg,
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg:is(.lucide-building2, .lucide-building-2)):has(svg.lucide-chevron-down) svg,
 html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-map-pin):has(svg.lucide-chevron-down) svg {
   color: rgba(26, 26, 24, 0.48) !important;
   stroke: currentColor !important;

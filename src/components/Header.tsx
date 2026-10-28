@@ -930,7 +930,7 @@ export const Header = () => {
                     await refreshPermissions();
                   }
                   toggleLayoutMode();
-                  navigate("/maintenance/project-details-list");
+                  navigate("/bms/hisoc-notice-list");
                 }
               }}
               variant="outline"
