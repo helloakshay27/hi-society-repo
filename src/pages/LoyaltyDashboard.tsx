@@ -561,6 +561,13 @@ export function LoyaltyDashboard() {
       }
       case 'Members': {
         const topEarner = membersData?.top_earners?.[0];
+        const topEarnerName = typeof topEarner === 'object' && topEarner !== null
+          ? (topEarner.name || 'N/A')
+          : (typeof topEarner === 'string' && topEarner ? topEarner : 'N/A');
+        const topEarnerSub = typeof topEarner === 'object' && topEarner !== null && topEarner.points_earned_this_month != null
+          ? `${fmtNum(topEarner.points_earned_this_month)} pts earned`
+          : 'No activity';
+
         const memTierDist = membersData?.tier_distribution || dashboardData?.tier_distribution || [];
         const memTiersChartData = memTierDist.length > 0 ? {
           labels: memTierDist.map((t: any) => t.name || 'Unknown'),
@@ -572,13 +579,10 @@ export function LoyaltyDashboard() {
 
         const newMemData = membersData?.new_members_by_month || [];
         const newMemChartData = newMemData.length > 0 ? {
-          labels: newMemData.map((d: any) => {
-            const [y, m] = d.month.split('-');
-            const date = new Date(parseInt(y), parseInt(m) - 1);
-            return date.toLocaleString('default', { month: 'short', year: 'numeric' });
-          }),
+          labels: newMemData.map((d: any) => formatMonth(d.month)),
           values: newMemData.map((d: any) => d.count),
           colors: ['var(--loyalty-info)'],
+          label: 'New Members',
           h: false,
           def: 'bar'
         } : undefined;
@@ -597,7 +601,7 @@ export function LoyaltyDashboard() {
               <KpiStripCard title="Active Members" value={membersData?.total_members?.toLocaleString() ?? "0"} sub="Total enrolled residents" onClick={() => openDrill('members-kpi', 'Active Member Status')} icon={<UserCheck className="w-3.5 h-3.5" />} iconBg="bg-[var(--loyalty-success)]/10" iconColor="text-[var(--loyalty-success)]" />
               <KpiStripCard title="Lapsed (>60 days)" value={membersData?.lapsed_members?.toLocaleString() ?? "0"} sub={`<span class='text-[var(--loyalty-danger-text)] font-semibold'>${lapseRate}%</span> churn risk`} onClick={() => openDrill('lapsed', 'Lapsed Member Analysis')} icon={<AlertTriangle className="w-3.5 h-3.5" />} iconBg="bg-[var(--loyalty-danger)]/15" iconColor="text-[var(--loyalty-danger-text)]" />
               <KpiStripCard title="New Members (MTD)" value={membersData?.new_members_this_month?.toLocaleString() ?? "0"} sub="Enrolled this month" icon={<Users className="w-3.5 h-3.5" />} iconBg="bg-[var(--loyalty-info)]/15" iconColor="text-[var(--loyalty-info)]" />
-              <KpiStripCard title="Top Earner (MTD)" value={topEarner ? topEarner.name : "N/A"} sub={topEarner ? `${topEarner.points_earned_this_month} pts earned` : "No activity"} icon={<Award className="w-3.5 h-3.5" />} iconBg="bg-[var(--loyalty-warning)]/20" iconColor="text-[var(--loyalty-warning)]" />
+              <KpiStripCard title="Top Earner (MTD)" value={topEarnerName} sub={topEarnerSub} icon={<Award className="w-3.5 h-3.5" />} iconBg="bg-[var(--loyalty-warning)]/20" iconColor="text-[var(--loyalty-warning)]" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[14px] mb-[14px]">
               <ChartCard 
@@ -676,7 +680,15 @@ export function LoyaltyDashboard() {
         const totalRedemptions = redemptionData?.total_redemptions_mtd ?? 0;
         const redemptionRate = redemptionData?.redemption_rate_mtd ?? 0;
         const pending = redemptionData?.pending_encashments || { count: 0, points_total: 0, amount_total_inr: 0 };
-        const topCategory = redemptionData?.top_category ?? 'N/A';
+        
+        // Handle both string and object shapes ({ name, share_pct }) from backend
+        const rawTopCat = redemptionData?.top_category;
+        const topCategoryName = typeof rawTopCat === 'object' && rawTopCat !== null
+          ? (rawTopCat.name || 'N/A')
+          : (typeof rawTopCat === 'string' && rawTopCat ? rawTopCat : 'N/A');
+        const topCategorySub = typeof rawTopCat === 'object' && rawTopCat !== null && rawTopCat.share_pct != null
+          ? `${rawTopCat.share_pct}% of all redemptions`
+          : 'Most popular redemption type';
 
         const redByType = redemptionData?.redemption_by_type || [];
         const redTypeChartData = redByType.length > 0 ? {
@@ -690,12 +702,12 @@ export function LoyaltyDashboard() {
         const redTrend = redemptionData?.redemption_rate_trend_by_month || [];
         const redTrendChartData = redTrend.length > 0 ? {
           labels: redTrend.map((r: any) => {
-            const [y, m] = r.month.split('-');
-            const date = new Date(parseInt(y), parseInt(m) - 1);
-            return date.toLocaleDateString('en-GB', { month: 'short' });
+            if (!r?.month) return '';
+            return formatMonth(r.month);
           }),
-          values: redTrend.map((r: any) => r.redemption_rate_pct),
+          values: redTrend.map((r: any) => r.redemption_rate_pct ?? 0),
           colors: ['var(--loyalty-accent)'],
+          label: 'Redemption Rate (%)',
           h: false,
           def: 'line'
         } : undefined;
@@ -740,7 +752,7 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 3 */}
-              <div className="bg-white border border-[var(--loyalty-accent)] rounded-[10px] p-[16px] flex flex-col justify-between shadow-sm">
+              <div className="bg-white border border-[var(--loyalty-accent)] rounded-[10px] p-[16px] flex flex-col justify-between shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => openDrill('redemption-kpi', 'Redemption Overview')}>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-accent)] uppercase tracking-wider">Pending Encashments</div>
@@ -755,14 +767,14 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 4 */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between">
+              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between cursor-pointer hover:border-[var(--loyalty-accent)] transition-colors" onClick={() => openDrill('redemption-kpi', 'Redemption Overview')}>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Top Category</div>
                     <div className="w-6 h-6 rounded-md flex items-center justify-center bg-[var(--loyalty-info)]/15 text-[var(--loyalty-info)] shrink-0"><Tag className="w-3.5 h-3.5" /></div>
                   </div>
-                  <div className="text-[26px] font-bold text-[var(--loyalty-text)] leading-none mb-2 capitalize">{topCategory}</div>
-                  <div className="text-[11px] text-[var(--loyalty-subtle)]">Most popular redemption type</div>
+                  <div className="text-[26px] font-bold text-[var(--loyalty-text)] leading-none mb-2 capitalize">{topCategoryName}</div>
+                  <div className="text-[11px] text-[var(--loyalty-subtle)]">{topCategorySub}</div>
                 </div>
               </div>
             </div>
@@ -842,11 +854,7 @@ export function LoyaltyDashboard() {
         const flowData = walletData?.points_flow_by_month || [];
         const walletFlowChartData = flowData.length > 0 ? {
           multi: true,
-          labels: flowData.map((d: any) => {
-            const [y, m] = d.month.split('-');
-            const date = new Date(parseInt(y), parseInt(m) - 1);
-            return date.toLocaleString('default', { month: 'short', year: 'numeric' });
-          }),
+          labels: flowData.map((d: any) => formatMonth(d.month)),
           def: 'bar',
           h: false,
           datasets: [
@@ -1033,7 +1041,13 @@ export function LoyaltyDashboard() {
         const totalOrders = ordersData?.total_orders ?? 0;
         const stuckOrders = ordersData?.stuck_orders ?? 0;
         const stuckPercent = ordersData?.stuck_percentage ?? 0;
-        const stuckCustomer = ordersData?.stuck_customer_concentration;
+        const rawStuckCustomer = ordersData?.stuck_customer_concentration;
+        const stuckCustomerName = typeof rawStuckCustomer === 'object' && rawStuckCustomer !== null
+          ? (rawStuckCustomer.name || 'N/A')
+          : (typeof rawStuckCustomer === 'string' && rawStuckCustomer ? rawStuckCustomer : 'N/A');
+        const stuckCustomerSub = typeof rawStuckCustomer === 'object' && rawStuckCustomer !== null && rawStuckCustomer.oldest_days != null
+          ? `Oldest: ${rawStuckCustomer.oldest_days} days`
+          : 'No stuck concentration data';
 
         const orderAgeDist = ordersData?.order_age_distribution || [];
         const orderAgeChartData = orderAgeDist.length > 0 ? {
@@ -1096,8 +1110,8 @@ export function LoyaltyDashboard() {
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Most Affected Customer</div>
                     <div className="w-6 h-6 rounded-md flex items-center justify-center bg-[var(--loyalty-accent)]/10 text-[var(--loyalty-accent)] shrink-0"><Users className="w-3.5 h-3.5" /></div>
                   </div>
-                  <div className="text-[26px] font-bold text-[var(--loyalty-text)] leading-none mb-2">{stuckCustomer ? stuckCustomer.name : 'N/A'}</div>
-                  <div className="text-[11px] text-[var(--loyalty-subtle)]">{stuckCustomer ? `Oldest: ${stuckCustomer.oldest_days} days` : 'No stuck concentration data'}</div>
+                  <div className="text-[26px] font-bold text-[var(--loyalty-text)] leading-none mb-2">{stuckCustomerName}</div>
+                  <div className="text-[11px] text-[var(--loyalty-subtle)]">{stuckCustomerSub}</div>
                 </div>
               </div>
             </div>

@@ -164,6 +164,7 @@ export const ChartViewer = ({ id, activeType, chartDataOverride }: { id: string,
       }));
     } else {
       datasets = [{
+        label: c.label || '',
         data: c.values,
         backgroundColor: isLine ? resolveChartColor('rgba(var(--loyalty-accent-rgb), 0.15)') : resolveChartColors(c.colors),
         borderColor: isLine ? resolveChartColor(c.colors?.[0] || 'var(--loyalty-accent)') : (isDo ? '#fff' : undefined),
