@@ -29,7 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchWithSuggestions } from "./SearchWithSuggestions";
-import { getUser, clearAuth, saveBaseUrl } from "@/utils/auth";
+import { getUser, getToken, clearAuth } from "@/utils/auth";
 import { permissionService } from "@/services/permissionService";
 import { is } from "date-fns/locale";
 import { Dashboard } from "@mui/icons-material";
@@ -93,7 +93,7 @@ export const HiSocietyHeader = () => {
   const isRMUser = accountUserType === "rm_user";
   const isCSUser = accountUserType === "cs_user";
   // Layout mode
-  const { layoutMode, toggleLayoutMode, isMobileSidebarOpen, setIsMobileSidebarOpen } = useLayout();
+  const { isMobileSidebarOpen, setIsMobileSidebarOpen } = useLayout();
   const fmProduct = useFmProductForSelectedOrganization();
 
   const currentPath = window.location.pathname;
@@ -149,7 +149,7 @@ export const HiSocietyHeader = () => {
     "53815",
   ];
 
-  const { userRole, refreshPermissions } = usePermissions();
+  const { userRole } = usePermissions();
 
   // Load user display name and role name from localStorage for immediate paint
   useEffect(() => {
@@ -617,14 +617,38 @@ export const HiSocietyHeader = () => {
           {/* Show FM only when the selected organization includes an FM product */}
           {fmProduct && (
             <Button
-              onClick={async () => {
-                // Keep the current tab and frontend host; switch the API
-                // backend and render the FM layout route in place.
-                saveBaseUrl(fmProduct.backendUrl);
-                // Reload the role from the FM backend (cached one is Hi-Society's)
-                await refreshPermissions();
-                if (layoutMode !== "fm-matrix") toggleLayoutMode();
-                navigate("/maintenance/asset");
+              onClick={() => {
+                // Open the FM Matrix site in a new tab and sign in there with the
+                // same session. Credentials go in the URL hash so they are
+                // never sent to the server; FM's /sso-login reads and stores them.
+                const user = getUser();
+                const token = getToken();
+                if (!user || !token) return;
+                const params = new URLSearchParams({
+                  token,
+                  baseUrl: fmProduct.backendUrl,
+                  org_id: String(fmProduct.organizationId),
+                  org_name: localStorage.getItem("selectedOrg") || "",
+                  redirect: "/maintenance/asset",
+                  user: JSON.stringify({
+                    id: user.id,
+                    email: user.email,
+                    firstname: user.firstname,
+                    lastname: user.lastname,
+                    mobile: user.mobile,
+                    country_code: user.country_code,
+                    user_type: user.user_type,
+                  }),
+                });
+                const frontendUrl = fmProduct.frontendUrl.trim();
+                const fmUrl = (
+                  /^https?:\/\//i.test(frontendUrl) ? frontendUrl : `https://${frontendUrl}`
+                ).replace(/\/+$/, "");
+                window.open(
+                  `${fmUrl}/sso-login#${params.toString()}`,
+                  "_blank",
+                  "noopener,noreferrer"
+                );
               }}
               variant="outline"
               size="sm"
