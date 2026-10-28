@@ -146,7 +146,7 @@ export const AddRolePage = () => {
   }, []);
 
   const handleBack = () => {
-    navigate("/settings/roles/role");
+    navigate(-1);
   };
 
   const handleModuleToggle = (moduleId: number, enabled: boolean) => {
@@ -345,7 +345,6 @@ export const AddRolePage = () => {
         lock_modules: enabledModuleIds,
       };
 
-
       const viPayload = {
         role: {
           user_id: localStorage.getItem("userId"),
@@ -358,18 +357,19 @@ export const AddRolePage = () => {
 
           the_role: permissionsHash,
           modules: enabledModuleIds,
-
-
         },
       };
 
       console.log("Creating role with payload:", payload);
 
       await roleService.createRoleWithPayload(
-        window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost" ? viPayload : payload
+        window.location.hostname === "web.hisociety.lockated.com" ||
+          window.location.hostname === "localhost"
+          ? viPayload
+          : payload
       );
       toast.success("Role created successfully");
-      navigate("/settings/roles/role");
+      navigate(-1);
     } catch (error) {
       console.error("Error creating role:", error);
       toast.error(
@@ -533,10 +533,11 @@ export const AddRolePage = () => {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveModuleTab(tab.id)}
-                    className={`px-4 py-2 rounded border text-sm font-medium transition-colors whitespace-nowrap ${activeModuleTab === tab.id
-                      ? "bg-brand text-white border-brand"
-                      : "bg-white text-brand border-brand hover:bg-brand-light"
-                      }`}
+                    className={`px-4 py-2 rounded border text-sm font-medium transition-colors whitespace-nowrap ${
+                      activeModuleTab === tab.id
+                        ? "bg-brand text-white border-brand"
+                        : "bg-white text-brand border-brand hover:bg-brand-light"
+                    }`}
                   >
                     {tab.name}
                   </button>
