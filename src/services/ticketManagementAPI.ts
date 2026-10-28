@@ -650,6 +650,7 @@ export const ticketManagementAPI = {
   // Tickets
   async getTickets(page: number = 1, perPage: number = 20, filters?: TicketFilters): Promise<TicketListResponse> {
     const queryParams = new URLSearchParams();
+const path = window.location.pathname;
     
     // Add pagination
     queryParams.append('page', page.toString());
@@ -686,7 +687,7 @@ export const ticketManagementAPI = {
       });
     }
 
-    const url = `/crm/admin/complaints.json?${queryParams.toString()}`;
+    const url = `/${path === "/bms/helpdesk"?"crm":"pms"}/admin/complaints.json?${queryParams.toString()}`;
     console.log('🔵 Final API URL:', url);
     console.log('🔵 Query parameters object:', Object.fromEntries(queryParams.entries()));
     const response = await apiClient.get(url);
