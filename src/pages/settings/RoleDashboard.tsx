@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   Table,
@@ -15,7 +16,6 @@ import {
   Plus,
   Search,
   Shield,
-  Check,
   AlertCircle,
   Edit2,
   X,
@@ -73,6 +73,7 @@ export const RoleDashboard = () => {
   const [allModules, setAllModules] = useState<LockModule[]>([]);
   const [modulesLoading, setModulesLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [togglingRoleId, setTogglingRoleId] = useState<number | null>(null);
 
   // Fetch roles with modules from new API
   useEffect(() => {
@@ -511,6 +512,27 @@ export const RoleDashboard = () => {
     );
   };
 
+  const handleRoleStatusToggle = async (
+    role: RoleWithModules,
+    active: boolean
+  ) => {
+    setTogglingRoleId(role.role_id);
+    try {
+      await roleService.updateRoleStatus(role, active);
+      toast.success(
+        `${role.role_name} ${active ? "activated" : "deactivated"} successfully`
+      );
+      await dispatch(fetchRolesWithModules());
+    } catch (error: any) {
+      console.error("Error updating role status:", error);
+      const errorMessage =
+        error?.response?.data?.message || error?.message || "Unknown error";
+      toast.error(`Failed to update role status: ${errorMessage}`);
+    } finally {
+      setTogglingRoleId(null);
+    }
+  };
+
   const handleUpdatePermissions = async () => {
     if (!currentRole) {
       toast.error("Please select a role first");
@@ -616,19 +638,40 @@ export const RoleDashboard = () => {
                 </div>
               ) : filteredRoles.length > 0 ? (
                 filteredRoles.map((role, index) => (
-                  <button
+                  <div
                     key={`${role.role_name}-${index}`}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleRoleClick(role)}
-                    className={`w-full text-left px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-between group ${currentRole?.role_name === role.role_name
-                      ? "bg-[#C72030] text-white shadow-md"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    onKeyDown={(e) => {
+                      if (e.target !== e.currentTarget) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleRoleClick(role);
+                      }
+                    }}
+                    className={`w-full text-left px-4 py-2.5 rounded-md text-sm transition-colors duration-200 flex items-center justify-between gap-3 cursor-pointer border-l-[3px] ${currentRole?.role_name === role.role_name
+                      ? "bg-brand-light border-brand text-brand-text font-semibold"
+                      : "border-transparent text-gray-600 font-medium hover:bg-gray-100 hover:text-gray-900"
                       }`}
                   >
-                    <span>{role.role_name}</span>
-                    {currentRole?.role_name === role.role_name && (
-                      <Check className="w-4 h-4 text-white/90" />
-                    )}
-                  </button>
+                    <span
+                      className={`truncate ${role.active === false ? "text-gray-400" : ""}`}
+                    >
+                      {role.role_name}
+                    </span>
+                    <Switch
+                      checked={role.active !== false}
+                      disabled={togglingRoleId === role.role_id}
+                      onClick={(e) => e.stopPropagation()}
+                      onCheckedChange={(checked) =>
+                        handleRoleStatusToggle(role, checked)
+                      }
+                      title={role.active !== false ? "Active" : "Inactive"}
+                      aria-label={`${role.active !== false ? "Deactivate" : "Activate"} ${role.role_name}`}
+                      className="shrink-0"
+                    />
+                  </div>
                 ))
               ) : (
                 <div className="text-center text-gray-500 py-8 flex flex-col items-center">

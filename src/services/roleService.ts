@@ -7,6 +7,7 @@ export interface ApiRole {
   permissions_hash: string;
   resource_id?: number | string | null;
   resource_type?: string | null;
+  active?: boolean | number | null;
 }
 
 export interface BCRole {
@@ -163,6 +164,7 @@ export interface RoleWithModules {
   modules: LockModule[];
   resource_id?: number | string | null;
   resource_type?: string | null;
+  active?: boolean;
 }
 
 export interface ApiModulesResponse {
@@ -192,6 +194,10 @@ const isWebOrg34 = () => {
   const orgId = String(localStorage.getItem("org_id") ?? "").trim();
   return window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost";
 };
+
+// API returns `active` as boolean or 0/1; treat missing as active
+const isRoleActive = (value: unknown) =>
+  value === undefined || value === null ? true : Boolean(Number(value));
 
 export const roleService = {
   // Fetch all roles
@@ -330,6 +336,26 @@ export const roleService = {
       );
     } catch (error) {
       console.error("Error deleting role:", error);
+      throw error;
+    }
+  },
+
+  // Activate / deactivate a role
+  async updateRoleStatus(
+    role: RoleWithModules,
+    active: boolean
+  ): Promise<void> {
+    try {
+      const payload = isWebOrg34()
+        ? { role: { active } }
+        : { lock_role: { active: active ? 1 : 0 } };
+
+      await apiClient.patch(
+        `${ENDPOINTS.ROLES.replace(".json", "")}/${role.role_id}.json`,
+        payload
+      );
+    } catch (error) {
+      console.error("Error updating role status:", error);
       throw error;
     }
   },
@@ -515,15 +541,17 @@ export const roleService = {
 
     // Step 3: Any role from the flat list that is missing from the modules response
     // gets added with empty modules so it still appears in the sidebar.
+    // Inactive roles are kept so they can be re-activated from the sidebar toggle.
     const transformedIds = new Set(transformedRoles.map((r: RoleWithModules) => r.role_id));
     const extraRoles: RoleWithModules[] = allFlatRoles
-      .filter((role: any) => role.active && !transformedIds.has(role.id))
+      .filter((role: any) => !transformedIds.has(role.id))
       .map((role: any): RoleWithModules => ({
         id: role.id,
         role_id: role.id,
         role_name: role.title || role.name,
         resource_id: role.resource_id ?? null,
         resource_type: role.resource_type ?? null,
+        active: isRoleActive(role.active),
         modules: [],
       }));
 
@@ -586,6 +614,7 @@ export const roleService = {
         role_name: apiRole.role_name,
         resource_id: matchingRole?.resource_id ?? null,
         resource_type: matchingRole?.resource_type ?? null,
+        active: isRoleActive(matchingRole?.active),
         modules: (apiRole.lock_modules || []).map((apiModule) => {
           console.log("Processing module:", apiModule);
 
@@ -688,7 +717,7 @@ export const roleService = {
           display_name: roleWithModules.role_name,
           access_level: null,
           access_to: null,
-          active: 1,
+          active: roleWithModules.active === false ? 0 : 1,
           role_for: "pms",
         },
         permissions_hash: permissionsHash,
@@ -703,7 +732,7 @@ export const roleService = {
           description: "",
           resource_type: roleWithModules.resource_type,
           resource_id: roleWithModules.resource_id,
-          active: true,
+          active: roleWithModules.active !== false,
           modules: enabledModuleIds,
           the_role: filteredPermissionsHash,
         },
