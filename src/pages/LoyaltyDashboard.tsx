@@ -1385,15 +1385,19 @@ export function LoyaltyDashboard() {
           </div>
 
           <button
-            className="flex items-center gap-1.5 bg-[var(--loyalty-accent)] text-white border-none rounded-[7px] px-3 py-[6px] text-[11px] font-semibold cursor-pointer transition-opacity hover:opacity-90 whitespace-nowrap"
+            className="loyalty-detail-ask-btn flex items-center gap-1.5 !bg-[#1a1a18] !text-white border-none rounded-[7px] px-3 py-[6px] text-[11px] font-semibold cursor-pointer transition-opacity hover:opacity-90 whitespace-nowrap"
+            style={{ backgroundColor: '#1a1a18', color: '#ffffff' }}
             onClick={() => setIsAiOpen(true)}
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Ask Assistant</span>
+            <Sparkles className="w-3.5 h-3.5 text-white" />
+            <span className="hidden sm:inline text-white">Ask Assistant</span>
           </button>
 
           {getUserInitials() && (
-            <div className="w-8 h-8 rounded-full bg-[var(--loyalty-text)] text-white flex items-center justify-center text-[10.5px] font-bold shrink-0">
+            <div
+              className="loyalty-detail-user-avatar w-8 h-8 rounded-full !bg-[#1a1a18] !text-white flex items-center justify-center text-[10.5px] font-bold shrink-0"
+              style={{ backgroundColor: '#1a1a18', color: '#ffffff' }}
+            >
               {getUserInitials()}
             </div>
           )}
@@ -1443,9 +1447,10 @@ export function LoyaltyDashboard() {
         <button
           onClick={() => setIsAiOpen(true)}
           title="Ask the assistant"
-          className="fixed bottom-5 right-5 z-[7000] w-12 h-12 bg-[var(--loyalty-accent)] rounded-full flex items-center justify-center text-white shadow-[0_4px_12px_rgba(var(--loyalty-accent-rgb),.35)] hover:opacity-90 transition-opacity cursor-pointer"
+          className="fixed bottom-5 right-5 z-[7000] w-12 h-12 !bg-[#1a1a18] rounded-full flex items-center justify-center !text-white shadow-[0_4px_12px_rgba(26,26,24,.35)] hover:opacity-90 transition-opacity cursor-pointer border-none"
+          style={{ backgroundColor: '#1a1a18', color: '#ffffff' }}
         >
-          <Sparkles className="w-5 h-5" />
+          <Sparkles className="w-5 h-5 text-white" />
         </button>
       )}
 
@@ -1467,10 +1472,10 @@ export function LoyaltyDashboard() {
       {/* AI Chat Panel */}
       {isAiOpen && (
         <div className="fixed bottom-[20px] right-[20px] w-[340px] h-[520px] bg-white rounded-[12px] shadow-[0_8px_32px_rgba(var(--color-text-rgb),.15)] border border-[var(--loyalty-border)] flex flex-col z-[8000] overflow-hidden">
-          <div className="flex items-center justify-between p-[14px] bg-[var(--loyalty-text)] text-white">
+          <div className="flex items-center justify-between p-[14px] !bg-[#1a1a18] !text-white" style={{ backgroundColor: '#1a1a18', color: '#ffffff' }}>
             <div className="flex items-center gap-2">
-              <Bot className="w-4 h-4 text-[var(--loyalty-accent)]" />
-              <span className="font-bold text-[12px]">Programme Assistant</span>
+              <Bot className="w-4 h-4 text-white" />
+              <span className="font-bold text-[12px] text-white">Programme Assistant</span>
             </div>
             <button className="bg-transparent border-none text-white/70 cursor-pointer p-1 rounded-full hover:bg-white/10 transition-colors" onClick={() => setIsAiOpen(false)}>
               <X className="w-4 h-4" />
@@ -1496,7 +1501,7 @@ export function LoyaltyDashboard() {
       )}
       
       {/* Required Keyframes */}
-      <style dangerouslySetInnerHTML={{__html: "@keyframes slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } } .animate-slide-in { animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1); }"}} />
+      <style dangerouslySetInnerHTML={{__html: "@keyframes slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } } .animate-slide-in { animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1); } .loyalty-detail-ask-btn { background-color: #1a1a18 !important; color: #ffffff !important; } .loyalty-detail-user-avatar { background-color: #1a1a18 !important; color: #ffffff !important; }"}} />
     </div>
   );
 }

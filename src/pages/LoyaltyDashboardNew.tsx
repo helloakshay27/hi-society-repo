@@ -428,7 +428,7 @@ export const LoyaltyDashboardNew = () => {
       {/* ── TOPBAR ── */}
       <div className="sticky top-0 z-[300] flex min-h-[50px] flex-wrap items-center justify-between gap-2 border-b border-[var(--loyalty-border)] bg-white px-4 py-2 shadow-[0_1px_6px_rgba(var(--color-text-rgb),.08)] md:px-5">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md bg-[var(--loyalty-accent)]">
+          <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md !bg-[#1a1a18]" style={{ backgroundColor: '#1a1a18' }}>
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-white" strokeWidth="2.2">
               <path d="M12 2L3 7v10l9 5 9-5V7L12 2zm0 2.8L19.2 8.5v7L12 19.2 4.8 15.5v-7L12 4.8z" />
             </svg>
@@ -473,10 +473,10 @@ export const LoyaltyDashboardNew = () => {
                     <input type="date" value={draftRange.to} min={draftRange.from} onChange={(e) => setDraftRange((r) => ({ ...r, to: e.target.value }))} className="h-[26px] min-w-0 flex-1 rounded-full border border-[var(--loyalty-border)] px-2 text-[10px] outline-none focus:border-[var(--loyalty-accent)]" style={FONT} />
                   </div>
                   <button
-                    style={FONT}
+                    style={{ ...FONT, backgroundColor: '#1a1a18', color: '#ffffff' }}
                     disabled={!draftRange.from || !draftRange.to || draftRange.from > draftRange.to}
                     onClick={() => { setCustomRange(draftRange); setPreset("Custom"); setFilterOpen(false); }}
-                    className="mt-2 h-[26px] w-full rounded-full bg-[var(--loyalty-accent)] text-[10px] font-semibold text-white disabled:opacity-40"
+                    className="mt-2 h-[26px] w-full rounded-full !bg-[#1a1a18] text-[10px] font-semibold !text-white disabled:opacity-40 border-none cursor-pointer"
                   >
                     Apply
                   </button>
@@ -486,15 +486,18 @@ export const LoyaltyDashboardNew = () => {
           </div>
 
           <button
-            className="flex items-center gap-[5px] rounded-full bg-[var(--loyalty-accent)] px-2.5 py-1 transition-opacity hover:opacity-[.85]"
-            style={FONT}
+            className="flex items-center gap-[5px] rounded-full !bg-[#1a1a18] !text-white px-2.5 py-1 transition-opacity hover:opacity-[.85] border-none cursor-pointer"
+            style={{ ...FONT, backgroundColor: '#1a1a18', color: '#ffffff' }}
             onClick={() => navigate("/loyalty/details-dashboard")}
           >
             <span className="whitespace-nowrap text-[10px] font-semibold text-white">Programme Detail →</span>
           </button>
           <div className="hidden text-[10px] text-[var(--loyalty-subtle)] md:block">{liveDate}</div>
           {getUserInitials() && (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--loyalty-accent)] text-[10px] font-bold text-white">
+            <div
+              className="flex h-7 w-7 items-center justify-center rounded-full !bg-[#1a1a18] !text-white text-[10px] font-bold shrink-0"
+              style={{ ...FONT, backgroundColor: '#1a1a18', color: '#ffffff' }}
+            >
               {getUserInitials()}
             </div>
           )}
@@ -754,9 +757,10 @@ export const LoyaltyDashboardNew = () => {
         <button
           onClick={() => setAiOpen(true)}
           title="Ask the assistant"
-          className="fixed bottom-5 right-5 z-[400] flex h-12 w-12 items-center justify-center rounded-full bg-[var(--loyalty-accent)] text-white shadow-[0_4px_12px_rgba(var(--loyalty-accent-rgb),.35)] transition-opacity hover:opacity-90"
+          className="fixed bottom-5 right-5 z-[400] flex h-12 w-12 items-center justify-center rounded-full !bg-[#1a1a18] !text-white shadow-[0_4px_12px_rgba(26,26,24,.35)] transition-opacity hover:opacity-90 border-none cursor-pointer"
+          style={{ backgroundColor: '#1a1a18', color: '#ffffff' }}
         >
-          <Sparkles className="h-5 w-5" />
+          <Sparkles className="h-5 w-5 text-white" />
         </button>
       )}
 
@@ -822,10 +826,11 @@ export const LoyaltyDashboardNew = () => {
               <button
                 type="submit"
                 disabled={!aiInput.trim()}
-                className="absolute bottom-1 right-1 top-1 flex w-7 items-center justify-center rounded-full bg-[var(--loyalty-accent)] text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="absolute bottom-1 right-1 top-1 flex w-7 items-center justify-center rounded-full !bg-[#1a1a18] !text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50 border-none cursor-pointer"
+                style={{ backgroundColor: '#1a1a18', color: '#ffffff' }}
                 title="Send"
               >
-                <ArrowUp className="h-3.5 w-3.5" />
+                <ArrowUp className="h-3.5 w-3.5 text-white" />
               </button>
             </form>
           </div>
