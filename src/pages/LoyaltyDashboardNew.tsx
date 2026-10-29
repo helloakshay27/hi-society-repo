@@ -58,7 +58,17 @@ type Member = {
   active?: boolean;
 };
 
-type StuckOrder = { id: string | number; customer_name?: string; customer?: string; amount?: number | string; created_at?: string; status?: string };
+type StuckOrder = {
+  id?: string | number;
+  order_number?: string | number;
+  order_no?: string | number;
+  order_id?: string | number;
+  customer_name?: string;
+  customer?: string;
+  amount?: number | string;
+  created_at?: string;
+  status?: string;
+};
 
 /* ── Palette ──────────────────────────────────────────────────────
    Uses the shared --loyalty-* tokens from theme.css (.loyalty-dashboard-theme),
@@ -312,7 +322,10 @@ export const LoyaltyDashboardNew = () => {
             </>
           )}
           <DSec>Stuck Orders</DSec>
-          {stuckList.length ? stuckList.map((o, i) => <DSl key={o.id ?? i} l={`${o.id} · ${o.customer_name || o.customer || "N/A"}`} r={`₹${fmtNum(o.amount)}`} />) : <Empty>No stuck orders.</Empty>}
+          {stuckList.length ? stuckList.map((o, i) => {
+            const orderId = o.order_number ?? o.id ?? o.order_no ?? o.order_id ?? "N/A";
+            return <DSl key={orderId || i} l={`${orderId} · ${o.customer_name || o.customer || "N/A"}`} r={`₹${fmtNum(o.amount)}`} />;
+          }) : <Empty>No stuck orders.</Empty>}
         </>
       );
     } else if (key === "store") {
@@ -371,9 +384,11 @@ export const LoyaltyDashboardNew = () => {
       );
     } else if (key === "order" && payload) {
       const o = payload as StuckOrder;
-      title = `Order ${o.id}`;
+      const orderId = o.order_number ?? o.id ?? o.order_no ?? o.order_id ?? "N/A";
+      title = `Order ${orderId}`;
       body = (
         <>
+          <DSl l="Order ID" r={String(orderId)} />
           <DSl l="Customer" r={o.customer_name || o.customer || "N/A"} />
           <DSl l="Amount" r={`₹${fmtNum(o.amount)}`} />
           <DSl l="Created" r={o.created_at ? new Date(o.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"} />
@@ -540,17 +555,23 @@ export const LoyaltyDashboardNew = () => {
           style={FONT}
         >
           <div className="min-w-[110px] border-l-[3px] border-[var(--loyalty-success)] px-3.5 py-1 text-center">
-            <div className="text-[20px] font-bold leading-none text-[var(--loyalty-text)]">{storeQuery.isLoading ? "…" : fmtNum(inAggregator)}</div>
+            <div className="text-[20px] font-bold leading-none text-[var(--loyalty-text)]">
+              {storeQuery.isLoading ? <span className="inline-block h-[20px] w-14 animate-pulse rounded bg-[var(--loyalty-surface)]" /> : fmtNum(inAggregator)}
+            </div>
             <div className="mt-[3px] whitespace-nowrap text-[9px] text-[var(--loyalty-subtle)]">Items in aggregator</div>
           </div>
           <div className="shrink-0 text-base text-[var(--loyalty-border)]">→</div>
           <div className={`min-w-[110px] border-l-[3px] px-3.5 py-1 text-center ${liveInStore ? "border-[var(--loyalty-success)]" : "border-[var(--loyalty-danger-text)]"}`}>
-            <div className="text-[20px] font-bold leading-none" style={{ color: liveInStore ? "var(--loyalty-text)" : "var(--loyalty-danger-text)" }}>{storeQuery.isLoading ? "…" : fmtNum(liveInStore)}</div>
+            <div className="text-[20px] font-bold leading-none" style={{ color: liveInStore ? "var(--loyalty-text)" : "var(--loyalty-danger-text)" }}>
+              {storeQuery.isLoading ? <span className="inline-block h-[20px] w-14 animate-pulse rounded bg-[var(--loyalty-surface)]" /> : fmtNum(liveInStore)}
+            </div>
             <div className="mt-[3px] whitespace-nowrap text-[9px] text-[var(--loyalty-subtle)]">Items live in store</div>
           </div>
           <div className="shrink-0 text-base text-[var(--loyalty-border)]">→</div>
           <div className="min-w-[110px] border-l-[3px] border-[var(--loyalty-border)] px-3.5 py-1 text-center">
-            <div className="text-[20px] font-bold leading-none text-[var(--loyalty-accent-hover)]">{loading ? "…" : fmtNum(home?.points_outstanding)}</div>
+            <div className="text-[20px] font-bold leading-none text-[var(--loyalty-accent-hover)]">
+              {loading ? <span className="inline-block h-[20px] w-14 animate-pulse rounded bg-[var(--loyalty-surface)]" /> : fmtNum(home?.points_outstanding)}
+            </div>
             <div className="mt-[3px] whitespace-nowrap text-[9px] text-[var(--loyalty-subtle)]">Points waiting to be spent</div>
           </div>
           {store && (
@@ -565,8 +586,14 @@ export const LoyaltyDashboardNew = () => {
         </button>
 
         {/* ALERTS */}
-        {!loading && (
-          alerts.length ? (
+        {loading ? (
+          <div className="mb-2.5 rounded-[10px] border border-[var(--loyalty-divider)] bg-white p-3 animate-pulse">
+            <div className="flex items-center gap-2">
+              <span className="h-4 w-4 rounded-full bg-[var(--loyalty-surface)]" />
+              <div className="h-3 w-56 rounded bg-[var(--loyalty-surface)]" />
+            </div>
+          </div>
+        ) : alerts.length ? (
             <div className="mb-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
               {alerts.map((a) => (
                 <button
@@ -591,7 +618,7 @@ export const LoyaltyDashboardNew = () => {
               ✓ Nothing needs attention right now.
             </div>
           )
-        )}
+        : null}
 
         {/* CHARTS ROW */}
         <div className="mb-2 grid grid-cols-1 gap-2 lg:grid-cols-[60fr_40fr]">
@@ -666,7 +693,20 @@ export const LoyaltyDashboardNew = () => {
               sub={membersData ? `${fmtNum(members.length)} members · sorted by balance` : undefined}
             />
             {membersQuery.isLoading ? (
-              <div className="h-[150px] animate-pulse rounded-md bg-[var(--loyalty-surface)]" />
+              <div className="animate-pulse space-y-2 py-1">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2.5 border-b border-[var(--loyalty-divider)] py-2 last:border-b-0">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-7 w-7 rounded-full bg-[var(--loyalty-surface)] shrink-0" />
+                      <div className="space-y-1">
+                        <div className="h-3 w-28 rounded bg-[var(--loyalty-surface)]" />
+                        <div className="h-2.5 w-20 rounded bg-[var(--loyalty-surface)]" />
+                      </div>
+                    </div>
+                    <div className="h-3 w-12 rounded bg-[var(--loyalty-surface)]" />
+                  </div>
+                ))}
+              </div>
             ) : members.length ? (
               members.slice(0, 6).map((m, i) => (
                 <button
@@ -701,7 +741,16 @@ export const LoyaltyDashboardNew = () => {
               action={<button onClick={() => navigate("/loyalty/details-dashboard")} className="shrink-0 whitespace-nowrap text-[10px] text-[var(--loyalty-accent)]" style={FONT}>Open Programme Detail →</button>}
             />
             {ordersQuery.isLoading ? (
-              <div className="h-[150px] animate-pulse rounded-md bg-[var(--loyalty-surface)]" />
+              <div className="animate-pulse space-y-2 py-1">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 border-b border-[var(--loyalty-divider)] py-2 last:border-b-0">
+                    <div className="h-3 w-20 rounded bg-[var(--loyalty-surface)]" />
+                    <div className="h-3 w-28 rounded bg-[var(--loyalty-surface)]" />
+                    <div className="h-3 w-16 rounded bg-[var(--loyalty-surface)]" />
+                    <div className="h-4 w-14 rounded-full bg-[var(--loyalty-surface)]" />
+                  </div>
+                ))}
+              </div>
             ) : stuckList.length ? (
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-[10.5px]">
@@ -715,19 +764,22 @@ export const LoyaltyDashboardNew = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {stuckList.slice(0, 6).map((o, i) => (
-                      <tr key={o.id ?? i} className="cursor-pointer transition-colors hover:bg-[var(--loyalty-surface)]" onClick={() => openDrill("order", o)}>
-                        <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5 font-semibold">{o.id}</td>
-                        <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5">{o.customer_name || o.customer || "N/A"}</td>
-                        <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5">₹{fmtNum(o.amount)}</td>
-                        <td className="whitespace-nowrap border-b border-[var(--loyalty-divider)] px-2 py-1.5 text-[var(--loyalty-subtle)]">
-                          {o.created_at ? new Date(o.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
-                        </td>
-                        <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5">
-                          <span className="inline-flex items-center rounded-[20px] bg-[var(--loyalty-surface)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--loyalty-text)]">{o.status || "Pending"}</span>
-                        </td>
-                      </tr>
-                    ))}
+                    {stuckList.slice(0, 6).map((o, i) => {
+                      const orderId = o.order_number ?? o.id ?? o.order_no ?? o.order_id ?? "N/A";
+                      return (
+                        <tr key={orderId || i} className="cursor-pointer transition-colors hover:bg-[var(--loyalty-surface)]" onClick={() => openDrill("order", o)}>
+                          <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5 font-semibold">{orderId}</td>
+                          <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5">{o.customer_name || o.customer || "N/A"}</td>
+                          <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5">₹{fmtNum(o.amount)}</td>
+                          <td className="whitespace-nowrap border-b border-[var(--loyalty-divider)] px-2 py-1.5 text-[var(--loyalty-subtle)]">
+                            {o.created_at ? new Date(o.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                          </td>
+                          <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5">
+                            <span className="inline-flex items-center rounded-[20px] bg-[var(--loyalty-surface)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--loyalty-text)]">{o.status || "Pending"}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
