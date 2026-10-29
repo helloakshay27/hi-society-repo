@@ -62,6 +62,7 @@ interface VisitorIdentity {
   id: number;
   identity_type?: string;
   government_id_number?: string;
+  govt_id_image?: string;
   documents?: DocumentItem[];
 }
 
@@ -261,8 +262,27 @@ export const VisitorDetailsPage = () => {
         const rawVisitor = data.data || data.gatekeeper || data.visitor || data;
 
         // Normalize nested fields so existing JSX works with both API shapes
+        // New API shape: identity_verification { govt_id_number, govt_id_image, documents }
+        const idv = rawVisitor.identity_verification;
+        const idvHasData =
+          idv &&
+          (idv.govt_id_number ||
+            idv.govt_id_image ||
+            (Array.isArray(idv.documents) && idv.documents.length > 0));
+
         const visitor: VisitorData = {
           ...rawVisitor,
+          visitor_identity:
+            rawVisitor.visitor_identity ||
+            (idvHasData
+              ? {
+                  id: rawVisitor.id,
+                  identity_type: idv.identity_type,
+                  government_id_number: idv.govt_id_number,
+                  govt_id_image: idv.govt_id_image,
+                  documents: idv.documents || [],
+                }
+              : undefined),
           // Flatten vehicle_info
           guest_vehicle_number:
             rawVisitor.guest_vehicle_number ||
@@ -1520,7 +1540,7 @@ export const VisitorDetailsPage = () => {
             )}
 
             {/* Main Visitor's Identity */}
-            {visitorData.visitor_identity && (hasData(visitorData.visitor_identity.identity_type) || hasData(visitorData.visitor_identity.government_id_number) || (visitorData.visitor_identity.documents && visitorData.visitor_identity.documents.length > 0)) && (
+            {visitorData.visitor_identity && (hasData(visitorData.visitor_identity.identity_type) || hasData(visitorData.visitor_identity.government_id_number) || hasData(visitorData.visitor_identity.govt_id_image) || (visitorData.visitor_identity.documents && visitorData.visitor_identity.documents.length > 0)) && (
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-6">
                   {visitorData?.guest_name ? `${visitorData.guest_name}'s Identity Details` : 'Main Visitor Identity'}
@@ -1549,6 +1569,31 @@ export const VisitorDetailsPage = () => {
                       </div>
                     )}
                   </div>
+
+                  {hasData(visitorData.visitor_identity.govt_id_image) && (
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3">Government ID Image</h4>
+                      <div className="relative inline-block">
+                        <img
+                          src={visitorData.visitor_identity.govt_id_image}
+                          alt="Government ID"
+                          className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200 cursor-pointer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                          }}
+                          onClick={() => {
+                            const url = visitorData.visitor_identity!.govt_id_image!;
+                            setSelectedDoc({
+                              id: visitorData.id,
+                              url,
+                              document_name: url.split("/").pop() || "Government_ID",
+                            });
+                            setIsModalOpen(true);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {visitorData.visitor_identity.documents && visitorData.visitor_identity.documents.length > 0 && (
                     <div>
