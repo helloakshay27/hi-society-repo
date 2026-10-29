@@ -234,13 +234,17 @@ export function LoyaltyDashboard() {
           </div>
           {customer?.name && <DrillRow label="Most affected customer" value={customer.name} />}
           <DrillSection>Stuck Orders</DrillSection>
-          {list.length ? list.map((o: any, i: number) => <DrillRow key={o.id ?? i} label={`${o.id} · ${o.customer_name || o.customer || 'N/A'}`} value={`₹${fmtNum(o.amount)}`} />) : <DrillEmpty />}
+          {list.length ? list.map((o: any, i: number) => {
+            const orderId = o.order_number ?? o.id ?? o.order_no ?? o.order_id ?? 'N/A';
+            return <DrillRow key={orderId || i} label={`${orderId} · ${o.customer_name || o.customer || 'N/A'}`} value={`₹${fmtNum(o.amount)}`} />;
+          }) : <DrillEmpty />}
         </>
       );
     } else if (id === 'order' && row) {
+      const orderId = row.order_number ?? row.id ?? row.order_no ?? row.order_id ?? 'N/A';
       body = (
         <>
-          <DrillRow label="Order ID" value={row.id} />
+          <DrillRow label="Order ID" value={orderId} />
           <DrillRow label="Customer" value={row.customer_name || row.customer || 'N/A'} />
           <DrillRow label="Amount" value={`₹${fmtNum(row.amount)}`} />
           <DrillRow label="Created" value={row.created_at ? new Date(row.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'} />
@@ -298,6 +302,83 @@ export function LoyaltyDashboard() {
       aiChatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [aiMsgs, isAiOpen]);
+
+  const renderTabSkeleton = () => {
+    const isOrders = activeTab === 'Orders';
+    const kpiCols = isOrders ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4';
+    const kpiCount = isOrders ? 3 : 4;
+
+    return (
+      <div className="flex flex-col gap-[14px] animate-pulse">
+        {/* Briefing skeleton for Overview */}
+        {activeTab === 'Overview' && (
+          <div className="bg-white border border-[var(--loyalty-divider)] rounded-lg p-3 px-4 mb-1 h-[52px] flex items-center gap-3">
+            <div className="w-4 h-4 rounded-full bg-[var(--loyalty-surface)] shrink-0" />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-2.5 w-32 bg-[var(--loyalty-surface)] rounded" />
+              <div className="h-3 w-3/4 bg-[var(--loyalty-surface)] rounded" />
+            </div>
+          </div>
+        )}
+
+        {/* Top KPI Strip Skeleton */}
+        <div className={`grid ${kpiCols} gap-[14px]`}>
+          {Array.from({ length: kpiCount }).map((_, i) => (
+            <div key={i} className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between h-[96px]">
+              <div className="flex items-center justify-between mb-2">
+                <div className="h-3 w-28 bg-[var(--loyalty-surface)] rounded" />
+                <div className="w-6 h-6 rounded-md bg-[var(--loyalty-surface)]" />
+              </div>
+              <div className="h-7 w-20 bg-[var(--loyalty-surface)] rounded mb-1" />
+              <div className="h-2.5 w-32 bg-[var(--loyalty-surface)] rounded" />
+            </div>
+          ))}
+        </div>
+
+        {/* Charts Section Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[14px]">
+          <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[14px] flex flex-col h-[280px]">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-3.5 w-44 bg-[var(--loyalty-surface)] rounded" />
+              <div className="h-6 w-20 bg-[var(--loyalty-surface)] rounded-md" />
+            </div>
+            <div className="flex-1 rounded-md bg-[var(--loyalty-surface)]/60 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full border-2 border-[var(--loyalty-divider)] border-t-[var(--loyalty-accent)] animate-spin" />
+            </div>
+          </div>
+          <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[14px] flex flex-col h-[280px]">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-3.5 w-44 bg-[var(--loyalty-surface)] rounded" />
+              <div className="h-6 w-20 bg-[var(--loyalty-surface)] rounded-md" />
+            </div>
+            <div className="flex-1 rounded-md bg-[var(--loyalty-surface)]/60 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full border-2 border-[var(--loyalty-divider)] border-t-[var(--loyalty-accent)] animate-spin" />
+            </div>
+          </div>
+        </div>
+
+        {/* Table / Section Skeleton */}
+        <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[14px]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-4 w-48 bg-[var(--loyalty-surface)] rounded" />
+            <div className="h-3 w-24 bg-[var(--loyalty-surface)] rounded" />
+          </div>
+          <div className="space-y-3">
+            <div className="h-8 w-full bg-[var(--loyalty-surface)] rounded" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-4 py-2 border-b border-[var(--loyalty-divider)]/60 last:border-b-0">
+                <div className="h-3.5 w-24 bg-[var(--loyalty-surface)] rounded" />
+                <div className="h-3.5 w-36 bg-[var(--loyalty-surface)] rounded" />
+                <div className="h-3.5 w-20 bg-[var(--loyalty-surface)] rounded" />
+                <div className="h-3.5 w-24 bg-[var(--loyalty-surface)] rounded" />
+                <div className="h-4 w-16 bg-[var(--loyalty-surface)] rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -463,7 +544,7 @@ export function LoyaltyDashboard() {
             {/* Category Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-[14px] mb-[20px]">
               {renderedRuleCards.map((card) => (
-                <div key={card.title} className={`bg-white border border-[var(--loyalty-divider)] border-t-4 rounded-[10px] p-[16px] shadow-sm ${card.borderClass}`}>
+                <div key={card.title} className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] shadow-sm">
                   <div className="text-[9px] font-bold text-[var(--loyalty-subtle)] uppercase tracking-wider mb-1">{card.title}</div>
                   <div className="text-[20px] font-bold text-[var(--loyalty-text)] mb-1">{card.ruleCount} rules</div>
                   <div className="text-[11px] text-[var(--loyalty-green)] mb-4">{card.subtitle} · {card.statusLabel}</div>
@@ -1141,17 +1222,20 @@ export function LoyaltyDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ordersData?.stuck_orders_list?.map((o: any, i: number) => (
-                      <tr key={i} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer" onClick={() => openDrill('order', `Order ${o.id}`, o)}>
-                        <td className="p-[8px] border-b border-[var(--loyalty-divider)] font-semibold">{o.id}</td>
-                        <td className="p-[8px] border-b border-[var(--loyalty-divider)]">{o.customer_name || o.customer || 'N/A'}</td>
-                        <td className="p-[8px] border-b border-[var(--loyalty-divider)]">₹{o.amount}</td>
-                        <td className="p-[8px] border-b border-[var(--loyalty-divider)] text-[var(--loyalty-green)]">{formatDt(o.created_at)}</td>
-                        <td className="p-[8px] border-b border-[var(--loyalty-divider)]">
-                          <span className="bg-[var(--loyalty-warning)]/25 text-[var(--loyalty-warning-text)] border border-[var(--loyalty-warning)]/50 text-[9px] font-semibold px-[7px] py-[2px] rounded-full">{o.status || 'Pending'}</span>
-                        </td>
-                      </tr>
-                    ))}
+                    {ordersData?.stuck_orders_list?.map((o: any, i: number) => {
+                      const orderId = o.order_number ?? o.id ?? o.order_no ?? o.order_id ?? 'N/A';
+                      return (
+                        <tr key={orderId || i} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer" onClick={() => openDrill('order', `Order ${orderId}`, o)}>
+                          <td className="p-[8px] border-b border-[var(--loyalty-divider)] font-semibold">{orderId}</td>
+                          <td className="p-[8px] border-b border-[var(--loyalty-divider)]">{o.customer_name || o.customer || 'N/A'}</td>
+                          <td className="p-[8px] border-b border-[var(--loyalty-divider)]">₹{fmtNum(o.amount)}</td>
+                          <td className="p-[8px] border-b border-[var(--loyalty-divider)] text-[var(--loyalty-green)]">{formatDt(o.created_at)}</td>
+                          <td className="p-[8px] border-b border-[var(--loyalty-divider)]">
+                            <span className="bg-[var(--loyalty-warning)]/25 text-[var(--loyalty-warning-text)] border border-[var(--loyalty-warning)]/50 text-[9px] font-semibold px-[7px] py-[2px] rounded-full">{o.status || 'Pending'}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {(!ordersData?.stuck_orders_list || ordersData.stuck_orders_list.length === 0) && (
                       <tr>
                         <td colSpan={5} className="p-[20px] text-center text-[var(--loyalty-subtle)]">No stuck orders found.</td>
@@ -1428,19 +1512,15 @@ export function LoyaltyDashboard() {
 
       {/* Main Content */}
       <div className="p-4 md:p-5 max-w-[1400px] mx-auto pb-20">
-        {tabError ? (
+        {tabError && (
           <div className="mb-[14px] flex flex-wrap items-center justify-between gap-2 rounded-[10px] border border-[var(--color-danger)]/30 bg-[var(--color-danger-light)]/40 px-4 py-3 text-[11px] text-[var(--loyalty-text)]">
             <span className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-[var(--color-danger)]" /> Couldn't load {activeTab} data. {getLoyaltyErrorMessage(tabError)}</span>
             <button onClick={retryTab} className="flex items-center gap-1 rounded-full border border-[var(--loyalty-border)] bg-white px-3 py-1 text-[10.5px] font-semibold cursor-pointer hover:border-[var(--loyalty-accent)]">
               <RefreshCw className="w-3 h-3" /> Retry
             </button>
           </div>
-        ) : isTabLoading ? (
-          <div className="mb-[14px] flex items-center gap-2 rounded-[10px] border border-[var(--loyalty-divider)] bg-white px-4 py-3 text-[11px] text-[var(--loyalty-subtle)]">
-            <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Loading {activeTab.toLowerCase()} data…
-          </div>
-        ) : null}
-        {renderTabContent()}
+        )}
+        {isTabLoading ? renderTabSkeleton() : renderTabContent()}
       </div>
 
       {!isAiOpen && (
