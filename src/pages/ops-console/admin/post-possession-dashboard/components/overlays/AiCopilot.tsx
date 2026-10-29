@@ -56,9 +56,10 @@ export const AiCopilot: React.FC = () => {
         type="button"
         className="cbtn"
         onClick={() => setCopilotOpen(!copilotOpen)}
-        title="Ask about your society"
+        title="Ask Genie"
       >
-        <Star size={20} color="white" fill="white" />
+        <Star size={16} color="white" fill="white" />
+        Ask Genie
       </button>
       <div className={`cpan${copilotOpen ? ' on' : ''}`} id="cpan">
         <div className="chdr">
@@ -66,8 +67,8 @@ export const AiCopilot: React.FC = () => {
             <Star size={15} color="white" fill="white" />
           </div>
           <div>
-            <div className="cht">AI Copilot</div>
-            <div className="chs">{SOCIETY_NAME} · BMS Intelligence</div>
+            <div className="cht">Ask Genie</div>
+            <div className="chs">{SOCIETY_NAME} · Business Genie AI</div>
           </div>
           <button type="button" className="ccl" onClick={() => setCopilotOpen(false)}>
             <X size={13} color="white" />
