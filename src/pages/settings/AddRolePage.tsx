@@ -102,7 +102,9 @@ export const AddRolePage = () => {
     const fetchModules = async () => {
       try {
         setModulesLoading(true);
-        const fetchedModules = await roleService.fetchModules();
+        const fetchedModules = await roleService.fetchModules({
+          "q[lock_phase_show_name_eq]": "HS",
+        });
         setModules(fetchedModules);
 
         // Initialize permissions for all modules
