@@ -78,7 +78,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       if (!hiSocietyAccountRaw) return true;
       const parsed = JSON.parse(hiSocietyAccountRaw);
       const raw = parsed?.is_society_admin;
-      console.log("hiSocietyAccount.is_society_admin raw value:", raw, typeof raw, parsed);
+      console.log(
+        "hiSocietyAccount.is_society_admin raw value:",
+        raw,
+        typeof raw,
+        parsed
+      );
       if (raw === undefined) return false;
       // Rails-style APIs can send this as a real boolean, "true"/"false", or 0/1 — normalize all of them.
       return raw === true || raw === "true" || raw === 1 || raw === "1";
@@ -93,14 +98,19 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     window.addEventListener("hiSocietyAccountUpdated", handleAccountUpdate);
     window.addEventListener("storage", handleAccountUpdate);
     return () => {
-      window.removeEventListener("hiSocietyAccountUpdated", handleAccountUpdate);
+      window.removeEventListener(
+        "hiSocietyAccountUpdated",
+        handleAccountUpdate
+      );
       window.removeEventListener("storage", handleAccountUpdate);
     };
   }, []);
 
   const isUnauthorizedSociety =
-    layoutMode === "hi-society" && !isSocietyAdmin && hostname !== "runwal-cp.lockated.com";
-  console.log(isUnauthorizedSociety)
+    layoutMode === "hi-society" &&
+    !isSocietyAdmin &&
+    hostname !== "runwal-cp.lockated.com";
+  console.log(isUnauthorizedSociety);
 
   // Detect Club Management routes
   const isClubManagementRoute =
@@ -160,8 +170,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Detect Hi-Society site - used for fallback when no API role exists
   const isUIHiSocietySite =
-    hostname.includes("ui-hisociety.lockated.com") ||
-    org_id === "9";
+    hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
 
   const isDevHiSocietySite = hostname.includes("dev-hisociety.lockated.com");
   const isCPSite = hostname === "runwal-cp.lockated.com";
@@ -176,14 +185,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Action sidebar/header orgs only apply in Hi-Society mode; switching to
   // FM Matrix falls through to the regular FM sidebar + dynamic header.
-  const isActionLayoutAccount =
-    layoutMode === "hi-society" &&
-    (userEmail === "dineshshinde6666@gmail.com" ||
-      org_id === "109" ||
-      org_id === "324" ||
-      org_id === "10" ||
-      org_id === "5" ||
-      org_id === "9");
+  const isActionLayoutAccount = layoutMode === "hi-society";
+  // &&
+  // (userEmail === "dineshshinde6666@gmail.com" ||
+  //   org_id === "109" ||
+  //   org_id === "324" ||
+  //   org_id === "10" ||
+  //   org_id === "5" ||
+  //   org_id === "9"
+  // );
 
   // Layout behavior:
   // - Company ID 189 (Lockated HO): Default layout (Sidebar + DynamicHeader)
@@ -202,9 +212,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     const storedToken = localStorage.getItem("token");
     const hasToken = hasTokenParam || storedToken;
 
-    if (
-      isActionLayoutAccount
-    ) {
+    if (isActionLayoutAccount) {
       console.log("✅ Rendering ActionSidebar (company-specific)");
       return <ActionSidebar />;
     }
@@ -263,8 +271,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       // return <HiSocietySidebar />;
     }
 
-
-
     if (selectedCompany?.id === 189) {
       return <ZxSidebar />;
     }
@@ -293,9 +299,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     // Company-specific logic (Admin layout)
 
-    if (
-      isActionLayoutAccount
-    ) {
+    if (isActionLayoutAccount) {
       return <ActionHeader />;
     }
 
@@ -432,9 +436,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div className="mx-auto mb-5 flex items-center justify-center w-16 h-16 rounded-full bg-[#F2C8C4]">
                 <ShieldAlert className="w-8 h-8 text-[#C72030]" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Restricted</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Access Restricted
+              </h2>
               <p className="text-sm text-gray-600 leading-relaxed">
-                You are not authorized to access this. Please change your society or contact administrator.
+                You are not authorized to access this. Please change your
+                society or contact administrator.
               </p>
             </div>
           </div>
@@ -461,19 +468,19 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   ? "md:ml-16 ml-0"
                   : "md:ml-64 ml-0"
                 : // FM Matrix mode - always show sidebar margin for admin users
-                isSidebarCollapsed
+                  isSidebarCollapsed
                   ? "md:ml-16 ml-0"
                   : "md:ml-64 ml-0"
-              } ${
+            } ${
               // Top padding based on mode
               layoutMode === "hi-society"
                 ? // RM/CS users have no HiSocietyNavigation bar (renderDynamicHeader
-                // returns null for them), so they only need space for the header
-                isCSUser || isRMUser
+                  // returns null for them), so they only need space for the header
+                  isCSUser || isRMUser
                   ? "pt-16"
                   : "pt-28"
                 : "pt-28"
-              }`}
+            }`}
           >
             <RouteErrorBoundary locationKey={location.key}>
               <Outlet />
