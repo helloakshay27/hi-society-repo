@@ -115,6 +115,7 @@ export const LockModuleList = () => {
                 <TableHead className="font-semibold text-gray-700">Name</TableHead>
                 <TableHead className="font-semibold text-gray-700">Display Name</TableHead>
                 <TableHead className="font-semibold text-gray-700">Abbreviation</TableHead>
+                <TableHead className="font-semibold text-gray-700">Phase</TableHead>
                 <TableHead className="font-semibold text-gray-700">Module Type</TableHead>
                 <TableHead className="font-semibold text-gray-700">Status</TableHead>
                 <TableHead className="font-semibold text-gray-700">Rate</TableHead>
@@ -123,7 +124,7 @@ export const LockModuleList = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     <div className="flex items-center justify-center">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       Loading modules...
@@ -132,7 +133,7 @@ export const LockModuleList = () => {
                 </TableRow>
               ) : filteredModules.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                     {searchTerm ? 'No modules found matching your search' : 'No modules found'}
                   </TableCell>
                 </TableRow>
@@ -166,6 +167,7 @@ export const LockModuleList = () => {
                         {module.abbreviation}
                       </Badge>
                     </TableCell>
+                    <TableCell>{module.lock_phase?.name || '-'}</TableCell>
                     <TableCell>{module.module_type || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={module.active ? "default" : "secondary"}>

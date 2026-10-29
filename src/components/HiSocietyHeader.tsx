@@ -75,11 +75,16 @@ export const HiSocietyHeader = () => {
   } | null>(null);
 
   // Hi-Society specific state
-  const [hiSocietySocieties, setHiSocietySocieties] = useState<HiSocietySociety[]>([]);
-  const [selectedSociety, setSelectedSociety] = useState<HiSocietySociety | null>(null);
-  const [selectedFlat, setSelectedFlat] = useState<HiSocietySociety | null>(null);
+  const [hiSocietySocieties, setHiSocietySocieties] = useState<
+    HiSocietySociety[]
+  >([]);
+  const [selectedSociety, setSelectedSociety] =
+    useState<HiSocietySociety | null>(null);
+  const [selectedFlat, setSelectedFlat] = useState<HiSocietySociety | null>(
+    null
+  );
   const [hiSocietyLoading, setHiSocietyLoading] = useState(false);
-  console.log(selectedSociety)
+  console.log(selectedSociety);
 
   // RM/CS specific state — account API returns `rm_societies` (assigned societies)
   // and `society` (currently selected one) instead of the member-style
@@ -108,7 +113,8 @@ export const HiSocietyHeader = () => {
 
   const isWebSite = hostname.includes("web.gophygital.work");
 
-  const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
+  const isUIHiSocietySite =
+    hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
 
   const isLocalhost =
     hostname.includes("localhost") ||
@@ -201,7 +207,7 @@ export const HiSocietyHeader = () => {
             role_name: data?.role_name,
           });
         })
-        .catch(() => { });
+        .catch(() => {});
     } catch {
       /* no-op */
     }
@@ -211,18 +217,25 @@ export const HiSocietyHeader = () => {
   const fetchHiSocietyData = async (token: string) => {
     if (!token) return;
     try {
-
       let accountData: any = null;
 
       // Fetch account data
-      const accountResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
+      const accountResponse = await fetch(
+        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`
+      );
       if (accountResponse.ok) {
         accountData = await accountResponse.json();
         localStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
         // Store the user_society id (not society.id) so cache lookup works correctly
-        localStorage.setItem("selectedUserSociety", accountData?.selected_user_society?.toString() || "");
+        localStorage.setItem(
+          "selectedUserSociety",
+          accountData?.selected_user_society?.toString() || ""
+        );
         sessionStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
-        sessionStorage.setItem("selectedUserSociety", accountData?.selected_user_society?.toString() || "");
+        sessionStorage.setItem(
+          "selectedUserSociety",
+          accountData?.selected_user_society?.toString() || ""
+        );
         // Let Layout (and any other listener) know fresh account data — including
         // is_society_admin — is available, since it lives in a sibling component.
         window.dispatchEvent(new Event("hiSocietyAccountUpdated"));
@@ -231,31 +244,46 @@ export const HiSocietyHeader = () => {
         // society straight off the account response (no separate approved-
         // societies call for them).
         setAccountUserType(accountData?.user_type || null);
-        if (accountData?.user_type === "rm_user" || accountData?.user_type === "cs_user") {
+        if (
+          accountData?.user_type === "rm_user" ||
+          accountData?.user_type === "cs_user"
+        ) {
           setRmSocieties(accountData?.rm_societies || []);
           setRmSelectedSociety(accountData?.society || null);
         }
       }
 
       // Fetch user approved societies
-      const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}&organization_id=${org_id}`);
+      const societiesResponse = await fetch(
+        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}&organization_id=${org_id}`
+      );
       if (societiesResponse.ok) {
         const societiesData = await societiesResponse.json();
         const societies = societiesData.user_societies || [];
-        localStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(societies));
-        sessionStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(societies));
+        localStorage.setItem(
+          "hiSocietyApprovedSocieties",
+          JSON.stringify(societies)
+        );
+        sessionStorage.setItem(
+          "hiSocietyApprovedSocieties",
+          JSON.stringify(societies)
+        );
 
         setHiSocietySocieties(societies);
 
         // Find selected society: try selected_user_society id first, then society.id, then first in list
-        const selectedUserSocietyId = accountData?.selected_user_society?.toString();
-        let selected: HiSocietySociety | undefined =
-          selectedUserSocietyId
-            ? societies.find((s: HiSocietySociety) => s.id.toString() === selectedUserSocietyId)
-            : undefined;
+        const selectedUserSocietyId =
+          accountData?.selected_user_society?.toString();
+        let selected: HiSocietySociety | undefined = selectedUserSocietyId
+          ? societies.find(
+              (s: HiSocietySociety) => s.id.toString() === selectedUserSocietyId
+            )
+          : undefined;
 
         if (!selected && accountData?.society?.id) {
-          selected = societies.find((s: HiSocietySociety) => s.society?.id === accountData.society.id);
+          selected = societies.find(
+            (s: HiSocietySociety) => s.society?.id === accountData.society.id
+          );
         }
 
         if (!selected && societies.length > 0) {
@@ -288,7 +316,9 @@ export const HiSocietyHeader = () => {
 
         // Find and set selected society and flat
         if (selectedUserSociety) {
-          const selected = societies.find(s => s.id.toString() === selectedUserSociety);
+          const selected = societies.find(
+            (s) => s.id.toString() === selectedUserSociety
+          );
           if (selected) {
             setSelectedSociety(selected);
             setSelectedFlat(selected);
@@ -307,7 +337,10 @@ export const HiSocietyHeader = () => {
         if (cachedAccountRaw) {
           const cachedAccount = JSON.parse(cachedAccountRaw);
           setAccountUserType(cachedAccount?.user_type || null);
-          if (cachedAccount?.user_type === "rm_user" || cachedAccount?.user_type === "cs_user") {
+          if (
+            cachedAccount?.user_type === "rm_user" ||
+            cachedAccount?.user_type === "cs_user"
+          ) {
             setRmSocieties(cachedAccount?.rm_societies || []);
             setRmSelectedSociety(cachedAccount?.society || null);
           }
@@ -333,7 +366,7 @@ export const HiSocietyHeader = () => {
   // Get unique societies for dropdown (avoid duplicates)
   const uniqueSocieties = React.useMemo(() => {
     const seen = new Set<string>();
-    return hiSocietySocieties.filter(society => {
+    return hiSocietySocieties.filter((society) => {
       if (seen.has(society.id_society)) {
         return false;
       }
@@ -344,12 +377,17 @@ export const HiSocietyHeader = () => {
 
   // Get available flats for selected society
   const availableFlats = selectedSociety
-    ? hiSocietySocieties.filter(s => s.id_society === selectedSociety.id_society && s.user_flat && Object.keys(s.user_flat).length > 0)
+    ? hiSocietySocieties.filter(
+        (s) =>
+          s.id_society === selectedSociety.id_society &&
+          s.user_flat &&
+          Object.keys(s.user_flat).length > 0
+      )
     : [];
 
   // Handle flat change
   const handleFlatChange = (flatUserSocietyId: number) => {
-    const selected = hiSocietySocieties.find(s => s.id === flatUserSocietyId);
+    const selected = hiSocietySocieties.find((s) => s.id === flatUserSocietyId);
     if (selected) {
       setSelectedFlat(selected);
       // Optionally store in localStorage if you want persistence
@@ -379,7 +417,7 @@ export const HiSocietyHeader = () => {
       const data = await response.json();
 
       // Update selected society and flat
-      const selected = hiSocietySocieties.find(s => s.id === societyId);
+      const selected = hiSocietySocieties.find((s) => s.id === societyId);
       if (selected) {
         setSelectedSociety(selected);
         setSelectedFlat(selected);
@@ -459,7 +497,11 @@ export const HiSocietyHeader = () => {
                 viewBox="0 0 325 274"
                 fill="none"
               >
-                <rect width={325} height={274} fill="url(#pattern0_4116_1359)" />
+                <rect
+                  width={325}
+                  height={274}
+                  fill="url(#pattern0_4116_1359)"
+                />
                 <defs>
                   <pattern
                     id="pattern0_4116_1359"
@@ -482,11 +524,7 @@ export const HiSocietyHeader = () => {
                 </defs>
               </svg>
             ) : isUIHiSocietySite ? (
-              <img
-                src={RunwalLogo}
-                alt="Runwal Logo"
-                width={60}
-              />
+              <img src={RunwalLogo} alt="Runwal Logo" width={60} />
             ) : isViSite ? (
               <svg
                 width="218"
@@ -504,7 +542,12 @@ export const HiSocietyHeader = () => {
                   d="M96.5583 31V25.7151C96.5583 24.8065 96.3752 24.1332 96.0092 23.6953C95.6431 23.2508 95.081 23.0285 94.3227 23.0285C93.9109 23.0285 93.5285 23.1135 93.1755 23.2835C92.8291 23.4469 92.5349 23.6822 92.2931 23.9894C92.1166 24.2248 91.9891 24.4993 91.9107 24.8131C91.8323 25.1268 91.793 25.6432 91.793 26.3622V31H90.3125V25.7151C90.3125 24.8065 90.1295 24.1332 89.7634 23.6953C89.3973 23.2508 88.8352 23.0285 88.0769 23.0285C87.6651 23.0285 87.2795 23.1135 86.92 23.2835C86.567 23.4469 86.2696 23.6822 86.0277 23.9894C85.8577 24.2182 85.7336 24.4829 85.6551 24.7836C85.5832 25.0843 85.5473 25.6105 85.5473 26.3622V31H84.0667V22.0284H85.5669V23.4109C85.9395 22.8357 86.3839 22.4076 86.9003 22.1265C87.4167 21.8454 88.0116 21.7049 88.6849 21.7049C89.4104 21.7049 90.0281 21.8617 90.538 22.1755C91.0479 22.4827 91.4335 22.9338 91.695 23.5286C92.0806 22.9142 92.5349 22.4566 93.0579 22.1559C93.5873 21.8552 94.1985 21.7049 94.8914 21.7049C95.8915 21.7049 96.6727 21.9859 97.2348 22.5481C97.797 23.1103 98.078 23.8914 98.078 24.8915V31H96.5583ZM100.745 35.373L103.177 30.1176L99.6566 22.0284H101.431L104.039 28.4703L106.804 22.0284H108.491L102.471 35.373H100.745Z"
                   fill="#ED323D"
                 />
-                <circle cx="24" cy="24" r="24" fill="url(#pattern0_4074_3337)" />
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="24"
+                  fill="url(#pattern0_4074_3337)"
+                />
                 <defs>
                   <pattern
                     id="pattern0_4074_3337"
@@ -641,9 +684,17 @@ export const HiSocietyHeader = () => {
                   }),
                 });
                 const frontendUrl = fmProduct.frontendUrl.trim();
-                const fmUrl = (
-                  /^https?:\/\//i.test(frontendUrl) ? frontendUrl : `https://${frontendUrl}`
-                ).replace(/\/+$/, "");
+                // const fmUrl = (
+                //   /^https?:\/\//i.test(frontendUrl) ? frontendUrl : `https://${frontendUrl}`
+                // ).replace(/\/+$/, "");
+                const fmUrl = `${
+                  window.location.hostname === "localhost"
+                    ? "http://localhost:5174"
+                    : (/^https?:\/\//i.test(frontendUrl)
+                        ? frontendUrl
+                        : `https://${frontendUrl}`
+                      ).replace(/\/+$/, "")
+                }`;
                 window.open(
                   `${fmUrl}/sso-login#${params.toString()}`,
                   "_blank",
@@ -673,7 +724,7 @@ export const HiSocietyHeader = () => {
                     ? rmSelectedSociety?.building_name || "Select Society"
                     : selectedSociety?.society?.building_name
                       ? selectedFlat?.user_flat?.flat
-                        ? `${selectedSociety.society.building_name} - ${selectedFlat.user_flat.block ? selectedFlat.user_flat.block + ' - ' : ''}${selectedFlat.user_flat.flat}`
+                        ? `${selectedSociety.society.building_name} - ${selectedFlat.user_flat.block ? selectedFlat.user_flat.block + " - " : ""}${selectedFlat.user_flat.flat}`
                         : selectedSociety.society.building_name
                       : "Select Society"}
                 </span>
@@ -683,7 +734,9 @@ export const HiSocietyHeader = () => {
             <DropdownMenuContent className="w-64 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
               {isRMUser || isCSUser ? (
                 rmSocieties.length === 0 ? (
-                  <DropdownMenuItem disabled>No societies assigned</DropdownMenuItem>
+                  <DropdownMenuItem disabled>
+                    No societies assigned
+                  </DropdownMenuItem>
                 ) : (
                   rmSocieties.map((item) => (
                     <DropdownMenuItem
@@ -699,7 +752,9 @@ export const HiSocietyHeader = () => {
                   ))
                 )
               ) : hiSocietySocieties.length === 0 ? (
-                <DropdownMenuItem disabled>No societies available</DropdownMenuItem>
+                <DropdownMenuItem disabled>
+                  No societies available
+                </DropdownMenuItem>
               ) : (
                 hiSocietySocieties.map((item) => (
                   <DropdownMenuItem
@@ -718,7 +773,8 @@ export const HiSocietyHeader = () => {
                     }
                   >
                     {item.society.building_name}
-                    {item.user_flat?.flat && ` - ${item.user_flat.block ? item.user_flat.block + ' - ' : ''}${item.user_flat.flat}`}
+                    {item.user_flat?.flat &&
+                      ` - ${item.user_flat.block ? item.user_flat.block + " - " : ""}${item.user_flat.flat}`}
                   </DropdownMenuItem>
                 ))
               )}
@@ -726,7 +782,10 @@ export const HiSocietyHeader = () => {
           </DropdownMenu>
 
           <div className="relative">
-            <button className="p-2 hover:bg-[#f6f4ee] rounded-lg transition-colors">
+            <button
+              aria-label="Notifications"
+              className="p-2 hover:bg-[#f6f4ee] rounded-lg transition-colors"
+            >
               <Bell className="w-5 h-5 text-[#1a1a1a]" />
             </button>
             {notificationCount > 0 && (
@@ -755,7 +814,7 @@ export const HiSocietyHeader = () => {
                 <p className="text-sm font-semibold text-gray-900">
                   {isViSite && viAccount
                     ? `${viAccount.firstname || ""} ${viAccount.lastname || ""}`.trim() ||
-                    "User"
+                      "User"
                     : `${user.firstname} ${user.lastname}`}
                 </p>
                 <div className="flex items-center text-gray-600 text-xs mt-0.5">

@@ -57,6 +57,10 @@ const adminNavigationStructure = {
         icon: Lock,
         subItems: [
           {
+            name: "Lock Phases",
+            href: "/ops-console/settings/account/lock-phases",
+          },
+          {
             name: "Lock Module",
             href: "/ops-console/settings/account/lock-module",
           },
