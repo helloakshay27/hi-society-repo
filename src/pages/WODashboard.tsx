@@ -433,7 +433,7 @@ useEffect(() => {
     <>
       <Button
       style={{ backgroundColor: '#F2EEE9', color: '#BF213E' }}
-        className="hover:bg-[#F2EEE9]/90"
+        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
         onClick={() => navigate('/finance/wo/add')}
       >
         <Plus className="w-4 h-4 mr-2" />

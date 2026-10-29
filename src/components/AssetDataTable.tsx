@@ -725,7 +725,9 @@ export const AssetDataTable: React.FC<AssetDataTableProps> = ({
         key={`asset-table-${availableCustomFields.map(f => f.key).join('-')}`} // Force re-render when custom fields change
         leftActions={
           shouldShow("assets", "add") && !(isRestrictedUser && window.location.pathname.includes('/maintenance/asset')) ? (
-            <Button size="sm" className="mr-2" onClick={handleActionClick}>
+            <Button size="sm" 
+           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium" 
+            onClick={handleActionClick}>
               <Plus className="w-4 h-4 mr-2" />
               Action
             </Button>
