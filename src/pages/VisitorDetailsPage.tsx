@@ -298,6 +298,10 @@ export const VisitorDetailsPage = () => {
               ? "checked_in"
               : rawVisitor.approval_status?.approve === 0
               ? "pending"
+              : rawVisitor.approval_status?.approve === 1
+              ? "approved"
+              : rawVisitor.approval_status?.approve_label
+              ? String(rawVisitor.approval_status.approve_label).toLowerCase()
               : "expected"),
         };
         setVisitorData(visitor);
@@ -544,7 +548,9 @@ export const VisitorDetailsPage = () => {
                   className={
                     visitorData.vstatus === "checked_in"
                       ? "bg-green-100 text-green-800"
-                      : visitorData.vstatus === "checked_out"
+                      : visitorData.vstatus === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : visitorData.vstatus === "checked_out"
                         ? "bg-blue-100 text-blue-800"
                         : visitorData.vstatus === "expected"
                           ? "bg-orange-100 text-orange-800"
@@ -562,7 +568,7 @@ export const VisitorDetailsPage = () => {
             {visitorData.approve === 0 && (
               <Button
                 onClick={handleSkipApproval}
-                className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
+                className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
               >
                 Skip Approval
               </Button>
@@ -573,8 +579,8 @@ export const VisitorDetailsPage = () => {
               visitorData.approve === 1 && (
                 <Button
                   onClick={handleCheckIn}
-                  className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
-                style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
+                 className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+                // style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
                 >
                   <span style={{ color: '#FFFFFF' }}>Check-in</span>
                 </Button>
