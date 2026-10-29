@@ -1,6 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Chart, type ChartConfiguration } from 'chart.js/auto';
 import { applyBrandHexRemap } from '../../charts/chartPalette';
+import {
+  centerLabelForChart,
+  doughnutRowsFromConfig,
+  renderBusinessGenieDonut,
+} from '../../charts/bgDonut';
+import { colsSpecFromBarConfig, renderBusinessGenieCols } from '../../charts/bgCols';
 import { inlineLucideIcons, normalizeInfoButtons } from '../../utils/lucideInline';
 
 interface TabHtmlContentProps {
@@ -106,6 +112,25 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
 
       if (!config) return;
 
+      // Business Genie SVG donuts (center total + side legend) instead of Chart.js pie
+      if (config.type === 'doughnut') {
+        renderBusinessGenieDonut(
+          placeholder,
+          doughnutRowsFromConfig(config),
+          centerLabelForChart(id)
+        );
+        return;
+      }
+
+      // Business Genie vertical column charts (palette by index, value labels, optional avg/ghost)
+      if (config.type === 'bar') {
+        const colsSpec = colsSpecFromBarConfig(id, config);
+        if (colsSpec) {
+          renderBusinessGenieCols(placeholder, colsSpec);
+          return;
+        }
+      }
+
       const canvas = document.createElement('canvas');
       canvas.id = id;
       placeholder.appendChild(canvas);
@@ -135,7 +160,7 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
   const handleClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
 
-    const infoEl = target.closest('.info-btn[data-info]') as HTMLElement | null;
+    const infoEl = target.closest('[data-info]') as HTMLElement | null;
     if (infoEl?.dataset.info) {
       e.stopPropagation();
       e.preventDefault();
@@ -182,7 +207,8 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
       );
     };
 
-    const infoButtons = container.querySelectorAll<HTMLElement>('.info-btn[data-info]');
+    // info-btn on card titles + pulse-ico tiles (Overview domain pulse cards)
+    const infoButtons = container.querySelectorAll<HTMLElement>('[data-info]');
     const cleanups: Array<() => void> = [];
 
     infoButtons.forEach((btn) => {

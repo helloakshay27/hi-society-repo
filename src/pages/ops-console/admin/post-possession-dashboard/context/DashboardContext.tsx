@@ -53,13 +53,13 @@ export function useDashboard() {
 }
 
 function renderAgeingMatrix(tbody: HTMLElement, openDrill: (k: string) => void) {
-  const colors = ['var(--for)', 'var(--amb)', 'var(--coral)', 'var(--crim)', 'var(--crim)'];
+  const colors = ['var(--for)', 'var(--sky)', 'var(--vio)', 'var(--crim)', 'var(--crim)'];
   const bgs = [
-    'rgba(8,80,65,.06)',
-    'rgba(186,117,23,.08)',
-    'rgba(218,119,86,.1)',
-    'rgba(163,45,45,.1)',
-    'rgba(163,45,45,.14)',
+    'rgba(18,161,80,.08)',
+    'rgba(47,111,224,.08)',
+    'rgba(90,75,224,.1)',
+    'rgba(229,72,77,.1)',
+    'rgba(229,72,77,.14)',
   ];
   tbody.innerHTML = AGEING_MATRIX.map((r) => {
     const tot = r.cols.reduce((a, b) => a + b, 0);

@@ -16,10 +16,10 @@ import type {
   KpiStripItem,
   TabConfig,
 } from '../types';
-import { PP_PALETTE } from '../charts/chartPalette';
+import { ASSET_CHART_SERIES, PP_PALETTE } from '../charts/chartPalette';
 
-export const SOCIETY_NAME = 'Veda Gardens';
-export const SOCIETY_SUBTITLE = 'Post Possession · 4 Towers';
+export const SOCIETY_NAME = 'Veda Garden';
+export const SOCIETY_SUBTITLE = 'Post Possession';
 export const USER_INITIALS = 'KD';
 
 export const TOWER_FILTERS = ['All', 'FM', 'T1', 'T2', 'T3'];
@@ -148,22 +148,22 @@ export const DIRECTORY: DirectoryVendor[] = [
 ];
 
 export const TOWER_TICKET_BARS = [
-  { n: 'FM', v: 22, c: PP_PALETTE.coral },
-  { n: 'T1', v: 18, c: PP_PALETTE.vio },
-  { n: 'T3', v: 12, c: PP_PALETTE.sky },
-  { n: 'T2', v: 7, c: PP_PALETTE.amb },
+  { n: 'FM', v: 22, c: ASSET_CHART_SERIES[0] },
+  { n: 'T1', v: 18, c: ASSET_CHART_SERIES[1] },
+  { n: 'T3', v: 12, c: ASSET_CHART_SERIES[2] },
+  { n: 'T2', v: 7, c: ASSET_CHART_SERIES[3] },
 ];
 
 export const GATE_BARS = [
-  { n: 'Komal Gate', v: 98, c: PP_PALETTE.coral },
-  { n: 'Devash Gate', v: 72, c: PP_PALETTE.vio },
-  { n: 'Dinash Gate', v: 64, c: PP_PALETTE.sky },
+  { n: 'Komal Gate', v: 98, c: ASSET_CHART_SERIES[0] },
+  { n: 'Devash Gate', v: 72, c: ASSET_CHART_SERIES[1] },
+  { n: 'Dinash Gate', v: 64, c: ASSET_CHART_SERIES[2] },
 ];
 
 export const PARKING_TOWER_BARS = [
-  { n: 'T3', v4: 2, v2: 1, c4: PP_PALETTE.sky },
-  { n: 'FM', v4: 2, v2: 0, c4: PP_PALETTE.coral },
-  { n: 'T4', v4: 1, v2: 0, c4: PP_PALETTE.for },
+  { n: 'T3', v4: 2, v2: 1, c4: ASSET_CHART_SERIES[1] },
+  { n: 'FM', v4: 2, v2: 0, c4: ASSET_CHART_SERIES[0] },
+  { n: 'T4', v4: 1, v2: 0, c4: ASSET_CHART_SERIES[2] },
 ];
 
 export const SLOT_DATA = [

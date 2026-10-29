@@ -1,19 +1,55 @@
 import type { ChartConfiguration } from 'chart.js';
-import { PP_AXIS, PP_PALETTE, rgba } from './chartPalette';
+import {
+  ASSET_CHART_BAR,
+  ASSET_CHART_SERIES,
+  DOUGHNUT_OPTIONS,
+  PP_AXIS,
+  doughnutCenterPlugin,
+  rgba,
+  seriesColor,
+} from './chartPalette';
 
-const P = PP_PALETTE;
+const S = ASSET_CHART_SERIES;
+
+function doughnutDataset(data: number[]) {
+  return {
+    data,
+    backgroundColor: data.map((_, i) => seriesColor(i, 0.92)),
+    borderColor: '#FFFFFF',
+    borderWidth: 2,
+    hoverOffset: 6,
+    hoverBorderWidth: 2,
+  };
+}
+
+function doughnutConfig(
+  labels: string[],
+  data: number[],
+  cutout = '65%'
+): ChartConfiguration {
+  return {
+    type: 'doughnut',
+    data: { labels, datasets: [doughnutDataset(data)] },
+    options: {
+      ...DOUGHNUT_OPTIONS,
+      cutout,
+    },
+    plugins: [doughnutCenterPlugin],
+  };
+}
+
 
 function compositeBarColor(value: number) {
-  if (value >= 80) return rgba(P.for, 0.75);
-  if (value >= 65) return rgba(P.sky, 0.65);
-  if (value >= 55) return rgba(P.amb, 0.7);
-  return rgba(P.crim, 0.75);
+  if (value >= 80) return rgba(S[2], 0.85);
+  if (value >= 65) return rgba(S[1], 0.75);
+  if (value >= 55) return rgba(S[0], 0.55);
+  return rgba(S[0], 0.95);
 }
 
 function rejectionBarColor(value: number) {
-  if (value < 30) return rgba(P.for, 0.7);
-  if (value < 50) return rgba(P.amb, 0.7);
-  return rgba(P.crim, 0.75);
+  if (value < 30) return rgba(S[2], 0.8);
+  if (value < 50) return rgba(S[0], 0.55);
+  return rgba(S[0], 0.95);
 }
 
 export function getLeaderboardCharts(): Record<string, ChartConfiguration> {
@@ -81,60 +117,11 @@ export function getLeaderboardCharts(): Record<string, ChartConfiguration> {
 
 export function getHelpdeskCharts(): Record<string, ChartConfiguration> {
   return {
-    ticketStatusChart: {
-      type: 'doughnut',
-      data: {
-        labels: ['Open/Pending', 'Work in Progress', 'Hold', 'Closed', 'Completed'],
-        datasets: [
-          {
-            data: [41, 8, 1, 10, 10],
-            backgroundColor: [
-              rgba(P.coral, 0.8),
-              rgba(P.amb, 0.8),
-              rgba(P.sky, 0.65),
-              rgba(P.for, 0.75),
-              rgba(P.vio, 0.7),
-            ],
-            borderWidth: 0,
-            hoverOffset: 5,
-          },
-        ],
-      },
-      options: {
-        cutout: '65%',
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: { boxWidth: 8, usePointStyle: true, padding: 9, font: { size: 10 } },
-          },
-        },
-      },
-    },
-    proactiveChart: {
-      type: 'doughnut',
-      data: {
-        labels: ['Proactive', 'Reactive'],
-        datasets: [
-          {
-            data: [35, 24],
-            backgroundColor: [rgba(P.vio, 0.75), rgba(P.coral, 0.7)],
-            borderWidth: 0,
-            hoverOffset: 5,
-          },
-        ],
-      },
-      options: {
-        cutout: '65%',
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: { boxWidth: 8, usePointStyle: true, padding: 9 },
-          },
-        },
-      },
-    },
+    ticketStatusChart: doughnutConfig(
+      ['Pending', 'In progress', 'On hold', 'Closed', 'Completed'],
+      [40, 8, 1, 5, 5]
+    ),
+    proactiveChart: doughnutConfig(['Proactive', 'Reactive'], [35, 24]),
     escalationChart: {
       type: 'bar',
       data: {
@@ -143,7 +130,7 @@ export function getHelpdeskCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Breached',
             data: [42, 38],
-            backgroundColor: rgba(P.crim, 0.7),
+            backgroundColor: rgba(S[0], 0.85),
             borderRadius: 5,
             borderSkipped: false,
             stack: 's',
@@ -151,7 +138,7 @@ export function getHelpdeskCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Achieved',
             data: [17, 21],
-            backgroundColor: rgba(P.for, 0.65),
+            backgroundColor: rgba(S[2], 0.75),
             borderRadius: 5,
             borderSkipped: false,
             stack: 's',
@@ -183,9 +170,9 @@ export function getHelpdeskCharts(): Record<string, ChartConfiguration> {
             data: [85, 60, 60, 67, 50],
             backgroundColor: (ctx) => {
               const v = (ctx.dataset.data[ctx.dataIndex] as number) ?? 0;
-              if (v >= 80) return rgba(P.crim, 0.8);
-              if (v >= 60) return rgba(P.amb, 0.75);
-              return rgba(P.sky, 0.65);
+              if (v >= 80) return rgba(S[0], 0.95);
+              if (v >= 60) return rgba(S[0], 0.6);
+              return rgba(S[1], 0.65);
             },
             borderRadius: 5,
             borderSkipped: false,
@@ -209,36 +196,11 @@ export function getHelpdeskCharts(): Record<string, ChartConfiguration> {
         },
       },
     },
-    modeChart: {
-      type: 'doughnut',
-      data: {
-        labels: ['Mobile', 'App', 'Common Area', 'Apartment', 'Other'],
-        datasets: [
-          {
-            data: [22, 18, 9, 7, 3],
-            backgroundColor: [
-              rgba(P.sky, 0.8),
-              rgba(P.vio, 0.7),
-              rgba(P.for, 0.7),
-              rgba(P.coral, 0.7),
-              rgba(P.sto, 0.5),
-            ],
-            borderWidth: 0,
-            hoverOffset: 5,
-          },
-        ],
-      },
-      options: {
-        cutout: '60%',
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: { boxWidth: 8, usePointStyle: true, padding: 9 },
-          },
-        },
-      },
-    },
+    modeChart: doughnutConfig(
+      ['Mobile', 'App', 'Common Area', 'Apartment', 'Other'],
+      [22, 18, 9, 7, 3],
+      '60%'
+    ),
   };
 }
 
@@ -252,11 +214,11 @@ export function getSecurityCharts(): Record<string, ChartConfiguration> {
           {
             data: [98, 54, 38, 32, 12],
             backgroundColor: [
-              rgba(P.sky, 0.75),
-              rgba(P.vio, 0.7),
-              rgba(P.coral, 0.7),
-              rgba(P.amb, 0.7),
-              rgba(P.sto, 0.5),
+              seriesColor(0, 0.9),
+              seriesColor(1, 0.85),
+              seriesColor(2, 0.85),
+              seriesColor(3, 0.8),
+              seriesColor(4, 0.7),
             ],
             borderRadius: 5,
             borderSkipped: false,
@@ -265,30 +227,10 @@ export function getSecurityCharts(): Record<string, ChartConfiguration> {
       },
       options: { scales: { x: PP_AXIS, y: { ...PP_AXIS, beginAtZero: true } }, plugins: { legend: { display: false } } },
     },
-    visitTypeChart: {
-      type: 'doughnut',
-      data: {
-        labels: ['Post-Approved (on arrival)', 'Pre-Approved (ahead of time)'],
-        datasets: [
-          {
-            data: [134, 100],
-            backgroundColor: [rgba(P.coral, 0.7), rgba(P.for, 0.7)],
-            borderWidth: 0,
-            hoverOffset: 5,
-          },
-        ],
-      },
-      options: {
-        cutout: '65%',
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: { boxWidth: 8, usePointStyle: true, padding: 9 },
-          },
-        },
-      },
-    },
+    visitTypeChart: doughnutConfig(
+      ['Post-Approved (on arrival)', 'Pre-Approved (ahead of time)'],
+      [134, 100]
+    ),
     hourlyTrafficChart: {
       type: 'bar',
       data: {
@@ -298,7 +240,7 @@ export function getSecurityCharts(): Record<string, ChartConfiguration> {
             data: [12, 18, 22, 16, 28, 52, 61, 48, 20],
             backgroundColor: (ctx) => {
               const v = (ctx.dataset.data[ctx.dataIndex] as number) ?? 0;
-              return v > 45 ? rgba(P.crim, 0.75) : rgba(P.sky, 0.6);
+              return v > 45 ? rgba(S[0], 0.95) : rgba(S[1], 0.65);
             },
             borderRadius: 5,
             borderSkipped: false,
@@ -315,12 +257,12 @@ export function getSecurityCharts(): Record<string, ChartConfiguration> {
           {
             data: [89, 52, 41, 28, 18, 6],
             backgroundColor: [
-              rgba(P.sky, 0.8),
-              rgba(P.vio, 0.7),
-              rgba(P.coral, 0.75),
-              rgba(P.amb, 0.7),
-              rgba(P.for, 0.65),
-              rgba(P.sto, 0.5),
+              seriesColor(0, 0.9),
+              seriesColor(1, 0.85),
+              seriesColor(2, 0.85),
+              seriesColor(3, 0.8),
+              seriesColor(4, 0.75),
+              seriesColor(5, 0.65),
             ],
             borderRadius: 5,
             borderSkipped: false,
@@ -341,14 +283,14 @@ export function getSecurityCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Member Vehicles',
             data: [10, 9, 8, 7, 9, 10, 11, 9, 8],
-            backgroundColor: rgba(P.for, 0.65),
+            backgroundColor: rgba(S[2], 0.75),
             borderRadius: 5,
             borderSkipped: false,
           },
           {
             label: 'Guest Vehicles',
             data: [2, 3, 4, 3, 5, 14, 18, 12, 4],
-            backgroundColor: rgba(P.crim, 0.7),
+            backgroundColor: rgba(S[0], 0.85),
             borderRadius: 5,
             borderSkipped: false,
           },
@@ -379,14 +321,14 @@ export function getStaffCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Scheduled',
             data: [14, 10, 6, 4],
-            backgroundColor: rgba(P.sto, 0.35),
+            backgroundColor: ASSET_CHART_BAR.muted,
             borderRadius: 5,
             borderSkipped: false,
           },
           {
             label: 'Present',
             data: [10, 9, 6, 4],
-            backgroundColor: rgba(P.for, 0.7),
+            backgroundColor: ASSET_CHART_BAR.solid,
             borderRadius: 5,
             borderSkipped: false,
           },
@@ -412,7 +354,7 @@ export function getStaffCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Scheduled',
             data: [12, 10, 9, 3],
-            backgroundColor: rgba(P.sto, 0.35),
+            backgroundColor: ASSET_CHART_BAR.muted,
             borderRadius: 5,
             borderSkipped: false,
           },
@@ -423,7 +365,7 @@ export function getStaffCharts(): Record<string, ChartConfiguration> {
               const scheduled = [12, 10, 9, 3];
               const present = (ctx.dataset.data[ctx.dataIndex] as number) ?? 0;
               const pct = present / scheduled[ctx.dataIndex];
-              return pct < 0.7 ? rgba(P.crim, 0.75) : rgba(P.for, 0.7);
+              return pct < 0.7 ? rgba(S[0], 0.9) : ASSET_CHART_BAR.solid;
             },
             borderRadius: 5,
             borderSkipped: false,
@@ -447,35 +389,7 @@ export function getStaffCharts(): Record<string, ChartConfiguration> {
 
 export function getClubCharts(): Record<string, ChartConfiguration> {
   return {
-    memberStatusChart: {
-      type: 'doughnut',
-      data: {
-        labels: ['Pending', 'Inactive', 'Active', 'Expired'],
-        datasets: [
-          {
-            data: [78, 24, 15, 0],
-            backgroundColor: [
-              rgba(P.crim, 0.7),
-              rgba(P.sto, 0.5),
-              rgba(P.for, 0.75),
-              rgba(P.amb, 0.5),
-            ],
-            borderWidth: 0,
-            hoverOffset: 5,
-          },
-        ],
-      },
-      options: {
-        cutout: '65%',
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: { boxWidth: 8, usePointStyle: true, padding: 9 },
-          },
-        },
-      },
-    },
+    memberStatusChart: doughnutConfig(['Pending', 'Inactive', 'Active', 'Expired'], [78, 24, 15, 0]),
     facilityChart: {
       type: 'bar',
       data: {
@@ -483,16 +397,7 @@ export function getClubCharts(): Record<string, ChartConfiguration> {
         datasets: [
           {
             data: [145, 62, 48, 22, 18, 12, 8, 5],
-            backgroundColor: [
-              rgba(P.coral, 0.8),
-              rgba(P.sky, 0.7),
-              rgba(P.vio, 0.7),
-              rgba(P.for, 0.7),
-              rgba(P.amb, 0.6),
-              rgba(P.crim, 0.5),
-              rgba(P.sto, 0.5),
-              rgba(P.vio, 0.4),
-            ],
+            backgroundColor: Array.from({ length: 8 }, (_, i) => seriesColor(i, 0.85)),
             borderRadius: 5,
             borderSkipped: false,
           },
@@ -500,30 +405,11 @@ export function getClubCharts(): Record<string, ChartConfiguration> {
       },
       options: { scales: { x: PP_AXIS, y: { ...PP_AXIS, beginAtZero: true } }, plugins: { legend: { display: false } } },
     },
-    planDistChart: {
-      type: 'doughnut',
-      data: {
-        labels: ['Basic Plan Gold', 'Summer Plan', 'Summer Membership', 'Test (demo)'],
-        datasets: [
-          {
-            data: [45, 28, 12, 5],
-            backgroundColor: [rgba(P.for, 0.8), rgba(P.sky, 0.75), rgba(P.coral, 0.7), rgba(P.sto, 0.4)],
-            borderWidth: 0,
-            hoverOffset: 5,
-          },
-        ],
-      },
-      options: {
-        cutout: '60%',
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: { boxWidth: 8, usePointStyle: true, padding: 9, font: { size: 10 } },
-          },
-        },
-      },
-    },
+    planDistChart: doughnutConfig(
+      ['Basic Plan Gold', 'Summer Plan', 'Summer Membership', 'Test (demo)'],
+      [45, 28, 12, 5],
+      '60%'
+    ),
     facilityTypeChart: {
       type: 'bar',
       data: {
@@ -532,14 +418,14 @@ export function getClubCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Confirmed',
             data: [128, 14],
-            backgroundColor: rgba(P.for, 0.75),
+            backgroundColor: rgba(S[2], 0.8),
             borderRadius: 5,
             borderSkipped: false,
           },
           {
             label: 'Pending Approval',
             data: [0, 8],
-            backgroundColor: rgba(P.amb, 0.7),
+            backgroundColor: rgba(S[0], 0.75),
             borderRadius: 5,
             borderSkipped: false,
           },
@@ -562,54 +448,8 @@ export function getClubCharts(): Record<string, ChartConfiguration> {
 
 export function getFitoutCharts(): Record<string, ChartConfiguration> {
   return {
-    fitoutTypeChart: {
-      type: 'doughnut',
-      data: {
-        labels: ['Fitout (Renovation)', 'Move In (New Resident)'],
-        datasets: [
-          {
-            data: [32, 6],
-            backgroundColor: [rgba(P.vio, 0.75), rgba(P.for, 0.7)],
-            borderWidth: 0,
-            hoverOffset: 5,
-          },
-        ],
-      },
-      options: {
-        cutout: '65%',
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: { boxWidth: 8, usePointStyle: true, padding: 9 },
-          },
-        },
-      },
-    },
-    deviationChart: {
-      type: 'doughnut',
-      data: {
-        labels: ['Structural', 'Electrical', 'Plumbing', 'Aesthetic'],
-        datasets: [
-          {
-            data: [2, 2, 2, 1],
-            backgroundColor: [rgba(P.crim, 0.75), rgba(P.amb, 0.7), rgba(P.sky, 0.65), rgba(P.sto, 0.5)],
-            borderWidth: 0,
-            hoverOffset: 5,
-          },
-        ],
-      },
-      options: {
-        cutout: '65%',
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: { boxWidth: 8, usePointStyle: true, padding: 9 },
-          },
-        },
-      },
-    },
+    fitoutTypeChart: doughnutConfig(['Fitout (Renovation)', 'Move In (New Resident)'], [32, 6]),
+    deviationChart: doughnutConfig(['Structural', 'Electrical', 'Plumbing', 'Aesthetic'], [2, 2, 2, 1]),
     createdByChart: {
       type: 'bar',
       data: {
@@ -618,7 +458,7 @@ export function getFitoutCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Avg days to decision',
             data: [1.8, 4.6],
-            backgroundColor: [rgba(P.vio, 0.7), rgba(P.crim, 0.7)],
+            backgroundColor: [seriesColor(0, 0.85), seriesColor(1, 0.85)],
             borderRadius: 6,
             borderSkipped: false,
           },
@@ -644,7 +484,7 @@ export function getFitoutCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Rejection rate',
             data: [30, 75],
-            backgroundColor: [rgba(P.vio, 0.7), rgba(P.crim, 0.75)],
+            backgroundColor: [seriesColor(0, 0.85), seriesColor(1, 0.9)],
             borderRadius: 6,
             borderSkipped: false,
           },
@@ -675,7 +515,7 @@ export function getFitoutCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Rejection rate',
             data: [62, 23],
-            backgroundColor: [rgba(P.amb, 0.75), rgba(P.for, 0.65)],
+            backgroundColor: [seriesColor(0, 0.7), seriesColor(2, 0.8)],
             borderRadius: 6,
             borderSkipped: false,
           },
@@ -703,30 +543,7 @@ export function getFitoutCharts(): Record<string, ChartConfiguration> {
 
 export function getParkingCharts(): Record<string, ChartConfiguration> {
   return {
-    parkingTypeChart: {
-      type: 'doughnut',
-      data: {
-        labels: ['SUV', 'Hatchback', 'Bike'],
-        datasets: [
-          {
-            data: [2, 2, 1],
-            backgroundColor: [rgba(P.sky, 0.75), rgba(P.coral, 0.7), rgba(P.vio, 0.65)],
-            borderWidth: 0,
-            hoverOffset: 5,
-          },
-        ],
-      },
-      options: {
-        cutout: '62%',
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: { boxWidth: 8, usePointStyle: true, padding: 9 },
-          },
-        },
-      },
-    },
+    parkingTypeChart: doughnutConfig(['SUV', 'Hatchback', 'Bike'], [2, 2, 1], '62%'),
   };
 }
 
@@ -739,12 +556,12 @@ export function getCommunityCharts(): Record<string, ChartConfiguration> {
         datasets: [
           {
             label: 'Adoption Rate',
-            data: [24, 70, 86, 17],
+            data: [23, 70, 86, 17],
             backgroundColor: (ctx) => {
               const v = (ctx.dataset.data[ctx.dataIndex] as number) ?? 0;
-              if (v < 30) return rgba(P.crim, 0.75);
-              if (v > 80) return rgba(P.for, 0.75);
-              return rgba(P.sky, 0.65);
+              if (v < 30) return rgba(S[0], 0.9);
+              if (v > 80) return rgba(S[2], 0.85);
+              return rgba(S[1], 0.7);
             },
             borderRadius: 6,
             borderSkipped: false,
@@ -774,16 +591,17 @@ export function getCommunityCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Total Votes',
             data: [0, 1, 0, 0],
-            backgroundColor: rgba(P.amb, 0.6),
+            backgroundColor: rgba(S[0], 0.7),
             borderRadius: 5,
             borderSkipped: false,
           },
         ],
       },
       options: {
+        indexAxis: 'y',
         scales: {
-          x: PP_AXIS,
-          y: { ...PP_AXIS, beginAtZero: true, max: 5, ticks: { stepSize: 1 } },
+          x: { ...PP_AXIS, beginAtZero: true, max: 5, ticks: { stepSize: 1 } },
+          y: PP_AXIS,
         },
         plugins: { legend: { display: false } },
       },
@@ -795,61 +613,26 @@ export function getCommunityCharts(): Record<string, ChartConfiguration> {
         datasets: [
           {
             label: 'Sent',
-            data: [22, 14, 9],
-            backgroundColor: rgba(P.sto, 0.35),
+            data: [19, 12, 14],
+            backgroundColor: ASSET_CHART_BAR.muted,
             borderRadius: 5,
             borderSkipped: false,
           },
           {
             label: 'Delivered',
-            data: [22, 14, 7],
-            backgroundColor: (ctx) => {
-              const sent = [22, 14, 9];
-              const delivered = (ctx.dataset.data[ctx.dataIndex] as number) ?? 0;
-              const pct = delivered / sent[ctx.dataIndex];
-              return pct < 0.9 ? rgba(P.crim, 0.75) : rgba(P.for, 0.7);
-            },
+            data: [19, 12, 11],
+            backgroundColor: ASSET_CHART_BAR.solid,
             borderRadius: 5,
             borderSkipped: false,
           },
         ],
       },
       options: {
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            align: 'end',
-            labels: { boxWidth: 7, font: { size: 10 } },
-          },
-        },
-        scales: { x: PP_AXIS, y: { ...PP_AXIS, beginAtZero: true } },
+        plugins: { legend: { display: false } },
+        scales: { x: PP_AXIS, y: { ...PP_AXIS, beginAtZero: true, max: 25 } },
       },
     },
-    quarantineTowerChart: {
-      type: 'doughnut',
-      data: {
-        labels: ['Tower A', 'FM', 'GL / Team'],
-        datasets: [
-          {
-            data: [4, 1, 3],
-            backgroundColor: [rgba(P.crim, 0.7), rgba(P.sky, 0.6), rgba(P.amb, 0.65)],
-            borderWidth: 0,
-            hoverOffset: 5,
-          },
-        ],
-      },
-      options: {
-        cutout: '62%',
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: { boxWidth: 8, usePointStyle: true, padding: 9 },
-          },
-        },
-      },
-    },
+    quarantineTowerChart: doughnutConfig(['Tower A', 'FM', 'GL / Team'], [4, 1, 3], '62%'),
   };
 }
 
