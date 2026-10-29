@@ -26,6 +26,7 @@ import { FormControl, InputLabel, MenuItem, Select as MuiSelect, TextField } fro
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
 
@@ -122,10 +123,11 @@ const formatDateTime = (iso: string | null | undefined): string => {
   });
 };
 
-const buildQueryString = (page: number, filters: FilterState): string => {
+const buildQueryString = (page: number, filters: FilterState, search = ""): string => {
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("per_page", "20");
+  if (search.trim()) params.set("q[search_all_fields_cont]", search.trim());
   if (filters.building) params.set("building_id", filters.building);
   if (filters.tower) params.set("tower_id", filters.tower);
   if (filters.flat) params.set("flat_id", filters.flat);
@@ -288,6 +290,8 @@ const SmartSecureVisitorHistory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState>(defaultFilters);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
 
   // Image preview state
   const [previewImageOpen, setPreviewImageOpen] = useState(false);
@@ -295,9 +299,9 @@ const SmartSecureVisitorHistory: React.FC = () => {
   const [previewImageName, setPreviewImageName] = useState<string>('');
 
   const { data: apiData, isLoading, isError, error, refetch } = useQuery<ApiResponse>({
-    queryKey: ["visitor-history-list", currentPage, activeFilters],
+    queryKey: ["visitor-history-list", currentPage, activeFilters, debouncedSearch],
     queryFn: async () => {
-      const qs = buildQueryString(currentPage, activeFilters);
+      const qs = buildQueryString(currentPage, activeFilters, debouncedSearch);
       const res = await fetch(
         getFullUrl(`/crm/admin/visitors_history.json?${qs}`),
         { headers: { Authorization: getAuthHeader() } }
@@ -307,6 +311,11 @@ const SmartSecureVisitorHistory: React.FC = () => {
     },
     staleTime: 30000,
   });
+
+  // Reset to page 1 whenever the search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
   const rows = useMemo(() => apiData?.data ?? [], [apiData]);
   const pagination = apiData?.pagination;
@@ -599,6 +608,9 @@ const SmartSecureVisitorHistory: React.FC = () => {
         columns={historyColumns}
         renderCell={renderCell}
         enableSearch={true}
+        disableClientSearch
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
         enableSelection={false}
         storageKey="visitor-history-list-table"
         emptyMessage="No visitor history available"

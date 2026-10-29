@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import { apiClient } from '@/utils/apiClient';
 import { API_CONFIG } from '@/config/apiConfig';
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useDebounce } from '@/hooks/useDebounce';
 
 // Column configuration for the enhanced table
 const columns: ColumnConfig[] = [
@@ -78,6 +79,8 @@ export const StaffsDashboard = () => {
   const [searchTrigger, setSearchTrigger] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [activeSearchQuery, setActiveSearchQuery] = useState<string>('');
+  const [tableSearchInput, setTableSearchInput] = useState('');
+  const debouncedTableSearch = useDebounce(tableSearchInput, 500);
   const [showActionMenu, setShowActionMenu] = useState(false);
   
   // API state management
@@ -197,6 +200,13 @@ export const StaffsDashboard = () => {
   useEffect(() => {
     loadStaffsData();
   }, [loadStaffsData]);
+
+  // Table search box -> server-side search (q[search_all_fields_cont])
+  useEffect(() => {
+    setActiveSearchQuery(debouncedTableSearch.trim());
+    setCurrentPage(1);
+    setSelectedStaffs([]);
+  }, [debouncedTableSearch]);
 
   // Pagination handlers
   const handlePreviousPage = () => {
@@ -401,6 +411,7 @@ export const StaffsDashboard = () => {
 
   const handleClearSearch = () => {
     setSearchTerm('');
+    setTableSearchInput('');
     setActiveSearchQuery('');
     setCurrentPage(1);
     setSelectedStaffs([]);
@@ -780,7 +791,10 @@ export const StaffsDashboard = () => {
             columns={columns}
             renderRow={renderRow}
             selectable={true}
-            enableSearch={false} // Disable built-in search since we're using API search
+            enableSearch={true}
+            disableClientSearch
+            searchValue={tableSearchInput}
+            onSearchChange={setTableSearchInput}
             enableSelection={true}
             enableExport={true}
             storageKey="staff-table"

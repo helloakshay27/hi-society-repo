@@ -118,7 +118,7 @@ const SmartSecureStaffsOut: React.FC = () => {
     try {
       let url = getFullUrl(`/crm/admin/staff_out.json?page=${page}&per_page=20`);
       if (search.trim()) {
-        url += `&q[first_name_or_last_name_or_mobile_or_full_name_cont]=${encodeURIComponent(search.trim())}`;
+        url += `&q[search_all_fields_cont]=${encodeURIComponent(search.trim())}`;
       }
       const response = await fetch(url, {
         headers: {
@@ -440,6 +440,7 @@ const SmartSecureStaffsOut: React.FC = () => {
         loading={isLoading}
         onSearchChange={handleSearch}
         searchValue={searchQuery}
+        disableClientSearch
         pagination={false}
         // leftActions={
         //   <Button
