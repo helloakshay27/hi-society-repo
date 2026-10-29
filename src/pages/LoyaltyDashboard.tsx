@@ -1292,7 +1292,7 @@ export function LoyaltyDashboard() {
             {/* Top Cards Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-[14px] mb-[14px]">
               {/* Card 1 */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between">
+              <div className="bg-white rounded-[10px] p-[16px] flex flex-col justify-between shadow-sm">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Live In Store</div>
@@ -1304,7 +1304,7 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 2 */}
-              <div className="bg-white border border-[var(--loyalty-accent)] rounded-[10px] p-[16px] flex flex-col justify-between">
+              <div className="bg-white rounded-[10px] p-[16px] flex flex-col justify-between shadow-sm">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Sitting In Aggregator</div>
@@ -1316,7 +1316,7 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 3 */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between">
+              <div className="bg-white rounded-[10px] p-[16px] flex flex-col justify-between shadow-sm">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Days Programme Live</div>
@@ -1335,7 +1335,7 @@ export function LoyaltyDashboard() {
                   const totalAvail = availableByCategory.reduce((sum: number, c: any) => sum + c.count, 0);
                   const pct = totalAvail > 0 ? Math.round((cat.count / totalAvail) * 100) : 0;
                   return (
-                    <div key={i} className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between" style={{ borderTop: `3px solid ${topColors[i % topColors.length]}` }}>
+                    <div key={i} className="bg-white rounded-[10px] p-[16px] flex flex-col justify-between shadow-sm">
                       <div>
                         <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider mb-2">{cat.category}</div>
                         <div className="text-[26px] font-bold text-[var(--loyalty-text)] leading-none mb-2">{cat.count.toLocaleString()}</div>

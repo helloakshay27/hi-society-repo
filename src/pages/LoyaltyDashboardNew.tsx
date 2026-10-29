@@ -613,12 +613,11 @@ export const LoyaltyDashboardNew = () => {
                 </button>
               ))}
             </div>
-          ) : !loadError && (
+          ) : !loadError ? (
             <div className="mb-2.5 rounded-lg border border-[var(--loyalty-success-border)] bg-[var(--loyalty-success-bg)] px-3 py-2 text-[11px] font-medium text-[var(--loyalty-success)]">
               ✓ Nothing needs attention right now.
             </div>
-          )
-        : null}
+          ) : null}
 
         {/* CHARTS ROW */}
         <div className="mb-2 grid grid-cols-1 gap-2 lg:grid-cols-[60fr_40fr]">
