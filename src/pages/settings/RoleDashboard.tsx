@@ -56,6 +56,8 @@ export const RoleDashboard = () => {
     (state) => state.roleWithModules
   );
 
+  const currentUserEmail = JSON.parse(localStorage.getItem("user")).email;
+
   console.log(roles);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -694,11 +696,9 @@ export const RoleDashboard = () => {
                   </span>
                 </p>
               </div>
-              {console.log("rolee:", currentRole)}
               <div className="flex gap-2">
                 {!isEditMode ? (
-                  currentRole?.resource_id &&
-                  currentRole?.resource_type && (
+                  currentUserEmail === "tejas.chaudhari@lockated.com" && (
                     <Button
                       onClick={() => setIsEditMode(true)}
                       className="min-w-[140px] bg-[#C72030] text-white hover:bg-[#C72030]/90"
