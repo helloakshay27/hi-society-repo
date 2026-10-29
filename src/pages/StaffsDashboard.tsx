@@ -772,7 +772,7 @@ export const StaffsDashboard = () => {
          
 
           {/* Search Results Summary */}
-          {activeSearchQuery && (
+          {/* {activeSearchQuery && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="text-sm text-blue-800">
                 <span className="font-medium">Search results for:</span> "{activeSearchQuery}"
@@ -784,7 +784,7 @@ export const StaffsDashboard = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
           <EnhancedTable
             data={filteredData('all')}
