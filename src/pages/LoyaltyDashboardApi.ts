@@ -3,13 +3,14 @@ import { API_CONFIG, getHiSocietyBaseUrl } from '@/config/apiConfig';
 
 /** Distinct series colours from the shared theme (resolved at draw time by ChartViewer). */
 export const CHART_COLORS = [
-  'var(--color-accent)',
-  'var(--color-info)',
-  'var(--color-secondary-green)',
-  'var(--color-secondary-purple)',
-  'var(--color-warning)',
-  'var(--color-danger)',
-  'var(--color-text)',
+  '#5A4BE0', // Purple (Business Genie AI)
+  '#2F6FE0', // Blue
+  '#12A150', // Green / Growth
+  '#798C5E', // Olive
+  '#7FD6AE', // Mint
+  '#4839C4', // Deep Purple
+  '#F2A312', // Warning Amber
+  '#E5484D', // Danger Red
 ];
 
 export const getLoyaltyBaseUrl = (): string => API_CONFIG.BASE_URL || getHiSocietyBaseUrl();

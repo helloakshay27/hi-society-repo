@@ -12,7 +12,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { ArrowUp, Bot, Sparkles, X } from "lucide-react";
+import { ArrowUp, Bot, Sparkles, X, Store, Receipt, Clock, UserPlus, Calendar, AlertTriangle } from "lucide-react";
 import { API_CONFIG } from "@/config/apiConfig";
 import "@/styles/theme.css";
 import {
@@ -74,7 +74,7 @@ type StuckOrder = {
    Uses the shared --loyalty-* tokens from theme.css (.loyalty-dashboard-theme),
    same as the Programme Detail page (/loyalty/details-dashboard). Chart series use a neutral grey ramp. */
 const FONT = { fontFamily: "'Poppins', sans-serif" };
-const STATUS_COLORS = ["#1a1a18", "#666666", "#999999", "#4d4d4d", "#b3b3b3", "#808080", "#cccccc"];
+const STATUS_COLORS = ["#5A4BE0", "#2F6FE0", "#12A150", "#798C5E", "#7FD6AE", "#4839C4", "#F2A312", "#E5484D"];
 const AV_COLORS = ["#1a1a18", "#4d4d4d", "#666666", "#808080", "#999999"];
 
 const tierColor = (name: string) => {
@@ -92,16 +92,16 @@ const initialsOf = (name: string) =>
 
 /* ── Small building blocks ── */
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`flex flex-col rounded-[10px] border border-[var(--loyalty-divider)] bg-white p-3 ${className}`}>{children}</div>
+  <div className={`flex flex-col rounded-[16px] bg-[#F5F4F0] p-4 md:p-5 border-0 shadow-none ${className}`}>{children}</div>
 );
 
 const CardHead = ({ title, info, sub, action }: { title: string; info: string; sub?: React.ReactNode; action?: React.ReactNode }) => (
-  <div className="mb-2 flex items-start justify-between gap-2">
+  <div className="mb-3 flex items-start justify-between gap-2">
     <div className="min-w-0">
-      <div className="flex items-center gap-1 text-[11px] font-semibold text-[var(--loyalty-text)]">
+      <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#1A1A18]">
         {title} <InfoIcon details={info} />
       </div>
-      {sub && <div className="mt-0.5 text-[9px] text-[var(--loyalty-subtle)]">{sub}</div>}
+      {sub && <div className="mt-0.5 text-[11px] text-[rgba(26,26,24,0.48)]">{sub}</div>}
     </div>
     {action}
   </div>
@@ -241,11 +241,11 @@ export const LoyaltyDashboardNew = () => {
   }, [messages, aiOpen]);
 
   /* ── alerts derived from data ── */
-  type Alert = { key: string; icon: string; title: string; sub: string; tone: "err" | "warn"; onClick: () => void };
+  type Alert = { key: string; icon: React.ReactNode; title: string; sub: string; tone: "err" | "warn"; onClick: () => void };
   const alerts: Alert[] = [];
   if (store && liveInStore === 0 && inAggregator > 0) {
     alerts.push({
-      key: "store", icon: "🏪", tone: "err",
+      key: "store", icon: <Store className="w-4 h-4 text-[#1A1A18]" />, tone: "err",
       title: "Redemption store is empty",
       sub: `${fmtNum(inAggregator)} items ready in aggregator`,
       onClick: () => openDrill("store"),
@@ -253,7 +253,7 @@ export const LoyaltyDashboardNew = () => {
   }
   if (orders && orders.stuck_orders > 0) {
     alerts.push({
-      key: "orders", icon: "🧾", tone: "err",
+      key: "orders", icon: <Receipt className="w-4 h-4 text-[#1A1A18]" />, tone: "err",
       title: `${fmtNum(orders.stuck_orders)} orders stuck — paid, not fulfilled`,
       sub: orders.oldest_stuck_days != null ? `Oldest ${fmtNum(orders.oldest_stuck_days)} days` : "Needs fulfilment",
       onClick: () => openDrill("stuck"),
@@ -261,7 +261,7 @@ export const LoyaltyDashboardNew = () => {
   }
   if (Number(membersData?.lapsed_members ?? 0) > 0) {
     alerts.push({
-      key: "lapsed", icon: "⏳", tone: "warn",
+      key: "lapsed", icon: <Clock className="w-4 h-4 text-[#1A1A18]" />, tone: "warn",
       title: `${fmtNum(membersData.lapsed_members)} members lapsed`,
       sub: "No activity in 60+ days",
       onClick: () => openDrill("lapsed"),
@@ -269,7 +269,7 @@ export const LoyaltyDashboardNew = () => {
   }
   if (Number(membersData?.new_members_this_month ?? 0) > 0) {
     alerts.push({
-      key: "new", icon: "🎉", tone: "warn",
+      key: "new", icon: <UserPlus className="w-4 h-4 text-[#1A1A18]" />, tone: "warn",
       title: `${fmtNum(membersData.new_members_this_month)} new members`,
       sub: "Joined in the selected period",
       onClick: () => openDrill("members"),
@@ -458,7 +458,7 @@ export const LoyaltyDashboardNew = () => {
               style={FONT}
               onClick={() => { setDraftRange(customRange); setFilterOpen((o) => !o); }}
             >
-              <span className="text-[11px]">📅</span>
+              <Calendar className="w-3.5 h-3.5 text-[#1A1A18]" />
               <span className="text-[10px] font-semibold text-[var(--loyalty-text)]">{filterLabel}</span>
               <span className="text-[8px] text-[var(--loyalty-subtle)]">▾</span>
             </button>
@@ -501,8 +501,8 @@ export const LoyaltyDashboardNew = () => {
           </div>
 
           <button
-            className="flex items-center gap-[5px] rounded-full !bg-[#1a1a18] !text-white px-2.5 py-1 transition-opacity hover:opacity-[.85] border-none cursor-pointer"
-            style={{ ...FONT, backgroundColor: '#1a1a18', color: '#ffffff' }}
+            className="flex items-center gap-1.5 rounded-[10px] !text-white px-3.5 py-1.5 transition-all hover:opacity-90 border-none cursor-pointer shadow-[0_4px_12px_-2px_rgba(90,75,224,0.4)]"
+            style={{ ...FONT, background: 'linear-gradient(135deg, #5A4BE0 0%, #6B5AE8 52%, #7B6BF0 100%)', color: '#ffffff' }}
             onClick={() => navigate("/loyalty/details-dashboard")}
           >
             <span className="whitespace-nowrap text-[10px] font-semibold text-white">Programme Detail →</span>
@@ -523,7 +523,7 @@ export const LoyaltyDashboardNew = () => {
       <div className="mx-auto max-w-[1400px] px-4 pb-24 pt-3 md:px-5">
         {loadError && (
           <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--loyalty-danger-border)] bg-[var(--loyalty-danger-bg)] px-3 py-2 text-[11px]">
-            <span>⚠️ Some dashboard data couldn't be loaded. {getLoyaltyErrorMessage(loadError)}</span>
+            <span className="flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5 text-[#E5484D] shrink-0" /> Some dashboard data couldn't be loaded. {getLoyaltyErrorMessage(loadError)}</span>
             <button onClick={retryAll} className="rounded-full border border-[var(--loyalty-accent)] px-3 py-0.5 text-[10px] font-semibold text-[var(--loyalty-accent)] hover:bg-[var(--loyalty-accent-tint)]" style={FONT}>
               Retry
             </button>
@@ -536,13 +536,13 @@ export const LoyaltyDashboardNew = () => {
             <button
               key={k.key}
               onClick={() => openDrill(k.key)}
-              className="rounded-[10px] border border-[var(--loyalty-divider)] bg-white px-3.5 py-[11px] text-left transition-all hover:border-[var(--loyalty-accent)] hover:shadow-[0_2px_8px_rgba(var(--loyalty-accent-rgb),.14)]"
+              className="rounded-[16px] bg-[#F5F4F0] p-[16px_18px] text-left transition-all hover:bg-[#EFEDE6] border-0 shadow-none"
               style={FONT}
             >
-              <div className="mb-[5px] flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[.06em] text-[var(--loyalty-subtle)]">
+              <div className="mb-[5px] flex items-center gap-1 text-[11.5px] font-medium text-[rgba(26,26,24,0.68)]">
                 {k.label} <InfoIcon details={k.info} />
               </div>
-              <div className="text-[22px] font-bold leading-none" style={{ color: k.color }}>{val(k.value)}</div>
+              <div className="text-[24px] font-semibold leading-tight tracking-tight text-[#1A1A18]">{val(k.value)}</div>
               <div className="mt-[5px] text-[10px] text-[var(--loyalty-subtle)]">{loading ? " " : k.sub}</div>
             </button>
           ))}
@@ -550,7 +550,7 @@ export const LoyaltyDashboardNew = () => {
 
         {/* STORE PIPELINE */}
         <button
-          className="mb-2.5 flex w-full flex-wrap items-center gap-2.5 rounded-[10px] border border-[var(--loyalty-divider)] bg-white px-4 py-3 text-left transition-shadow hover:shadow-[0_2px_8px_rgba(var(--color-text-rgb),0.07)]"
+          className="mb-2.5 flex w-full flex-wrap items-center gap-2.5 rounded-[16px] bg-[#F5F4F0] px-5 py-3.5 text-left transition-colors hover:bg-[#EFEDE6] border-0 shadow-none"
           onClick={() => openDrill("store")}
           style={FONT}
         >
@@ -587,10 +587,10 @@ export const LoyaltyDashboardNew = () => {
 
         {/* ALERTS */}
         {loading ? (
-          <div className="mb-2.5 rounded-[10px] border border-[var(--loyalty-divider)] bg-white p-3 animate-pulse">
+          <div className="mb-2.5 rounded-[14px] bg-[#F5F4F0] p-3 animate-pulse border-0 shadow-none">
             <div className="flex items-center gap-2">
-              <span className="h-4 w-4 rounded-full bg-[var(--loyalty-surface)]" />
-              <div className="h-3 w-56 rounded bg-[var(--loyalty-surface)]" />
+              <span className="h-4 w-4 rounded-full bg-white" />
+              <div className="h-3 w-56 rounded bg-white" />
             </div>
           </div>
         ) : alerts.length ? (
@@ -600,11 +600,11 @@ export const LoyaltyDashboardNew = () => {
                   key={a.key}
                   onClick={a.onClick}
                   style={FONT}
-                  className={`flex items-center gap-2 rounded-lg border border-l-[3px] px-2.5 py-[9px] text-left transition-opacity hover:opacity-[.88] ${
-                    a.tone === "err" ? "border-[var(--loyalty-danger-border)] border-l-[var(--loyalty-danger-text)] bg-[var(--loyalty-danger-bg)]" : "border-[var(--loyalty-warning-border)] border-l-[var(--loyalty-subtle)] bg-[var(--loyalty-warning-bg)]"
-                  }`}
+                  className="flex items-center gap-2.5 rounded-[14px] bg-[#F5F4F0] px-3.5 py-2.5 text-left transition-colors hover:bg-[#EFEDE6] border-0 shadow-none cursor-pointer"
                 >
-                  <div className="shrink-0 text-[17px]">{a.icon}</div>
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] bg-white text-[#1A1A18] shadow-none">
+                    {a.icon}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[11px] font-semibold text-[var(--loyalty-text)]">{a.title}</div>
                     <div className="mt-px truncate text-[10px] text-[var(--loyalty-subtle)]">{a.sub}</div>
@@ -614,7 +614,7 @@ export const LoyaltyDashboardNew = () => {
               ))}
             </div>
           ) : !loadError ? (
-            <div className="mb-2.5 rounded-lg border border-[var(--loyalty-success-border)] bg-[var(--loyalty-success-bg)] px-3 py-2 text-[11px] font-medium text-[var(--loyalty-success)]">
+            <div className="mb-2.5 flex items-center gap-2 rounded-[14px] bg-[#F5F4F0] px-3.5 py-2.5 text-[11px] font-medium text-[var(--loyalty-success)] border-0 shadow-none">
               ✓ Nothing needs attention right now.
             </div>
           ) : null}
@@ -751,8 +751,8 @@ export const LoyaltyDashboardNew = () => {
                 ))}
               </div>
             ) : stuckList.length ? (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-[10.5px]">
+              <div className="overflow-x-auto rounded-[12px] bg-white border border-[rgba(26,26,24,0.07)]">
+                <table className="w-full border-collapse text-[11px]">
                   <thead>
                     <tr>
                       {["Order", "Customer", "Amount", "Created", "Status"].map((h) => (
@@ -774,7 +774,7 @@ export const LoyaltyDashboardNew = () => {
                             {o.created_at ? new Date(o.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                           </td>
                           <td className="border-b border-[var(--loyalty-divider)] px-2 py-1.5">
-                            <span className="inline-flex items-center rounded-[20px] bg-[var(--loyalty-surface)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--loyalty-text)]">{o.status || "Pending"}</span>
+                            <span className="inline-flex items-center rounded-full bg-[#FFF2D6] text-[#8A5B00] px-2.5 py-0.5 text-[10px] font-semibold">{o.status || "Pending"}</span>
                           </td>
                         </tr>
                       );
@@ -807,9 +807,9 @@ export const LoyaltyDashboardNew = () => {
       {!aiOpen && (
         <button
           onClick={() => setAiOpen(true)}
-          title="Ask the assistant"
-          className="fixed bottom-5 right-5 z-[400] flex h-12 w-12 items-center justify-center rounded-full !bg-[#1a1a18] !text-white shadow-[0_4px_12px_rgba(26,26,24,.35)] transition-opacity hover:opacity-90 border-none cursor-pointer"
-          style={{ backgroundColor: '#1a1a18', color: '#ffffff' }}
+          title="Ask Genie"
+          className="fixed bottom-7 right-7 z-[400] flex h-12 w-12 items-center justify-center rounded-[14px] !text-white shadow-[0_6px_16px_-4px_rgba(96,74,199,0.8)] transition-all hover:-translate-y-0.5 border-none cursor-pointer"
+          style={{ ...FONT, background: 'linear-gradient(135deg, #5A4BE0 0%, #6B5AE8 52%, #7B6BF0 100%)', color: '#ffffff' }}
         >
           <Sparkles className="h-5 w-5 text-white" />
         </button>
@@ -817,11 +817,11 @@ export const LoyaltyDashboardNew = () => {
 
       {aiOpen && (
         <div className="fixed bottom-5 right-5 z-[401] flex h-[min(520px,calc(100vh-40px))] w-[min(360px,calc(100vw-40px))] flex-col overflow-hidden rounded-[12px] border border-[var(--loyalty-border)] bg-white shadow-[0_8px_32px_rgba(var(--color-text-rgb),.15)]" style={FONT}>
-          <div className="flex shrink-0 items-center justify-between bg-[var(--loyalty-text)] p-[14px] text-white">
+          <div className="flex shrink-0 items-center justify-between p-[14px] text-white" style={{ background: 'linear-gradient(135deg, #5A4BE0 0%, #6B5AE8 52%, #7B6BF0 100%)' }}>
             <div className="flex min-w-0 items-center gap-2">
-              <Bot className="h-4 w-4 shrink-0" />
+              <Sparkles className="h-4 w-4 shrink-0" />
               <div className="min-w-0">
-                <div className="text-[12px] font-bold leading-tight">Loyalty Assistant</div>
+                <div className="text-[12px] font-bold leading-tight">Business Genie</div>
                 <div className="truncate text-[9px] text-white/60">Answers from the data on this page</div>
               </div>
             </div>
