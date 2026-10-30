@@ -329,10 +329,32 @@ const AggregatorInventorySection = () => {
     const handleSyncInventory = async () => {
         try {
             setLoading(true);
+            const category = categories.find(c => c.value === activeTab);
+            await axios.request({
+                method: "GET",
+                url: `https://${baseUrl}/aggregators/1/sync_products`,
+                headers: {
+                    Authorization: getAuthHeader(),
+                    "Content-Type": "application/json",
+                },
+                data: {
+                    query: "plumProAPI.mutation.getVouchers",
+                    tag: "plumProAPI",
+                    variables: {
+                        data: {
+                            limit: 50,
+                            categoryType: category?.apiCategory,
+                            page: 0,
+                            exchangeRate: 1,
+                            filters: [{ key: "country", value: "india" }],
+                        },
+                    },
+                },
+            });
             toast.success("Inventory sync started!");
-            // Optionally, you can refresh the inventory data after sync
-            fetchInventoryData();
+            await fetchInventoryData();
         } catch (error) {
+            console.error("Error syncing inventory:", error);
             toast.error("Failed to sync inventory.");
         } finally {
             setLoading(false);
