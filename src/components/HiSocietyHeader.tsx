@@ -221,7 +221,7 @@ export const HiSocietyHeader = () => {
 
       // Fetch account data
       const accountResponse = await fetch(
-        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`
+        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}&organization_id=${org_id}`
       );
       if (accountResponse.ok) {
         accountData = await accountResponse.json();

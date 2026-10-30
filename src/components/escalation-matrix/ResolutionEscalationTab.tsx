@@ -287,6 +287,7 @@ export const ResolutionEscalationTab: React.FC = () => {
 
   // Assign Rule states
   const [isAutomatic, setIsAutomatic] = useState(false);
+  const [isAssignModeUpdating, setIsAssignModeUpdating] = useState(false);
   const [isAddAssignRuleOpen, setIsAddAssignRuleOpen] = useState(false);
   const [assignRuleForm, setAssignRuleForm] = useState({
     issueType: "",
@@ -551,6 +552,11 @@ export const ResolutionEscalationTab: React.FC = () => {
 
       const data = await ticketManagementAPI.getAssignRules(params);
       setAssignRules(data.assign_rules || []);
+      if (typeof data.complaint_assign?.auto_assign === "boolean") {
+        setIsAutomatic(data.complaint_assign.auto_assign);
+      } else if (data.complaint_assign?.value) {
+        setIsAutomatic(data.complaint_assign.value === "auto");
+      }
       if (data.pagination) {
         setAssignRulesPagination({
           currentPage: data.pagination.current_page,
@@ -564,6 +570,21 @@ export const ResolutionEscalationTab: React.FC = () => {
       toast.error("Failed to load assign rules!");
     } finally {
       setAssignRulesLoading(false);
+    }
+  };
+
+  const handleAssignModeChange = async (automatic: boolean) => {
+    setIsAssignModeUpdating(true);
+    try {
+      await ticketManagementAPI.updateComplaintAssignMode(
+        automatic ? "auto" : "",
+      );
+      setIsAutomatic(automatic);
+    } catch (error) {
+      console.error("Error updating complaint assignment mode:", error);
+      toast.error("Failed to update assignment mode!");
+    } finally {
+      setIsAssignModeUpdating(false);
     }
   };
 
@@ -1242,8 +1263,9 @@ export const ResolutionEscalationTab: React.FC = () => {
                 Manual
               </span>
               <button
-                onClick={() => setIsAutomatic(!isAutomatic)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                onClick={() => handleAssignModeChange(!isAutomatic)}
+                disabled={isAssignModeUpdating}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
                   isAutomatic ? "bg-[#C72030]" : "bg-gray-300"
                 }`}
               >

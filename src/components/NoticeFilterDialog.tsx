@@ -9,14 +9,19 @@ import { Button } from "@/components/ui/button";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 import { X, RotateCcw, Search } from "lucide-react";
+import { TowerFlatFilterFields } from "@/components/TowerFlatFilterFields";
 
 // ── Static options ────────────────────────────────────────────────────────────
+// Keep in sync with the Notice Type options in HiSocNoticeCreate.tsx
 const NOTICE_TYPE_OPTIONS = [
-  { value: "0", label: "General" },
-  { value: "1", label: "Personal" },
+  { value: "Maintenance", label: "Maintenance" },
+  { value: "General", label: "General" },
+  { value: "Emergency", label: "Emergency" },
+  { value: "Announcement", label: "Announcement" },
+  { value: "Event", label: "Event" },
 ];
 
-const STATUS_OPTIONS = [
+export const STATUS_OPTIONS = [
   { value: "1", label: "Published" },
   { value: "2", label: "Disabled" },
   { value: "0", label: "Rejected" },
@@ -24,8 +29,11 @@ const STATUS_OPTIONS = [
 
 export interface NoticeFilters {
   shared_in: string[];
+  notice_type: string;
   date_range: string;
   publish_in: string[];
+  block_id: string;
+  flat_id: string;
 }
 
 interface Props {
@@ -36,8 +44,11 @@ interface Props {
 
 const empty: NoticeFilters = {
   shared_in: [],
+  notice_type: "",
   date_range: "",
   publish_in: [],
+  block_id: "",
+  flat_id: "",
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -50,6 +61,8 @@ export const NoticeFilterDialog: React.FC<Props> = ({
   const [selectedStatus, setSelectedStatus] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [selectedBlock, setSelectedBlock] = useState("");
+  const [selectedFlat, setSelectedFlat] = useState("");
 
   // ── Reset ─────────────────────────────────────────────────────────────────
   const handleReset = () => {
@@ -57,6 +70,8 @@ export const NoticeFilterDialog: React.FC<Props> = ({
     setSelectedStatus("");
     setDateFrom("");
     setDateTo("");
+    setSelectedBlock("");
+    setSelectedFlat("");
     onApplyFilters(empty);
     onClose();
   };
@@ -65,8 +80,8 @@ export const NoticeFilterDialog: React.FC<Props> = ({
   const handleApply = () => {
     const filters: NoticeFilters = { ...empty };
 
-    if (selectedNoticeType !== "") {
-      filters.shared_in = [selectedNoticeType];
+    if (selectedNoticeType !== "" && selectedNoticeType !== "__all__") {
+      filters.notice_type = selectedNoticeType;
     }
     if (dateFrom && dateTo) {
       // Format: DD/MM/YYYY - DD/MM/YYYY  (adjust if your API needs another format)
@@ -79,13 +94,15 @@ export const NoticeFilterDialog: React.FC<Props> = ({
     if (selectedStatus !== "") {
       filters.publish_in = [selectedStatus];
     }
+    filters.block_id = selectedBlock;
+    filters.flat_id = selectedFlat;
 
     onApplyFilters(filters);
     onClose();
   };
 
   const hasFilters =
-    selectedNoticeType || selectedStatus || dateFrom || dateTo;
+    selectedNoticeType || selectedStatus || dateFrom || dateTo || selectedBlock || selectedFlat;
 
   return (
     <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
@@ -176,6 +193,14 @@ export const NoticeFilterDialog: React.FC<Props> = ({
               ))}
             </MuiSelect>
           </FormControl>
+
+          {/* Tower / Flat */}
+          <TowerFlatFilterFields
+            blockId={selectedBlock}
+            flatId={selectedFlat}
+            onBlockChange={setSelectedBlock}
+            onFlatChange={setSelectedFlat}
+          />
         </div>
 
         {/* Footer */}

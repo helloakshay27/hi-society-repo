@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, ArrowLeft, FileText, Calendar, Users, X, Plus, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
+import { ChevronRight, ArrowLeft, FileText, Calendar, Users, X, Plus, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info, Search } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -61,6 +61,7 @@ const HiSocEventCreate = () => {
   console.log("formData", formData);
   const [eventType, setEventType] = useState([]);
   const [eventUserID, setEventUserID] = useState([]);
+  const [individualSearchTerm, setIndividualSearchTerm] = useState("");
   const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1072,6 +1073,17 @@ const HiSocEventCreate = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const getMemberDisplayName = (member) => {
+    const name = `${member.user?.firstname || member.firstname || ''} ${member.user?.lastname || member.lastname || ''}`.trim();
+    const flat = member.user_flat?.flat || member.flat || '';
+    const block = member.user_flat?.block || member.block || '';
+    return name + (flat ? ` - Flat ${flat}` : '') + (block ? ` (${block})` : '');
+  };
+
+  const filteredEventUsers = eventUserID.filter((member) =>
+    getMemberDisplayName(member).toLowerCase().includes(individualSearchTerm.trim().toLowerCase())
+  );
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -2256,23 +2268,36 @@ const HiSocEventCreate = () => {
                       />
                     </div>
 
+                    {/* Search Members */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={individualSearchTerm}
+                        onChange={(e) => setIndividualSearchTerm(e.target.value)}
+                        placeholder="Search members by name or flat..."
+                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-[#C72030] focus:ring-1 focus:ring-[#C72030]"
+                      />
+                    </div>
+
                     {/* Select All Checkbox */}
-                    {eventUserID.length > 0 && (
+                    {filteredEventUsers.length > 0 && (
                       <div className="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 mb-2">
                         <input
                           type="checkbox"
                           id="selectAllUsers"
-                          checked={Array.isArray(formData.user_id) && formData.user_id.length === eventUserID.length && eventUserID.length > 0}
+                          checked={Array.isArray(formData.user_id) && filteredEventUsers.every((u) => formData.user_id.includes(u.id))}
                           onChange={(e) => {
+                            const filteredIds = filteredEventUsers.map((u) => u.id);
                             if (e.target.checked) {
                               setFormData((prev) => ({
                                 ...prev,
-                                user_id: eventUserID.map((u) => u.id),
+                                user_id: Array.from(new Set([...(Array.isArray(prev.user_id) ? prev.user_id : []), ...filteredIds])),
                               }));
                             } else {
                               setFormData((prev) => ({
                                 ...prev,
-                                user_id: [],
+                                user_id: (Array.isArray(prev.user_id) ? prev.user_id : []).filter((id) => !filteredIds.includes(id)),
                               }));
                             }
                           }}
@@ -2287,17 +2312,11 @@ const HiSocEventCreate = () => {
 
                     {/* Members List with Checkboxes */}
                     {eventUserID.length > 0 ? (
+                      filteredEventUsers.length > 0 ? (
                       <div className="border border-gray-200 rounded-md max-h-64 overflow-y-auto">
                         <div className="divide-y">
-                          {eventUserID.map((member) => {
-                            const firstName = member.user?.firstname || member.firstname || '';
-                            const lastName = member.user?.lastname || member.lastname || '';
-                            const flat = member.user_flat?.flat || member.flat || '';
-                            const block = member.user_flat?.block || member.block || '';
-                            const name = `${firstName} ${lastName}`.trim();
-                            const flatText = flat ? ` - Flat ${flat}` : '';
-                            const blockText = block ? ` (${block})` : '';
-                            const displayName = name + flatText + blockText;
+                          {filteredEventUsers.map((member) => {
+                            const displayName = getMemberDisplayName(member);
                             const isChecked = Array.isArray(formData.user_id) && formData.user_id.includes(member.id);
 
                             return (
@@ -2330,6 +2349,11 @@ const HiSocEventCreate = () => {
                           })}
                         </div>
                       </div>
+                      ) : (
+                        <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
+                          No members match "{individualSearchTerm}"
+                        </div>
+                      )
                     ) : (
                       <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
                         No members available

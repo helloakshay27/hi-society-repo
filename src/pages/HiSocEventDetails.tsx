@@ -221,7 +221,7 @@ const HiSocEventDetails = () => {
               { label: 'Event Details', value: 'event-details' },
               { label: 'Events Related Images', value: 'images' },
               { label: 'Invited Member / User', value: 'invited-cps' },
-              { label: 'Participants', value: 'participants' },
+              // { label: 'Participants', value: 'participants' },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -402,7 +402,32 @@ const HiSocEventDetails = () => {
                 </div>
               </div>
               <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
-                <p className="text-gray-600">Invited Member / User content will be displayed here.</p>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white w-24">Sr. No.</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Name</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Array.isArray(eventData?.sharedwith) && eventData.sharedwith.length > 0 ? (
+                        eventData.sharedwith.map((member, index) => (
+                          <TableRow key={member.id || index} className="hover:bg-gray-50">
+                            <TableCell className="py-3 px-4 text-center">{index + 1}</TableCell>
+                            <TableCell className="py-3 px-4">{member.user_name || "N/A"}</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={2} className="text-center py-8 text-gray-600">
+                            No invited members found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
           </TabsContent>
