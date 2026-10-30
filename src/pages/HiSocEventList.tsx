@@ -21,7 +21,18 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import {
   EventFilterDialog,
   EventFilters,
+  STATUS_OPTIONS,
 } from "@/components/EventFilterDialog";
+import { StatusBadge } from "@/components/ui/status-badge";
+
+const PUBLISH_BADGE_VARIANTS: Record<
+  string,
+  "accepted" | "pending" | "rejected"
+> = {
+  "1": "accepted",
+  "2": "pending",
+  "0": "rejected",
+};
 import {
   Pagination,
   PaginationContent,
@@ -43,6 +54,8 @@ interface Event {
   active: boolean;
   show_on_home: boolean;
   publish: number;
+  block?: string;
+  flat?: string;
   created_by?: string;
   created_at: string;
   updated_at: string;
@@ -125,6 +138,18 @@ const HiSocEventList = () => {
           filters.publish_in.forEach((v) =>
             params.append("q[publish_in][]", v)
           );
+          if (filters.block_id) {
+            params.append(
+              "q[user_society_user_flat_society_flat_society_block_id_eq]",
+              filters.block_id
+            );
+          }
+          if (filters.flat_id) {
+            params.append(
+              "q[user_society_user_flat_society_flat_id_eq]",
+              filters.flat_id
+            );
+          }
         }
         const qs = params.toString();
         const response = await axios.get(
@@ -190,7 +215,10 @@ const HiSocEventList = () => {
 
   const handleApplyFilters = (filters: EventFilters) => {
     const hasFilters =
-      filters.date_range !== "" || filters.publish_in.length > 0;
+      filters.date_range !== "" ||
+      filters.publish_in.length > 0 ||
+      filters.block_id !== "" ||
+      filters.flat_id !== "";
     setActiveFilters(hasFilters ? filters : null);
     setCurrentPage(1);
   };
@@ -318,36 +346,19 @@ const HiSocEventList = () => {
     });
   }
 
-  function formatDateOnly(datetime: string) {
-    if (!datetime) return "-";
-    const date = new Date(datetime);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  }
-
-  function formatTimeOnly(datetime: string) {
-    if (!datetime) return "-";
-    const date = new Date(datetime);
-    return date.toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  }
-
   const columns = [
     { key: "actions", label: "Action", sortable: false },
     { key: "id", label: "Sr No", sortable: true },
     { key: "event_name", label: "Event Name", sortable: true },
     { key: "event_at", label: "Event At", sortable: true },
-    { key: "from_time", label: "Event Date", sortable: false },
-    { key: "to_time", label: "Event Time", sortable: false },
+    { key: "block", label: "Tower", sortable: false },
+    { key: "flat", label: "Flat", sortable: false },
+    { key: "from_time", label: "Start Date & Time", sortable: false },
+    { key: "to_time", label: "End Date & Time", sortable: false },
     { key: "created_by", label: "Created By", sortable: false },
+    { key: "created_at", label: "Created On", sortable: false },
     { key: "show_on_home", label: "Show on Home", sortable: false },
-    { key: "publish", label: "Publish", sortable: false },
+    { key: "publish", label: "Status", sortable: false },
     // { key: "active", label: "Status", sortable: false },
   ];
 
@@ -395,27 +406,46 @@ const HiSocEventList = () => {
       case "event_at":
         return item.event_at || "-";
       case "from_time":
-        return formatDateOnly(item.from_time);
+        return formatDateTimeManual(item.from_time);
       case "to_time":
-        return formatTimeOnly(item.from_time);
+        return formatDateTimeManual(item.to_time);
+      case "created_at":
+        return formatDateTimeManual(item.created_at);
+      case "block":
+        return item.block || "-";
+      case "flat":
+        return item.flat || "-";
       case "created_by":
         return item.created_by || "-";
       case "show_on_home":
         return (
           <div className="flex items-center justify-center">
-            <Switch checked={!!(!!item.show_on_home)} onCheckedChange={() => handleToggleShowOnHome(item.id, item.show_on_home)} />
+            <Switch
+              checked={!!!!item.show_on_home}
+              onCheckedChange={() =>
+                handleToggleShowOnHome(item.id, item.show_on_home)
+              }
+            />
           </div>
         );
-      case "publish":
-        return (
-          <div className="flex items-center justify-center">
-            <Switch checked={!!(item.publish === 1)} onCheckedChange={() => handleTogglePublish(item.id, item.publish)} />
-          </div>
+      case "publish": {
+        const publish = item.publish != null ? String(item.publish) : "";
+        const option = STATUS_OPTIONS.find((o) => o.value === publish);
+        return option ? (
+          <StatusBadge variant={PUBLISH_BADGE_VARIANTS[publish]}>
+            {option.label}
+          </StatusBadge>
+        ) : (
+          "-"
         );
+      }
       case "active":
         return (
           <div className="flex items-center justify-center">
-            <Switch checked={!!(!!item.active)} onCheckedChange={() => handleToggle(item.id, item.active)} />
+            <Switch
+              checked={!!!!item.active}
+              onCheckedChange={() => handleToggle(item.id, item.active)}
+            />
           </div>
         );
       default:
@@ -516,19 +546,6 @@ const HiSocEventList = () => {
           onGlobalSearch={handleGlobalSearch}
           searchPlaceholder="Search events..."
           leftActions={renderCustomActions()}
-          rightActions={
-            activeFilters ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearFilters}
-                className="h-8 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                title="Clear filters"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            ) : undefined
-          }
           onFilterClick={() => setIsFilterOpen(true)}
           loading={isSearching || loading}
           loadingMessage={
@@ -593,7 +610,7 @@ const HiSocEventList = () => {
     <div className="p-2 sm:p-4 lg:p-6">
       <div className="w-full">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
+          {/* <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
             <TabsTrigger
               value="events"
               className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
@@ -635,7 +652,7 @@ const HiSocEventList = () => {
               </svg>
               Analytics
             </TabsTrigger>
-          </TabsList>
+          </TabsList> */}
 
           <TabsContent
             value="events"

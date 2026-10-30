@@ -60,7 +60,7 @@ export const permissionService = {
       const currentOrgId = localStorage.getItem("org_id");
 
       const response = await apiClient.get<UserRoleResponse>(
-        `${window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost"  ? "/pms/users/get_role.json" : "/pms/users/get_role.json"}`
+        `${window.location.hostname === "web.hisociety.lockated.com" || window.location.hostname === "localhost"  ? `/pms/users/get_role.json?organization_id=${currentOrgId}` : `/pms/users/get_role.json?organization_id=${currentOrgId}`}`,
       );
 
       if (response.data.success) {

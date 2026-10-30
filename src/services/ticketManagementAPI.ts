@@ -1867,6 +1867,13 @@ const path = window.location.pathname;
     return response.data;
   },
 
+  async updateComplaintAssignMode(value: "auto" | "") {
+    const response = await apiClient.post('/crm/admin/complaint_assign.json', {
+      system_constant: { value },
+    });
+    return response.data;
+  },
+
   async getAssignRuleById(id: string | number) {
     const token = API_CONFIG.TOKEN;
     const response = await apiClient.get(`/crm/admin/show_assign_rule.json?token=${token}&id=${id}`);

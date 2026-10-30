@@ -1,10 +1,27 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Users, QrCode, Image as ImageIcon, Calendar, Settings, Download, Mail } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Users,
+  QrCode,
+  Image as ImageIcon,
+  Calendar,
+  Settings,
+  Download,
+  Mail,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 
@@ -27,7 +44,7 @@ const HiSocEventDetails = () => {
       cpName: "Kshitij Rasal",
       companyName: "ABD Tech",
       emailId: "kshitij.r@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp2-176700403055"
+      qrCodeId: "QR-EVT-1767003965366-cp2-176700403055",
     },
     {
       id: 2,
@@ -35,7 +52,7 @@ const HiSocEventDetails = () => {
       cpName: "Sohail Ansari",
       companyName: "XYZ Ltd",
       emailId: "sohail.a@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp3-176700403056"
+      qrCodeId: "QR-EVT-1767003965366-cp3-176700403056",
     },
     {
       id: 3,
@@ -43,7 +60,7 @@ const HiSocEventDetails = () => {
       cpName: "Hamza Quazi",
       companyName: "XYZ Ltd",
       emailId: "hamza.q@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056"
+      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056",
     },
     {
       id: 4,
@@ -51,8 +68,8 @@ const HiSocEventDetails = () => {
       cpName: "Shahab Mirza",
       companyName: "XYZ Ltd",
       emailId: "shahab.m@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056"
-    }
+      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056",
+    },
   ]);
 
   const eventId = id;
@@ -72,9 +89,12 @@ const HiSocEventDetails = () => {
           axios.get(`${API_CONFIG.BASE_URL}/crm/admin/events/${eventId}.json`, {
             headers,
           }),
-          axios.get(`${API_CONFIG.BASE_URL}/crm/admin/events/${eventId}/event_all_rsvps.json`, {
-            headers,
-          }),
+          axios.get(
+            `${API_CONFIG.BASE_URL}/crm/admin/events/${eventId}/event_all_rsvps.json`,
+            {
+              headers,
+            }
+          ),
         ]);
 
         if (eventResponse.status === "fulfilled") {
@@ -88,13 +108,16 @@ const HiSocEventDetails = () => {
           const participantsList = Array.isArray(participantsPayload)
             ? participantsPayload
             : Array.isArray(participantsPayload?.data)
-            ? participantsPayload.data
-            : [];
+              ? participantsPayload.data
+              : [];
 
           setParticipantsData(participantsList);
           setParticipantsError(null);
         } else {
-          console.error("Error fetching participants data:", participantsResponse.reason);
+          console.error(
+            "Error fetching participants data:",
+            participantsResponse.reason
+          );
           setParticipantsData([]);
           setParticipantsError("Failed to load participants");
         }
@@ -118,8 +141,8 @@ const HiSocEventDetails = () => {
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
@@ -161,16 +184,18 @@ const HiSocEventDetails = () => {
   };
 
   const handleDownloadAllQRCodes = () => {
-    toast.success('Downloading all QR Codes');
+    toast.success("Downloading all QR Codes");
   };
 
   const handleSendAllQRCodesEmail = () => {
-    toast.success('Sending QR Codes to all channel partners');
+    toast.success("Sending QR Codes to all channel partners");
   };
 
   const formatRSVPStatus = (rsvpValue) => {
-    if (rsvpValue === 1 || rsvpValue === "1" || rsvpValue === true) return "Yes";
-    if (rsvpValue === 0 || rsvpValue === "0" || rsvpValue === false) return "No";
+    if (rsvpValue === 1 || rsvpValue === "1" || rsvpValue === true)
+      return "Yes";
+    if (rsvpValue === 0 || rsvpValue === "0" || rsvpValue === false)
+      return "No";
     return "N/A";
   };
 
@@ -196,15 +221,14 @@ const HiSocEventDetails = () => {
   return (
     <div className="p-6 min-h-screen hi-soc-event-details-page">
       <div className="mb-[22px]">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="ref-back"
-        >
+        <button type="button" onClick={() => navigate(-1)} className="ref-back">
           <ArrowLeft className="w-[18px] h-[18px]" />
           Back to Event List
         </button>
-        <h1 className="mt-[14px] text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>
+        <h1
+          className="mt-[14px] text-[22px] font-semibold leading-tight tracking-[-0.015em]"
+          style={{ color: "#1A1A18" }}
+        >
           {eventData?.event_name || "Event Details"}
         </h1>
       </div>
@@ -316,34 +340,43 @@ const HiSocEventDetails = () => {
           }
         `}</style>
         <Tabs defaultValue="event-details" className="w-full">
-          <TabsList className="top-level-tabs w-full flex flex-nowrap rounded-t-lg p-0 overflow-x-auto mb-4" style={{ gap: '0', padding: '0', backgroundColor: 'rgba(246, 247, 247, 1)', height: '50px', marginBottom: '16px' }}>
+          <TabsList
+            className="top-level-tabs w-full flex flex-nowrap rounded-t-lg p-0 overflow-x-auto mb-4"
+            style={{
+              gap: "0",
+              padding: "0",
+              backgroundColor: "rgba(246, 247, 247, 1)",
+              height: "50px",
+              marginBottom: "16px",
+            }}
+          >
             {[
-              { label: 'Event Details', value: 'event-details' },
-              { label: 'Events Related Images', value: 'images' },
-              { label: 'Invited Member / User', value: 'invited-cps' },
-              { label: 'Participants', value: 'participants' },
+              { label: "Event Details", value: "event-details" },
+              { label: "Events Related Images", value: "images" },
+              { label: "Invited Member / User", value: "invited-cps" },
+              // { label: 'Participants', value: 'participants' },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
                 className="data-[state=active]:bg-white data-[state=active]:text-[#1A1A18]"
                 style={{
-                  width: '230px',
+                  width: "230px",
                   // height: '36px',
-                  paddingTop: '10px',
-                  paddingRight: '20px',
-                  paddingBottom: '10px',
-                  paddingLeft: '20px',
-                  borderRadius: '0',
-                  border: 'none',
-                  margin: '0',
-                  fontFamily: 'Work Sans',
+                  paddingTop: "10px",
+                  paddingRight: "20px",
+                  paddingBottom: "10px",
+                  paddingLeft: "20px",
+                  borderRadius: "0",
+                  border: "none",
+                  margin: "0",
+                  fontFamily: "Work Sans",
                   fontWeight: 500,
-                  fontSize: '14px',
-                  lineHeight: '100%',
-                  letterSpacing: '0%',
-                  color: 'rgba(26, 26, 26, 1)',
-                  backgroundColor: 'rgba(246, 247, 247, 1)'
+                  fontSize: "14px",
+                  lineHeight: "100%",
+                  letterSpacing: "0%",
+                  color: "rgba(26, 26, 26, 1)",
+                  backgroundColor: "rgba(246, 247, 247, 1)",
                 }}
               >
                 {tab.label}
@@ -352,7 +385,11 @@ const HiSocEventDetails = () => {
           </TabsList>
 
           {/* Event Details Tab */}
-          <TabsContent value="event-details" className="p-6 space-y-6" style={{ backgroundColor: 'rgba(250, 249, 247, 1)' }}>
+          <TabsContent
+            value="event-details"
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}
+          >
             {/* Event Details Card */}
             <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
@@ -364,76 +401,115 @@ const HiSocEventDetails = () => {
                     Event Details
                   </h3>
                 </div>
-              </div>              {/* Body */}
+              </div>{" "}
+              {/* Body */}
               <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Name</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event Name
+                    </p>
                     <p className="text-base font-medium text-gray-900">
                       {eventData?.event_name || "N/A"}
                     </p>
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Shared</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event Shared
+                    </p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.shared === "0" || eventData?.shared === 0 ? "All" : "Individual"}
+                      {eventData?.shared === "0" || eventData?.shared === 0
+                        ? "All"
+                        : "Individual"}
                     </p>
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Description</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event Description
+                    </p>
                     <p className="text-base font-medium text-gray-900 flex-1 break-words">
                       {eventData?.description || "-"}
                     </p>
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event At</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event At
+                    </p>
                     <p className="text-base font-medium text-gray-900">
                       {eventData?.event_at || "Sion"}
                     </p>
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Send Email</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Send Email
+                    </p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.email_trigger_enabled === "1" || eventData?.email_trigger_enabled === 1 || eventData?.email_trigger_enabled === true ? "Yes" : "No"}
+                      {eventData?.email_trigger_enabled === "1" ||
+                      eventData?.email_trigger_enabled === 1 ||
+                      eventData?.email_trigger_enabled === true
+                        ? "Yes"
+                        : "No"}
                     </p>
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Start Date</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event Start Date
+                    </p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.from_time ? formatDate(eventData.from_time) : "N/A"}
+                      {eventData?.from_time
+                        ? formatDate(eventData.from_time)
+                        : "N/A"}
                     </p>
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Start Time</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event Start Time
+                    </p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.from_time ? formatTime(eventData.from_time) : "N/A"}
+                      {eventData?.from_time
+                        ? formatTime(eventData.from_time)
+                        : "N/A"}
                     </p>
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event End Date</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event End Date
+                    </p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.to_time ? formatDate(eventData.to_time) : "N/A"}
+                      {eventData?.to_time
+                        ? formatDate(eventData.to_time)
+                        : "N/A"}
                     </p>
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event End Time</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event End Time
+                    </p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.to_time ? formatTime(eventData.to_time) : "N/A"}
+                      {eventData?.to_time
+                        ? formatTime(eventData.to_time)
+                        : "N/A"}
                     </p>
                   </div>
 
                   <div className="lg:col-span-3 flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">RSVP Action</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      RSVP Action
+                    </p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.rsvp_action === "1" || eventData?.rsvp_action === 1 || eventData?.rsvp_action_int === 1 ? "Yes" : "No"}
+                      {eventData?.rsvp_action === "1" ||
+                      eventData?.rsvp_action === 1 ||
+                      eventData?.rsvp_action_int === 1
+                        ? "Yes"
+                        : "No"}
                     </p>
                   </div>
                 </div>
@@ -457,9 +533,15 @@ const HiSocEventDetails = () => {
               <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Show on Home Page</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Show on Home Page
+                    </p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.show_on_home_page === "1" || eventData?.show_on_home === 1 || eventData?.show_on_home === true ? "Yes" : "No"}
+                      {eventData?.show_on_home_page === "1" ||
+                      eventData?.show_on_home === 1 ||
+                      eventData?.show_on_home === true
+                        ? "Yes"
+                        : "No"}
                     </p>
                   </div>
 
@@ -489,7 +571,11 @@ const HiSocEventDetails = () => {
           </TabsContent>
 
           {/* Invited Member / User Tab */}
-          <TabsContent value="invited-cps" className="p-6 space-y-6" style={{ backgroundColor: 'rgba(250, 249, 247, 1)' }}>
+          <TabsContent
+            value="invited-cps"
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}
+          >
             <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
@@ -502,13 +588,57 @@ const HiSocEventDetails = () => {
                 </div>
               </div>
               <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
-                <p className="text-gray-600">Invited Member / User content will be displayed here.</p>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow style={{ backgroundColor: "#E6E2D8" }}>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white w-24">
+                          Sr. No.
+                        </TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                          Name
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Array.isArray(eventData?.sharedwith) &&
+                      eventData.sharedwith.length > 0 ? (
+                        eventData.sharedwith.map((member, index) => (
+                          <TableRow
+                            key={member.id || index}
+                            className="hover:bg-gray-50"
+                          >
+                            <TableCell className="py-3 px-4 text-center">
+                              {index + 1}
+                            </TableCell>
+                            <TableCell className="py-3 px-4">
+                              {member.user_name || "N/A"}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={2}
+                            className="text-center py-8 text-gray-600"
+                          >
+                            No invited members found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
           </TabsContent>
 
           {/* Participants Tab */}
-          <TabsContent value="participants" className="p-6 space-y-6" style={{ backgroundColor: 'rgba(250, 249, 247, 1)' }}>
+          <TabsContent
+            value="participants"
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}
+          >
             <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
@@ -530,32 +660,69 @@ const HiSocEventDetails = () => {
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">Sr. No.</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Name</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Email</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">RSVP</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">No. of People</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center">Attended</TableHead>
+                        <TableRow style={{ backgroundColor: "#E6E2D8" }}>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
+                            Sr. No.
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            Name
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            Email
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
+                            RSVP
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
+                            No. of People
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center">
+                            Attended
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {participantsData.length > 0 ? (
                           participantsData.map((participant, index) => (
-                            <TableRow key={participant.id || `${participant.user_id}-${index}`} className="hover:bg-gray-50">
-                              <TableCell className="py-3 px-4 text-center">{index + 1}</TableCell>
-                              <TableCell className="py-3 px-4">{participant.user_name || "N/A"}</TableCell>
-                              <TableCell className="py-3 px-4">{participant.user_email || "N/A"}</TableCell>
-                              <TableCell className="py-3 px-4 text-center">{formatRSVPStatus(participant.rsvp)}</TableCell>
-                              <TableCell className="py-3 px-4 text-center">{participant.no_of_people ?? "N/A"}</TableCell>
+                            <TableRow
+                              key={
+                                participant.id ||
+                                `${participant.user_id}-${index}`
+                              }
+                              className="hover:bg-gray-50"
+                            >
                               <TableCell className="py-3 px-4 text-center">
-                                {participant.event_attended === 1 || participant.event_attended === "1" ? "Yes" : participant.event_attended === 0 || participant.event_attended === "0" ? "No" : "N/A"}
+                                {index + 1}
+                              </TableCell>
+                              <TableCell className="py-3 px-4">
+                                {participant.user_name || "N/A"}
+                              </TableCell>
+                              <TableCell className="py-3 px-4">
+                                {participant.user_email || "N/A"}
+                              </TableCell>
+                              <TableCell className="py-3 px-4 text-center">
+                                {formatRSVPStatus(participant.rsvp)}
+                              </TableCell>
+                              <TableCell className="py-3 px-4 text-center">
+                                {participant.no_of_people ?? "N/A"}
+                              </TableCell>
+                              <TableCell className="py-3 px-4 text-center">
+                                {participant.event_attended === 1 ||
+                                participant.event_attended === "1"
+                                  ? "Yes"
+                                  : participant.event_attended === 0 ||
+                                      participant.event_attended === "0"
+                                    ? "No"
+                                    : "N/A"}
                               </TableCell>
                             </TableRow>
                           ))
                         ) : (
                           <TableRow>
-                            <TableCell colSpan={6} className="text-center py-8 text-gray-600">
+                            <TableCell
+                              colSpan={6}
+                              className="text-center py-8 text-gray-600"
+                            >
                               No participants found
                             </TableCell>
                           </TableRow>
@@ -570,20 +737,43 @@ const HiSocEventDetails = () => {
 
           {/* QR Code Tab */}
           <TabsContent value="qr-code" className="p-0">
-            <div className="rounded-lg shadow-sm border border-gray-200" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
+            <div
+              className="rounded-lg shadow-sm border border-gray-200"
+              style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
+            >
               <Tabs defaultValue="qr-code-sub" className="w-full">
                 <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-[36px] p-0 text-sm justify-stretch border-b border-gray-200">
                   <TabsTrigger
                     value="analytics"
                     className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-0 h-[36px] flex items-center gap-2 text-gray-700 data-[state=active]:text-[#C72030] data-[state=active]:border-0 [&_svg]:text-gray-700 data-[state=active]:[&_svg]:text-[#C72030]"
-                    style={{ border: '1px solid rgba(217, 217, 217, 1)', borderRight: '1px solid rgba(209, 209, 209, 1)' }}
+                    style={{
+                      border: "1px solid rgba(217, 217, 217, 1)",
+                      borderRight: "1px solid rgba(209, 209, 209, 1)",
+                    }}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <mask id="mask0_9547_3931" style={{ maskType: 'alpha' }} maskUnits="userSpaceOnUse" x="0" y="0" width="18" height="18">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 18 18"
+                      fill="none"
+                    >
+                      <mask
+                        id="mask0_9547_3931"
+                        style={{ maskType: "alpha" }}
+                        maskUnits="userSpaceOnUse"
+                        x="0"
+                        y="0"
+                        width="18"
+                        height="18"
+                      >
                         <rect width="18" height="18" fill="#D9D9D9" />
                       </mask>
                       <g mask="url(#mask0_9547_3931)">
-                        <path d="M8.66681 13.1106C7.59669 13.0192 6.69719 12.5831 5.96831 11.8024C5.23944 11.0216 4.875 10.0875 4.875 9C4.875 7.85413 5.27606 6.88019 6.07819 6.07819C6.88019 5.27606 7.85413 4.875 9 4.875C10.0875 4.875 11.0216 5.23825 11.8024 5.96475C12.5831 6.69112 13.0192 7.58944 13.1106 8.65969L11.9179 8.30625C11.7557 7.63125 11.4066 7.07812 10.8703 6.64688C10.3342 6.21563 9.71075 6 9 6C8.175 6 7.46875 6.29375 6.88125 6.88125C6.29375 7.46875 6 8.175 6 9C6 9.7125 6.21681 10.3375 6.65044 10.875C7.08406 11.4125 7.636 11.7625 8.30625 11.925L8.66681 13.1106ZM9.56681 16.0946C9.47231 16.1149 9.37788 16.125 9.2835 16.125H9C8.01438 16.125 7.08812 15.938 6.22125 15.564C5.35437 15.19 4.60031 14.6824 3.95906 14.0413C3.31781 13.4002 2.81019 12.6463 2.43619 11.7795C2.06206 10.9128 1.875 9.98669 1.875 9.00131C1.875 8.01581 2.062 7.0895 2.436 6.22237C2.81 5.35525 3.31756 4.601 3.95869 3.95962C4.59981 3.31825 5.35375 2.81044 6.2205 2.43619C7.08725 2.06206 8.01331 1.875 8.99869 1.875C9.98419 1.875 10.9105 2.06206 11.7776 2.43619C12.6448 2.81019 13.399 3.31781 14.0404 3.95906C14.6818 4.60031 15.1896 5.35437 15.5638 6.22125C15.9379 7.08812 16.125 8.01438 16.125 9V9.27975C16.125 9.373 16.1149 9.46631 16.0946 9.55969L15 9.225V9C15 7.325 14.4187 5.90625 13.2563 4.74375C12.0938 3.58125 10.675 3 9 3C7.325 3 5.90625 3.58125 4.74375 4.74375C3.58125 5.90625 3 7.325 3 9C3 10.675 3.58125 12.0938 4.74375 13.2563C5.90625 14.4187 7.325 15 9 15H9.225L9.56681 16.0946ZM15.1052 16.2332L11.7043 12.825L10.8894 15.2884L9 9L15.2884 10.8894L12.825 11.7043L16.2332 15.1052L15.1052 16.2332Z" fill="#C72030"/>
+                        <path
+                          d="M8.66681 13.1106C7.59669 13.0192 6.69719 12.5831 5.96831 11.8024C5.23944 11.0216 4.875 10.0875 4.875 9C4.875 7.85413 5.27606 6.88019 6.07819 6.07819C6.88019 5.27606 7.85413 4.875 9 4.875C10.0875 4.875 11.0216 5.23825 11.8024 5.96475C12.5831 6.69112 13.0192 7.58944 13.1106 8.65969L11.9179 8.30625C11.7557 7.63125 11.4066 7.07812 10.8703 6.64688C10.3342 6.21563 9.71075 6 9 6C8.175 6 7.46875 6.29375 6.88125 6.88125C6.29375 7.46875 6 8.175 6 9C6 9.7125 6.21681 10.3375 6.65044 10.875C7.08406 11.4125 7.636 11.7625 8.30625 11.925L8.66681 13.1106ZM9.56681 16.0946C9.47231 16.1149 9.37788 16.125 9.2835 16.125H9C8.01438 16.125 7.08812 15.938 6.22125 15.564C5.35437 15.19 4.60031 14.6824 3.95906 14.0413C3.31781 13.4002 2.81019 12.6463 2.43619 11.7795C2.06206 10.9128 1.875 9.98669 1.875 9.00131C1.875 8.01581 2.062 7.0895 2.436 6.22237C2.81 5.35525 3.31756 4.601 3.95869 3.95962C4.59981 3.31825 5.35375 2.81044 6.2205 2.43619C7.08725 2.06206 8.01331 1.875 8.99869 1.875C9.98419 1.875 10.9105 2.06206 11.7776 2.43619C12.6448 2.81019 13.399 3.31781 14.0404 3.95906C14.6818 4.60031 15.1896 5.35437 15.5638 6.22125C15.9379 7.08812 16.125 8.01438 16.125 9V9.27975C16.125 9.373 16.1149 9.46631 16.0946 9.55969L15 9.225V9C15 7.325 14.4187 5.90625 13.2563 4.74375C12.0938 3.58125 10.675 3 9 3C7.325 3 5.90625 3.58125 4.74375 4.74375C3.58125 5.90625 3 7.325 3 9C3 10.675 3.58125 12.0938 4.74375 13.2563C5.90625 14.4187 7.325 15 9 15H9.225L9.56681 16.0946ZM15.1052 16.2332L11.7043 12.825L10.8894 15.2884L9 9L15.2884 10.8894L12.825 11.7043L16.2332 15.1052L15.1052 16.2332Z"
+                          fill="#C72030"
+                        />
                       </g>
                     </svg>
                     Analytics
@@ -591,24 +781,45 @@ const HiSocEventDetails = () => {
                   <TabsTrigger
                     value="qr-code-sub"
                     className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-0 h-[36px] flex items-center gap-2 text-gray-700 data-[state=active]:text-[#C72030] data-[state=active]:border-0 [&_svg]:text-gray-700 data-[state=active]:[&_svg]:text-[#C72030]"
-                    style={{ border: '1px solid rgba(217, 217, 217, 1)' }}
+                    style={{ border: "1px solid rgba(217, 217, 217, 1)" }}
                   >
                     <QrCode className="w-4 h-4" />
                     QR Code Generation
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="analytics" className="p-4 sm:p-6" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
+                <TabsContent
+                  value="analytics"
+                  className="p-4 sm:p-6"
+                  style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
+                >
                   <div className="w-full bg-white rounded-lg shadow-sm border">
                     <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 18 18" fill="none">
-                            <mask id="mask0_9547_3931" style={{ maskType: 'alpha' }} maskUnits="userSpaceOnUse" x="0" y="0" width="18" height="18">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 18 18"
+                            fill="none"
+                          >
+                            <mask
+                              id="mask0_9547_3931"
+                              style={{ maskType: "alpha" }}
+                              maskUnits="userSpaceOnUse"
+                              x="0"
+                              y="0"
+                              width="18"
+                              height="18"
+                            >
                               <rect width="18" height="18" fill="#D9D9D9" />
                             </mask>
                             <g mask="url(#mask0_9547_3931)">
-                              <path d="M8.66681 13.1106C7.59669 13.0192 6.69719 12.5831 5.96831 11.8024C5.23944 11.0216 4.875 10.0875 4.875 9C4.875 7.85413 5.27606 6.88019 6.07819 6.07819C6.88019 5.27606 7.85413 4.875 9 4.875C10.0875 4.875 11.0216 5.23825 11.8024 5.96475C12.5831 6.69112 13.0192 7.58944 13.1106 8.65969L11.9179 8.30625C11.7557 7.63125 11.4066 7.07812 10.8703 6.64688C10.3342 6.21563 9.71075 6 9 6C8.175 6 7.46875 6.29375 6.88125 6.88125C6.29375 7.46875 6 8.175 6 9C6 9.7125 6.21681 10.3375 6.65044 10.875C7.08406 11.4125 7.636 11.7625 8.30625 11.925L8.66681 13.1106ZM9.56681 16.0946C9.47231 16.1149 9.37788 16.125 9.2835 16.125H9C8.01438 16.125 7.08812 15.938 6.22125 15.564C5.35437 15.19 4.60031 14.6824 3.95906 14.0413C3.31781 13.4002 2.81019 12.6463 2.43619 11.7795C2.06206 10.9128 1.875 9.98669 1.875 9.00131C1.875 8.01581 2.062 7.0895 2.436 6.22237C2.81 5.35525 3.31756 4.601 3.95869 3.95962C4.59981 3.31825 5.35375 2.81044 6.2205 2.43619C7.08725 2.06206 8.01331 1.875 8.99869 1.875C9.98419 1.875 10.9105 2.06206 11.7776 2.43619C12.6448 2.81019 13.399 3.31781 14.0404 3.95906C14.6818 4.60031 15.1896 5.35437 15.5638 6.22125C15.9379 7.08812 16.125 8.01438 16.125 9V9.27975C16.125 9.373 16.1149 9.46631 16.0946 9.55969L15 9.225V9C15 7.325 14.4187 5.90625 13.2563 4.74375C12.0938 3.58125 10.675 3 9 3C7.325 3 5.90625 3.58125 4.74375 4.74375C3.58125 5.90625 3 7.325 3 9C3 10.675 3.58125 12.0938 4.74375 13.2563C5.90625 14.4187 7.325 15 9 15H9.225L9.56681 16.0946ZM15.1052 16.2332L11.7043 12.825L10.8894 15.2884L9 9L15.2884 10.8894L12.825 11.7043L16.2332 15.1052L15.1052 16.2332Z" fill="#C72030"/>
+                              <path
+                                d="M8.66681 13.1106C7.59669 13.0192 6.69719 12.5831 5.96831 11.8024C5.23944 11.0216 4.875 10.0875 4.875 9C4.875 7.85413 5.27606 6.88019 6.07819 6.07819C6.88019 5.27606 7.85413 4.875 9 4.875C10.0875 4.875 11.0216 5.23825 11.8024 5.96475C12.5831 6.69112 13.0192 7.58944 13.1106 8.65969L11.9179 8.30625C11.7557 7.63125 11.4066 7.07812 10.8703 6.64688C10.3342 6.21563 9.71075 6 9 6C8.175 6 7.46875 6.29375 6.88125 6.88125C6.29375 7.46875 6 8.175 6 9C6 9.7125 6.21681 10.3375 6.65044 10.875C7.08406 11.4125 7.636 11.7625 8.30625 11.925L8.66681 13.1106ZM9.56681 16.0946C9.47231 16.1149 9.37788 16.125 9.2835 16.125H9C8.01438 16.125 7.08812 15.938 6.22125 15.564C5.35437 15.19 4.60031 14.6824 3.95906 14.0413C3.31781 13.4002 2.81019 12.6463 2.43619 11.7795C2.06206 10.9128 1.875 9.98669 1.875 9.00131C1.875 8.01581 2.062 7.0895 2.436 6.22237C2.81 5.35525 3.31756 4.601 3.95869 3.95962C4.59981 3.31825 5.35375 2.81044 6.2205 2.43619C7.08725 2.06206 8.01331 1.875 8.99869 1.875C9.98419 1.875 10.9105 2.06206 11.7776 2.43619C12.6448 2.81019 13.399 3.31781 14.0404 3.95906C14.6818 4.60031 15.1896 5.35437 15.5638 6.22125C15.9379 7.08812 16.125 8.01438 16.125 9V9.27975C16.125 9.373 16.1149 9.46631 16.0946 9.55969L15 9.225V9C15 7.325 14.4187 5.90625 13.2563 4.74375C12.0938 3.58125 10.675 3 9 3C7.325 3 5.90625 3.58125 4.74375 4.74375C3.58125 5.90625 3 7.325 3 9C3 10.675 3.58125 12.0938 4.74375 13.2563C5.90625 14.4187 7.325 15 9 15H9.225L9.56681 16.0946ZM15.1052 16.2332L11.7043 12.825L10.8894 15.2884L9 9L15.2884 10.8894L12.825 11.7043L16.2332 15.1052L15.1052 16.2332Z"
+                                fill="#C72030"
+                              />
                             </g>
                           </svg>
                         </div>
@@ -618,12 +829,18 @@ const HiSocEventDetails = () => {
                       </div>
                     </div>
                     <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-                      <p className="text-gray-600">QR Code analytics data will be displayed here</p>
+                      <p className="text-gray-600">
+                        QR Code analytics data will be displayed here
+                      </p>
                     </div>
                   </div>
                 </TabsContent>
 
-                <TabsContent value="qr-code-sub" className="p-4 sm:p-6" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
+                <TabsContent
+                  value="qr-code-sub"
+                  className="p-4 sm:p-6"
+                  style={{ backgroundColor: "rgba(250, 250, 250, 1)" }}
+                >
                   <div className="w-full bg-white rounded-lg shadow-sm border">
                     <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                       <div className="flex items-center gap-3">
@@ -636,81 +853,97 @@ const HiSocEventDetails = () => {
                       </div>
                     </div>
                     <div className="bg-[#FBFBFA] border border-gray-200 overflow-hidden px-5 py-4">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
-                          Actions
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
-                          Sr. No.
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
-                          CP Name
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
-                          Company Name
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
-                          Email ID
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">
-                          QR Code ID
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {qrCodeData.length > 0 ? (
-                        qrCodeData.map((row) => (
-                          <TableRow key={row.id} className="hover:bg-gray-50">
-                            <TableCell className="py-3 px-4">
-                              <div className="flex items-center justify-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => handleDownloadQRCode(row.qrCodeId, row.cpName)}
-                                  className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
-                                  title="Download QR Code"
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow style={{ backgroundColor: "#E6E2D8" }}>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
+                                Actions
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
+                                Sr. No.
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                CP Name
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                Company Name
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                Email ID
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                                QR Code ID
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {qrCodeData.length > 0 ? (
+                              qrCodeData.map((row) => (
+                                <TableRow
+                                  key={row.id}
+                                  className="hover:bg-gray-50"
                                 >
-                                  <Download className="w-4 h-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleSendQRCodeEmail(row.emailId, row.cpName)}
-                                  className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
-                                  title="Send via Email"
+                                  <TableCell className="py-3 px-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleDownloadQRCode(
+                                            row.qrCodeId,
+                                            row.cpName
+                                          )
+                                        }
+                                        className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
+                                        title="Download QR Code"
+                                      >
+                                        <Download className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleSendQRCodeEmail(
+                                            row.emailId,
+                                            row.cpName
+                                          )
+                                        }
+                                        className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
+                                        title="Send via Email"
+                                      >
+                                        <Mail className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="py-3 px-4 text-center font-medium">
+                                    {row.srNo}
+                                  </TableCell>
+                                  <TableCell className="py-3 px-4">
+                                    {row.cpName}
+                                  </TableCell>
+                                  <TableCell className="py-3 px-4">
+                                    {row.companyName}
+                                  </TableCell>
+                                  <TableCell className="py-3 px-4">
+                                    {row.emailId}
+                                  </TableCell>
+                                  <TableCell className="py-3 px-4 text-sm text-gray-600">
+                                    {row.qrCodeId}
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            ) : (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={6}
+                                  className="text-center py-8 text-gray-600"
                                 >
-                                  <Mail className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-3 px-4 text-center font-medium">
-                              {row.srNo}
-                            </TableCell>
-                            <TableCell className="py-3 px-4">
-                              {row.cpName}
-                            </TableCell>
-                            <TableCell className="py-3 px-4">
-                              {row.companyName}
-                            </TableCell>
-                            <TableCell className="py-3 px-4">
-                              {row.emailId}
-                            </TableCell>
-                            <TableCell className="py-3 px-4 text-sm text-gray-600">
-                              {row.qrCodeId}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-gray-600">
-                            No QR Codes generated yet
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                                  No QR Codes generated yet
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
                   </div>
                 </TabsContent>
@@ -719,7 +952,11 @@ const HiSocEventDetails = () => {
           </TabsContent>
 
           {/* Events Related Images Tab */}
-          <TabsContent value="images" className="p-6 space-y-6" style={{ backgroundColor: 'rgba(250, 249, 247, 1)' }}>
+          <TabsContent
+            value="images"
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}
+          >
             <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
                 <div className="flex items-center gap-3">
@@ -734,15 +971,25 @@ const HiSocEventDetails = () => {
               <div className="bg-[#FBFBFA] border-t-0 px-6 py-6 space-y-6">
                 {/* Cover Images Section */}
                 <div>
-                  <h4 className="text-base font-semibold text-gray-900 mb-3">Cover Images</h4>
+                  <h4 className="text-base font-semibold text-gray-900 mb-3">
+                    Cover Images
+                  </h4>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
+                        <TableRow style={{ backgroundColor: "#E6E2D8" }}>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Name
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Type
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            Updated At
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                            Image
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody className="bg-white">
@@ -759,18 +1006,27 @@ const HiSocEventDetails = () => {
                               Array.isArray(group)
                                 ? group
                                 : group && typeof group === "object"
-                                ? [group]
-                                : []
+                                  ? [group]
+                                  : []
                             )
                             .flat()
                             .filter((img) => img?.document_url);
 
                           return normalizedImages.length > 0 ? (
                             normalizedImages.map((file, index) => (
-                              <TableRow key={`cover-${index}`} className="hover:bg-gray-50">
-                                <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                                <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                                <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
+                              <TableRow
+                                key={`cover-${index}`}
+                                className="hover:bg-gray-50"
+                              >
+                                <TableCell className="text-gray-900 py-3 px-4">
+                                  {file.document_file_name}
+                                </TableCell>
+                                <TableCell className="text-gray-900 py-3 px-4">
+                                  {file.document_content_type}
+                                </TableCell>
+                                <TableCell className="text-gray-900 py-3 px-4">
+                                  {formatDateTime(file.document_updated_at)}
+                                </TableCell>
                                 <TableCell className="py-3 px-4">
                                   <img
                                     src={file.document_url}
@@ -782,7 +1038,10 @@ const HiSocEventDetails = () => {
                             ))
                           ) : (
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center py-8 text-gray-600">
+                              <TableCell
+                                colSpan={4}
+                                className="text-center py-8 text-gray-600"
+                              >
                                 No Cover Images
                               </TableCell>
                             </TableRow>
@@ -795,15 +1054,25 @@ const HiSocEventDetails = () => {
 
                 {/* Event Gallery Section */}
                 <div>
-                  <h4 className="text-base font-semibold text-gray-900 mb-3">Event Gallery</h4>
+                  <h4 className="text-base font-semibold text-gray-900 mb-3">
+                    Event Gallery
+                  </h4>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
+                        <TableRow style={{ backgroundColor: "#E6E2D8" }}>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Name
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Type
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            Updated At
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                            Image
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody className="bg-white">
@@ -816,16 +1085,28 @@ const HiSocEventDetails = () => {
                           ];
 
                           const allEventImages = eventGroups
-                            .filter((group) => Array.isArray(group) && group.length > 0)
+                            .filter(
+                              (group) =>
+                                Array.isArray(group) && group.length > 0
+                            )
                             .flat()
                             .filter((img) => img?.document_url);
 
                           return allEventImages.length > 0 ? (
                             allEventImages.map((file, index) => (
-                              <TableRow key={`event-${index}`} className="hover:bg-gray-50">
-                                <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                                <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                                <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
+                              <TableRow
+                                key={`event-${index}`}
+                                className="hover:bg-gray-50"
+                              >
+                                <TableCell className="text-gray-900 py-3 px-4">
+                                  {file.document_file_name}
+                                </TableCell>
+                                <TableCell className="text-gray-900 py-3 px-4">
+                                  {file.document_content_type}
+                                </TableCell>
+                                <TableCell className="text-gray-900 py-3 px-4">
+                                  {formatDateTime(file.document_updated_at)}
+                                </TableCell>
                                 <TableCell className="py-3 px-4">
                                   <img
                                     src={file.document_url}
@@ -837,7 +1118,10 @@ const HiSocEventDetails = () => {
                             ))
                           ) : (
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center py-8 text-gray-600">
+                              <TableCell
+                                colSpan={4}
+                                className="text-center py-8 text-gray-600"
+                              >
                                 No Event Images
                               </TableCell>
                             </TableRow>

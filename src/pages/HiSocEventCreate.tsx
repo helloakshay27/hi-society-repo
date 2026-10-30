@@ -2,11 +2,35 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, ArrowLeft, FileText, Calendar, Users, X, Plus, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
+import {
+  ChevronRight,
+  ArrowLeft,
+  FileText,
+  Calendar,
+  Users,
+  X,
+  Plus,
+  FileSpreadsheet,
+  Upload,
+  Download,
+  Mail,
+  Edit,
+  Trash,
+  Trash2,
+  Info,
+  Search,
+} from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
 import {
@@ -17,11 +41,13 @@ import {
   MenuItem,
   Box,
   Avatar,
-  
   Switch,
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import { MemberFilterPanel, MemberFilterState } from "@/components/MemberFilterPanel";
+import {
+  MemberFilterPanel,
+  MemberFilterState,
+} from "@/components/MemberFilterPanel";
 const HiSocEventCreate = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -62,6 +88,7 @@ const HiSocEventCreate = () => {
   console.log("formData", formData);
   const [eventType, setEventType] = useState([]);
   const [eventUserID, setEventUserID] = useState([]);
+  const [individualSearchTerm, setIndividualSearchTerm] = useState("");
   const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -69,8 +96,14 @@ const HiSocEventCreate = () => {
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [showTooltip, setShowTooltip] = useState(false);
   const [groups, setGroups] = useState([]);
-  const [memberFilter, setMemberFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
-  const [groupFilter, setGroupFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
+  const [memberFilter, setMemberFilter] = useState<MemberFilterState>({
+    roles: [],
+    towers: [],
+  });
+  const [groupFilter, setGroupFilter] = useState<MemberFilterState>({
+    roles: [],
+    towers: [],
+  });
 
   // Enhanced reminder state
   const [reminderValue, setReminderValue] = useState("");
@@ -100,7 +133,7 @@ const HiSocEventCreate = () => {
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const totalSteps = 3;
-  const EVENT_DRAFT_STORAGE_KEY = 'event_create_draft';
+  const EVENT_DRAFT_STORAGE_KEY = "event_create_draft";
 
   // Invite Member / User state
   const [channelPartners, setChannelPartners] = useState([]);
@@ -119,43 +152,45 @@ const HiSocEventCreate = () => {
   const fetchImageConfigurations = async () => {
     try {
       const response = await axios.get(
-        getFullUrl('/system_constants.json?q[description_eq]=ImagesConfiguration'),
+        getFullUrl(
+          "/system_constants.json?q[description_eq]=ImagesConfiguration"
+        ),
         {
           headers: {
             Authorization: getAuthHeader(),
           },
         }
       );
-      
+
       if (response.data && Array.isArray(response.data)) {
         const configs = {};
-        
+
         response.data.forEach((config) => {
           const { name, value } = config;
-          
+
           // Extract ratio from value (e.g., "event_images_16_by_9" -> "16:9")
           const ratioMatch = value.match(/(\d+)_by_(\d+)/);
           if (ratioMatch) {
             const ratio = `${ratioMatch[1]}:${ratioMatch[2]}`;
-            
+
             if (!configs[name]) {
               configs[name] = [];
             }
-            
+
             if (!configs[name].includes(ratio)) {
               configs[name].push(ratio);
             }
           }
         });
-        
+
         setImageConfigurations(configs);
       }
     } catch (error) {
-      console.error('Error fetching image configurations:', error);
+      console.error("Error fetching image configurations:", error);
       // Set default configurations if API fails
       setImageConfigurations({
-        EventImage: ['16:9', '1:1', '9:16', '3:2'],
-        EventCoverImage: ['16:9', '1:1', '9:16', '3:2'],
+        EventImage: ["16:9", "1:1", "9:16", "3:2"],
+        EventCoverImage: ["16:9", "1:1", "9:16", "3:2"],
       });
     }
   };
@@ -175,7 +210,7 @@ const HiSocEventCreate = () => {
       cpName: "Kshitij Rasal",
       companyName: "ABD Tech",
       emailId: "kshitij.r@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp2-176700403055"
+      qrCodeId: "QR-EVT-1767003965366-cp2-176700403055",
     },
     {
       id: 2,
@@ -183,7 +218,7 @@ const HiSocEventCreate = () => {
       cpName: "Sohail Ansari",
       companyName: "XYZ Ltd",
       emailId: "sohail.a@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp3-176700403056"
+      qrCodeId: "QR-EVT-1767003965366-cp3-176700403056",
     },
     {
       id: 3,
@@ -191,7 +226,7 @@ const HiSocEventCreate = () => {
       cpName: "Hamza Quazi",
       companyName: "XYZ Ltd",
       emailId: "hamza.q@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056"
+      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056",
     },
     {
       id: 4,
@@ -199,30 +234,30 @@ const HiSocEventCreate = () => {
       cpName: "Shahab Mirza",
       companyName: "XYZ Ltd",
       emailId: "shahab.m@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056"
-    }
+      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056",
+    },
   ]);
 
   // Field styles for Material-UI components
   const fieldStyles = {
-    height: '45px',
-    backgroundColor: '#fff',
-    borderRadius: '4px',
-    '& .MuiOutlinedInput-root': {
-      height: '45px',
-      '& fieldset': {
-        borderColor: '#ddd',
+    height: "45px",
+    backgroundColor: "#fff",
+    borderRadius: "4px",
+    "& .MuiOutlinedInput-root": {
+      height: "45px",
+      "& fieldset": {
+        borderColor: "#ddd",
       },
-      '&:hover fieldset': {
-        borderColor: '#C72030',
+      "&:hover fieldset": {
+        borderColor: "#C72030",
       },
-      '&.Mui-focused fieldset': {
-        borderColor: '#C72030',
+      "&.Mui-focused fieldset": {
+        borderColor: "#C72030",
       },
     },
-    '& .MuiInputLabel-root': {
-      '&.Mui-focused': {
-        color: '#C72030',
+    "& .MuiInputLabel-root": {
+      "&.Mui-focused": {
+        color: "#C72030",
       },
     },
   };
@@ -520,8 +555,15 @@ const HiSocEventCreate = () => {
           toast.error("End Date cannot be earlier than Start Date.");
           return;
         }
-        if (endDate === startDate && startTime && endTime && endTime <= startTime) {
-          toast.error("End Time must be later than Start Time for the same date.");
+        if (
+          endDate === startDate &&
+          startTime &&
+          endTime &&
+          endTime <= startTime
+        ) {
+          toast.error(
+            "End Time must be later than Start Time for the same date."
+          );
           return;
         }
       }
@@ -649,14 +691,22 @@ const HiSocEventCreate = () => {
     if (!formData.shared) {
       errors.push("Share With is required.");
     }
-    
+
     // Validate shared with individual - require at least one user
-    if (formData.shared === "individual" && (!formData.user_id || formData.user_id.length === 0)) {
-      errors.push("Please select at least one user when sharing with individuals.");
+    if (
+      formData.shared === "individual" &&
+      (!formData.user_id || formData.user_id.length === 0)
+    ) {
+      errors.push(
+        "Please select at least one user when sharing with individuals."
+      );
     }
-    
+
     // Validate shared with group - require at least one group
-    if (formData.shared === "group" && (!formData.group_id || formData.group_id.length === 0)) {
+    if (
+      formData.shared === "group" &&
+      (!formData.group_id || formData.group_id.length === 0)
+    ) {
       errors.push("Please select at least one group when sharing with groups.");
     }
 
@@ -664,8 +714,15 @@ const HiSocEventCreate = () => {
     if (formData.from_date && formData.to_date) {
       if (formData.to_date < formData.from_date) {
         errors.push("End Date cannot be earlier than Start Date.");
-      } else if (formData.to_date === formData.from_date && formData.from_time && formData.to_time && formData.to_time <= formData.from_time) {
-        errors.push("End Time must be later than Start Time for the same date.");
+      } else if (
+        formData.to_date === formData.from_date &&
+        formData.from_time &&
+        formData.to_time &&
+        formData.to_time <= formData.from_time
+      ) {
+        errors.push(
+          "End Time must be later than Start Time for the same date."
+        );
       }
     }
 
@@ -714,14 +771,22 @@ const HiSocEventCreate = () => {
     if (!formData.shared) {
       errors.push("Share With is required.");
     }
-    
+
     // Validate shared with individual - require at least one user
-    if (formData.shared === "individual" && (!formData.user_id || formData.user_id.length === 0)) {
-      errors.push("Please select at least one user when sharing with individuals.");
+    if (
+      formData.shared === "individual" &&
+      (!formData.user_id || formData.user_id.length === 0)
+    ) {
+      errors.push(
+        "Please select at least one user when sharing with individuals."
+      );
     }
-    
+
     // Validate shared with group - require at least one group
-    if (formData.shared === "group" && (!formData.group_id || formData.group_id.length === 0)) {
+    if (
+      formData.shared === "group" &&
+      (!formData.group_id || formData.group_id.length === 0)
+    ) {
       errors.push("Please select at least one group when sharing with groups.");
     }
 
@@ -729,13 +794,20 @@ const HiSocEventCreate = () => {
     if (formData.from_date && formData.to_date) {
       if (formData.to_date < formData.from_date) {
         errors.push("End Date cannot be earlier than Start Date.");
-      } else if (formData.to_date === formData.from_date && formData.from_time && formData.to_time && formData.to_time <= formData.from_time) {
-        errors.push("End Time must be later than Start Time for the same date.");
+      } else if (
+        formData.to_date === formData.from_date &&
+        formData.from_time &&
+        formData.to_time &&
+        formData.to_time <= formData.from_time
+      ) {
+        errors.push(
+          "End Time must be later than Start Time for the same date."
+        );
       }
     }
 
     if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
+      errors.forEach((error) => toast.error(error));
       return false;
     }
     return true;
@@ -801,7 +873,7 @@ const HiSocEventCreate = () => {
     formDataToSend.append("event[event_name]", formData.event_name);
     formDataToSend.append("event[description]", formData.description || "");
     formDataToSend.append("event[event_at]", formData.event_at || "");
-    
+
     // Combine date and time for from_time parameter
     let fromTimeValue = "";
     if (formData.from_date && formData.from_time) {
@@ -823,10 +895,22 @@ const HiSocEventCreate = () => {
     if (toTimeValue) {
       formDataToSend.append("event[to_time]", toTimeValue);
     }
-    formDataToSend.append("event[shared]", formData.shared === "all" ? "0" : "1");
-    formDataToSend.append("event[is_important]", formData.is_important === "1" ? "1" : "0");
-    formDataToSend.append("event[email_trigger_enabled]", formData.email_trigger_enabled === "true" ? "1" : "0");
-    formDataToSend.append("event[show_on_home]", formData.show_on_home === true ? "1" : "0");
+    formDataToSend.append(
+      "event[shared]",
+      formData.shared === "all" ? "0" : "1"
+    );
+    formDataToSend.append(
+      "event[is_important]",
+      formData.is_important === "1" ? "1" : "0"
+    );
+    formDataToSend.append(
+      "event[email_trigger_enabled]",
+      formData.email_trigger_enabled === "true" ? "1" : "0"
+    );
+    formDataToSend.append(
+      "event[show_on_home]",
+      formData.show_on_home === true ? "1" : "0"
+    );
     formDataToSend.append("event[active]", "true");
 
     // === RSVP FIELDS ===
@@ -848,14 +932,21 @@ const HiSocEventCreate = () => {
     }
 
     // Add cpusers (channel partner users) from selected channel partners
-    if (Array.isArray(selectedChannelPartners) && selectedChannelPartners.length > 0) {
+    if (
+      Array.isArray(selectedChannelPartners) &&
+      selectedChannelPartners.length > 0
+    ) {
       selectedChannelPartners.forEach((id, index) => {
         formDataToSend.append(`event[cpusers][]`, id);
       });
     }
 
     // Add cp_group_id if shared with groups
-    if (formData.shared === "group" && Array.isArray(formData.group_id) && formData.group_id.length > 0) {
+    if (
+      formData.shared === "group" &&
+      Array.isArray(formData.group_id) &&
+      formData.group_id.length > 0
+    ) {
       formDataToSend.append("event[group_id]", formData.group_id[0]);
     } else if (formData.shared === "group" && formData.group_id) {
       formDataToSend.append("event[group_id]", formData.group_id);
@@ -869,14 +960,20 @@ const HiSocEventCreate = () => {
       }
     }
 
-    if (formData.cover_image_16_by_9 && formData.cover_image_16_by_9.length > 0) {
+    if (
+      formData.cover_image_16_by_9 &&
+      formData.cover_image_16_by_9.length > 0
+    ) {
       const img = formData.cover_image_16_by_9[0];
       if (img.file) {
         formDataToSend.append("event[cover_image_16_by_9]", img.file);
       }
     }
 
-    if (formData.cover_image_9_by_16 && formData.cover_image_9_by_16.length > 0) {
+    if (
+      formData.cover_image_9_by_16 &&
+      formData.cover_image_9_by_16.length > 0
+    ) {
       const img = formData.cover_image_9_by_16[0];
       if (img.file) {
         formDataToSend.append("event[cover_image_9_by_16]", img.file);
@@ -891,7 +988,10 @@ const HiSocEventCreate = () => {
     }
 
     // Add event images (all ratios)
-    if (formData.event_images_1_by_1 && formData.event_images_1_by_1.length > 0) {
+    if (
+      formData.event_images_1_by_1 &&
+      formData.event_images_1_by_1.length > 0
+    ) {
       formData.event_images_1_by_1.forEach((img) => {
         if (img.file) {
           formDataToSend.append("event[event_images_1_by_1][]", img.file);
@@ -899,7 +999,10 @@ const HiSocEventCreate = () => {
       });
     }
 
-    if (formData.event_images_16_by_9 && formData.event_images_16_by_9.length > 0) {
+    if (
+      formData.event_images_16_by_9 &&
+      formData.event_images_16_by_9.length > 0
+    ) {
       formData.event_images_16_by_9.forEach((img) => {
         if (img.file) {
           formDataToSend.append("event[event_images_16_by_9][]", img.file);
@@ -907,7 +1010,10 @@ const HiSocEventCreate = () => {
       });
     }
 
-    if (formData.event_images_9_by_16 && formData.event_images_9_by_16.length > 0) {
+    if (
+      formData.event_images_9_by_16 &&
+      formData.event_images_9_by_16.length > 0
+    ) {
       formData.event_images_9_by_16.forEach((img) => {
         if (img.file) {
           formDataToSend.append("event[event_images_9_by_16][]", img.file);
@@ -915,7 +1021,10 @@ const HiSocEventCreate = () => {
       });
     }
 
-    if (formData.event_images_3_by_2 && formData.event_images_3_by_2.length > 0) {
+    if (
+      formData.event_images_3_by_2 &&
+      formData.event_images_3_by_2.length > 0
+    ) {
       formData.event_images_3_by_2.forEach((img) => {
         if (img.file) {
           formDataToSend.append("event[event_images_3_by_2][]", img.file);
@@ -938,7 +1047,10 @@ const HiSocEventCreate = () => {
     if (preparedReminders && preparedReminders.length > 0) {
       preparedReminders.forEach((reminder, index) => {
         Object.keys(reminder).forEach((key) => {
-          formDataToSend.append(`event[set_reminders_attributes][${index}][${key}]`, reminder[key]);
+          formDataToSend.append(
+            `event[set_reminders_attributes][${index}][${key}]`,
+            reminder[key]
+          );
         });
       });
     }
@@ -949,12 +1061,16 @@ const HiSocEventCreate = () => {
     }
 
     try {
-      const response = await axios.post(getFullUrl('/crm/admin/events.json'), formDataToSend, {
-        headers: {
-                      Authorization: getAuthHeader(),
-                      "Content-Type": "multipart/form-data",
-                    },
-      });
+      const response = await axios.post(
+        getFullUrl("/crm/admin/events.json"),
+        formDataToSend,
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       toast.success("Event created successfully!");
       setFormData({
         event_type: "",
@@ -1017,9 +1133,9 @@ const HiSocEventCreate = () => {
 
           {
             headers: {
-                   Authorization: getAuthHeader(),
-                   "Content-Type": "multipart/form-data",
-                 },
+              Authorization: getAuthHeader(),
+              "Content-Type": "multipart/form-data",
+            },
           }
         );
 
@@ -1033,7 +1149,9 @@ const HiSocEventCreate = () => {
     fetchEvent();
   }, []);
 
-  const fetchUsers = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
+  const fetchUsers = async (
+    activeFilters: MemberFilterState = { roles: [], towers: [] }
+  ) => {
     const params = new URLSearchParams();
     activeFilters.roles.forEach((r) => params.append("values[]", r));
     activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
@@ -1042,25 +1160,26 @@ const HiSocEventCreate = () => {
       const response = await axios.get(
         getFullUrl(`/usergroups/get_members_list.json${qs ? `?${qs}` : ""}`),
         {
-           headers: {
-                    Authorization: getAuthHeader(),
-                    "Content-Type": "application/json",
-                  },
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
         }
       );
 
       // Transform the response to match the expected format
-      const transformedUsers = (response?.data || []).map(item => ({
+      const transformedUsers = (response?.data || []).map((item) => ({
         id: item.id,
         id_user: item.id_user,
-        firstname: item.user?.firstname || '',
-        lastname: item.user?.lastname || '',
-        user_name: `${item.user?.firstname || ''} ${item.user?.lastname || ''}`.trim(),
-        email: item.user?.email || '',
-        mobile: item.user?.mobile || '',
-        flat: item.user_flat?.flat || '',
-        block: item.user_flat?.block || '',
-        society_name: item.society?.building_name || ''
+        firstname: item.user?.firstname || "",
+        lastname: item.user?.lastname || "",
+        user_name:
+          `${item.user?.firstname || ""} ${item.user?.lastname || ""}`.trim(),
+        email: item.user?.email || "",
+        mobile: item.user?.mobile || "",
+        flat: item.user_flat?.flat || "",
+        block: item.user_flat?.block || "",
+        society_name: item.society?.building_name || "",
       }));
 
       setEventUserID(transformedUsers);
@@ -1074,17 +1193,36 @@ const HiSocEventCreate = () => {
     fetchUsers();
   }, []);
 
+  const getMemberDisplayName = (member) => {
+    const name =
+      `${member.user?.firstname || member.firstname || ""} ${member.user?.lastname || member.lastname || ""}`.trim();
+    const flat = member.user_flat?.flat || member.flat || "";
+    const block = member.user_flat?.block || member.block || "";
+    return (
+      name + (flat ? ` - Flat ${flat}` : "") + (block ? ` (${block})` : "")
+    );
+  };
+
+  const filteredEventUsers = eventUserID.filter((member) =>
+    getMemberDisplayName(member)
+      .toLowerCase()
+      .includes(individualSearchTerm.trim().toLowerCase())
+  );
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        console.log("Fetching projects from:", getFullUrl('/projects_for_dropdown.json'));
+        console.log(
+          "Fetching projects from:",
+          getFullUrl("/projects_for_dropdown.json")
+        );
         const response = await axios.get(
-          getFullUrl('/projects_for_dropdown.json'),
+          getFullUrl("/projects_for_dropdown.json"),
           {
-             headers: {
-                          Authorization: getAuthHeader(),
-                          "Content-Type": "application/json",
-                        },
+            headers: {
+              Authorization: getAuthHeader(),
+              "Content-Type": "application/json",
+            },
           }
         );
         console.log("Projects API Response:", response.data);
@@ -1106,7 +1244,9 @@ const HiSocEventCreate = () => {
     navigate(-1);
   };
 
-  const fetchGroups = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
+  const fetchGroups = async (
+    activeFilters: MemberFilterState = { roles: [], towers: [] }
+  ) => {
     const params = new URLSearchParams();
     activeFilters.roles.forEach((r) => params.append("values[]", r));
     activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
@@ -1116,9 +1256,9 @@ const HiSocEventCreate = () => {
         getFullUrl(`/crm/usergroups.json${qs ? `?${qs}` : ""}`),
         {
           headers: {
-                   Authorization: getAuthHeader(),
-                   "Content-Type": "application/json",
-                 },
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
         }
       );
       const groupsData = response.data.usergroups || [];
@@ -1133,18 +1273,18 @@ const HiSocEventCreate = () => {
     if (formData.shared === "group") {
       fetchGroups(groupFilter);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.shared]);
 
   // Fetch Channel Partners
   useEffect(() => {
     const fetchChannelPartners = async () => {
       try {
-        const response = await axios.get(getFullUrl('/channel_partners.json'), {
+        const response = await axios.get(getFullUrl("/channel_partners.json"), {
           headers: {
-                   Authorization: getAuthHeader(),
-                   "Content-Type": "multipart/form-data",
-                 },
+            Authorization: getAuthHeader(),
+            "Content-Type": "multipart/form-data",
+          },
         });
 
         const partnersData = Array.isArray(response.data)
@@ -1209,68 +1349,69 @@ const HiSocEventCreate = () => {
   // CSV File Upload Handler
   const handleCsvFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    
-    const validFiles = files.filter(file => {
-      const isValidType = file.name.endsWith('.csv') || 
-                          file.name.endsWith('.xlsx') || 
-                          file.name.endsWith('.xls');
-      
+
+    const validFiles = files.filter((file) => {
+      const isValidType =
+        file.name.endsWith(".csv") ||
+        file.name.endsWith(".xlsx") ||
+        file.name.endsWith(".xls");
+
       if (!isValidType) {
         toast.error(`${file.name} is not a valid CSV/Excel file`);
         return false;
       }
-      
+
       return true;
     });
 
     if (validFiles.length > 0) {
-      setCsvFiles(prev => [...prev, ...validFiles]);
+      setCsvFiles((prev) => [...prev, ...validFiles]);
       toast.success(`${validFiles.length} file(s) uploaded successfully`);
     }
-    
+
     // Reset input
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const removeCsvFile = (index) => {
-    setCsvFiles(prev => prev.filter((_, i) => i !== index));
-    toast.success('File removed');
+    setCsvFiles((prev) => prev.filter((_, i) => i !== index));
+    toast.success("File removed");
   };
 
   // QR Code handlers
   const handleDownloadQRCode = (qrCodeId, cpName) => {
     toast.success(`Downloading QR Code for ${cpName}`);
     // Implementation for downloading individual QR code
-    console.log('Download QR Code:', qrCodeId);
+    console.log("Download QR Code:", qrCodeId);
   };
 
   const handleSendQRCodeEmail = (email, cpName) => {
     toast.success(`Sending QR Code to ${email}`);
     // Implementation for sending QR code via email
-    console.log('Send QR Code to:', email);
+    console.log("Send QR Code to:", email);
   };
 
   const handleDownloadAllQRCodes = () => {
-    toast.success('Downloading all QR Codes');
+    toast.success("Downloading all QR Codes");
     // Implementation for downloading all QR codes
-    console.log('Download All QR Codes');
+    console.log("Download All QR Codes");
   };
 
   const handleSendAllQRCodesEmail = () => {
-    toast.success('Sending QR Codes to all channel partners');
+    toast.success("Sending QR Codes to all channel partners");
     // Implementation for sending all QR codes via email
-    console.log('Send All QR Codes via Email');
+    console.log("Send All QR Codes via Email");
   };
 
   // Step navigation functions
   const goToNextStep = () => {
     if (!completedSteps.includes(currentStep)) {
-      setCompletedSteps(prev => [...prev, currentStep]);
+      setCompletedSteps((prev) => [...prev, currentStep]);
     }
     if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const goToPreviousStep = () => {
@@ -1278,7 +1419,7 @@ const HiSocEventCreate = () => {
       setCurrentStep(currentStep - 1);
       setShowPreviousSections(true);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const goToStep = (step: number) => {
@@ -1286,16 +1427,21 @@ const HiSocEventCreate = () => {
       setCurrentStep(step);
       setShowPreviousSections(true);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleStepClick = (step: number) => {
     // In preview mode, clicking steps should scroll to sections instead of changing step
     if (isPreviewMode) {
-      const ids = ['section-event-details', 'section-invite-cps', 'section-qr-code', 'section-event-images'] as const;
+      const ids = [
+        "section-event-details",
+        "section-invite-cps",
+        "section-qr-code",
+        "section-event-images",
+      ] as const;
       const target = document.getElementById(ids[step]);
       if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
       }
       return;
     }
@@ -1304,7 +1450,9 @@ const HiSocEventCreate = () => {
     if (step > currentStep) {
       for (let i = 0; i < step; i++) {
         if (!completedSteps.includes(i)) {
-          toast.error(`Please complete step ${i + 1} before proceeding to step ${step + 1}.`);
+          toast.error(
+            `Please complete step ${i + 1} before proceeding to step ${step + 1}.`
+          );
           return;
         }
       }
@@ -1318,14 +1466,14 @@ const HiSocEventCreate = () => {
     setCurrentStep(step);
     setShowPreviousSections(false);
     setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }, 100);
   };
 
   const handleProceedToSave = () => {
     // Validate current step before proceeding
     let isValid = false;
-    
+
     switch (currentStep) {
       case 0:
         isValid = validateStep0();
@@ -1346,14 +1494,14 @@ const HiSocEventCreate = () => {
     }
 
     if (!completedSteps.includes(currentStep)) {
-      setCompletedSteps(prev => [...prev, currentStep]);
+      setCompletedSteps((prev) => [...prev, currentStep]);
     }
 
     // If on Step 0 (Event Details), go to Step 1 (Event Images)
     if (currentStep === 0) {
       setCurrentStep(1);
       setShowPreviousSections(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -1361,7 +1509,7 @@ const HiSocEventCreate = () => {
     if (currentStep === 1) {
       setCurrentStep(2);
       setShowPreviousSections(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -1375,13 +1523,13 @@ const HiSocEventCreate = () => {
       }
       setShowPreviousSections(false);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSaveToDraft = () => {
     // Validate current step before saving to draft
     let isValid = false;
-    
+
     switch (currentStep) {
       case 0:
         isValid = validateStep0();
@@ -1402,7 +1550,7 @@ const HiSocEventCreate = () => {
     }
 
     if (!completedSteps.includes(currentStep)) {
-      setCompletedSteps(prev => [...prev, currentStep]);
+      setCompletedSteps((prev) => [...prev, currentStep]);
     }
 
     // If on Step 0 (Event Details) and RSVP is No, skip to Step 1 (Event Images)
@@ -1410,7 +1558,7 @@ const HiSocEventCreate = () => {
       setCurrentStep(1);
       setShowPreviousSections(true);
       toast.success("Progress saved to draft successfully!");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -1419,73 +1567,107 @@ const HiSocEventCreate = () => {
     }
     setShowPreviousSections(true);
     toast.success("Progress saved to draft successfully!");
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Stepper component
   const StepperComponent = () => {
-    const steps = ['Event Details', 'Event Related Images', 'Invite Member / User'];
+    const steps = [
+      "Event Details",
+      "Event Related Images",
+      "Invite Member / User",
+    ];
 
     return (
-      <Box sx={{ mb: 4, width: '100%' }}>
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          width: '100%',
-          gap: 0
-        }}>
+      <Box sx={{ mb: 4, width: "100%" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            width: "100%",
+            gap: 0,
+          }}
+        >
           {steps.map((label, index) => (
-            <Box key={`step-${index}`} sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+            <Box
+              key={`step-${index}`}
+              sx={{ display: "flex", alignItems: "center", flex: 1 }}
+            >
               <Box
                 sx={{
-                  width: '100%',
-                  height: '50px',
-                  padding: '5px',
-                  borderRadius: '4px',
-                  border: '1px solid #E5E7EB',
-                  backgroundColor: 'rgba(255, 255, 255, 1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  width: "100%",
+                  height: "50px",
+                  padding: "5px",
+                  borderRadius: "4px",
+                  border: "1px solid #E5E7EB",
+                  backgroundColor: "rgba(255, 255, 255, 1)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 <Box
                   onClick={() => handleStepClick(index)}
                   sx={{
-                    cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
-                    width: '100%',
-                    height: '40px',
-                    backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#1A1A18' :
-                      (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
-                    color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
-                      (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
-                    border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #1A1A18' :
-                      (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
-                    padding: '12px 20px',
-                    fontSize: '13px',
+                    cursor:
+                      index > currentStep && !completedSteps.includes(index - 1)
+                        ? "not-allowed"
+                        : "pointer",
+                    width: "100%",
+                    height: "40px",
+                    backgroundColor:
+                      index === currentStep || completedSteps.includes(index)
+                        ? "#1A1A18"
+                        : index > currentStep &&
+                            !completedSteps.includes(index - 1)
+                          ? "rgba(245, 245, 245, 1)"
+                          : "rgba(255, 255, 255, 1)",
+                    color:
+                      index === currentStep || completedSteps.includes(index)
+                        ? "white"
+                        : index > currentStep &&
+                            !completedSteps.includes(index - 1)
+                          ? "rgba(150, 150, 150, 1)"
+                          : "rgba(196, 184, 157, 1)",
+                    border:
+                      index === currentStep || completedSteps.includes(index)
+                        ? "2px solid #1A1A18"
+                        : index > currentStep &&
+                            !completedSteps.includes(index - 1)
+                          ? "1px solid rgba(200, 200, 200, 1)"
+                          : "1px solid rgba(196, 184, 157, 1)",
+                    padding: "12px 20px",
+                    fontSize: "13px",
                     fontWeight: 500,
-                    textAlign: 'center',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: 'none',
-                    transition: 'all 0.2s ease',
-                    fontFamily: 'Work Sans, sans-serif',
-                    position: 'relative',
-                    borderRadius: '4px',
-                    '&:hover': {
-                      opacity: (index > currentStep && !completedSteps.includes(index - 1)) ? 1 : 0.9
+                    textAlign: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "none",
+                    transition: "all 0.2s ease",
+                    fontFamily: "Work Sans, sans-serif",
+                    position: "relative",
+                    borderRadius: "4px",
+                    "&:hover": {
+                      opacity:
+                        index > currentStep &&
+                        !completedSteps.includes(index - 1)
+                          ? 1
+                          : 0.9,
                     },
-                    '&::before': completedSteps.includes(index) && index !== currentStep ? {
-                      content: '"✓"',
-                      position: 'absolute',
-                      right: '8px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    } : {}
+                    "&::before":
+                      completedSteps.includes(index) && index !== currentStep
+                        ? {
+                            content: '"✓"',
+                            position: "absolute",
+                            right: "8px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                          }
+                        : {},
                   }}
                 >
                   {label}
@@ -1494,27 +1676,27 @@ const HiSocEventCreate = () => {
               {index < steps.length - 1 && (
                 <Box
                   sx={{
-                    width: '60px',
-                    minWidth: '60px',
-                    height: '0px',
-                    border: '1px dashed rgba(196, 184, 157, 1)',
-                    borderWidth: '1px',
-                    borderStyle: 'dashed',
-                    borderColor: 'rgba(196, 184, 157, 1)',
+                    width: "60px",
+                    minWidth: "60px",
+                    height: "0px",
+                    border: "1px dashed rgba(196, 184, 157, 1)",
+                    borderWidth: "1px",
+                    borderStyle: "dashed",
+                    borderColor: "rgba(196, 184, 157, 1)",
                     opacity: 1,
-                    margin: '0',
-                    '@media (max-width: 1200px)': {
-                      width: '40px',
-                      minWidth: '40px'
+                    margin: "0",
+                    "@media (max-width: 1200px)": {
+                      width: "40px",
+                      minWidth: "40px",
                     },
-                    '@media (max-width: 900px)': {
-                      width: '30px',
-                      minWidth: '30px'
+                    "@media (max-width: 900px)": {
+                      width: "30px",
+                      minWidth: "30px",
                     },
-                    '@media (max-width: 600px)': {
-                      width: '20px',
-                      minWidth: '20px'
-                    }
+                    "@media (max-width: 600px)": {
+                      width: "20px",
+                      minWidth: "20px",
+                    },
                   }}
                 />
               )}
@@ -1654,7 +1836,10 @@ const HiSocEventCreate = () => {
       `}</style>
       {/* Back Button */}
       <div className="mb-[22px]">
-        <div className="flex items-center gap-2 text-[13px] font-medium mb-3" style={{ color: "rgba(26, 26, 24, 0.48)" }}>
+        <div
+          className="flex items-center gap-2 text-[13px] font-medium mb-3"
+          style={{ color: "rgba(26, 26, 24, 0.48)" }}
+        >
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -1665,37 +1850,58 @@ const HiSocEventCreate = () => {
           </button>
           <span>Event List</span>
           <ChevronRight className="w-3.5 h-3.5" />
-          <span className="font-semibold" style={{ color: "#1A1A18" }}>Create New Event</span>
+          <span className="font-semibold" style={{ color: "#1A1A18" }}>
+            Create New Event
+          </span>
         </div>
-        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em]" style={{ color: "#1A1A18" }}>New Event</h1>
+        <h1
+          className="text-[22px] font-semibold leading-tight tracking-[-0.015em]"
+          style={{ color: "#1A1A18" }}
+        >
+          New Event
+        </h1>
       </div>
 
       {/* Stepper Component - Hide in preview mode */}
       {!isPreviewMode && <StepperComponent />}
 
-      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(e);
+        }}
+        className="space-y-6"
+      >
         {/* Step 1: Event Information */}
         {currentStep === 0 && !isPreviewMode && (
           <div className="ref-card bg-white overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+            <div
+              className="px-6 py-3 border-b border-gray-200"
+              style={{ backgroundColor: "#F6F4EE" }}
+            >
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <Avatar
                   sx={{
                     width: 32,
                     height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
+                    backgroundColor: "#E5E0D3",
+                    mr: 1.5,
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+                  <SettingsOutlinedIcon
+                    sx={{
+                      fontSize: 18,
+                      color: "var(--color-primary, #da7756)",
+                    }}
+                  />
                 </Avatar>
                 Event Details
               </h2>
             </div>
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Project Select */}
-              {/* <FormControl
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Project Select */}
+                {/* <FormControl
                 fullWidth
                 variant="outlined"
                 sx={{ '& .MuiInputBase-root': fieldStyles }}
@@ -1724,8 +1930,8 @@ const HiSocEventCreate = () => {
                 </MuiSelect>
               </FormControl> */}
 
-              {/* Event Type */}
-              {/* <TextField
+                {/* Event Type */}
+                {/* <TextField
                 label="Event Type"
                 placeholder="Enter Event Type"
                 value={formData.event_type}
@@ -1743,256 +1949,290 @@ const HiSocEventCreate = () => {
                 }}
               /> */}
 
-              {/* Event Name */}
-              <TextField
-                label={<span>Event Name <span className="text-red-500">*</span></span>}
-                placeholder="Enter Event Name"
-                value={formData.event_name}
-                onChange={handleChange}
-                name="event_name"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-
-              {/* Event At */}
-              <TextField
-                label={<span>Event At <span className="text-red-500">*</span></span>}
-                placeholder="Enter Event At"
-                value={formData.event_at}
-                onChange={handleChange}
-                name="event_at"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-              <TextField
-                label={<span>Start Date <span className="text-red-500">*</span></span>}
-                type="date"
-                value={formData.from_date}
-                onChange={handleChange}
-                name="from_date"
-                fullWidth
-                variant="outlined"
-                helperText="Format: DD/MM/YYYY"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                  htmlInput: {
-                    min: new Date().toISOString().split('T')[0],
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-
-              <TextField
-                label={<span>Start Time <span className="text-red-500">*</span></span>}
-                type="time"
-                value={formData.from_time}
-                onChange={handleChange}
-                name="from_time"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-
-              <TextField
-                label={<span>End Date <span className="text-red-500">*</span></span>}
-                type="date"
-                value={formData.to_date}
-                onChange={handleChange}
-                name="to_date"
-                fullWidth
-                variant="outlined"
-                helperText="Format: DD/MM/YYYY"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                  htmlInput: {
-                    min: formData.from_date || new Date().toISOString().split('T')[0],
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-
-              <TextField
-                label={<span>End Time <span className="text-red-500">*</span></span>}
-                type="time"
-                value={formData.to_time}
-                onChange={handleChange}
-                name="to_time"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                  htmlInput: {
-                    min: formData.to_date && formData.from_date && formData.to_date === formData.from_date ? formData.from_time || undefined : undefined,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-
-              <div className="md:col-span-3 relative w-full">
-                <textarea
-                  id="description"
-                  value={formData.description}
+                {/* Event Name */}
+                <TextField
+                  label={
+                    <span>
+                      Event Name <span className="text-red-500">*</span>
+                    </span>
+                  }
+                  placeholder="Enter Event Name"
+                  value={formData.event_name}
                   onChange={handleChange}
-                  name="description"
-                  rows={3}
-                  placeholder=" "
-                  className="peer block w-full appearance-none bg-white px-3 pt-6 pb-2 placeholder-transparent focus:outline-none resize-vertical"
+                  name="event_name"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
                 />
-                <label
-                  htmlFor="description"
-                  className="absolute left-3 -top-[10px] bg-white px-1 text-xs z-[1] transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:-top-[10px] peer-focus:text-xs"
-                >
-                  Event Description <span className="text-red-500">*</span>
-                </label>
-              </div>
-             
-            </div>
 
-            {/* 4-column grid for Send Email, RSVP Action, Mark Important */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {/* Send Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email <span className="text-red-500">*</span></label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="email_trigger_enabled"
-                      value="true"
-                      checked={formData.email_trigger_enabled === "true"}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          email_trigger_enabled: e.target.value,
-                        }))
-                      }
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Yes</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="email_trigger_enabled"
-                      value="false"
-                      checked={formData.email_trigger_enabled === "false"}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          email_trigger_enabled: e.target.value,
-                        }))
-                      }
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">No</span>
+                {/* Event At */}
+                <TextField
+                  label={
+                    <span>
+                      Event At <span className="text-red-500">*</span>
+                    </span>
+                  }
+                  placeholder="Enter Event At"
+                  value={formData.event_at}
+                  onChange={handleChange}
+                  name="event_at"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+                <TextField
+                  label={
+                    <span>
+                      Start Date <span className="text-red-500">*</span>
+                    </span>
+                  }
+                  type="date"
+                  value={formData.from_date}
+                  onChange={handleChange}
+                  name="from_date"
+                  fullWidth
+                  variant="outlined"
+                  helperText="Format: DD/MM/YYYY"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                    htmlInput: {
+                      min: new Date().toISOString().split("T")[0],
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                <TextField
+                  label={
+                    <span>
+                      Start Time <span className="text-red-500">*</span>
+                    </span>
+                  }
+                  type="time"
+                  value={formData.from_time}
+                  onChange={handleChange}
+                  name="from_time"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                <TextField
+                  label={
+                    <span>
+                      End Date <span className="text-red-500">*</span>
+                    </span>
+                  }
+                  type="date"
+                  value={formData.to_date}
+                  onChange={handleChange}
+                  name="to_date"
+                  fullWidth
+                  variant="outlined"
+                  helperText="Format: DD/MM/YYYY"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                    htmlInput: {
+                      min:
+                        formData.from_date ||
+                        new Date().toISOString().split("T")[0],
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                <TextField
+                  label={
+                    <span>
+                      End Time <span className="text-red-500">*</span>
+                    </span>
+                  }
+                  type="time"
+                  value={formData.to_time}
+                  onChange={handleChange}
+                  name="to_time"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                    htmlInput: {
+                      min:
+                        formData.to_date &&
+                        formData.from_date &&
+                        formData.to_date === formData.from_date
+                          ? formData.from_time || undefined
+                          : undefined,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                <div className="md:col-span-3 relative w-full">
+                  <textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    name="description"
+                    rows={3}
+                    placeholder=" "
+                    className="peer block w-full appearance-none bg-white px-3 pt-6 pb-2 placeholder-transparent focus:outline-none resize-vertical"
+                  />
+                  <label
+                    htmlFor="description"
+                    className="absolute left-3 -top-[10px] bg-white px-1 text-xs z-[1] transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:-top-[10px] peer-focus:text-xs"
+                  >
+                    Event Description <span className="text-red-500">*</span>
                   </label>
                 </div>
               </div>
 
-              {/* RSVP Action */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action <span className="text-red-500">*</span></label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="rsvp_action"
-                      value="1"
-                      checked={formData.rsvp_action === "1"}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Yes</span>
+              {/* 4-column grid for Send Email, RSVP Action, Mark Important */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {/* Send Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Send Email <span className="text-red-500">*</span>
                   </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="rsvp_action"
-                      value="0"
-                      checked={formData.rsvp_action === "0"}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">No</span>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="email_trigger_enabled"
+                        value="true"
+                        checked={formData.email_trigger_enabled === "true"}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            email_trigger_enabled: e.target.value,
+                          }))
+                        }
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Yes</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="email_trigger_enabled"
+                        value="false"
+                        checked={formData.email_trigger_enabled === "false"}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            email_trigger_enabled: e.target.value,
+                          }))
+                        }
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">No</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* RSVP Action */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    RSVP Action <span className="text-red-500">*</span>
                   </label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="rsvp_action"
+                        value="1"
+                        checked={formData.rsvp_action === "1"}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Yes</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="rsvp_action"
+                        value="0"
+                        checked={formData.rsvp_action === "0"}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">No</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Mark as Important */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mark as Important <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="is_important"
+                        value="1"
+                        checked={formData.is_important === "1"}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Yes</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="is_important"
+                        value="0"
+                        checked={formData.is_important === "0"}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: "#C72030" }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">No</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
-              {/* Mark as Important */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mark as Important <span className="text-red-500">*</span></label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="is_important"
-                      value="1"
-                      checked={formData.is_important === "1"}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Yes</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="is_important"
-                      value="0"
-                      checked={formData.is_important === "0"}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">No</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-             
-              {/* <div className="md:col-span-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* <div className="md:col-span-3">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Set Reminders</label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                   <FormControl
@@ -2104,27 +2344,34 @@ const HiSocEventCreate = () => {
                   ))}
               </div> */}
 
-              
-              {/* Share With section moved to Step 2: Invite Member / User */}
+                {/* Share With section moved to Step 2: Invite Member / User */}
+              </div>
             </div>
           </div>
-        </div>
         )}
 
         {/* Visibility Card */}
         {currentStep === 0 && !isPreviewMode && (
           <div className="ref-card bg-white overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+            <div
+              className="px-6 py-3 border-b border-gray-200"
+              style={{ backgroundColor: "#F6F4EE" }}
+            >
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <Avatar
                   sx={{
                     width: 32,
                     height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
+                    backgroundColor: "#E5E0D3",
+                    mr: 1.5,
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+                  <SettingsOutlinedIcon
+                    sx={{
+                      fontSize: 18,
+                      color: "var(--color-primary, #da7756)",
+                    }}
+                  />
                 </Avatar>
                 Visibility
               </h2>
@@ -2133,22 +2380,31 @@ const HiSocEventCreate = () => {
               {/* Show on Home Page */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">Show on Home Page <span className="text-red-500">*</span></h3>
-                  <p className="text-sm text-gray-500">Display this event on the home page</p>
+                  <h3 className="text-sm font-medium text-gray-900">
+                    Show on Home Page <span className="text-red-500">*</span>
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Display this event on the home page
+                  </p>
                 </div>
                 <Switch
                   checked={formData.show_on_home}
-                  onChange={(e) => setFormData(prev => ({ ...prev, show_on_home: e.target.checked }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      show_on_home: e.target.checked,
+                    }))
+                  }
                   sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#C72030',
+                    "& .MuiSwitch-switchBase.Mui-checked": {
+                      color: "#C72030",
                     },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#C72030',
+                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                      backgroundColor: "#C72030",
                     },
                   }}
                 />
-                    {/* <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
+                {/* <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
                     <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                     <g filter="url(#filter0_dd_2611_3818)">
                       <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -2249,17 +2505,25 @@ const HiSocEventCreate = () => {
         {/* Step 3: Invite Member / User */}
         {currentStep === 2 && !isPreviewMode && (
           <div className="ref-card bg-white overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+            <div
+              className="px-6 py-3 border-b border-gray-200"
+              style={{ backgroundColor: "#F6F4EE" }}
+            >
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <Avatar
                   sx={{
                     width: 32,
                     height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
+                    backgroundColor: "#E5E0D3",
+                    mr: 1.5,
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+                  <SettingsOutlinedIcon
+                    sx={{
+                      fontSize: 18,
+                      color: "var(--color-primary, #da7756)",
+                    }}
+                  />
                 </Avatar>
                 Invite Member / User
               </h2>
@@ -2306,7 +2570,9 @@ const HiSocEventCreate = () => {
 
               {/* Share With Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Share With
+                </label>
                 <div className="flex gap-6 mb-4">
                   <label className="flex items-center">
                     <input
@@ -2323,7 +2589,7 @@ const HiSocEventCreate = () => {
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
+                      style={{ accentColor: "#C72030" }}
                     />
                     <span className="ml-2 text-sm text-gray-700">All</span>
                   </label>
@@ -2341,9 +2607,11 @@ const HiSocEventCreate = () => {
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
+                      style={{ accentColor: "#C72030" }}
                     />
-                    <span className="ml-2 text-sm text-gray-700">Individuals</span>
+                    <span className="ml-2 text-sm text-gray-700">
+                      Individuals
+                    </span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -2359,7 +2627,7 @@ const HiSocEventCreate = () => {
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
+                      style={{ accentColor: "#C72030" }}
                     />
                     <span className="ml-2 text-sm text-gray-700">Groups</span>
                   </label>
@@ -2368,7 +2636,9 @@ const HiSocEventCreate = () => {
                 {formData.shared === "individual" && (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">Filter members by role or tower</span>
+                      <span className="text-sm text-gray-500">
+                        Filter members by role or tower
+                      </span>
                       <MemberFilterPanel
                         value={memberFilter}
                         onChange={(newFilters) => {
@@ -2378,80 +2648,133 @@ const HiSocEventCreate = () => {
                       />
                     </div>
 
+                    {/* Search Members */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={individualSearchTerm}
+                        onChange={(e) =>
+                          setIndividualSearchTerm(e.target.value)
+                        }
+                        placeholder="Search members by name or flat..."
+                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-[#C72030] focus:ring-1 focus:ring-[#C72030]"
+                      />
+                    </div>
+
                     {/* Select All Checkbox */}
-                    {eventUserID.length > 0 && (
+                    {filteredEventUsers.length > 0 && (
                       <div className="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 mb-2">
                         <input
                           type="checkbox"
                           id="selectAllUsers"
-                          checked={Array.isArray(formData.user_id) && formData.user_id.length === eventUserID.length && eventUserID.length > 0}
+                          checked={
+                            Array.isArray(formData.user_id) &&
+                            filteredEventUsers.every((u) =>
+                              formData.user_id.includes(u.id)
+                            )
+                          }
                           onChange={(e) => {
+                            const filteredIds = filteredEventUsers.map(
+                              (u) => u.id
+                            );
                             if (e.target.checked) {
                               setFormData((prev) => ({
                                 ...prev,
-                                user_id: eventUserID.map((u) => u.id),
+                                user_id: Array.from(
+                                  new Set([
+                                    ...(Array.isArray(prev.user_id)
+                                      ? prev.user_id
+                                      : []),
+                                    ...filteredIds,
+                                  ])
+                                ),
                               }));
                             } else {
                               setFormData((prev) => ({
                                 ...prev,
-                                user_id: [],
+                                user_id: (Array.isArray(prev.user_id)
+                                  ? prev.user_id
+                                  : []
+                                ).filter((id) => !filteredIds.includes(id)),
                               }));
                             }
                           }}
                           className="w-4 h-4 rounded"
-                          style={{ accentColor: '#C72030' }}
+                          style={{ accentColor: "#C72030" }}
                         />
-                        <label htmlFor="selectAllUsers" className="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
-                          Select All Members ({Array.isArray(formData.user_id) ? formData.user_id.length : 0}/{eventUserID.length})
+                        <label
+                          htmlFor="selectAllUsers"
+                          className="ml-3 text-sm font-medium text-gray-700 cursor-pointer"
+                        >
+                          Select All Members (
+                          {Array.isArray(formData.user_id)
+                            ? formData.user_id.length
+                            : 0}
+                          /{eventUserID.length})
                         </label>
                       </div>
                     )}
 
                     {/* Members List with Checkboxes */}
                     {eventUserID.length > 0 ? (
-                      <div className="border border-gray-200 rounded-md max-h-64 overflow-y-auto">
-                        <div className="divide-y">
-                          {eventUserID.map((member) => {
-                            const firstName = member.user?.firstname || member.firstname || '';
-                            const lastName = member.user?.lastname || member.lastname || '';
-                            const flat = member.user_flat?.flat || member.flat || '';
-                            const block = member.user_flat?.block || member.block || '';
-                            const name = `${firstName} ${lastName}`.trim();
-                            const flatText = flat ? ` - Flat ${flat}` : '';
-                            const blockText = block ? ` (${block})` : '';
-                            const displayName = name + flatText + blockText;
-                            const isChecked = Array.isArray(formData.user_id) && formData.user_id.includes(member.id);
+                      filteredEventUsers.length > 0 ? (
+                        <div className="border border-gray-200 rounded-md max-h-64 overflow-y-auto">
+                          <div className="divide-y">
+                            {filteredEventUsers.map((member) => {
+                              const displayName = getMemberDisplayName(member);
+                              const isChecked =
+                                Array.isArray(formData.user_id) &&
+                                formData.user_id.includes(member.id);
 
-                            return (
-                              <div key={member.id} className="flex items-center p-3 hover:bg-gray-50 transition-colors">
-                                <input
-                                  type="checkbox"
-                                  id={`user-${member.id}`}
-                                  checked={isChecked}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        user_id: [...(Array.isArray(prev.user_id) ? prev.user_id : []), member.id],
-                                      }));
-                                    } else {
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        user_id: (prev.user_id || []).filter((id) => id !== member.id),
-                                      }));
-                                    }
-                                  }}
-                                  className="w-4 h-4 rounded"
-                                  style={{ accentColor: '#C72030' }}
-                                />
-                                <label htmlFor={`user-${member.id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
-                                  {displayName}
-                                </label>
-                              </div>
-                            );
-                          })}
+                              return (
+                                <div
+                                  key={member.id}
+                                  className="flex items-center p-3 hover:bg-gray-50 transition-colors"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    id={`user-${member.id}`}
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          user_id: [
+                                            ...(Array.isArray(prev.user_id)
+                                              ? prev.user_id
+                                              : []),
+                                            member.id,
+                                          ],
+                                        }));
+                                      } else {
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          user_id: (prev.user_id || []).filter(
+                                            (id) => id !== member.id
+                                          ),
+                                        }));
+                                      }
+                                    }}
+                                    className="w-4 h-4 rounded"
+                                    style={{ accentColor: "#C72030" }}
+                                  />
+                                  <label
+                                    htmlFor={`user-${member.id}`}
+                                    className="ml-3 text-sm text-gray-700 cursor-pointer flex-1"
+                                  >
+                                    {displayName}
+                                  </label>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
+                          No members match "{individualSearchTerm}"
+                        </div>
+                      )
                     ) : (
                       <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
                         No members available
@@ -2462,7 +2785,9 @@ const HiSocEventCreate = () => {
                 {formData.shared === "group" && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">Filter groups by role or tower</span>
+                      <span className="text-sm text-gray-500">
+                        Filter groups by role or tower
+                      </span>
                       <MemberFilterPanel
                         value={groupFilter}
                         onChange={(newFilters) => {
@@ -2471,46 +2796,58 @@ const HiSocEventCreate = () => {
                         }}
                       />
                     </div>
-                  <FormControl
-                    fullWidth
-                    variant="outlined"
-                    sx={{ '& .MuiInputBase-root': fieldStyles }}
-                  >
-                    <InputLabel shrink>Share with Groups</InputLabel>
-                    <MuiSelect
-                      multiple
-                      value={Array.isArray(formData.group_id) ? formData.group_id : []}
-                      onChange={(e) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          group_id: e.target.value,
-                        }));
-                      }}
-                      label="Share with Groups"
-                      notched
-                      displayEmpty
-                      renderValue={(selected) => {
-                        if (!selected || selected.length === 0) {
-                          return <span style={{ color: '#999' }}>Select Groups</span>;
-                        }
-                        return selected
-                          .map((id) => {
-                            const group = groups.find((g) => g.id === id || g.id.toString() === id.toString());
-                            return group ? group.name : id;
-                          })
-                          .join(", ");
-                      }}
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      sx={{ "& .MuiInputBase-root": fieldStyles }}
                     >
-                      <MenuItem value="" disabled>
-                        Select Groups
-                      </MenuItem>
-                      {groups.map((group) => (
-                        <MenuItem key={group.id} value={group.id}>
-                          {group.name}
+                      <InputLabel shrink>Share with Groups</InputLabel>
+                      <MuiSelect
+                        multiple
+                        value={
+                          Array.isArray(formData.group_id)
+                            ? formData.group_id
+                            : []
+                        }
+                        onChange={(e) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            group_id: e.target.value,
+                          }));
+                        }}
+                        label="Share with Groups"
+                        notched
+                        displayEmpty
+                        renderValue={(selected) => {
+                          if (!selected || selected.length === 0) {
+                            return (
+                              <span style={{ color: "#999" }}>
+                                Select Groups
+                              </span>
+                            );
+                          }
+                          return selected
+                            .map((id) => {
+                              const group = groups.find(
+                                (g) =>
+                                  g.id === id ||
+                                  g.id.toString() === id.toString()
+                              );
+                              return group ? group.name : id;
+                            })
+                            .join(", ");
+                        }}
+                      >
+                        <MenuItem value="" disabled>
+                          Select Groups
                         </MenuItem>
-                      ))}
-                    </MuiSelect>
-                  </FormControl>
+                        {groups.map((group) => (
+                          <MenuItem key={group.id} value={group.id}>
+                            {group.name}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </FormControl>
                   </div>
                 )}
               </div>
@@ -2521,7 +2858,7 @@ const HiSocEventCreate = () => {
               </div>
 
               {/* CSV File Upload Section */}
-              <div 
+              <div
                 className="relative"
                 onMouseEnter={() => setShowCsvTooltip(true)}
                 onMouseLeave={() => setShowCsvTooltip(false)}
@@ -2536,8 +2873,10 @@ const HiSocEventCreate = () => {
                   {csvFiles.length > 0 ? (
                     <div className="flex flex-wrap gap-3">
                       {csvFiles.map((file, index) => {
-                        const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
-                        const isCsv = file.name.endsWith('.csv');
+                        const isExcel =
+                          file.name.endsWith(".xlsx") ||
+                          file.name.endsWith(".xls");
+                        const isCsv = file.name.endsWith(".csv");
 
                         return (
                           <div
@@ -2557,7 +2896,9 @@ const HiSocEventCreate = () => {
                                 <FileText className="w-8 h-8" />
                               </div>
                             )}
-                            <span className="text-[10px] text-center truncate max-w-[100px] mb-1">{file.name}</span>
+                            <span className="text-[10px] text-center truncate max-w-[100px] mb-1">
+                              {file.name}
+                            </span>
                             <button
                               type="button"
                               className="absolute top-1 right-1 h-6 w-6 p-0 text-gray-600 bg-white rounded-full border border-gray-300 flex items-center justify-center hover:bg-red-100 hover:text-red-600"
@@ -2576,8 +2917,12 @@ const HiSocEventCreate = () => {
                         <Upload className="w-12 h-12" />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-[#C72030] mb-1">Choose CSV File</p>
-                        <p className="text-xs text-gray-500">CSV should include: Name, Email, Company</p>
+                        <p className="text-sm font-semibold text-[#C72030] mb-1">
+                          Choose CSV File
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          CSV should include: Name, Email, Company
+                        </p>
                       </div>
                       <label className="cursor-pointer">
                         <input
@@ -2594,7 +2939,7 @@ const HiSocEventCreate = () => {
                       </label>
                     </div>
                   )}
-                  
+
                   {/* Add More Files Button when files exist */}
                   {csvFiles.length > 0 && (
                     <div className="mt-4 flex justify-center">
@@ -2614,28 +2959,36 @@ const HiSocEventCreate = () => {
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">CSV should include: Name, Email, Company</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  CSV should include: Name, Email, Company
+                </p>
               </div>
             </div>
           </div>
         )}
 
-
-
         {/* Step 2: Event Related Images */}
         {currentStep === 1 && !isPreviewMode && (
           <div className="ref-card bg-white overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+            <div
+              className="px-6 py-3 border-b border-gray-200"
+              style={{ backgroundColor: "#F6F4EE" }}
+            >
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <Avatar
                   sx={{
                     width: 32,
                     height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
+                    backgroundColor: "#E5E0D3",
+                    mr: 1.5,
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+                  <SettingsOutlinedIcon
+                    sx={{
+                      fontSize: 18,
+                      color: "var(--color-primary, #da7756)",
+                    }}
+                  />
                 </Avatar>
                 Event Related Images
               </h2>
@@ -2654,7 +3007,9 @@ const HiSocEventCreate = () => {
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showCoverImageTooltip && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Max Upload Size 3 MB. Supports {getDynamicRatiosText("EventCoverImage")} aspect ratios
+                          Max Upload Size 3 MB. Supports{" "}
+                          {getDynamicRatiosText("EventCoverImage")} aspect
+                          ratios
                         </span>
                       )}
                     </span>
@@ -2674,37 +3029,79 @@ const HiSocEventCreate = () => {
                 <div className="rounded-lg border border-gray-200 overflow-hidden">
                   <Table className="border-separate">
                     <TableHeader>
-                      <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Ratio</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4" style={{ borderColor: "#fff" }}>Action</TableHead>
+                      <TableRow
+                        className="hover:bg-gray-50"
+                        style={{ backgroundColor: "#e6e2d8" }}
+                      >
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          File Name
+                        </TableHead>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          Preview
+                        </TableHead>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          Ratio
+                        </TableHead>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          Action
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {coverImageRatios.flatMap(({ key, label }) => {
-                        const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
+                        const files = Array.isArray(formData[key])
+                          ? formData[key]
+                          : formData[key]
+                            ? [formData[key]]
+                            : [];
                         if (files.length === 0) return [];
 
                         return files.map((file, index) => (
-                          <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50 transition-colors">
-                            <TableCell className="py-3 px-4 font-medium">{file.name || file.document_file_name || `Image ${index + 1}`}</TableCell>
+                          <TableRow
+                            key={`${key}-${file.id || index}`}
+                            className="hover:bg-gray-50 transition-colors"
+                          >
+                            <TableCell className="py-3 px-4 font-medium">
+                              {file.name ||
+                                file.document_file_name ||
+                                `Image ${index + 1}`}
+                            </TableCell>
                             <TableCell className="py-3 px-4">
                               <img
-                                style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                style={{
+                                  maxWidth: 100,
+                                  maxHeight: 100,
+                                  objectFit: "cover",
+                                }}
                                 className="rounded border border-gray-200"
                                 src={file.preview || file.document_url}
                                 alt={file.name}
                               />
                             </TableCell>
-                            <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
+                            <TableCell className="py-3 px-4">
+                              {file.ratio || label}
+                            </TableCell>
                             <TableCell className="py-3 px-4">
                               <button
                                 type="button"
                                 // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                onClick={() => handleImageRemoval(key, index, file.id)}
+                                onClick={() =>
+                                  handleImageRemoval(key, index, file.id)
+                                }
                               >
-                               <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                <Trash2 className="w-4 h-4 text-[#C72030]" />
                               </button>
                             </TableCell>
                           </TableRow>
@@ -2728,7 +3125,9 @@ const HiSocEventCreate = () => {
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showAttachmentTooltip && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Max Upload Size 3 MB (Images), 10 MB (Videos). Supports {getDynamicRatiosText("EventImage")} aspect ratios
+                          Max Upload Size 3 MB (Images), 10 MB (Videos).
+                          Supports {getDynamicRatiosText("EventImage")} aspect
+                          ratios
                         </span>
                       )}
                     </span>
@@ -2748,41 +3147,90 @@ const HiSocEventCreate = () => {
                 <div className="rounded-lg border border-gray-200 overflow-hidden">
                   <Table className="border-separate">
                     <TableHeader>
-                      <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Ratio</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4" style={{ borderColor: "#fff" }}>Action</TableHead>
+                      <TableRow
+                        className="hover:bg-gray-50"
+                        style={{ backgroundColor: "#e6e2d8" }}
+                      >
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          File Name
+                        </TableHead>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          Preview
+                        </TableHead>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          Ratio
+                        </TableHead>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          Action
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {eventImageRatios.map(({ key, label }) =>
                         (formData[key] || []).length > 0
                           ? formData[key].map((file, index) => {
-                              const isVideo = file.type === "video" || (file.file && file.file.type.startsWith("video/"));
+                              const isVideo =
+                                file.type === "video" ||
+                                (file.file &&
+                                  file.file.type.startsWith("video/"));
                               return (
-                                <TableRow key={`${key}-${file.id}`} className="hover:bg-gray-50 transition-colors">
-                                  <TableCell className="py-3 px-4 font-medium">{file.name || "Unnamed File"}</TableCell>
+                                <TableRow
+                                  key={`${key}-${file.id}`}
+                                  className="hover:bg-gray-50 transition-colors"
+                                >
+                                  <TableCell className="py-3 px-4 font-medium">
+                                    {file.name || "Unnamed File"}
+                                  </TableCell>
                                   <TableCell className="py-3 px-4">
                                     {isVideo ? (
-                                      <video controls style={{ maxWidth: 100, maxHeight: 100 }} className="rounded border border-gray-200">
-                                        <source src={file.preview} type={file.file?.type || "video/mp4"} />
+                                      <video
+                                        controls
+                                        style={{
+                                          maxWidth: 100,
+                                          maxHeight: 100,
+                                        }}
+                                        className="rounded border border-gray-200"
+                                      >
+                                        <source
+                                          src={file.preview}
+                                          type={file.file?.type || "video/mp4"}
+                                        />
                                       </video>
                                     ) : (
                                       <img
-                                        style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                        style={{
+                                          maxWidth: 100,
+                                          maxHeight: 100,
+                                          objectFit: "cover",
+                                        }}
                                         className="rounded border border-gray-200"
                                         src={file.preview}
                                         alt={file.name}
                                       />
                                     )}
                                   </TableCell>
-                                  <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
+                                  <TableCell className="py-3 px-4">
+                                    {file.ratio || label}
+                                  </TableCell>
                                   <TableCell className="py-3 px-4">
                                     <button
                                       type="button"
                                       // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                      onClick={() => handleImageRemoval(key, index)}
+                                      onClick={() =>
+                                        handleImageRemoval(key, index)
+                                      }
                                     >
                                       <Trash2 className="w-4 h-4 text-[#C72030]" />
                                     </button>
@@ -2821,9 +3269,13 @@ const HiSocEventCreate = () => {
             </div>
             {currentStep > 0 && (
               <>
-                <div className="w-full border-t border-[#C4B89D] my-4" style={{ borderTopWidth: '0.5px' }}></div>
+                <div
+                  className="w-full border-t border-[#C4B89D] my-4"
+                  style={{ borderTopWidth: "0.5px" }}
+                ></div>
                 <div className="text-center text-sm text-gray-600">
-                  You've completed {completedSteps.length} out of {totalSteps} steps.
+                  You've completed {completedSteps.length} out of {totalSteps}{" "}
+                  steps.
                 </div>
               </>
             )}
@@ -2833,40 +3285,49 @@ const HiSocEventCreate = () => {
         {/* Completed Sections - Show all previous steps below current step */}
         {!isPreviewMode && currentStep > 0 && (
           <div className="mt-8 space-y-6">
-            {Array.from({ length: currentStep }, (_, i) => i).map((stepIndex) => (
-              <div key={`completed-section-${stepIndex}`}>
-                {/* Step 1: Event Details - Completed */}
-                {stepIndex === 0 && (
-                  <div className="ref-card bg-white overflow-hidden">
-                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            backgroundColor: '#E5E0D3',
-                            mr: 1.5
-                          }}
-                        >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                        </Avatar>
-                        Event Details
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCurrentStep(0);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="ref-edit-btn"
+            {Array.from({ length: currentStep }, (_, i) => i).map(
+              (stepIndex) => (
+                <div key={`completed-section-${stepIndex}`}>
+                  {/* Step 1: Event Details - Completed */}
+                  {stepIndex === 0 && (
+                    <div className="ref-card bg-white overflow-hidden">
+                      <div
+                        className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                        style={{ backgroundColor: "#F6F4EE" }}
                       >
-                        <Edit className="w-4 h-4" /> <span>Edit</span> 
-                      </button>
-                    </div>
-                    <div className="p-6 space-y-6 opacity-75 pointer-events-none">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Project */}
-                            {/* <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              backgroundColor: "#E5E0D3",
+                              mr: 1.5,
+                            }}
+                          >
+                            <SettingsOutlinedIcon
+                              sx={{
+                                fontSize: 18,
+                                color: "var(--color-primary, #da7756)",
+                              }}
+                            />
+                          </Avatar>
+                          Event Details
+                        </h2>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentStep(0);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          className="ref-edit-btn"
+                        >
+                          <Edit className="w-4 h-4" /> <span>Edit</span>
+                        </button>
+                      </div>
+                      <div className="p-6 space-y-6 opacity-75 pointer-events-none">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {/* Project */}
+                          {/* <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
                               <InputLabel shrink>Project</InputLabel>
                               <MuiSelect
                                 value={selectedProjectId || ""}
@@ -2884,175 +3345,199 @@ const HiSocEventCreate = () => {
                               </MuiSelect>
                             </FormControl> */}
 
-                            {/* Event Name */}
-                            <TextField
-                              label="Event Name"
-                              value={formData.event_name}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
+                          {/* Event Name */}
+                          <TextField
+                            label="Event Name"
+                            value={formData.event_name}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
 
-                            {/* Event At */}
-                            <TextField
-                              label="Event At"
-                              value={formData.event_at}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
-                            {/* Start Date */}
-                            <TextField
-                              label="Start Date"
-                              type="date"
-                              value={formData.from_date || ""}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
+                          {/* Event At */}
+                          <TextField
+                            label="Event At"
+                            value={formData.event_at}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
+                          {/* Start Date */}
+                          <TextField
+                            label="Start Date"
+                            type="date"
+                            value={formData.from_date || ""}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
 
-                            {/* Start Time */}
+                          {/* Start Time */}
+                          <TextField
+                            label="Start Time"
+                            type="time"
+                            value={formData.from_time || ""}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
+
+                          {/* End Date */}
+                          <TextField
+                            label="End Date"
+                            type="date"
+                            value={formData.to_date || ""}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
+
+                          {/* End Time */}
+                          <TextField
+                            label="End Time"
+                            type="time"
+                            value={formData.to_time || ""}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
+
+                          {/* Event Description */}
+                          <div className="md:col-span-3">
                             <TextField
-                              label="Start Time"
-                              type="time"
-                              value={formData.from_time || ""}
+                              label="Event Description"
+                              value={formData.description}
                               fullWidth
                               variant="outlined"
                               disabled
                               slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
                             />
+                          </div>
+                        </div>
 
-                            {/* End Date */}
-                            <TextField
-                              label="End Date"
-                              type="date"
-                              value={formData.to_date || ""}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
-
-                            {/* End Time */}
-                            <TextField
-                              label="End Time"
-                              type="time"
-                              value={formData.to_time || ""}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
-
-                            {/* Event Description */}
-                            <div className="md:col-span-3">
-                              <TextField
-                                label="Event Description"
-                                value={formData.description}
-                                fullWidth
-                                variant="outlined"
-                                disabled
-                                slotProps={{ inputLabel: { shrink: true } }}
-                              />
+                        {/* 4-column grid for Send Email, RSVP Action, Mark Important */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                          {/* Send Email */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Send Email
+                            </label>
+                            <div className="flex gap-4">
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={
+                                    formData.email_trigger_enabled === "true"
+                                  }
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: "#C72030" }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">
+                                  Yes
+                                </span>
+                              </label>
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={
+                                    formData.email_trigger_enabled === "false"
+                                  }
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: "#C72030" }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">
+                                  No
+                                </span>
+                              </label>
                             </div>
                           </div>
 
-                          {/* 4-column grid for Send Email, RSVP Action, Mark Important */}
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-
-                            {/* Send Email */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
-                              <div className="flex gap-4">
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.email_trigger_enabled === "true"}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">Yes</span>
-                                </label>
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.email_trigger_enabled === "false"}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">No</span>
-                                </label>
-                              </div>
-                            </div>
-
-                            {/* RSVP Action */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
-                              <div className="flex gap-4">
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.rsvp_action === "1"}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">Yes</span>
-                                </label>
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.rsvp_action === "0"}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">No</span>
-                                </label>
-                              </div>
-                            </div>
-
-                            {/* Mark as Important */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Mark as Important</label>
-                              <div className="flex gap-4">
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.is_important === "1"}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">Yes</span>
-                                </label>
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.is_important === "0" || !formData.is_important}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">No</span>
-                                </label>
-                              </div>
+                          {/* RSVP Action */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              RSVP Action
+                            </label>
+                            <div className="flex gap-4">
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={formData.rsvp_action === "1"}
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: "#C72030" }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">
+                                  Yes
+                                </span>
+                              </label>
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={formData.rsvp_action === "0"}
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: "#C72030" }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">
+                                  No
+                                </span>
+                              </label>
                             </div>
                           </div>
 
-                          {/* Share With */}
-                          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {/* Mark as Important */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Mark as Important
+                            </label>
+                            <div className="flex gap-4">
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={formData.is_important === "1"}
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: "#C72030" }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">
+                                  Yes
+                                </span>
+                              </label>
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={
+                                    formData.is_important === "0" ||
+                                    !formData.is_important
+                                  }
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: "#C72030" }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">
+                                  No
+                                </span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Share With */}
+                        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="md:col-span-3">
                               <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
                               <div className="flex gap-6 mb-4">
@@ -3150,62 +3635,75 @@ const HiSocEventCreate = () => {
                               )}
                             </div>
                           </div> */}
-                        </div>
                       </div>
+                    </div>
                     // </div>
                   )}
 
-                {/* Visibility Card - Completed */}
-                {stepIndex === 0 && (
-                  <div className="ref-card bg-white overflow-hidden mt-6">
-                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            backgroundColor: '#E5E0D3',
-                            mr: 1.5
-                          }}
-                        >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                        </Avatar>
-                        Visibility
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCurrentStep(0);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="ref-edit-btn"
+                  {/* Visibility Card - Completed */}
+                  {stepIndex === 0 && (
+                    <div className="ref-card bg-white overflow-hidden mt-6">
+                      <div
+                        className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                        style={{ backgroundColor: "#F6F4EE" }}
                       >
-                        <Edit className="w-4 h-4" /> <span>Edit</span> 
-                      </button>
-                    </div>
-                    <div className="p-6 space-y-4 opacity-75 pointer-events-none">
-                      {/* Show on Home Page */}
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
-                          <p className="text-sm text-gray-500">Display this event on the home page</p>
-                        </div>
-                        <Switch
-                          checked={formData.show_on_home || false}
-                          disabled
-                          sx={{
-                            '& .MuiSwitch-switchBase.Mui-checked': {
-                              color: '#C72030',
-                            },
-                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                              backgroundColor: '#C72030',
-                            },
+                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              backgroundColor: "#E5E0D3",
+                              mr: 1.5,
+                            }}
+                          >
+                            <SettingsOutlinedIcon
+                              sx={{
+                                fontSize: 18,
+                                color: "var(--color-primary, #da7756)",
+                              }}
+                            />
+                          </Avatar>
+                          Visibility
+                        </h2>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentStep(0);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                        />
+                          className="ref-edit-btn"
+                        >
+                          <Edit className="w-4 h-4" /> <span>Edit</span>
+                        </button>
                       </div>
+                      <div className="p-6 space-y-4 opacity-75 pointer-events-none">
+                        {/* Show on Home Page */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">
+                              Show on Home Page
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              Display this event on the home page
+                            </p>
+                          </div>
+                          <Switch
+                            checked={formData.show_on_home || false}
+                            disabled
+                            sx={{
+                              "& .MuiSwitch-switchBase.Mui-checked": {
+                                color: "#C72030",
+                              },
+                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                                {
+                                  backgroundColor: "#C72030",
+                                },
+                            }}
+                          />
+                        </div>
 
-                      {/* Show on Project Detail Page */}
-                      {/* <div className="flex items-center justify-between">
+                        {/* Show on Project Detail Page */}
+                        {/* <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
                           <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
@@ -3234,8 +3732,8 @@ const HiSocEventCreate = () => {
                         </svg>
                       </div> */}
 
-                      {/* Show on Booking Page */}
-                      {/* <div className="flex items-center justify-between">
+                        {/* Show on Booking Page */}
+                        {/* <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
                           <p className="text-sm text-gray-500">Display this event on the home page</p>
@@ -3264,8 +3762,8 @@ const HiSocEventCreate = () => {
                         </svg>
                       </div> */}
 
-                      {/* Featured Event */}
-                      {/* <div className="flex items-center justify-between">
+                        {/* Featured Event */}
+                        {/* <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
                           <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
@@ -3293,163 +3791,290 @@ const HiSocEventCreate = () => {
                           </defs>
                         </svg>
                       </div> */}
-                    </div>
-                  </div>
-                )}
-
-
-                {stepIndex === 1 && (
-                  <div className="ref-card bg-white overflow-hidden">
-                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            backgroundColor: '#E5E0D3',
-                            mr: 1.5
-                          }}
-                        >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                        </Avatar>
-                        Event Related Images
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCurrentStep(1);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="ref-edit-btn"
-                      >
-                        <Edit className="w-4 h-4" /> <span>Edit</span> 
-                      </button>
-                    </div>
-                    <div className="p-6 space-y-6 opacity-75 pointer-events-none">
-                      {/* Cover Images */}
-                      <div>
-                        <h5 className="text-base font-semibold mb-4">Event Cover Image</h5>
-                        <div className="rounded-lg border border-gray-200 overflow-hidden">
-                          <Table className="border-separate">
-                            <TableHeader>
-                              <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</TableHead>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</TableHead>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4" style={{ borderColor: "#fff" }}>Ratio</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {coverImageRatios.flatMap(({ key, label }) => {
-                                const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
-                                if (files.length === 0) return [];
-                                return files.map((file, index) => (
-                                  <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50 transition-colors">
-                                    <TableCell className="py-3 px-4 font-medium">{file.name || file.document_file_name || `Image ${index + 1}`}</TableCell>
-                                    <TableCell className="py-3 px-4">
-                                      <img
-                                        style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                        className="rounded border border-gray-200"
-                                        src={file.preview || file.document_url}
-                                        alt={file.name}
-                                      />
-                                    </TableCell>
-                                    <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
-                                  </TableRow>
-                                ));
-                              })}
-                              {coverImageRatios.every(({ key }) => !(Array.isArray(formData[key]) && formData[key].length > 0)) && (
-                                <TableRow>
-                                  <TableCell colSpan={3} className="text-center py-4 text-gray-500">No cover images uploaded</TableCell>
-                                </TableRow>
-                              )}
-                            </TableBody>
-                          </Table>
-                        </div>
                       </div>
+                    </div>
+                  )}
 
-                      {/* Event Attachment Images */}
-                      <div>
-                        <h5 className="text-base font-semibold mb-4">Event Attachment</h5>
-                        <div className="rounded-lg border border-gray-200 overflow-hidden">
-                          <Table className="border-separate">
-                            <TableHeader>
-                              <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</TableHead>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</TableHead>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4" style={{ borderColor: "#fff" }}>Ratio</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {eventImageRatios.flatMap(({ key, label }) => {
-                                const files = Array.isArray(formData[key]) ? formData[key] : [];
-                                if (files.length === 0) return [];
-                                return files.map((file, index) => {
-                                  const isVideo = file.type === "video" || (file.file && file.file.type?.startsWith("video/"));
-                                  return (
-                                    <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50 transition-colors">
-                                      <TableCell className="py-3 px-4 font-medium">{file.name || "Unnamed File"}</TableCell>
-                                      <TableCell className="py-3 px-4">
-                                        {isVideo ? (
-                                          <video controls style={{ maxWidth: 100, maxHeight: 100 }} className="rounded border border-gray-200">
-                                            <source src={file.preview} type={file.file?.type || "video/mp4"} />
-                                          </video>
-                                        ) : (
-                                          <img
-                                            style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                            className="rounded border border-gray-200"
-                                            src={file.preview || file.document_url}
-                                            alt={file.name}
-                                          />
-                                        )}
+                  {stepIndex === 1 && (
+                    <div className="ref-card bg-white overflow-hidden">
+                      <div
+                        className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                        style={{ backgroundColor: "#F6F4EE" }}
+                      >
+                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              backgroundColor: "#E5E0D3",
+                              mr: 1.5,
+                            }}
+                          >
+                            <SettingsOutlinedIcon
+                              sx={{
+                                fontSize: 18,
+                                color: "var(--color-primary, #da7756)",
+                              }}
+                            />
+                          </Avatar>
+                          Event Related Images
+                        </h2>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentStep(1);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          className="ref-edit-btn"
+                        >
+                          <Edit className="w-4 h-4" /> <span>Edit</span>
+                        </button>
+                      </div>
+                      <div className="p-6 space-y-6 opacity-75 pointer-events-none">
+                        {/* Cover Images */}
+                        <div>
+                          <h5 className="text-base font-semibold mb-4">
+                            Event Cover Image
+                          </h5>
+                          <div className="rounded-lg border border-gray-200 overflow-hidden">
+                            <Table className="border-separate">
+                              <TableHeader>
+                                <TableRow
+                                  className="hover:bg-gray-50"
+                                  style={{ backgroundColor: "#e6e2d8" }}
+                                >
+                                  <TableHead
+                                    className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                    style={{ borderColor: "#fff" }}
+                                  >
+                                    File Name
+                                  </TableHead>
+                                  <TableHead
+                                    className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                    style={{ borderColor: "#fff" }}
+                                  >
+                                    Preview
+                                  </TableHead>
+                                  <TableHead
+                                    className="font-semibold text-gray-900 py-3 px-4"
+                                    style={{ borderColor: "#fff" }}
+                                  >
+                                    Ratio
+                                  </TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {coverImageRatios.flatMap(({ key, label }) => {
+                                  const files = Array.isArray(formData[key])
+                                    ? formData[key]
+                                    : formData[key]
+                                      ? [formData[key]]
+                                      : [];
+                                  if (files.length === 0) return [];
+                                  return files.map((file, index) => (
+                                    <TableRow
+                                      key={`${key}-${file.id || index}`}
+                                      className="hover:bg-gray-50 transition-colors"
+                                    >
+                                      <TableCell className="py-3 px-4 font-medium">
+                                        {file.name ||
+                                          file.document_file_name ||
+                                          `Image ${index + 1}`}
                                       </TableCell>
-                                      <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
+                                      <TableCell className="py-3 px-4">
+                                        <img
+                                          style={{
+                                            maxWidth: 100,
+                                            maxHeight: 100,
+                                            objectFit: "cover",
+                                          }}
+                                          className="rounded border border-gray-200"
+                                          src={
+                                            file.preview || file.document_url
+                                          }
+                                          alt={file.name}
+                                        />
+                                      </TableCell>
+                                      <TableCell className="py-3 px-4">
+                                        {file.ratio || label}
+                                      </TableCell>
                                     </TableRow>
-                                  );
-                                });
-                              })}
-                              {eventImageRatios.every(({ key }) => !(Array.isArray(formData[key]) && formData[key].length > 0)) && (
-                                <TableRow>
-                                  <TableCell colSpan={3} className="text-center py-4 text-gray-500">No event images uploaded</TableCell>
+                                  ));
+                                })}
+                                {coverImageRatios.every(
+                                  ({ key }) =>
+                                    !(
+                                      Array.isArray(formData[key]) &&
+                                      formData[key].length > 0
+                                    )
+                                ) && (
+                                  <TableRow>
+                                    <TableCell
+                                      colSpan={3}
+                                      className="text-center py-4 text-gray-500"
+                                    >
+                                      No cover images uploaded
+                                    </TableCell>
+                                  </TableRow>
+                                )}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+
+                        {/* Event Attachment Images */}
+                        <div>
+                          <h5 className="text-base font-semibold mb-4">
+                            Event Attachment
+                          </h5>
+                          <div className="rounded-lg border border-gray-200 overflow-hidden">
+                            <Table className="border-separate">
+                              <TableHeader>
+                                <TableRow
+                                  className="hover:bg-gray-50"
+                                  style={{ backgroundColor: "#e6e2d8" }}
+                                >
+                                  <TableHead
+                                    className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                    style={{ borderColor: "#fff" }}
+                                  >
+                                    File Name
+                                  </TableHead>
+                                  <TableHead
+                                    className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                    style={{ borderColor: "#fff" }}
+                                  >
+                                    Preview
+                                  </TableHead>
+                                  <TableHead
+                                    className="font-semibold text-gray-900 py-3 px-4"
+                                    style={{ borderColor: "#fff" }}
+                                  >
+                                    Ratio
+                                  </TableHead>
                                 </TableRow>
-                              )}
-                            </TableBody>
-                          </Table>
+                              </TableHeader>
+                              <TableBody>
+                                {eventImageRatios.flatMap(({ key, label }) => {
+                                  const files = Array.isArray(formData[key])
+                                    ? formData[key]
+                                    : [];
+                                  if (files.length === 0) return [];
+                                  return files.map((file, index) => {
+                                    const isVideo =
+                                      file.type === "video" ||
+                                      (file.file &&
+                                        file.file.type?.startsWith("video/"));
+                                    return (
+                                      <TableRow
+                                        key={`${key}-${file.id || index}`}
+                                        className="hover:bg-gray-50 transition-colors"
+                                      >
+                                        <TableCell className="py-3 px-4 font-medium">
+                                          {file.name || "Unnamed File"}
+                                        </TableCell>
+                                        <TableCell className="py-3 px-4">
+                                          {isVideo ? (
+                                            <video
+                                              controls
+                                              style={{
+                                                maxWidth: 100,
+                                                maxHeight: 100,
+                                              }}
+                                              className="rounded border border-gray-200"
+                                            >
+                                              <source
+                                                src={file.preview}
+                                                type={
+                                                  file.file?.type || "video/mp4"
+                                                }
+                                              />
+                                            </video>
+                                          ) : (
+                                            <img
+                                              style={{
+                                                maxWidth: 100,
+                                                maxHeight: 100,
+                                                objectFit: "cover",
+                                              }}
+                                              className="rounded border border-gray-200"
+                                              src={
+                                                file.preview ||
+                                                file.document_url
+                                              }
+                                              alt={file.name}
+                                            />
+                                          )}
+                                        </TableCell>
+                                        <TableCell className="py-3 px-4">
+                                          {file.ratio || label}
+                                        </TableCell>
+                                      </TableRow>
+                                    );
+                                  });
+                                })}
+                                {eventImageRatios.every(
+                                  ({ key }) =>
+                                    !(
+                                      Array.isArray(formData[key]) &&
+                                      formData[key].length > 0
+                                    )
+                                ) && (
+                                  <TableRow>
+                                    <TableCell
+                                      colSpan={3}
+                                      className="text-center py-4 text-gray-500"
+                                    >
+                                      No event images uploaded
+                                    </TableCell>
+                                  </TableRow>
+                                )}
+                              </TableBody>
+                            </Table>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {stepIndex === 2 && (
-                  <div className="ref-card bg-white overflow-hidden">
-                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            backgroundColor: '#E5E0D3',
-                            mr: 1.5
-                          }}
-                        >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
-                        </Avatar>
-                        Invite Member / User
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCurrentStep(2);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="ref-edit-btn"
+                  {stepIndex === 2 && (
+                    <div className="ref-card bg-white overflow-hidden">
+                      <div
+                        className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                        style={{ backgroundColor: "#F6F4EE" }}
                       >
-                        <Edit className="w-4 h-4" /> <span>Edit</span> 
-                      </button>
-                    </div>
-                    <div className="p-6 space-y-6 opacity-75 pointer-events-none">
-                      {/* Channel Partners */}
-                      {/* <div>
+                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              backgroundColor: "#E5E0D3",
+                              mr: 1.5,
+                            }}
+                          >
+                            <SettingsOutlinedIcon
+                              sx={{
+                                fontSize: 18,
+                                color: "var(--color-primary, #da7756)",
+                              }}
+                            />
+                          </Avatar>
+                          Invite Member / User
+                        </h2>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentStep(2);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          className="ref-edit-btn"
+                        >
+                          <Edit className="w-4 h-4" /> <span>Edit</span>
+                        </button>
+                      </div>
+                      <div className="p-6 space-y-6 opacity-75 pointer-events-none">
+                        {/* Channel Partners */}
+                        {/* <div>
                         <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
                           <InputLabel shrink>Selected Channel Partners</InputLabel>
                           <MuiSelect
@@ -3480,120 +4105,165 @@ const HiSocEventCreate = () => {
                         </FormControl>
                       </div> */}
 
-                      {/* Share With Section */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
-                        <div className="flex gap-6 mb-4">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              checked={formData.shared === "all"}
-                              disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
-                            />
-                            <span className="ml-2 text-sm text-gray-700">All</span>
+                        {/* Share With Section */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Share With
                           </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              checked={formData.shared === "individual"}
-                              disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
-                            />
-                            <span className="ml-2 text-sm text-gray-700">Individuals</span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              checked={formData.shared === "group"}
-                              disabled
-                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
-                            />
-                            <span className="ml-2 text-sm text-gray-700">Groups</span>
-                          </label>
+                          <div className="flex gap-6 mb-4">
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                checked={formData.shared === "all"}
+                                disabled
+                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                style={{ accentColor: "#C72030" }}
+                              />
+                              <span className="ml-2 text-sm text-gray-700">
+                                All
+                              </span>
+                            </label>
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                checked={formData.shared === "individual"}
+                                disabled
+                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                style={{ accentColor: "#C72030" }}
+                              />
+                              <span className="ml-2 text-sm text-gray-700">
+                                Individuals
+                              </span>
+                            </label>
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                checked={formData.shared === "group"}
+                                disabled
+                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                style={{ accentColor: "#C72030" }}
+                              />
+                              <span className="ml-2 text-sm text-gray-700">
+                                Groups
+                              </span>
+                            </label>
+                          </div>
+
+                          {formData.shared === "individual" && (
+                            <FormControl
+                              fullWidth
+                              variant="outlined"
+                              sx={{ "& .MuiInputBase-root": fieldStyles }}
+                            >
+                              <InputLabel shrink>Event User ID</InputLabel>
+                              <MuiSelect
+                                multiple
+                                value={
+                                  Array.isArray(formData.user_id)
+                                    ? formData.user_id
+                                    : []
+                                }
+                                label="Event User ID"
+                                notched
+                                displayEmpty
+                                disabled
+                                renderValue={(selected) => {
+                                  if (!selected || selected.length === 0) {
+                                    return (
+                                      <span style={{ color: "#999" }}>
+                                        Select Users
+                                      </span>
+                                    );
+                                  }
+                                  return selected
+                                    .map((id) => {
+                                      const user = eventUserID.find(
+                                        (u) =>
+                                          u.id === id ||
+                                          u.id.toString() === id.toString()
+                                      );
+                                      return user
+                                        ? `${user.firstname} ${user.lastname}`
+                                        : id;
+                                    })
+                                    .join(", ");
+                                }}
+                              >
+                                {eventUserID.map((user) => (
+                                  <MenuItem key={user.id} value={user.id}>
+                                    {user.firstname} {user.lastname}
+                                  </MenuItem>
+                                ))}
+                              </MuiSelect>
+                            </FormControl>
+                          )}
+                          {formData.shared === "group" && (
+                            <FormControl
+                              fullWidth
+                              variant="outlined"
+                              sx={{ "& .MuiInputBase-root": fieldStyles }}
+                            >
+                              <InputLabel shrink>Share with Groups</InputLabel>
+                              <MuiSelect
+                                multiple
+                                value={
+                                  Array.isArray(formData.group_id)
+                                    ? formData.group_id
+                                    : []
+                                }
+                                label="Share with Groups"
+                                notched
+                                displayEmpty
+                                disabled
+                                renderValue={(selected) => {
+                                  if (!selected || selected.length === 0) {
+                                    return (
+                                      <span style={{ color: "#999" }}>
+                                        Select Groups
+                                      </span>
+                                    );
+                                  }
+                                  return selected
+                                    .map((id) => {
+                                      const group = groups.find(
+                                        (g) =>
+                                          g.id === id ||
+                                          g.id.toString() === id.toString()
+                                      );
+                                      return group ? group.name : id;
+                                    })
+                                    .join(", ");
+                                }}
+                              >
+                                {groups.map((group) => (
+                                  <MenuItem key={group.id} value={group.id}>
+                                    {group.name}
+                                  </MenuItem>
+                                ))}
+                              </MuiSelect>
+                            </FormControl>
+                          )}
                         </div>
 
-                        {formData.shared === "individual" && (
-                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                            <InputLabel shrink>Event User ID</InputLabel>
-                            <MuiSelect
-                              multiple
-                              value={Array.isArray(formData.user_id) ? formData.user_id : []}
-                              label="Event User ID"
-                              notched
-                              displayEmpty
-                              disabled
-                              renderValue={(selected) => {
-                                if (!selected || selected.length === 0) {
-                                  return <span style={{ color: '#999' }}>Select Users</span>;
-                                }
-                                return selected
-                                  .map((id) => {
-                                    const user = eventUserID.find((u) => u.id === id || u.id.toString() === id.toString());
-                                    return user ? `${user.firstname} ${user.lastname}` : id;
-                                  })
-                                  .join(", ");
-                              }}
-                            >
-                              {eventUserID.map((user) => (
-                                <MenuItem key={user.id} value={user.id}>
-                                  {user.firstname} {user.lastname}
-                                </MenuItem>
-                              ))}
-                            </MuiSelect>
-                          </FormControl>
-                        )}
-                        {formData.shared === "group" && (
-                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                            <InputLabel shrink>Share with Groups</InputLabel>
-                            <MuiSelect
-                              multiple
-                              value={Array.isArray(formData.group_id) ? formData.group_id : []}
-                              label="Share with Groups"
-                              notched
-                              displayEmpty
-                              disabled
-                              renderValue={(selected) => {
-                                if (!selected || selected.length === 0) {
-                                  return <span style={{ color: '#999' }}>Select Groups</span>;
-                                }
-                                return selected
-                                  .map((id) => {
-                                    const group = groups.find((g) => g.id === id || g.id.toString() === id.toString());
-                                    return group ? group.name : id;
-                                  })
-                                  .join(", ");
-                              }}
-                            >
-                              {groups.map((group) => (
-                                <MenuItem key={group.id} value={group.id}>
-                                  {group.name}
-                                </MenuItem>
-                              ))}
-                            </MuiSelect>
-                          </FormControl>
+                        {/* CSV Files */}
+                        {csvFiles.length > 0 && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Uploaded CSV Files
+                            </label>
+                            <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg p-6 text-center">
+                              <p className="text-sm text-gray-600">
+                                {csvFiles.length} file(s) uploaded
+                              </p>
+                            </div>
+                          </div>
                         )}
                       </div>
-
-                      {/* CSV Files */}
-                      {csvFiles.length > 0 && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Uploaded CSV Files</label>
-                          <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg p-6 text-center">
-                            <p className="text-sm text-gray-600">
-                              {csvFiles.length} file(s) uploaded
-                            </p>
-                          </div>
-                        </div>
-                      )}
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              )
+            )}
           </div>
         )}
 
@@ -3608,17 +4278,25 @@ const HiSocEventCreate = () => {
               {/* Step 1: Event Details Preview */}
               <div className="mb-6">
                 <div className="ref-card bg-white overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                  <div
+                    className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
                       <Avatar
                         sx={{
                           width: 32,
                           height: 32,
-                          backgroundColor: '#E5E0D3',
-                          mr: 1.5
+                          backgroundColor: "#E5E0D3",
+                          mr: 1.5,
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+                        <SettingsOutlinedIcon
+                          sx={{
+                            fontSize: 18,
+                            color: "var(--color-primary, #da7756)",
+                          }}
+                        />
                       </Avatar>
                       Event Details
                     </h2>
@@ -3627,11 +4305,11 @@ const HiSocEventCreate = () => {
                       onClick={() => {
                         setIsPreviewMode(false);
                         setCurrentStep(0);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                       className="ref-edit-btn"
-                      >
-                        <Edit className="w-4 h-4" /> <span>Edit</span> 
+                    >
+                      <Edit className="w-4 h-4" /> <span>Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
@@ -3657,118 +4335,130 @@ const HiSocEventCreate = () => {
 
                       {/* Event Name */}
                       <TextField
-                              label="Event Name"
-                              value={formData.event_name}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
+                        label="Event Name"
+                        value={formData.event_name}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
 
-                            {/* Event At */}
-                            <TextField
-                              label="Event At"
-                              value={formData.event_at}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
-                             
-                            {/* Start Date */}
-                            <TextField
-                              label="Start Date"
-                              type="date"
-                              value={formData.from_date || ""}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
+                      {/* Event At */}
+                      <TextField
+                        label="Event At"
+                        value={formData.event_at}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
 
-                            {/* Start Time */}
-                            <TextField
-                              label="Start Time"
-                              type="time"
-                              value={formData.from_time || ""}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
+                      {/* Start Date */}
+                      <TextField
+                        label="Start Date"
+                        type="date"
+                        value={formData.from_date || ""}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
 
-                            {/* End Date */}
-                            <TextField
-                              label="End Date"
-                              type="date"
-                              value={formData.to_date || ""}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
+                      {/* Start Time */}
+                      <TextField
+                        label="Start Time"
+                        type="time"
+                        value={formData.from_time || ""}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
 
-                            {/* End Time */}
-                            <TextField
-                              label="End Time"
-                              type="time"
-                              value={formData.to_time || ""}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
+                      {/* End Date */}
+                      <TextField
+                        label="End Date"
+                        type="date"
+                        value={formData.to_date || ""}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
 
-                            {/* Event Description */}
-                            <div className="md:col-span-3">
-                              <TextField
-                                label="Event Description"
-                                value={formData.description}
-                                fullWidth
-                                variant="outlined"
-                                disabled
-                                slotProps={{ inputLabel: { shrink: true } }}
-                              />
-                            </div>
+                      {/* End Time */}
+                      <TextField
+                        label="End Time"
+                        type="time"
+                        value={formData.to_time || ""}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+
+                      {/* Event Description */}
+                      <div className="md:col-span-3">
+                        <TextField
+                          label="Event Description"
+                          value={formData.description}
+                          fullWidth
+                          variant="outlined"
+                          disabled
+                          slotProps={{ inputLabel: { shrink: true } }}
+                        />
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                       {/* Send Email */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Send Email
+                        </label>
                         <div className="flex gap-4">
                           <label className="flex items-center">
                             <input
                               type="radio"
-                              checked={formData.email_trigger_enabled === "true"}
+                              checked={
+                                formData.email_trigger_enabled === "true"
+                              }
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              style={{ accentColor: "#C72030" }}
                             />
-                            <span className="ml-2 text-sm text-gray-700">Yes</span>
+                            <span className="ml-2 text-sm text-gray-700">
+                              Yes
+                            </span>
                           </label>
                           <label className="flex items-center">
                             <input
                               type="radio"
-                              checked={formData.email_trigger_enabled === "false"}
+                              checked={
+                                formData.email_trigger_enabled === "false"
+                              }
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              style={{ accentColor: "#C72030" }}
                             />
-                            <span className="ml-2 text-sm text-gray-700">No</span>
+                            <span className="ml-2 text-sm text-gray-700">
+                              No
+                            </span>
                           </label>
                         </div>
                       </div>
 
                       {/* RSVP Action */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          RSVP Action
+                        </label>
                         <div className="flex gap-4">
                           <label className="flex items-center">
                             <input
@@ -3776,9 +4466,11 @@ const HiSocEventCreate = () => {
                               checked={formData.rsvp_action === "1"}
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              style={{ accentColor: "#C72030" }}
                             />
-                            <span className="ml-2 text-sm text-gray-700">Yes</span>
+                            <span className="ml-2 text-sm text-gray-700">
+                              Yes
+                            </span>
                           </label>
                           <label className="flex items-center">
                             <input
@@ -3786,15 +4478,19 @@ const HiSocEventCreate = () => {
                               checked={formData.rsvp_action === "0"}
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              style={{ accentColor: "#C72030" }}
                             />
-                            <span className="ml-2 text-sm text-gray-700">No</span>
+                            <span className="ml-2 text-sm text-gray-700">
+                              No
+                            </span>
                           </label>
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Mark as Important</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Mark as Important
+                        </label>
                         <div className="flex gap-4">
                           <label className="flex items-center">
                             <input
@@ -3802,19 +4498,26 @@ const HiSocEventCreate = () => {
                               checked={formData.is_important === "1"}
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              style={{ accentColor: "#C72030" }}
                             />
-                            <span className="ml-2 text-sm text-gray-700">Yes</span>
+                            <span className="ml-2 text-sm text-gray-700">
+                              Yes
+                            </span>
                           </label>
                           <label className="flex items-center">
                             <input
                               type="radio"
-                              checked={formData.is_important === "0" || !formData.is_important}
+                              checked={
+                                formData.is_important === "0" ||
+                                !formData.is_important
+                              }
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              style={{ accentColor: "#C72030" }}
                             />
-                            <span className="ml-2 text-sm text-gray-700">No</span>
+                            <span className="ml-2 text-sm text-gray-700">
+                              No
+                            </span>
                           </label>
                         </div>
                       </div>
@@ -3950,17 +4653,25 @@ const HiSocEventCreate = () => {
               {/* Visibility Card Preview */}
               <div className="mb-6">
                 <div className="ref-card bg-white overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                  <div
+                    className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
                       <Avatar
                         sx={{
                           width: 32,
                           height: 32,
-                          backgroundColor: '#E5E0D3',
-                          mr: 1.5
+                          backgroundColor: "#E5E0D3",
+                          mr: 1.5,
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+                        <SettingsOutlinedIcon
+                          sx={{
+                            fontSize: 18,
+                            color: "var(--color-primary, #da7756)",
+                          }}
+                        />
                       </Avatar>
                       Visibility
                     </h2>
@@ -3969,30 +4680,35 @@ const HiSocEventCreate = () => {
                       onClick={() => {
                         setIsPreviewMode(false);
                         setCurrentStep(0);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                       className="ref-edit-btn"
                     >
-                      <Edit className="w-4 h-4" /> <span>Edit</span> 
+                      <Edit className="w-4 h-4" /> <span>Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-4">
                     {/* Show on Home Page */}
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
-                        <p className="text-sm text-gray-500">Display this event on the home page</p>
+                        <h3 className="text-sm font-medium text-gray-900">
+                          Show on Home Page
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Display this event on the home page
+                        </p>
                       </div>
                       <Switch
                         checked={formData.show_on_home || false}
                         disabled
                         sx={{
-                          '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: '#C72030',
+                          "& .MuiSwitch-switchBase.Mui-checked": {
+                            color: "#C72030",
                           },
-                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: '#C72030',
-                          },
+                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                            {
+                              backgroundColor: "#C72030",
+                            },
                         }}
                       />
                     </div>
@@ -4063,17 +4779,25 @@ const HiSocEventCreate = () => {
               {/* Step 3: Invite Member / User Preview */}
               <div className="mb-6">
                 <div className="ref-card bg-white overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                  <div
+                    className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
                       <Avatar
                         sx={{
                           width: 32,
                           height: 32,
-                          backgroundColor: '#E5E0D3',
-                          mr: 1.5
+                          backgroundColor: "#E5E0D3",
+                          mr: 1.5,
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+                        <SettingsOutlinedIcon
+                          sx={{
+                            fontSize: 18,
+                            color: "var(--color-primary, #da7756)",
+                          }}
+                        />
                       </Avatar>
                       Invite Member / User
                     </h2>
@@ -4082,11 +4806,11 @@ const HiSocEventCreate = () => {
                       onClick={() => {
                         setIsPreviewMode(false);
                         setCurrentStep(2);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
-                     className="ref-edit-btn"
-                      >
-                        <Edit className="w-4 h-4" /> <span>Edit</span> 
+                      className="ref-edit-btn"
+                    >
+                      <Edit className="w-4 h-4" /> <span>Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
@@ -4124,7 +4848,9 @@ const HiSocEventCreate = () => {
 
                     {/* Share With Section */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Share With
+                      </label>
                       <div className="flex gap-6 mb-4">
                         <label className="flex items-center">
                           <input
@@ -4132,9 +4858,11 @@ const HiSocEventCreate = () => {
                             checked={formData.shared === "all"}
                             disabled
                             className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                            style={{ accentColor: '#C72030' }}
+                            style={{ accentColor: "#C72030" }}
                           />
-                          <span className="ml-2 text-sm text-gray-700">All</span>
+                          <span className="ml-2 text-sm text-gray-700">
+                            All
+                          </span>
                         </label>
                         <label className="flex items-center">
                           <input
@@ -4142,9 +4870,11 @@ const HiSocEventCreate = () => {
                             checked={formData.shared === "individual"}
                             disabled
                             className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                            style={{ accentColor: '#C72030' }}
+                            style={{ accentColor: "#C72030" }}
                           />
-                          <span className="ml-2 text-sm text-gray-700">Individuals</span>
+                          <span className="ml-2 text-sm text-gray-700">
+                            Individuals
+                          </span>
                         </label>
                         <label className="flex items-center">
                           <input
@@ -4152,30 +4882,50 @@ const HiSocEventCreate = () => {
                             checked={formData.shared === "group"}
                             disabled
                             className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                            style={{ accentColor: '#C72030' }}
+                            style={{ accentColor: "#C72030" }}
                           />
-                          <span className="ml-2 text-sm text-gray-700">Groups</span>
+                          <span className="ml-2 text-sm text-gray-700">
+                            Groups
+                          </span>
                         </label>
                       </div>
 
                       {formData.shared === "individual" && (
-                        <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                        <FormControl
+                          fullWidth
+                          variant="outlined"
+                          sx={{ "& .MuiInputBase-root": fieldStyles }}
+                        >
                           <InputLabel shrink>Event User ID</InputLabel>
                           <MuiSelect
                             multiple
-                            value={Array.isArray(formData.user_id) ? formData.user_id : []}
+                            value={
+                              Array.isArray(formData.user_id)
+                                ? formData.user_id
+                                : []
+                            }
                             label="Event User ID"
                             notched
                             displayEmpty
                             disabled
                             renderValue={(selected) => {
                               if (!selected || selected.length === 0) {
-                                return <span style={{ color: '#999' }}>Select Users</span>;
+                                return (
+                                  <span style={{ color: "#999" }}>
+                                    Select Users
+                                  </span>
+                                );
                               }
                               return selected
                                 .map((id) => {
-                                  const user = eventUserID.find((u) => u.id === id || u.id.toString() === id.toString());
-                                  return user ? `${user.firstname} ${user.lastname}` : id;
+                                  const user = eventUserID.find(
+                                    (u) =>
+                                      u.id === id ||
+                                      u.id.toString() === id.toString()
+                                  );
+                                  return user
+                                    ? `${user.firstname} ${user.lastname}`
+                                    : id;
                                 })
                                 .join(", ");
                             }}
@@ -4189,22 +4939,38 @@ const HiSocEventCreate = () => {
                         </FormControl>
                       )}
                       {formData.shared === "group" && (
-                        <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                        <FormControl
+                          fullWidth
+                          variant="outlined"
+                          sx={{ "& .MuiInputBase-root": fieldStyles }}
+                        >
                           <InputLabel shrink>Share with Groups</InputLabel>
                           <MuiSelect
                             multiple
-                            value={Array.isArray(formData.group_id) ? formData.group_id : []}
+                            value={
+                              Array.isArray(formData.group_id)
+                                ? formData.group_id
+                                : []
+                            }
                             label="Share with Groups"
                             notched
                             displayEmpty
                             disabled
                             renderValue={(selected) => {
                               if (!selected || selected.length === 0) {
-                                return <span style={{ color: '#999' }}>Select Groups</span>;
+                                return (
+                                  <span style={{ color: "#999" }}>
+                                    Select Groups
+                                  </span>
+                                );
                               }
                               return selected
                                 .map((id) => {
-                                  const group = groups.find((g) => g.id === id || g.id.toString() === id.toString());
+                                  const group = groups.find(
+                                    (g) =>
+                                      g.id === id ||
+                                      g.id.toString() === id.toString()
+                                  );
                                   return group ? group.name : id;
                                 })
                                 .join(", ");
@@ -4223,7 +4989,9 @@ const HiSocEventCreate = () => {
                     {/* CSV Files */}
                     {csvFiles.length > 0 && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Uploaded CSV Files</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Uploaded CSV Files
+                        </label>
                         <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg p-6 text-center">
                           <p className="text-sm text-gray-600">
                             {csvFiles.length} file(s) uploaded
@@ -4238,17 +5006,25 @@ const HiSocEventCreate = () => {
               {/* Step 2: Event Related Images Preview */}
               <div className="mb-6">
                 <div className="ref-card bg-white overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                  <div
+                    className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
                       <Avatar
                         sx={{
                           width: 32,
                           height: 32,
-                          backgroundColor: '#E5E0D3',
-                          mr: 1.5
+                          backgroundColor: "#E5E0D3",
+                          mr: 1.5,
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: 'var(--color-primary, #da7756)' }} />
+                        <SettingsOutlinedIcon
+                          sx={{
+                            fontSize: 18,
+                            color: "var(--color-primary, #da7756)",
+                          }}
+                        />
                       </Avatar>
                       Event Related Images
                     </h2>
@@ -4257,43 +5033,80 @@ const HiSocEventCreate = () => {
                       onClick={() => {
                         setIsPreviewMode(false);
                         setCurrentStep(1);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                       className="ref-edit-btn"
-                      >
-                        <Edit className="w-4 h-4" /> <span>Edit</span> 
+                    >
+                      <Edit className="w-4 h-4" /> <span>Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
                     {/* Cover Images */}
                     <div>
-                      <h5 className="text-base font-semibold mb-4">Event Cover Image</h5>
+                      <h5 className="text-base font-semibold mb-4">
+                        Event Cover Image
+                      </h5>
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <Table className="border-separate">
                           <TableHeader>
-                            <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
-                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</TableHead>
-                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</TableHead>
-                              <TableHead className="font-semibold text-gray-900 py-3 px-4" style={{ borderColor: "#fff" }}>Ratio</TableHead>
+                            <TableRow
+                              className="hover:bg-gray-50"
+                              style={{ backgroundColor: "#e6e2d8" }}
+                            >
+                              <TableHead
+                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                style={{ borderColor: "#fff" }}
+                              >
+                                File Name
+                              </TableHead>
+                              <TableHead
+                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                style={{ borderColor: "#fff" }}
+                              >
+                                Preview
+                              </TableHead>
+                              <TableHead
+                                className="font-semibold text-gray-900 py-3 px-4"
+                                style={{ borderColor: "#fff" }}
+                              >
+                                Ratio
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {coverImageRatios.flatMap(({ key, label }) => {
-                              const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
+                              const files = Array.isArray(formData[key])
+                                ? formData[key]
+                                : formData[key]
+                                  ? [formData[key]]
+                                  : [];
                               if (files.length === 0) return [];
 
                               return files.map((file, index) => (
-                                <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50 transition-colors">
-                                  <TableCell className="py-3 px-4 font-medium">{file.name || file.document_file_name || `Image ${index + 1}`}</TableCell>
+                                <TableRow
+                                  key={`${key}-${file.id || index}`}
+                                  className="hover:bg-gray-50 transition-colors"
+                                >
+                                  <TableCell className="py-3 px-4 font-medium">
+                                    {file.name ||
+                                      file.document_file_name ||
+                                      `Image ${index + 1}`}
+                                  </TableCell>
                                   <TableCell className="py-3 px-4">
                                     <img
-                                      style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                      style={{
+                                        maxWidth: 100,
+                                        maxHeight: 100,
+                                        objectFit: "cover",
+                                      }}
                                       className="rounded border border-gray-200"
                                       src={file.preview || file.document_url}
                                       alt={file.name}
                                     />
                                   </TableCell>
-                                  <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
+                                  <TableCell className="py-3 px-4">
+                                    {file.ratio || label}
+                                  </TableCell>
                                 </TableRow>
                               ));
                             })}
@@ -4304,39 +5117,85 @@ const HiSocEventCreate = () => {
 
                     {/* Event Attachments */}
                     <div>
-                      <h5 className="text-base font-semibold mb-4">Event Attachment</h5>
+                      <h5 className="text-base font-semibold mb-4">
+                        Event Attachment
+                      </h5>
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <Table className="border-separate">
                           <TableHeader>
-                            <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
-                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</TableHead>
-                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</TableHead>
-                              <TableHead className="font-semibold text-gray-900 py-3 px-4" style={{ borderColor: "#fff" }}>Ratio</TableHead>
+                            <TableRow
+                              className="hover:bg-gray-50"
+                              style={{ backgroundColor: "#e6e2d8" }}
+                            >
+                              <TableHead
+                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                style={{ borderColor: "#fff" }}
+                              >
+                                File Name
+                              </TableHead>
+                              <TableHead
+                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                style={{ borderColor: "#fff" }}
+                              >
+                                Preview
+                              </TableHead>
+                              <TableHead
+                                className="font-semibold text-gray-900 py-3 px-4"
+                                style={{ borderColor: "#fff" }}
+                              >
+                                Ratio
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {eventImageRatios.map(({ key, label }) =>
                               (formData[key] || []).length > 0
                                 ? formData[key].map((file, index) => {
-                                    const isVideo = file.type === "video" || (file.file && file.file.type.startsWith("video/"));
+                                    const isVideo =
+                                      file.type === "video" ||
+                                      (file.file &&
+                                        file.file.type.startsWith("video/"));
                                     return (
-                                      <TableRow key={`${key}-${file.id}`} className="hover:bg-gray-50 transition-colors">
-                                        <TableCell className="py-3 px-4 font-medium">{file.name || "Unnamed File"}</TableCell>
+                                      <TableRow
+                                        key={`${key}-${file.id}`}
+                                        className="hover:bg-gray-50 transition-colors"
+                                      >
+                                        <TableCell className="py-3 px-4 font-medium">
+                                          {file.name || "Unnamed File"}
+                                        </TableCell>
                                         <TableCell className="py-3 px-4">
                                           {isVideo ? (
-                                            <video controls style={{ maxWidth: 100, maxHeight: 100 }} className="rounded border border-gray-200">
-                                              <source src={file.preview} type={file.file?.type || "video/mp4"} />
+                                            <video
+                                              controls
+                                              style={{
+                                                maxWidth: 100,
+                                                maxHeight: 100,
+                                              }}
+                                              className="rounded border border-gray-200"
+                                            >
+                                              <source
+                                                src={file.preview}
+                                                type={
+                                                  file.file?.type || "video/mp4"
+                                                }
+                                              />
                                             </video>
                                           ) : (
                                             <img
-                                              style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                              style={{
+                                                maxWidth: 100,
+                                                maxHeight: 100,
+                                                objectFit: "cover",
+                                              }}
                                               className="rounded border border-gray-200"
                                               src={file.preview}
                                               alt={file.name}
                                             />
                                           )}
                                         </TableCell>
-                                        <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
+                                        <TableCell className="py-3 px-4">
+                                          {file.ratio || label}
+                                        </TableCell>
                                       </TableRow>
                                     );
                                   })
@@ -4549,40 +5408,42 @@ const HiSocEventCreate = () => {
                 disabled={loading}
                 className="btn-primary h-9 px-4 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Submitting...' : 'Submit Event'}
+                {loading ? "Submitting..." : "Submit Event"}
               </button>
             </div>
           </>
         )}
       </form>
 
-        {/* Modals */}
-        {showCoverUploader && (
-          <ProjectBannerUpload
-            onClose={() => setShowCoverUploader(false)}
-            includeInvalidRatios={false}
-            selectedRatioProp={selectedCoverRatios}
-            showAsModal={true}
-            label={coverImageLabel}
-            description={dynamicCoverDescription}
-            onContinue={(validImages) => handleCroppedImages(validImages, "cover")}
-          />
-        )}
+      {/* Modals */}
+      {showCoverUploader && (
+        <ProjectBannerUpload
+          onClose={() => setShowCoverUploader(false)}
+          includeInvalidRatios={false}
+          selectedRatioProp={selectedCoverRatios}
+          showAsModal={true}
+          label={coverImageLabel}
+          description={dynamicCoverDescription}
+          onContinue={(validImages) =>
+            handleCroppedImages(validImages, "cover")
+          }
+        />
+      )}
 
-        {showEventUploader && (
-          <ProjectImageVideoUpload
-            onClose={() => setShowEventUploader(false)}
-            includeInvalidRatios={false}
-            selectedRatioProp={selectedEventRatios}
-            showAsModal={true}
-            label={eventImageLabel}
-            description={dynamicEventDescription}
-            onContinue={(validImages, videoFiles) =>
-              handleEventCroppedImages(validImages, videoFiles, "event")
-            }
-            allowVideos={true}
-          />
-        )}
+      {showEventUploader && (
+        <ProjectImageVideoUpload
+          onClose={() => setShowEventUploader(false)}
+          includeInvalidRatios={false}
+          selectedRatioProp={selectedEventRatios}
+          showAsModal={true}
+          label={eventImageLabel}
+          description={dynamicEventDescription}
+          onContinue={(validImages, videoFiles) =>
+            handleEventCroppedImages(validImages, videoFiles, "event")
+          }
+          allowVideos={true}
+        />
+      )}
     </div>
   );
 };
