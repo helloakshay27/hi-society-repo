@@ -1,4 +1,4 @@
-/* ===========================================
+﻿/* ===========================================
    LOCKATED BRAND THEME SYSTEM
    Global theming - Edit ONLY this file for color changes
    Last Updated: April 2026
@@ -11,94 +11,115 @@
 :root {
   /* =====================
      PRIMARY COLORS
+     ΓÇö updated to match the "asset-management" reference mockup's palette
      ===================== */
-  --color-primary: #da7756;
-  --color-primary-rgb: 218, 119, 86;
-  --color-primary-hover: rgba(218, 119, 86, 0.85);
-  --color-primary-light: rgba(218, 119, 86, 0.15);
-  --color-primary-selected: rgba(218, 119, 86, 0.08);
+  --color-primary: #1a1a18;
+  --color-primary-rgb: 26, 26, 24;
+  --color-primary-hover: #12100e; /* wireframe .btn.p:hover */
+  --color-primary-light: rgba(26, 26, 24, 0.08);
+  --color-primary-selected: rgba(26, 26, 24, 0.05);
+
+  /* Accent (coral) ΓÇö links, count badges, highlights. Separate from the
+     primary ink so buttons and accents can be changed independently. */
+  /* Button corner radius ΓÇö wireframe .btn { border-radius: 8px } */
+  --radius-button: 8px;
+  /* Form-field corner radius ΓÇö wireframe .inp { border-radius: 12px } */
+  --radius-input: 12px;
+  /* Focus state of form fields: softened ink border + faint halo (one place to tune) */
+  --color-input-focus-border: var(--color-primary); /* 1px ink border */
+  --color-input-focus-ring: transparent; /* rounded halo removed; focus = 1px ink border only */
+
+  --color-accent: #d97757;
+  --color-accent-rgb: 217, 119, 87;
 
   /* Background & Text */
-  --color-bg: #f6f4ee;
-  --color-bg-rgb: 246, 244, 238;
-  --color-text: #2c2c2c;
-  --color-text-rgb: 44, 44, 44;
-  --color-text-light: #888780;
+  --color-bg: #fdfdfb;
+  --color-bg-rgb: 253, 253, 251;
+  --color-text: #1a1a18;
+  --color-text-rgb: 26, 26, 24;
+  --color-text-light: rgba(26, 26, 24, 0.68);
+  --color-surface: #f5f4f0;
+  --color-hover: #f7f6f2;
+  --color-line: rgba(26, 26, 24, 0.08);
+  --color-ink-68: rgba(26, 26, 24, 0.68);
+  --color-ink-48: rgba(26, 26, 24, 0.48);
+  --color-ink-30: rgba(26, 26, 24, 0.3);
 
   /* =====================
      SECONDARY COLORS
      ===================== */
-  /* Green Olive */
-  --color-secondary-green: #798c5e;
-  --color-secondary-green-rgb: 121, 140, 94;
-  --color-secondary-green-light: rgba(121, 140, 94, 0.15);
-  --color-secondary-green-bg: rgba(121, 140, 94, 0.3);
+  /* Green (mapped to the mockup's solid "growth" green) */
+  --color-secondary-green: #12a150;
+  --color-secondary-green-rgb: 18, 161, 80;
+  --color-secondary-green-light: #e0f7ea;
+  --color-secondary-green-bg: #e0f7ea;
 
-  /* Purple/Lavender */
-  --color-secondary-purple: #cecbf6;
-  --color-secondary-purple-rgb: 206, 203, 246;
-  --color-secondary-purple-light: rgba(206, 203, 246, 0.3);
-  --color-secondary-purple-bg: rgba(206, 203, 246, 0.3);
+  /* Purple (mapped to the mockup's solid "purple" accent + its pale lavender tile tint) */
+  --color-secondary-purple: #5a4be0;
+  --color-secondary-purple-rgb: 90, 75, 224;
+  --color-secondary-purple-light: #eeebff;
+  --color-secondary-purple-bg: #eeebff;
 
-  /* Teal/Mint */
-  --color-secondary-teal: #9ec8ba;
-  --color-secondary-teal-rgb: 158, 200, 186;
-  --color-secondary-teal-light: rgba(158, 200, 186, 0.3);
-  --color-secondary-teal-bg: rgba(158, 200, 186, 0.3);
+  /* Teal ΓÇö no direct teal in the mockup; mapped to its "info" blue solid + pale blue tile tint */
+  --color-secondary-teal: #2f6fe0;
+  --color-secondary-teal-rgb: 47, 111, 224;
+  --color-secondary-teal-light: #dbe7ff;
+  --color-secondary-teal-bg: #dbe7ff;
 
   /* =====================
      TERTIARY / SEMANTIC COLORS
      ===================== */
-  --color-info: #6b9bcc;
-  --color-info-rgb: 107, 155, 204;
-  --color-disabled: #d3d1c7;
-  --color-muted: #d3d1c7;
-  --color-tags: #cecbf6;
-  --color-danger: #e49191;
-  --color-danger-light: #f8dada;
-  --color-warning: #edc488;
-  --color-warning-light: #f8e4c7;
-  --color-growth: rgba(16, 140, 114, 0.3);
-  --color-growth-solid: #108c72;
+  --color-info: #2f6fe0;
+  --color-info-rgb: 47, 111, 224;
+  --color-disabled: rgba(26, 26, 24, 0.3);
+  --color-muted: rgba(26, 26, 24, 0.3);
+  --color-tags: #eeebff;
+  --color-danger: #e5484d;
+  --color-danger-light: #fbdcdc;
+  --color-warning: #f2a312;
+  --color-warning-light: #fff2d6;
+  --color-growth: rgba(18, 161, 80, 0.3);
+  --color-growth-solid: #12a150;
 
   /* =====================
      STATUS COLORS
      ===================== */
-  --color-success: #89f7e7;
-  --color-success-solid: #798c5e;
-  --color-success-bg: rgba(121, 140, 94, 0.15);
-  --color-error: #e7848e;
-  --color-error-bg: rgba(231, 132, 142, 0.15);
+  --color-success: #e0f7ea;
+  --color-success-solid: #12a150;
+  --color-success-bg: rgba(18, 161, 80, 0.15);
+  --color-error: #a32126;
+  --color-error-bg: rgba(229, 72, 77, 0.12);
   --color-exception: #aab9c5;
 
   /* =====================
      SURFACE & BORDER COLORS
      ===================== */
-  --color-card-border: #c4b89d;
-  --color-card-bg: #f6f4ee;
+  --color-card-border: rgba(26, 26, 24, 0.09);
+  --color-card-bg: #ffffff;
   --color-card-white: #ffffff;
-  --color-border-subtle: #d5dbdb;
-  --color-divider: #e5e5e5;
+  --color-border-subtle: rgba(26, 26, 24, 0.08);
+  --color-divider: #ebe9e2;
+  --pulse-card-border: #ebe9e2;
 
-  /* Sidebar */
+  /* Sidebar ΓÇö no counterpart in the mockup (its sidebar uses plain canvas bg), left unchanged */
   --color-sidebar: #c4b89d;
   --color-sidebar-hover: rgba(196, 184, 157, 0.5);
 
   /* =====================
      GRADIENT TOKENS
      ===================== */
-  --gradient-highlight: radial-gradient(circle, #f6f4ee 0%, #2c2c2c 100%);
-  --gradient-primary: linear-gradient(135deg, #da7756 0%, #c4b89d 100%);
-  --gradient-card: linear-gradient(180deg, #ffffff 0%, #f6f4ee 100%);
+  --gradient-highlight: radial-gradient(circle, #fdfdfb 0%, #1a1a18 100%);
+  --gradient-primary: linear-gradient(135deg, var(--color-accent) 0%, #efede6 100%);
+  --gradient-card: linear-gradient(180deg, #ffffff 0%, #fdfdfb 100%);
 
   /* =====================
      SHADOW TOKENS
      ===================== */
-  --shadow-sm: 0px 1px 2px 0px rgba(44, 44, 44, 0.06);
-  --shadow-md: 0px 4px 8px 0px rgba(44, 44, 44, 0.1);
-  --shadow-lg: 0px 4px 16px 0px rgba(44, 44, 44, 0.12);
-  --shadow-xl: 0px 8px 24px 0px rgba(44, 44, 44, 0.15);
-  --shadow-card: 0px 2px 8px rgba(196, 184, 157, 0.15);
+  --shadow-sm: 0px 1px 2px 0px rgba(26, 26, 24, 0.06);
+  --shadow-md: 0px 4px 8px 0px rgba(26, 26, 24, 0.1);
+  --shadow-lg: 0px 4px 16px 0px rgba(26, 26, 24, 0.12);
+  --shadow-xl: 0px 8px 24px 0px rgba(26, 26, 24, 0.15);
+  --shadow-card: 0px 2px 8px rgba(26, 26, 24, 0.08);
 
   /* =====================
      TYPOGRAPHY
@@ -166,6 +187,54 @@
   --z-modal: 1050;
   --z-popover: 1060;
   --z-tooltip: 1070;
+}
+
+/* Loyalty dashboard aliases keep its utility-based styles on the shared theme. */
+.loyalty-dashboard-theme {
+  color: var(--color-text);
+  font-family: var(--font-family);
+  --loyalty-bg: #fdfdfb;
+  --loyalty-surface: #f5f4f0;
+  --loyalty-text: #1a1a18;
+  --loyalty-subtle: #666666;
+  --loyalty-muted: rgba(0, 0, 0, 0.48);
+  --loyalty-accent: #1a1a18;
+  --loyalty-accent-rgb: 26, 26, 24;
+  --loyalty-accent-hover: #12100e;
+  --loyalty-green: #666666;
+  --loyalty-success: #666666;
+  --loyalty-success-light: #f5f4f0;
+  --loyalty-warning: #1a1a18;
+  --loyalty-warning-text: #666666;
+  --loyalty-danger: #666666;
+  --loyalty-danger-text: #1a1a18;
+  --loyalty-info: #666666;
+  --loyalty-info-light: #f5f4f0;
+  --loyalty-purple: #666666;
+  --loyalty-purple-light: #f5f4f0;
+  --loyalty-border: #e5e5e5;
+  --loyalty-divider: #ebe9e2;
+  --loyalty-surface-alt: #f5f4f0;
+  --loyalty-surface-card: #ffffff;
+  --loyalty-warning-bg: #f5f4f0;
+  --loyalty-warning-border: #ebe9e2;
+  --loyalty-danger-bg: #f5f4f0;
+  --loyalty-success-tint: #f5f4f0;
+  --loyalty-success-bg: #f5f4f0;
+  --loyalty-success-border: #ebe9e2;
+  --loyalty-accent-tint: #f5f4f0;
+  --loyalty-accent-bg: #f5f4f0;
+  --loyalty-danger-tint: #f5f4f0;
+  --loyalty-danger-border: #ebe9e2;
+  --loyalty-danger-border-strong: #ebe9e2;
+  --loyalty-warning-tint: #f5f4f0;
+  --loyalty-warning-bg-soft: #f5f4f0;
+  --loyalty-warning-border-soft: #ebe9e2;
+  --loyalty-shadow-accent: 0 2px 8px rgba(26, 26, 24, 0.08);
+}
+
+.loyalty-dashboard-theme .bg-white {
+  background-color: var(--color-card-bg);
 }
 
 /* ===========================================
@@ -314,6 +383,19 @@ header [class*="DropdownMenuItem"].text-\[\#C72030\],
   background-color: var(--color-primary-hover) !important;
 }
 
+/* Cancel-style buttons (gray bg + gray text) ΓÇö white bg, black text & border */
+button.bg-gray-200.text-gray-700,
+button[class*="bg-gray-200"][class*="text-gray-700"] {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+
+button.bg-gray-200.text-gray-700:hover,
+button[class*="bg-gray-200"][class*="text-gray-700"]:hover {
+  background-color: #f3f4f6 !important;
+}
+
 /* ===========================================
    CARD OVERRIDES - Only brand-specific classes
    =========================================== */
@@ -426,6 +508,14 @@ select:focus {
   color: var(--color-primary) !important;
 }
 
+/* MUI Radio - unchecked/base state. Several pages set inline
+   sx={{ color: '#C72030', ... }} for the *unchecked* ring specifically, which
+   the checked-only rule below never touches ΓÇö force the base color too. */
+.MuiRadio-root,
+[class*="MuiRadio-root"] {
+  color: var(--color-primary) !important;
+}
+
 /* MUI Radio with any checked state - override inline sx styles */
 .MuiRadio-root.Mui-checked,
 [class*="MuiRadio-root"].Mui-checked {
@@ -438,15 +528,171 @@ select:focus {
   color: inherit !important;
 }
 
-/* MUI Checkbox with any checked state */
+/* MUI Checkbox - unchecked/base state. Several pages set inline
+   sx={{ color: '#C72030', ... }} for the *unchecked* ring specifically, which
+   the checked-only rule below never touches ΓÇö force the base color too. */
+.MuiCheckbox-root,
+[class*="MuiCheckbox-root"] {
+  color: var(--color-primary) !important;
+}
+
+/* MUI Checkbox with any checked state - override inline sx styles */
 .MuiCheckbox-root.Mui-checked,
 [class*="MuiCheckbox-root"].Mui-checked {
   color: var(--color-primary) !important;
 }
 
+/* MUI Checkbox SVG icon */
+.MuiCheckbox-root svg,
+[class*="MuiCheckbox-root"] svg {
+  color: inherit !important;
+}
+
 /* MUI Switches */
-[class*="MuiSwitch-colorPrimary"].Mui-checked + [class*="MuiSwitch-track"] {
-  background-color: var(--color-primary) !important;
+[class*="MuiSwitch-colorPrimary"].Mui-checked + [class*="MuiSwitch-track"],
+html body [class*="MuiSwitch-switchBase"].Mui-checked + [class*="MuiSwitch-track"] {
+  background-color: #1a1a18 !important;
+  opacity: 1 !important;
+}
+
+html body [class*="MuiSwitch-switchBase"].Mui-checked {
+  color: #fff !important;
+}
+
+html body [class*="MuiSwitch-switchBase"]:not(.Mui-checked)
+  + [class*="MuiSwitch-track"] {
+  background-color: #d1d5db !important;
+  opacity: 1 !important;
+}
+
+/* Project Details Edit page toggles (Enable Enquiry / Is Sold / Show on Home):
+   thumb circle must be black ΓÇö the page sx sets #C72030 and colorPatch.ts
+   repaints the checked thumb brand orange. Scoped to the page by its
+   "EDIT PROJECT" header (root div > div.mb-8 > h1). */
+html body #root div.p-6.bg-gray-50:has(> div.mb-8 > h1)
+  .MuiSwitch-root
+  .MuiSwitch-switchBase.Mui-checked
+  .MuiSwitch-thumb {
+  color: #000000 !important;
+  background-color: #000000 !important;
+}
+
+/* Event create pages (EventCreate + its HiSoc/Loyalty/Communication clones,
+   which share the same header: root div > div.mb-6 > "Go back" button):
+   checked thumb circle must be black instead of #C72030 / brand orange. */
+html body #root div.p-6.bg-gray-50.min-h-screen:has(> div.mb-6 > button[aria-label="Go back"])
+  .MuiSwitch-root
+  .MuiSwitch-switchBase.Mui-checked
+  .MuiSwitch-thumb {
+  color: #000000 !important;
+  background-color: #000000 !important;
+}
+
+/* Event edit stepper: only the current and completed step boxes are black. */
+html body #root div.p-6.bg-gray-50.min-h-screen:has(> form.space-y-6)
+  > .MuiBox-root
+  > .MuiBox-root
+  > .MuiBox-root:first-child
+  > .MuiBox-root
+  > .MuiBox-root {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Event edit page checked toggles should use a black thumb as well as track. */
+html body #root div.p-6.bg-gray-50.min-h-screen:has(> form.space-y-6)
+  .MuiSwitch-root
+  .MuiSwitch-switchBase.Mui-checked
+  .MuiSwitch-thumb {
+  color: #000000 !important;
+  background-color: #000000 !important;
+}
+
+/* Project Details Create page toggles (Enable Enquiry / Is Sold / Show on Home):
+   checked thumb circle must be black ΓÇö the page sx sets #C72030 and
+   colorPatch.ts repaints the checked thumb brand orange. Scoped by the page's
+   unique root class .project-details-create-page. */
+html body .project-details-create-page .MuiSwitch-root
+  .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb {
+  color: #000000 !important;
+  background-color: #000000 !important;
+}
+
+/* Radix / custom switches (any checked switch) */
+html body button[role="switch"][data-state="checked"],
+html body [role="switch"][aria-checked="true"] {
+  background-color: #1a1a18 !important;
+}
+
+html body [role="switch"] {
+  border-color: transparent !important;
+}
+
+html body [role="switch"]:not(:focus-visible) {
+  box-shadow: none !important;
+}
+
+html body button[role="switch"][data-state="unchecked"],
+html body [role="switch"][aria-checked="false"],
+html body [role="switch"]:disabled,
+html body [role="switch"][aria-disabled="true"] {
+  background-color: #d1d5db !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+html body [role="switch"][aria-checked="false"]:focus-visible,
+html body [role="switch"][data-state="unchecked"]:focus-visible,
+html body [role="switch"]:disabled:focus-visible,
+html body [role="switch"][aria-disabled="true"]:focus-visible {
+  outline: 2px solid #9ca3af !important;
+  outline-offset: 2px;
+}
+
+/* Bootstrap-style switches should not inherit the legacy red/black checkbox styles. */
+html body .form-switch .form-check-input,
+html body .form-check-input.on-off-toggler {
+  border-color: transparent !important;
+}
+
+html body .form-switch .form-check-input:not(:checked),
+html body .form-check-input.on-off-toggler:not(:checked),
+html body .form-switch .form-check-input:disabled,
+html body .form-check-input.on-off-toggler:disabled {
+  background-color: #d1d5db !important;
+}
+
+html body input[type="checkbox"],
+html body input[type="radio"] {
+  accent-color: #1a1a18 !important;
+}
+
+/* Custom pill toggles (button.rounded-full with brand bg) */
+html body button[class*="rounded-full"][class*="h-6"][class*="w-11"][class*="bg-[#C72030]"],
+html body button[class*="rounded-full"][class*="h-6"][class*="w-11"][class*="bg-[#DA7756]"],
+html body button[class*="rounded-full"][class*="h-6"][class*="w-11"][class*="bg-[#da7756]"],
+html body button[class*="rounded-full"][class*="h-5"][class*="w-9"][class*="bg-[#C72030]"],
+html body button[class*="rounded-full"][class*="h-5"][class*="w-9"][class*="bg-[#DA7756]"],
+html body button[class*="rounded-full"][class*="h-6"][class*="w-11"][class*="bg-[#C72030]"]:hover,
+html body button[class*="rounded-full"][class*="h-6"][class*="w-11"][class*="bg-[#DA7756]"]:hover,
+html body button[class*="rounded-full"][class*="h-5"][class*="w-9"][class*="bg-[#C72030]"]:hover {
+  background-color: #1a1a18 !important;
+  border-color: #1a1a18 !important;
+}
+
+/* Normalize legacy pill switches to the shared 36x20 switch dimensions. */
+html body button[class*="rounded-full"][class*="h-6"][class*="w-11"] {
+  width: 36px !important;
+  height: 20px !important;
+  min-width: 36px !important;
+  min-height: 20px !important;
+}
+
+html body button[class*="rounded-full"][class*="h-6"][class*="w-11"]
+  > [class*="translate-x-6"] {
+  transform: translateX(16px) !important;
 }
 
 /* MUI Tabs */
@@ -464,6 +710,19 @@ select:focus {
   border-color: var(--color-primary) !important;
 }
 
+/* MUI Loaders ΓÇö CircularProgress/LinearProgress default to theme blue; force brand orange everywhere */
+[class*="MuiCircularProgress-root"] {
+  color: var(--color-primary) !important;
+}
+
+[class*="MuiLinearProgress-root"] {
+  background-color: var(--color-primary-light) !important;
+}
+
+[class*="MuiLinearProgress-bar"] {
+  background-color: var(--color-primary) !important;
+}
+
 [class*="MuiInputLabel-root"].Mui-focused {
   color: var(--color-primary) !important;
 }
@@ -475,7 +734,7 @@ select:focus {
 
 [class*="MuiChip-outlinedPrimary"] {
   border-color: var(--color-primary) !important;
-   color: #ffffff !important;
+  color: var(--color-primary) !important;
 }
 
 /* ===========================================
@@ -489,7 +748,7 @@ select:focus {
   background-color: var(--color-primary) !important;
 }
 
-/* Native HTML checkbox & radio — accent-color drives the browser-native tint.
+/* Native HTML checkbox & radio ΓÇö accent-color drives the browser-native tint.
    CSS !important beats non-!important inline style="accentColor:#C72030" */
 input[type="checkbox"],
 input[type="radio"] {
@@ -510,6 +769,7 @@ input[type="radio"] {
 [role="radio"] {
   border-color: var(--color-primary) !important;
   color: var(--color-primary) !important;
+  border-radius: 9999px !important;
 }
 [role="radio"][data-state="checked"] {
   border-color: var(--color-primary) !important;
@@ -524,16 +784,20 @@ input[type="radio"] {
   border-color: var(--color-primary) !important;
 }
 
-/* Radio inner indicator circle fill */
+/* Radio inner indicator circle fill ΓÇö force a true circle regardless of the
+   indicator's own border-radius classes, so it never renders as a square */
 [role="radio"] span,
-[role="radio"] > span {
+[role="radio"] > span,
+[role="radio"] div {
   background-color: var(--color-primary) !important;
+  border-radius: 9999px !important;
 }
 [role="radio"] svg,
 [role="radio"] svg[class*="fill-[#C72030]"],
 [role="radio"] svg[class*="text-[#C72030]"] {
   fill: var(--color-primary) !important;
   color: var(--color-primary) !important;
+  border-radius: 9999px !important;
 }
 
 /* Flag / bookmark SVG icons using Tailwind red-500 as brand action colour */
@@ -736,6 +1000,12 @@ svg.text-red-500.fill-red-500 {
   background-color: rgba(107, 155, 204, 0.15) !important;
 }
 
+/* White text for solid status pills (e.g. Active/Inactive badges on red/green bg) */
+.bg-red-500 span,
+.bg-red-500 > span {
+  color: #ffffff !important;
+}
+
 /* ===========================================
    ANIMATION UTILITIES
    =========================================== */
@@ -809,7 +1079,7 @@ svg.text-red-500.fill-red-500 {
 /* Hover bg with opacity - rgba version */
 [class*="hover:bg-[#C72030]/10"]:hover,
 .hover\:bg-\[\#C72030\]\/10:hover {
-  background-color: rgba(218, 119, 86, 0.1) !important;
+  background-color: rgba(var(--color-accent-rgb), 0.1) !important;
 }
 
 .hover\:text-\[\#C72030\]:hover,
@@ -948,6 +1218,187 @@ button.text-\[\#C72030\] svg {
 }
 
 /* ===========================================
+   BUTTON PURPLE COLOR OVERRIDES
+   Legacy Tailwind purple- and violet- utility classes (bg-purple-500/600/700/800,
+   bg-violet-600, etc.) applied directly on buttons ΓÇö render as brand primary
+   instead. [class*="bg-purple-"] substring-matches any shade without
+   enumerating each one.
+   =========================================== */
+
+button[class*="bg-purple-"],
+[type="button"][class*="bg-purple-"],
+[type="submit"][class*="bg-purple-"],
+a[class*="bg-purple-"],
+.btn[class*="bg-purple-"],
+button[class*="bg-violet-"],
+[type="button"][class*="bg-violet-"],
+[type="submit"][class*="bg-violet-"],
+a[class*="bg-violet-"],
+.btn[class*="bg-violet-"] {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+/* Icons inside purple-background buttons should be white */
+button[class*="bg-purple-"] svg,
+button[class*="bg-purple-"] .lucide,
+button[class*="bg-violet-"] svg,
+button[class*="bg-violet-"] .lucide {
+  color: white !important;
+  stroke: white !important;
+}
+
+button[class*="hover:bg-purple-"]:hover,
+[type="button"][class*="hover:bg-purple-"]:hover,
+[type="submit"][class*="hover:bg-purple-"]:hover,
+a[class*="hover:bg-purple-"]:hover,
+.btn[class*="hover:bg-purple-"]:hover,
+button[class*="hover:bg-violet-"]:hover,
+[type="button"][class*="hover:bg-violet-"]:hover,
+[type="submit"][class*="hover:bg-violet-"]:hover,
+a[class*="hover:bg-violet-"]:hover,
+.btn[class*="hover:bg-violet-"]:hover {
+  background-color: var(--color-primary-hover) !important;
+}
+
+/* Outline/text buttons with purple text or border */
+button[class*="text-purple-"],
+a[class*="text-purple-"],
+.btn[class*="text-purple-"],
+button[class*="border-purple-"],
+a[class*="border-purple-"],
+button[class*="text-violet-"],
+a[class*="text-violet-"],
+.btn[class*="text-violet-"],
+button[class*="border-violet-"],
+a[class*="border-violet-"] {
+  color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+button[class*="text-purple-"] svg,
+button[class*="border-purple-"] svg,
+button[class*="text-violet-"] svg,
+button[class*="border-violet-"] svg {
+  color: var(--color-primary) !important;
+}
+
+button[class*="hover:text-purple-"]:hover,
+a[class*="hover:text-purple-"]:hover,
+button[class*="hover:text-violet-"]:hover,
+a[class*="hover:text-violet-"]:hover {
+  color: var(--color-primary-hover) !important;
+}
+
+/* ===========================================
+   BUTTON ARBITRARY-HEX PURPLE OVERRIDES
+   One-off hardcoded purple hexes (Tailwind bg-[#......] arbitrary values)
+   scattered across dozens of Add/Edit/List pages ΓÇö every distinct shade
+   found in the codebase is enumerated here and mapped to brand primary.
+   Do not add a new one-off purple hex; migrate the component to bg-brand instead.
+   =========================================== */
+
+button[class*="bg-[#8B4B8C]"],
+[type="button"][class*="bg-[#8B4B8C]"],
+[type="submit"][class*="bg-[#8B4B8C]"],
+a[class*="bg-[#8B4B8C]"],
+button[class*="bg-[#8b4b8c]"],
+a[class*="bg-[#8b4b8c]"],
+button[class*="bg-[#8B5CF6]"],
+a[class*="bg-[#8B5CF6]"],
+button[class*="bg-[#532D5F]"],
+a[class*="bg-[#532D5F]"],
+button[class*="bg-[#5B2D66]"],
+a[class*="bg-[#5B2D66]"],
+button[class*="bg-[#6B2C65]"],
+a[class*="bg-[#6B2C65]"],
+button[class*="bg-[#6B2C91]"],
+a[class*="bg-[#6B2C91]"],
+button[class*="bg-[#6B3FA0]"],
+a[class*="bg-[#6B3FA0]"],
+button[class*="bg-[#8B4A9C]"],
+a[class*="bg-[#8B4A9C]"],
+button[class*="bg-[#8B4B6B]"],
+a[class*="bg-[#8B4B6B]"],
+button[class*="bg-[#8B5A99]"],
+a[class*="bg-[#8B5A99]"],
+button[class*="bg-[#6B2245]"],
+a[class*="bg-[#6B2245]"],
+button[class*="bg-[#4B003F]"],
+a[class*="bg-[#4B003F]"],
+button[class*="bg-[#C1A5FF]"],
+a[class*="bg-[#C1A5FF]"] {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+button[class*="bg-[#8B4B8C]"] svg,
+button[class*="bg-[#8B5CF6]"] svg,
+button[class*="bg-[#532D5F]"] svg,
+button[class*="bg-[#5B2D66]"] svg,
+button[class*="bg-[#6B2C65]"] svg,
+button[class*="bg-[#6B2C91]"] svg,
+button[class*="bg-[#6B3FA0]"] svg,
+button[class*="bg-[#8B4A9C]"] svg,
+button[class*="bg-[#8B4B6B]"] svg,
+button[class*="bg-[#8B5A99]"] svg,
+button[class*="bg-[#6B2245]"] svg,
+button[class*="bg-[#4B003F]"] svg,
+button[class*="bg-[#C1A5FF]"] svg {
+  color: white !important;
+  stroke: white !important;
+}
+
+/* Hover variants ΓÇö every hover hex paired with the base colors above,
+   plus each base color's own /opacity hover (e.g. hover:bg-[#532D5F]/90) */
+button[class*="hover:bg-[#7A3F7B]"]:hover,
+a[class*="hover:bg-[#7A3F7B]"]:hover,
+button[class*="hover:bg-[#7A4077]"]:hover,
+a[class*="hover:bg-[#7A4077]"]:hover,
+button[class*="hover:bg-[#7A427B]"]:hover,
+a[class*="hover:bg-[#7A427B]"]:hover,
+button[class*="hover:bg-[#7C3AED]"]:hover,
+a[class*="hover:bg-[#7C3AED]"]:hover,
+button[class*="hover:bg-[#5a2455]"]:hover,
+a[class*="hover:bg-[#5a2455]"]:hover,
+button[class*="hover:bg-[#5A2478]"]:hover,
+a[class*="hover:bg-[#5A2478]"]:hover,
+button[class*="hover:bg-[#5A2579]"]:hover,
+a[class*="hover:bg-[#5A2579]"]:hover,
+button[class*="hover:bg-[#7A4089]"]:hover,
+a[class*="hover:bg-[#7A4089]"]:hover,
+button[class*="hover:bg-[#7A4260]"]:hover,
+a[class*="hover:bg-[#7A4260]"]:hover,
+button[class*="hover:bg-[#B195FF]"]:hover,
+a[class*="hover:bg-[#B195FF]"]:hover,
+button[class*="hover:bg-[#8B4B8C]"]:hover,
+a[class*="hover:bg-[#8B4B8C]"]:hover,
+button[class*="hover:bg-[#532D5F]"]:hover,
+a[class*="hover:bg-[#532D5F]"]:hover,
+button[class*="hover:bg-[#6B2245]"]:hover,
+a[class*="hover:bg-[#6B2245]"]:hover {
+  background-color: var(--color-primary-hover) !important;
+}
+
+/* Outline/ghost buttons with an arbitrary purple hex as text/border */
+button[class*="text-[#8B4B8C]"],
+a[class*="text-[#8B4B8C]"],
+button[class*="border-[#8B4B8C]"],
+button[class*="text-[#6B2C91]"],
+a[class*="text-[#6B2C91]"],
+button[class*="border-[#8B5CF6]"] {
+  color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+button[class*="hover:text-[#7A4077]"]:hover,
+a[class*="hover:text-[#7A4077]"]:hover {
+  color: var(--color-primary-hover) !important;
+}
+
+/* ===========================================
    FILTER CHIP & BADGE OVERRIDES
    =========================================== */
 
@@ -972,7 +1423,7 @@ nav [class*="text-[#C72030]"],
    =========================================== */
 
 /* Table header */
-thead th,
+thead th:not(.analytics-header),
 .table-header,
 [class*="TableHead"] {
   background-color: var(--color-bg) !important;
@@ -1110,7 +1561,7 @@ path[stroke="#c72030"] {
 }
 
 .location-stepper-line {
-  background: rgba(218, 119, 86, 0.68) !important;
+  background: rgba(var(--color-accent-rgb), 0.68) !important;
 }
 
 .location-step-dot {
@@ -1139,6 +1590,12 @@ path[stroke="#c72030"] {
 .bg-\[\#C4B89D54\],
 [class*="bg-[#C4B89D54]"] {
   background-color: rgba(196, 184, 157, 0.33) !important;
+}
+
+/* Survey stat card icon circles (HelpCircle/Smile etc.) ΓÇö white bg instead of pink tint */
+.bg-\[\#C7203014\],
+[class*="bg-[#C7203014]"] {
+  background-color: #ffffff !important;
 }
 
 /* ===========================================
@@ -1222,6 +1679,65 @@ tbody tr.hover-brand:hover {
    GLOBAL COLOR OVERRIDES FOR #C72030
    Only override color values, not layout/sizing
    =========================================== */
+
+/* Table checkboxes are rounded squares, never circles. */
+html body table button[role="checkbox"],
+html body [role="table"] button[role="checkbox"],
+html body table input[type="checkbox"],
+html body table .MuiCheckbox-root,
+html body table .MuiCheckbox-root svg {
+  border-radius: 4px !important;
+}
+
+/* Survey mapping "+N" count chips: black text. */
+html body #root span.rounded-full[style*="background-color: rgb(230, 224, 211)"] {
+  color: #000 !important;
+}
+
+/* Ticket detail section header icons: black instead of orange. */
+html body #root div.rounded-full.w-10.h-10[class*="bg-[#E5E0D3]"] svg,
+html body #root div.rounded-full.w-10.h-10[class*="bg-[#E5E0D3]"] svg * {
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
+/* Ticket detail header icons and outline Edit button icons: black. */
+html body #root div.rounded-full[class*="bg-[#E5E0D3]"] svg,
+html body #root div.rounded-full[class*="bg-[#E5E0D3]"] svg *,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-square-pen,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-square-pen *,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-edit,
+html body #root button[class*="border-[#D9D9D9]"] svg.lucide-edit * {
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
+/* Fitout request details section header icons (Request Details / Payment /
+   Annexures / Deviations cards): black instead of orange. These circles carry
+   #E5E0D3 as an inline style rather than a Tailwind class, and colorPatch.ts
+   repaints the icon's inline #C72030 to brand orange ΓÇö so scope by the page
+   root (p-4 sm:p-6 min-h-screen bg-gray-50 > div.mb-6 > back button) and win
+   over the inline style with !important. */
+html body #root div.p-4.sm\:p-6.min-h-screen.bg-gray-50:has(> div.mb-6 > button)
+  div.rounded-full[style*="rgb(229, 224, 211)"] svg,
+html body #root div.p-4.sm\:p-6.min-h-screen.bg-gray-50:has(> div.mb-6 > button)
+  div.rounded-full[style*="rgb(229, 224, 211)"] svg *,
+html body #root div.p-4.sm\:p-6.min-h-screen.bg-gray-50:has(> div.mb-6 > button)
+  div.rounded-full[style*="#E5E0D3"] svg,
+html body #root div.p-4.sm\:p-6.min-h-screen.bg-gray-50:has(> div.mb-6 > button)
+  div.rounded-full[style*="#E5E0D3"] svg * {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* User details section heading icons: black instead of orange. */
+html body #root .MuiBox-root:has(> svg + .MuiTypography-h6) > svg,
+html body #root .MuiBox-root:has(> svg + .MuiTypography-h6) > svg *,
+html body #root .MuiBox-root > .MuiBox-root > svg.lucide[style*="rgb(199, 32, 48)"],
+html body #root .MuiBox-root > .MuiBox-root > svg.lucide[style*="rgb(199, 32, 48)"] * {
+  color: #000 !important;
+  stroke: #000 !important;
+}
 
 /* ===== CHECKBOX COLOR OVERRIDES ===== */
 /* Unchecked checkbox - white background with gray border */
@@ -1357,9 +1873,11 @@ textarea:focus {
 
 /* ===== SELECT/DROPDOWN FOCUS OVERRIDES ===== */
 select:focus,
-[role="combobox"]:focus {
+[role="combobox"]:focus,
+[role="combobox"][data-state="open"] {
   border-color: var(--color-primary) !important;
   outline: none !important;
+  box-shadow: none !important;
 }
 
 /* ===== SIDEBAR COLOR OVERRIDES ===== */
@@ -1478,27 +1996,27 @@ header a[class*="text-[#C72030]"] {
 
 /* ===== CHART COLOR PALETTE VARIABLES ===== */
 :root {
-  /* Secondary Chart Colors */
-  --chart-green-olive: #798c5e;
-  --chart-green-olive-hover: rgba(121, 140, 94, 0.85);
-  --chart-purple: #cecbf6;
-  --chart-purple-hover: rgba(206, 203, 246, 0.7);
-  --chart-teal: #9ec8ba;
-  --chart-teal-hover: rgba(158, 200, 186, 0.7);
+  /* Secondary Chart Colors ΓÇö kept in sync with the :root tokens above */
+  --chart-green-olive: #12a150;
+  --chart-green-olive-hover: rgba(18, 161, 80, 0.85);
+  --chart-purple: #5a4be0;
+  --chart-purple-hover: rgba(90, 75, 224, 0.7);
+  --chart-teal: #2f6fe0;
+  --chart-teal-hover: rgba(47, 111, 224, 0.7);
 
   /* Tertiary/Semantic Chart Colors */
-  --chart-info: #6b9bcc;
-  --chart-disabled: #d3d1c7;
-  --chart-tags: #cecbf6;
-  --chart-danger: #e49191;
-  --chart-warning: #edc488;
-  --chart-growth: rgba(16, 140, 114, 0.3);
-  --chart-growth-solid: #108c72;
+  --chart-info: #2f6fe0;
+  --chart-disabled: rgba(26, 26, 24, 0.3);
+  --chart-tags: #eeebff;
+  --chart-danger: #e5484d;
+  --chart-warning: #f2a312;
+  --chart-growth: rgba(18, 161, 80, 0.3);
+  --chart-growth-solid: #12a150;
 
   /* Surface Colors */
-  --chart-border: #c4b89d;
-  --chart-card-bg: #f6f4ee;
-  --chart-divider: #d5dbdb;
+  --chart-border: rgba(26, 26, 24, 0.09);
+  --chart-card-bg: #ffffff;
+  --chart-divider: #ebe9e2;
 }
 
 /* ===== RECHARTS / SVG CHART COLOR OVERRIDES ===== */
@@ -1619,7 +2137,7 @@ rect[fill="#d5dbdb"] {
 
 /* ===== MAP COMMON TAILWIND/LEGACY COLORS TO BRAND ===== */
 
-/* Green-500 (#22C55E) → Brand Olive Green (#798C5E) */
+/* Green-500 (#22C55E) ΓåÆ Brand Olive Green (#798C5E) */
 [fill="#22C55E"],
 [fill="#22c55e"],
 path[fill="#22C55E"],
@@ -1629,7 +2147,7 @@ rect[fill="#22c55e"] {
   fill: var(--chart-green-olive) !important;
 }
 
-/* Emerald-500 (#10b981) → Brand Growth (#108C72) */
+/* Emerald-500 (#10b981) ΓåÆ Brand Growth (#108C72) */
 [fill="#10b981"],
 [fill="#10B981"],
 path[fill="#10b981"],
@@ -1639,7 +2157,7 @@ rect[fill="#10B981"] {
   fill: var(--chart-growth-solid) !important;
 }
 
-/* Red-500 (#EF4444) → Brand Danger (#E49191) */
+/* Red-500 (#EF4444) ΓåÆ Brand Danger (#E49191) */
 [fill="#EF4444"],
 [fill="#ef4444"],
 path[fill="#EF4444"],
@@ -1649,7 +2167,7 @@ rect[fill="#ef4444"] {
   fill: var(--chart-danger) !important;
 }
 
-/* Amber-500 (#F59E0B) → Brand Warning (#EDC488) */
+/* Amber-500 (#F59E0B) ΓåÆ Brand Warning (#EDC488) */
 [fill="#F59E0B"],
 [fill="#f59e0b"],
 path[fill="#F59E0B"],
@@ -1659,7 +2177,7 @@ rect[fill="#f59e0b"] {
   fill: var(--chart-warning) !important;
 }
 
-/* Gray (#A5A5A5) → Brand Disabled (#D3D1C7) */
+/* Gray (#A5A5A5) ΓåÆ Brand Disabled (#D3D1C7) */
 [fill="#A5A5A5"],
 [fill="#a5a5a5"],
 path[fill="#A5A5A5"],
@@ -1917,13 +2435,13 @@ rect[fill="#dad6ca"] {
 }
 
 /* ===========================================
-   LEGACY CHART COLORS → BRAND PALETTE MAPPING
+   LEGACY CHART COLORS ΓåÆ BRAND PALETTE MAPPING
    Override hardcoded colors in chart components
    =========================================== */
 
-/* ===== LEGACY BROWN/BEIGE TONES → BRAND SECONDARY ===== */
+/* ===== LEGACY BROWN/BEIGE TONES ΓåÆ BRAND SECONDARY ===== */
 
-/* #8B7355 (Dark Brown - proactiveOpen, twoWheeler) → Brand Green Olive */
+/* #8B7355 (Dark Brown - proactiveOpen, twoWheeler) ΓåÆ Brand Green Olive */
 [fill="#8B7355"],
 [fill="#8b7355"],
 path[fill="#8B7355"],
@@ -1942,7 +2460,7 @@ circle[fill="#8b7355"] {
   fill: var(--color-secondary-green) !important;
 }
 
-/* #C4B99D (Primary Beige - proactiveClosed, fourWheeler, primary) → Brand Teal */
+/* #C4B99D (Primary Beige - proactiveClosed, fourWheeler, primary) ΓåÆ Brand Teal */
 [fill="#C4B99D"],
 [fill="#c4b99d"],
 path[fill="#C4B99D"],
@@ -1961,7 +2479,19 @@ circle[fill="#c4b99d"] {
   fill: var(--color-secondary-teal) !important;
 }
 
-/* #B8AFA0 (Medium shade - reactiveOpen) → Brand Purple */
+/* Add MIS section and item actions. */
+html body #root .MuiPaper-root:has(svg.lucide-file-text) .MuiButton-root {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiPaper-root:has(svg.lucide-file-text) .MuiButton-root:hover {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* #B8AFA0 (Medium shade - reactiveOpen) ΓåÆ Brand Purple */
 [fill="#B8AFA0"],
 [fill="#b8afa0"],
 path[fill="#B8AFA0"],
@@ -1980,7 +2510,7 @@ circle[fill="#b8afa0"] {
   fill: var(--color-secondary-purple) !important;
 }
 
-/* #DAD6CA (Secondary beige - reactiveClosed, secondary) → Brand Info */
+/* #DAD6CA (Secondary beige - reactiveClosed, secondary) ΓåÆ Brand Info */
 [fill="#DAD6CA"],
 [fill="#dad6ca"],
 path[fill="#DAD6CA"],
@@ -1999,7 +2529,7 @@ circle[fill="#dad6ca"] {
   fill: var(--color-info) !important;
 }
 
-/* #D5DBDB (Tertiary - subtle borders) → Brand Disabled/Muted */
+/* #D5DBDB (Tertiary - subtle borders) ΓåÆ Brand Disabled/Muted */
 [fill="#D5DBDB"],
 [fill="#d5dbdb"],
 path[fill="#D5DBDB"],
@@ -2018,7 +2548,7 @@ circle[fill="#d5dbdb"] {
   fill: var(--color-disabled) !important;
 }
 
-/* #DDD4C4 (Primary Light) → Brand Green Light (15%) */
+/* #DDD4C4 (Primary Light) ΓåÆ Brand Green Light (15%) */
 [fill="#DDD4C4"],
 [fill="#ddd4c4"],
 path[fill="#DDD4C4"],
@@ -2037,7 +2567,7 @@ circle[fill="#ddd4c4"] {
   fill: var(--color-secondary-green-light) !important;
 }
 
-/* #E8E5DD (Secondary Light) → Brand Teal Light (30%) */
+/* #E8E5DD (Secondary Light) ΓåÆ Brand Teal Light (30%) */
 [fill="#E8E5DD"],
 [fill="#e8e5dd"],
 path[fill="#E8E5DD"],
@@ -2056,7 +2586,7 @@ circle[fill="#e8e5dd"] {
   fill: var(--color-secondary-teal-light) !important;
 }
 
-/* #E5E9E9 (Tertiary Light) → Brand Purple Light (30%) */
+/* #E5E9E9 (Tertiary Light) ΓåÆ Brand Purple Light (30%) */
 [fill="#E5E9E9"],
 [fill="#e5e9e9"],
 path[fill="#E5E9E9"],
@@ -2167,9 +2697,9 @@ circle[fill="#e5e9e9"] {
    =========================================== */
 
 :root {
-  /* 6 Unified Chart Colors — updated per design guide April 2026 */
+  /* 6 Unified Chart Colors ΓÇö updated per design guide April 2026 */
   --analytics-color-1: #6b9bcc; /* Info Blue          */
-  --analytics-color-2: #9ec8ba; /* Warm Light Grey    */
+  --analytics-color-2: #9ec8ba; /* Teal (Current Period) */
   --analytics-color-3: #f4c37e; /* Amber/Yellow       */
   --analytics-color-4: #e9704d; /* Orange-Red         */
   --analytics-color-5: #f28c8f; /* Salmon Pink        */
@@ -2189,7 +2719,7 @@ circle[fill="#e5e9e9"] {
    Use BLACK (#2C2C2C) for headings - per design guidelines
    =========================================== */
 
-/* Card title with primary color → BLACK */
+/* Card title with primary color ΓåÆ BLACK */
 /* Target specific card title elements, not all text-primary */
 [class*="CardHeader"] [class*="text-[#DA7756]"],
 [class*="CardHeader"] [class*="text-[#da7756]"],
@@ -2205,7 +2735,7 @@ h4.text-\[\#DA7756\] {
   color: var(--color-text) !important;
 }
 
-/* CRITICAL: CardTitle with #C72030 → BLACK (Asset Analytics, etc.) */
+/* CRITICAL: CardTitle with #C72030 ΓåÆ BLACK (Asset Analytics, etc.) */
 [class*="CardTitle"][class*="text-[#C72030]"],
 [class*="CardTitle"].text-\[\#C72030\],
 .CardTitle.text-\[\#C72030\],
@@ -2338,30 +2868,28 @@ h4[class*="text-[#1A1A1A]"],
   color: var(--color-text) !important;
   font-size: 13px !important;
 }
+.text-center.font-bold.text-white.leading-tight {
+  color: var(--color-bg) !important;
 
+}
+
+.text-center.font-semibold.text-white.survey-force-white {
+  color: var(--color-bg) !important;
+
+}
 /* Chart subheadings like "Response TAT", "Resolution TAT" - BLACK */
-.text-center.font-semibold,
-.text-center.font-bold {
+.text-center.font-semibold:not(.analytics-header),
+.text-center.font-bold:not(.analytics-header) {
   color: var(--color-text) !important;
 }
 
 /* Table headers - BLACK text on brand background */
-table th,
-thead th,
-[class*="table"] th {
+table th:not(.analytics-header),
+thead th:not(.analytics-header),
+[class*="table"] th:not(.analytics-header) {
   color: var(--color-text) !important;
   background-color: var(--color-bg) !important;
   font-weight: 600 !important;
-}
-
-.tickets-ageing-matrix-table thead th {
-  background-color: var(--color-primary) !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
-}
-
-.tickets-ageing-matrix-table thead th.tickets-ageing-matrix-bucket {
-  color: #ffffff !important;
 }
 
 /* Table cell text - BLACK */
@@ -2385,7 +2913,7 @@ tbody td:first-child {
    indicators, and data-preserve-colors zones.
    =========================================== */
 
-/* Red text colors → Primary (excluding semantic contexts) */
+/* Red text colors ΓåÆ Primary (excluding semantic contexts) */
 :not([data-semantic-colors]) > .text-red-500:not(.keep-red),
 :not([data-semantic-colors]) > .text-red-600:not(.keep-red),
 :not([data-semantic-colors]) > .text-red-700:not(.keep-red),
@@ -2400,7 +2928,7 @@ tbody td:first-child {
   color: var(--color-primary) !important;
 }
 
-/* Red background colors → Primary (excluding semantic contexts) */
+/* Red background colors ΓåÆ Primary (excluding semantic contexts) */
 :not([data-semantic-colors]) > .bg-red-500:not(.keep-red),
 :not([data-semantic-colors]) > .bg-red-600:not(.keep-red),
 :not([data-semantic-colors]) > .bg-red-700:not(.keep-red),
@@ -2411,7 +2939,7 @@ tbody td:first-child {
   background-color: var(--color-primary) !important;
 }
 
-/* Red border colors → Primary (excluding semantic contexts) */
+/* Red border colors ΓåÆ Primary (excluding semantic contexts) */
 :not([data-semantic-colors]) > .border-red-500:not(.keep-red),
 :not([data-semantic-colors]) > .border-red-600:not(.keep-red),
 .border-\[\#bf213e\],
@@ -2450,14 +2978,14 @@ button.bg-\[\#f2eee9\].text-\[\#bf213e\],
 }
 
 /* ===========================================
-   BEIGE/TAN/BROWN COLORS → BRAND 6-COLOR PALETTE
+   BEIGE/TAN/BROWN COLORS ΓåÆ BRAND 6-COLOR PALETTE
    Override all legacy beige tones to unified brand colors
    =========================================== */
 
 /* Override beige/tan colors commonly used in charts */
 /* #C4B99D, #c6b692, #B8AFA0, #DDD4C4, #bfaf8f - map to brand colors */
 
-/* Tan/Brown tones → Green Olive (Color 1) */
+/* Tan/Brown tones ΓåÆ Green Olive (Color 1) */
 [fill="#bfaf8f"],
 [fill="#BFAF8F"],
 path[fill="#bfaf8f"],
@@ -2469,7 +2997,7 @@ circle[fill="#bfaf8f"],
   fill: var(--analytics-color-1) !important;
 }
 
-/* Warmer tan → Teal (Color 2) */
+/* Warmer tan ΓåÆ Teal (Color 2) */
 [fill="#c6b692"],
 [fill="#C6B692"],
 path[fill="#c6b692"],
@@ -2481,7 +3009,7 @@ circle[fill="#c6b692"],
   fill: var(--analytics-color-2) !important;
 }
 
-/* Medium beige → Info Blue (Color 4) */
+/* Medium beige ΓåÆ Info Blue (Color 4) */
 [fill="#d8dcdd"],
 [fill="#D8DCDD"],
 path[fill="#d8dcdd"],
@@ -2493,7 +3021,7 @@ circle[fill="#d8dcdd"],
   fill: var(--analytics-color-4) !important;
 }
 
-/* Light beige/cream → Purple (Color 3) */
+/* Light beige/cream ΓåÆ Purple (Color 3) */
 [fill="#DDD4C4"],
 [fill="#ddd4c4"],
 path[fill="#DDD4C4"],
@@ -2671,9 +3199,9 @@ rect[fill="#E8E5DD"],
    =========================================== */
 
 /* Table headers in analytics */
-table th,
-[class*="table"] th,
-thead th {
+table th:not(.analytics-header),
+[class*="table"] th:not(.analytics-header),
+thead th:not(.analytics-header) {
   background-color: var(--color-bg) !important;
   color: var(--color-text) !important;
   font-weight: 600 !important;
@@ -2690,6 +3218,22 @@ tbody td {
 table tbody tr:hover,
 [class*="table"] tbody tr:hover {
   background-color: var(--color-primary-selected) !important;
+}
+
+/* Opt-out: Item Table on the Invoice/Credit Note/Debit Note Add pages has no row hover tint */
+table.item-table-no-hover tbody tr:hover {
+  background-color: transparent !important;
+}
+
+/* Reusable brand-orange "confirm delete" button ΓÇö apply to any delete-confirmation
+   OK/Delete button instead of hardcoding red inline styles. */
+.btn-delete-confirm {
+  background-color: var(--color-primary) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+.btn-delete-confirm:hover {
+  background-color: var(--color-primary-hover) !important;
 }
 
 /* ===========================================
@@ -2856,14 +3400,28 @@ table tbody tr:hover,
    FAILED TO LOAD / ERROR STATES
    =========================================== */
 
-/* Error/Failed state containers */
+/* Error/Failed state containers
+   Do NOT use [class*="text-destructive"] ΓÇö it also matches
+   text-destructive-foreground on toasts and kills contrast. */
 .error-message,
 .error-state,
 [class*="error-message"],
 [class*="failed-to-load"],
-.text-destructive,
-[class*="text-destructive"] {
+.text-destructive {
   color: var(--color-danger) !important;
+}
+
+/* Keep toast text readable against brand-error-bg */
+[data-radix-collection-item].destructive,
+.destructive[role="status"],
+li.destructive,
+div.destructive.group {
+  color: var(--color-text) !important;
+}
+div.destructive.group [class*="ToastTitle"],
+div.destructive.group [class*="ToastDescription"],
+.destructive.group > div {
+  color: var(--color-text) !important;
 }
 
 /* Failed to load card styling */
@@ -2902,7 +3460,7 @@ table tbody tr:hover,
 
 /* ===========================================
    GLOBAL CARD TITLE OVERRIDE (ALL CONTEXTS)
-   Ensure ALL CardTitle with any color class → BLACK
+   Ensure ALL CardTitle with any color class ΓåÆ BLACK
    =========================================== */
 
 /* Force all CardTitle elements to BLACK regardless of inline styles */
@@ -2935,19 +3493,20 @@ table tbody tr:hover,
    (No component-level edits required)
    =========================================== */
 
-/* Primary CTA buttons using legacy red shades */
+/* Primary CTA buttons using legacy red shades
+   Use ~= / exact class so hover:bg-[#C72030]/10 action icons stay ghost. */
 button.bg-\[\#C62828\],
 button.bg-\[\#c62828\],
 button.bg-\[\#C72030\],
 button.bg-\[\#c72030\],
-button[class*="bg-[#C62828]"],
-button[class*="bg-[#c62828]"],
-button[class*="bg-[#C72030]"],
-button[class*="bg-[#c72030]"],
+button[class~="bg-[#C62828]"],
+button[class~="bg-[#c62828]"],
+button[class~="bg-[#C72030]"],
+button[class~="bg-[#c72030]"],
 input[type="submit"].bg-\[\#C62828\],
 input[type="submit"].bg-\[\#C72030\],
-input[type="submit"][class*="bg-[#C62828]"],
-input[type="submit"][class*="bg-[#C72030]"] {
+input[type="submit"][class~="bg-[#C62828]"],
+input[type="submit"][class~="bg-[#C72030]"] {
   background-color: var(--color-primary) !important;
   border-color: var(--color-primary) !important;
   color: #fff !important;
@@ -2976,7 +3535,7 @@ button[class*="border-[#c62828]"],
 button[class*="border-[#C72030]"],
 button[class*="border-[#c72030]"] {
   border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
+  color: var(--color-bg) !important;
 }
 
 button.hover\:bg-red-50:hover,
@@ -2995,6 +3554,43 @@ form input[type="submit"] {
 form button[type="submit"]:hover,
 form input[type="submit"]:hover {
   filter: brightness(0.98);
+}
+
+/* CRITICAL: Protect solid brand fill buttons from hover overrides.
+   Do NOT match outline/Reset hovers like hover:bg-brand-selected or
+   hover:bg-brand-light ΓÇö those must stay as light tints, not solid fill. */
+button.bg-brand:hover,
+button[class~="bg-brand"]:hover,
+button[class*="hover:bg-brand-hover"]:hover {
+  background-color: var(--color-primary-hover) !important;
+  filter: none !important;
+}
+
+/* Outline / secondary Reset-Cancel hover ΓÇö light brand tint only */
+button[class*="hover:bg-brand-selected"]:hover {
+  background-color: var(--color-primary-selected) !important;
+  color: var(--color-primary) !important;
+  filter: none !important;
+}
+button[class*="hover:bg-brand-light"]:hover {
+  background-color: var(--color-primary-light) !important;
+  color: var(--color-primary) !important;
+  filter: none !important;
+}
+
+/* Outline Reset/Cancel with mistaken hover:bg-brand (solid orange fill) ΓÇö
+   force light tint + keep brand text (never white-on-solid). */
+button[class*="border-brand"][class*="hover:bg-brand"]:not([class*="hover:bg-brand-selected"]):not([class*="hover:bg-brand-hover"]):not([class*="hover:bg-brand-light"]):not([class~="bg-brand"]):hover,
+button[class*="border-[#C72030]"][class*="hover:bg-brand"]:not([class~="bg-brand"]):hover,
+button[class*="border-[#c72030]"][class*="hover:bg-brand"]:not([class~="bg-brand"]):hover {
+  background-color: var(--color-primary-selected) !important;
+  color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  filter: none !important;
+}
+button[class*="border-brand"][class*="hover:bg-brand"]:not([class*="hover:bg-brand-selected"]):not([class*="hover:bg-brand-hover"]):not([class*="hover:bg-brand-light"]):not([class~="bg-brand"]):hover *,
+button[class*="border-brand"][class*="hover:text-white"]:not([class~="bg-brand"]):hover {
+  color: var(--color-primary) !important;
 }
 
 /* Logout consistency without forcing destructive treatment */
@@ -3024,51 +3620,34 @@ svg.lucide-eye {
   color: var(--color-text) !important;
 }
 
-/* View button icon: no hover color change */
+button[title*="View"]:hover svg,
+button[title*="view"]:hover svg {
+  color: var(--color-text) !important;
+}
 
 /* ===========================================
-   ENHANCED TABLE — Toolbar action buttons: Filter · Columns · Export
+   ENHANCED TABLE ΓÇö Toolbar action buttons: Filter ┬╖ Columns ┬╖ Export
    =========================================== */
 
 /* Filter button: border-[#C72030] text-[#C72030] (targeted by class AND title) */
 button.border-\[\#C72030\],
 button[class*="border-[#C72030]"],
 button.text-\[\#C72030\],
-button[class*="text-[#C72030]"],
-button[title="Filter"] {
+button[class*="text-[#C72030]"] {
   border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
+  color: var(--color-bg) !important;
 }
 
 /* Filter hover */
-button[class*="hover:bg-[#C72030]/10"]:hover,
-button[title="Filter"]:hover {
-  background-color: rgba(218, 119, 86, 0.1) !important;
+button[class*="hover:bg-[#C72030]/10"]:hover {
+  background-color: rgba(var(--color-accent-rgb), 0.1) !important;
 }
 
-/* Columns visibility & Export / Download buttons — uniform brand styling */
-button[title="Columns"],
-button[title="Export"],
-button[title="Exporting..."] {
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
-button[title="Columns"]:hover,
-button[title="Export"]:hover {
-  background-color: rgba(218, 119, 86, 0.1) !important;
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
-/* Icons inside these toolbar buttons inherit the brand color */
-button[title="Filter"] svg,
-button[title="Columns"] svg,
-button[title="Export"] svg {
-  color: var(--color-primary) !important;
-  stroke: var(--color-primary) !important;
-}
+/* Filter / Columns / Export toolbar buttons: see "TABLE TOOLBAR ICON BUTTONS"
+   at the end of this file (hairline border matching the search box). */
 
 /* Add-row cancel X button: text-red-600 hover:text-red-700
-   (non-destructive context — override to neutral/primary) */
+   (non-destructive context ΓÇö override to neutral/primary) */
 button.text-red-600:not([aria-label*="delete"]):not([aria-label*="Delete"]):not(
     [aria-label*="remove"]
   ),
@@ -3086,7 +3665,7 @@ button[class*="hover:text-red-700"]:not([aria-label*="delete"]):not(
   color: var(--color-text, #333) !important;
 }
 
-/* ColumnVisibilityMenu checkmark icon: text-red-500 → primary */
+/* ColumnVisibilityMenu checkmark icon: text-red-500 ΓåÆ primary */
 [class*="data-[state=checked]"]:not([aria-label*="delete"])
   [class*="text-red-500"],
 [data-state="checked"] svg.text-red-500,
@@ -3097,11 +3676,12 @@ button[class*="hover:text-red-700"]:not([aria-label*="delete"]):not(
 }
 
 /* IssueFilterModal Apply (bg-[#C62828]) and Reset (border-[#C62828]) buttons
-   — attribute substring selectors are the most reliable for arbitrary values */
-[class*="bg-[#C62828]"],
-[class*="bg-[#c62828]"],
-[class*="bg-[#C72030]"],
-[class*="bg-[#c72030]"] {
+   ΓÇö use ~= so hover:bg-[#C72030]/10 is NOT matched (that was painting
+   ghost Eye/action icons as solid brand squares) */
+[class~="bg-[#C62828]"],
+[class~="bg-[#c62828]"],
+[class~="bg-[#C72030]"],
+[class~="bg-[#c72030]"] {
   background-color: var(--color-primary) !important;
   border-color: var(--color-primary) !important;
   color: #ffffff !important;
@@ -3123,10 +3703,10 @@ button[class*="hover:text-red-700"]:not([aria-label*="delete"]):not(
   color: var(--color-primary) !important;
 }
 
-/* IssueFilterModal calendar/search icon: text-red-400 → muted brand */
+/* IssueFilterModal calendar/search icon: text-red-400 ΓåÆ muted brand */
 .absolute.text-red-400,
 [class*="text-red-400"] {
-  color: var(--color-primary-light, rgba(218, 119, 86, 0.6)) !important;
+  color: var(--color-primary-light, rgba(var(--color-accent-rgb), 0.6)) !important;
 }
 
 /* Dashboard survey chart: hardcoded #C72030 array colour handled by JS patcher,
@@ -3138,8 +3718,8 @@ button[class*="hover:text-red-700"]:not([aria-label*="delete"]):not(
   fill: var(--color-primary) !important;
 }
 
-/* Closed status badge (bg-red-500) — context: issues/status chips */
-/* Only override non-destructive status badges — "Closed" uses red-500 */
+/* Closed status badge (bg-red-500) ΓÇö context: issues/status chips */
+/* Only override non-destructive status badges ΓÇö "Closed" uses red-500 */
 .status-badge.bg-red-500,
 [class*="StatusBadge"].bg-red-500,
 [class*="status-badge"].bg-red-500 {
@@ -3147,27 +3727,27 @@ button[class*="hover:text-red-700"]:not([aria-label*="delete"]):not(
 }
 
 /* ============================================================
-   LOGIN PAGE — brand color overrides (#C72030 → #DA7756)
+   LOGIN PAGE ΓÇö brand color overrides (#C72030 ΓåÆ #DA7756)
    ============================================================ */
 
 /* Step indicator circles */
 .bg-\[\#C72030\] {
-  background-color: #da7756 !important;
+  background-color: var(--color-primary) !important;
 }
 
 /* Hover border on org cards */
 .hover\:border-\[\#C72030\]:hover {
-  border-color: #da7756 !important;
+  border-color: var(--color-primary) !important;
 }
 
 /* Org card icon background tint */
 .bg-\[\#C72030\].bg-opacity-10 {
-  background-color: rgba(218, 119, 86, 0.1) !important;
+  background-color: rgba(var(--color-accent-rgb), 0.1) !important;
 }
 
 /* Org card Building2 icon + any text-[#C72030] not already overridden */
 .text-\[\#C72030\] {
-  color: #da7756 !important;
+  color: var(--color-primary) !important;
 }
 
 /* Inline style: border-color / color on email input focus */
@@ -3175,26 +3755,28 @@ button[class*="hover:text-red-700"]:not([aria-label*="delete"]):not(
 [style*="borderColor:#C72030"],
 [style*='color: "#C72030"'],
 [style*="color:#C72030"] {
-  border-color: #da7756 !important;
-  color: #da7756 !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
 }
 
-/* Primary action buttons on login page */
+/* Primary action buttons on login page ΓÇö mockup's .btn.p uses ink (#1A1A18),
+   not the coral accent (that's reserved for links/badges ΓÇö see asset-management
+   reference: a{color:var(--accent)} vs .btn.p{background:var(--ink)}) */
 button.bg-\[\#C72030\],
-button[class*="bg-[#C72030]"] {
-  background-color: #da7756 !important;
+button[class~="bg-[#C72030]"] {
+  background-color: var(--color-primary) !important;
 }
 button.hover\:bg-\[\#a81c29\]:hover,
 button[class*="hover:bg-[#a81c29]"]:hover {
-  background-color: #c45f40 !important;
+  background-color: var(--color-primary-hover) !important;
 }
 button.hover\:text-\[\#a81c29\]:hover,
 button[class*="hover:text-[#a81c29]"]:hover {
-  color: #c45f40 !important;
+  color: #1a1a18 !important;
 }
 
 /* ============================================================
-   BUSINESS COMPASS DAILY REPORT — Tab bar redesign
+   BUSINESS COMPASS DAILY REPORT ΓÇö Tab bar redesign
    ============================================================ */
 
 /* Replace filled brand-colored pill with clean white/border style */
@@ -3206,9 +3788,9 @@ button[class*="hover:text-[#a81c29]"]:hover {
 }
 
 [data-daily-report-tabs] [role="tab"][data-state="active"] {
-  background-color: #da7756 !important;
+  background-color: var(--color-primary) !important;
   color: #ffffff !important;
-  box-shadow: 0 1px 4px rgba(218, 119, 86, 0.25) !important;
+  box-shadow: 0 1px 4px rgba(var(--color-accent-rgb), 0.25) !important;
 }
 
 [data-daily-report-tabs] [role="tab"][data-state="inactive"] {
@@ -3217,7 +3799,7 @@ button[class*="hover:text-[#a81c29]"]:hover {
 }
 
 /* ============================================================
-   GLOBAL: ALL #C72030 / #C62828 → #DA7756 via CSS attribute selectors
+   GLOBAL: ALL #C72030 / #C62828 ΓåÆ #DA7756 via CSS attribute selectors
    Covers: inline style="color:#C72030", style="background-color:#C72030" etc.
    ============================================================ */
 
@@ -3228,7 +3810,7 @@ button[class*="hover:text-[#a81c29]"]:hover {
 [style*='color: "#C72030"'],
 [style*="color: #C62828"],
 [style*="color:#C62828"] {
-  color: #da7756 !important;
+  color: var(--color-primary) !important;
 }
 
 /* Inline style: background-color */
@@ -3238,7 +3820,7 @@ button[class*="hover:text-[#a81c29]"]:hover {
 [style*="background-color:#C62828"],
 [style*="backgroundColor: '#C72030'"],
 [style*='backgroundColor: "#C72030"'] {
-  background-color: #da7756 !important;
+  background-color: var(--color-primary) !important;
 }
 
 /* Inline style: border-color */
@@ -3247,11 +3829,11 @@ button[class*="hover:text-[#a81c29]"]:hover {
 [style*="borderColor: '#C72030'"],
 [style*='borderColor: "#C72030"'],
 [style*="borderColor:#C72030"] {
-  border-color: #da7756 !important;
+  border-color: var(--color-primary) !important;
 }
 
 /* ============================================================
-   UI COMPONENTS — checkbox, radio, calendar, pagination, heading
+   UI COMPONENTS ΓÇö checkbox, radio, calendar, pagination, heading
    ============================================================ */
 
 /* Checkbox checked state */
@@ -3259,15 +3841,15 @@ button[class*="hover:text-[#a81c29]"]:hover {
 [class*="checkbox"][data-state="checked"],
 input[type="checkbox"]:checked,
 .peer[data-state="checked"] {
-  background-color: #da7756 !important;
-  border-color: #da7756 !important;
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
 }
 
 /* Radio group checked */
 [data-state="checked"].data-\[state\=checked\]\:border-\[\#C72030\],
 .border-\[\#C72030\],
 [class*="border-[#C72030]"] {
-  border-color: #da7756 !important;
+  border-color: var(--color-primary) !important;
 }
 
 /* accentColor inline style for native checkboxes */
@@ -3276,110 +3858,112 @@ input[type="checkbox"]:checked,
 [style*="accentColor:#C72030"],
 [style*="accent-color: #C72030"],
 [style*="accent-color:#C72030"] {
-  accent-color: #da7756 !important;
+  accent-color: var(--color-primary) !important;
 }
 
-/* Calendar selected day */
+/* Calendar selected day ΓÇö solid brand only (exclude /10 tint circles) */
 .rdp-day_selected,
 [class*="day_selected"],
-.bg-\[\#C72030\].text-white.rounded-full,
-[class*="bg-[#C72030]"].rounded-full {
-  background-color: #da7756 !important;
+.bg-\[\#C72030\].text-white.rounded-full {
+  background-color: var(--color-primary) !important;
   color: #ffffff !important;
 }
 
 /* Calendar today border */
 .border-\[\#C72030\].rounded-full,
 [class*="border-[#C72030]"].rounded-full {
-  border-color: #da7756 !important;
-  color: #da7756 !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
 }
 
 /* Pagination active page */
 .bg-\[\#C72030\].text-white.font-semibold,
 [class*="bg-[#C72030]"].text-white {
-  background-color: #da7756 !important;
+  background-color: var(--color-primary) !important;
 }
 
 /* heading.tsx primary variant */
 .text-\[\#C72030\]:not([data-semantic-colors] *) {
-  color: #da7756 !important;
+  color: var(--color-primary) !important;
 }
 
 /* ============================================================
-   MAINTENANCE TICKET ADD PAGE — buttons, icons, inputs
+   MAINTENANCE TICKET ADD PAGE ΓÇö buttons, icons, inputs
    ============================================================ */
 
-/* Submit button bg-red-600 */
+/* Submit button bg-red-600 ΓÇö ink primary, per mockup's .btn.p */
 button.bg-red-600,
 button[class*="bg-red-600"] {
-  background-color: #da7756 !important;
-  border-color: #da7756 !important;
+  background-color: #1a1a18 !important;
+  border-color: #1a1a18 !important;
 }
 button.bg-red-600:hover,
 button[class*="bg-red-600"]:hover,
 button.hover\:bg-red-700:hover,
 button[class*="hover:bg-red-700"]:hover {
-  background-color: #c45f40 !important;
+  background-color: #12100e !important;
 }
 
-/* SVG fill="C72030" — handled by JS patcher; add CSS fallback for path elements */
+/* SVG fill="C72030" ΓÇö handled by JS patcher; add CSS fallback for path elements */
 path[fill="#C72030"],
 path[fill="#C62828"],
 circle[fill="#C72030"],
 rect[fill="#C72030"] {
-  fill: #da7756 !important;
+  fill: var(--color-primary) !important;
 }
 
 /* SVG color attribute (Lucide icons passed color prop) */
 svg[color="#C72030"] *,
 [color="#C72030"] {
-  color: #da7756 !important;
+  color: var(--color-primary) !important;
 }
 
 /* ============================================================
    EMPLOYEE HEADER / TOP NAVIGATION
    ============================================================ */
 
-/* Active state: bg-white text-[#C72030] → brand */
+/* Active state: bg-white text-[#C72030] ΓåÆ brand */
 .bg-white.text-\[\#C72030\] {
-  color: #da7756 !important;
+  color: var(--color-primary) !important;
 }
 
-/* Notification dot bg-[#C72030] */
-.bg-\[\#C72030\].rounded-full,
-[class*="bg-[#C72030]"].rounded-full {
-  background-color: #da7756 !important;
+/* Notification / solid avatar dots ΓÇö exact solid bg only, not /10 tints */
+.bg-\[\#C72030\].rounded-full {
+  background-color: var(--color-accent) !important;
 }
 
-/* Avatar circle bg-[#C72030] */
+/* Avatar circle solid bg-[#C72030] only ΓÇö not bg-[#C72030]/10 tints */
 .w-8.h-8.bg-\[\#C72030\].rounded-full,
-.w-10.h-10.bg-\[\#C72030\].rounded-full,
-[class*="bg-[#C72030]"][class*="rounded-full"] {
-  background-color: #da7756 !important;
+.w-10.h-10.bg-\[\#C72030\].rounded-full {
+  background-color: var(--color-accent) !important;
+}
+
+/* Light brand tint for icon wells (page headers, section badges) */
+.bg-\[\#C72030\]\/10 {
+  background-color: rgba(var(--color-accent-rgb), 0.1) !important;
 }
 
 /* Hover bg-[#C72030] on list items */
 .hover\:bg-\[\#C72030\]:hover,
 [class*="hover:bg-[#C72030]"]:hover {
-  background-color: #da7756 !important;
-  border-color: #da7756 !important;
+  background-color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
 }
 
 /* hover:border-[#C72030] */
 .hover\:border-\[\#C72030\]:hover,
 [class*="hover:border-[#C72030]"]:hover {
-  border-color: #da7756 !important;
+  border-color: var(--color-primary) !important;
 }
 
 /* hover:text-[#A01020] */
 .hover\:text-\[\#A01020\]:hover,
 [class*="hover:text-[#A01020]"]:hover {
-  color: #c45f40 !important;
+  color: #c26040 !important;
 }
 
 /* ============================================================
-   DASHBOARD ANALYTICS — Recharts bar/pie fill="#C72030"
+   DASHBOARD ANALYTICS ΓÇö Recharts bar/pie fill="#C72030"
    ============================================================ */
 
 /* Recharts bar fill override (also covered by JS patcher) */
@@ -3387,17 +3971,17 @@ svg[color="#C72030"] *,
 .recharts-bar-rectangle path[fill="#C62828"],
 .recharts-rectangle[fill="#C72030"],
 .recharts-rectangle[fill="#C62828"] {
-  fill: #da7756 !important;
+  fill: var(--color-primary) !important;
 }
 
 /* Recharts legend icon */
 .recharts-legend-icon[fill="#C72030"],
 svg .recharts-symbols [fill="#C72030"] {
-  fill: #da7756 !important;
+  fill: var(--color-primary) !important;
 }
 
 /* ===========================================
-   NUCLEAR OVERRIDE — EnhancedTable toolbar buttons
+   NUCLEAR OVERRIDE ΓÇö EnhancedTable toolbar buttons
    Placed at END of file for highest source-order priority.
    Ensures filter / columns / export are always outline-style
    (white bg, brand border+text) regardless of any earlier rules.
@@ -3409,41 +3993,25 @@ svg .recharts-symbols [fill="#C72030"] {
   border-color: var(--color-primary) !important;
 }
 
-/* Force toolbar buttons to white background + brand border/text */
+/* Toolbar buttons keep the search input radius (8px / --radius-md) ΓÇö override
+   Button's rounded-none and any fm-button-fix border-radius: 0. Border, fill and
+   size live in "TABLE TOOLBAR ICON BUTTONS" at the end of this file. */
 button[title="Filter"],
 button[title="Columns"],
-button[title="Export"] {
-  background-color: #ffffff !important;
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
-  border-width: 1px !important;
-  border-style: solid !important;
-}
-button[title="Filter"]:hover,
-button[title="Columns"]:hover,
-button[title="Export"]:hover {
-  background-color: rgba(218, 119, 86, 0.08) !important;
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
-button[title="Filter"] svg,
-button[title="Filter"] .lucide,
-button[title="Columns"] svg,
-button[title="Columns"] .lucide,
-button[title="Export"] svg,
-button[title="Export"] .lucide {
-  color: var(--color-primary) !important;
-  stroke: var(--color-primary) !important;
+button[title="Refresh"],
+button[title="Export"],
+button[title="Exporting..."] {
+  border-radius: var(--radius-md) !important;
 }
 
 /* ===========================================
-   DESIGN GUIDE — Additional old analytics colors → new 6-color palette
+   DESIGN GUIDE ΓÇö Additional old analytics colors ΓåÆ new 6-color palette
    April 2026: covers every "use X instead of Y" entry from the design spec
    =========================================== */
 
 /* --- Data & Analytics old colors --- */
 
-/* #907250 → Color 1 (#6B9BCC) */
+/* #907250 ΓåÆ Color 1 (#6B9BCC) */
 [fill="#907250"],
 [fill="#907250" i],
 path[fill="#907250"],
@@ -3461,7 +4029,7 @@ circle[fill="#907250"],
   color: var(--analytics-color-1) !important;
 }
 
-/* #BBB09E, #C6BA9A → Color 2 (#D3D1C6) */
+/* #BBB09E, #C6BA9A ΓåÆ Color 2 (#D3D1C6) */
 [fill="#BBB09E"],
 [fill="#bbb09e"],
 path[fill="#BBB09E"],
@@ -3516,17 +4084,17 @@ circle[fill="#C6B692"],
 .recharts-cell[fill="#C6B692"] {
   fill: var(--analytics-color-2) !important;
 }
-/* Exact direct-class overrides only — hover:bg variants must NOT be matched */
-.bg-\[\#C4B89D\],
+/* Exact direct-class overrides only ΓÇö hover:bg variants must NOT be matched */
+/* .bg-\[\#C4B89D\],
 .bg-\[\#c4b89d\],
 .bg-\[\#C6B692\],
 .bg-\[\#c6b692\],
 .bg-\[\#DBC2A9\],
 .bg-\[\#dbc2a9\] {
   background-color: var(--analytics-color-2) !important;
-}
+} */
 
-/* #DCD6C9, #DAD6C9, #E5E0D3 → Color 3 (#F4C37E) */
+/* #DCD6C9, #DAD6C9, #E5E0D3 ΓåÆ Color 3 (#F4C37E) */
 [fill="#DCD6C9"],
 [fill="#dcd6c9"],
 path[fill="#DCD6C9"],
@@ -3551,7 +4119,7 @@ circle[fill="#E5E0D3"],
   fill: var(--analytics-color-3) !important;
 }
 
-/* #A2A8AA, #D4DBDB, #D8DCDD, #B8AFA0 → Color 4 (#E9704D) */
+/* #A2A8AA, #D4DBDB, #D8DCDD, #B8AFA0 ΓåÆ Color 4 (#E9704D) */
 [fill="#A2A8AA"],
 [fill="#a2a8aa"],
 path[fill="#A2A8AA"],
@@ -3576,7 +4144,7 @@ circle[fill="#D8DCDD"],
   fill: var(--analytics-color-4) !important;
 }
 
-/* #CAAD9B, #A89078 → Color 5 (#F28C8F) */
+/* #CAAD9B, #A89078 ΓåÆ Color 5 (#F28C8F) */
 [fill="#CAAD9B"],
 [fill="#caad9b"],
 path[fill="#CAAD9B"],
@@ -3603,26 +4171,26 @@ circle[fill="#AF8260"],
 
 /* --- Card & Border old colors (background/border overrides) --- */
 
-/* #FBF6EE → #F6F4EE (brand bg) */
+/* #FBF6EE ΓåÆ #FDFDFB (brand bg) */
 [style*="background-color:#FBF6EE"],
 [style*="background-color: #FBF6EE"],
 [style*="background:#FBF6EE"],
 [style*="background: #FBF6EE"] {
-  background-color: #f6f4ee !important;
+  background-color: #fdfdfb !important;
 }
 .bg-\[\#FBF6EE\] {
-  background-color: #f6f4ee !important;
+  background-color: #fdfdfb !important;
 }
 
-/* #E6DDCD → #F6F4EE (brand bg) */
+/* #E6DDCD ΓåÆ #FDFDFB (brand bg) */
 [style*="background-color:#E6DDCD"],
 [style*="background-color: #E6DDCD"],
 [style*="background:#E6DDCD"],
 [style*="background: #E6DDCD"] {
-  background-color: #f6f4ee !important;
+  background-color: #fdfdfb !important;
 }
 .bg-\[\#E6DDCD\] {
-  background-color: #f6f4ee !important;
+  background-color: #fdfdfb !important;
 }
 .border-\[\#E6DDCD\],
 [class*="border-[#E6DDCD]"] {
@@ -3635,7 +4203,7 @@ rect[fill="#E6DDCD"] {
   fill: var(--analytics-color-1) !important;
 }
 
-/* #D4FDE7 → #DFEEEB (mint green bg) */
+/* #D4FDE7 ΓåÆ #DFEEEB (mint green bg) */
 [style*="background-color:#D4FDE7"],
 [style*="background-color: #D4FDE7"],
 [style*="background:#D4FDE7"] {
@@ -3645,7 +4213,7 @@ rect[fill="#E6DDCD"] {
   background-color: #dfeeeb !important;
 }
 
-/* #FFF9BC → #F0EFFD (lavender bg) */
+/* #FFF9BC ΓåÆ #F0EFFD (lavender bg) */
 [style*="background-color:#FFF9BC"],
 [style*="background-color: #FFF9BC"],
 [style*="background:#FFF9BC"] {
@@ -3655,7 +4223,7 @@ rect[fill="#E6DDCD"] {
   background-color: #f0effd !important;
 }
 
-/* #F0E4D7 → #D4DBDB (cool grey) */
+/* #F0E4D7 ΓåÆ #D4DBDB (cool grey) */
 [style*="background-color:#F0E4D7"],
 [style*="background-color: #F0E4D7"],
 [style*="background:#F0E4D7"] {
@@ -3666,7 +4234,7 @@ rect[fill="#E6DDCD"] {
 }
 
 /* ===========================================
-   SIDEBAR PROTECTION — never override hover/active bg colors
+   SIDEBAR PROTECTION ΓÇö never override hover/active bg colors
    The Sidebar uses hover:bg-[#DBC2A9] and bg-[#f0e8dc] for active state.
    These must NOT be touched by the analytics palette overrides above.
    =========================================== */
@@ -3675,4 +4243,2307 @@ rect[fill="#E6DDCD"] {
 }
 .bg-\[\#f0e8dc\] {
   background-color: #f0e8dc !important;
+}
+
+/* ===========================================
+   BRAND ACCENT TEXT ΓÇö wins over table/card black overrides
+   Use on labels/headers that must stay brand orange
+   =========================================== */
+.text-brand-accent,
+table th.text-brand-accent,
+table td.text-brand-accent,
+thead th.text-brand-accent,
+tbody td.text-brand-accent,
+tbody td.text-brand-accent span,
+table td:first-child.text-brand-accent,
+[class*="CardHeader"] .text-brand-accent,
+[class*="CardHeader"] .font-semibold.text-brand-accent,
+.text-2xl.font-semibold.text-brand-accent,
+.text-lg.font-semibold.text-brand-accent,
+.text-base.font-semibold.text-brand-accent,
+.text-sm.font-semibold.text-brand-accent,
+.text-sm.font-medium.text-brand-accent,
+label.text-brand-accent,
+div.text-brand-accent,
+h1.text-brand-accent,
+h2.text-brand-accent,
+h3.text-brand-accent,
+span.text-brand-accent {
+  color: var(--color-primary) !important;
+}
+
+/* ============================================================
+   TABLE HEADER SURFACE ΓÇö design-team wireframe (asset-management)
+   Raw <thead> tables that hardcode a grey header class render the
+   same #F5F4F0 header as EnhancedTable / ui/table.
+   ============================================================ */
+thead.bg-gray-50, thead.bg-gray-100, thead[class*="bg-muted"],
+thead.bg-gray-50 > tr, thead.bg-gray-100 > tr, thead[class*="bg-muted"] > tr,
+thead.bg-gray-50 th, thead.bg-gray-100 th, thead[class*="bg-muted"] th {
+  background-color: #F5F4F0 !important;
+}
+
+
+/* ============================================================
+   DESIGN-TEAM WIREFRAME SKIN ΓÇö asset-management reference
+   Global header / module bar / sidebar / stat cards / tables.
+   Colors only (plus sidebar/tab pill shape) ΓÇö no component edits.
+   Kept LAST so it wins over the legacy override layers above.
+   Wireframe tokens: ink #1A1A18, canvas #FDFDFB, surface #F5F4F0,
+   hover #F7F6F2, line rgba(26,26,24,.08), accent #D97757.
+   ============================================================ */
+
+/* ---------- Shared hairline border (header, sidebar, tables, cards) ---------- */
+html body .border-\[\#D5DbDB\],
+html body .border-\[\#d5dbdb\] {
+  border-color: rgba(26, 26, 24, 0.08) !important;
+}
+
+/* ---------- Top header ---------- */
+html body header.fixed.top-0 {
+  background-color: #fdfdfb !important;
+  border-bottom: 1px solid rgba(26, 26, 24, 0.08) !important;
+  box-shadow: none !important;
+}
+
+/* Dashboard / Executive Dashboard links: grey ΓåÆ ink on hover, no red */
+html body header.fixed.top-0 button[class*="hover:bg-[#f6f4ee]"] {
+  color: rgba(26, 26, 24, 0.62) !important;
+  transition: all 0.16s;
+}
+html body header.fixed.top-0 button[class*="hover:bg-[#f6f4ee]"]:hover {
+  background-color: #f7f6f2 !important;
+  color: #1a1a18 !important;
+}
+
+/* Project / site selectors ΓåÆ rounded pill (ΓëÑ768px) */
+@media (min-width: 768px) {
+  html body header.fixed.top-0 button[aria-label="Select project"],
+  html body header.fixed.top-0 button[aria-label="Select site"] {
+    height: 36px !important;
+    padding: 0 12px 0 10px !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(26, 26, 24, 0.08) !important;
+    background-color: #ffffff !important;
+    color: #1a1a18 !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+  }
+  html body header.fixed.top-0 button[aria-label="Select project"]:hover,
+  html body header.fixed.top-0 button[aria-label="Select site"]:hover {
+    border-color: rgba(26, 26, 24, 0.28) !important;
+  }
+}
+
+/* Notification bell ΓåÆ borderless icon button, thin grey line bell */
+html body header.fixed.top-0 button[aria-label="Notifications"] {
+  border: 1px solid rgba(26, 26, 24, 0.08) !important;
+  background-color: transparent !important;
+  border-radius: 8px !important;
+  overflow: visible !important;
+}
+html body header.fixed.top-0 button[aria-label="Notifications"]:hover {
+  background-color: var(--color-surface) !important;
+}
+html body header.fixed.top-0 button[aria-label="Notifications"] > svg {
+  width: 20px !important;
+  height: 20px !important;
+  color: rgba(26, 26, 24, 0.55) !important;
+  stroke-width: 1.8 !important;
+}
+/* Unread count ΓåÆ coral pill (accentOrange #E8916F), white bold count,
+   2px page-coloured ring so it reads cleanly over the bell.
+   The count is a shadcn Badge rendered as the bell button's next sibling. */
+html body header.fixed.top-0 button[aria-label="Notifications"] + [class*="bg-red-500"] {
+  top: -6px !important;
+  right: -8px !important;
+  min-width: 20px !important;
+  height: 18px !important;
+  padding: 0 5px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background-color: #e8916f !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px var(--color-bg) !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  line-height: 18px !important;
+  letter-spacing: 0 !important;
+  font-variant-numeric: tabular-nums;
+}
+html body header.fixed.top-0 [class*="bg-[#DA7756]"] {
+  background-color: var(--color-accent) !important;
+  color: #ffffff !important;
+}
+
+/* Profile avatar ΓåÆ surface grey */
+html body header.fixed.top-0 [class*="bg-[#C4b89D]"] {
+  background-color: #f5f4f0 !important;
+}
+
+/* ---------- Module bar (Transitioning / Maintenance / Safety ΓÇª) ---------- */
+html body div.fixed.top-16.h-12[style*="246, 244, 238"] {
+  background-color: #fdfdfb !important;
+  border-bottom-color: rgba(26, 26, 24, 0.08) !important;
+}
+html body div.fixed.top-16.h-12 button.flex-shrink-0 {
+  padding: 7px 12px !important;
+  border-radius: 8px !important;
+  border-bottom: none !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
+  color: rgba(26, 26, 24, 0.55) !important;
+  /* Animate fill/colour only ΓÇö animating borders made the previously
+     active tab flash an outline while switching modules. */
+  transition: background-color 0.16s, color 0.16s !important;
+}
+html body div.fixed.top-16.h-12 button.flex-shrink-0:hover {
+  background-color: #f7f6f2 !important;
+  color: #1a1a18 !important;
+}
+/* Active module: soft grey filled pill, bold ink label ΓÇö no outline or shadow.
+   (The generic "red text + red border button" rules also match this tab's
+   legacy classes, so border/shadow/outline are cleared here.) */
+html body div.fixed.top-16.h-12 button.flex-shrink-0.border-b-2,
+html body div.fixed.top-16.h-12 button.flex-shrink-0.border-b-2:hover,
+html body div.fixed.top-16.h-12 button.flex-shrink-0.border-b-2:focus-visible {
+  background-color: rgba(26, 26, 24, 0.07) !important;
+  /* zero-width (not `none`, which resets width to `medium`) so switching
+     tabs never animates a border in or out */
+  border: 0 solid transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #1a1a18 !important;
+  font-weight: 600 !important;
+}
+
+/* ---------- Sidebar ---------- */
+html body div.fixed.left-0.top-0[class*="bg-[#f6f4ee]"] {
+  background-color: #fdfdfb !important;
+  border-right-color: rgba(26, 26, 24, 0.06) !important;
+}
+/* Section label ("MAINTENANCE") */
+html body div.fixed.left-0.top-0[class*="bg-[#f6f4ee]"] h3.uppercase {
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.07em !important;
+  color: rgba(26, 26, 24, 0.38) !important;
+  opacity: 1 !important;
+}
+/* Items: 13.5px, 10px radius, grey text */
+html body div.fixed.left-0.top-0[class*="bg-[#f6f4ee]"] nav button.rounded-lg {
+  border-radius: 10px !important;
+  font-size: 13.5px !important;
+  padding-top: 9px !important;
+  padding-bottom: 9px !important;
+}
+html body div.fixed.left-0.top-0[class*="bg-[#f6f4ee]"] nav button .text-\[\#1a1a1a\],
+html body div.fixed.left-0.top-0[class*="bg-[#f6f4ee]"] nav button {
+  font-weight: 500;
+}
+html body div.fixed.left-0.top-0[class*="bg-[#f6f4ee]"] .hover\:bg-\[\#DBC2A9\]:hover {
+  background-color: #f7f6f2 !important;
+}
+html body div.fixed.left-0.top-0[class*="bg-[#f6f4ee]"] .bg-\[\#f0e8dc\] {
+  background-color: rgba(26, 26, 24, 0.07) !important;
+  box-shadow: none !important;
+}
+/* Active item: the red left bar becomes a soft full-row pill */
+html body div.fixed.left-0.top-0[class*="bg-[#f6f4ee]"] div.absolute.left-0.top-0.bottom-0[class*="bg-[#C72030]"] {
+  inset: 0 !important;
+  width: auto !important;
+  border-radius: 10px !important;
+  background-color: rgba(26, 26, 24, 0.07) !important;
+  z-index: -1;
+  pointer-events: none;
+}
+/* Count badge on menu items ΓåÆ accent */
+html body div.fixed.left-0.top-0[class*="bg-[#f6f4ee]"] span.rounded-full[class*="bg-[#C72030]"] {
+  background-color: var(--color-accent) !important;
+}
+
+/* ---------- Stat cards (AssetStats / StatsCard / any bg-[#F6F4EE] tile) ---------- */
+html body .bg-\[\#F6F4EE\],
+html body .bg-\[\#f6f4ee\],
+html body [class*="bg-[#F6F4EE]"],
+html body [class*="bg-[#f6f4ee]"] {
+  background-color: #f5f4f0 !important;
+}
+/* ΓÇªbut the fixed chrome keeps the canvas colour set above */
+html body header.fixed.top-0,
+html body div.fixed.left-0.top-0[class*="bg-[#f6f4ee]"],
+html body div.fixed.top-16.h-12[style*="246, 244, 238"] {
+  background-color: #fdfdfb !important;
+}
+/* Icon tile ΓåÆ white, soft-ink icon */
+html body .bg-\[\#C4B89D54\],
+html body [class*="bg-[#C4B89D54]"] {
+  background-color: #ffffff !important;
+  border-radius: 10px !important;
+}
+html body .bg-\[\#C4B89D54\] svg,
+html body .bg-\[\#C4B89D54\] span,
+html body [class*="bg-[#C4B89D54]"] svg,
+html body [class*="bg-[#C4B89D54]"] span {
+  color: rgba(26, 26, 24, 0.68) !important;
+}
+/* Value stays ink, label softens */
+html body [class*="bg-[#F6F4EE]"] .text-sm.font-medium,
+html body [class*="bg-[#f6f4ee]"] .text-xs.font-medium,
+html body [class*="bg-[#F6F4EE]"] .text-xs.font-medium {
+  color: rgba(26, 26, 24, 0.68) !important;
+}
+
+/* ---------- Tables ---------- */
+html body table th:not(.analytics-header),
+html body thead th:not(.analytics-header),
+html body [class*="table"] th:not(.analytics-header) {
+  background-color: #f5f4f0 !important;
+  color: rgba(26, 26, 24, 0.48) !important;
+  border-bottom: 1px solid rgba(26, 26, 24, 0.08) !important;
+  font-weight: 600 !important;
+}
+html body table td:not(:first-child),
+html body tbody td:not(:first-child) {
+  color: rgba(26, 26, 24, 0.68) !important;
+}
+html body table td,
+html body tbody td {
+  border-color: rgba(26, 26, 24, 0.08) !important;
+}
+html body table tbody tr:hover,
+html body [class*="table"] tbody tr:hover {
+  background-color: #f7f6f2 !important;
+}
+html body table.item-table-no-hover tbody tr:hover {
+  background-color: transparent !important;
+}
+
+
+/* ============================================================
+   PRIMARY ACTION BUTTONS (Add / Action / Submit ΓÇª) ΓÇö ONE SOURCE
+   Every filled primary button, whichever legacy class it still
+   carries (bg-brand, bg-[#C72030], bg-[#DA7756]ΓÇª), resolves to
+   --color-primary, and every hover variant to --color-primary-hover.
+   Change those two tokens in :root and all buttons follow.
+   ============================================================ */
+html body button.bg-brand,
+html body button[class*="bg-[#C72030]"],
+html body button[class*="bg-[#DA7756]"],
+html body button[class*="bg-[#da7756]"],
+html body a.bg-brand[class*="text-white"],
+html body [role="button"].bg-brand {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #ffffff !important;
+}
+html body button.bg-brand svg,
+html body button[class*="bg-[#C72030]"] svg,
+html body button[class*="bg-[#DA7756]"] svg,
+html body button[class*="bg-[#da7756]"] svg {
+  color: #ffffff !important;
+}
+html body button.bg-brand:hover,
+html body button.hover\:bg-brand-hover:hover,
+html body button[class*="hover:bg-[#C72030]"]:hover,
+html body button[class*="hover:bg-[#A01020]"]:hover,
+html body button[class*="hover:bg-[#A01828]"]:hover,
+html body button[class*="hover:bg-[#DA7756]"]:hover,
+html body button[class*="hover:bg-[#C45F40]"]:hover,
+html body button[class*="bg-[#C72030]"]:hover,
+html body button[class*="bg-[#DA7756]"]:hover,
+html body button[class*="bg-[#da7756]"]:hover,
+html body a.bg-brand:hover,
+html body [role="button"].bg-brand:hover {
+  background-color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+  color: #ffffff !important;
+}
+
+/* ---------- Button corner radius (wireframe .btn = 8px) ---------- */
+html body button.bg-brand,
+html body button[class*="bg-[#C72030]"],
+html body button[class*="bg-[#DA7756]"],
+html body button[class*="bg-[#da7756]"],
+html body button.fm-button-fix,
+html body a.fm-button-fix,
+html body [role="button"].fm-button-fix,
+html body a.bg-brand[class*="text-white"],
+html body [role="button"].bg-brand,
+html body button.btn-cancel,
+html body button.cancel-btn,
+html body button[class*="border-brand"],
+html body button[class*="border-[#C72030]"],
+html body button[class*="border-[#DA7756]"],
+html body button[class*="border-[#da7756]"] {
+  border-radius: var(--radius-button) !important;
+}
+
+/* ============================================================
+   SEGMENTED TABS (e.g. "Asset List | Analytics") ΓÇö wireframe .seg
+   Every Tabs list that uses the white bordered "grid w-full" look
+   becomes the design-team pill switcher: tinted track, white
+   raised active segment, grey inactive. No component edits.
+   ============================================================ */
+html body [role="tablist"][class*="bg-white"][class*="border-gray-200"] {
+  display: inline-flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px !important;
+  width: fit-content !important;
+  max-width: 100%;
+  height: auto !important;
+  padding: 3px !important;
+  background-color: rgba(26, 26, 24, 0.055) !important;
+  border: none !important;
+  border-radius: 12px !important;
+}
+html body [role="tablist"][class*="bg-white"][class*="border-gray-200"] [role="tab"] {
+  flex: none;
+  gap: 7px !important;
+  padding: 8px 16px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background-color: transparent !important;
+  color: rgba(26, 26, 24, 0.55) !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+  transition: all 0.16s;
+}
+html body [role="tablist"][class*="bg-white"][class*="border-gray-200"] [role="tab"]:hover {
+  color: #1a1a18 !important;
+}
+html body [role="tablist"][class*="bg-white"][class*="border-gray-200"] [role="tab"][data-state="active"] {
+  background-color: #ffffff !important;
+  color: #1a1a18 !important;
+  box-shadow: 0 1px 2px rgba(26, 26, 24, 0.1), 0 0 0 1px rgba(26, 26, 24, 0.05) !important;
+}
+
+/* ============================================================
+   DATA TABLE STRUCTURE ΓÇö wireframe .tw / .tr
+   Rounded 16px shell, tinted uppercase header (10.5px / 700 /
+   .09em tracking), airy 12.5px rows with hairline separators,
+   rounded-square checkboxes and soft tinted status pills.
+   Applies to EnhancedTable and every plain <table>.
+   ============================================================ */
+
+/* Shell around EnhancedTable */
+html body div.bg-white.rounded-lg:has(> .table-container) {
+  border: 1px solid rgba(26, 26, 24, 0.09) !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+/* Header cells */
+html body table thead th:not(.analytics-header),
+html body table th:not(.analytics-header) {
+  height: auto !important;
+  padding: 12px 16px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.09em !important;
+  text-transform: uppercase !important;
+  line-height: 1.4 !important;
+  color: rgba(26, 26, 24, 0.48) !important;
+  background-color: #f5f4f0 !important;
+  border-bottom: none !important;
+}
+
+/* Body cells */
+html body table tbody td {
+  padding: 13px 16px !important;
+  font-size: 12.5px !important;
+  line-height: 1.4;
+  color: rgba(26, 26, 24, 0.68) !important;
+  border-bottom: 1px solid rgba(26, 26, 24, 0.08) !important;
+}
+html body table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+html body table tbody tr.bg-blue-50,
+html body table tbody tr.bg-blue-50 > td {
+  background-color: rgba(26, 26, 24, 0.04) !important;
+}
+
+/* Checkboxes: 18px rounded square, ink when checked */
+html body button[role="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 4px !important;
+  border: 1.5px solid rgba(26, 26, 24, 0.22) !important;
+  background-color: transparent !important;
+  color: #ffffff !important;
+}
+html body button[role="checkbox"][data-state="checked"],
+html body button[role="checkbox"][data-state="indeterminate"] {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Status pills (StatusBadge / status-badge variants), keyed by their legacy fill */
+html body [class*="bg-[#C7EDDA]"][class*="border-[#C7EDDA]"],
+html body [class*="bg-[#F2EBC9]"][class*="border-[#F2EBC9]"],
+html body [class*="bg-[#F2C8C4]"][class*="border-[#F2C8C4]"],
+html body [class*="bg-[#DBE7FF]"][class*="border-[#DBE7FF]"],
+html body [class*="bg-[#D5DbDB]"][class*="border-[#D5DbDB]"] {
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 4px 10px !important;
+  justify-content: center !important;
+  text-align: center !important;
+  border: none !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  gap: 5px;
+}
+html body [class*="bg-[#C7EDDA]"][class*="border-[#C7EDDA]"] {
+  background-color: rgba(18, 161, 80, 0.12) !important;
+  color: #0e7f3f !important;
+}
+html body [class*="bg-[#F2EBC9]"][class*="border-[#F2EBC9]"] {
+  background-color: rgba(242, 163, 18, 0.3) !important;
+  color: #8a5b00 !important;
+}
+html body [class*="bg-[#F2C8C4]"][class*="border-[#F2C8C4]"] {
+  background-color: rgba(229, 72, 77, 0.12) !important;
+  color: #a32126 !important;
+}
+html body [class*="bg-[#D5DbDB]"][class*="border-[#D5DbDB]"] {
+  background-color: #f5f4f0 !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+}
+html body [class*="bg-[#DBE7FF]"][class*="border-[#DBE7FF]"] {
+  background-color: rgba(47, 111, 224, 0.12) !important;
+  color: #2556b0 !important;
+}
+
+/* ============================================================
+   TABLE HEADER ΓÇö specificity boost
+   Older layers above use `[class*="table"] th:not(.analytics-header)`
+   (0,2,1), which beat the header rules written earlier and kept the
+   old 48px / sentence-case header. Doubling the :not() lifts this
+   one above all of them. Wireframe .tr.h: 11px 20px, 10.5px / 700 /
+   .09em uppercase, surface #F5F4F0, no divider under the header.
+   ============================================================ */
+html body table thead th:not(.analytics-header):not(.analytics-header),
+html body table th:not(.analytics-header):not(.analytics-header),
+html body [class*="table"] th:not(.analytics-header):not(.analytics-header) {
+  height: auto !important;
+  padding: 11px 16px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.09em !important;
+  text-transform: uppercase !important;
+  line-height: 1.4 !important;
+  color: rgba(26, 26, 24, 0.48) !important;
+  background-color: #f5f4f0 !important;
+  border-bottom: none !important;
+}
+/* Header label / sort-arrow wrappers must follow the th, not their own sizes */
+html body table thead th:not(.analytics-header) > *,
+html body table thead th:not(.analytics-header) span,
+html body table thead th:not(.analytics-header) div {
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  letter-spacing: inherit !important;
+  text-transform: inherit !important;
+  color: inherit !important;
+}
+
+/* Row separators + cell rhythm (wireframe .tr: 13px 20px, 1px rgba(26,26,24,.08)) */
+html body table tbody tr td:not([colspan]),
+html body [class*="table"] tbody tr td:not([colspan]) {
+  padding-top: 13px !important;
+  padding-bottom: 13px !important;
+  border-bottom: 1px solid rgba(26, 26, 24, 0.08) !important;
+}
+html body table tbody tr:last-child td:not([colspan]) {
+  border-bottom: none !important;
+}
+
+/* ============================================================
+   ADD / CREATE FORM PAGES ΓÇö wireframe card sections
+   "ASSET CATEGORY", "ATTACHMENTS" ΓÇª section cards used a coral left
+   bar, coral heading and coral icon chip. Now: hairline-bordered
+   16px card, ink heading, grey icon chip, soft upload dropzone.
+   Keyed on the legacy section classes so every Add* page follows.
+   ============================================================ */
+
+/* Card shell */
+html body div:has(> [class*="border-l-4"][class*="border-l-[#DA7756]"]),
+html body div:has(> [class*="border-l-4"][class*="border-l-[#C72030]"]) {
+  border: 1px solid rgba(26, 26, 24, 0.09) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+/* Coral left bar ΓåÆ none */
+html body [class*="border-l-4"][class*="border-l-[#DA7756]"],
+html body [class*="border-l-4"][class*="border-l-[#C72030]"] {
+  border-left-width: 0 !important;
+}
+/* Section title: ink, 14px semibold */
+html body [class*="border-l-4"][class*="border-l-[#DA7756]"] [class*="text-[#DA7756]"],
+html body [class*="border-l-4"][class*="border-l-[#C72030]"] [class*="text-[#C72030]"] {
+  color: var(--color-text) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+}
+/* Icon chip: coral disc ΓåÆ soft grey */
+html body [class*="border-l-4"][class*="border-l-[#DA7756]"] span[class*="bg-[#DA7756]"],
+html body [class*="border-l-4"][class*="border-l-[#C72030]"] span[class*="bg-[#C72030]"] {
+  background-color: #f5f4f0 !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+}
+
+/* Remaining coral text on forms (labels, links, "Choose File") ΓåÆ primary ink */
+html body .text-\[\#DA7756\],
+html body [class*="text-[#DA7756]"] {
+  color: var(--color-primary) !important;
+}
+
+/* Upload dropzones ΓÇö wireframe .dropzone */
+html body .border-dashed.border-gray-300,
+html body .border-dashed.border-gray-200 {
+  border-width: 2px !important;
+  border-color: #ebe9e2 !important;
+  border-radius: 12px !important;
+  background-color: transparent;
+  transition: all 0.16s;
+}
+html body .border-dashed.border-gray-300:hover,
+html body .border-dashed.border-gray-200:hover {
+  border-color: rgba(26, 26, 24, 0.28) !important;
+  background-color: #fdfdfb;
+}
+html body .border-dashed button[class*="bg-[#f6f4ee]"],
+html body .border-dashed button[class*="bg-[#F6F4EE]"] {
+  background-color: #f5f4f0 !important;
+  border-radius: 8px !important;
+  font-weight: 600;
+}
+html body .border-dashed button svg {
+  color: currentColor !important;
+}
+
+/* Coral focus rings ΓåÆ ink ring */
+html body [class*="focus:ring-[#DA7756]"]:focus {
+  --tw-ring-color: rgba(var(--color-primary-rgb), 0.25) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* ============================================================
+   SEGMENTED TABS ΓÇö extended to every plain / grey tab list
+   (Asset details: "Asset Info | AMC Details | ΓÇª" and the inner
+   "Analytics | Asset Details" switcher). Excludes lists that opt out
+   of a track (transparent underline tabs, rounded-full pills).
+   ============================================================ */
+html body [role="tablist"]:is(
+    [class*="bg-gray-50"],
+    :not([class*="bg-"]):not([class*="border"]):not([class*="rounded-full"]):not([class*="rounded-none"])
+  ) {
+  display: inline-flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px !important;
+  width: fit-content !important;
+  max-width: 100%;
+  height: auto !important;
+  padding: 3px !important;
+  background-color: rgba(26, 26, 24, 0.055) !important;
+  border: none !important;
+  border-radius: 12px !important;
+}
+html body [role="tablist"]:is(
+    [class*="bg-gray-50"],
+    :not([class*="bg-"]):not([class*="border"]):not([class*="rounded-full"]):not([class*="rounded-none"])
+  ) [role="tab"] {
+  flex: none !important;
+  min-width: 0;
+  gap: 7px !important;
+  padding: 8px 16px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background-color: transparent !important;
+  color: rgba(26, 26, 24, 0.55) !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+  transition: all 0.16s;
+}
+html body [role="tablist"]:is(
+    [class*="bg-gray-50"],
+    :not([class*="bg-"]):not([class*="border"]):not([class*="rounded-full"]):not([class*="rounded-none"])
+  ) [role="tab"]:hover {
+  color: #1a1a18 !important;
+}
+html body [role="tablist"]:is(
+    [class*="bg-gray-50"],
+    :not([class*="bg-"]):not([class*="border"]):not([class*="rounded-full"]):not([class*="rounded-none"])
+  ) [role="tab"][data-state="active"] {
+  background-color: #ffffff !important;
+  color: #1a1a18 !important;
+  box-shadow: 0 1px 2px rgba(26, 26, 24, 0.1), 0 0 0 1px rgba(26, 26, 24, 0.05) !important;
+}
+
+/* ============================================================
+   LEGACY BEIGE / GREY SURFACES ΓåÆ wireframe surface + hairline
+   (detail-page section bars, panels, dividers)
+   ============================================================ */
+html body .bg-\[\#E5E0D3\],
+html body .bg-\[\#F6F7F7\] {
+  background-color: #f5f4f0 !important;
+}
+html body .bg-\[\#EDEAE3\] {
+  background-color: #efede6 !important;
+}
+html body .border-\[\#D9D9D9\],
+html body .border-\[\#EDEAE3\] {
+  border-color: rgba(26, 26, 24, 0.08) !important;
+}
+
+/* ============================================================
+   DETAIL PAGES ΓÇö stat tiles, icon chips, selected rings, switchers
+   ============================================================ */
+/* Selected-state rings that were hard red */
+html body .ring-red-600,
+html body .ring-red-500,
+html body [class*="ring-[#C72030]"] {
+  --tw-ring-color: var(--color-primary) !important;
+}
+html body .border-red-600,
+html body .border-red-500 {
+  border-color: var(--color-primary) !important;
+}
+/* Icon chips with inline beige fill ΓåÆ white chip, soft-ink icon (wireframe .pic) */
+html body [style*="237, 234, 227"] {
+  background: #ffffff !important;
+  border-radius: 10px !important;
+}
+html body [style*="237, 234, 227"] svg,
+html body [style*="237, 234, 227"] svg path,
+html body [style*="237, 234, 227"] svg circle {
+  stroke: rgba(26, 26, 24, 0.68) !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+}
+html body [style*="237, 234, 227"] svg [fill="#C72030"] {
+  fill: rgba(26, 26, 24, 0.68) !important;
+}
+html body .bg-white\/20 svg,
+html body .bg-white\/20 {
+  color: rgba(26, 26, 24, 0.68) !important;
+}
+/* Switcher triggers must not stretch full width / stack */
+html body [role="tablist"] [role="tab"].w-full {
+  width: auto !important;
+}
+
+/* ============================================================
+   DETAIL PAGES ΓÇö drop the outer white card around the tab set
+   The wireframe lays tabs and content straight on the canvas.
+   Targets any white bordered card whose direct child is a Tabs root
+   holding a tablist (Asset details, and every detail page built alike).
+   ============================================================ */
+html body div.bg-white.rounded-lg.border:has(> [data-orientation="horizontal"] > [role="tablist"]) {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* ============================================================
+   DETAIL PAGES ΓÇö alignment & card surfaces (wireframe asset details)
+   Tab panels no longer inset their content, so the inner switcher,
+   config card and tiles share the left edge of the tab bar.
+   ============================================================ */
+html body [role="tabpanel"][class*="p-4"][class*="sm:p-6"] {
+  padding: 20px 0 0 !important;
+}
+/* Big shadowed content cards ΓåÆ white hairline card, 16px radius */
+html body div.rounded-xl.border.shadow-lg {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(26, 26, 24, 0.09) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+html body div.rounded-xl.border.shadow-lg .border-gray-300 {
+  border-color: rgba(26, 26, 24, 0.08) !important;
+}
+/* Stat tiles on detail pages: hairline instead of heavy border, 16px corners */
+html body div.border.bg-\[\#F6F4EE\] {
+  border: none !important;
+  border-radius: 16px !important;
+}
+
+/* ============================================================
+   MODULE BAR (Transitioning ΓÇª Accounting) ΓÇö wireframe .modrow
+   Tabs sit left-aligned in a tight row (2px gap, 7px 12px pills)
+   instead of being spread edge-to-edge; bar is 48px with a hairline.
+   Also clears the grey spacer strip above the sidebar section label.
+   ============================================================ */
+html body div.fixed.top-16.h-12 > div {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+html body div.fixed.top-16.h-12 div.flex[class*="justify-"] {
+  justify-content: flex-start !important;
+  width: max-content !important;
+  max-width: none !important;
+  gap: 2px !important;
+}
+html body div.fixed.top-16.h-12 div.flex[class*="justify-"] > button {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+html body div.fixed.top-16.h-12 button.flex-shrink-0 {
+  height: auto !important;
+  line-height: 1.4;
+}
+/* Sidebar: empty spacer above the section label was picking up the grey surface */
+html body div.fixed.left-0.top-0 > div > div.w-full.h-4,
+html body div.fixed.left-0.top-0 div.w-full.h-4[class*="bg-[#f6f4ee]"] {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+/* ============================================================
+   PRIMARY BUTTONS ΓÇö disabled state (e.g. login "Continue")
+   A disabled primary button stays the primary ink colour at reduced
+   opacity with a clearly readable white label, and does not lift.
+   ============================================================ */
+html body button[class*="bg-[#C72030]"]:disabled,
+html body button.bg-brand:disabled,
+html body button[class*="bg-[#DA7756]"]:disabled {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+html body button[class*="bg-[#C72030]"]:disabled:hover,
+html body button.bg-brand:disabled:hover {
+  background-color: var(--color-primary) !important;
+}
+/* Login-page primary buttons: full-width, 12px radius, 600 label */
+html body button[class*="bg-[#C72030]"][class*="w-full"][class*="h-12"] {
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  color: #ffffff !important;
+}
+
+
+/* ============================================================
+   FORM FIELD RADIUS ΓÇö consistent with the 16px cards
+   MUI outlined fields (TextField / Select / Autocomplete / pickers),
+   shadcn inputs, textareas and select triggers all share one token.
+   ============================================================ */
+html body .MuiOutlinedInput-root,
+html body .MuiOutlinedInput-notchedOutline,
+html body .MuiInputBase-root.MuiOutlinedInput-root,
+html body .MuiAutocomplete-inputRoot {
+  border-radius: var(--radius-input) !important;
+}
+html body input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not(.MuiInputBase-input):not(.MuiSelect-nativeInput),
+html body textarea:not(.MuiInputBase-input),
+html body select,
+html body button[role="combobox"] {
+  border-radius: var(--radius-input) !important;
+}
+
+
+/* ============================================================
+   FORM FIELD FOCUS ΓÇö softer than full ink
+   Previously focus used the solid primary ink + 2px ring, which read
+   as a heavy black box. Now a mid-grey border with a faint halo.
+   ============================================================ */
+html body input:not([type="checkbox"]):not([type="radio"]):focus,
+html body input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+html body textarea:focus,
+html body textarea:focus-visible,
+html body select:focus,
+html body button[role="combobox"]:focus,
+html body button[role="combobox"][data-state="open"] {
+  border-color: var(--color-input-focus-border) !important;
+  box-shadow: 0 0 0 4px var(--color-input-focus-ring) !important;
+  --tw-ring-color: transparent !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-width: 0px !important;
+  outline: none !important;
+}
+html body .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline,
+html body .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-input-focus-border) !important;
+  border-width: 1px !important;
+}
+html body .MuiOutlinedInput-root.Mui-focused {
+  box-shadow: 0 0 0 4px var(--color-input-focus-ring) !important;
+  border-radius: var(--radius-input);
+}
+
+/* Dashboard/stat card glyphs use neutral ink, not legacy orange accents. */
+html body [class*="bg-[#C4B89D54]"] svg,
+html body [class*="bg-[#CDCAF5]"] svg,
+html body [class*="bg-[#76CDC180]"] svg,
+html body [class*="bg-[#E3909060]"] svg,
+html body [class*="bg-[#85BDF660]"] svg,
+html body [class*="bg-[#FFDD9480]"] svg,
+html body [class*="bg-[#E6DDCF]"] svg,
+html body .figma-card-icon {
+  color: var(--color-text) !important;
+  stroke: currentColor !important;
+  fill: #ffffff !important;
+}
+
+/* Normalize legacy orange icon glyphs across create/edit pages and FM. */
+html body #root svg[class~="text-[#DA7756]" i]:not(.recharts-surface),
+html body #root [class~="text-[#DA7756]" i] svg:not(.recharts-surface),
+html body #root svg[color="#DA7756" i]:not(.recharts-surface),
+html body #root svg[style*="color: #DA7756" i]:not(.recharts-surface),
+html body #root svg[style*="color:#DA7756" i]:not(.recharts-surface),
+html body #root svg[style*="color: rgb(217, 119, 87)" i]:not(.recharts-surface),
+html body #root svg[style*="color:rgb(217, 119, 87)" i]:not(.recharts-surface) {
+  color: var(--color-text) !important;
+  stroke: currentColor !important;
+  fill: #ffffff !important;
+}
+
+html body #root svg:not(.recharts-surface):not([class*="recharts"]) [stroke="#DA7756" i],
+html body #root svg:not(.recharts-surface):not([class*="recharts"]) [fill="#DA7756" i],
+html body #root svg[stroke="#DA7756" i]:not(.recharts-surface),
+html body #root svg[fill="#DA7756" i]:not(.recharts-surface) {
+  color: var(--color-text) !important;
+  stroke: var(--color-text) !important;
+  fill: #ffffff !important;
+}
+
+/* Primary action icons stay white even when legacy SVG paths hardcode red. */
+html body button.bg-brand svg,
+html body button[class~="bg-brand"] svg {
+  color: #ffffff !important;
+}
+html body button.bg-brand svg [fill="#C72030" i],
+html body button[class~="bg-brand"] svg [fill="#C72030" i],
+html body button.bg-brand svg [fill="#C62828" i],
+html body button[class~="bg-brand"] svg [fill="#C62828" i] {
+  fill: #ffffff !important;
+}
+
+/* Asset details View QR uses a custom SVG with this unique viewBox. */
+html body #root button svg[viewBox="0 0 14 15"],
+html body #root button svg[viewBox="0 0 14 15"] path {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* QR dialog Download uses the shared outline Button but renders as a CTA. */
+html body [role="dialog"]:has(img[alt$="QR Code"]) button:has(svg.lucide-download) {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #ffffff !important;
+}
+html body [role="dialog"]:has(img[alt$="QR Code"]) button:has(svg.lucide-download):hover {
+  background-color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+  color: #ffffff !important;
+}
+html body [role="dialog"]:has(img[alt$="QR Code"]) button:has(svg.lucide-download) svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Outlined (Cancel/Reset) buttons: white bg, black border + black text.
+   Table toolbar icon buttons (Filter / Columns / Export ΓÇª) are excluded ΓÇö they
+   use the outline variant too but take the hairline border at the end of this file. */
+html body button[class*="bg-white" i][class*="text-[#C72030]" i]:not([title="Import"]),
+html body button[class*="bg-white" i][class*="text-[#DA7756]" i]:not([title="Import"]),
+html body button[class*="bg-white" i][class*="text-[#BF213E]" i]:not(:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."])):not([title="Import"]),
+html body button[class*="bg-white" i][class*="text-[#d97757]" i]:not([title="Import"]),
+html body button[class*="border-[#da7756]" i]:not([title="Import"]),
+html body button[class*="border-[#d97757]" i]:not([title="Import"]),
+html body button.cancel-btn:not([title="Import"]),
+html body button.btn-cancel:not([title="Import"]),
+html body .btn-cancel {
+  background-color: #ffffff !important;
+  color: #1a1a18 !important;
+  -webkit-text-fill-color: #1a1a18 !important;
+  border: 1px solid #1a1a18 !important;
+  border-radius: var(--radius-button, 8px) !important;
+}
+html body button[class*="bg-white" i][class*="text-[#C72030]" i]:hover,
+html body button[class*="bg-white" i][class*="text-[#DA7756]" i]:hover,
+html body button[class*="bg-white" i][class*="text-[#BF213E]" i]:not(:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."])):hover,
+html body button[class*="border-[#da7756]" i]:hover,
+html body .btn-cancel:hover {
+  background-color: #ffffff !important;
+  color: #1a1a18 !important;
+}
+html body button[class*="bg-white" i][class*="text-[#C72030]" i] svg,
+html body button[class*="bg-white" i][class*="text-[#DA7756]" i] svg {
+  color: #1a1a18 !important;
+  stroke: #1a1a18 !important;
+}
+
+/* Primary submit actions: black background with white text across button variants. */
+html body button[type="submit"],
+html body button[type="submit"]:hover,
+html body button.btn-primary,
+html body button.btn-primary:hover,
+html body .MuiDialogActions-root button[class*="text-white"] {
+  background-color: #1a1a18 !important;
+  background-image: none !important;
+  border-color: #1a1a18 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body button[type="submit"] svg,
+html body button.btn-primary svg,
+html body .MuiDialogActions-root button[class*="text-white"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Pencil/edit actions should use the same neutral ink across the app. */
+html body button:has(svg.lucide-pencil) svg,
+html body button:has(svg.lucide-pen) svg,
+html body button:has(svg.lucide-edit) svg,
+html body button[aria-label*="edit" i] svg,
+html body button[title*="edit" i] svg {
+  color: #1a1a18 !important;
+  stroke: #1a1a18 !important;
+}
+
+/* Add / Action primary buttons use the 8px radius from asset-management.html. */
+html body button.btn-primary,
+html body button[class*="bg-brand"],
+html body button[class*="bg-[#C72030]"],
+html body button[class*="bg-[#DA7756]"],
+html body button[class*="bg-[#da7756]"],
+html body button[class*="bg-[#1a1a18]"],
+html body button[class*="color-primary"],
+html body button:has(svg.lucide-plus),
+html body button[class*="purple-btn2"] {
+  border-radius: 8px !important;
+}
+
+/* Stat-card icon tiles match the white, rounded tiles in the reference design. */
+html body [class*="bg-[#C4B89D54]"],
+html body div[class*="w-10"][class*="h-10"][style*="196, 184, 157"] {
+  background-color: #ffffff !important;
+  border-radius: 12px !important;
+}
+
+html body div[class*="bg-[#F6F4EE]"][class*="rounded-lg"]:has(> div[class*="w-10"][class*="h-10"][style*="196, 184, 157"]) {
+  border-radius: 16px !important;
+}
+
+html body div[class*="bg-[#F6F4EE]"][class*="rounded-lg"]:has(> div[class*="bg-[#C4B89D54]"]) {
+  border-radius: 16px !important;
+}
+
+/* Keep submit controls readable and visually unchanged on hover. */
+html body [type="submit"],
+html body [type="submit"]:hover,
+html body [type="submit"]:focus,
+html body [type="submit"]:focus-visible,
+html body [type="submit"]:active {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  transition: none !important;
+}
+
+html body [type="submit"] *,
+html body [type="submit"]:hover * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Header switch and organization/site selectors use the same global pill style. */
+html body #root header button[class*="border-[#D5DbDB]" i],
+html body #root header button[class*="border-[#D5DbDB]" i]:hover,
+html body #root header button[class*="border-[#D5DbDB]" i]:focus-visible {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: max-content !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border: 1px solid rgba(26, 26, 24, 0.08) !important;
+  border-radius: 9999px !important;
+  background: #ffffff !important;
+  color: #1a1a18 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+html body #root header button[class*="border-[#D5DbDB]" i] svg {
+  color: rgba(26, 26, 24, 0.48) !important;
+  stroke: currentColor !important;
+}
+
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg:is(.lucide-building2, .lucide-building-2)):has(svg.lucide-chevron-down),
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-map-pin):has(svg.lucide-chevron-down),
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg:is(.lucide-building2, .lucide-building-2)):has(svg.lucide-chevron-down):hover,
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-map-pin):has(svg.lucide-chevron-down):hover,
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg:is(.lucide-building2, .lucide-building-2)):has(svg.lucide-chevron-down):focus-visible,
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-map-pin):has(svg.lucide-chevron-down):focus-visible {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border: 1px solid rgba(26, 26, 24, 0.08) !important;
+  border-radius: 9999px !important;
+  background: #ffffff !important;
+  color: #1a1a18 !important;
+  box-shadow: none !important;
+}
+
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg:is(.lucide-building2, .lucide-building-2)):has(svg.lucide-chevron-down) svg,
+html body #root header button[class*="text-[#1a1a1a]"]:has(svg.lucide-map-pin):has(svg.lucide-chevron-down) svg {
+  color: rgba(26, 26, 24, 0.48) !important;
+  stroke: currentColor !important;
+}
+
+/* Shared segmented tabs used by the escalation matrix sections. */
+html body #root div.p-0.space-y-0 div.flex.border-b.border-gray-200.bg-white {
+  display: flex !important;
+  width: 100% !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 4px !important;
+  border-radius: 12px !important;
+  background: #f1f1ef !important;
+}
+
+html body #root div.p-0.space-y-0 div.flex.border-b.border-gray-200.bg-white > button.border-b-2 {
+  padding: 8px 24px !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: #4b5563 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 20px !important;
+  transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease !important;
+}
+
+html body #root div.p-0.space-y-0 div.flex.border-b.border-gray-200.bg-white > button.border-b-2:hover:not([class*="border-[#C72030]"]) {
+  background: rgba(255, 255, 255, 0.6) !important;
+  color: #1a1a18 !important;
+}
+
+html body #root div.p-0.space-y-0 div.flex.border-b.border-gray-200.bg-white > button.border-b-2[class*="border-[#C72030]"] {
+  border-color: #e5e5e5 !important;
+  background: #ffffff !important;
+  color: #1a1a18 !important;
+  box-shadow: 0 1px 2px rgba(26, 26, 24, 0.08) !important;
+}
+
+/* Global styles for the migrated component-specific presentation changes. */
+html body #root button.inline-flex.rounded-none {
+  border-radius: var(--radius-button, 8px) !important;
+}
+
+html body #root .MuiPaper-root:has(> .MuiBox-root > .MuiBox-root > button[class*="px-8"][class*="text-[#da7756]"]) > .MuiBox-root:first-child {
+  background: #1a1a18 !important;
+}
+
+html body #root button[class*="min-w-[34px]"][class*="text-gray-800"],
+html body #root button[class*="min-w-[34px]"][class*="text-gray-800"]:hover {
+  background: transparent !important;
+  color: #1a1a18 !important;
+}
+
+html body #root button[class*="min-w-[34px]"][class*="bg-[#C72030]"] {
+  background: #1a1a18 !important;
+  color: #ffffff !important;
+}
+
+html body #root div.p-0.space-y-0 div.border-b[class*="last:border-b-0"] > div.flex.items-center.justify-between.bg-gray-50 > div.flex.items-center.space-x-4 > span.font-semibold.text-purple-600 {
+  color: #000000 !important;
+}
+
+html body #root div.p-0.space-y-0 div.space-y-0 > div.flex.border-b.border-gray-200.bg-white + div.space-y-0 {
+  margin-top: 8px !important;
+}
+
+/* Keep form icons, radio controls, and submit actions neutral black. */
+html body #root form svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+html body #root form input[type="radio"],
+html body #root form .MuiRadio-root,
+html body #root form [role="radio"] {
+  accent-color: #000000 !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+html body #root form [role="radio"] > span {
+  background-color: #000000 !important;
+}
+
+html body #root form button[type="submit"],
+html body #root form input[type="submit"] {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root form button[type="submit"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Stat-card icons use a 10x10 tinted tile; keep the glyph itself black. */
+html body #root div[class*="w-10"][class*="h-10"][style*="196, 184, 157"] svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Offers add-page back arrow and image upload hover styling. */
+html body #root .MuiBox-root:has(> input[type="file"][accept="image/*"])
+  > .MuiBox-root:hover {
+  border-color: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(input[type="file"][accept="image/*"])
+  > .MuiPaper-root:has(.MuiIconButton-root svg.lucide-arrow-left)
+  .MuiIconButton-root {
+  color: #000000 !important;
+}
+
+/* BMS invoice report filter controls. */
+html body #root div.p-2.sm\:p-4.lg\:p-6 button:has(svg.lucide-calendar) svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+html body #root div.p-2.sm\:p-4.lg\:p-6 > div.bg-white.rounded-lg.border.border-gray-200.p-6
+  > div.flex.gap-2.mt-6 > button,
+html body #root div.p-2.sm\:p-4.lg\:p-6 > div.bg-white.rounded-lg.border.border-gray-200.p-6
+  > div.flex.gap-2.mt-6 > button:hover,
+html body #root div.p-2.sm\:p-4.lg\:p-6 > div.bg-white.rounded-lg.border.border-gray-200.p-6
+  > div.flex.gap-2.mt-6 > button:disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Block Days Configuration: checked status-toggle thumb should be black. */
+html body #root div.p-6.bg-gray-50.min-h-screen:has(input[placeholder="Search"])
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+}
+
+html body #root div.p-6.bg-gray-50.min-h-screen:has(input[placeholder="Search"])
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb {
+  background-color: #000000 !important;
+}
+
+/* Slots Configuration: keep labels visible on black Save and Submit buttons. */
+html body #root div.p-6.bg-brand-bg.min-h-screen
+  .space-y-4.rounded-lg.border.border-brand-border.bg-white.p-4 button.bg-brand,
+html body:has(#root div.p-6.bg-brand-bg.min-h-screen)
+  [role="dialog"][class*="sm:max-w-[700px]"]
+  button[class*="bg-[#C72030]"] {
+  background-color: #1a1a18 !important;
+  border-color: #1a1a18 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root div.p-6.bg-brand-bg.min-h-screen
+  .space-y-4.rounded-lg.border.border-brand-border.bg-white.p-4 button.bg-brand *,
+html body:has(#root div.p-6.bg-brand-bg.min-h-screen)
+  [role="dialog"][class*="sm:max-w-[700px]"]
+  button[class*="bg-[#C72030]"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+html body #root div.p-6.bg-brand-bg.min-h-screen button.schedule-rules-save-action,
+html body #root div.p-6.bg-brand-bg.min-h-screen button.schedule-rules-save-action:hover {
+  background-color: #1a1a18 !important;
+  border-color: #1a1a18 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root div.p-6.bg-brand-bg.min-h-screen button.schedule-rules-save-action > span {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Template list status toggle thumb. */
+html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
+  .MuiSwitch-root .MuiSwitch-switchBase,
+html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+}
+
+html body #root div.max-w-full.overflow-x-hidden:has(> div.mb-6 > h1)
+  .MuiSwitch-root .MuiSwitch-thumb {
+  background-color: #000000 !important;
+}
+
+/* Template details page gear and back-navigation icons. */
+html body #root .MuiBox-root:has(> .MuiTypography-root):has(.bg-white.rounded-lg.shadow-sm.border h3)
+  .bg-white.rounded-lg.shadow-sm.border > div.bg-\[\#F6F4EE\] svg.MuiSvgIcon-root,
+html body #root .MuiBox-root:has(> .MuiTypography-root):has(.bg-white.rounded-lg.shadow-sm.border h3)
+  button:has(> svg.lucide-arrow-left) > svg.lucide-arrow-left {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Ways to Earn dialog toggle thumb. */
+html body [role="dialog"]:has(input[title="Upload image"])
+  .MuiSwitch-root .MuiSwitch-switchBase,
+html body [role="dialog"]:has(input[title="Upload image"])
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+  background-color: transparent !important;
+}
+
+html body [role="dialog"]:has(input[title="Upload image"])
+  .MuiSwitch-root .MuiSwitch-thumb {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  box-sizing: border-box !important;
+  background-color: #000000 !important;
+}
+
+/* Brand Partners Config dialog toggle thumb. */
+html body [role="dialog"]:has(input[title="Upload logo"])
+  .MuiSwitch-root .MuiSwitch-switchBase,
+html body [role="dialog"]:has(input[title="Upload logo"])
+  .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+  background-color: transparent !important;
+}
+
+html body [role="dialog"]:has(input[title="Upload logo"])
+  .MuiSwitch-root .MuiSwitch-thumb {
+  background-color: #000000 !important;
+}
+
+/* Incident attachment picker button. */
+html body #root label[for="file-upload"] > button {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Generate Bills action icon on Accounting Charge Calculations. */
+html body #root button:has(> svg.lucide-send) > svg.lucide-send {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Loyalty Inventory Add New Item status toggle thumb. */
+html body [role="dialog"]:has(.space-y-4.mt-4.pb-4) .MuiSwitch-root .MuiSwitch-switchBase,
+html body [role="dialog"]:has(.space-y-4.mt-4.pb-4) .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: #000000 !important;
+}
+
+html body [role="dialog"]:has(.space-y-4.mt-4.pb-4) .MuiSwitch-root .MuiSwitch-thumb {
+  background-color: #000000 !important;
+}
+
+/* Add User form: replace orange accents with black. */
+html body #root .MuiBox-root:has(#profile-upload)
+  .MuiPaper-root > .MuiBox-root:has(> h2) > .MuiBox-root:first-child {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiPaper-root:has(#profile-upload) .MuiAvatar-root {
+  border-color: #000000 !important;
+  color: #000000 !important;
+}
+
+html body #root .MuiPaper-root:has(#profile-upload) .MuiAvatar-root svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) button[title="Capture from camera"],
+html body #root .MuiBox-root:has(#profile-upload) button[title="Upload image"] {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) button[title="Capture from camera"] svg,
+html body #root .MuiBox-root:has(#profile-upload) button[title="Upload image"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiFormLabel-asterisk,
+html body #root .MuiBox-root:has(#profile-upload) .MuiInputLabel-root.Mui-focused,
+html body #root .MuiBox-root:has(#profile-upload) .MuiFormLabel-root.Mui-focused,
+html body #root .MuiBox-root:has(#profile-upload) .MuiOutlinedInput-root.Mui-focused fieldset {
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiRadio-root,
+html body #root .MuiBox-root:has(#profile-upload) .MuiRadio-root.Mui-checked {
+  color: #000000 !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root:has(+ .MuiButton-root),
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root:has(+ .MuiButton-root):hover,
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root:has(+ .MuiButton-root).Mui-disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(#profile-upload) .MuiButton-root[class*="border-[#da7756]"] {
+  border-color: #000000 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* Add/Edit Template submit action. */
+html body #root .MuiBox-root:has(> .MuiPaper-root svg[stroke="#C72030"])
+  > .MuiBox-root:last-child > .MuiButton-root:first-child,
+html body #root .MuiBox-root:has(> .MuiPaper-root svg[stroke="#C72030"])
+  > .MuiBox-root:last-child > .MuiButton-root:first-child:hover,
+html body #root .MuiBox-root:has(> .MuiPaper-root svg[stroke="#C72030"])
+  > .MuiBox-root:last-child > .MuiButton-root:first-child.Mui-disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Template form actions follow the form card as a sibling action row. */
+html body #root .MuiPaper-root + .MuiBox-root:has(> .MuiButton-root:first-child)
+  > .MuiButton-root:first-child,
+html body #root .MuiPaper-root + .MuiBox-root:has(> .MuiButton-root:first-child)
+  > .MuiButton-root:first-child:hover,
+html body #root .MuiPaper-root + .MuiBox-root:has(> .MuiButton-root:first-child)
+  > .MuiButton-root:first-child.Mui-disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Pricing Rule Create page Cancel button outline. */
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root):has(svg path[d="M12 6v6l4 2"])
+  > .MuiBox-root:last-child > .MuiButton-root:last-child,
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root):has(svg path[d="M12 6v6l4 2"])
+  > .MuiBox-root:last-child > .MuiButton-root:last-child:hover,
+html body #root .MuiBox-root:has(> .MuiTypography-body2 + .MuiPaper-root):has(svg path[d="M12 6v6l4 2"])
+  > .MuiBox-root:last-child > .MuiButton-root:last-child:focus-visible {
+  border-color: #000000 !important;
+}
+
+/* Customer Pricing Rule dialog Organization field label. */
+html body #root [role="dialog"]:has(.MuiDialogTitle-root)
+  .space-y-4.mt-4.pb-4 > .MuiFormControl-root:first-child .MuiInputLabel-root,
+html body #root [role="dialog"]:has(.MuiDialogTitle-root)
+  .space-y-4.mt-4.pb-4 > .MuiFormControl-root:first-child .MuiInputLabel-root.Mui-focused,
+html body #root [role="dialog"]:has(.MuiDialogTitle-root)
+  .space-y-4.mt-4.pb-4 > .MuiFormControl-root:first-child .MuiFormLabel-asterisk {
+  color: #000000 !important;
+}
+
+/* Wallet Top-up Organization field label. */
+html body #root .MuiFormControl-root:has(#organization_select) .MuiInputLabel-root,
+html body #root .MuiFormControl-root:has(#organization_select) .MuiInputLabel-root.Mui-focused,
+html body #root .MuiFormControl-root:has(#organization_select) .MuiFormLabel-asterisk {
+  color: #000000 !important;
+}
+
+/* Loyalty customer Credit Wallet button. */
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus),
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus):hover,
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus):focus-visible,
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus):disabled {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root button.flex.items-center.gap-2[class*="bg-[#00A651]"]:has(svg.lucide-plus) svg.lucide-plus {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Polls search filter icon. */
+html body #root .MuiPaper-root:has(input[placeholder="Search polls..."])
+  .MuiIconButton-root:has(svg.lucide-filter),
+html body #root .MuiPaper-root:has(input[placeholder="Search polls..."])
+  .MuiIconButton-root:has(svg.lucide-filter):hover {
+  border-color: #000000 !important;
+  color: #000000 !important;
+}
+
+html body #root .MuiPaper-root:has(input[placeholder="Search polls..."])
+  .MuiIconButton-root:has(svg.lucide-filter) svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Parking Slot dialog field labels stay black on hover and focus. */
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root,
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root:hover,
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiInputLabel-root.Mui-focused,
+html body #root [role="dialog"][class*="sm:max-w-[620px]"] .MuiFormLabel-asterisk {
+  color: #000000 !important;
+}
+
+/* Roster edit: keep selected recurring-day labels readable on black buttons. */
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button[class*="bg-[#C72030]"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Roster edit: previous/next and back-navigation arrows should be black. */
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button:has(
+    svg.lucide-arrow-left,
+    svg.lucide-arrow-right,
+    svg.lucide-chevron-left,
+    svg.lucide-chevron-right
+  ),
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button[aria-label*="previous" i],
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button[aria-label*="next" i],
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  .MuiPickersArrowSwitcher-button {
+  color: #000000 !important;
+}
+
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button:has(
+    svg.lucide-arrow-left,
+    svg.lucide-arrow-right,
+    svg.lucide-chevron-left,
+    svg.lucide-chevron-right
+  ) svg,
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button[aria-label*="previous" i] svg,
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  button[aria-label*="next" i] svg,
+html body #root div.p-6.space-y-6.relative:has(> header h1)
+  .MuiPickersArrowSwitcher-button svg {
+  color: #000000 !important;
+  fill: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Roster list pagination arrows: override the legacy red arrow color. */
+html body #root div.flex.items-center.justify-between.mt-4
+  button:has(svg.lucide-chevron-left, svg.lucide-chevron-right) {
+  color: #000000 !important;
+}
+
+html body #root div.flex.items-center.justify-between.mt-4
+  button:has(svg.lucide-chevron-left, svg.lucide-chevron-right) svg {
+  color: #000000 !important;
+  fill: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Roster detail back arrow and Edit icon should use black instead of red. */
+html body #root div.p-6.space-y-6:has(> header button[title="Back to Roster Management"])
+  header button[title="Back to Roster Management"] svg,
+html body #root div.p-6.space-y-6:has(> header button[title="Back to Roster Management"])
+  > header > div.flex.items-center.gap-3 button svg {
+  color: #000000 !important;
+  fill: none !important;
+  stroke: #000000 !important;
+}
+
+html body #root div.p-6.space-y-6:has(> header button[title="Back to Roster Management"])
+  > header > div.flex.items-center.gap-3 button svg * {
+  fill: none !important;
+  stroke: #000000 !important;
+}
+
+/* Manage Flat details: orange date text, Refetch Data border and icon in black. */
+html body #root div:has(> div > div > div > button[title="Back to Manage Flats"]) .text-\[\#da7756\] {
+  color: #000000 !important;
+}
+
+html body #root div:has(> div > div > div > button[title="Back to Manage Flats"])
+  button:not([title]):has(svg.lucide-refresh-cw) {
+  border-color: #000000 !important;
+}
+
+html body #root div:has(> div > div > div > button[title="Back to Manage Flats"])
+  button:not([title]) svg.lucide-refresh-cw,
+html body #root div:has(> div > div > div > button[title="Back to Manage Flats"])
+  button:not([title]) svg.lucide-refresh-cw * {
+  color: #000000 !important;
+  stroke: #000000 !important;
+  fill: none !important;
+}
+
+/* Active step in the Create Contest wizard. */
+html body #root .create-contest-page nav[aria-label="Contest creation steps"]
+  button[aria-current="step"] {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .create-contest-page nav[aria-label="Contest creation steps"]
+  button[aria-current="step"]:focus-visible {
+  outline-color: #000000 !important;
+}
+
+/* Loyalty Offer details: active step and section gear icons. */
+html body #root .MuiBox-root:has(.MuiStepper-root):has(button[aria-label="Go back"])
+  .MuiStepper-root .MuiStepLabel-label.Mui-active > .MuiBox-root > .MuiBox-root,
+html body #root .MuiBox-root:has(.MuiStepper-root):has(button[aria-label="Go back"])
+  .MuiStepper-root .MuiStepLabel-label.Mui-completed > .MuiBox-root > .MuiBox-root {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html body #root .MuiBox-root:has(.MuiStepper-root):has(button[aria-label="Go back"])
+  .MuiSvgIcon-root {
+  color: #000000 !important;
+}
+
+/* Incident details header actions use dark fills with white labels. */
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"],
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"]:hover,
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"] *,
+html body #root .flex.flex-row.items-center.justify-between:has(+ div.p-6.bg-white):has(> div.flex.gap-2 > button[class*="bg-[#C72030]"])
+  > div.flex.gap-2 > button[class*="bg-[#C72030]"]:hover * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Accounting custom-settings address Edit/Delete buttons. */
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil),
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil):hover,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2),
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2):hover {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil) *,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil):hover *,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2) *,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2):hover * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-pencil) svg,
+html body #root div.min-h-screen[class*="bg-[#f6f4ee]"] button:has(svg.lucide-trash-2) svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-trash-2) {
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: 100px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  font-size: 12px !important;
+}
+
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-trash-2)::after {
+  content: "Delete";
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+/* Address Edit button: hide the text label and keep only the pencil icon. */
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-pencil) {
+  font-size: 0 !important;
+  min-width: 40px !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+html body #root div:has(> button:has(svg.lucide-pencil)):has(> button:has(svg.lucide-trash-2))
+  > button:has(svg.lucide-pencil) svg {
+  margin-right: 0 !important;
+}
+
+/* Accounting Transactions tabs use the Ticket List / Analytics segmented layout. */
+html body #root
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has(
+    [role="tablist"] > [role="tab"][aria-controls$="-content-all"]
+  )
+  [role="tablist"] {
+  width: fit-content !important;
+  max-width: 100% !important;
+  height: auto !important;
+  justify-content: flex-start !important;
+  gap: 4px !important;
+  overflow-x: auto !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background-color: #f1f0ec !important;
+  padding: 4px !important;
+}
+
+html body #root
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has(
+    [role="tablist"] > [role="tab"][aria-controls$="-content-all"]
+  )
+  [role="tablist"]
+  > [role="tab"] {
+  min-height: 40px !important;
+  flex-shrink: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  padding: 8px 16px !important;
+  color: var(--color-text-light) !important;
+  box-shadow: none !important;
+}
+
+html body #root
+  div.p-2.sm\:p-4.lg\:p-6.max-w-full.overflow-x-hidden:has(
+    [role="tablist"] > [role="tab"][aria-controls$="-content-all"]
+  )
+  [role="tablist"]
+  > [role="tab"][data-state="active"] {
+  border-color: #e5e5e5 !important;
+  background-color: #ffffff !important;
+  color: var(--color-text) !important;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%) !important;
+}
+
+/* ============================================================
+   MUI OUTLINED FIELDS ΓÇö LABEL ABOVE THE CONTROL
+   Every MUI outlined TextField / Select / Autocomplete / date or
+   time picker shows its label above the box instead of inside the
+   border notch:
+     label   12px / 600 Poppins, ink-soft, 6px gap to the control
+     control 44px min height, 12px radius, 1px hairline, 13.5px / 500
+     textarea 88px min height, 12px 14px padding
+   Pure CSS ΓÇö value, validation, focus and disabled behaviour are
+   untouched. Opt a single field out with className="mui-floating-label"
+   on the TextField / FormControl.
+   ============================================================ */
+
+/* Label: out of the border, into the flow above the control */
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiInputLabel-outlined {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  -webkit-transform: none !important;
+  max-width: 100% !important;
+  width: auto !important;
+  margin: 0 0 6px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
+  color: var(--color-ink-68) !important;
+  z-index: auto !important;
+  transition: none !important;
+}
+/* Label keeps its colour on focus (no brand flash); error / disabled stay readable */
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiInputLabel-outlined.Mui-focused {
+  color: var(--color-ink-68) !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiInputLabel-outlined.Mui-error {
+  color: var(--color-danger) !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiInputLabel-outlined.Mui-disabled {
+  color: var(--color-ink-48) !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiInputLabel-outlined .MuiFormLabel-asterisk {
+  color: var(--color-danger) !important;
+}
+
+/* The field wrapper must grow to hold label + control. Many forms pin the
+   whole TextField/FormControl to the old box height (sx height: 28/36/45),
+   which made the control spill out below ΓÇö overlapping the next row and the
+   card border. The control's own height rules (below) are unaffected. */
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) {
+  height: auto !important;
+  min-height: 0 !important;
+}
+/* Inside grid layouts the grid gap spaces the rows; the old `mt` that made
+   room for the notched label only mis-aligned fields that had it vs. not. */
+html body .grid > .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) {
+  margin-top: 0 !important;
+}
+
+/* Notch: always closed, the border is drawn as one continuous line */
+html body .MuiFormControl-root:not(.mui-floating-label) .MuiOutlinedInput-notchedOutline > legend,
+html body .MuiFormControl-root:not(.mui-floating-label) .MuiPickersOutlinedInput-notchedOutline > legend {
+  max-width: 0.01px !important;
+  padding: 0 !important;
+  transition: none !important;
+}
+
+/* MUI hides the placeholder while an un-shrunk label sits inside the box;
+   the label is outside now, so the placeholder stays visible */
+html body .MuiFormControl-root:not(.mui-floating-label) > label[data-shrink="false"] + .MuiInputBase-formControl .MuiInputBase-input::placeholder {
+  opacity: 1 !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) .MuiInputBase-input::placeholder {
+  color: var(--color-ink-30);
+  opacity: 1;
+  font-style: normal;
+}
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiPickersInputBase-root .MuiPickersInputBase-sectionsContainer,
+html body .MuiFormControl-root:not(.mui-floating-label) > .MuiPickersOutlinedInput-root .MuiPickersSectionList-root {
+  opacity: 1 !important;
+}
+/* Select placeholders written as <em>Select ΓÇª</em> render upright and muted */
+html body .MuiSelect-select em {
+  font-style: normal;
+  color: var(--color-ink-30);
+}
+
+/* Control shell (labelled fields only ΓÇö label-less toolbar/search fields keep their size) */
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root:not(.MuiInputBase-multiline),
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiPickersOutlinedInput-root {
+  min-height: 44px !important;
+  height: auto !important;
+  border-radius: var(--radius-input) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root > .MuiOutlinedInput-input:not(.MuiAutocomplete-input):not(textarea),
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root > .MuiSelect-select {
+  padding-top: 10.5px !important;
+  padding-bottom: 10.5px !important;
+  height: auto !important;
+  min-height: 1.4375em !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  color: var(--color-text);
+  box-sizing: content-box;
+}
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) .MuiAutocomplete-input,
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) .MuiPickersSectionList-root {
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root:not(.Mui-focused):not(.Mui-error):not(.Mui-disabled) > .MuiOutlinedInput-notchedOutline,
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiPickersOutlinedInput-root:not(.Mui-focused):not(.Mui-error):not(.Mui-disabled) > .MuiPickersOutlinedInput-notchedOutline {
+  border-width: 1px;
+  border-color: rgba(26, 26, 24, 0.12);
+}
+
+/* Textareas (multiline TextField) */
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root.MuiInputBase-multiline {
+  min-height: 88px !important;
+  height: auto !important;
+  padding: 12px 14px !important;
+  align-items: flex-start !important;
+  border-radius: var(--radius-input) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+html body .MuiFormControl-root:not(.mui-floating-label):has(> .MuiInputLabel-outlined) > .MuiOutlinedInput-root.MuiInputBase-multiline > textarea {
+  padding: 0 !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+
+
+/* ============================================================
+   STAT / KPI CARDS ΓÇö summary tile
+   Label on top, large ink value below, white 36px icon tile in the
+   top-right corner; grey #F5F4F0 surface, 16px radius, 18px 20px
+   padding, no border and no shadow (hover included).
+   Applies to <StatsCard> and every inline tile built the same way:
+   beige tile > icon well (bg-[#C4B89D54]) + value/title block.
+   <StatsCard> wraps well + text in one extra flex div, so each rule
+   also accepts that wrapper as the well's parent.
+   CSS only ΓÇö values, click/filter handlers and selection untouched.
+   ============================================================ */
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])),
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) {
+  position: relative;
+  display: flex !important;
+  flex-direction: row-reverse !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 18px 20px !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  background-color: #f5f4f0 !important;
+  transition: background-color 0.16s !important;
+}
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover,
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover {
+  box-shadow: none !important;
+}
+html body div[class*="cursor-pointer"]:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover,
+html body div[class*="cursor-pointer"]:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover {
+  background-color: #efede7 !important;
+}
+/* Selected filter card (StatsCard selected) */
+html body div[class*="bg-[rgb(230_226_218"]:has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])),
+html body div[class*="bg-[rgb(230_226_218"]:has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover,
+html body div[class*="bg-[rgb(230_226_218"]:has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])),
+html body div[class*="bg-[rgb(230_226_218"]:has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])):hover {
+  background-color: #e9e7e0 !important;
+}
+/* StatsCard's inner wrapper takes over the tile's row-reverse layout */
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div:has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) {
+  display: flex !important;
+  flex-direction: row-reverse !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Icon tile: white 36├ù36, 10px corners, neutral 18px line icon */
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i]:has(+ div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  flex: 0 0 36px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  background-color: #ffffff !important;
+}
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i]:has(+ div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) svg {
+  width: 18px !important;
+  height: 18px !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+  stroke: currentColor !important;
+  stroke-width: 1.8 !important;
+}
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i]:has(+ div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) span {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+}
+
+/* Text block: label above the value */
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i] + div:has(> :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  gap: 0 !important;
+}
+/* most tiles write value first, title second ΓåÆ show title first */
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i] + div:has(> :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"]):first-child) {
+  flex-direction: column-reverse !important;
+  justify-content: flex-end !important;
+}
+/* value: large full-ink number */
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"]) {
+  margin: 0 !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.01em !important;
+  color: #1a1a18 !important;
+  font-variant-numeric: tabular-nums;
+}
+/* label (and any sub-line): soft ink */
+html body :is(div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]), div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]) > div) > [class*="bg-[#C4B89D54]" i] + div:has(> :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) > :not([class*="text-xl"]):not([class*="text-2xl"]):not([class*="text-3xl"]) {
+  margin: 0 0 6px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+}
+
+/* Corner control (Asset stats "swap", StatsCard download): move out of the
+   icon's corner to bottom-right */
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) > button.absolute,
+html body div:is([class*="bg-[#F6F4EE]" i], [class*="bg-[rgb(230_226_218"]):has(> div > [class*="bg-[#C4B89D54]" i] + div > :is([class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"])) > button.absolute {
+  top: auto !important;
+  bottom: 12px !important;
+  right: 14px !important;
+}
+
+
+/* ============================================================
+   PAGINATION ΓÇö selected page has 8px corners everywhere
+   (shadcn PaginationLink already uses rounded-[8px]; this covers
+   custom pagers and MUI <Pagination>)
+   ============================================================ */
+html body nav[aria-label="pagination"] [aria-current="page"],
+html body [class*="pagination"] button[class*="bg-[#C72030]"],
+html body [class*="pagination"] [aria-current="page"],
+html body .MuiPaginationItem-root.Mui-selected {
+  border-radius: 8px !important;
+}
+
+
+/* ============================================================
+   TABLE TOOLBAR ICON BUTTONS
+   Filter / Columns / Refresh / Export sit next to the table search box:
+   same border as the search input (shadcn Input: border-gray-300 #d1d5db), ink icon,
+   soft grey hover, same 36px height (shadcn Input is fixed at h-[36px]).
+   ============================================================ */
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."], [title="Import"]) {
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: var(--color-primary) !important;
+}
+/* Icon-only toolbar buttons: same 36px height as the table search input, square.
+   (Labelled "Refresh"/"Filters" buttons elsewhere keep their own width.) */
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."], [title="Import"]):is([class*="w-8"], [class*="w-9"], [class*="w-[28px]"], [class*="w-[36px]"]) {
+  height: 36px !important;
+  min-height: 36px !important;
+  width: 36px !important;
+  min-width: 36px !important;
+  padding: 0 !important;
+}
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."], [title="Import"]):hover {
+  background-color: var(--color-hover) !important;
+  border-color: rgba(26, 26, 24, 0.28) !important;
+  color: var(--color-primary) !important;
+}
+html body button:is([title="Filter"], [title="Columns"], [title="Refresh"], [title="Export"], [title="Exporting..."], [title="Import"]) :is(svg, .lucide) {
+  color: var(--color-primary) !important;
+  stroke: currentColor !important;
+}
+
+
+/* ============================================================
+   MODALS & CARDS ΓÇö 16px corners everywhere
+   Centred shadcn dialogs / alert dialogs (side sheets & popovers are
+   excluded by the centring classes), MUI dialog papers and MUI cards.
+   Buttons inside keep their own 8px radius.
+   ============================================================ */
+html body [role="dialog"][class*="translate-x-[-50%]"],
+html body [role="alertdialog"][class*="translate-x-[-50%]"],
+html body .MuiDialog-paper,
+html body .MuiCard-root {
+  border-radius: 16px !important;
+}
+
+
+/* ============================================================
+   FORM ACTION BUTTONS ΓÇö match the helpdesk "New Ticket" footer
+   (src/pages/BMS/AddHelpdeskTicket.tsx). Overrides the black-outlined
+   cancel rule above: secondary/cancel buttons get a hairline border and
+   muted ink that darkens on hover; primary keeps solid ink. Colour,
+   border, weight and radius only ΓÇö sizes stay per-component so 36px
+   toolbar buttons still line up with the search box.
+   ============================================================ */
+html body button.btn-cancel,
+html body .btn-cancel,
+html body button.cancel-btn,
+html body button[class*="bg-white" i][class*="text-[#C72030]" i],
+html body button[class*="bg-white" i][class*="text-[#DA7756]" i],
+html body button[class*="bg-white" i][class*="text-[#d97757]" i],
+html body button[class*="border-[#da7756]" i],
+html body button[class*="border-[#d97757]" i] {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(26, 26, 24, 0.08) !important;
+  color: rgba(26, 26, 24, 0.68) !important;
+  -webkit-text-fill-color: rgba(26, 26, 24, 0.68) !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-button, 8px) !important;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+html body button.btn-cancel:hover,
+html body .btn-cancel:hover,
+html body button.cancel-btn:hover,
+html body button[class*="bg-white" i][class*="text-[#C72030]" i]:hover,
+html body button[class*="bg-white" i][class*="text-[#DA7756]" i]:hover,
+html body button[class*="bg-white" i][class*="text-[#d97757]" i]:hover,
+html body button[class*="border-[#da7756]" i]:hover,
+html body button[class*="border-[#d97757]" i]:hover {
+  background-color: #ffffff !important;
+  border-color: rgba(26, 26, 24, 0.28) !important;
+  color: #1a1a18 !important;
+  -webkit-text-fill-color: #1a1a18 !important;
+}
+html body :is(button.btn-cancel, .btn-cancel, button.cancel-btn, button[class*="border-[#da7756]" i]) svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+html body button[type="submit"]:not([role="switch"]),
+html body button.btn-primary {
+  font-weight: 600 !important;
+  border-radius: var(--radius-button, 8px) !important;
+}
+html body button[type="submit"]:not([role="switch"]):hover,
+html body button.btn-primary:hover {
+  background-color: #12100e !important;
+  border-color: #12100e !important;
+}
+html body button[type="submit"]:disabled,
+html body button.btn-primary:disabled {
+  opacity: 0.6;
+}
+
+/* ============================================================
+   RADIO BUTTONS ΓÇö neutral ink everywhere (global)
+   Overrides the older brand-colored radio rules above so MUI,
+   Radix and native radios all match the form radio style.
+   ============================================================ */
+html body .MuiRadio-root,
+html body .MuiRadio-root.Mui-checked,
+html body [class*="MuiRadio-root"],
+html body [class*="MuiRadio-root"].Mui-checked {
+  color: #1a1a18 !important;
+}
+html body .MuiRadio-root svg {
+  color: inherit !important;
+}
+html body .MuiFormControlLabel-root:has(.MuiRadio-root) .MuiFormControlLabel-label {
+  color: #1a1a18 !important;
+}
+html body .MuiFormLabel-root.Mui-focused:has(+ .MuiRadioGroup-root),
+html body .MuiFormControl-root:has(.MuiRadioGroup-root) > .MuiFormLabel-root.Mui-focused {
+  color: rgba(26, 26, 24, 0.6) !important;
+}
+html body input[type="radio"] {
+  accent-color: #1a1a18 !important;
+}
+html body [role="radio"],
+html body [role="radio"][data-state="checked"] {
+  border-color: #1a1a18 !important;
+  color: #1a1a18 !important;
+}
+html body [role="radio"] span,
+html body [role="radio"] > span,
+html body [role="radio"] div {
+  background-color: #1a1a18 !important;
+}
+html body [role="radio"] svg {
+  fill: #1a1a18 !important;
+  color: #1a1a18 !important;
+}
+
+
+/* ============================================================
+   RADIO BUTTONS ΓÇö final global override (theme ink #1a1a18)
+   Wins over page-level sx, legacy #C72030 rules and the runtime
+   colorPatch.ts <style> tag. Covers color AND fill on the icon and
+   its paths, so neither the ring nor the dot can stay red/orange.
+   ============================================================ */
+html body #root .MuiRadio-root,
+html body #root .MuiRadio-root.Mui-checked,
+html body #root [class*="MuiRadio-root"],
+html body #root [class*="MuiRadio-root"].Mui-checked,
+html body .MuiRadio-root,
+html body .MuiRadio-root.Mui-checked {
+  color: #1a1a18 !important;
+}
+html body #root .MuiRadio-root svg,
+html body #root .MuiRadio-root svg path,
+html body #root .MuiRadio-root .MuiSvgIcon-root,
+html body .MuiRadio-root svg,
+html body .MuiRadio-root svg path {
+  color: #1a1a18 !important;
+  fill: #1a1a18 !important;
+}
+html body #root .MuiRadio-root:hover {
+  background-color: rgba(26, 26, 24, 0.04) !important;
+}
+html body #root .MuiRadio-root .MuiTouchRipple-root {
+  color: #1a1a18 !important;
+}
+html body #root input[type="radio"],
+html body input[type="radio"] {
+  accent-color: #1a1a18 !important;
+}
+
+/* Radix checkbox tick: always white on the filled (ink) box, 18px rounded square */
+html body #root button[role="checkbox"][data-state="checked"],
+html body #root button[role="checkbox"][data-state="indeterminate"] {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  color: #ffffff !important;
+}
+html body #root button[role="checkbox"] [data-radix-checkbox-indicator],
+html body #root button[role="checkbox"] svg,
+html body #root button[role="checkbox"] svg * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+html body #root button[role="checkbox"] svg {
+  width: 12px !important;
+  height: 12px !important;
+  stroke-width: 3 !important;
+}
+/* Radix checkboxes everywhere (incl. dialogs/portals): same 4px radius as table checkboxes */
+html body button[role="checkbox"],
+html body button[role="checkbox"][data-state="checked"],
+html body button[role="checkbox"][data-state="unchecked"],
+html body button[role="checkbox"][data-state="indeterminate"],
+html body [role="dialog"] button[role="checkbox"] {
+  border-radius: 4px !important;
+}
+
+/* Partially selected select-all checkbox: show the same white tick as a checked box */
+html body button[role="checkbox"][data-state="indeterminate"] {
+  position: relative;
+}
+html body button[role="checkbox"][data-state="indeterminate"]::after {
+  content: "";
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* Import toolbar button: keep the same light border as the Columns button, even when focused/active */
+html body button[title="Import"],
+html body button[title="Import"]:focus,
+html body button[title="Import"]:focus-visible,
+html body button[title="Import"]:active {
+  border: 1px solid #d1d5db !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+html body button[title="Import"]:hover {
+  border-color: rgba(26, 26, 24, 0.28) !important;
+}
+
+/* Import toolbar button: same corner radius as the Columns/Filter buttons */
+html body button[title="Import"] {
+  border-radius: var(--radius-md) !important;
+}
+
+/* ============================================================
+   CALENDAR GRID (react-day-picker) ΓÇö opt out of the global table
+   styles above. Day pickers render a real <table>, so the data-table
+   header band, cell padding and row separators were leaking in and
+   pushing the weekday headers out of line with the date columns.
+   Specificity (0,5,5) beats the (0,3,3) table rules.
+   ============================================================ */
+html body .rdp table.rdp-table thead th.rdp-head_cell:not(.analytics-header):not(.analytics-header) {
+  width: 2.5rem !important;
+  height: 2rem !important;
+  padding: 0 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  line-height: 2rem !important;
+  text-align: center !important;
+  color: rgba(26, 26, 24, 0.48) !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+html body .rdp table.rdp-table tbody tr.rdp-row td.rdp-cell:not([colspan]):not(.analytics-header) {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  border: none !important;
+  background-color: transparent !important;
+}
+html body .rdp table.rdp-table tbody tr.rdp-row:hover {
+  background-color: transparent !important;
+}
+
+/* Survey filter Apply button: black bg, white text */
+html body [role="dialog"] button.survey-apply-btn {
+  background-color: #000 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Keep checkbox hover and selected states on the brand color, never dark ink. */
+html body input[type="checkbox"],
+html body input[type="checkbox"]:hover {
+  accent-color: #1a1a18 !important;
+}
+html body button[role="checkbox"][data-state="unchecked"],
+html body button[role="checkbox"][data-state="unchecked"]:hover,
+html body [role="checkbox"][data-state="unchecked"],
+html body [role="checkbox"][data-state="unchecked"]:hover {
+  background-color: #FFFFFF !important;
+  border-color: #D1D5DB !important;
+}
+html body button[role="checkbox"][data-state="unchecked"]:hover,
+html body [role="checkbox"][data-state="unchecked"]:hover {
+  background-color: #F6F4EE !important;
+  border-color: #1a1a18 !important;
+}
+html body button[role="checkbox"][data-state="checked"],
+html body button[role="checkbox"][data-state="checked"]:hover,
+html body button[role="checkbox"][data-state="indeterminate"],
+html body button[role="checkbox"][data-state="indeterminate"]:hover {
+  background-color: #1a1a18 !important;
+  border-color: #1a1a18 !important;
+}
+html body .MuiCheckbox-root:hover {
+  background-color: rgba(26, 26, 24, 0.08) !important;
+}
+html body .MuiCheckbox-root.Mui-checked,
+html body .MuiCheckbox-root.Mui-checked:hover {
+  color: #1a1a18 !important;
 }

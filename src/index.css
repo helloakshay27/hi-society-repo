@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 @import "./styles/enhanced-select.css";
@@ -1000,20 +1000,35 @@ body {
   /* remove the green border */
 }
 
-td div,
-td span,
-th div,
-th span {
+/* Cell content hugs the left edge ΓÇö except fully rounded capsules (status
+   pills / badges), which keep their own symmetric padding and centred text. */
+td div:not([class*="rounded-full"]),
+td span:not([class*="rounded-full"]),
+th div:not([class*="rounded-full"]),
+th span:not([class*="rounded-full"]) {
   justify-content: flex-start !important;
   text-align: left !important;
 }
 
-td div,
-td span,
-th div,
-td button,
+td div:not([class*="rounded-full"]),
+td span:not([class*="rounded-full"]),
+th div:not([class*="rounded-full"]),
+td button:not([role="switch"]),
 td a {
   padding-left: 2px !important;
+}
+
+/* Toggle switches in table rows: no extra padding, or the knob is pushed past
+   the end of the track when on. */
+td button[role="switch"] {
+  padding: 0 !important;
+}
+
+/* Centre capsule text ΓÇö but never a toggle switch: its track is also an
+   inline-flex rounded-full button, and centring it shifts the knob off the track. */
+td [class*="rounded-full"]:not([role="switch"]) {
+  justify-content: center;
+  text-align: center;
 }
 
 /* ===========================================
@@ -1564,7 +1579,7 @@ button.text-blue-600 {
 
 /* ===========================================
    GLOBAL MOBILE RESPONSIVENESS
-   Applied app-wide — mobile-first defaults,
+   Applied app-wide ΓÇö mobile-first defaults,
    desktop overrides via min-width queries.
    =========================================== */
 
@@ -1588,7 +1603,7 @@ body {
     env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-/* 2. Page content wrapper — used inside <main> on every page */
+/* 2. Page content wrapper ΓÇö used inside <main> on every page */
 .page-content {
   width: 100%;
   padding: 12px;
@@ -1682,14 +1697,14 @@ body {
   }
 }
 
-/* Action button group in page headers — stack on mobile, row on desktop */
+/* Action button group in page headers ΓÇö stack on mobile, row on desktop */
 .page-header-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-/* 7. Filter / search bar rows — common pattern across all dashboards */
+/* 7. Filter / search bar rows ΓÇö common pattern across all dashboards */
 .filter-row {
   display: flex;
   flex-direction: column;
@@ -1729,7 +1744,7 @@ body {
   }
 }
 
-/* 9. Generic form grid — 2 columns on md+, 1 column on mobile */
+/* 9. Generic form grid ΓÇö 2 columns on md+, 1 column on mobile */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -1779,7 +1794,7 @@ body {
   }
 }
 
-/* 11. Figma card — responsive padding */
+/* 11. Figma card ΓÇö responsive padding */
 @media (max-width: 639px) {
   .figma-card-header {
     padding: 10px 12px !important;
@@ -1792,7 +1807,7 @@ body {
   }
 }
 
-/* 12. Pagination row — center on mobile */
+/* 12. Pagination row ΓÇö center on mobile */
 @media (max-width: 639px) {
   .pagination-row,
   .flex.items-center.justify-between:has(button[aria-label*="page"]),
@@ -1816,7 +1831,7 @@ body {
   }
 }
 
-/* 14. Dropdown menus — constrain on very small screens */
+/* 14. Dropdown menus ΓÇö constrain on very small screens */
 @media (max-width: 400px) {
   [data-radix-dropdown-menu-content],
   [data-radix-select-content],
@@ -1826,15 +1841,15 @@ body {
 }
 
 /* ===========================================
-   SELECTION PANEL — global responsive styles
+   SELECTION PANEL ΓÇö global responsive styles
    Desktop: fixed bottom-center bar (sidebar-aware)
    Mobile (<640px): full-width bottom sheet
    =========================================== */
 
-/* ── Desktop base (640px+) ── */
-/* ── SelectionPanel — desktop only (≥640px)
+/* ΓöÇΓöÇ Desktop base (640px+) ΓöÇΓöÇ */
+/* ΓöÇΓöÇ SelectionPanel ΓÇö desktop only (ΓëÑ640px)
    Fixed bottom bar, centered in the content area beside the sidebar.
-   The mobile sheet is handled entirely in the component via Tailwind. ── */
+   The mobile sheet is handled entirely in the component via Tailwind. ΓöÇΓöÇ */
 /* Mobile: hide desktop panel completely */
 @media (max-width: 639px) {
   .selection-panel {
@@ -1842,7 +1857,7 @@ body {
   }
 }
 
-/* Desktop (≥640px): fixed bottom bar centered in content area */
+/* Desktop (ΓëÑ640px): fixed bottom bar centered in content area */
 @media (min-width: 640px) {
   .selection-panel {
     position: fixed !important;
@@ -1942,8 +1957,8 @@ body {
 /*button Styling*/
 
 :root {
-  --btn-primary: #DA7756;
-  --btn-primary-hover: #c96844;
+  --btn-primary: #1a1a18;
+  --btn-primary-hover: #1a1a18;
 }
 
 /* baaki styles... */
