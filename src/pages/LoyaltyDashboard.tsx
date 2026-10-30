@@ -18,7 +18,7 @@ import {
   toIsoDate,
 } from './LoyaltyDashboardApi';
 import { API_CONFIG } from '../config/apiConfig';
-import '@/styles/theme.css';
+import '@/styles/loyalty-dashboard.css';
 
 const DrillStat = ({ value, label }: { value: React.ReactNode; label: string }) => (
   <div className="bg-[var(--loyalty-bg)] rounded-[8px] p-2.5 flex-1 text-center min-w-[80px]">
