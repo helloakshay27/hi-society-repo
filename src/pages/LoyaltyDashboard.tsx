@@ -234,13 +234,17 @@ export function LoyaltyDashboard() {
           </div>
           {customer?.name && <DrillRow label="Most affected customer" value={customer.name} />}
           <DrillSection>Stuck Orders</DrillSection>
-          {list.length ? list.map((o: any, i: number) => <DrillRow key={o.id ?? i} label={`${o.id} · ${o.customer_name || o.customer || 'N/A'}`} value={`₹${fmtNum(o.amount)}`} />) : <DrillEmpty />}
+          {list.length ? list.map((o: any, i: number) => {
+            const orderId = o.order_number ?? o.id ?? o.order_no ?? o.order_id ?? 'N/A';
+            return <DrillRow key={orderId || i} label={`${orderId} · ${o.customer_name || o.customer || 'N/A'}`} value={`₹${fmtNum(o.amount)}`} />;
+          }) : <DrillEmpty />}
         </>
       );
     } else if (id === 'order' && row) {
+      const orderId = row.order_number ?? row.id ?? row.order_no ?? row.order_id ?? 'N/A';
       body = (
         <>
-          <DrillRow label="Order ID" value={row.id} />
+          <DrillRow label="Order ID" value={orderId} />
           <DrillRow label="Customer" value={row.customer_name || row.customer || 'N/A'} />
           <DrillRow label="Amount" value={`₹${fmtNum(row.amount)}`} />
           <DrillRow label="Created" value={row.created_at ? new Date(row.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'} />
@@ -298,6 +302,83 @@ export function LoyaltyDashboard() {
       aiChatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [aiMsgs, isAiOpen]);
+
+  const renderTabSkeleton = () => {
+    const isOrders = activeTab === 'Orders';
+    const kpiCols = isOrders ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4';
+    const kpiCount = isOrders ? 3 : 4;
+
+    return (
+      <div className="flex flex-col gap-[14px] animate-pulse">
+        {/* Briefing skeleton for Overview */}
+        {activeTab === 'Overview' && (
+          <div className="bg-[#F5F4F0] rounded-[14px] p-3 px-4 mb-1 h-[52px] flex items-center gap-3 border-0 shadow-none">
+            <div className="w-4 h-4 rounded-full bg-[var(--loyalty-surface)] shrink-0" />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-2.5 w-32 bg-[var(--loyalty-surface)] rounded" />
+              <div className="h-3 w-3/4 bg-[var(--loyalty-surface)] rounded" />
+            </div>
+          </div>
+        )}
+
+        {/* Top KPI Strip Skeleton */}
+        <div className={`grid ${kpiCols} gap-[14px]`}>
+          {Array.from({ length: kpiCount }).map((_, i) => (
+            <div key={i} className="bg-[#F5F4F0] rounded-[16px] p-4 flex flex-col justify-between h-[96px] border-0 shadow-none">
+              <div className="flex items-center justify-between mb-2">
+                <div className="h-3 w-28 bg-[var(--loyalty-surface)] rounded" />
+                <div className="w-6 h-6 rounded-md bg-[var(--loyalty-surface)]" />
+              </div>
+              <div className="h-7 w-20 bg-[var(--loyalty-surface)] rounded mb-1" />
+              <div className="h-2.5 w-32 bg-[var(--loyalty-surface)] rounded" />
+            </div>
+          ))}
+        </div>
+
+        {/* Charts Section Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[14px]">
+          <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col h-[280px] border-0 shadow-none">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-3.5 w-44 bg-[var(--loyalty-surface)] rounded" />
+              <div className="h-6 w-20 bg-[var(--loyalty-surface)] rounded-md" />
+            </div>
+            <div className="flex-1 rounded-md bg-[var(--loyalty-surface)]/60 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full border-2 border-[var(--loyalty-divider)] border-t-[#5A4BE0] animate-spin" />
+            </div>
+          </div>
+          <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col h-[280px] border-0 shadow-none">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-3.5 w-44 bg-[var(--loyalty-surface)] rounded" />
+              <div className="h-6 w-20 bg-[var(--loyalty-surface)] rounded-md" />
+            </div>
+            <div className="flex-1 rounded-md bg-[var(--loyalty-surface)]/60 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full border-2 border-[var(--loyalty-divider)] border-t-[#5A4BE0] animate-spin" />
+            </div>
+          </div>
+        </div>
+
+        {/* Table / Section Skeleton */}
+        <div className="bg-[#F5F4F0] rounded-[16px] p-5 border-0 shadow-none">
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-4 w-48 bg-[var(--loyalty-surface)] rounded" />
+            <div className="h-3 w-24 bg-[var(--loyalty-surface)] rounded" />
+          </div>
+          <div className="space-y-3">
+            <div className="h-8 w-full bg-[var(--loyalty-surface)] rounded" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-4 py-2 border-b border-[var(--loyalty-divider)]/60 last:border-b-0">
+                <div className="h-3.5 w-24 bg-[var(--loyalty-surface)] rounded" />
+                <div className="h-3.5 w-36 bg-[var(--loyalty-surface)] rounded" />
+                <div className="h-3.5 w-20 bg-[var(--loyalty-surface)] rounded" />
+                <div className="h-3.5 w-24 bg-[var(--loyalty-surface)] rounded" />
+                <div className="h-4 w-16 bg-[var(--loyalty-surface)] rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -370,7 +451,7 @@ export function LoyaltyDashboard() {
         const ruleCatChartData = firesByCategory.length > 0 ? {
           labels: firesByCategory.map((c: any) => c.category || c.name || 'Unknown'),
           values: firesByCategory.map((c: any) => c.fires_mtd || c.count || c.fires || 0),
-          colors: ['var(--loyalty-accent)', 'var(--loyalty-success)', 'var(--loyalty-warning)', 'var(--loyalty-info)', 'var(--loyalty-danger)', 'var(--loyalty-text)'].slice(0, firesByCategory.length),
+          colors: CHART_COLORS.slice(0, firesByCategory.length),
           h: false,
           def: 'bar'
         } : undefined;
@@ -383,7 +464,7 @@ export function LoyaltyDashboard() {
             return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
           }),
           values: dailyFires.map((d: any) => d.fires || 0),
-          colors: ['var(--loyalty-accent)'],
+          colors: [CHART_COLORS[0]],
           h: false,
           def: 'line'
         } : undefined;
@@ -463,7 +544,7 @@ export function LoyaltyDashboard() {
             {/* Category Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-[14px] mb-[20px]">
               {renderedRuleCards.map((card) => (
-                <div key={card.title} className={`bg-white border border-[var(--loyalty-divider)] border-t-4 rounded-[10px] p-[16px] shadow-sm ${card.borderClass}`}>
+                <div key={card.title} className="bg-[#F5F4F0] rounded-[16px] p-5 border-0 shadow-none">
                   <div className="text-[9px] font-bold text-[var(--loyalty-subtle)] uppercase tracking-wider mb-1">{card.title}</div>
                   <div className="text-[20px] font-bold text-[var(--loyalty-text)] mb-1">{card.ruleCount} rules</div>
                   <div className="text-[11px] text-[var(--loyalty-green)] mb-4">{card.subtitle} · {card.statusLabel}</div>
@@ -476,24 +557,24 @@ export function LoyaltyDashboard() {
             </div>
 
             {/* Table Area */}
-            <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[20px] mb-[14px]">
+            <div className="bg-[#F5F4F0] rounded-[16px] p-5 mb-[14px] border-0 shadow-none">
               <div className="mb-4">
                 <div className="text-[14px] font-bold text-[var(--loyalty-text)] mb-1">All Active Rules</div>
                 <div className="text-[11px] text-[var(--loyalty-subtle)]">{filteredRules.length} rules · click any row to inspect</div>
               </div>
               
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-[12px] bg-white border border-[rgba(26,26,24,0.07)]">
                 <table className="w-full text-left border-collapse text-[11px]">
                   <thead>
-                    <tr>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Rule Name</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Category</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Type</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Trigger</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Points</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Fires (MTD)</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Last Fired</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Status</th>
+                    <tr className="bg-[#EFEDE6]">
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Rule Name</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Category</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Type</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Trigger</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Points</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Fires (MTD)</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Last Fired</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -561,24 +642,28 @@ export function LoyaltyDashboard() {
       }
       case 'Members': {
         const topEarner = membersData?.top_earners?.[0];
+        const topEarnerName = typeof topEarner === 'object' && topEarner !== null
+          ? (topEarner.name || 'N/A')
+          : (typeof topEarner === 'string' && topEarner ? topEarner : 'N/A');
+        const topEarnerSub = typeof topEarner === 'object' && topEarner !== null && topEarner.points_earned_this_month != null
+          ? `${fmtNum(topEarner.points_earned_this_month)} pts earned`
+          : 'No activity';
+
         const memTierDist = membersData?.tier_distribution || dashboardData?.tier_distribution || [];
         const memTiersChartData = memTierDist.length > 0 ? {
           labels: memTierDist.map((t: any) => t.name || 'Unknown'),
           values: memTierDist.map((t: any) => t.member_count || 0),
-          colors: ['var(--loyalty-border)','var(--loyalty-subtle)','var(--loyalty-warning)', 'var(--loyalty-info)', 'var(--loyalty-danger)', 'var(--loyalty-text)'].slice(0, memTierDist.length),
+          colors: CHART_COLORS.slice(0, memTierDist.length),
           h: false,
           def: 'doughnut'
         } : undefined;
 
         const newMemData = membersData?.new_members_by_month || [];
         const newMemChartData = newMemData.length > 0 ? {
-          labels: newMemData.map((d: any) => {
-            const [y, m] = d.month.split('-');
-            const date = new Date(parseInt(y), parseInt(m) - 1);
-            return date.toLocaleString('default', { month: 'short', year: 'numeric' });
-          }),
+          labels: newMemData.map((d: any) => formatMonth(d.month)),
           values: newMemData.map((d: any) => d.count),
-          colors: ['var(--loyalty-info)'],
+          colors: [CHART_COLORS[0]],
+          label: 'New Members',
           h: false,
           def: 'bar'
         } : undefined;
@@ -597,7 +682,7 @@ export function LoyaltyDashboard() {
               <KpiStripCard title="Active Members" value={membersData?.total_members?.toLocaleString() ?? "0"} sub="Total enrolled residents" onClick={() => openDrill('members-kpi', 'Active Member Status')} icon={<UserCheck className="w-3.5 h-3.5" />} iconBg="bg-[var(--loyalty-success)]/10" iconColor="text-[var(--loyalty-success)]" />
               <KpiStripCard title="Lapsed (>60 days)" value={membersData?.lapsed_members?.toLocaleString() ?? "0"} sub={`<span class='text-[var(--loyalty-danger-text)] font-semibold'>${lapseRate}%</span> churn risk`} onClick={() => openDrill('lapsed', 'Lapsed Member Analysis')} icon={<AlertTriangle className="w-3.5 h-3.5" />} iconBg="bg-[var(--loyalty-danger)]/15" iconColor="text-[var(--loyalty-danger-text)]" />
               <KpiStripCard title="New Members (MTD)" value={membersData?.new_members_this_month?.toLocaleString() ?? "0"} sub="Enrolled this month" icon={<Users className="w-3.5 h-3.5" />} iconBg="bg-[var(--loyalty-info)]/15" iconColor="text-[var(--loyalty-info)]" />
-              <KpiStripCard title="Top Earner (MTD)" value={topEarner ? topEarner.name : "N/A"} sub={topEarner ? `${topEarner.points_earned_this_month} pts earned` : "No activity"} icon={<Award className="w-3.5 h-3.5" />} iconBg="bg-[var(--loyalty-warning)]/20" iconColor="text-[var(--loyalty-warning)]" />
+              <KpiStripCard title="Top Earner (MTD)" value={topEarnerName} sub={topEarnerSub} icon={<Award className="w-3.5 h-3.5" />} iconBg="bg-[var(--loyalty-warning)]/20" iconColor="text-[var(--loyalty-warning)]" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[14px] mb-[14px]">
               <ChartCard 
@@ -615,25 +700,25 @@ export function LoyaltyDashboard() {
             </div>
 
             {/* Members List Table */}
-            <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[20px] mb-[14px]">
+            <div className="bg-[#F5F4F0] rounded-[16px] p-5 mb-[14px] border-0 shadow-none">
               <div className="mb-4">
                 <div className="text-[14px] font-bold text-[var(--loyalty-text)] mb-1">Members List</div>
                 <div className="text-[11px] text-[var(--loyalty-subtle)]">{membersData?.members?.length || 0} members · click any row to inspect</div>
               </div>
               
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-[12px] bg-white border border-[rgba(26,26,24,0.07)]">
                 <table className="w-full text-left border-collapse text-[11px]">
                   <thead>
-                    <tr>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Name</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Society</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Tier</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Balance</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Earned</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Redeemed</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Joined</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Last Activity</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Status</th>
+                    <tr className="bg-[#EFEDE6]">
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Name</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Society</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Tier</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Balance</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Earned</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Redeemed</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Joined</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Last Activity</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -676,13 +761,21 @@ export function LoyaltyDashboard() {
         const totalRedemptions = redemptionData?.total_redemptions_mtd ?? 0;
         const redemptionRate = redemptionData?.redemption_rate_mtd ?? 0;
         const pending = redemptionData?.pending_encashments || { count: 0, points_total: 0, amount_total_inr: 0 };
-        const topCategory = redemptionData?.top_category ?? 'N/A';
+        
+        // Handle both string and object shapes ({ name, share_pct }) from backend
+        const rawTopCat = redemptionData?.top_category;
+        const topCategoryName = typeof rawTopCat === 'object' && rawTopCat !== null
+          ? (rawTopCat.name || 'N/A')
+          : (typeof rawTopCat === 'string' && rawTopCat ? rawTopCat : 'N/A');
+        const topCategorySub = typeof rawTopCat === 'object' && rawTopCat !== null && rawTopCat.share_pct != null
+          ? `${rawTopCat.share_pct}% of all redemptions`
+          : 'Most popular redemption type';
 
         const redByType = redemptionData?.redemption_by_type || [];
         const redTypeChartData = redByType.length > 0 ? {
           labels: redByType.map((r: any) => r.type),
           values: redByType.map((r: any) => r.count),
-          colors: ['var(--loyalty-accent)', 'var(--loyalty-success)', 'var(--loyalty-warning)', 'var(--loyalty-info)'],
+          colors: CHART_COLORS.slice(0, redByType.length),
           h: false,
           def: 'doughnut'
         } : undefined;
@@ -690,12 +783,12 @@ export function LoyaltyDashboard() {
         const redTrend = redemptionData?.redemption_rate_trend_by_month || [];
         const redTrendChartData = redTrend.length > 0 ? {
           labels: redTrend.map((r: any) => {
-            const [y, m] = r.month.split('-');
-            const date = new Date(parseInt(y), parseInt(m) - 1);
-            return date.toLocaleDateString('en-GB', { month: 'short' });
+            if (!r?.month) return '';
+            return formatMonth(r.month);
           }),
-          values: redTrend.map((r: any) => r.redemption_rate_pct),
-          colors: ['var(--loyalty-accent)'],
+          values: redTrend.map((r: any) => r.redemption_rate_pct ?? 0),
+          colors: [CHART_COLORS[0]],
+          label: 'Redemption Rate (%)',
           h: false,
           def: 'line'
         } : undefined;
@@ -710,7 +803,7 @@ export function LoyaltyDashboard() {
           <div className="relative">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-[14px] mb-[14px]">
               {/* Card 1 */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between cursor-pointer hover:border-[var(--loyalty-accent)] transition-colors" onClick={() => openDrill('redemption-kpi', 'Redemption Overview')}>
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col justify-between border-0 shadow-none cursor-pointer hover:bg-[#EFEDE6] transition-colors" onClick={() => openDrill('redemption-kpi', 'Redemption Overview')}>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Total Redemptions (MTD)</div>
@@ -725,7 +818,7 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 2 */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between cursor-pointer hover:border-[var(--loyalty-success)] transition-colors" onClick={() => openDrill('redemption-kpi', 'Redemption Overview')}>
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col justify-between border-0 shadow-none cursor-pointer hover:bg-[#EFEDE6] transition-colors" onClick={() => openDrill('redemption-kpi', 'Redemption Overview')}>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Redemption Rate</div>
@@ -740,7 +833,7 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 3 */}
-              <div className="bg-white border border-[var(--loyalty-accent)] rounded-[10px] p-[16px] flex flex-col justify-between shadow-sm">
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col justify-between border-0 shadow-none cursor-pointer hover:bg-[#EFEDE6] transition-colors" onClick={() => openDrill('redemption-kpi', 'Redemption Overview')}>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-accent)] uppercase tracking-wider">Pending Encashments</div>
@@ -755,14 +848,14 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 4 */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between">
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col justify-between border-0 shadow-none cursor-pointer hover:bg-[#EFEDE6] transition-colors" onClick={() => openDrill('redemption-kpi', 'Redemption Overview')}>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Top Category</div>
                     <div className="w-6 h-6 rounded-md flex items-center justify-center bg-[var(--loyalty-info)]/15 text-[var(--loyalty-info)] shrink-0"><Tag className="w-3.5 h-3.5" /></div>
                   </div>
-                  <div className="text-[26px] font-bold text-[var(--loyalty-text)] leading-none mb-2 capitalize">{topCategory}</div>
-                  <div className="text-[11px] text-[var(--loyalty-subtle)]">Most popular redemption type</div>
+                  <div className="text-[26px] font-bold text-[var(--loyalty-text)] leading-none mb-2 capitalize">{topCategoryName}</div>
+                  <div className="text-[11px] text-[var(--loyalty-subtle)]">{topCategorySub}</div>
                 </div>
               </div>
             </div>
@@ -785,22 +878,22 @@ export function LoyaltyDashboard() {
             </div>
 
             {/* Pending Encashments Table */}
-            <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[20px] mb-[14px]">
+            <div className="bg-[#F5F4F0] rounded-[16px] p-5 mb-[14px] border-0 shadow-none">
               <div className="mb-4">
                 <div className="text-[14px] font-bold text-[var(--loyalty-text)] mb-1">Pending Encashments</div>
                 <div className="text-[11px] text-[var(--loyalty-subtle)]">{pending.count} requests · ₹{fmtNum(pending.amount_total_inr)} total</div>
               </div>
               
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-[12px] bg-white border border-[rgba(26,26,24,0.07)]">
                 <table className="w-full text-left border-collapse text-[11px]">
                   <thead>
-                    <tr>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Member</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Points</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">₹ Value</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Requested</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Bank</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Status</th>
+                    <tr className="bg-[#EFEDE6]">
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Member</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Points</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">₹ Value</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Requested</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Bank</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -842,17 +935,13 @@ export function LoyaltyDashboard() {
         const flowData = walletData?.points_flow_by_month || [];
         const walletFlowChartData = flowData.length > 0 ? {
           multi: true,
-          labels: flowData.map((d: any) => {
-            const [y, m] = d.month.split('-');
-            const date = new Date(parseInt(y), parseInt(m) - 1);
-            return date.toLocaleString('default', { month: 'short', year: 'numeric' });
-          }),
+          labels: flowData.map((d: any) => formatMonth(d.month)),
           def: 'bar',
           h: false,
           datasets: [
-            { label: 'Issued', data: flowData.map((d: any) => d.issued), bg: 'var(--loyalty-success)', bc: 'var(--loyalty-success)' },
-            { label: 'Redeemed', data: flowData.map((d: any) => d.redeemed), bg: 'var(--loyalty-danger-text)', bc: 'var(--loyalty-danger-text)' },
-            { label: 'Balance', data: flowData.map((d: any) => d.balance), bg: 'var(--loyalty-info)', bc: 'var(--loyalty-info)' }
+            { label: 'Issued', data: flowData.map((d: any) => d.issued), bg: CHART_COLORS[1], bc: CHART_COLORS[1] },
+            { label: 'Redeemed', data: flowData.map((d: any) => d.redeemed), bg: CHART_COLORS[0], bc: CHART_COLORS[0] },
+            { label: 'Balance', data: flowData.map((d: any) => d.balance), bg: CHART_COLORS[2], bc: CHART_COLORS[2] }
           ]
         } : undefined;
 
@@ -880,7 +969,7 @@ export function LoyaltyDashboard() {
           <div className="relative">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-[14px] mb-[14px]">
               {/* Card 1: Expired Points */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[20px] flex flex-col items-center justify-center text-center">
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col items-center justify-center text-center border-0 shadow-none">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--loyalty-warning)]/20 text-[var(--loyalty-warning)] mb-3">
                   <Timer className="w-5 h-5" />
                 </div>
@@ -893,7 +982,7 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 2: Wallet Summary */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[20px]">
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 border-0 shadow-none">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[var(--loyalty-info)]/15 text-[var(--loyalty-info)] shrink-0"><Wallet className="w-4 h-4" /></div>
                   <div className="text-[14px] font-bold text-[var(--loyalty-text)]">Wallet Summary</div>
@@ -923,7 +1012,7 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 3: Liability Health */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[20px]">
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 border-0 shadow-none">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[var(--loyalty-accent)]/10 text-[var(--loyalty-accent)] shrink-0"><ShieldCheck className="w-4 h-4" /></div>
                   <div className="text-[14px] font-bold text-[var(--loyalty-text)]">Liability Health</div>
@@ -958,7 +1047,7 @@ export function LoyaltyDashboard() {
             </div>
 
             {/* Table Card */}
-            <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[20px] mb-[14px]">
+            <div className="bg-[#F5F4F0] rounded-[16px] p-5 mb-[14px] border-0 shadow-none">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <div className="text-[14px] font-bold text-[var(--loyalty-text)] mb-1">Transaction Ledger — Recent</div>
@@ -975,17 +1064,17 @@ export function LoyaltyDashboard() {
                 </div>
               </div>
               
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-[12px] bg-white border border-[rgba(26,26,24,0.07)]">
                 <table className="w-full text-left border-collapse text-[11px]">
                   <thead>
-                    <tr>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Timestamp</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Member</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Event Type</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Remarks</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Points</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Direction</th>
-                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider text-[9px]">Balance After</th>
+                    <tr className="bg-[#EFEDE6]">
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Timestamp</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Member</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Event Type</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Remarks</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Points</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Direction</th>
+                      <th className="p-[10px_8px] border-b border-[var(--loyalty-divider)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Balance After</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1033,13 +1122,19 @@ export function LoyaltyDashboard() {
         const totalOrders = ordersData?.total_orders ?? 0;
         const stuckOrders = ordersData?.stuck_orders ?? 0;
         const stuckPercent = ordersData?.stuck_percentage ?? 0;
-        const stuckCustomer = ordersData?.stuck_customer_concentration;
+        const rawStuckCustomer = ordersData?.stuck_customer_concentration;
+        const stuckCustomerName = typeof rawStuckCustomer === 'object' && rawStuckCustomer !== null
+          ? (rawStuckCustomer.name || 'N/A')
+          : (typeof rawStuckCustomer === 'string' && rawStuckCustomer ? rawStuckCustomer : 'N/A');
+        const stuckCustomerSub = typeof rawStuckCustomer === 'object' && rawStuckCustomer !== null && rawStuckCustomer.oldest_days != null
+          ? `Oldest: ${rawStuckCustomer.oldest_days} days`
+          : 'No stuck concentration data';
 
         const orderAgeDist = ordersData?.order_age_distribution || [];
         const orderAgeChartData = orderAgeDist.length > 0 ? {
           labels: orderAgeDist.map((d: any) => d.bucket),
           values: orderAgeDist.map((d: any) => d.count),
-          colors: ['var(--loyalty-info)', 'var(--loyalty-info)', 'var(--loyalty-info)', 'var(--loyalty-info)'], // Provide enough colors for the bars
+          colors: CHART_COLORS.slice(0, orderAgeDist.length),
           h: false,
           def: 'bar'
         } : undefined;
@@ -1048,7 +1143,7 @@ export function LoyaltyDashboard() {
         const fVsSChartData = {
           labels: ['Fulfilled', 'Stuck'],
           values: [fVsS.fulfilled, fVsS.stuck],
-          colors: ['var(--loyalty-success)', 'var(--loyalty-danger)'],
+          colors: [CHART_COLORS[1], CHART_COLORS[0]],
           h: false,
           def: 'doughnut'
         };
@@ -1063,7 +1158,7 @@ export function LoyaltyDashboard() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-[14px] mb-[14px]">
               {/* Card 1 */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between cursor-pointer hover:border-[var(--loyalty-accent)] transition-colors" onClick={() => openDrill('orders-total', 'Order Pipeline')}>
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col justify-between border-0 shadow-none cursor-pointer hover:bg-[#EFEDE6] transition-colors" onClick={() => openDrill('orders-total', 'Order Pipeline')}>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Total Orders</div>
@@ -1075,7 +1170,7 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 2 */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between cursor-pointer hover:border-[var(--loyalty-danger)] transition-colors" onClick={() => openDrill('orders-stuck', 'Stuck Orders Analysis')}>
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col justify-between border-0 shadow-none cursor-pointer hover:bg-[#EFEDE6] transition-colors" onClick={() => openDrill('orders-stuck', 'Stuck Orders Analysis')}>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Stuck — Paid, Not Fulfilled</div>
@@ -1090,14 +1185,14 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 3 */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between cursor-pointer hover:border-[var(--loyalty-accent)] transition-colors" onClick={() => openDrill('orders-customer', 'Impacted Customer')}>
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col justify-between border-0 shadow-none cursor-pointer hover:bg-[#EFEDE6] transition-colors" onClick={() => openDrill('orders-customer', 'Impacted Customer')}>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Most Affected Customer</div>
                     <div className="w-6 h-6 rounded-md flex items-center justify-center bg-[var(--loyalty-accent)]/10 text-[var(--loyalty-accent)] shrink-0"><Users className="w-3.5 h-3.5" /></div>
                   </div>
-                  <div className="text-[26px] font-bold text-[var(--loyalty-text)] leading-none mb-2">{stuckCustomer ? stuckCustomer.name : 'N/A'}</div>
-                  <div className="text-[11px] text-[var(--loyalty-subtle)]">{stuckCustomer ? `Oldest: ${stuckCustomer.oldest_days} days` : 'No stuck concentration data'}</div>
+                  <div className="text-[26px] font-bold text-[var(--loyalty-text)] leading-none mb-2">{stuckCustomerName}</div>
+                  <div className="text-[11px] text-[var(--loyalty-subtle)]">{stuckCustomerSub}</div>
                 </div>
               </div>
             </div>
@@ -1113,31 +1208,34 @@ export function LoyaltyDashboard() {
                 chartDataOverride={fVsSChartData}
               />
             </div>
-            <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[14px] mb-[14px]">
+            <div className="bg-[#F5F4F0] rounded-[16px] p-5 mb-[14px] border-0 shadow-none">
               <div className="text-[12px] font-semibold text-[var(--loyalty-text)] mb-2.5">Stuck Orders — Paid, Not Fulfilled</div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-[12px] bg-white border border-[rgba(26,26,24,0.07)]">
                 <table className="w-full text-left border-collapse text-[11px]">
                   <thead>
-                    <tr>
-                      <th className="p-[8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)]">Order ID</th>
-                      <th className="p-[8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)]">Customer</th>
-                      <th className="p-[8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)]">Amount</th>
-                      <th className="p-[8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)]">Created</th>
-                      <th className="p-[8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)]">Status</th>
+                    <tr className="bg-[#EFEDE6]">
+                      <th className="p-[10px_12px] border-b border-[rgba(26,26,24,0.07)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Order ID</th>
+                      <th className="p-[10px_12px] border-b border-[rgba(26,26,24,0.07)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Customer</th>
+                      <th className="p-[10px_12px] border-b border-[rgba(26,26,24,0.07)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Amount</th>
+                      <th className="p-[10px_12px] border-b border-[rgba(26,26,24,0.07)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Created</th>
+                      <th className="p-[10px_12px] border-b border-[rgba(26,26,24,0.07)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {ordersData?.stuck_orders_list?.map((o: any, i: number) => (
-                      <tr key={i} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer" onClick={() => openDrill('order', `Order ${o.id}`, o)}>
-                        <td className="p-[8px] border-b border-[var(--loyalty-divider)] font-semibold">{o.id}</td>
-                        <td className="p-[8px] border-b border-[var(--loyalty-divider)]">{o.customer_name || o.customer || 'N/A'}</td>
-                        <td className="p-[8px] border-b border-[var(--loyalty-divider)]">₹{o.amount}</td>
-                        <td className="p-[8px] border-b border-[var(--loyalty-divider)] text-[var(--loyalty-green)]">{formatDt(o.created_at)}</td>
-                        <td className="p-[8px] border-b border-[var(--loyalty-divider)]">
-                          <span className="bg-[var(--loyalty-warning)]/25 text-[var(--loyalty-warning-text)] border border-[var(--loyalty-warning)]/50 text-[9px] font-semibold px-[7px] py-[2px] rounded-full">{o.status || 'Pending'}</span>
-                        </td>
-                      </tr>
-                    ))}
+                    {ordersData?.stuck_orders_list?.map((o: any, i: number) => {
+                      const orderId = o.order_number ?? o.id ?? o.order_no ?? o.order_id ?? 'N/A';
+                      return (
+                        <tr key={orderId || i} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer" onClick={() => openDrill('order', `Order ${orderId}`, o)}>
+                          <td className="p-[8px] border-b border-[var(--loyalty-divider)] font-semibold">{orderId}</td>
+                          <td className="p-[8px] border-b border-[var(--loyalty-divider)]">{o.customer_name || o.customer || 'N/A'}</td>
+                          <td className="p-[8px] border-b border-[var(--loyalty-divider)]">₹{fmtNum(o.amount)}</td>
+                          <td className="p-[8px] border-b border-[var(--loyalty-divider)] text-[var(--loyalty-green)]">{formatDt(o.created_at)}</td>
+                          <td className="p-[8px] border-b border-[var(--loyalty-divider)]">
+                            <span className="bg-[#FFF2D6] text-[#8A5B00] text-[10px] font-semibold px-2.5 py-0.5 rounded-full">{o.status || 'Pending'}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {(!ordersData?.stuck_orders_list || ordersData.stuck_orders_list.length === 0) && (
                       <tr>
                         <td colSpan={5} className="p-[20px] text-center text-[var(--loyalty-subtle)]">No stuck orders found.</td>
@@ -1171,8 +1269,8 @@ export function LoyaltyDashboard() {
         const funnelChartData = funnelLabels.length > 0 ? {
           labels: funnelLabels,
           datasets: [
-            { label: 'Catalog', data: funnelCatalog, bg: 'var(--loyalty-divider)', bc: 'var(--loyalty-border)' },
-            { label: 'Added to Store', data: funnelAdded, bg: 'var(--loyalty-accent)', bc: 'var(--loyalty-accent-hover)' }
+            { label: 'Catalog', data: funnelCatalog, bg: CHART_COLORS[0], bc: CHART_COLORS[0] },
+            { label: 'Added to Store', data: funnelAdded, bg: CHART_COLORS[1], bc: CHART_COLORS[1] }
           ],
           h: false,
           def: 'bar',
@@ -1184,7 +1282,7 @@ export function LoyaltyDashboard() {
         const catMixChartData = catMixLabels.length > 0 ? {
           labels: catMixLabels,
           values: catMixValues,
-          colors: ['var(--loyalty-accent)', 'var(--loyalty-success)', 'var(--loyalty-warning)', 'var(--loyalty-info)', 'var(--loyalty-warning)', 'var(--loyalty-danger)'],
+          colors: CHART_COLORS.slice(0, catMixLabels.length),
           h: false,
           def: 'doughnut'
         } : undefined;
@@ -1194,7 +1292,7 @@ export function LoyaltyDashboard() {
             {/* Top Cards Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-[14px] mb-[14px]">
               {/* Card 1 */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between">
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col justify-between border-0 shadow-none">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Live In Store</div>
@@ -1206,7 +1304,7 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 2 */}
-              <div className="bg-white border border-[var(--loyalty-accent)] rounded-[10px] p-[16px] flex flex-col justify-between">
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col justify-between border-0 shadow-none">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Sitting In Aggregator</div>
@@ -1218,7 +1316,7 @@ export function LoyaltyDashboard() {
               </div>
 
               {/* Card 3 */}
-              <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between">
+              <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col justify-between border-0 shadow-none">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">Days Programme Live</div>
@@ -1237,7 +1335,7 @@ export function LoyaltyDashboard() {
                   const totalAvail = availableByCategory.reduce((sum: number, c: any) => sum + c.count, 0);
                   const pct = totalAvail > 0 ? Math.round((cat.count / totalAvail) * 100) : 0;
                   return (
-                    <div key={i} className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[16px] flex flex-col justify-between" style={{ borderTop: `3px solid ${topColors[i % topColors.length]}` }}>
+                    <div key={i} className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col justify-between border-0 shadow-none">
                       <div>
                         <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider mb-2">{cat.category}</div>
                         <div className="text-[26px] font-bold text-[var(--loyalty-text)] leading-none mb-2">{cat.count.toLocaleString()}</div>
@@ -1268,14 +1366,14 @@ export function LoyaltyDashboard() {
             </div>
 
             {/* How To Fix Table */}
-            <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[14px] mb-[14px]">
+            <div className="bg-[#F5F4F0] rounded-[16px] p-5 mb-[14px] border-0 shadow-none">
               <div className="text-[12px] font-semibold text-[var(--loyalty-text)] mb-2.5">AI Recommended Steps to Fix Pipeline</div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-[12px] bg-white border border-[rgba(26,26,24,0.07)]">
                 <table className="w-full text-left border-collapse text-[11px]">
                   <thead>
-                    <tr>
+                    <tr className="bg-[#EFEDE6]">
                       <th className="p-[8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] w-[60px]">Step</th>
-                      <th className="p-[8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)]">Action</th>
+                      <th className="p-[10px_12px] border-b border-[rgba(26,26,24,0.07)] font-bold text-[rgba(26,26,24,0.48)] uppercase tracking-wider text-[10px]">Action</th>
                       <th className="p-[8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-semibold text-[var(--loyalty-green)] w-[150px]">Owner</th>
                     </tr>
                   </thead>
@@ -1308,20 +1406,20 @@ export function LoyaltyDashboard() {
   return (
     <div className="loyalty-dashboard-theme min-h-screen bg-[var(--loyalty-bg)] font-[Poppins] text-[var(--loyalty-text)]">
       {/* Topbar */}
-      <div className="flex flex-wrap items-center justify-between gap-y-2 bg-white border-b border-[var(--loyalty-border)] px-4 md:px-5 py-2.5 min-h-[60px] sticky top-0 z-[300] shadow-[0_1px_6px_rgba(var(--color-text-rgb),.08)]">
+      <div className="loyalty-detail-header flex flex-wrap items-center justify-between gap-y-2 bg-[#FDFDFB] border-b border-[rgba(26,26,24,0.07)] px-4 md:px-6 py-3 min-h-[60px] sticky top-0 z-[300] backdrop-blur-md">
 
         {/* ── LEFT GROUP ── */}
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => navigate('/loyalty/home-dashboard')}
             title="Back to Loyalty home"
-            className="flex items-center justify-center w-8 h-8 rounded-lg border border-[var(--loyalty-border)] text-[var(--loyalty-text)] bg-white cursor-pointer transition-colors hover:border-[var(--loyalty-accent)] shrink-0"
+            className="loyalty-detail-header-control flex items-center justify-center w-8 h-8 rounded-lg border border-[var(--loyalty-border)] !text-[#1a1a18] bg-white cursor-pointer transition-colors hover:border-[var(--loyalty-accent)] shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="min-w-0">
-            <div className="text-[13.5px] font-bold text-[var(--loyalty-text)] leading-tight truncate">Loyalty Programme Detail</div>
-            <div className="text-[10px] text-[var(--loyalty-subtle)] font-medium truncate">Rules, members, redemption, wallet, orders &amp; store</div>
+            <div className="loyalty-detail-header-title text-[13.5px] font-bold !text-[#1a1a18] leading-tight truncate">Loyalty Programme Detail</div>
+            <div className="loyalty-detail-header-subtitle text-[10px] !text-[#666666] font-medium truncate">Rules, members, redemption, wallet, orders &amp; store</div>
           </div>
         </div>
 
@@ -1331,7 +1429,7 @@ export function LoyaltyDashboard() {
           <div className="relative" ref={filterRef}>
             <button
               onClick={() => { setDraftRange(customRange); setIsFilterOpen((o) => !o); }}
-              className="flex items-center gap-1.5 border border-[var(--loyalty-border)] rounded-[7px] px-2.5 py-[6px] text-[11px] font-semibold text-[var(--loyalty-text)] bg-white cursor-pointer hover:border-[var(--loyalty-accent)] transition-colors whitespace-nowrap"
+              className="loyalty-detail-header-control flex items-center gap-1.5 border border-[var(--loyalty-border)] rounded-[7px] px-2.5 py-[6px] text-[11px] font-semibold !text-[#1a1a18] bg-white cursor-pointer hover:border-[var(--loyalty-accent)] transition-colors whitespace-nowrap"
             >
               <Calendar className="w-3.5 h-3.5" />
               {dateLabel}
@@ -1371,30 +1469,35 @@ export function LoyaltyDashboard() {
           </div>
 
           <button
-            className="flex items-center gap-1.5 bg-[var(--loyalty-accent)] text-white border-none rounded-[7px] px-3 py-[6px] text-[11px] font-semibold cursor-pointer transition-opacity hover:opacity-90 whitespace-nowrap"
+            className="loyalty-detail-ask-btn flex items-center gap-1.5 !text-white border-none rounded-[10px] px-3.5 py-[7px] text-[11.5px] font-semibold cursor-pointer transition-all hover:opacity-90 shadow-[0_4px_12px_-2px_rgba(90,75,224,0.4)] whitespace-nowrap"
+            style={{ background: 'linear-gradient(135deg, #5A4BE0 0%, #6B5AE8 52%, #7B6BF0 100%)', color: '#ffffff' }}
             onClick={() => setIsAiOpen(true)}
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Ask Assistant</span>
+            <Sparkles className="w-3.5 h-3.5 text-white" />
+            <span className="hidden sm:inline text-white">Ask Genie</span>
           </button>
 
           {getUserInitials() && (
-            <div className="w-8 h-8 rounded-full bg-[var(--loyalty-text)] text-white flex items-center justify-center text-[10.5px] font-bold shrink-0">
+            <div
+              className="loyalty-detail-user-avatar w-8 h-8 rounded-full !bg-[#1a1a18] !text-white flex items-center justify-center text-[10.5px] font-bold shrink-0"
+              style={{ backgroundColor: '#1a1a18', color: '#ffffff' }}
+            >
               {getUserInitials()}
             </div>
           )}
         </div>
       </div>
 
-      {/* TabNav */}
-      <div className="flex gap-0 px-4 md:px-5 bg-white border-b border-[var(--loyalty-border)] md:sticky md:top-[60px] z-[299] overflow-x-auto overflow-y-hidden scrollbar-hide">
-        {tabs.map(tab => (
-          <div 
-            key={tab}
-            className={`flex items-center gap-[5px] px-[14px] py-[10px] border-b-2 text-[10.5px] cursor-pointer whitespace-nowrap transition-all duration-150 mb-[-1px] ${activeTab === tab ? 'text-[var(--loyalty-accent)] border-[var(--loyalty-accent)] font-semibold' : 'border-transparent font-medium text-[var(--loyalty-green)] hover:text-[var(--loyalty-accent)]'}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            <span className="flex items-center gap-[5px]">
+      {/* TabNav — Business Genie Segmented Control (.seg .lg) */}
+      <div className="loyalty-detail-tabs flex px-4 md:px-6 py-2.5 bg-[#FDFDFB] border-b border-[rgba(26,26,24,0.07)] md:sticky md:top-[60px] z-[299] overflow-x-auto scrollbar-hide">
+        <div className="inline-flex items-center gap-1 p-1 rounded-[12px] bg-[#F5F4F0] min-w-fit">
+          {tabs.map(tab => (
+            <button 
+              key={tab}
+              type="button"
+              className={`loyalty-detail-tab inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[8px] text-[12px] font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${activeTab === tab ? 'bg-white text-[#1A1A18] shadow-[0_1px_2px_rgba(26,26,24,0.10),0_0_0_1px_rgba(26,26,24,0.05)]' : 'text-[rgba(26,26,24,0.48)] hover:text-[#1A1A18] bg-transparent'}`}
+              onClick={() => setActiveTab(tab)}
+            >
               {tab === 'Overview' && <LayoutDashboard className="w-3.5 h-3.5" />}
               {tab === 'Rules Engine' && <Sliders className="w-3.5 h-3.5" />}
               {tab === 'Members' && <Users className="w-3.5 h-3.5" />}
@@ -1402,36 +1505,33 @@ export function LoyaltyDashboard() {
               {tab === 'Wallet' && <Wallet className="w-3.5 h-3.5" />}
               {tab === 'Orders' && <ShoppingBag className="w-3.5 h-3.5" />}
               {tab === 'Store & Inventory' && <Store className="w-3.5 h-3.5" />}
-              {tab}
-            </span>
-          </div>
-        ))}
+              <span>{tab}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Main Content */}
       <div className="p-4 md:p-5 max-w-[1400px] mx-auto pb-20">
-        {tabError ? (
+        {tabError && (
           <div className="mb-[14px] flex flex-wrap items-center justify-between gap-2 rounded-[10px] border border-[var(--color-danger)]/30 bg-[var(--color-danger-light)]/40 px-4 py-3 text-[11px] text-[var(--loyalty-text)]">
             <span className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-[var(--color-danger)]" /> Couldn't load {activeTab} data. {getLoyaltyErrorMessage(tabError)}</span>
             <button onClick={retryTab} className="flex items-center gap-1 rounded-full border border-[var(--loyalty-border)] bg-white px-3 py-1 text-[10.5px] font-semibold cursor-pointer hover:border-[var(--loyalty-accent)]">
               <RefreshCw className="w-3 h-3" /> Retry
             </button>
           </div>
-        ) : isTabLoading ? (
-          <div className="mb-[14px] flex items-center gap-2 rounded-[10px] border border-[var(--loyalty-divider)] bg-white px-4 py-3 text-[11px] text-[var(--loyalty-subtle)]">
-            <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Loading {activeTab.toLowerCase()} data…
-          </div>
-        ) : null}
-        {renderTabContent()}
+        )}
+        {isTabLoading ? renderTabSkeleton() : renderTabContent()}
       </div>
 
       {!isAiOpen && (
         <button
           onClick={() => setIsAiOpen(true)}
-          title="Ask the assistant"
-          className="fixed bottom-5 right-5 z-[7000] w-12 h-12 bg-[var(--loyalty-accent)] rounded-full flex items-center justify-center text-white shadow-[0_4px_12px_rgba(var(--loyalty-accent-rgb),.35)] hover:opacity-90 transition-opacity cursor-pointer"
+          title="Ask Genie"
+          className="fixed right-7 bottom-7 z-[7000] flex items-center justify-center w-12 h-12 rounded-[14px] !text-white shadow-[0_6px_16px_-4px_rgba(96,74,199,0.8)] hover:-translate-y-0.5 transition-all cursor-pointer border-none"
+          style={{ background: 'linear-gradient(135deg, #5A4BE0 0%, #6B5AE8 52%, #7B6BF0 100%)', color: '#ffffff' }}
         >
-          <Sparkles className="w-5 h-5" />
+          <Sparkles className="w-5 h-5 text-white" />
         </button>
       )}
 
@@ -1453,10 +1553,10 @@ export function LoyaltyDashboard() {
       {/* AI Chat Panel */}
       {isAiOpen && (
         <div className="fixed bottom-[20px] right-[20px] w-[340px] h-[520px] bg-white rounded-[12px] shadow-[0_8px_32px_rgba(var(--color-text-rgb),.15)] border border-[var(--loyalty-border)] flex flex-col z-[8000] overflow-hidden">
-          <div className="flex items-center justify-between p-[14px] bg-[var(--loyalty-text)] text-white">
+          <div className="flex items-center justify-between p-[14px] !text-white" style={{ background: 'linear-gradient(135deg, #5A4BE0 0%, #6B5AE8 52%, #7B6BF0 100%)', color: '#ffffff' }}>
             <div className="flex items-center gap-2">
-              <Bot className="w-4 h-4 text-[var(--loyalty-accent)]" />
-              <span className="font-bold text-[12px]">Programme Assistant</span>
+              <Sparkles className="w-4 h-4 text-white" />
+              <span className="font-bold text-[12px] text-white">Business Genie</span>
             </div>
             <button className="bg-transparent border-none text-white/70 cursor-pointer p-1 rounded-full hover:bg-white/10 transition-colors" onClick={() => setIsAiOpen(false)}>
               <X className="w-4 h-4" />
@@ -1464,7 +1564,15 @@ export function LoyaltyDashboard() {
           </div>
           <div className="flex-1 overflow-y-auto p-[14px] bg-[var(--loyalty-bg)] flex flex-col gap-3">
             {aiMsgs.map((msg, i) => (
-              <div key={i} className={`max-w-[85%] p-[10px_12px] text-[11px] leading-relaxed ${msg.sender === 'user' ? 'bg-[var(--loyalty-accent)] text-white rounded-[12px_12px_0_12px] self-end' : 'bg-white text-[var(--loyalty-text)] border border-[var(--loyalty-divider)] rounded-[12px_12px_12px_0] self-start shadow-sm'}`}>
+              <div
+                key={i}
+                className={`max-w-[85%] p-[10px_12px] text-[11px] leading-relaxed ${
+                  msg.sender === 'user'
+                    ? 'text-white rounded-[12px_12px_0_12px] self-end'
+                    : 'bg-white text-[var(--loyalty-text)] border border-[var(--loyalty-divider)] rounded-[12px_12px_12px_0] self-start shadow-sm'
+                }`}
+                style={msg.sender === 'user' ? { background: '#5A4BE0' } : undefined}
+              >
                 {msg.text}
               </div>
             ))}
@@ -1473,7 +1581,7 @@ export function LoyaltyDashboard() {
           <div className="p-3 border-t border-[var(--loyalty-divider)] bg-white">
             <form onSubmit={handleAiSend} className="relative">
               <input type="text" value={aiInput} onChange={(e) => setAiInput(e.target.value)} placeholder="Ask about rules, redemptions, etc..." className="w-full bg-[var(--loyalty-bg)] border border-[var(--loyalty-border)] rounded-full px-[14px] py-[8px] pr-10 text-[11px] font-[Poppins] outline-none transition-colors focus:border-[var(--loyalty-accent)] focus:bg-white" />
-              <button type="submit" className="absolute right-1 top-1 bottom-1 w-7 flex items-center justify-center bg-[var(--loyalty-accent)] text-white rounded-full border-none cursor-pointer shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50" disabled={!aiInput.trim()}>
+              <button type="submit" className="absolute right-1 top-1 bottom-1 w-7 flex items-center justify-center text-white rounded-full border-none cursor-pointer shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #5A4BE0 0%, #6B5AE8 52%, #7B6BF0 100%)' }} disabled={!aiInput.trim()}>
                 ↑
               </button>
             </form>
@@ -1482,7 +1590,7 @@ export function LoyaltyDashboard() {
       )}
       
       {/* Required Keyframes */}
-      <style dangerouslySetInnerHTML={{__html: "@keyframes slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } } .animate-slide-in { animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1); }"}} />
+      <style dangerouslySetInnerHTML={{__html: "@keyframes slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } } .animate-slide-in { animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1); } .loyalty-detail-user-avatar { background-color: #1a1a18 !important; color: #ffffff !important; }"}} />
     </div>
   );
 }
