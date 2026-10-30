@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import { CD } from './LoyaltyDashboardData';
 import '@/styles/theme.css';
 
@@ -8,7 +9,7 @@ Chart.register(...registerables);
 const chartColorCache = new Map<string, string>();
 
 function resolveChartColor(color: string): string {
-  if (!color.includes('var(')) return color;
+  if (!color || !color.includes('var(')) return color;
   const cached = chartColorCache.get(color);
   if (cached) return cached;
 
@@ -27,93 +28,89 @@ function resolveChartColors(value: string | string[] | undefined): string | stri
   return Array.isArray(value) ? value.map(resolveChartColor) : resolveChartColor(value);
 }
 
-export const Briefing = ({ label, text, icon = "✦" }: { label: string, text: React.ReactNode, icon?: React.ReactNode }) => (
-  <div className="bg-[var(--loyalty-surface-card)] border border-[var(--loyalty-border)] rounded-lg p-3 px-4 mb-3 flex gap-3 items-start relative overflow-hidden shadow-sm">
-    <div className="shrink-0 mt-[2px] text-[var(--loyalty-accent)]">{icon}</div>
+/** Business Genie AI Insight briefing header */
+export const Briefing = ({ label, text, icon }: { label: string; text: React.ReactNode; icon?: React.ReactNode }) => (
+  <div
+    className="relative rounded-[14px] p-[14px_16px_14px_48px] mb-3 overflow-hidden"
+    style={{
+      background: 'linear-gradient(135deg, #F4F1FE 0%, #EEEBFF 46%, #F6F4FF 100%)',
+      border: '1px solid rgba(90, 75, 224, 0.20)',
+    }}
+  >
+    <div
+      className="absolute left-3.5 top-3.5 w-[26px] h-[26px] rounded-[8px] text-white flex items-center justify-center shadow-sm"
+      style={{ background: 'linear-gradient(135deg, #5A4BE0 0%, #6B5AE8 52%, #7B6BF0 100%)' }}
+    >
+      <Sparkles className="w-3.5 h-3.5" />
+    </div>
     <div className="relative z-10">
-      <div className="text-[9px] font-semibold uppercase tracking-wider text-[var(--loyalty-subtle)] mb-1 flex items-center gap-1.5">{label}</div>
-      <div className="text-[11px] text-[var(--loyalty-text)] leading-relaxed [&>strong]:text-[var(--loyalty-text)]" dangerouslySetInnerHTML={{ __html: text as string }} />
+      <div className="inline-block px-2 py-0.5 rounded-full text-[9.5px] font-bold tracking-wider uppercase text-[#4839C4] bg-[rgba(90,75,224,0.10)] mb-1">
+        {label}
+      </div>
+      <div
+        className="text-[12px] text-[rgba(26,26,24,0.68)] leading-relaxed [&>strong]:text-[#1A1A18] [&>strong]:font-semibold"
+        dangerouslySetInnerHTML={{ __html: text as string }}
+      />
     </div>
   </div>
 );
 
-export const KpiStripCard = ({ title, value, sub, barWidth, barColor, valueColor, onClick, icon, iconBg, iconColor }: any) => (
-  <div onClick={onClick} className="bg-white border border-[var(--loyalty-divider)] rounded-lg p-[12px_14px] cursor-pointer transition-all duration-150 hover:border-[var(--loyalty-accent)] hover:shadow-[0_2px_8px_rgba(var(--loyalty-accent-rgb),.14)] flex flex-col justify-between">
+/** Stat KPI card — matching Business Genie .stat (.card fill #F5F4F0, rounded-16, borderless) */
+export const KpiStripCard = ({ title, value, sub, barWidth, barColor, valueColor, onClick, icon }: any) => (
+  <div
+    onClick={onClick}
+    className="bg-[#F5F4F0] rounded-[16px] p-[16px_18px] cursor-pointer transition-all duration-150 hover:bg-[#EFEDE6] flex flex-col justify-between border-0 shadow-none relative"
+  >
     <div>
       <div className="flex items-center justify-between gap-1.5 mb-1.5">
-        <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">{title}</div>
+        <div className="text-[11.5px] font-medium text-[rgba(26,26,24,0.68)]">{title}</div>
         {icon && (
-          <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${iconBg || 'bg-[var(--loyalty-accent)]/10'} ${iconColor || 'text-[var(--loyalty-accent)]'}`}>
+          <div className="w-[34px] h-[34px] rounded-[10px] bg-white text-[#1A1A18] flex items-center justify-center shrink-0 shadow-none">
             {icon}
           </div>
         )}
       </div>
-      <div className={`text-[22px] font-bold leading-none ${valueColor || 'text-[var(--loyalty-text)]'}`}>{value}</div>
+      <div className={`text-[24px] font-semibold leading-tight tracking-tight ${valueColor || 'text-[#1A1A18]'}`}>{value}</div>
     </div>
-    <div>
+    <div className="mt-2">
       {barWidth !== undefined && (
-        <div className="h-[3px] bg-[var(--loyalty-divider)] rounded-full overflow-hidden mt-2">
-          <div className="h-full rounded-full" style={{ width: `${barWidth}%`, backgroundColor: barColor || 'var(--loyalty-accent)' }} />
+        <div className="h-[5px] bg-white rounded-full overflow-hidden mb-1.5">
+          <div className="h-full rounded-full" style={{ width: `${barWidth}%`, backgroundColor: barColor || '#1A1A18' }} />
         </div>
       )}
-      <div className="text-[10px] mt-1.5 text-[var(--loyalty-green)]" dangerouslySetInnerHTML={{ __html: sub }} />
+      <div className="text-[11px] text-[rgba(26,26,24,0.48)]" dangerouslySetInnerHTML={{ __html: sub }} />
     </div>
   </div>
 );
 
-export const KpiCard = ({ title, value, sub, barWidth, barColor, valueColor, onClick, icon, iconBg, iconColor }: any) => (
-  <div onClick={onClick} className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[12px_14px] cursor-pointer transition-all duration-150 hover:border-[var(--loyalty-accent)] hover:shadow-sm flex flex-col justify-between">
-    <div>
-      <div className="flex items-center justify-between gap-1.5 mb-1.5">
-        <div className="text-[10px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wider">{title}</div>
-        {icon && (
-          <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${iconBg || 'bg-[var(--loyalty-accent)]/10'} ${iconColor || 'text-[var(--loyalty-accent)]'}`}>
-            {icon}
-          </div>
-        )}
-      </div>
-      <div className={`text-[22px] font-bold leading-none ${valueColor || 'text-[var(--loyalty-text)]'}`}>{value}</div>
-    </div>
-    <div>
-      {barWidth !== undefined && (
-        <div className="h-[3px] bg-[var(--loyalty-divider)] rounded-full overflow-hidden mt-2">
-          <div className="h-full rounded-full" style={{ width: `${barWidth}%`, backgroundColor: barColor || 'var(--loyalty-accent)' }} />
-        </div>
-      )}
-      <div className="text-[10px] mt-1.5 text-[var(--loyalty-green)]" dangerouslySetInnerHTML={{ __html: sub }} />
-    </div>
-  </div>
-);
+export const KpiCard = KpiStripCard;
 
-export const ModuleCard = ({ title, value, sub, colorClass, chips, onClick }: any) => {
-  const colorMap: Record<string, string> = {
-    coral: 'bg-[var(--loyalty-accent)]',
-    forest: 'bg-[var(--loyalty-success)]',
-    amber: 'bg-[var(--loyalty-warning)]',
-    crimson: 'bg-[var(--loyalty-danger)]',
-    violet: 'bg-[var(--loyalty-info)]',
-    sky: 'bg-[var(--loyalty-info)]'
-  };
-  const topBorderClass = colorMap[colorClass] || 'bg-[var(--loyalty-divider)]';
-
+/** Module overview card — grey fill, pill badges */
+export const ModuleCard = ({ title, value, sub, chips, onClick }: any) => {
   return (
-    <div onClick={onClick} className="bg-white border border-[var(--loyalty-divider)] rounded-lg p-3 cursor-pointer transition-all duration-150 hover:border-[var(--loyalty-accent)] hover:-translate-y-[1px] hover:shadow-[0_2px_8px_rgba(var(--color-text-rgb),.07)] relative overflow-hidden group">
-      <div className={`absolute top-0 left-0 right-0 h-[3px] ${topBorderClass}`}></div>
-      <div className="text-[9px] font-semibold text-[var(--loyalty-green)] uppercase tracking-wide mb-[3px] mt-[2px]">{title}</div>
-      <div className="text-[17px] font-bold text-[var(--loyalty-text)] leading-none">{value}</div>
-      <div className="text-[10px] text-[var(--loyalty-green)] mt-[2px]" dangerouslySetInnerHTML={{ __html: sub }}></div>
+    <div
+      onClick={onClick}
+      className="bg-[#F5F4F0] rounded-[16px] p-4 cursor-pointer transition-all duration-150 hover:bg-[#EFEDE6] flex flex-col justify-between border-0 shadow-none relative"
+    >
+      <div>
+        <div className="text-[11px] font-semibold text-[rgba(26,26,24,0.48)] uppercase tracking-wider mb-1">{title}</div>
+        <div className="text-[22px] font-semibold text-[#1A1A18] leading-tight">{value}</div>
+        <div className="text-[11px] text-[rgba(26,26,24,0.68)] mt-1" dangerouslySetInnerHTML={{ __html: sub }}></div>
+      </div>
       {chips && chips.length > 0 && (
-        <div className="flex gap-1 flex-wrap mt-1.5">
+        <div className="flex gap-1.5 flex-wrap mt-3">
           {chips.map((c: any, i: number) => {
             const chipClassMap: Record<string, string> = {
-              'chip-ok': 'bg-[var(--loyalty-success)]/20 text-[var(--loyalty-success)] border border-[var(--loyalty-success)]/50',
-              'chip-warn': 'bg-[var(--loyalty-warning)]/25 text-[var(--loyalty-warning-text)] border border-[var(--loyalty-warning)]/50',
-              'chip-err': 'bg-[var(--loyalty-danger)]/20 text-[var(--loyalty-danger-text)] border border-[var(--loyalty-danger)]/50',
-              'chip-info': 'bg-[var(--loyalty-info)]/20 text-[var(--loyalty-info)] border border-[var(--loyalty-info)]/40',
-              'chip-muted': 'bg-[var(--loyalty-green)]/15 text-[var(--loyalty-green)] border border-[var(--loyalty-divider)]',
+              'chip-ok': 'bg-[#E0F7EA] text-[#0B7A3B]',
+              'chip-warn': 'bg-[#FFF2D6] text-[#8A5B00]',
+              'chip-err': 'bg-[#FDEDED] text-[#A32126]',
+              'chip-info': 'bg-[rgba(90,75,224,0.10)] text-[#4839C4]',
+              'chip-muted': 'bg-[rgba(26,26,24,0.06)] text-[rgba(26,26,24,0.68)]',
             };
             return (
-              <span key={i} className={`text-[9px] font-semibold px-[7px] py-[2px] rounded-full ${chipClassMap[c.type]}`}>{c.label}</span>
+              <span key={i} className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${chipClassMap[c.type] || chipClassMap['chip-muted']}`}>
+                {c.label}
+              </span>
             );
           })}
         </div>
@@ -122,10 +119,10 @@ export const ModuleCard = ({ title, value, sub, colorClass, chips, onClick }: an
   );
 };
 
-export const ChartViewer = ({ id, activeType, chartDataOverride }: { id: string, activeType: string, chartDataOverride?: any }) => {
+export const ChartViewer = ({ id, activeType, chartDataOverride }: { id: string; activeType: string; chartDataOverride?: any }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<any>(null);
-  
+
   useEffect(() => {
     if (!canvasRef.current) return;
     const c = chartDataOverride || CD[id];
@@ -151,37 +148,39 @@ export const ChartViewer = ({ id, activeType, chartDataOverride }: { id: string,
         fill: d.fill || false,
         tension: d.tension || (isLine ? 0.35 : 0),
         pointRadius: isLine ? (d.pr !== undefined && d.pr > 0 ? d.pr : 4) : 0,
-        pointHoverRadius: isLine ? 7 : 0,
-        pointBackgroundColor: resolveChartColor(d.bc || d.bg || 'var(--loyalty-accent)'),
+        pointHoverRadius: isLine ? 6 : 0,
+        pointBackgroundColor: resolveChartColor(d.bc || d.bg || '#5A4BE0'),
         pointBorderColor: '#FFFFFF',
         pointBorderWidth: isLine ? 1.5 : 0,
-        pointHoverBackgroundColor: resolveChartColor('var(--loyalty-accent)'),
+        pointHoverBackgroundColor: resolveChartColor('#5A4BE0'),
         pointHoverBorderColor: '#FFFFFF',
         pointHoverBorderWidth: 2,
-        borderWidth: isLine ? 2.5 : (ct === 'bar' ? 0 : 0),
-        borderRadius: ct === 'bar' ? 4 : 0,
-        borderDash: d.dash
+        borderWidth: isLine ? 2.5 : 0,
+        borderRadius: ct === 'bar' ? 5 : 0,
+        borderDash: d.dash,
       }));
     } else {
-      datasets = [{
-        label: c.label || '',
-        data: c.values,
-        backgroundColor: isLine ? resolveChartColor('rgba(var(--loyalty-accent-rgb), 0.15)') : resolveChartColors(c.colors),
-        borderColor: isLine ? resolveChartColor(c.colors?.[0] || 'var(--loyalty-accent)') : (isDo ? '#fff' : undefined),
-        hoverBackgroundColor: isLine ? resolveChartColor('rgba(var(--loyalty-accent-rgb), 0.25)') : resolveChartColors(c.colors),
-        borderWidth: isDo ? 2 : (isLine ? 2.5 : 0),
-        borderRadius: ct === 'bar' ? 4 : 0,
-        fill: isLine,
-        tension: isLine ? 0.35 : 0,
-        pointRadius: isLine ? 4 : 0,
-        pointHoverRadius: isLine ? 7 : 0,
-        pointBackgroundColor: isLine ? resolveChartColor(c.colors?.[0] || 'var(--loyalty-accent)') : undefined,
-        pointBorderColor: '#FFFFFF',
-        pointBorderWidth: isLine ? 1.5 : 0,
-        pointHoverBackgroundColor: resolveChartColor('var(--loyalty-accent)'),
-        pointHoverBorderColor: '#FFFFFF',
-        pointHoverBorderWidth: 2,
-      }];
+      datasets = [
+        {
+          label: c.label || '',
+          data: c.values,
+          backgroundColor: isLine ? 'rgba(90, 75, 224, 0.12)' : resolveChartColors(c.colors),
+          borderColor: isLine ? resolveChartColor(c.colors?.[0] || '#5A4BE0') : isDo ? '#FFFFFF' : undefined,
+          hoverBackgroundColor: isLine ? 'rgba(90, 75, 224, 0.20)' : resolveChartColors(c.colors),
+          borderWidth: isDo ? 2 : isLine ? 2.5 : 0,
+          borderRadius: ct === 'bar' ? 5 : 0,
+          fill: isLine,
+          tension: isLine ? 0.35 : 0,
+          pointRadius: isLine ? 4 : 0,
+          pointHoverRadius: isLine ? 6 : 0,
+          pointBackgroundColor: isLine ? resolveChartColor(c.colors?.[0] || '#5A4BE0') : undefined,
+          pointBorderColor: '#FFFFFF',
+          pointBorderWidth: isLine ? 1.5 : 0,
+          pointHoverBackgroundColor: resolveChartColor('#5A4BE0'),
+          pointHoverBorderColor: '#FFFFFF',
+          pointHoverBorderWidth: 2,
+        },
+      ];
     }
 
     chartInstanceRef.current = new Chart(canvasRef.current, {
@@ -203,20 +202,25 @@ export const ChartViewer = ({ id, activeType, chartDataOverride }: { id: string,
           legend: {
             display: isDo || (c.multi && !isDo),
             position: 'right',
-            labels: { font: { size: 9, family: "'Poppins',sans-serif" }, boxWidth: 8, padding: 6, color: resolveChartColor('var(--loyalty-text)') }
+            labels: {
+              font: { size: 10, family: "'Poppins', sans-serif" },
+              boxWidth: 8,
+              padding: 8,
+              color: '#1A1A18',
+            },
           },
           tooltip: {
             enabled: true,
             mode: isDo ? 'nearest' : 'index',
             intersect: false,
-            backgroundColor: 'rgba(44, 44, 44, 0.95)',
+            backgroundColor: 'rgba(26, 26, 24, 0.95)',
             titleColor: '#FFFFFF',
-            titleFont: { size: 11, weight: 'bold', family: "'Poppins',sans-serif" },
-            bodyColor: resolveChartColor('var(--loyalty-bg)'),
-            bodyFont: { size: 10, family: "'Poppins',sans-serif" },
+            titleFont: { size: 11, weight: 'bold', family: "'Poppins', sans-serif" },
+            bodyColor: 'rgba(255, 255, 255, 0.88)',
+            bodyFont: { size: 10, family: "'Poppins', sans-serif" },
             padding: 10,
             cornerRadius: 8,
-            borderColor: 'rgba(255, 255, 255, 0.15)',
+            borderColor: 'rgba(255, 255, 255, 0.12)',
             borderWidth: 1,
             displayColors: true,
             boxPadding: 4,
@@ -226,9 +230,14 @@ export const ChartViewer = ({ id, activeType, chartDataOverride }: { id: string,
                 if (label) {
                   label += ': ';
                 }
-                const val = context.parsed.y !== undefined
-                  ? context.parsed.y
-                  : (context.parsed.x !== undefined && c.h ? context.parsed.x : (context.parsed !== undefined ? context.parsed : context.raw));
+                const val =
+                  context.parsed.y !== undefined
+                    ? context.parsed.y
+                    : context.parsed.x !== undefined && c.h
+                    ? context.parsed.x
+                    : context.parsed !== undefined
+                    ? context.parsed
+                    : context.raw;
                 if (typeof val === 'number') {
                   label += val.toLocaleString();
                 } else {
@@ -237,16 +246,24 @@ export const ChartViewer = ({ id, activeType, chartDataOverride }: { id: string,
                 return label;
               },
             },
-          }
+          },
         },
-        ...(isDo ? { cutout: '65%' } : {
-          indexAxis: c.h ? 'y' : 'x',
-          scales: {
-            x: { grid: { color: resolveChartColor('rgba(var(--color-text-rgb),.08)') }, ticks: { font: { size: 9 }, color: resolveChartColor('var(--loyalty-green)') } },
-            y: { grid: { color: resolveChartColor('rgba(var(--color-text-rgb),.08)') }, ticks: { font: { size: 9 }, color: resolveChartColor('var(--loyalty-green)') } }
-          }
-        })
-      }
+        ...(isDo
+          ? { cutout: '68%' }
+          : {
+              indexAxis: c.h ? 'y' : 'x',
+              scales: {
+                x: {
+                  grid: { color: 'rgba(26, 26, 24, 0.07)' },
+                  ticks: { font: { size: 10, family: "'Poppins', sans-serif" }, color: 'rgba(26, 26, 24, 0.48)' },
+                },
+                y: {
+                  grid: { color: 'rgba(26, 26, 24, 0.07)' },
+                  ticks: { font: { size: 10, family: "'Poppins', sans-serif" }, color: 'rgba(26, 26, 24, 0.48)' },
+                },
+              },
+            }),
+      },
     });
 
     return () => {
@@ -260,7 +277,7 @@ export const ChartViewer = ({ id, activeType, chartDataOverride }: { id: string,
 
   if (!c.labels || c.labels.length === 0) {
     return (
-      <div className="flex h-full w-full items-center justify-center rounded-md bg-[var(--loyalty-surface)] text-[11px] text-[var(--loyalty-subtle)]">
+      <div className="flex h-full w-full items-center justify-center rounded-[12px] bg-white text-[11px] text-[rgba(26,26,24,0.48)]">
         No data for this period
       </div>
     );
@@ -269,22 +286,26 @@ export const ChartViewer = ({ id, activeType, chartDataOverride }: { id: string,
   if (ct === 'tbl') {
     if (c.multi) {
       return (
-        <div className="overflow-x-auto w-full h-full">
-          <table className="w-full border-collapse text-[10px] text-left">
+        <div className="overflow-x-auto w-full h-full rounded-[12px] bg-white border border-[rgba(26,26,24,0.07)]">
+          <table className="w-full border-collapse text-[11px] text-left">
             <thead>
-              <tr>
-                <th className="p-[4px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-medium text-[var(--loyalty-green)]">Period</th>
+              <tr className="bg-[#EFEDE6]">
+                <th className="p-[8px_12px] font-bold text-[rgba(26,26,24,0.48)] uppercase text-[10px] tracking-wider">Period</th>
                 {c.datasets.map((d: any, i: number) => (
-                  <th key={i} className="p-[4px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] text-right font-medium text-[var(--loyalty-green)]">{d.label}</th>
+                  <th key={i} className="p-[8px_12px] text-right font-bold text-[rgba(26,26,24,0.48)] uppercase text-[10px] tracking-wider">
+                    {d.label}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {c.labels.map((l: string, i: number) => (
-                <tr key={i}>
-                  <td className="p-[4px_8px] border-b border-[var(--loyalty-divider)] text-[var(--loyalty-text)]">{l}</td>
+                <tr key={i} className="border-b border-[rgba(26,26,24,0.07)] last:border-b-0 hover:bg-[#FAF9F5] transition-colors">
+                  <td className="p-[8px_12px] text-[#1A1A18] font-medium">{l}</td>
                   {c.datasets.map((d: any, j: number) => (
-                    <td key={j} className="p-[4px_8px] border-b border-[var(--loyalty-divider)] text-right font-semibold text-[var(--loyalty-text)]">{Number(d.data[i] ?? 0).toLocaleString()}</td>
+                    <td key={j} className="p-[8px_12px] text-right font-semibold text-[#1A1A18]">
+                      {Number(d.data[i] ?? 0).toLocaleString()}
+                    </td>
                   ))}
                 </tr>
               ))}
@@ -294,19 +315,19 @@ export const ChartViewer = ({ id, activeType, chartDataOverride }: { id: string,
       );
     } else {
       return (
-        <div className="overflow-x-auto w-full h-full">
-          <table className="w-full border-collapse text-[10px] text-left">
+        <div className="overflow-x-auto w-full h-full rounded-[12px] bg-white border border-[rgba(26,26,24,0.07)]">
+          <table className="w-full border-collapse text-[11px] text-left">
             <thead>
-              <tr>
-                <th className="p-[4px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] font-medium text-[var(--loyalty-green)]">Category</th>
-                <th className="p-[4px_8px] border-b border-[var(--loyalty-divider)] bg-[var(--loyalty-bg)] text-right font-medium text-[var(--loyalty-green)]">Value</th>
+              <tr className="bg-[#EFEDE6]">
+                <th className="p-[8px_12px] font-bold text-[rgba(26,26,24,0.48)] uppercase text-[10px] tracking-wider">Category</th>
+                <th className="p-[8px_12px] text-right font-bold text-[rgba(26,26,24,0.48)] uppercase text-[10px] tracking-wider">Value</th>
               </tr>
             </thead>
             <tbody>
               {c.labels.map((l: string, i: number) => (
-                <tr key={i}>
-                  <td className="p-[4px_8px] border-b border-[var(--loyalty-divider)] text-[var(--loyalty-text)]">{l}</td>
-                  <td className="p-[4px_8px] border-b border-[var(--loyalty-divider)] text-right font-semibold text-[var(--loyalty-text)]">{Number(c.values[i] ?? 0).toLocaleString()}</td>
+                <tr key={i} className="border-b border-[rgba(26,26,24,0.07)] last:border-b-0 hover:bg-[#FAF9F5] transition-colors">
+                  <td className="p-[8px_12px] text-[#1A1A18] font-medium">{l}</td>
+                  <td className="p-[8px_12px] text-right font-semibold text-[#1A1A18]">{Number(c.values[i] ?? 0).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
@@ -319,21 +340,42 @@ export const ChartViewer = ({ id, activeType, chartDataOverride }: { id: string,
   return <canvas ref={canvasRef} className="w-full h-full" />;
 };
 
-export const ChartCard = ({ id, title, acts, insight, onAiOpen, chartDataOverride }: { id: string, title: string, acts: any[], insight?: any, onAiOpen?: () => void, chartDataOverride?: any }) => {
+/** Business Genie chart card — grey fill #F5F4F0, rounded-16, segmented controls, AI insight surface */
+export const ChartCard = ({
+  id,
+  title,
+  acts,
+  insight,
+  onAiOpen,
+  chartDataOverride,
+}: {
+  id: string;
+  title: string;
+  acts: any[];
+  insight?: any;
+  onAiOpen?: () => void;
+  chartDataOverride?: any;
+}) => {
   const cDef = (chartDataOverride || CD[id])?.def || 'bar';
   const [activeType, setActiveType] = useState<string>(acts && acts.length > 0 ? acts[0].type : cDef);
-  
+
   return (
-    <div className="bg-white border border-[var(--loyalty-divider)] rounded-[10px] p-[14px] flex flex-col h-full">
-      <div className="flex justify-between items-start mb-2.5">
-        <div><div className="text-[12px] font-semibold text-[var(--loyalty-text)]">{title}</div></div>
+    <div className="bg-[#F5F4F0] rounded-[16px] p-5 flex flex-col h-full border-0 shadow-none">
+      <div className="flex justify-between items-center mb-3">
+        <div>
+          <div className="text-[14px] font-semibold text-[#1A1A18]">{title}</div>
+        </div>
         {acts && acts.length > 0 && (
-          <div className="flex gap-1 items-center flex-wrap">
+          <div className="inline-flex gap-1 p-[3px] rounded-[8px] bg-[rgba(26,26,24,0.06)]">
             {acts.map((act) => (
-              <button 
-                key={act.type} 
-                onClick={() => setActiveType(act.type)} 
-                className={`border rounded-[6px] px-2 py-[3px] text-[10px] cursor-pointer font-[Poppins] transition-all duration-150 ${activeType === act.type ? 'bg-[var(--loyalty-accent)] text-white border-[var(--loyalty-accent)]' : 'bg-transparent border-[var(--loyalty-divider)] text-[var(--loyalty-green)] hover:bg-[var(--loyalty-accent)] hover:text-white hover:border-[var(--loyalty-accent)]'}`}
+              <button
+                key={act.type}
+                onClick={() => setActiveType(act.type)}
+                className={`rounded-[6px] px-2.5 py-[3px] text-[10.5px] cursor-pointer font-[Poppins] transition-all duration-150 font-semibold ${
+                  activeType === act.type
+                    ? 'bg-white text-[#1A1A18] shadow-[0_1px_2px_rgba(26,26,24,0.1)]'
+                    : 'bg-transparent text-[rgba(26,26,24,0.48)] hover:text-[#1A1A18]'
+                }`}
               >
                 {act.label}
               </button>
@@ -341,16 +383,36 @@ export const ChartCard = ({ id, title, acts, insight, onAiOpen, chartDataOverrid
           </div>
         )}
       </div>
-      <div className="h-[200px] relative w-full grow">
+
+      <div className="h-[210px] relative w-full grow">
         <ChartViewer id={id} activeType={activeType} chartDataOverride={chartDataOverride} />
       </div>
+
       {insight && (
-        <div className="mt-2 flex items-center gap-2 flex-wrap cursor-pointer group" onClick={onAiOpen}>
-          <div className={`p-[6px_10px] rounded-[6px] border-l-[3px] flex-1 min-w-0 transition-colors ${insight.bgClass} ${insight.borderClass} group-hover:bg-[var(--loyalty-warning-bg-soft)] group-hover:border-[var(--loyalty-accent)]`}>
-            <div className={`text-[9px] font-bold uppercase tracking-wide mb-[2px] transition-colors ${insight.textClass} group-hover:text-[var(--loyalty-accent)]`}>{insight.label}</div>
-            <div className="text-[10.5px] leading-relaxed text-[var(--loyalty-text)] line-clamp-2">{insight.text}</div>
+        <div
+          className="mt-3 relative rounded-[12px] p-[12px_14px_12px_44px] cursor-pointer transition-all hover:opacity-95"
+          style={{
+            background: 'linear-gradient(135deg, #F4F1FE 0%, #EEEBFF 46%, #F6F4FF 100%)',
+            border: '1px solid rgba(90, 75, 224, 0.20)',
+          }}
+          onClick={onAiOpen}
+        >
+          <div
+            className="absolute left-3 top-3.5 w-6 h-6 rounded-[7px] text-white flex items-center justify-center shadow-sm"
+            style={{ background: 'linear-gradient(135deg, #5A4BE0 0%, #6B5AE8 52%, #7B6BF0 100%)' }}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
           </div>
-          <button className="inline-flex items-center gap-1 shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-full bg-transparent border border-[var(--loyalty-border)] text-[var(--loyalty-green)] cursor-pointer font-[Poppins] transition-all group-hover:border-[var(--loyalty-accent)] group-hover:text-[var(--loyalty-accent)]">{insight.btnText || '✦ Generate'}</button>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-block px-2 py-0.5 rounded-full text-[9.5px] font-bold tracking-wider uppercase text-[#4839C4] bg-[rgba(90,75,224,0.10)]">
+              {insight.label || 'AI INSIGHT'}
+            </span>
+          </div>
+          <div className="text-[11.5px] leading-relaxed text-[rgba(26,26,24,0.68)] line-clamp-2">{insight.text}</div>
+          <div className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-[#1A1A18]">
+            <span>{insight.btnText || 'Ask Assistant'}</span>
+            <ArrowRight className="w-3 h-3 text-[#5A4BE0]" />
+          </div>
         </div>
       )}
     </div>
