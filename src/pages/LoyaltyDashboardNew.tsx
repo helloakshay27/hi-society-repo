@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { ArrowUp, Bot, Sparkles, X, Store, Receipt, Clock, UserPlus, Calendar, AlertTriangle } from "lucide-react";
 import { API_CONFIG } from "@/config/apiConfig";
-import "@/styles/theme.css";
+import "@/styles/loyalty-dashboard.css";
 import {
   DATE_PRESETS,
   DatePreset,
