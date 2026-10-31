@@ -198,6 +198,12 @@ const hasActiveDescendant = (func: any, allFunctions: any[]): boolean => {
 };
 
 /**
+ * Only allow same-origin app paths (blocks protocol-relative "//host" links)
+ */
+export const isSafePath = (path: string | null | undefined): path is string =>
+  !!path && path.startsWith("/") && !path.startsWith("//");
+
+/**
  * Find the first accessible route for the user based on active permissions
  */
 export const findFirstAccessibleRoute = (

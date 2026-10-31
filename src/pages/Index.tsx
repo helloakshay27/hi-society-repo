@@ -1,7 +1,10 @@
 import React, { useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/contexts/PermissionsContext";
-import { findFirstAccessibleRoute } from "@/utils/dynamicNavigation";
+import {
+  findFirstAccessibleRoute,
+  isSafePath,
+} from "@/utils/dynamicNavigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { getUser } from "@/utils/auth";
@@ -86,6 +89,17 @@ const Index = () => {
     // Wait for permissions to load
     if (loading) {
       roleRequestedRef.current = true;
+      return;
+    }
+
+    // Role not loaded yet — this effect re-runs once it arrives
+    if (!userRole && !roleRequestedRef.current) return;
+
+    // Land on the first route the user's role gives access to; otherwise
+    // fall through to the host/org-specific defaults below
+    const firstRoute = findFirstAccessibleRoute(userRole);
+    if (isSafePath(firstRoute)) {
+      navigate(firstRoute, { replace: true });
       return;
     }
 

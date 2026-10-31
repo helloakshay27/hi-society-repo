@@ -63,13 +63,14 @@ export const ActionHeader = () => {
     }
   };
 
-  // Filter out employee-specific modules
+  // Filter out employee-specific modules and Society Admin
   const filteredModules = availableModules.filter(
     (module) =>
       module.module_name !== "Employee Sidebar" &&
       module.module_name !== "Employee Projects Sidebar" &&
       module.module_name !== "Employee Business Compass" &&
-      module.module_name !== "Employee Admin Compass"
+      module.module_name !== "Employee Admin Compass" &&
+      module.module_name !== "Society Admin"
   );
 
   // Sort modules to ensure Master is second-to-last and Settings is last
