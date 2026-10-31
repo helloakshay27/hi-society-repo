@@ -56,9 +56,9 @@ export const useActionLayout = () => {
     // and when Layout is momentarily rendered outside the provider tree
     return {
       currentModule: "",
-      setCurrentModule: () => { },
+      setCurrentModule: () => {},
       currentFunction: "",
-      setCurrentFunction: () => { },
+      setCurrentFunction: () => {},
       availableModules: [],
       getModuleFunctions: () => [],
       isActionSidebarVisible: false,
@@ -150,7 +150,8 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
       orgId === "5" ||
       orgId === "9" ||
       userEmail === "dineshshinde6666@gmail.com" ||
-      window.location.hostname === "piramal.lockated.com";
+      window.location.hostname === "piramal.lockated.com" ||
+      window.location.hostname === "kraheja.lockated.com";
 
     if (!userRole || !userRole.lock_modules) {
       setIsActionSidebarVisible(false);
@@ -324,7 +325,9 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
             `🔍 ActionLayout - Fallback found no module for path "${path}". Tried candidates:`,
             triedCandidates,
             "Available module names in role:",
-            userRole.lock_modules.map((m) => `${m.module_name} (active=${m.module_active})`)
+            userRole.lock_modules.map(
+              (m) => `${m.module_name} (active=${m.module_active})`
+            )
           );
         }
       }
