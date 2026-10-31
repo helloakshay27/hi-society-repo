@@ -218,6 +218,7 @@ export const VisitorDetailsPage = () => {
     Record<number, boolean>
   >({});
   const [activeTab, setActiveTab] = useState("profile");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // State for document modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -335,7 +336,7 @@ export const VisitorDetailsPage = () => {
     };
 
     fetchVisitorDetails();
-  }, [id]);
+  }, [id, refreshKey]);
 
   const handleBackToList = () => {
     navigate(-1);
@@ -427,7 +428,7 @@ export const VisitorDetailsPage = () => {
       toast.success("Host approval skipped successfully!");
 
       // Refresh visitor data
-      window.location.reload();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("❌ Error skipping approval:", err);
       toast.error("Failed to skip approval. Please try again.");
@@ -455,7 +456,7 @@ export const VisitorDetailsPage = () => {
     try {
       await ticketManagementAPI.checkInVisitor(Number(id));
       toast.success("Visitor checked in successfully!");
-      window.location.reload();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("❌ Error checking in visitor:", err);
       toast.error("Failed to check-in visitor. Please try again.");
@@ -504,7 +505,7 @@ export const VisitorDetailsPage = () => {
       toast.success("Visitor checked out successfully!");
 
       // Refresh visitor data
-      window.location.reload();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("❌ Error checking out visitor:", err);
       toast.error("Failed to checkout visitor. Please try again.");
