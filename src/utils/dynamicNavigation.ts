@@ -217,37 +217,46 @@ export const findFirstAccessibleRoute = (
       continue;
     }
 
+    // A parent function's own link is only a fallback — prefer its first
+    // active child (recursively), so we land on a real page, not the parent.
+    const findFirstActiveLink = (
+      currentFunc: any,
+      allFuncs: any[],
+      visited: Set<any> = new Set()
+    ): string | null => {
+      // Guard against cycles in parent_function/action_name data
+      if (visited.has(currentFunc)) return null;
+      visited.add(currentFunc);
+
+      // Check child functions first (parent_function may hold the parent's
+      // action_name or its function_id)
+      const children = allFuncs.filter(
+        (f: any) =>
+          f.parent_function != null &&
+          f !== currentFunc &&
+          (f.parent_function === currentFunc.action_name ||
+            f.parent_function === currentFunc.function_id)
+      );
+
+      for (const child of children) {
+        const link = findFirstActiveLink(child, allFuncs, visited);
+        if (link) return link;
+      }
+
+      // No usable child — use this function's own link if it's active
+      if (
+        currentFunc.function_active === 1 &&
+        isSafePath(currentFunc.react_link)
+      ) {
+        return currentFunc.react_link;
+      }
+
+      return null;
+    };
+
     // Find the first function with active descendants
     for (const func of module.lock_functions) {
       if (hasActiveDescendant(func, module.lock_functions)) {
-        // If this function has a react_link and is active, use it
-        if (func.function_active === 1 && func.react_link) {
-          return func.react_link;
-        }
-
-        // Otherwise, find the first active descendant with a react_link
-        const findFirstActiveLink = (
-          currentFunc: any,
-          allFuncs: any[]
-        ): string | null => {
-          // Check if current function is active and has a link
-          if (currentFunc.function_active === 1 && currentFunc.react_link) {
-            return currentFunc.react_link;
-          }
-
-          // Check child functions
-          const children = allFuncs.filter(
-            (f: any) => f.parent_function === currentFunc.action_name
-          );
-
-          for (const child of children) {
-            const link = findFirstActiveLink(child, allFuncs);
-            if (link) return link;
-          }
-
-          return null;
-        };
-
         const link = findFirstActiveLink(func, module.lock_functions);
         if (link) return link;
       }
