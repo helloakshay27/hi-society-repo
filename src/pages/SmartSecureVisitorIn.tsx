@@ -61,6 +61,7 @@ interface ApiGatekeeper {
   guest_number: string;
   guest_vehicle_number: string;
   visit_purpose: string | null;
+  visit_to?: string | null;
   guest_name: string;
   guest_entry_time: string | null;
   guest_exit_time: string | null;
@@ -129,10 +130,11 @@ const getHostDisplay = (v: ApiGatekeeper): string => {
     const block = h.block_name ? `${h.block_name}/` : "";
     return `${block}${h.flat_name} - ${h.name}`;
   }
-  if (v.user_flat) {
-    return `${v.user_flat.block}/${v.user_flat.flat}`;
+  const flat = v.user_flat ? `${v.user_flat.block}/${v.user_flat.flat}` : "";
+  if (v.visit_to) {
+    return flat ? `${flat} - ${v.visit_to}` : v.visit_to;
   }
-  return "--";
+  return flat || "--";
 };
 
 // ─── API Actions ──────────────────────────────────────────────────────────────
