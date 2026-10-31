@@ -477,20 +477,20 @@ const FitoutRequests: React.FC = () => {
         draggable: true,
         defaultVisible: true,
       },
-      {
-        key: "contactor_name",
-        label: "Contractor Name",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: "contactor_no",
-        label: "Contractor Mobile",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
+      // {
+      //   key: "contactor_name",
+      //   label: "Contractor Name",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: false,
+      // },
+      // {
+      //   key: "contactor_no",
+      //   label: "Contractor Mobile",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: false,
+      // },
       {
         key: "start_date",
         label: "Requested Date",
@@ -498,20 +498,20 @@ const FitoutRequests: React.FC = () => {
         draggable: true,
         defaultVisible: true,
       },
-      {
-        key: "expiry_date",
-        label: "Expiry Date",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: "refund_date",
-        label: "Refund Date",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
+      // {
+      //   key: "expiry_date",
+      //   label: "Expiry Date",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: false,
+      // },
+      // {
+      //   key: "refund_date",
+      //   label: "Refund Date",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: false,
+      // },
       {
         key: "amount",
         label: "Amount",
@@ -806,7 +806,7 @@ const FitoutRequests: React.FC = () => {
           selectable={false}
           getItemId={(item) => item.id.toString()}
           renderCell={renderCell}
-          storageKey="fitout-requests-table-v1"
+          storageKey="fitout-requests-table-v2"
           enableExport={true}
           exportFileName="fitout-requests-data"
           enableGlobalSearch={true}

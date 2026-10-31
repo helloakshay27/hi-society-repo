@@ -271,6 +271,12 @@ export const VisitorDetailsPage = () => {
             idv.govt_id_image ||
             (Array.isArray(idv.documents) && idv.documents.length > 0));
 
+        const selectedHosts: { name?: string; mobile?: string }[] = Array.isArray(
+          rawVisitor.visitor_hosts
+        )
+          ? rawVisitor.visitor_hosts
+          : [];
+
         const visitor: VisitorData = {
           ...rawVisitor,
           visitor_identity:
@@ -291,10 +297,18 @@ export const VisitorDetailsPage = () => {
           vehicle_type:
             rawVisitor.vehicle_type || rawVisitor.vehicle_info?.vehicle_type,
           // Flatten person_to_meet
+          // Prefer the host(s) selected for the visit over the creator (person_to_meet)
           visitor_host_name:
-            rawVisitor.visitor_host_name || rawVisitor.person_to_meet?.name,
+            selectedHosts
+              .map((h: { name?: string }) => h?.name)
+              .filter(Boolean)
+              .join(", ") ||
+            rawVisitor.visitor_host_name ||
+            rawVisitor.person_to_meet?.name,
           visitor_host_mobile:
-            rawVisitor.visitor_host_mobile || rawVisitor.person_to_meet?.mobile,
+            selectedHosts[0]?.mobile ||
+            rawVisitor.visitor_host_mobile ||
+            rawVisitor.person_to_meet?.mobile,
           // Flatten building
           building_name:
             rawVisitor.building_name || rawVisitor.building?.name,
@@ -1207,20 +1221,14 @@ export const VisitorDetailsPage = () => {
                   </div>
                 </div>
               ))
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                No additional visitor details found
-              </div>
-            )}
-          </TabsContent>
+            ) : null}
 
-          {/* Tab 3: Asset Details */}
-          <TabsContent value="assets" className="p-6 space-y-6">
+            {/* Goods Details (shown in the Additional Details tab) */}
             {/* MIMO Details Section (new API) */}
             {visitorData.mimo_details && visitorData.mimo_details.length > 0 && (
               <div className="space-y-6">
                 <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                  Item Movements
+                  Goods Details
                 </h2>
                 {visitorData.mimo_details.map((mimo: MimoDetail, index: number) => (
                   <div key={mimo.id || index} className="border rounded-lg p-6 bg-gray-50">
@@ -1268,7 +1276,7 @@ export const VisitorDetailsPage = () => {
             {visitorData.item_movements && visitorData.item_movements.length > 0 && (
               <div className="space-y-6">
                 <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                  Item Movements
+                  Goods Details
                 </h2>
                 {visitorData.item_movements.map((movement: ItemMovement, index: number) => (
                   <div key={movement.id || index} className="border rounded-lg p-6 bg-gray-50">
@@ -1478,9 +1486,9 @@ export const VisitorDetailsPage = () => {
               ))
             )}
 
-            {!visitorData.mimo_details?.length && !visitorData.item_movements?.length && !visitorData.assets?.length && !visitorData.additional_visitors?.some(v => v.assets?.length) && (
+            {!visitorData.additional_visitors?.length && !visitorData.mimo_details?.length && !visitorData.item_movements?.length && !visitorData.assets?.length && (
               <div className="text-center py-12 text-gray-500">
-                No asset details found
+                No additional visitor or goods details found
               </div>
             )}
           </TabsContent>
