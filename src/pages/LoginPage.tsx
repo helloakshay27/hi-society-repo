@@ -18,7 +18,10 @@ import {
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { usePermissions } from "@/contexts/PermissionsContext";
-import { findFirstAccessibleRoute } from "@/utils/dynamicNavigation";
+import {
+  findFirstAccessibleRoute,
+  isSafePath,
+} from "@/utils/dynamicNavigation";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 
 const muiFieldStyles = {
@@ -384,7 +387,6 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
       saveUser({ ...userData, spree_api_key: response.spree_api_key });
       saveToken(response.access_token);
-      setToken(response.access_token);
       saveBaseUrl(baseUrl);
 
       // Always use Hi-Society layout mode and Admin view on login
@@ -393,9 +395,15 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       setStoredValue("userType", "admin");
       setStoredValue("userId", response.id.toString());
 
+      // Push the token into App state in the same update as the navigation.
+      // Setting it earlier makes the /login route <Navigate to="/"> while the
+      // role is still loading, and Index's redirect then races this one.
       const redirectTo = (path: string) => {
         toast.success(`Welcome back, ${response.firstname}! Login successful.`);
-        setTimeout(() => navigate(path, { replace: true }), 500);
+        setTimeout(() => {
+          setToken(response.access_token);
+          navigate(path, { replace: true });
+        }, 500);
       };
       const from = (location.state as { from?: Location })?.from;
 
@@ -410,11 +418,23 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         return;
       }
 
+      // Land on the first route the user's role gives access to. Permissions
+      // for a freshly-authenticated session aren't fetched yet at this point,
+      // so force a refresh instead of relying on the cached userRole.
+      // refreshPermissions never throws — it resolves null on failure.
+      const freshRole = await refreshPermissions();
+      const firstRoute = findFirstAccessibleRoute(freshRole);
+
+      if (isSafePath(firstRoute)) {
+        if (isHiSocietySite || isUIHiSocietySite) {
+          await fetchHiSocietyData(response.spree_api_key);
+        }
+        redirectTo(firstRoute);
+        return;
+      }
+
       // Org 109 / 324 / 10 (and runwal.lockated.com) use the ActionSidebar/
-      // ActionHeader layout (see Layout.tsx) and should land on the first
-      // route their role actually grants. Permissions for a freshly-
-      // authenticated session aren't fetched yet at this point, so force a
-      // refresh here instead of relying on the cached userRole.
+      // ActionHeader layout (see Layout.tsx).
       const loginOrgId = localStorage.getItem("org_id");
       if (
         hostname === "runwal.lockated.com" ||
@@ -422,10 +442,6 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         loginOrgId === "324" ||
         loginOrgId === "10"
       ) {
-        const freshRole = await refreshPermissions();
-        const firstRoute = freshRole
-          ? findFirstAccessibleRoute(freshRole)
-          : null;
         const fromPath =
           from?.pathname && from.pathname !== "/" && from.pathname !== "/login"
             ? from.pathname
@@ -436,6 +452,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
       // web.hisociety.lockated.com - navigate to Index for view selection handling
       if (hostname.includes("web.hisociety.lockated.com")) {
+        setToken(response.access_token);
         navigate("/", { replace: true });
         return;
       }
