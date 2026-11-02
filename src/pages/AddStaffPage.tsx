@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Camera, X } from 'lucide-react';
 import { staffService, StaffFormData, ScheduleData, StaffAttachments, StaffFilterOption, StaffFiltersResponse } from '@/services/staffService';
 import { toast } from 'sonner';
-import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, FormHelperText } from '@mui/material';
 import { getUser } from '@/utils/auth';
 
 // Field styles for Material-UI components
@@ -48,6 +48,8 @@ export const AddStaffPage = () => {
   const [isPhotoSaved, setIsPhotoSaved] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
   
+  const [staffTypeError, setStaffTypeError] = useState('');
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -277,6 +279,12 @@ export const AddStaffPage = () => {
 
   const handleSubmit = async () => {
     // Validate required fields
+    if (!formData.staffType) {
+      setStaffTypeError('Staff Type is required');
+      toast.error('Please select a staff type');
+      return;
+    }
+
     if (!formData.firstName || !formData.lastName || !formData.mobile) {
       toast.error('Please fill in all required fields (First Name, Last Name, Mobile)');
       return;
@@ -580,14 +588,17 @@ export const AddStaffPage = () => {
               />
               
               {/* Staff Type Dropdown - from staff_filters API */}
-              <FormControl fullWidth variant="outlined">
+              <FormControl fullWidth variant="outlined" error={!!staffTypeError}>
                 <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
-                  Staff Type
+                  Staff Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </InputLabel>
                 <MuiSelect
                   value={formData.staffType}
-                  onChange={(e) => handleInputChange('staffType', e.target.value)}
-                  label="Staff Type"
+                  onChange={(e) => {
+                    handleInputChange('staffType', e.target.value);
+                    setStaffTypeError('');
+                  }}
+                  label={<span>Staff Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                   displayEmpty
                   sx={fieldStyles}
                 >
@@ -600,6 +611,7 @@ export const AddStaffPage = () => {
                     </MenuItem>
                   ))}
                 </MuiSelect>
+                {staffTypeError && <FormHelperText>{staffTypeError}</FormHelperText>}
               </FormControl>
 
               {/* Work Type Dropdown - from staff_filters API */}

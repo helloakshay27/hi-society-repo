@@ -230,7 +230,7 @@ const visitorInColumns: ColumnConfig[] = [
   { key: "primary_host",    label: "Host",           sortable: false, hideable: true,  draggable: true  },
   { key: "visit_purpose",   label: "Purpose",        sortable: true,  hideable: true,  draggable: true  },
   { key: "society_gate",    label: "Gate",           sortable: false, hideable: true,  draggable: true  },
-  { key: "guest_entry_time",label: "Entry Time",     sortable: true,  hideable: true,  draggable: true  },
+  // { key: "guest_entry_time",label: "Entry Time",     sortable: true,  hideable: true,  draggable: true  },
   // { key: "check_in_action", label: "Check In",       sortable: false, hideable: false, draggable: false },
   // { key: "out_action",      label: "OUT",            sortable: false, hideable: false, draggable: false },
 ];
@@ -737,7 +737,7 @@ const SmartSecureVisitorIn: React.FC = () => {
         hideColumnsButton={false}
         loading={isLoading}
         leftActions={leftActions}
-        rightActions={rightActions}
+        // rightActions={rightActions}
       />
 
       {/* Pagination */}

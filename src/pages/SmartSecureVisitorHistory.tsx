@@ -123,18 +123,27 @@ const formatDateTime = (iso: string | null | undefined): string => {
   });
 };
 
+// Convert YYYY-MM-DD → DD/MM/YYYY for the API date_range param
+const toFilterDate = (isoDate: string): string => {
+  const [y, m, d] = isoDate.split("-");
+  return `${d}/${m}/${y}`;
+};
+
 const buildQueryString = (page: number, filters: FilterState, search = ""): string => {
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("per_page", "20");
   if (search.trim()) params.set("q[search_all_fields_cont]", search.trim());
-  if (filters.building) params.set("building_id", filters.building);
-  if (filters.tower) params.set("tower_id", filters.tower);
-  if (filters.flat) params.set("flat_id", filters.flat);
-  if (filters.visitor_type) params.set("visitor_type", filters.visitor_type);
-  if (filters.approval_status) params.set("approval_status", filters.approval_status);
-  if (filters.from_date) params.set("created_date_range[from]", filters.from_date);
-  if (filters.to_date) params.set("created_date_range[to]", filters.to_date);
+  if (filters.tower)
+    params.set("q[user_society_user_flat_society_flat_society_block_id_eq]", filters.tower);
+  if (filters.flat)
+    params.append("q[user_society_user_flat_society_flat_id_in][]", filters.flat);
+  if (filters.visitor_type) params.set("q[guest_type_eq]", filters.visitor_type);
+  if (filters.approval_status) params.set("q[approve_eq]", filters.approval_status);
+  if (filters.from_date) params.set("q[created_at_gteq]", filters.from_date);
+  if (filters.to_date) params.set("q[created_at_lteq]", filters.to_date);
+  if (filters.from_date && filters.to_date)
+    params.set("q[date_range]", `${toFilterDate(filters.from_date)} - ${toFilterDate(filters.to_date)}`);
   return params.toString();
 };
 
@@ -232,33 +241,45 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
           </Button>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            {renderSelectField("Building", "Select Building", local.building, "building", options?.buildings)}
-            {renderSelectField("Tower", "Select Tower", local.tower, "tower", options?.towers)}
-            {renderSelectField("Flat", "Select Flat", local.flat, "flat", options?.flats)}
-            {renderSelectField("Visitor Type", "Select Visitor Type", local.visitor_type, "visitor_type", options?.visitor_types)}
-            {renderSelectField("Approval Status", "Select Approval Status", local.approval_status, "approval_status", options?.approval_statuses)}
-            <TextField
-              label="From Date"
-              type="date"
-              value={local.from_date}
-              onChange={(e) => set("from_date", e.target.value)}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: fieldStyles }}
-            />
-            <TextField
-              label="To Date"
-              type="date"
-              value={local.to_date}
-              onChange={(e) => set("to_date", e.target.value)}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: fieldStyles }}
-            />
+        <div className="space-y-5 px-6 pb-6">
+          <div>
+            <div className="mb-3 text-[10.5px] font-bold uppercase tracking-[.09em] text-[rgba(26,26,24,.48)]">Visitor Details</div>
+            <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+              {/* {renderSelectField("Building", "Select Building", local.building, "building", options?.buildings)} */}
+              {renderSelectField("Tower", "Select Tower", local.tower, "tower", options?.towers)}
+              {renderSelectField("Flat", "Select Flat", local.flat, "flat", options?.flats)}
+              {renderSelectField("Visitor Type", "Select Visitor Type", local.visitor_type, "visitor_type", options?.visitor_types)}
+              {renderSelectField("Approval Status", "Select Approval Status", local.approval_status, "approval_status", options?.approval_statuses)}
+            </div>
+          </div>
+          <div className="pt-1">
+            <div className="mb-3 text-[10.5px] font-bold uppercase tracking-[.09em] text-[rgba(26,26,24,.48)]">Date Range</div>
+            <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,.68)]">From Date</label>
+                <TextField
+                  type="date"
+                  value={local.from_date}
+                  onChange={(e) => set("from_date", e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  sx={{ '& .MuiOutlinedInput-root': { height: 50, borderRadius: '12px', fontSize: '13.5px', '& fieldset': { borderColor: 'rgba(26,26,24,.10)' }, '&:hover fieldset': { borderColor: 'rgba(26,26,24,.24)' }, '&.Mui-focused fieldset': { borderColor: '#1A1A18' } } }}
+                  inputProps={{ 'aria-label': 'From Date' }}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-[12.5px] font-semibold text-[rgba(26,26,24,.68)]">To Date</label>
+                <TextField
+                  type="date"
+                  value={local.to_date}
+                  onChange={(e) => set("to_date", e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  sx={{ '& .MuiOutlinedInput-root': { height: 50, borderRadius: '12px', fontSize: '13.5px', '& fieldset': { borderColor: 'rgba(26,26,24,.10)' }, '&:hover fieldset': { borderColor: 'rgba(26,26,24,.24)' }, '&.Mui-focused fieldset': { borderColor: '#1A1A18' } } }}
+                  inputProps={{ 'aria-label': 'To Date' }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
