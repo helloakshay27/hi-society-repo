@@ -141,21 +141,7 @@ export const FormViewAllQuestions: React.FC<FormViewAllQuestionsProps> = ({
     };
 
     return (
-        <div className="w-full space-y-6 min-h-screen p-4 relative">
-            {/* Background image layer with brightness filter */}
-            {surveyImageUrl && (
-                <div
-                    className="absolute inset-0"
-                    style={{
-                        backgroundImage: `url(${surveyImageUrl})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        backgroundRepeat: "no-repeat",
-                        backgroundAttachment: "fixed",
-                        filter: "brightness(0.85)",
-                    }}
-                />
-            )}
+        <div className="w-full space-y-6 p-4 relative">
             <div className="relative z-10 space-y-6">
             {questions.map((question, index) => {
                 const answer = answers[question.id];

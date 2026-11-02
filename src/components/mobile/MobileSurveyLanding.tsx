@@ -1989,11 +1989,15 @@ export const MobileSurveyLanding: React.FC = () => {
 
   return (
     <div
-      className="h-screen w-screen max-w-md mx-auto flex flex-col relative bg-white"
+      className={`w-screen max-w-md mx-auto flex flex-col relative bg-white ${isFormView ? "min-h-screen" : "h-screen"}`}
     >
       {/* Background image overlay - filter only affects this element */}
       <div
-        className="absolute inset-0 z-0"
+        className={
+          isFormView
+            ? "fixed inset-y-0 left-1/2 -translate-x-1/2 w-full max-w-md z-0"
+            : "absolute inset-0 z-0"
+        }
         style={{
           backgroundImage: `url(${surveyData?.snag_checklist?.survey_attachment?.url})`,
           backgroundSize: "cover",
@@ -2103,7 +2107,7 @@ export const MobileSurveyLanding: React.FC = () => {
 
       {/* Main Content */}
       {isFormView && (
-        <div className="px-4 pt-2 pb-1">
+        <div className="px-4 pt-2 pb-1 relative z-10">
           {(surveyData.society_name || surveyData.created_by || surveyData.user_name) && (
             <div className="flex justify-start mb-3">
               <div className="bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-md border border-gray-100">
@@ -2134,18 +2138,23 @@ export const MobileSurveyLanding: React.FC = () => {
               </div>
             </div>
           )}
-          <h1 className="text-xl font-semibold text-black/100 mb-3 text-center">
-            {surveyData.survey_title}
-          </h1>
+          {/* Long titles are really intro text, so show them as a readable card */}
+          {surveyData.survey_title?.length > 120 ? (
+            <p className="bg-white/90 rounded-xl p-4 shadow-md text-sm text-gray-800 leading-relaxed whitespace-pre-line mb-1">
+              {surveyData.survey_title}
+            </p>
+          ) : (
+            <h1 className="text-xl font-semibold text-black/100 mb-3 text-center">
+              {surveyData.survey_title}
+            </h1>
+          )}
         </div>
       )}
 
       <div
-        className={`flex-1 overflow-hidden relative z-10 ${isFormView ? "overflow-y-auto" : ""}`}
+        className={`flex-1 relative z-10 ${isFormView ? "" : "overflow-hidden"}`}
       >
-        <div
-          className={`h-full ${isFormView ? "overflow-y-scroll pb-6" : "flex flex-col pb-6"}`}
-        >
+        <div className={isFormView ? "pb-6" : "h-full flex flex-col pb-6"}>
           {/* Title - Only for Form View */}
 
           {/* Form View: All Questions at Once */}
