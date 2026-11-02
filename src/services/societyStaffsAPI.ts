@@ -31,6 +31,7 @@ export interface NewSocietyStaff {
   block_reason?: string | null;
   blocked_on?: string | null;
   associated_flats: unknown[];
+  associate_function_name?: string | null;
   actions: {
     view_url: string;
     edit_url: string;
