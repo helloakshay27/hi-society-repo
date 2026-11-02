@@ -120,6 +120,8 @@ export interface AdoptionTrendResponse {
     previous: AdoptionTrendWeek[];
   };
   trend_pct: number | null;
+  /** Mean WAU of the last 8 complete weeks vs the 8 before; null when that baseline is 0. */
+  avg_trend_pct?: number | null;
   wau_now: number;
   wau_4wk_ago: number;
 }
@@ -161,16 +163,29 @@ export interface RolesResponse {
   roles: RoleStat[];
 }
 
-export interface ModuleNode {
+export interface SubModuleNode {
+  key: string;
   name: string;
   users: number;
   events: number;
   sessions: number;
 }
 
+export interface ModuleNode {
+  /** Present on `modules` rows: the ?module= value. On `tree` rows, `name` is that value. */
+  key?: string;
+  name: string;
+  users: number;
+  events: number;
+  sessions: number;
+  sub_modules?: SubModuleNode[];
+}
+
 export interface ModulesResponse {
   meta: AdoptionMeta;
   tree: ModuleNode[];
+  /** Live screens arranged under modules; empty unless the scope's app declares them (e.g. RE-CP01). */
+  modules?: ModuleNode[];
 }
 
 export interface FunnelStep {
@@ -198,12 +213,23 @@ export interface EntryScreenItem {
   bounce_trend: number | null;
 }
 
+export interface ModuleFunnel {
+  key: string;
+  name: string;
+  started: number;
+  completed: number;
+  completion_pct: number;
+  biggest_drop_pct: number;
+}
+
 export interface WorkflowUsageResponse {
   meta: AdoptionMeta;
   kpis: Record<string, { value: number | null; delta_pct: number | null }>;
   funnel: FunnelStep[];
   flows: FlowItem[];
   entry_screens: EntryScreenItem[];
+  /** All modules of a catalogue app: each module's own funnel, which the KPIs roll up. */
+  module_funnels?: ModuleFunnel[];
 }
 
 /** One row from `recent_active_users` — a currently/recently active identified user. */

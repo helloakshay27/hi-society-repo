@@ -487,7 +487,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
             <>
               <div className="hbars">
                 {deviceList.map((d, idx) => {
-                  const sharePct = Math.round(d.session_share <= 1 ? d.session_share * 100 : d.session_share);
+                  const sharePct = Math.round(d.session_share);
                   const barColor = deviceColors[d.device] || 'var(--chart-blue)';
                   return (
                     <div className="role" key={idx}>

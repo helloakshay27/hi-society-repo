@@ -68,8 +68,7 @@ export const RetentionCohortTable: React.FC<RetentionCohortTableProps> = ({ coho
                     );
                   }
 
-                  // If returned as decimal <= 1, convert to percentage 0-100
-                  const pctVal = num <= 1 && num > 0 ? Math.round(num * 100) : Math.round(num);
+                  const pctVal = Math.round(num);
                   const t = Math.min(1, Math.max(0, pctVal / 100));
                   const bg = `rgba(var(--heat-rgb), ${(0.09 + t * 0.78).toFixed(2)})`;
                   const col = t > 0.55 ? 'var(--on-heat)' : 'var(--ink)';

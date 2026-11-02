@@ -204,7 +204,7 @@ export const INFO: Record<string, InfoEntry> = {
   },
   F4: {
     t: 'Usage Volume (F4)',
-    f: 'Total absolute count of workflow completions successfully finalized in the selected period.',
+    f: 'Count of sessions that entered the funnel in the selected period; with All Modules, added up across modules.',
     d: 'Reflects the business throughput and operational transaction volume processed via the app.',
   },
   'chart.usage': {
