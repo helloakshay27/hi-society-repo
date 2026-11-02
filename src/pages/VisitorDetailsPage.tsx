@@ -317,6 +317,21 @@ export const VisitorDetailsPage = () => {
           })
         );
 
+        // New API documents use `url`; the UI reads `document_url`
+        const normalizeDocs = (docs: any): DocumentItem[] =>
+          Array.isArray(docs)
+            ? docs
+                .map((d: any) => ({
+                  ...d,
+                  document_url: d.document_url ?? d.url,
+                }))
+                .filter((d: DocumentItem) => !!d.document_url)
+            : [];
+        // Avoid showing the govt id image twice (it also appears in documents)
+        const idvDocuments = normalizeDocs(idv?.documents).filter(
+          (d) => d.document_url !== idv?.govt_id_image
+        );
+
         const visitor: VisitorData = {
           ...rawVisitor,
           additional_visitors:
@@ -332,7 +347,7 @@ export const VisitorDetailsPage = () => {
                   identity_type: idv.identity_type,
                   government_id_number: idv.govt_id_number,
                   govt_id_image: idv.govt_id_image,
-                  documents: idv.documents || [],
+                  documents: idvDocuments,
                 }
               : undefined),
           // Flatten vehicle_info
@@ -1285,7 +1300,15 @@ export const VisitorDetailsPage = () => {
               ))
             ) : null}
 
-            {/* Goods Details (new API: additional_details.goods_details) */}
+            {(visitorData.additional_details ||
+              visitorData.mimo_details?.length ||
+              visitorData.item_movements?.length) && (
+              <h2 className="text-lg font-semibold text-gray-900 pt-2">
+                Goods Details
+              </h2>
+            )}
+
+            {/* Goods summary (new API: additional_details.goods_details) */}
             {(() => {
               const goods = visitorData.additional_details?.goods_details;
               const goodsItems = goods?.items ?? [];
@@ -1312,10 +1335,7 @@ export const VisitorDetailsPage = () => {
 
               return (
                 <div className="space-y-6">
-                  <h2 className="text-lg font-semibold text-gray-900 pt-2">
-                    Goods Details
-                  </h2>
-                  <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
+                  {/* <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
                     <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
                       <div className="flex min-w-0 flex-col items-start gap-1">
                         <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Carrying Goods</span>
@@ -1368,7 +1388,7 @@ export const VisitorDetailsPage = () => {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               );
             })()}
@@ -1376,9 +1396,6 @@ export const VisitorDetailsPage = () => {
             {/* MIMO Details Section (new API) */}
             {visitorData.mimo_details && visitorData.mimo_details.length > 0 && (
               <div className="space-y-6">
-                <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                  Goods Details
-                </h2>
                 {visitorData.mimo_details.map((mimo: MimoDetail, index: number) => (
                   <div key={mimo.id || index} className="border rounded-lg p-6 bg-gray-50">
                     <h3 className="text-base font-semibold text-gray-900 mb-4">
@@ -1424,9 +1441,6 @@ export const VisitorDetailsPage = () => {
             {/* Item Movements Section (legacy API) */}
             {visitorData.item_movements && visitorData.item_movements.length > 0 && (
               <div className="space-y-6">
-                <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                  Goods Details
-                </h2>
                 {visitorData.item_movements.map((movement: ItemMovement, index: number) => (
                   <div key={movement.id || index} className="border rounded-lg p-6 bg-gray-50">
                     <h3 className="text-base font-semibold text-gray-900 mb-4">
