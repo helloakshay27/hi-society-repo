@@ -151,7 +151,8 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
       orgId === "9" ||
       userEmail === "dineshshinde6666@gmail.com" ||
       window.location.hostname === "piramal.lockated.com" ||
-      window.location.hostname === "kraheja.lockated.com";
+      window.location.hostname === "kraheja.lockated.com" ||
+      window.location.hostname === "web.hisociety.lockated.com" ||;
 
     if (!userRole || !userRole.lock_modules) {
       setIsActionSidebarVisible(false);
