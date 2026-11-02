@@ -13,7 +13,7 @@ import {
   permissionService,
 } from "@/services/permissionService";
 import { permissionCache } from "@/services/simplePermissionCache";
-import { isAuthenticated } from "@/utils/auth";
+import { isAuthenticated, isPublicSurveyRoute } from "@/utils/auth";
 import { toast } from "sonner";
 
 interface PermissionsContextType {
@@ -68,8 +68,8 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
   userRoleRef.current = userRole;
 
   const fetchUserPermissions = useCallback(async (forceRefresh = false): Promise<UserRoleResponse | null> => {
-    // Don't fetch permissions if user is not authenticated
-    if (!isAuthenticated()) {
+    // Don't fetch permissions if user is not authenticated or on a public survey link
+    if (!isAuthenticated() || isPublicSurveyRoute()) {
       setUserRole(null);
       setLoading(false);
       return null;

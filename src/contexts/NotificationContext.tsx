@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import axios from "axios";
-import { getBaseUrl } from "@/utils/auth";
+import { getBaseUrl, isPublicSurveyRoute } from "@/utils/auth";
 
 export interface Notification {
   id: number;
@@ -39,7 +39,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
     const baseUrl = getBaseUrl();
-    if (!baseUrl || !token) return;
+    if (!baseUrl || !token || isPublicSurveyRoute()) return;
 
     try {
       const response = await axios.get(
