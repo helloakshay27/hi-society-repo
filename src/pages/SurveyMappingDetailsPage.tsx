@@ -1082,11 +1082,17 @@ export const SurveyMappingDetailsPage = () => {
           <span className="sm:hidden">Back</span>
         </Button>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a] break-words">
+          {/* Long names are clamped here; the full text is in the Survey Information card */}
+          <h1
+            title={mapping.name}
+            className={`min-w-0 font-bold text-[#1a1a1a] break-words line-clamp-2 ${
+              mapping.name?.length > 120 ? "text-base sm:text-lg" : "text-xl sm:text-2xl"
+            }`}
+          >
             {/* Survey Details -  */}
             {mapping.name}
           </h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <button
               className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
             >
@@ -1308,7 +1314,7 @@ export const SurveyMappingDetailsPage = () => {
 
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-sm text-gray-800">
+                  <div className={`text-sm text-gray-800 ${mapping.name?.length > 120 ? "md:col-span-3" : ""}`}>
                     <span className="text-gray-500">Survey Name:</span>{" "}
                     <span className="font-medium text-gray-800">
                       {mapping.name}
