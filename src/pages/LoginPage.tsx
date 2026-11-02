@@ -18,7 +18,10 @@ import {
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { usePermissions } from "@/contexts/PermissionsContext";
-import { findFirstAccessibleRoute } from "@/utils/dynamicNavigation";
+import {
+  findFirstAccessibleRoute,
+  isSafePath,
+} from "@/utils/dynamicNavigation";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 
 const muiFieldStyles = {
@@ -257,10 +260,10 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       return valid
         ? { isValid: true, message: "" }
         : {
-          isValid: false,
-          message:
-            "Please enter a valid email address (e.g. name@example.com).",
-        };
+            isValid: false,
+            message:
+              "Please enter a valid email address (e.g. name@example.com).",
+          };
     }
 
     // Treat as mobile: strip spaces/dashes, allow optional leading +
@@ -269,9 +272,9 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     return valid
       ? { isValid: true, message: "" }
       : {
-        isValid: false,
-        message: "Please enter a valid mobile number (7–15 digits).",
-      };
+          isValid: false,
+          message: "Please enter a valid mobile number (7–15 digits).",
+        };
   };
 
   const handleEmailSubmit = async () => {
@@ -384,7 +387,6 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
       saveUser({ ...userData, spree_api_key: response.spree_api_key });
       saveToken(response.access_token);
-      setToken(response.access_token);
       saveBaseUrl(baseUrl);
 
       // Always use Hi-Society layout mode and Admin view on login
@@ -393,9 +395,15 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       setStoredValue("userType", "admin");
       setStoredValue("userId", response.id.toString());
 
+      // Push the token into App state in the same update as the navigation.
+      // Setting it earlier makes the /login route <Navigate to="/"> while the
+      // role is still loading, and Index's redirect then races this one.
       const redirectTo = (path: string) => {
         toast.success(`Welcome back, ${response.firstname}! Login successful.`);
-        setTimeout(() => navigate(path, { replace: true }), 500);
+        setTimeout(() => {
+          setToken(response.access_token);
+          navigate(path, { replace: true });
+        }, 500);
       };
       const from = (location.state as { from?: Location })?.from;
 
@@ -410,11 +418,23 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         return;
       }
 
+      // Land on the first route the user's role gives access to. Permissions
+      // for a freshly-authenticated session aren't fetched yet at this point,
+      // so force a refresh instead of relying on the cached userRole.
+      // refreshPermissions never throws — it resolves null on failure.
+      const freshRole = await refreshPermissions();
+      const firstRoute = findFirstAccessibleRoute(freshRole);
+
+      if (isSafePath(firstRoute)) {
+        if (isHiSocietySite || isUIHiSocietySite) {
+          await fetchHiSocietyData(response.spree_api_key);
+        }
+        redirectTo(firstRoute);
+        return;
+      }
+
       // Org 109 / 324 / 10 (and runwal.lockated.com) use the ActionSidebar/
-      // ActionHeader layout (see Layout.tsx) and should land on the first
-      // route their role actually grants. Permissions for a freshly-
-      // authenticated session aren't fetched yet at this point, so force a
-      // refresh here instead of relying on the cached userRole.
+      // ActionHeader layout (see Layout.tsx).
       const loginOrgId = localStorage.getItem("org_id");
       if (
         hostname === "runwal.lockated.com" ||
@@ -422,10 +442,6 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         loginOrgId === "324" ||
         loginOrgId === "10"
       ) {
-        const freshRole = await refreshPermissions();
-        const firstRoute = freshRole
-          ? findFirstAccessibleRoute(freshRole)
-          : null;
         const fromPath =
           from?.pathname && from.pathname !== "/" && from.pathname !== "/login"
             ? from.pathname
@@ -436,6 +452,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
       // web.hisociety.lockated.com - navigate to Index for view selection handling
       if (hostname.includes("web.hisociety.lockated.com")) {
+        setToken(response.access_token);
         navigate("/", { replace: true });
         return;
       }
@@ -444,8 +461,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         await fetchHiSocietyData(response.spree_api_key);
         redirectTo(
           (from && from.pathname + (from.search || "")) ||
-          // "/maintenance/survey/mapping"
-          "/bms/hisoc-notice-list"
+            // "/maintenance/survey/mapping"
+            "/bms/hisoc-notice-list"
         );
         return;
       }
@@ -495,12 +512,13 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         {[1, 2, 3].map((step) => (
           <div
             key={step}
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all transform ${step === currentStep
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all transform ${
+              step === currentStep
                 ? "bg-[#C72030] text-white shadow-lg scale-110"
                 : step < currentStep
                   ? "bg-green-500 text-white"
                   : "bg-gray-100 text-gray-400"
-              }`}
+            }`}
           >
             {step < currentStep ? (
               <Check className="w-5 h-5 stroke-[2.5]" />
@@ -512,16 +530,19 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       </div>
       <div className="flex justify-center items-center gap-2">
         <div
-          className={`h-1 w-16 rounded-full transition-all ${currentStep >= 1 ? "bg-[#C72030]" : "bg-gray-200"
-            }`}
+          className={`h-1 w-16 rounded-full transition-all ${
+            currentStep >= 1 ? "bg-[#C72030]" : "bg-gray-200"
+          }`}
         ></div>
         <div
-          className={`h-1 w-16 rounded-full transition-all ${currentStep >= 2 ? "bg-[#C72030]" : "bg-gray-200"
-            }`}
+          className={`h-1 w-16 rounded-full transition-all ${
+            currentStep >= 2 ? "bg-[#C72030]" : "bg-gray-200"
+          }`}
         ></div>
         <div
-          className={`h-1 w-16 rounded-full transition-all ${currentStep >= 3 ? "bg-[#C72030]" : "bg-gray-200"
-            }`}
+          className={`h-1 w-16 rounded-full transition-all ${
+            currentStep >= 3 ? "bg-[#C72030]" : "bg-gray-200"
+          }`}
         ></div>
       </div>
       <p className="text-gray-400 text-sm mt-3 font-medium">
@@ -643,7 +664,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
                 </div>
                 <div>
                   <h3 className="text-gray-900 font-medium">{org.name}</h3>
-                  <p className="text-gray-500 text-sm">{org.domain}</p>
+                  {/* <p className="text-gray-500 text-sm">{org.domain}</p> */}
                 </div>
               </div>
             </div>
@@ -790,8 +811,9 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
           <div className=" rounded-2xl  p-8 sm:p-10 relative z-10 animate-fade-in">
             {/* Logo */}
             <div
-              className={`text-center mb-5 flex flex-col items-center space-y-2 ${isViSite ? "-mt-4" : ""
-                }`}
+              className={`text-center mb-5 flex flex-col items-center space-y-2 ${
+                isViSite ? "-mt-4" : ""
+              }`}
             >
               {isOmanSite ? (
                 <svg
@@ -883,10 +905,11 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
               )}
 
               <p
-                className={`${isViSite
+                className={`${
+                  isViSite
                     ? "text-gray-800 text-base sm:text-lg font-semibold tracking-tight"
                     : "text-gray-600 text-sm font-medium"
-                  }`}
+                }`}
               >
                 Sign in to your account
               </p>

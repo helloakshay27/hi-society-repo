@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Building2, ChevronsUpDown, Search } from 'lucide-react';
+import { Bell, ChevronsUpDown, Search } from 'lucide-react';
 import { SOCIETY_NAME, SOCIETY_SUBTITLE, TOWER_FILTERS, USER_INITIALS } from '../../data/mockData';
 import { useDashboard } from '../../context/DashboardContext';
 import type { DateGrain } from '../../types';
@@ -7,9 +7,9 @@ import { HeaderDatePicker } from './HeaderDatePicker';
 
 const DATE_GRAINS: [DateGrain, string][] = [
   ['today', 'Today'],
-  ['week', 'This Week'],
-  ['month', 'This Month'],
-  ['range', 'Custom Range'],
+  ['week', 'This week'],
+  ['month', 'This month'],
+  ['range', 'Custom'],
 ];
 
 export const Header: React.FC = () => {
@@ -28,12 +28,11 @@ export const Header: React.FC = () => {
         </a>
         <div className="sep" />
         <div className="soc" onClick={() => toast('Society selector', 'd')} role="button" tabIndex={0}>
-          <Building2 size={12} className="soc-ico" aria-hidden />
           <div className="soc-text">
             <div className="soc-n">{SOCIETY_NAME}</div>
             <div className="soc-s">{SOCIETY_SUBTITLE}</div>
           </div>
-          <ChevronsUpDown size={11} className="soc-caret" aria-hidden />
+          <ChevronsUpDown size={16} className="soc-caret" aria-hidden strokeWidth={1.8} />
         </div>
         <div className="tw">
           {TOWER_FILTERS.map((tower) => (
@@ -52,8 +51,8 @@ export const Header: React.FC = () => {
         </div>
         <div className="hg" />
         <div className="sb">
-          <Search size={12} className="sb-ico" aria-hidden />
-          <input type="text" size={40} placeholder="Search tickets, visitors, members…" />
+          <Search size={16} className="sb-ico" aria-hidden strokeWidth={1.8} />
+          <input type="text" size={40} placeholder="Search tickets, visitors, members" />
         </div>
         <div className="tw-f">
           {DATE_GRAINS.map(([grain, label]) => (

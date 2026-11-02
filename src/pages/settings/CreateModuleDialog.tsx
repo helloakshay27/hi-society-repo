@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import { toast } from 'sonner';
-import { moduleService, CreateModulePayload } from '@/services/moduleService';
+import { moduleService, CreateModulePayload, LockPhase } from '@/services/moduleService';
 
 interface CreateModuleDialogProps {
   open: boolean;
@@ -46,8 +46,17 @@ export const CreateModuleDialog = ({
     total_billing: 2000,
     rate_type: 'fixed',
     active: true,
-    phase_id: 1,
+    phase_id: undefined as number | undefined,
   });
+  const [phases, setPhases] = useState<LockPhase[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    moduleService
+      .fetchPhases()
+      .then(setPhases)
+      .catch(() => toast.error('Failed to load phases'));
+  }, [open]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -67,6 +76,10 @@ export const CreateModuleDialog = ({
     }
     if (!formData.show_name.trim()) {
       toast.error('Display name is required');
+      return false;
+    }
+    if (!formData.phase_id) {
+      toast.error('Phase is required');
       return false;
     }
     return true;
@@ -127,7 +140,7 @@ export const CreateModuleDialog = ({
       total_billing: 2000,
       rate_type: 'fixed',
       active: true,
-      phase_id: 1,
+      phase_id: undefined,
     });
     onOpenChange(false);
   };
@@ -195,7 +208,27 @@ export const CreateModuleDialog = ({
               />
             </div>
 
-       
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="phase_id">Phase *</Label>
+              <Select
+                value={formData.phase_id ? String(formData.phase_id) : undefined}
+                onValueChange={(value) => {
+                  // Radix fires "" while options are still loading; ignore it
+                  if (value) handleInputChange('phase_id', Number(value));
+                }}
+              >
+                <SelectTrigger id="phase_id">
+                  <SelectValue placeholder="Select phase" />
+                </SelectTrigger>
+                <SelectContent>
+                  {phases.map((phase) => (
+                    <SelectItem key={phase.id} value={String(phase.id)}>
+                      {phase.show_name || phase.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4 border-t">

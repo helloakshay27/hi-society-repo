@@ -9,6 +9,10 @@ export const INFO_TOOLTIPS: Record<string, InfoTooltipContent> = {
   // ── OVERVIEW ──
   tbl_tov_possession_experience_resident_feedback:{what:`Resident satisfaction with the handover experience, split into 5 stages so a problem can be traced to a cause.`,formula:`Overall = average of 5 dimension scores, each on a 1–5 scale`,note:`The 5 dimensions come from different parts of the process — a low score in one does not mean the others are also failing.`},
   tbl_tov_important_events:{what:`A live feed of the highest-priority events across every module today, so nothing critical gets missed by staying in one tab.`,note:`Shows high-priority items only — this is not a complete activity log.`},
+  pulse_helpdesk:{what:`Today's Helpdesk snapshot — total tickets with response breaches, open, and in-progress counts.`,note:`Click the card to open the full Helpdesk tab for status, escalation, and ageing detail.`},
+  pulse_security:{what:`Today's Security snapshot — visitor in/out balance, pending gate approvals, and patrol compliance.`,note:`Click the card to open the full Security tab for visitors, vehicles, and patrol detail.`},
+  pulse_club:{what:`Today's Club & Facilities snapshot — booked vs vacant slots, active members, and pending activations.`,note:`Click the card to open the full Club & Facilities tab for bookings, memberships, and payments.`},
+  pulse_fitout:{what:`This month's Fitout snapshot — total requests, how many are still pending, closed count, and open deviations.`,note:`Click the card to open the full Fitout tab for approvals, compliance, and deposit detail.`},
 
   // ── HELPDESK ──
   kpi_top_total_tickets:{what:`All Helpdesk tickets raised this period, across every status.`},

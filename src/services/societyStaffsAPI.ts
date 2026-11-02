@@ -100,7 +100,7 @@ export const fetchSocietyStaffs = async (page: number = 1, searchQuery?: string,
 
     const search = filters?.search || searchQuery;
     if (search?.trim()) {
-      params.append('q[full_name_or_first_name_or_last_name_or_mobile_or_soc_staff_id_cont]', search.trim());
+      params.append('q[search_all_fields_cont]', search.trim());
     }
 
     if (filters?.work_type_id) {

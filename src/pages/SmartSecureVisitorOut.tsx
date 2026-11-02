@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // ─── API Types ─────────────────────────────────────────────────────────────────
 
@@ -172,6 +173,8 @@ const SmartSecureVisitorOut: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
   const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
 
   // ── OUT Modal State ─────────────────────────────────────────────────
@@ -181,10 +184,12 @@ const SmartSecureVisitorOut: React.FC = () => {
   const [outSubmitLoading, setOutSubmitLoading] = useState(false);
 
   const { data: apiData, isLoading, isError, error, refetch } = useQuery<ApiResponse>({
-    queryKey: ["visitor-out-list", currentPage],
+    queryKey: ["visitor-out-list", currentPage, debouncedSearch],
     queryFn: async () => {
+      const params = new URLSearchParams({ page: String(currentPage), per_page: "20" });
+      if (debouncedSearch.trim()) params.set("q[search_all_fields_cont]", debouncedSearch.trim());
       const res = await fetch(
-        getFullUrl(`/crm/admin/visitor_out.json?page=${currentPage}&per_page=20`),
+        getFullUrl(`/crm/admin/visitor_out.json?${params.toString()}`),
         { headers: { Authorization: getAuthHeader() } }
       );
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
@@ -192,6 +197,11 @@ const SmartSecureVisitorOut: React.FC = () => {
     },
     staleTime: 30000,
   });
+
+  // Reset to page 1 whenever the search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
   const rows = useMemo(() => apiData?.data ?? [], [apiData]);
   const gates = useMemo(() => apiData?.gates ?? [], [apiData]);
@@ -506,6 +516,9 @@ const SmartSecureVisitorOut: React.FC = () => {
         columns={visitorOutColumns}
         renderCell={renderCell}
         enableSearch={true}
+        disableClientSearch
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
         enableSelection={false}
         storageKey="visitor-out-table"
         emptyMessage="No visitors to check out"

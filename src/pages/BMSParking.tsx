@@ -435,8 +435,8 @@ const BMSParking: React.FC = () => {
               const matchedFlat = flatIdFromItem
                 ? fetchedFlats.find((f) => f.id === flatIdFromItem)
                 : fetchedFlats.find(
-                  (f) => f.flat_no === item.society_flat?.flat_no
-                );
+                    (f) => f.flat_no === item.society_flat?.flat_no
+                  );
               if (matchedFlat) {
                 setFormData((prev) => ({
                   ...prev,
@@ -575,9 +575,14 @@ const BMSParking: React.FC = () => {
         setIsImportOpen(false);
         setImportFile(null);
       } else {
-        const rows: Array<{ row_number?: number; status?: string; error?: string }> =
-          Array.isArray(data?.rows) ? data.rows : [];
-        const failedRows = rows.filter((row) => row.status === "failed" || row.error);
+        const rows: Array<{
+          row_number?: number;
+          status?: string;
+          error?: string;
+        }> = Array.isArray(data?.rows) ? data.rows : [];
+        const failedRows = rows.filter(
+          (row) => row.status === "failed" || row.error
+        );
         const summary = data?.summary as
           | { total?: number; created?: number; failed?: number }
           | undefined;
@@ -676,9 +681,9 @@ const BMSParking: React.FC = () => {
         const err = await response.json().catch(() => null);
         toast.error(
           err?.message ||
-          (isEdit
-            ? "Failed to update parking slot"
-            : "Failed to add parking slot")
+            (isEdit
+              ? "Failed to update parking slot"
+              : "Failed to add parking slot")
         );
       }
     } catch {
@@ -884,7 +889,11 @@ const BMSParking: React.FC = () => {
         </p>
         <div className="grid grid-cols-2 gap-6">
           <TextField
-            label={<>Slot Name <span style={{ color: "#C72030" }}>*</span></>}
+            label={
+              <>
+                Slot Name <span style={{ color: "#C72030" }}>*</span>
+              </>
+            }
             placeholder="Enter slot name"
             value={formData.slotName}
             onChange={(e) => {
@@ -1012,9 +1021,7 @@ const BMSParking: React.FC = () => {
               MenuProps={clickableMenuProps}
             >
               <MenuItem value="">
-                <em>
-                  {loadingBlocks ? "Loading..." : "Select Tower / Block"}
-                </em>
+                <em>{loadingBlocks ? "Loading..." : "Select Tower / Block"}</em>
               </MenuItem>
               {blocks.map((b) => (
                 <MenuItem key={b.id} value={b.id.toString()}>
@@ -1153,7 +1160,7 @@ const BMSParking: React.FC = () => {
         enableExport={true}
         handleExport={handleExport}
         onSearchChange={(q) => setSearchQuery(q)}
-        searchPlaceholder="Search by slot, vehicle number..."
+        searchPlaceholder="Search by vehicle number..."
         enableSearch={true}
         onFilterClick={() => setIsFilterOpen(true)}
         leftActions={
@@ -1244,7 +1251,11 @@ const BMSParking: React.FC = () => {
       </div>
 
       {/* Add Modal */}
-      <Dialog open={isAddModalOpen} modal={false} onOpenChange={setIsAddModalOpen}>
+      <Dialog
+        open={isAddModalOpen}
+        modal={false}
+        onOpenChange={setIsAddModalOpen}
+      >
         <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold">
@@ -1256,7 +1267,11 @@ const BMSParking: React.FC = () => {
       </Dialog>
 
       {/* Edit Modal */}
-      <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
+      <Dialog
+        open={isEditModalOpen}
+        modal={false}
+        onOpenChange={setIsEditModalOpen}
+      >
         <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold">

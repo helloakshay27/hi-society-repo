@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import { Plus, KeyRound, Loader2, Eye, Pencil, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import { useDebounce } from "@/hooks/useDebounce";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { BulkUploadModal } from "@/components/BulkUploadModal";
 import {
@@ -60,6 +61,7 @@ interface ApiGatekeeper {
   guest_number: string;
   guest_vehicle_number: string;
   visit_purpose: string | null;
+  visit_to?: string | null;
   guest_name: string;
   guest_entry_time: string | null;
   guest_exit_time: string | null;
@@ -128,10 +130,11 @@ const getHostDisplay = (v: ApiGatekeeper): string => {
     const block = h.block_name ? `${h.block_name}/` : "";
     return `${block}${h.flat_name} - ${h.name}`;
   }
-  if (v.user_flat) {
-    return `${v.user_flat.block}/${v.user_flat.flat}`;
+  const flat = v.user_flat ? `${v.user_flat.block}/${v.user_flat.flat}` : "";
+  if (v.visit_to) {
+    return flat ? `${flat} - ${v.visit_to}` : v.visit_to;
   }
-  return "--";
+  return flat || "--";
 };
 
 // ─── API Actions ──────────────────────────────────────────────────────────────
@@ -239,6 +242,8 @@ const SmartSecureVisitorIn: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
   const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
   const perPage = 20;
 
@@ -329,10 +334,12 @@ const SmartSecureVisitorIn: React.FC = () => {
   };
 
   const { data: apiData, isLoading, isError, refetch } = useQuery<ApiResponse>({
-    queryKey: ["visitor-in-list", currentPage],
+    queryKey: ["visitor-in-list", currentPage, debouncedSearch],
     queryFn: async () => {
+      const params = new URLSearchParams({ page: String(currentPage), per_page: String(perPage) });
+      if (debouncedSearch.trim()) params.set("q[search_all_fields_cont]", debouncedSearch.trim());
       const res = await fetch(
-        getFullUrl(`/crm/admin/visitor_in.json?page=${currentPage}&per_page=${perPage}`),
+        getFullUrl(`/crm/admin/visitor_in.json?${params.toString()}`),
         { headers: { Authorization: getAuthHeader() } }
       );
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
@@ -340,6 +347,11 @@ const SmartSecureVisitorIn: React.FC = () => {
     },
     staleTime: 30000,
   });
+
+  // Reset to page 1 whenever the search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
   const rows = useMemo(() => apiData?.gatekeepers ?? [], [apiData]);
   const totalCount = apiData?.count ?? 0;
@@ -714,6 +726,9 @@ const SmartSecureVisitorIn: React.FC = () => {
         columns={visitorInColumns}
         renderCell={renderCell}
         enableSearch={true}
+        disableClientSearch
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
         enableSelection={false}
         storageKey="visitor-in-table"
         emptyMessage="No visitors found"

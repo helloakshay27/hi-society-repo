@@ -123,6 +123,10 @@ export const API_CONFIG = {
     CREATE_SUB_FUNCTION: "/lock_sub_functions.json",
     UPDATE_SUB_FUNCTION: "/lock_sub_functions", // Base path, will append /:id.json
     DELETE_SUB_FUNCTION: "/lock_sub_functions", // Base path, will append /:id.json
+    PHASES: "/admin/lock_phases.json",
+    CREATE_PHASE: "/admin/lock_phases.json",
+    UPDATE_PHASE: "/admin/lock_phases", // Base path, will append /:id.json
+    DELETE_PHASE: "/admin/lock_phases", // Base path, will append /:id.json
     // Role Config endpoints
     ROLE_CONFIGS: "/lock_roles.json",
     ROLE_CONFIG_DETAILS: "/lock_roles", // Base path, will append /:id.json
@@ -190,7 +194,7 @@ export const API_CONFIG = {
     // Add task group endpoints
     TASK_GROUPS: "/pms/asset_groups.json?type=checklist",
     TASK_SUB_GROUPS: "/pms/assets/get_asset_group_sub_group.json", // Will append ?group_id=
-    TICKETS_SUMMARY: "/crm/admin/ticket_summary.json",
+    TICKETS_SUMMARY: `/crm/admin/ticket_summary.json`,
     TICKETS_EXPORT_EXCEL: "/pms/admin/complaints.xlsx",
     // Checklist master endpoint
     CHECKLIST_MASTER: "/master_checklist_list.json",

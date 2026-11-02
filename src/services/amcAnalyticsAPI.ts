@@ -592,14 +592,14 @@ export const amcAnalyticsAPI = {
     const url = `/pms/asset_amcs/amc_statistics.json?site_id=${siteId}&coverage_by_location=true&from_date=${fromDateStr}&to_date=${toDateStr}&access_token=${API_CONFIG.TOKEN}`;
     
     const response = await apiClient.get<AMCCoverageByLocationResponse>(url);
-    return this.transformCoverageData(response.data.coverage_by_location);
+    return this.transformCoverageData(response.data?.coverage_by_location);
   },
 
   // Transform nested coverage data into a flat tree structure
   transformCoverageData(coverageData: AMCCoverageByLocationResponse['coverage_by_location']): AMCLocationCoverageNode[] {
     const result: AMCLocationCoverageNode[] = [];
 
-    Object.entries(coverageData).forEach(([siteName, siteData]) => {
+    Object.entries(coverageData ?? {}).forEach(([siteName, siteData]) => {
       const siteNode: AMCLocationCoverageNode = {
         name: siteName,
         level: 'site',
@@ -609,7 +609,7 @@ export const amcAnalyticsAPI = {
         children: []
       };
 
-      Object.entries(siteData).forEach(([buildingName, buildingData]) => {
+      Object.entries(siteData ?? {}).forEach(([buildingName, buildingData]) => {
         const buildingNode: AMCLocationCoverageNode = {
           name: buildingName,
           level: 'building',
@@ -619,7 +619,7 @@ export const amcAnalyticsAPI = {
           children: []
         };
 
-        Object.entries(buildingData).forEach(([wingName, wingData]) => {
+        Object.entries(buildingData ?? {}).forEach(([wingName, wingData]) => {
           const wingNode: AMCLocationCoverageNode = {
             name: wingName,
             level: 'wing',
@@ -629,7 +629,7 @@ export const amcAnalyticsAPI = {
             children: []
           };
 
-          Object.entries(wingData).forEach(([floorName, floorData]) => {
+          Object.entries(wingData ?? {}).forEach(([floorName, floorData]) => {
             const floorNode: AMCLocationCoverageNode = {
               name: floorName,
               level: 'floor',
@@ -639,7 +639,7 @@ export const amcAnalyticsAPI = {
               children: []
             };
 
-            Object.entries(floorData).forEach(([areaName, areaData]) => {
+            Object.entries(floorData ?? {}).forEach(([areaName, areaData]) => {
               const areaNode: AMCLocationCoverageNode = {
                 name: areaName,
                 level: 'area',
@@ -649,18 +649,18 @@ export const amcAnalyticsAPI = {
                 children: []
               };
 
-              Object.entries(areaData).forEach(([roomName, roomData]) => {
+              Object.entries(areaData ?? {}).forEach(([roomName, roomData]) => {
                 const roomNode: AMCLocationCoverageNode = {
                   name: roomName,
                   level: 'room',
-                  total: roomData.total,
-                  covered: roomData.covered,
-                  percent: roomData.percent
+                  total: roomData?.total ?? 0,
+                  covered: roomData?.covered ?? 0,
+                  percent: roomData?.percent ?? 0
                 };
 
                 areaNode.children!.push(roomNode);
-                areaNode.total += roomData.total;
-                areaNode.covered += roomData.covered;
+                areaNode.total += roomNode.total;
+                areaNode.covered += roomNode.covered;
               });
 
               areaNode.percent = areaNode.total > 0 ? Math.round((areaNode.covered / areaNode.total) * 100 * 10) / 10 : 0;

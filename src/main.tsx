@@ -11,6 +11,11 @@ import { PostHogPageView } from "./components/PostHogPageView";
 import posthog from "posthog-js";
 import { getPostHogSuperProperties } from "./utils/posthogContext";
 import { attachPostHogDebugLogger } from "./utils/posthogDebug";
+import { installNetworkMonitor } from "./utils/networkMonitor";
+
+// App-wide toasts for slow requests, unreachable server and offline/online —
+// see utils/networkMonitor.ts for why this patches fetch/XHR globally.
+installNetworkMonitor();
 
 // import { registerServiceWorker } from "./utils/pwa.ts";
 

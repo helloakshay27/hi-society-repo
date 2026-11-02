@@ -374,10 +374,9 @@ const FitoutReport: React.FC = () => {
             <Button
               onClick={handleExport}
               disabled={isExporting}
-              variant="outline"
-               className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4 mr-2 text-white" />
               {isExporting ? "Exporting..." : "Export"}
             </Button>
           </div>

@@ -101,7 +101,6 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { toast as sonnerToast } from "sonner";
 import { AIAssistantWidget } from "@/components/AIAssistantWidget";
 import { DashboardAIAssistant } from "@/components/DashboardAIAssistant";
-import { SpeechProvider } from "@/contexts/SpeechContext";
 
 // Sortable Chart Item Component
 const SortableChartItem = ({
@@ -1325,14 +1324,14 @@ export const TicketDashboard = () => {
       label: "Sub Category",
       sortable: true,
     },
+    // {
+    //   key: "tower",
+    //   label: "Tower",
+    //   sortable: true,
+    // },
     {
       key: "flat_number",
-      label: "Flat",
-      sortable: true,
-    },
-    {
-      key: "tower",
-      label: "Tower",
+      label: "Tower-Flat",
       sortable: true,
     },
     {
@@ -1708,11 +1707,11 @@ export const TicketDashboard = () => {
       const parts = String(item.flat_number).split("-");
       return parts.length > 1 ? parts.join(" - ") : item.flat_number;
     }
-    if (columnKey === "tower") {
-      if (!item.flat_number) return "--";
-      const parts = String(item.flat_number).split("-");
-      return parts.length > 1 ? parts[0] : "--";
-    }
+    // if (columnKey === "tower") {
+    //   if (!item.flat_number) return "--";
+    //   const parts = String(item.flat_number).split("-");
+    //   return parts.length > 1 ? parts[0] : "--";
+    // }
     if (columnKey === "created_at") {
       return formatDate(item.created_at);
     }
@@ -1776,7 +1775,7 @@ export const TicketDashboard = () => {
           className="w-full"
           onValueChange={handleTabChange}
         >
-          <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
+          {/* <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
             <TabsTrigger
               value="tickets"
               className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
@@ -1818,7 +1817,7 @@ export const TicketDashboard = () => {
               </svg>
               Analytics
             </TabsTrigger>
-          </TabsList>
+          </TabsList> */}
 
           <TabsContent
             value="analytics"
@@ -2036,9 +2035,7 @@ export const TicketDashboard = () => {
                 />
               </div>
             </div>
-            <SpeechProvider>
-              <DashboardAIAssistant moduleId="2" />
-            </SpeechProvider>
+            <DashboardAIAssistant moduleId="2" />
           </TabsContent>
 
           <TabsContent
@@ -2139,7 +2136,9 @@ export const TicketDashboard = () => {
                     value={item.value.toString()}
                     icon={<IconComponent className="w-5 h-5 text-[#C72030]" />}
                     selected={isActive}
-                    onClick={() => item.type && handleStatusCardClick(item.type)}
+                    onClick={() =>
+                      item.type && handleStatusCardClick(item.type)
+                    }
                     downloadData={[]}
                   />
                 );

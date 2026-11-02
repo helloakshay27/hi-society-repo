@@ -704,6 +704,10 @@ const getBalanceTATSeconds = (
 };
 
 export const TicketDetailsPage = () => {
+  const isAssignedToRequired =
+    typeof window !== "undefined" &&
+    window.location.hostname.toLowerCase().replace(/^www\./, "") ===
+      "runwalrealty.lockated.com";
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -3496,7 +3500,7 @@ export const TicketDetailsPage = () => {
 
   // Handle Ticket Management Form Submit
   const handleTicketMgmtSubmit = async () => {
-    if (!ticketMgmtFormData.assigned_to) {
+    if (isAssignedToRequired && !ticketMgmtFormData.assigned_to) {
       toast.error("Please select Assigned To");
       return;
     }
@@ -7937,7 +7941,9 @@ export const TicketDetailsPage = () => {
                             <FormControl fullWidth size="small">
                               <InputLabel>
                                 Assigned To{" "}
-                                <span className="text-[#d32f2f]">*</span>
+                                {isAssignedToRequired && (
+                                  <span className="text-[#d32f2f]">*</span>
+                                )}
                               </InputLabel>
                               <MuiSelect
                                 value={ticketMgmtFormData.assigned_to}
@@ -11881,7 +11887,11 @@ export const TicketDetailsPage = () => {
                           </MuiSelect>
                         </FormControl>
 
-                        <FormControl fullWidth size="small" required>
+                        <FormControl
+                          fullWidth
+                          size="small"
+                          required={isAssignedToRequired}
+                        >
                           <InputLabel>Assigned To</InputLabel>
                           <MuiSelect
                             value={ticketMgmtFormData.assigned_to}

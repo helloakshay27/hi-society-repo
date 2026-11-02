@@ -287,7 +287,7 @@ export const GatePassOutwardsDashboard = () => {
     // </Button>
     <Button
       size="sm"
-      className="mr-2"
+      className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
       onClick={() => setShowActionPanel((prev) => !prev)}
     >
       <Plus className="w-4 h-4 mr-2" />

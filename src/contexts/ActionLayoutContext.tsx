@@ -56,9 +56,9 @@ export const useActionLayout = () => {
     // and when Layout is momentarily rendered outside the provider tree
     return {
       currentModule: "",
-      setCurrentModule: () => { },
+      setCurrentModule: () => {},
       currentFunction: "",
-      setCurrentFunction: () => { },
+      setCurrentFunction: () => {},
       availableModules: [],
       getModuleFunctions: () => [],
       isActionSidebarVisible: false,
@@ -141,16 +141,18 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
 
     const orgId = localStorage.getItem("org_id");
     const userEmail = getUser()?.email;
-    // Must stay in sync with the org list in Layout.tsx that renders
-    // ActionSidebar/ActionHeader — otherwise add/edit/details pages for
-    // those orgs never get the sibling-route fallback and the sidebar hides.
+    // Accounts rendered with the action layout need sibling-route matching
+    // when the role only registers a list route (for example survey/add).
     const isActionOrgAccount =
       orgId === "109" ||
       orgId === "324" ||
       orgId === "10" ||
       orgId === "5" ||
       orgId === "9" ||
-      userEmail === "dineshshinde6666@gmail.com";
+      userEmail === "dineshshinde6666@gmail.com" ||
+      window.location.hostname === "piramal.lockated.com" ||
+      window.location.hostname === "kraheja.lockated.com" ||
+      window.location.hostname === "web.hisociety.lockated.com";
 
     if (!userRole || !userRole.lock_modules) {
       setIsActionSidebarVisible(false);
@@ -191,8 +193,8 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
       if (foundMatch) break;
     }
 
-    // Fallback for accounts pinned to the ActionSidebar/ActionHeader (org 109/324,
-    // see Layout.tsx) whose role data has no active function with a react_link
+    // Fallback for accounts pinned to the ActionSidebar/ActionHeader whose
+    // role data has no active function with a react_link
     // matching the current route exactly. Derive the module from the URL itself
     // (same mapping the static sidebars use) so the sidebar still shows instead
     // of silently staying blank.
@@ -324,7 +326,9 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
             `🔍 ActionLayout - Fallback found no module for path "${path}". Tried candidates:`,
             triedCandidates,
             "Available module names in role:",
-            userRole.lock_modules.map((m) => `${m.module_name} (active=${m.module_active})`)
+            userRole.lock_modules.map(
+              (m) => `${m.module_name} (active=${m.module_active})`
+            )
           );
         }
       }

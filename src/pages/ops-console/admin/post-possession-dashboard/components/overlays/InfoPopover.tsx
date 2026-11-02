@@ -6,7 +6,7 @@ import { useDashboard } from '../../context/DashboardContext';
 function resolveInfoAnchor(anchor: HTMLElement | null, key: string): HTMLElement | null {
   if (anchor?.isConnected) return anchor;
   return document.querySelector<HTMLElement>(
-    `.pp-dashboard-root .info-btn[data-info="${CSS.escape(key)}"]`
+    `.pp-dashboard-root [data-info="${CSS.escape(key)}"]`
   );
 }
 
@@ -93,7 +93,7 @@ export const InfoPopover: React.FC = () => {
       const pop = popRef.current;
       if (!pop) return;
       const target = e.target as HTMLElement;
-      if (!pop.contains(target) && !target.closest?.('.info-btn')) hideInfo();
+      if (!pop.contains(target) && !target.closest?.('[data-info]')) hideInfo();
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') hideInfo();

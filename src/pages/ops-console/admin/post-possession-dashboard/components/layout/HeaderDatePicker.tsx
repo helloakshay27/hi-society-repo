@@ -278,8 +278,7 @@ export const HeaderDatePicker: React.FC<HeaderDatePickerProps> = ({ dateGrain })
           setOpen((v) => !v);
         }}
       >
-        <Calendar size={11} className="fdate-ico" aria-hidden />
-        <span className="fdate-label">{label}</span>
+        <Calendar size={18} className="fdate-ico" aria-hidden strokeWidth={1.8} />
       </button>
       {calendar}
     </div>

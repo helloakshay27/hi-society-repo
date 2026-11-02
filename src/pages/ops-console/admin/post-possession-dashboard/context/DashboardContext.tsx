@@ -52,35 +52,121 @@ export function useDashboard() {
   return ctx;
 }
 
-function renderAgeingMatrix(tbody: HTMLElement, openDrill: (k: string) => void) {
-  const colors = ['var(--for)', 'var(--amb)', 'var(--coral)', 'var(--crim)', 'var(--crim)'];
-  const bgs = [
-    'rgba(8,80,65,.06)',
-    'rgba(186,117,23,.08)',
-    'rgba(218,119,86,.1)',
-    'rgba(163,45,45,.1)',
-    'rgba(163,45,45,.14)',
-  ];
-  tbody.innerHTML = AGEING_MATRIX.map((r) => {
+
+const HELPDESK_NOTICES = [
+  {
+    pill: 'p-bad',
+    label: 'Critical risk',
+    key: '#E5484D',
+    title: 'Response escalation breached on 42 of 59 tickets (71%)',
+    body: 'Tickets are created but not acknowledged within target — likely understaffing or assignment gaps.',
+    cta: 'Review unassigned tickets',
+    drill: 'resp_breach',
+  },
+  {
+    pill: 'p-warn',
+    label: 'High risk',
+    key: '#F2A312',
+    title: 'Resolution escalation breached on 38 tickets (64%)',
+    body: 'Acknowledged but not resolved in time. If most are Housekeeping + Electrical, vendor capacity is the bottleneck.',
+    cta: 'Review ageing tickets',
+    drill: 'tickets_open',
+  },
+  {
+    pill: 'p-white',
+    label: 'Watchlist',
+    key: '#5A4BE0',
+    title: 'Proactive ratio at 59% — below the 70% target',
+    body: 'Team-raised tickets need to stay above 70% to signal a proactive maintenance culture.',
+    cta: 'View proactive breakdown',
+    drill: 'tickets_open',
+  },
+];
+
+function mountNoticeStack(root: HTMLElement, openDrill: (k: string) => void) {
+  let ni = 0;
+  const q = (k: string) => root.querySelector(`[data-n="${k}"]`) as HTMLElement | null;
+  const render = () => {
+    const n = HELPDESK_NOTICES[ni];
+    const pill = q('pill');
+    const count = q('count');
+    const title = q('title');
+    const body = q('body');
+    const cta = q('cta');
+    if (!pill || !count || !title || !body || !cta) return;
+    pill.className = `pill ${n.pill}`;
+    pill.textContent = n.label;
+    count.textContent = `${ni + 1} of ${HELPDESK_NOTICES.length}`;
+    count.style.background = n.key;
+    title.textContent = n.title;
+    body.textContent = n.body;
+    cta.textContent = n.cta;
+    const go = root.querySelector('.go') as HTMLElement | null;
+    if (go) go.setAttribute('data-drill', n.drill);
+  };
+  q('next')?.addEventListener('click', () => {
+    ni = (ni + 1) % HELPDESK_NOTICES.length;
+    render();
+  });
+  q('prev')?.addEventListener('click', () => {
+    ni = (ni + HELPDESK_NOTICES.length - 1) % HELPDESK_NOTICES.length;
+    render();
+  });
+  root.querySelector('.go')?.addEventListener('click', () => {
+    const drill = (root.querySelector('.go') as HTMLElement)?.getAttribute('data-drill');
+    if (drill) openDrill(drill);
+  });
+  root.setAttribute('data-pp-ready', '1');
+  render();
+}
+
+function renderAgeingMatrix(host: HTMLElement, openDrill: (k: string) => void) {
+  // Business Genie: ink tint deepening with age × volume (veda-gardens-vertical-bars.html)
+  const rowsHtml = AGEING_MATRIX.map((r) => {
     const tot = r.cols.reduce((a, b) => a + b, 0);
     const cells = r.cols
-      .map((v, i) =>
-        v > 0
-          ? `<td style="text-align:center;cursor:pointer;background:${bgs[i]};color:${colors[i]};font-weight:700" data-drill="tickets_open">${v}</td>`
-          : `<td style="text-align:center;color:var(--sto)">—</td>`
-      )
+      .map((n, i) => {
+        if (!n) return `<span class="cell z">—</span>`;
+        const bg =
+          i === 0 ? '#FFFFFF' : `rgba(26,26,24,${(0.03 + i * 0.02 + n * 0.008).toFixed(3)})`;
+        return `<span class="cell" style="background:${bg}" data-drill="tickets_open">${n}</span>`;
+      })
       .join('');
-    return `<tr><td><span style="font-size:11px;font-weight:600;color:${r.color}">${r.pri}</span></td>${cells}<td style="text-align:center;font-weight:700;font-size:12px">${tot}</td></tr>`;
+    return `<div class="grid-row"><span>${r.pri}</span>${cells}<span class="tot">${tot}</span></div>`;
   }).join('');
-  tbody.querySelectorAll('[data-drill]').forEach((el) => {
+
+  // Support both legacy <tbody> and BG .age grid host
+  if (host.tagName === 'TBODY') {
+    const table = host.closest('table');
+    const wrap = table?.parentElement;
+    if (wrap && table) {
+      const age = document.createElement('div');
+      age.className = 'tbox num';
+      age.id = 'ageing';
+      age.innerHTML =
+        `<div class="grid-head"><span>Priority</span><span>0–3 days</span><span>4–7 days</span><span>8–14 days</span><span>15–30 days</span><span>30+ days</span><span>Total</span></div>${rowsHtml}`;
+      wrap.replaceChild(age, table);
+      age.querySelectorAll('[data-drill]').forEach((el) => {
+        el.addEventListener('click', () => openDrill('tickets_open'));
+      });
+      return;
+    }
+  }
+
+  host.classList.add('num');
+  // #ageing sits under an existing .grid-head in the BG markup — rows only
+  host.innerHTML = rowsHtml;
+  host.querySelectorAll('[data-drill]').forEach((el) => {
     el.addEventListener('click', () => openDrill('tickets_open'));
   });
 }
 
 function renderTowerBars(container: HTMLElement, openDrill: (k: string) => void) {
+  const max = Math.max(...TOWER_TICKET_BARS.map((d) => d.v), 1);
+  container.classList.add('hbars', 'num');
   container.innerHTML = TOWER_TICKET_BARS.map(
     (d) =>
-      `<div class="trow"><div class="tn">${d.n}</div><div class="tb2" data-drill="tickets_open"><div class="tf" style="width:${d.v * 3.5}%;background:${d.c}"></div></div><div class="tv">${d.v}</div></div>`
+      `<div class="hbar" data-drill="tickets_open"><span>${d.n}</span><div class="htrack"><i style="width:${(d.v / max) * 100}%"></i></div><b>${d.v}</b></div>`
   ).join('');
   container.querySelectorAll('[data-drill]').forEach((el) => {
     el.addEventListener('click', () => openDrill('tickets_open'));
@@ -206,7 +292,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     window.addEventListener('pp-goto-tab', onTab);
     window.addEventListener('pp-show-info', onInfo);
     window.addEventListener('pp-toast', onToast);
+    const onNotices = (e: Event) =>
+      mountNoticeStack((e as CustomEvent<HTMLElement>).detail, openDrill);
     window.addEventListener('pp-render-ageing', onAgeing);
+    window.addEventListener('pp-render-notices', onNotices);
     window.addEventListener('pp-render-tower-bars', onTower);
     window.addEventListener('pp-render-gate-bars', onGate);
     window.addEventListener('pp-render-parking-bars', onParking);
@@ -220,6 +309,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       window.removeEventListener('pp-show-info', onInfo);
       window.removeEventListener('pp-toast', onToast);
       window.removeEventListener('pp-render-ageing', onAgeing);
+      window.removeEventListener('pp-render-notices', onNotices);
       window.removeEventListener('pp-render-tower-bars', onTower);
       window.removeEventListener('pp-render-gate-bars', onGate);
       window.removeEventListener('pp-render-parking-bars', onParking);

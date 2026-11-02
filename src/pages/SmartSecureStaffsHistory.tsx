@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { RefreshCw, X } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Pagination,
   PaginationContent,
@@ -154,6 +155,8 @@ const SmartSecureStaffsHistory: React.FC = () => {
   const [previewImageOpen, setPreviewImageOpen] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [previewImageName, setPreviewImageName] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 500);
   const perPage = 20;
 
   // Build Ransack query params from filters
@@ -161,6 +164,10 @@ const SmartSecureStaffsHistory: React.FC = () => {
     const params = new URLSearchParams();
     params.set("page", String(currentPage));
     params.set("per_page", String(perPage));
+
+    if (debouncedSearch.trim()) {
+      params.set("q[search_all_fields_cont]", debouncedSearch.trim());
+    }
 
     if (filters.work_type_id) {
       params.append("q[type_id_in][]", filters.work_type_id);
@@ -185,11 +192,11 @@ const SmartSecureStaffsHistory: React.FC = () => {
     }
 
     return params.toString();
-  }, [currentPage, filters]);
+  }, [currentPage, filters, debouncedSearch]);
 
   // Fetch staff history
   const { data: apiData, isLoading, refetch } = useQuery<StaffHistoryResponse>({
-    queryKey: ["staff-history", currentPage, filters],
+    queryKey: ["staff-history", currentPage, filters, debouncedSearch],
     queryFn: async () => {
       const res = await fetch(
         getFullUrl(`/crm/admin/staff_history.json?${buildQueryParams()}`),
@@ -200,6 +207,11 @@ const SmartSecureStaffsHistory: React.FC = () => {
     },
     staleTime: 30000,
   });
+
+  // Reset to page 1 whenever the search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
   const rows = apiData?.data ?? [];
   const pagination = apiData?.pagination;
@@ -458,6 +470,9 @@ const SmartSecureStaffsHistory: React.FC = () => {
         rightActions={null}
         searchPlaceholder="Search by name or mobile number"
         enableSearch={true}
+        disableClientSearch
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
         hideTableExport={false}
         hideColumnsButton={false}
         className="transition-all duration-500 ease-in-out"

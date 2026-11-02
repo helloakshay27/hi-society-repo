@@ -330,8 +330,12 @@ const formatDateForAPI = (dateString: string): string => {
 // API Services
 export const ticketManagementAPI = {
   // New methods for filter dropdown data
-  async getHelpdeskCategories(): Promise<CategoryOption[]> {
-    const response = await apiClient.get(ENDPOINTS.HELPDESK_CATEGORIES);
+  async getHelpdeskCategories(issueTypeId?: number): Promise<CategoryOption[]> {
+    const response = await apiClient.get(ENDPOINTS.HELPDESK_CATEGORIES,{
+      params: {
+        "q[issue_type_id_eq]": issueTypeId
+      }
+    });
     return response.data.helpdesk_categories || [];
   },
 
@@ -650,6 +654,7 @@ export const ticketManagementAPI = {
   // Tickets
   async getTickets(page: number = 1, perPage: number = 20, filters?: TicketFilters): Promise<TicketListResponse> {
     const queryParams = new URLSearchParams();
+const path = window.location.pathname;
     
     // Add pagination
     queryParams.append('page', page.toString());
@@ -686,7 +691,7 @@ export const ticketManagementAPI = {
       });
     }
 
-    const url = `/crm/admin/complaints.json?${queryParams.toString()}`;
+    const url = `/${path === "/bms/helpdesk"?"crm":"pms"}/admin/complaints.json?${queryParams.toString()}`;
     console.log('🔵 Final API URL:', url);
     console.log('🔵 Query parameters object:', Object.fromEntries(queryParams.entries()));
     const response = await apiClient.get(url);
@@ -1863,6 +1868,13 @@ export const ticketManagementAPI = {
   async getAssignRules(params?: Record<string, string | number>) {
     const token = API_CONFIG.TOKEN;
     const response = await apiClient.get(`/crm/admin/assign_rule.json?token=${token}`, { params });
+    return response.data;
+  },
+
+  async updateComplaintAssignMode(value: "auto" | "") {
+    const response = await apiClient.post('/crm/admin/complaint_assign.json', {
+      system_constant: { value },
+    });
     return response.data;
   },
 

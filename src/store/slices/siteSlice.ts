@@ -41,11 +41,14 @@ export const fetchAllowedSites = createAsyncThunk(
   "site/fetchAllowedSites",
   async (userId: number, { rejectWithValue }) => {
     try {
-      // const response = await apiClient.get(
-      //   `${ENDPOINTS.ALLOWED_SITES}?user_id=${userId}`
-      // );
-      // return response.data;
-      return { sites: [], selected_site: null };
+      // Ops console has no site context — skip the call there
+      if (window.location.pathname.startsWith("/ops-console")) {
+        return { sites: [], selected_site: null };
+      }
+      const response = await apiClient.get(
+        `${ENDPOINTS.ALLOWED_SITES}?user_id=${userId}`
+      );
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch sites"

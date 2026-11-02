@@ -62,6 +62,7 @@ interface VisitorIdentity {
   id: number;
   identity_type?: string;
   government_id_number?: string;
+  govt_id_image?: string;
   documents?: DocumentItem[];
 }
 
@@ -217,6 +218,7 @@ export const VisitorDetailsPage = () => {
     Record<number, boolean>
   >({});
   const [activeTab, setActiveTab] = useState("profile");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // State for document modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -261,8 +263,33 @@ export const VisitorDetailsPage = () => {
         const rawVisitor = data.data || data.gatekeeper || data.visitor || data;
 
         // Normalize nested fields so existing JSX works with both API shapes
+        // New API shape: identity_verification { govt_id_number, govt_id_image, documents }
+        const idv = rawVisitor.identity_verification;
+        const idvHasData =
+          idv &&
+          (idv.govt_id_number ||
+            idv.govt_id_image ||
+            (Array.isArray(idv.documents) && idv.documents.length > 0));
+
+        const selectedHosts: { name?: string; mobile?: string }[] = Array.isArray(
+          rawVisitor.visitor_hosts
+        )
+          ? rawVisitor.visitor_hosts
+          : [];
+
         const visitor: VisitorData = {
           ...rawVisitor,
+          visitor_identity:
+            rawVisitor.visitor_identity ||
+            (idvHasData
+              ? {
+                  id: rawVisitor.id,
+                  identity_type: idv.identity_type,
+                  government_id_number: idv.govt_id_number,
+                  govt_id_image: idv.govt_id_image,
+                  documents: idv.documents || [],
+                }
+              : undefined),
           // Flatten vehicle_info
           guest_vehicle_number:
             rawVisitor.guest_vehicle_number ||
@@ -270,10 +297,18 @@ export const VisitorDetailsPage = () => {
           vehicle_type:
             rawVisitor.vehicle_type || rawVisitor.vehicle_info?.vehicle_type,
           // Flatten person_to_meet
+          // Prefer the host(s) selected for the visit over the creator (person_to_meet)
           visitor_host_name:
-            rawVisitor.visitor_host_name || rawVisitor.person_to_meet?.name,
+            selectedHosts
+              .map((h: { name?: string }) => h?.name)
+              .filter(Boolean)
+              .join(", ") ||
+            rawVisitor.visitor_host_name ||
+            rawVisitor.person_to_meet?.name,
           visitor_host_mobile:
-            rawVisitor.visitor_host_mobile || rawVisitor.person_to_meet?.mobile,
+            selectedHosts[0]?.mobile ||
+            rawVisitor.visitor_host_mobile ||
+            rawVisitor.person_to_meet?.mobile,
           // Flatten building
           building_name:
             rawVisitor.building_name || rawVisitor.building?.name,
@@ -298,6 +333,10 @@ export const VisitorDetailsPage = () => {
               ? "checked_in"
               : rawVisitor.approval_status?.approve === 0
               ? "pending"
+              : rawVisitor.approval_status?.approve === 1
+              ? "approved"
+              : rawVisitor.approval_status?.approve_label
+              ? String(rawVisitor.approval_status.approve_label).toLowerCase()
               : "expected"),
         };
         setVisitorData(visitor);
@@ -311,7 +350,7 @@ export const VisitorDetailsPage = () => {
     };
 
     fetchVisitorDetails();
-  }, [id]);
+  }, [id, refreshKey]);
 
   const handleBackToList = () => {
     navigate(-1);
@@ -403,7 +442,7 @@ export const VisitorDetailsPage = () => {
       toast.success("Host approval skipped successfully!");
 
       // Refresh visitor data
-      window.location.reload();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("❌ Error skipping approval:", err);
       toast.error("Failed to skip approval. Please try again.");
@@ -431,7 +470,7 @@ export const VisitorDetailsPage = () => {
     try {
       await ticketManagementAPI.checkInVisitor(Number(id));
       toast.success("Visitor checked in successfully!");
-      window.location.reload();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("❌ Error checking in visitor:", err);
       toast.error("Failed to check-in visitor. Please try again.");
@@ -480,7 +519,7 @@ export const VisitorDetailsPage = () => {
       toast.success("Visitor checked out successfully!");
 
       // Refresh visitor data
-      window.location.reload();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("❌ Error checking out visitor:", err);
       toast.error("Failed to checkout visitor. Please try again.");
@@ -544,7 +583,9 @@ export const VisitorDetailsPage = () => {
                   className={
                     visitorData.vstatus === "checked_in"
                       ? "bg-green-100 text-green-800"
-                      : visitorData.vstatus === "checked_out"
+                      : visitorData.vstatus === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : visitorData.vstatus === "checked_out"
                         ? "bg-blue-100 text-blue-800"
                         : visitorData.vstatus === "expected"
                           ? "bg-orange-100 text-orange-800"
@@ -562,7 +603,7 @@ export const VisitorDetailsPage = () => {
             {visitorData.approve === 0 && (
               <Button
                 onClick={handleSkipApproval}
-                className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
+                className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
               >
                 Skip Approval
               </Button>
@@ -573,8 +614,8 @@ export const VisitorDetailsPage = () => {
               visitorData.approve === 1 && (
                 <Button
                   onClick={handleCheckIn}
-                  className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
-                style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
+                 className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+                // style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
                 >
                   <span style={{ color: '#FFFFFF' }}>Check-in</span>
                 </Button>
@@ -1181,20 +1222,14 @@ export const VisitorDetailsPage = () => {
                   </div>
                 </div>
               ))
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                No additional visitor details found
-              </div>
-            )}
-          </TabsContent>
+            ) : null}
 
-          {/* Tab 3: Asset Details */}
-          <TabsContent value="assets" className="mt-4 space-y-4 p-0">
+            {/* Goods Details (shown in the Additional Details tab) */}
             {/* MIMO Details Section (new API) */}
             {visitorData.mimo_details && visitorData.mimo_details.length > 0 && (
               <div className="space-y-6">
                 <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                  Item Movements
+                  Goods Details
                 </h2>
                 {visitorData.mimo_details.map((mimo: MimoDetail, index: number) => (
                   <div key={mimo.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
@@ -1242,7 +1277,7 @@ export const VisitorDetailsPage = () => {
             {visitorData.item_movements && visitorData.item_movements.length > 0 && (
               <div className="space-y-6">
                 <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                  Item Movements
+                  Goods Details
                 </h2>
                 {visitorData.item_movements.map((movement: ItemMovement, index: number) => (
                   <div key={movement.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
@@ -1452,9 +1487,9 @@ export const VisitorDetailsPage = () => {
               ))
             )}
 
-            {!visitorData.mimo_details?.length && !visitorData.item_movements?.length && !visitorData.assets?.length && !visitorData.additional_visitors?.some(v => v.assets?.length) && (
+            {!visitorData.additional_visitors?.length && !visitorData.mimo_details?.length && !visitorData.item_movements?.length && !visitorData.assets?.length && (
               <div className="text-center py-12 text-gray-500">
-                No asset details found
+                No additional visitor or goods details found
               </div>
             )}
           </TabsContent>
@@ -1515,7 +1550,7 @@ export const VisitorDetailsPage = () => {
             )}
 
             {/* Main Visitor's Identity */}
-            {visitorData.visitor_identity && (hasData(visitorData.visitor_identity.identity_type) || hasData(visitorData.visitor_identity.government_id_number) || (visitorData.visitor_identity.documents && visitorData.visitor_identity.documents.length > 0)) && (
+            {visitorData.visitor_identity && (hasData(visitorData.visitor_identity.identity_type) || hasData(visitorData.visitor_identity.government_id_number) || hasData(visitorData.visitor_identity.govt_id_image) || (visitorData.visitor_identity.documents && visitorData.visitor_identity.documents.length > 0)) && (
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-6">
                   {visitorData?.guest_name ? `${visitorData.guest_name}'s Identity Details` : 'Main Visitor Identity'}
@@ -1544,6 +1579,31 @@ export const VisitorDetailsPage = () => {
                       </div>
                     )}
                   </div>
+
+                  {hasData(visitorData.visitor_identity.govt_id_image) && (
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3">Government ID Image</h4>
+                      <div className="relative inline-block">
+                        <img
+                          src={visitorData.visitor_identity.govt_id_image}
+                          alt="Government ID"
+                          className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200 cursor-pointer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                          }}
+                          onClick={() => {
+                            const url = visitorData.visitor_identity!.govt_id_image!;
+                            setSelectedDoc({
+                              id: visitorData.id,
+                              url,
+                              document_name: url.split("/").pop() || "Government_ID",
+                            });
+                            setIsModalOpen(true);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {visitorData.visitor_identity.documents && visitorData.visitor_identity.documents.length > 0 && (
                     <div>

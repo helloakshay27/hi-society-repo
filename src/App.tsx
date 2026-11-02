@@ -2105,6 +2105,11 @@ const LockModuleList = lazy(() =>
     default: m.LockModuleList,
   }))
 );
+const LockPhasesList = lazy(() =>
+  import("./pages/settings/LockPhasesList").then((m) => ({
+    default: m.LockPhasesList,
+  }))
+);
 const LockModuleEdit = lazy(() =>
   import("./pages/settings/LockModuleEdit").then((m) => ({
     default: m.LockModuleEdit,
@@ -2707,6 +2712,7 @@ import ProjectTaskDetailsMobile from "./components/ProjectTaskDetailsMobile";
 import MilestoneDetailsMobile from "./components/MilestoneDetailsMobile";
 import VisitorSharingFormWeb from "./components/VisitorSharingFormWeb";
 import { ActionLayoutProvider } from "./contexts/ActionLayoutContext";
+import { SpeechProvider } from "./contexts/SpeechContext";
 const EventUserDetailsPage = lazy(() => import("./pages/EventUserDetailsPage"));
 const OnlyOfficePublicEditorPage = lazy(() =>
   import("./pages/OnlyOfficePublicEditorPage").then((m) => ({
@@ -3410,6 +3416,7 @@ function App() {
           <EnhancedSelectProvider>
             <LayoutProvider>
               <PermissionsProvider>
+                <SpeechProvider>
                 <ActionLayoutProvider>
                   <Suspense
                     fallback={
@@ -3534,6 +3541,10 @@ function App() {
                           path="settings/account/lock-module"
                           element={<LockModuleList />}
                         />
+                        <Route
+                          path="settings/account/lock-phases"
+                          element={<LockPhasesList />}
+                        />
 
                         <Route
                           path="master/user/fm-users"
@@ -3572,6 +3583,10 @@ function App() {
                         <Route
                           path="settings/account/lock-module"
                           element={<LockModuleList />}
+                        />
+                        <Route
+                          path="settings/account/lock-phases"
+                          element={<LockPhasesList />}
                         />
                         <Route
                           path="settings/modules"
@@ -9352,6 +9367,10 @@ function App() {
                           element={<LockModuleList />}
                         />
                         <Route
+                          path="/settings/account/lock-phases"
+                          element={<LockPhasesList />}
+                        />
+                        <Route
                           path="/settings/account/lock-function"
                           element={<LockFunctionList />}
                         />
@@ -9684,6 +9703,7 @@ function App() {
                   {/* Toast position/styling is defined globally in components/ui/sonner.tsx */}
                   <SonnerToaster />
                 </ActionLayoutProvider>
+                </SpeechProvider>
               </PermissionsProvider>
             </LayoutProvider>
           </EnhancedSelectProvider>

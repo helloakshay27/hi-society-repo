@@ -8,7 +8,18 @@ import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import {
   NoticeFilterDialog,
   NoticeFilters,
+  STATUS_OPTIONS,
 } from "@/components/NoticeFilterDialog";
+import { StatusBadge } from "@/components/ui/status-badge";
+
+const PUBLISH_BADGE_VARIANTS: Record<
+  string,
+  "accepted" | "pending" | "rejected"
+> = {
+  "1": "accepted",
+  "2": "pending",
+  "0": "rejected",
+};
 import {
   Pagination,
   PaginationContent,
@@ -98,12 +109,21 @@ const HiSocNoticeList = () => {
         }
         if (filters) {
           filters.shared_in.forEach((v) => params.append("q[shared_in][]", v));
+          if (filters.notice_type) {
+            params.append("q[notice_type_eq]", filters.notice_type);
+          }
           if (filters.date_range) {
             params.append("q[date_range]", filters.date_range);
           }
           filters.publish_in.forEach((v) =>
             params.append("q[publish_in][]", v)
           );
+          if (filters.block_id) {
+            params.append("q[user_society_user_flat_society_flat_society_block_id_eq]", filters.block_id);
+          }
+          if (filters.flat_id) {
+            params.append("q[user_society_user_flat_society_flat_id_eq]", filters.flat_id);
+          }
         }
         const qs = params.toString();
         const url = getFullUrl(
@@ -272,8 +292,11 @@ const HiSocNoticeList = () => {
   const handleApplyFilters = (filters: NoticeFilters) => {
     const hasFilters =
       filters.shared_in.length > 0 ||
+      filters.notice_type !== "" ||
       filters.date_range !== "" ||
-      filters.publish_in.length > 0;
+      filters.publish_in.length > 0 ||
+      filters.block_id !== "" ||
+      filters.flat_id !== "";
     setCurrentPage(1);
     setActiveFilters(hasFilters ? filters : null);
   };
@@ -350,7 +373,9 @@ const HiSocNoticeList = () => {
     { key: "society_name", label: "Society", sortable: true },
     { key: "is_important", label: "Important", sortable: false },
     { key: "expire_time", label: "Expire Time", sortable: false },
-    { key: "active", label: "Status", sortable: false },
+    { key: "created_at", label: "Created On", sortable: false },
+    { key: "publish", label: "Status", sortable: false },
+    { key: "active", label: "Active", sortable: false },
   ];
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -364,6 +389,8 @@ const HiSocNoticeList = () => {
       society_name?: string;
       is_important?: boolean;
       expire_time?: string;
+      created_at?: string;
+      publish?: number | string;
       active: boolean;
       [key: string]: any;
     },
@@ -431,10 +458,28 @@ const HiSocNoticeList = () => {
         );
       case "expire_time":
         return formatDateTimeManual(item.expire_time);
+      case "created_at":
+        return formatDateTimeManual(item.created_at);
+      case "publish": {
+        const publish = item.publish != null ? String(item.publish) : "";
+        const option = STATUS_OPTIONS.find((o) => o.value === publish);
+        return option ? (
+          <StatusBadge variant={PUBLISH_BADGE_VARIANTS[publish]}>
+            {option.label}
+          </StatusBadge>
+        ) : (
+          "-"
+        );
+      }
       case "active":
         return noticeboardPermission.destroy === "true" ? (
           <div className="flex items-center justify-center">
-            <Switch checked={!!(item.active)} onCheckedChange={() => handleToggleNoticeboard(item.id, item.active)} />
+            <Switch
+              checked={!!item.active}
+              onCheckedChange={() =>
+                handleToggleNoticeboard(item.id, item.active)
+              }
+            />
           </div>
         ) : (
           <span className="text-sm text-gray-500">
@@ -474,19 +519,6 @@ const HiSocNoticeList = () => {
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search broadcasts..."
         leftActions={renderCustomActions()}
-        rightActions={
-          activeFilters ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearFilters}
-              className="h-8 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-              title="Clear filters"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          ) : undefined
-        }
         onFilterClick={() => setIsFilterOpen(true)}
         loading={isSearching || loading}
         loadingMessage={

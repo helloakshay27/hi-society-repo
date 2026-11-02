@@ -16,8 +16,8 @@ export const PostPossessionDashboard: React.FC = () => {
       <div className="pp-dashboard-root">
         <Header />
         <KpiStrip />
-        <FilterBar />
         <TabNav />
+        <FilterBar />
         <main className="pg">
           <TabPanels />
         </main>

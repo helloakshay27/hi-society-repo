@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,8 +17,13 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
-import { toast } from 'sonner';
-import { moduleService, LockModule, CreateModulePayload } from '@/services/moduleService';
+import { toast } from "sonner";
+import {
+  moduleService,
+  LockModule,
+  CreateModulePayload,
+  LockPhase,
+} from "@/services/moduleService";
 
 interface EditModuleDialogProps {
   open: boolean;
@@ -27,68 +32,81 @@ interface EditModuleDialogProps {
   onModuleUpdated?: () => void;
 }
 
-export const EditModuleDialog = ({ 
-  open, 
-  onOpenChange, 
+export const EditModuleDialog = ({
+  open,
+  onOpenChange,
   module,
-  onModuleUpdated 
+  onModuleUpdated,
 }: EditModuleDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    abbreviation: '',
-    show_name: '',
-    module_type: '',
-    charged_per: '',
+    name: "",
+    abbreviation: "",
+    show_name: "",
+    module_type: "",
+    charged_per: "",
     no_of_licences: 10,
     min_billing: 1000,
     rate: 150,
     max_billing: 5000,
     total_billing: 2000,
-    rate_type: 'fixed',
+    rate_type: "fixed",
     active: true,
-    phase_id: 1,
+    phase_id: undefined as number | undefined,
   });
+  const [phases, setPhases] = useState<LockPhase[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    moduleService
+      .fetchPhases()
+      .then(setPhases)
+      .catch(() => toast.error("Failed to load phases"));
+  }, [open]);
 
   // Initialize form data when module prop changes
   useEffect(() => {
     if (module) {
       setFormData({
-        name: module.name || '',
-        abbreviation: module.abbreviation || '',
-        show_name: module.show_name || '',
-        module_type: module.module_type || '',
-        charged_per: module.charged_per || '',
+        name: module.name || "",
+        abbreviation: module.abbreviation || "",
+        show_name: module.show_name || "",
+        module_type: module.module_type || "",
+        charged_per: module.charged_per || "",
         no_of_licences: module.no_of_licences || 10,
         min_billing: module.min_billing || 1000,
         rate: module.rate || 150,
         max_billing: module.max_billing || 5000,
         total_billing: module.total_billing || 2000,
-        rate_type: module.rate_type || 'fixed',
+        rate_type: module.rate_type || "fixed",
         active: module.active,
-        phase_id: module.phase_id || 1,
+        phase_id: module.phase_id ? Number(module.phase_id) : undefined,
       });
     }
   }, [module]);
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const validateForm = () => {
     if (!formData.name.trim()) {
-      toast.error('Module name is required');
+      toast.error("Module name is required");
       return false;
     }
     if (!formData.abbreviation.trim()) {
-      toast.error('Abbreviation is required');
+      toast.error("Abbreviation is required");
       return false;
     }
     if (!formData.show_name.trim()) {
-      toast.error('Display name is required');
+      toast.error("Display name is required");
+      return false;
+    }
+    if (!formData.phase_id) {
+      toast.error("Phase is required");
       return false;
     }
     return true;
@@ -96,13 +114,13 @@ export const EditModuleDialog = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm() || !module.id) {
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const payload: Partial<CreateModulePayload> = {
         lock_module: {
@@ -119,43 +137,39 @@ export const EditModuleDialog = ({
           rate_type: formData.rate_type,
           active: formData.active,
           phase_id: formData.phase_id,
-        }
+        },
       };
 
-      const response = await moduleService.updateModule(module.id, payload);
-      
-      if (response.success) {
-        toast.success('Module updated successfully');
-        onModuleUpdated?.();
-      } else {
-        toast.error(response.message || 'Failed to update module');
-      }
+      await moduleService.updateModule(module.id, payload);
+
+      toast.success("Module updated successfully");
+      onModuleUpdated?.();
     } catch (error) {
-      console.error('Error updating module:', error);
-      toast.error('Failed to update module');
+      console.error("Error updating module:", error);
+      toast.error("Failed to update module");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const moduleTypeOptions = [
-    { value: 'standard', label: 'Standard' },
-    { value: 'premium', label: 'Premium' },
-    { value: 'enterprise', label: 'Enterprise' },
-    { value: 'custom', label: 'Custom' },
+    { value: "standard", label: "Standard" },
+    { value: "premium", label: "Premium" },
+    { value: "enterprise", label: "Enterprise" },
+    { value: "custom", label: "Custom" },
   ];
 
   const chargedPerOptions = [
-    { value: 'user', label: 'Per User' },
-    { value: 'license', label: 'Per License' },
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'yearly', label: 'Yearly' },
+    { value: "user", label: "Per User" },
+    { value: "license", label: "Per License" },
+    { value: "monthly", label: "Monthly" },
+    { value: "yearly", label: "Yearly" },
   ];
 
   const rateTypeOptions = [
-    { value: 'fixed', label: 'Fixed' },
-    { value: 'variable', label: 'Variable' },
-    { value: 'tiered', label: 'Tiered' },
+    { value: "fixed", label: "Fixed" },
+    { value: "variable", label: "Variable" },
+    { value: "tiered", label: "Tiered" },
   ];
 
   return (
@@ -164,7 +178,7 @@ export const EditModuleDialog = ({
         <DialogHeader>
           <DialogTitle>Edit Module</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Basic Information */}
@@ -173,7 +187,7 @@ export const EditModuleDialog = ({
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Enter module name"
                 required
               />
@@ -184,7 +198,9 @@ export const EditModuleDialog = ({
               <Input
                 id="abbreviation"
                 value={formData.abbreviation}
-                onChange={(e) => handleInputChange('abbreviation', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("abbreviation", e.target.value)
+                }
                 placeholder="e.g., pms"
                 required
               />
@@ -195,7 +211,7 @@ export const EditModuleDialog = ({
               <Input
                 id="show_name"
                 value={formData.show_name}
-                onChange={(e) => handleInputChange('show_name', e.target.value)}
+                onChange={(e) => handleInputChange("show_name", e.target.value)}
                 placeholder="Display name for the module"
                 required
               />
@@ -204,9 +220,11 @@ export const EditModuleDialog = ({
             {/* Module Configuration */}
             <div className="space-y-2">
               <Label htmlFor="module_type">Module Type</Label>
-              <Select 
-                value={formData.module_type} 
-                onValueChange={(value) => handleInputChange('module_type', value)}
+              <Select
+                value={formData.module_type}
+                onValueChange={(value) =>
+                  handleInputChange("module_type", value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select module type" />
@@ -223,9 +241,11 @@ export const EditModuleDialog = ({
 
             <div className="space-y-2">
               <Label htmlFor="charged_per">Charged Per</Label>
-              <Select 
-                value={formData.charged_per} 
-                onValueChange={(value) => handleInputChange('charged_per', value)}
+              <Select
+                value={formData.charged_per}
+                onValueChange={(value) =>
+                  handleInputChange("charged_per", value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select charging basis" />
@@ -247,20 +267,38 @@ export const EditModuleDialog = ({
                 id="no_of_licences"
                 type="number"
                 value={formData.no_of_licences}
-                onChange={(e) => handleInputChange('no_of_licences', parseInt(e.target.value) || 0)}
+                onChange={(e) =>
+                  handleInputChange(
+                    "no_of_licences",
+                    parseInt(e.target.value) || 0
+                  )
+                }
                 min="1"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phase_id">Phase ID</Label>
-              <Input
-                id="phase_id"
-                type="number"
-                value={formData.phase_id}
-                onChange={(e) => handleInputChange('phase_id', parseInt(e.target.value) || 1)}
-                min="1"
-              />
+              <Label htmlFor="phase_id">Phase *</Label>
+              <Select
+                value={
+                  formData.phase_id ? String(formData.phase_id) : undefined
+                }
+                onValueChange={(value) => {
+                  // Radix fires "" while options are still loading; ignore it
+                  if (value) handleInputChange("phase_id", Number(value));
+                }}
+              >
+                <SelectTrigger id="phase_id">
+                  <SelectValue placeholder="Select phase" />
+                </SelectTrigger>
+                <SelectContent>
+                  {phases.map((phase) => (
+                    <SelectItem key={phase.id} value={String(phase.id)}>
+                      {phase.show_name || phase.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Billing */}
@@ -270,7 +308,9 @@ export const EditModuleDialog = ({
                 id="rate"
                 type="number"
                 value={formData.rate}
-                onChange={(e) => handleInputChange('rate', parseFloat(e.target.value) || 0)}
+                onChange={(e) =>
+                  handleInputChange("rate", parseFloat(e.target.value) || 0)
+                }
                 min="0"
                 step="0.01"
               />
@@ -278,9 +318,9 @@ export const EditModuleDialog = ({
 
             <div className="space-y-2">
               <Label htmlFor="rate_type">Rate Type</Label>
-              <Select 
-                value={formData.rate_type} 
-                onValueChange={(value) => handleInputChange('rate_type', value)}
+              <Select
+                value={formData.rate_type}
+                onValueChange={(value) => handleInputChange("rate_type", value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select rate type" />
@@ -301,7 +341,12 @@ export const EditModuleDialog = ({
                 id="min_billing"
                 type="number"
                 value={formData.min_billing}
-                onChange={(e) => handleInputChange('min_billing', parseFloat(e.target.value) || 0)}
+                onChange={(e) =>
+                  handleInputChange(
+                    "min_billing",
+                    parseFloat(e.target.value) || 0
+                  )
+                }
                 min="0"
                 step="0.01"
               />
@@ -313,7 +358,12 @@ export const EditModuleDialog = ({
                 id="max_billing"
                 type="number"
                 value={formData.max_billing}
-                onChange={(e) => handleInputChange('max_billing', parseFloat(e.target.value) || 0)}
+                onChange={(e) =>
+                  handleInputChange(
+                    "max_billing",
+                    parseFloat(e.target.value) || 0
+                  )
+                }
                 min="0"
                 step="0.01"
               />
@@ -325,7 +375,12 @@ export const EditModuleDialog = ({
                 id="total_billing"
                 type="number"
                 value={formData.total_billing}
-                onChange={(e) => handleInputChange('total_billing', parseFloat(e.target.value) || 0)}
+                onChange={(e) =>
+                  handleInputChange(
+                    "total_billing",
+                    parseFloat(e.target.value) || 0
+                  )
+                }
                 min="0"
                 step="0.01"
               />
@@ -336,7 +391,9 @@ export const EditModuleDialog = ({
               <Checkbox
                 id="active"
                 checked={formData.active}
-                onCheckedChange={(checked) => handleInputChange('active', checked)}
+                onCheckedChange={(checked) =>
+                  handleInputChange("active", checked)
+                }
               />
               <Label htmlFor="active">Active</Label>
             </div>
@@ -362,7 +419,7 @@ export const EditModuleDialog = ({
                   Updating...
                 </>
               ) : (
-                'Update Module'
+                "Update Module"
               )}
             </Button>
           </div>

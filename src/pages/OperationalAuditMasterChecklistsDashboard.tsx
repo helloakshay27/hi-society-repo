@@ -60,7 +60,7 @@ export const OperationalAuditMasterChecklistsDashboard = () => {
       <div className="mb-6 flex items-center gap-6">
         <Button onClick={handleAddMasterChecklist} style={{
         backgroundColor: '#C72030'
-      }} className="text-white hover:opacity-90 flex items-center gap-2">
+      }}  className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium">
           <Plus className="w-4 h-4" />
           Add
         </Button>
@@ -79,12 +79,12 @@ export const OperationalAuditMasterChecklistsDashboard = () => {
         <div className="flex gap-3">
           <Button onClick={handleDownloadSampleFormat} style={{
           backgroundColor: '#C72030'
-        }} className="text-white hover:opacity-90">
+        }}  className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium">
             Download Sample Format
           </Button>
           <Button onClick={handleImportQuestions} style={{
           backgroundColor: '#C72030'
-        }} className="text-white hover:opacity-90">
+        }}  className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium">
             Import Questions
           </Button>
         </div>

@@ -95,13 +95,16 @@ export interface UpdateReferralSetupPayload {
 /**
  * Fetch all referral setups
  */
-export const getReferralSetups = async (): Promise<ReferralSetupsResponse> => {
+export const getReferralSetups = async (
+  params?: Record<string, string>
+): Promise<ReferralSetupsResponse> => {
   const baseUrl = getBaseUrl();
   const token = getToken();
 
   const response = await axios.get(
     `${baseUrl}/crm/admin/referral_setups.json`,
     {
+      params,
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
