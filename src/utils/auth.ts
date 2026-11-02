@@ -197,6 +197,10 @@ export const getBaseUrlDomain = (): string | null => {
   return stripProtocol(savedUrl);
 };
 
+// Public survey links work without a login, so they must not depend on session APIs
+export const isPublicSurveyRoute = (): boolean =>
+  /^\/(survey_mappings|mobile\/survey)\//.test(window.location.pathname);
+
 // Check if user is authenticated
 export const isAuthenticated = (): boolean => {
   const user = getUser();

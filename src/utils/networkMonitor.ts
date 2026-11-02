@@ -2,6 +2,10 @@ import { toast } from "sonner";
 
 // How long a request may run before we tell the user the network is slow
 const SLOW_REQUEST_MS = 5000;
+// Requested to confirm the connection really is down when an API call fails
+const CONNECTION_CHECK_URL = "/favicon.ico";
+const CONNECTION_CHECK_TIMEOUT_MS = 4000;
+const CONNECTION_RECHECK_MS = 5000;
 
 const SLOW_TOAST_ID = "network-slow";
 const OFFLINE_TOAST_ID = "network-offline";
@@ -13,8 +17,6 @@ const OFFLINE_TITLE = "You're Offline";
 const OFFLINE_MESSAGE =
   "It looks like your computer isn't connected to the internet. Please check your Wi-Fi, Ethernet, or network settings and try again.";
 const BACK_ONLINE_MESSAGE = "You are back online.";
-const NETWORK_ERROR_MESSAGE =
-  "Unable to reach the server. Please check your internet connection and try again.";
 const TIMEOUT_MESSAGE =
   "The request timed out due to a slow network. Please try again.";
 
@@ -69,12 +71,69 @@ const showOfflineToast = () => {
   });
 };
 
-const reportNetworkFailure = () => {
-  if (isOffline()) {
-    showOfflineToast();
-    return;
+const showBackOnlineToast = () => {
+  // Same id, so the offline toast turns into the "back online" one
+  toast.success(BACK_ONLINE_MESSAGE, {
+    id: OFFLINE_TOAST_ID,
+    // Clear the offline body copy, which sonner keeps when updating by id
+    description: undefined,
+    duration: 3000,
+  });
+};
+
+// Not patched, so connection checks never report themselves as failures
+let nativeFetch: typeof window.fetch;
+let connectionCheck: Promise<boolean> | null = null;
+
+/** navigator.onLine stays true on Wi-Fi with no internet, so verify with a request. */
+const hasConnection = (): Promise<boolean> => {
+  if (isOffline()) return Promise.resolve(false);
+  // The packaged desktop app has no web origin to check against
+  if (!window.location.protocol.startsWith("http")) return Promise.resolve(true);
+
+  if (!connectionCheck) {
+    connectionCheck = nativeFetch(CONNECTION_CHECK_URL, {
+      method: "HEAD",
+      cache: "no-store",
+      signal: AbortSignal.timeout(CONNECTION_CHECK_TIMEOUT_MS),
+    })
+      .then(
+        () => true,
+        () => false
+      )
+      .finally(() => {
+        connectionCheck = null;
+      });
   }
-  toast.error(NETWORK_ERROR_MESSAGE, { id: ERROR_TOAST_ID });
+  return connectionCheck;
+};
+
+let recoveryTimer: ReturnType<typeof setInterval> | null = null;
+
+const stopRecoveryWatch = () => {
+  if (recoveryTimer) clearInterval(recoveryTimer);
+  recoveryTimer = null;
+};
+
+// No "online" event fires if navigator.onLine never changed, so poll for recovery
+const watchForRecovery = () => {
+  if (recoveryTimer) return;
+  recoveryTimer = setInterval(async () => {
+    if (await hasConnection()) {
+      stopRecoveryWatch();
+      showBackOnlineToast();
+    }
+  }, CONNECTION_RECHECK_MS);
+};
+
+/**
+ * A failed request alone doesn't mean the internet is down (bad host, CORS,
+ * server outage), so only a confirmed loss of connection raises a toast.
+ */
+const reportNetworkFailure = async () => {
+  if (await hasConnection()) return;
+  showOfflineToast();
+  watchForRecovery();
 };
 
 const getRequestUrl = (input: RequestInfo | URL): string => {
@@ -85,6 +144,7 @@ const getRequestUrl = (input: RequestInfo | URL): string => {
 
 const patchFetch = () => {
   const originalFetch = window.fetch.bind(window);
+  nativeFetch = originalFetch;
 
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     if (isIgnored(getRequestUrl(input))) return originalFetch(input, init);
@@ -136,13 +196,8 @@ const patchXhr = () => {
 const watchConnection = () => {
   window.addEventListener("offline", showOfflineToast);
   window.addEventListener("online", () => {
-    // Same id, so the offline toast turns into the "back online" one
-    toast.success(BACK_ONLINE_MESSAGE, {
-      id: OFFLINE_TOAST_ID,
-      // Clear the offline body copy, which sonner keeps when updating by id
-      description: undefined,
-      duration: 3000,
-    });
+    stopRecoveryWatch();
+    showBackOnlineToast();
   });
   if (isOffline()) showOfflineToast();
 };
@@ -150,8 +205,8 @@ const watchConnection = () => {
 let installed = false;
 
 /**
- * Shows toasts app-wide when requests are slow, fail because the server
- * can't be reached, or the device goes offline/online.
+ * Shows toasts app-wide when requests are slow or time out, or the device
+ * genuinely loses and regains its internet connection.
  */
 export const installNetworkMonitor = () => {
   if (installed || typeof window === "undefined") return;
