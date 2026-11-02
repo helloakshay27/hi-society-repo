@@ -15,10 +15,6 @@ import {
   IconButton,
   Typography,
   Box,
-  MenuItem,
-  Select as MuiSelect,
-  FormControl,
-  InputLabel,
   CircularProgress,
 } from "@mui/material";
 import { X } from "lucide-react";
@@ -43,11 +39,14 @@ const CampaignsReferralSetup: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
+  const emptyFilters = {
     projectName: "",
     referralNumber: "",
-    createdDate: "",
-  });
+    createdFrom: "",
+    createdTo: "",
+  };
+  const [filters, setFilters] = useState(emptyFilters);
+  const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
 
   const [projectsData, setProjectsData] = useState<ReferralSetup[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,7 +56,19 @@ const CampaignsReferralSetup: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await getReferralSetups();
+      const params: Record<string, string> = {};
+      if (appliedFilters.projectName.trim())
+        params["q[project_name_cont]"] = appliedFilters.projectName.trim();
+      if (appliedFilters.referralNumber.trim())
+        params["q[project_reference_id_cont]"] =
+          appliedFilters.referralNumber.trim();
+      if (appliedFilters.createdFrom)
+        params["q[created_at_gteq]"] = appliedFilters.createdFrom;
+      if (appliedFilters.createdTo)
+        // Include the whole "to" day
+        params["q[created_at_lteq]"] = `${appliedFilters.createdTo} 23:59:59`;
+
+      const response = await getReferralSetups(params);
       setProjectsData(response.referral_setups || []);
       setCurrentPage(1);
     } catch (err) {
@@ -66,7 +77,7 @@ const CampaignsReferralSetup: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [appliedFilters]);
 
   useEffect(() => {
     fetchReferralSetups();
@@ -411,11 +422,14 @@ const CampaignsReferralSetup: React.FC = () => {
   };
 
   const handleApplyFilters = () => {
-    // Apply filter logic here - connect to API or filter local data
+    setAppliedFilters(filters);
+    setShowFilters(false);
   };
 
   const handleResetFilters = () => {
-    setFilters({ projectName: "", referralNumber: "", createdDate: "" });
+    setFilters(emptyFilters);
+    setAppliedFilters(emptyFilters);
+    setShowFilters(false);
   };
 
   return (
@@ -548,28 +562,18 @@ variant="ghost"
 
               <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-4">
-                  <FormControl fullWidth size="small">
-                    <InputLabel id="project-name-label" shrink>
-                      Project Name
-                    </InputLabel>
-                    <MuiSelect
-                      labelId="project-name-label"
-                      value={filters.projectName}
-                      label="Project Name"
-                      onChange={(e) =>
-                        setFilters({ ...filters, projectName: e.target.value })
-                      }
-                      displayEmpty
-                      notched
-                    >
-                      <MenuItem value="">Select Project Name</MenuItem>
-                      <MenuItem value="godrej">Godrej City</MenuItem>
-                      <MenuItem value="romanjee">
-                        Romanjee-Igatput-V-95xx
-                      </MenuItem>
-                      <MenuItem value="godrej living">Godrej Living</MenuItem>
-                    </MuiSelect>
-                  </FormControl>
+                  <TextField
+                    fullWidth
+                    label="Project Name"
+                    type="text"
+                    placeholder="Enter Project Name"
+                    value={filters.projectName}
+                    onChange={(e) =>
+                      setFilters({ ...filters, projectName: e.target.value })
+                    }
+                    InputLabelProps={{ shrink: true }}
+                    size="small"
+                  />
 
                   <TextField
                     fullWidth
@@ -587,17 +591,33 @@ variant="ghost"
                     size="small"
                   />
 
-                  <TextField
-                    fullWidth
-                    label="Created Date"
-                    type="date"
-                    value={filters.createdDate}
-                    onChange={(e) =>
-                      setFilters({ ...filters, createdDate: e.target.value })
-                    }
-                    InputLabelProps={{ shrink: true }}
-                    size="small"
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <TextField
+                      fullWidth
+                      label="Created From"
+                      type="date"
+                      value={filters.createdFrom}
+                      onChange={(e) =>
+                        setFilters({ ...filters, createdFrom: e.target.value })
+                      }
+                      InputLabelProps={{ shrink: true }}
+                      inputProps={{ max: filters.createdTo || undefined }}
+                      size="small"
+                    />
+
+                    <TextField
+                      fullWidth
+                      label="Created To"
+                      type="date"
+                      value={filters.createdTo}
+                      onChange={(e) =>
+                        setFilters({ ...filters, createdTo: e.target.value })
+                      }
+                      InputLabelProps={{ shrink: true }}
+                      inputProps={{ min: filters.createdFrom || undefined }}
+                      size="small"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">

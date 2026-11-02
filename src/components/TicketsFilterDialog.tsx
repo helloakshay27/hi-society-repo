@@ -233,12 +233,14 @@ export const TicketsFilterDialog = ({
         statusesData,
         usersData,
       ] = await Promise.all([
-        ticketManagementAPI.getHelpdeskCategories(),
+        ticketManagementAPI.getHelpdeskCategories(
+          issueType ? Number(issueType) : undefined
+        ),
         ticketManagementAPI.getDepartments(),
         ticketManagementAPI.getAllSites(),
         ticketManagementAPI.getUnits(),
         ticketManagementAPI.getComplaintStatuses(),
-        ticketManagementAPI.getFMUsers(),
+        ticketManagementAPI.getServiceEngineers(),
       ]);
 
       setCategories(categoriesData);
@@ -246,7 +248,12 @@ export const TicketsFilterDialog = ({
       setSites(sitesData);
       setUnits(unitsData);
       setStatuses(statusesData);
-      setUsers(usersData);
+      setUsers(
+        usersData?.helpdesk_users?.map((user) => ({
+          id: user.id,
+          name: user.full_name,
+        })) || []
+      );
     } catch (error) {
       console.error("❌ Error loading filter data:", error);
       console.error("❌ Detailed error:", {
@@ -256,6 +263,25 @@ export const TicketsFilterDialog = ({
       toast({
         title: "Error",
         description: "Failed to load filter options.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleIssueTypeChange = async (value: string) => {
+    setIssueType(value);
+    setCategory(""); // Reset category/subcategory when issue type changes
+    setSubCategory("");
+    try {
+      const categoriesData = await ticketManagementAPI.getHelpdeskCategories(
+        value ? Number(value) : undefined
+      );
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load categories.",
         variant: "destructive",
       });
     }
@@ -272,8 +298,11 @@ export const TicketsFilterDialog = ({
 
   const loadFlats = async (towerId: string) => {
     try {
-      const response = await apiClient.get("/crm/admin/society_flats.json", {
-        params: { "q[society_block_id_eq]": towerId },
+      const response = await apiClient.get("/get_society_flats.json", {
+        params: {
+          society_id: localStorage.getItem("selectedSocietyId"),
+          society_block_id: towerId,
+        },
       });
       setFlats(response.data.society_flats || []);
     } catch (error) {
@@ -298,7 +327,11 @@ export const TicketsFilterDialog = ({
   const loadComplaintModes = async () => {
     try {
       const response = await apiClient.get("/crm/admin/complaint_modes.json");
-      setComplaintModes(Array.isArray(response.data) ? response.data : []);
+      setComplaintModes(
+        Array.isArray(response.data?.complaint_modes)
+          ? response.data.complaint_modes
+          : []
+      );
     } catch (error) {
       console.error("Error loading complaint modes:", error);
     }
@@ -391,9 +424,7 @@ export const TicketsFilterDialog = ({
     setDateFrom("");
     setDateTo("");
     setTicketNumber("");
-    setIssueType("");
-    setCategory("");
-    setSubCategory("");
+    handleIssueTypeChange(""); // Also resets category/subcategory and reloads all categories
     setAssignedUser("");
     setTower("");
     setFlat("");
@@ -495,7 +526,7 @@ export const TicketsFilterDialog = ({
                 </InputLabel>
                 <MuiSelect
                   value={issueType}
-                  onChange={(e) => setIssueType(e.target.value)}
+                  onChange={(e) => handleIssueTypeChange(e.target.value)}
                   displayEmpty
                   label="Issue Type"
                   sx={fieldStyles}

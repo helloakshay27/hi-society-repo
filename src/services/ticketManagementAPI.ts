@@ -330,8 +330,12 @@ const formatDateForAPI = (dateString: string): string => {
 // API Services
 export const ticketManagementAPI = {
   // New methods for filter dropdown data
-  async getHelpdeskCategories(): Promise<CategoryOption[]> {
-    const response = await apiClient.get(ENDPOINTS.HELPDESK_CATEGORIES);
+  async getHelpdeskCategories(issueTypeId?: number): Promise<CategoryOption[]> {
+    const response = await apiClient.get(ENDPOINTS.HELPDESK_CATEGORIES,{
+      params: {
+        "q[issue_type_id_eq]": issueTypeId
+      }
+    });
     return response.data.helpdesk_categories || [];
   },
 
