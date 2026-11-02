@@ -47,7 +47,7 @@ export const AllScreensTable: React.FC<AllScreensTableProps> = ({ flows = [] }) 
               <td className="num">{r.sessions != null ? r.sessions.toLocaleString() : '—'}</td>
               {/* <td className="num">
                 {r.f_comp != null
-                  ? `${Math.round(r.f_comp <= 1 ? r.f_comp * 100 : r.f_comp)}%`
+                  ? `${Math.round(r.f_comp)}%`
                   : '—'}
               </td> */}
             </tr>
@@ -90,7 +90,7 @@ export const EntryScreensTable: React.FC<EntryScreensTableProps> = ({ entryScree
               <td className="num">{r.views != null ? r.views.toLocaleString() : '—'}</td>
               <td className="num">
                 {r.bounce != null
-                  ? `${Math.round(r.bounce <= 1 ? r.bounce * 100 : r.bounce)}%`
+                  ? `${Math.round(r.bounce)}%`
                   : '—'}
               </td>
             </tr>

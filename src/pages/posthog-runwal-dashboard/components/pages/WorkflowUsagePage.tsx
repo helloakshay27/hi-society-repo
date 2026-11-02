@@ -29,6 +29,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
 }) => {
 
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [selectedSubModule, setSelectedSubModule] = useState<string | null>(null);
 
   const {
     data: moduleTreeData,
@@ -41,24 +42,33 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
     isError: isWfError,
     error: wfError,
     refetch: refetchWf,
-  } = useWorkflowUsage(filters, selectedModule, null, sitesSettled);
+  } = useWorkflowUsage(filters, selectedModule, selectedSubModule, sitesSettled);
 
   // Refetch workflow usage when the selected module changes to ensure fresh data
   useEffect(() => {
     refetchWf();
-  }, [selectedModule]);
+  }, [selectedModule, selectedSubModule]);
 
   const isWfActiveLoading = isWfLoading || isRefreshing;
   const isModulesActiveLoading = isModulesLoading || isRefreshing;
 
-  const moduleList = moduleTreeData?.tree || [];
+  // Scopes whose app declares modules get screens arranged under them; others keep the flat tree.
+  const hierarchy = moduleTreeData?.modules;
+  const moduleList = hierarchy && hierarchy.length > 0 ? hierarchy : moduleTreeData?.tree || [];
+  const selectedNode = moduleList.find((m) => (m.key ?? m.name) === selectedModule);
+
+  const handleSelectModule = (moduleName: string | null) => {
+    setSelectedModule(moduleName);
+    setSelectedSubModule(null);
+  };
+
   const kpis = wfData?.kpis;
 
   // Adoption KPI
   const fAdopt = kpis?.f_adopt?.value;
   const fAdoptDisplay =
     fAdopt != null
-      ? `${Math.round(fAdopt <= 1 ? fAdopt * 100 : fAdopt)}%`
+      ? `${Math.round(fAdopt)}%`
       : isWfActiveLoading
       ? '...'
       : '—';
@@ -68,7 +78,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   const fComp = kpis?.f_comp?.value;
   const fCompDisplay =
     fComp != null
-      ? `${Math.round(fComp <= 1 ? fComp * 100 : fComp)}%`
+      ? `${Math.round(fComp)}%`
       : isWfActiveLoading
       ? '...'
       : '—';
@@ -78,7 +88,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   const fStep = kpis?.f_step?.value;
   const fStepDisplay =
     fStep != null
-      ? `${Math.round(fStep <= 1 ? fStep * 100 : fStep)}%`
+      ? `${Math.round(fStep)}%`
       : isWfActiveLoading
       ? '...'
       : '—';
@@ -93,6 +103,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
       : '—';
 
   const funnelList = wfData?.funnel || [];
+  const moduleFunnels = wfData?.module_funnels || [];
   const flowsList = wfData?.flows || [];
   const entryScreensList = wfData?.entry_screens || [];
 
@@ -108,8 +119,10 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
       <ModuleNav
         modules={moduleList}
         selectedModule={selectedModule}
-        onSelectModule={setSelectedModule}
+        onSelectModule={handleSelectModule}
         isLoading={isModulesActiveLoading}
+        selectedSubModule={selectedSubModule}
+        onSelectSubModule={setSelectedSubModule}
       />
 
       {isWfError && (
@@ -130,7 +143,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           val={fAdoptDisplay}
           dir={fAdoptDelta && fAdoptDelta > 0 ? 'up' : fAdoptDelta && fAdoptDelta < 0 ? 'dn' : 'flat'}
           delta={fAdoptDelta != null ? `${fAdoptDelta > 0 ? '+' : ''}${fAdoptDelta.toFixed(1)}%` : null}
-          raw={fAdopt != null ? (fAdopt <= 1 ? fAdopt * 100 : fAdopt) : undefined}
+          raw={fAdopt != null ? (fAdopt) : undefined}
           unit="%"
           goodUp={true}
           benchmark={benchmarks.wfAdoption}
@@ -144,7 +157,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           val={fCompDisplay}
           dir={fCompDelta && fCompDelta > 0 ? 'up' : fCompDelta && fCompDelta < 0 ? 'dn' : 'flat'}
           delta={fCompDelta != null ? `${fCompDelta > 0 ? '+' : ''}${fCompDelta.toFixed(1)}%` : null}
-          raw={fComp != null ? (fComp <= 1 ? fComp * 100 : fComp) : undefined}
+          raw={fComp != null ? (fComp) : undefined}
           unit="%"
           goodUp={true}
           benchmark={benchmarks.wfCompletion}
@@ -167,7 +180,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           val={fVolDisplay}
           dir="up"
           delta="this period"
-          sub="workflow completions"
+          sub="sessions started"
           noTarget={true}
           isLoading={isWfActiveLoading}
         />
@@ -177,12 +190,37 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         id="card-wfFunnel"
         infoKey="chart.funnel"
         eyebrow="Workflow funnel (real event sequence)"
-        title={`${selectedModule ? formatModuleName(selectedModule) : 'All Workflows'} — completion funnel`}
+        title={`${selectedSubModule ? formatModuleName(selectedSubModule) : selectedNode?.key ? selectedNode.name : selectedModule ? formatModuleName(selectedModule) : moduleFunnels.length > 0 ? 'All Modules' : 'All Workflows'} — completion funnel`}
         purpose="Shows step-by-step completion and drop-off for the selected workflow, using real instrumented usage event sequences."
         style={{ margin: '16px 0' }}
       >
         {isWfActiveLoading ? (
           <FunnelSkeleton steps={4} />
+        ) : moduleFunnels.length > 0 ? (
+          <div className="tbl-wrap">
+            <table className="pathtbl">
+              <thead>
+                <tr>
+                  <th>Module</th>
+                  <th className="num">Started</th>
+                  <th className="num">Completed</th>
+                  <th className="num">Completion</th>
+                  <th className="num">Biggest Drop</th>
+                </tr>
+              </thead>
+              <tbody>
+                {moduleFunnels.map((f) => (
+                  <tr key={f.key}>
+                    <td className="strong">{f.name}</td>
+                    <td className="num">{f.started.toLocaleString()}</td>
+                    <td className="num">{f.completed.toLocaleString()}</td>
+                    <td className="num">{Math.round(f.completion_pct)}%</td>
+                    <td className="num">{Math.round(f.biggest_drop_pct)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <WorkflowFunnel funnel={funnelList} />
         )}
