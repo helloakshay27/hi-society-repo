@@ -58,6 +58,14 @@ function dispatchDynamicRenders(container: HTMLElement) {
   if (ageingBody && ageingBody.children.length === 0) {
     window.dispatchEvent(new CustomEvent('pp-render-ageing', { detail: ageingBody }));
   }
+  const ageing = container.querySelector('#ageing');
+  if (ageing && ageing.children.length === 0) {
+    window.dispatchEvent(new CustomEvent('pp-render-ageing', { detail: ageing }));
+  }
+  const notices = container.querySelector('#notices');
+  if (notices && !notices.getAttribute('data-pp-ready')) {
+    window.dispatchEvent(new CustomEvent('pp-render-notices', { detail: notices }));
+  }
   const towerTicketBars = container.querySelector('#towerTicketBars');
   if (towerTicketBars && towerTicketBars.children.length === 0) {
     window.dispatchEvent(new CustomEvent('pp-render-tower-bars', { detail: towerTicketBars }));

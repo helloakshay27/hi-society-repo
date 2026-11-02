@@ -176,10 +176,10 @@ export const SLOT_DATA = [
 ];
 
 export const AGEING_MATRIX = [
-  { pri: 'P1 — Critical', cols: [1, 0, 0, 0, 0], color: PP_PALETTE.crim },
-  { pri: 'P2 — High', cols: [2, 5, 6, 4, 3], color: PP_PALETTE.amb },
-  { pri: 'P3 — Medium', cols: [3, 4, 5, 6, 8], color: PP_PALETTE.sky },
-  { pri: 'P4 — Low', cols: [2, 3, 2, 1, 0], color: PP_PALETTE.sto },
+  { pri: 'P1 — Critical', cols: [1, 0, 0, 0, 0], color: 'var(--ink)' },
+  { pri: 'P2 — High', cols: [2, 5, 6, 4, 3], color: 'var(--ink)' },
+  { pri: 'P3 — Medium', cols: [3, 4, 5, 6, 8], color: 'var(--ink)' },
+  { pri: 'P4 — Low', cols: [2, 3, 2, 1, 0], color: 'var(--ink)' },
 ];
 
 export const PARKING_SLOTS = [

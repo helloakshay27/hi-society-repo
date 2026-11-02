@@ -1,1 +1,161 @@
-export const HELPDESKTAB_HTML: string = "\n  <div class=\"hban\">\n    <div class=\"hban-score\"><span class=\"hban-n\" style=\"color:#DA7756\">59</span><span class=\"hban-d\"> tickets</span></div>\n    <div class=\"hban-info\" style=\"flex:1\">\n      <div class=\"hban-title\">BMS Helpdesk — Ticket Overview <span class=\"hban-scope\">Veda Gardens</span></div>\n      <div class=\"hban-trend\" style=\"color:var(--crim)\">⚠ Response Escalation breached on 71% of tickets</div>\n      <div class=\"hban-why\">The team is not meeting first-response targets. 42 tickets have Response Escalation status = Breached. Most are Proactive tickets (59%) but the escalation rate suggests insufficient assignment or staffing bandwidth.</div>\n    </div>\n    <div class=\"hban-bars\">\n      <div class=\"hb-row\"><div class=\"hb-label\">Resp. Achieved</div><div class=\"hb-track\"><div class=\"hb-fill\" style=\"width:29%;background:#5A4BE0\"></div></div><div class=\"hb-val\" style=\"color:#5A4BE0\">29%</div></div>\n      <div class=\"hb-row\"><div class=\"hb-label\">Resol. Achieved</div><div class=\"hb-track\"><div class=\"hb-fill\" style=\"width:37%;background:#2F6FE0\"></div></div><div class=\"hb-val\" style=\"color:#2F6FE0\">37%</div></div>\n      <div class=\"hb-row\"><div class=\"hb-label\">Proactive %</div><div class=\"hb-track\"><div class=\"hb-fill\" style=\"width:59%;background:#7C75E8\"></div></div><div class=\"hb-val\" style=\"color:#7C75E8\">59%</div></div>\n      <div class=\"hb-row\"><div class=\"hb-label\">Assigned</div><div class=\"hb-track\"><div class=\"hb-fill\" style=\"width:72%;background:#12A150\"></div></div><div class=\"hb-val\" style=\"color:#12A150\">72%</div></div>\n    </div>\n  </div>\n  <div class=\"krow\" style=\"grid-template-columns:repeat(6,1fr)\">\n    <div class=\"kc\" onclick=\"openD('tickets_all')\"><span class=\"kpip pwa\"></span><div class=\"kc-l\">Total Tickets<button class=\"info-btn\" onclick=\"showInfo('kpi_top_total_tickets',this,event)\" aria-label=\"About Total Tickets\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div><div class=\"kc-v\">59</div><div class=\"kc-tr nt\">This period</div><div class=\"kc-tgt\">All statuses</div></div>\n    <div class=\"kc\" onclick=\"openD('tickets_open')\"><span class=\"kpip pwa\"></span><div class=\"kc-l\">Open Tickets<button class=\"info-btn\" onclick=\"showInfo('kpi_top_open_tickets',this,event)\" aria-label=\"About Open Tickets\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div><div class=\"kc-v\">49</div><div class=\"kc-tr dn\">↑ 8 in progress</div><div class=\"kc-tgt\">1 on Hold</div></div>\n    <div class=\"kc\" onclick=\"openD('resp_breach')\"><span class=\"kpip per\"></span><div class=\"kc-l\">Response Breached<button class=\"info-btn\" onclick=\"showInfo('kpi_top_response_breached',this,event)\" aria-label=\"About Response Breached\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div><div class=\"kc-v\">42</div><div class=\"kc-tr dn\">71% breach rate</div><div class=\"kc-tgt\">Target: 0%</div></div>\n    <div class=\"kc\" onclick=\"openD('res_breach')\"><span class=\"kpip per\"></span><div class=\"kc-l\">Resolution Breached<button class=\"info-btn\" onclick=\"showInfo('kpi_top_resolution_breached',this,event)\" aria-label=\"About Resolution Breached\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div><div class=\"kc-v\">38</div><div class=\"kc-tr dn\">64% breach rate</div><div class=\"kc-tgt\">Target: 0%</div></div>\n    <div class=\"kc\" onclick=\"openD('proactive')\"><span class=\"kpip pnt\"></span><div class=\"kc-l\">Proactive Tickets<button class=\"info-btn\" onclick=\"showInfo('kpi_top_proactive_tickets',this,event)\" aria-label=\"About Proactive Tickets\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div><div class=\"kc-v\">35</div><div class=\"kc-tr wa\">59% ratio</div><div class=\"kc-tgt\">Target: 70%+</div></div>\n    <div class=\"kc\" onclick=\"openD('golden_tickets')\"><span class=\"kpip pwa\"></span><div class=\"kc-l\" style=\"color:var(--amb)\">⭐ Golden Tickets<button class=\"info-btn\" onclick=\"showInfo('kpi_top_golden_tickets',this,event)\" aria-label=\"About Golden Tickets\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div><div class=\"kc-v\">4</div><div class=\"kc-tr wa\">2 P1 · Senior residents</div><div class=\"kc-tgt\">Priority handling</div></div>\n  </div>\n  <div class=\"rg\">\n    <div class=\"rk crit\" onclick=\"openD('resp_breach')\"><div class=\"rk-sv\">Critical Risk</div><div class=\"rk-t\">Response Escalation breached on 42 of 59 tickets (71%)</div><div class=\"rk-m\">First-response SLA is not being met. Tickets are being created but not acknowledged within target time. Could indicate understaffing or assignment gaps.</div><button class=\"rk-a\">Review unassigned tickets <i data-lucide=\"chevron-right\" style=\"width:9px;height:9px\"></i></button></div>\n    <div class=\"rk high\" onclick=\"openD('res_breach')\"><div class=\"rk-sv\">High Risk</div><div class=\"rk-t\">Resolution Escalation breached on 38 tickets (64%)</div><div class=\"rk-m\">Tickets are being acknowledged but not resolved within target. P1-Critical tickets dominate — if majority are Housekeeping + Electrical, vendor capacity may be the bottleneck.</div><button class=\"rk-a\">Review aging tickets <i data-lucide=\"chevron-right\" style=\"width:9px;height:9px\"></i></button></div>\n    <div class=\"rk med\" onclick=\"openD('proactive')\"><div class=\"rk-sv\">Watchlist</div><div class=\"rk-t\">Proactive ticket ratio at 59% — below 70% target</div><div class=\"rk-m\">59% of tickets are Proactive (team-raised) vs 41% Reactive (resident-raised). Good trend but needs to stay above 70% to indicate a proactive maintenance culture.</div><button class=\"rk-a\">View proactive breakdown <i data-lucide=\"chevron-right\" style=\"width:9px;height:9px\"></i></button></div>\n  </div>\n  <div class=\"g c2 mb16\">\n    <div class=\"card\">\n      <div class=\"ch\"><div class=\"ct\">Ticket status distribution<button class=\"info-btn\" onclick=\"showInfo('ticketStatusChart',this,event)\" aria-label=\"About Ticket status distribution\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div><span class=\"chip\">59 total</span></div>\n      <div class=\"ci co\"><div class=\"ci-h\">💡 49 open tickets — 8 Work in Progress, 1 on Hold, rest Pending. Only 10 closed and 10 completed. Hold status means the ticket is paused pending resident/vendor action.</div><div class=\"ci-a\">→ Review the Hold ticket — ensure it's not an excuse to avoid resolution. Move WIP tickets to Completed.</div></div>\n      <div class=\"chx\" style=\"height:190px\"><canvas id=\"ticketStatusChart\"></canvas></div>\n    </div>\n    <div class=\"card\">\n      <div class=\"ch\"><div class=\"ct\">Proactive vs Reactive<button class=\"info-btn\" onclick=\"showInfo('proactiveChart',this,event)\" aria-label=\"About Proactive vs Reactive\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div><span class=\"b bwa\">Target: 70% Proactive</span></div>\n      <div class=\"ci am\"><div class=\"ci-h\">💡 59% Proactive (35 tickets) vs 41% Reactive (24 tickets). Proactive is the desired state — team spots issues before residents complain.</div><div class=\"ci-a\">→ Aim to push Proactive to 70%+ to demonstrate service quality to residents.</div></div>\n      <div class=\"chx\" style=\"height:190px\"><canvas id=\"proactiveChart\"></canvas></div>\n    </div>\n  </div>\n  <div class=\"g c2 mb16\">\n    <div class=\"card\">\n      <div class=\"ch\"><div class=\"ct\">Response vs Resolution escalation<button class=\"info-btn\" onclick=\"showInfo('escalationChart',this,event)\" aria-label=\"About Response vs Resolution escalation\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div></div>\n      <div class=\"ci er\"><div class=\"ci-h\">💡 Both Response and Resolution escalation are heavily Breached. Response at 71% breach is the more urgent issue — tickets aren't being picked up fast enough.</div><div class=\"ci-a\">→ Set up auto-assignment rules for Housekeeping and Electrical categories to reduce response time.</div></div>\n      <div class=\"chx\" style=\"height:190px\"><canvas id=\"escalationChart\"></canvas></div>\n    </div>\n    <div class=\"card\">\n      <div class=\"ch\"><div class=\"ct\">Response breach rate by category<button class=\"info-btn\" onclick=\"showInfo('categoryChart',this,event)\" aria-label=\"About Response breach rate by category\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div></div>\n      <div class=\"ci am\"><div class=\"ci-h\">💡 Housekeeping breaches Response SLA 85% of the time — well above the 71% society-wide average and every other category. Housekeeping alone accounts for over half of all breached tickets, despite being under half of total volume.</div><div class=\"ci-a\">→ Housekeeping needs a dedicated response-time fix, not a general \"improve SLA\" initiative — the other categories are already closer to acceptable.</div></div>\n      <div class=\"chx\" style=\"height:190px\"><canvas id=\"categoryChart\"></canvas></div>\n    </div>\n  </div>\n\n  <!-- AGEING MATRIX -->\n  <div class=\"card mb16\">\n    <div class=\"ch\"><div class=\"ct\">Tickets Ageing Matrix<button class=\"info-btn\" onclick=\"showInfo('tbl_top_tickets_ageing_matrix',this,event)\" aria-label=\"About Tickets Ageing Matrix\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div><span class=\"b ber\">Priority × Days Open</span></div>\n    <div class=\"ci er\"><div class=\"ci-h\">💡 P1 tickets should never cross 3 days. P2 crossing 7 days is a breach. This matrix shows where tickets are stacking up by priority and age — click any cell to see the specific tickets.</div><div class=\"ci-a\">→ Any P1 in the 8+ day columns needs immediate escalation to the FM head.</div></div>\n    <div style=\"overflow-x:auto\">\n      <table class=\"tbl\" id=\"ageingMatrix\">\n        <thead>\n          <tr>\n            <th style=\"width:90px\">Priority</th>\n            <th style=\"text-align:center;color:var(--for)\">0–3 Days</th>\n            <th style=\"text-align:center;color:var(--amb)\">4–7 Days</th>\n            <th style=\"text-align:center;color:var(--coral)\">8–14 Days</th>\n            <th style=\"text-align:center;color:var(--crim)\">15–30 Days</th>\n            <th style=\"text-align:center;color:var(--crim)\">30+ Days</th>\n            <th style=\"text-align:center;font-weight:700\">Total</th>\n          </tr>\n        </thead>\n        <tbody id=\"ageingBody\"></tbody>\n      </table>\n    </div>\n    <div style=\"margin-top:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap\">\n      <span style=\"font-size:10px;color:var(--sto)\">Avg resolution time:</span>\n      <span style=\"font-size:12px;font-weight:700;color:var(--for)\">1 day</span>\n      <span style=\"font-size:10px;color:var(--sto);margin-left:8px\">Avg ticket age (open):</span>\n      <span style=\"font-size:12px;font-weight:700;color:var(--amb)\">6.4 days</span>\n    </div>\n  </div>\n\n  <div class=\"g c2\">\n    <div class=\"card\">\n      <div class=\"ch\"><div class=\"ct\">Ticket source — Complaint Mode<button class=\"info-btn\" onclick=\"showInfo('modeChart',this,event)\" aria-label=\"About Ticket source  Complaint Mode\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div></div>\n      <div class=\"ci\"><div class=\"ci-h\">💡 Mobile and App together are 68% of tickets. The remaining 32% come through Common Area and Apartment channels — typically logged by staff on a resident's behalf, not self-service. That pattern lines up with the app adoption gap already found in Community: towers with low adoption (FM, T3) are more likely to have residents who can't self-log tickets at all.</div><div class=\"ci-a\">→ Cross-check whether Apartment/Common Area tickets concentrate in FM and T3 — if so, fixing adoption there reduces staff logging workload too.</div></div>\n      <div class=\"chx\" style=\"height:160px\"><canvas id=\"modeChart\"></canvas></div>\n    </div>\n    <div class=\"card\">\n      <div class=\"ch\"><div class=\"ct\">Tower-wise ticket volume<button class=\"info-btn\" onclick=\"showInfo('tbl_top_tower_wise_ticket_volume',this,event)\" aria-label=\"About Tower-wise ticket volume\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9.5\"/><line x1=\"12\" y1=\"16.2\" x2=\"12\" y2=\"11\"/><circle cx=\"12\" cy=\"7.4\" r=\"0.6\" fill=\"currentColor\" stroke=\"none\"/></svg></button></div></div>\n      <div class=\"ci co\"><div class=\"ci-h\">💡 Use tower breakdown to spot if one tower is generating disproportionate complaints — a common sign of infrastructure or staffing gaps in that block.</div><div class=\"ci-a\">→ Investigate the highest-volume tower for systemic maintenance patterns.</div></div>\n      <div id=\"towerTicketBars\" style=\"padding:6px 0\"></div>\n    </div>\n  </div>\n";
+export const HELPDESKTAB_HTML: string = `
+  <div class="hd-shell mb14">
+    <div class="hd-head">
+      <div class="eyebrow">Veda Gardens · 59 tickets this period</div>
+      <h1 class="ph1">BMS helpdesk — ticket overview</h1>
+      <p class="lede">42 of 59 tickets missed first-response targets — the team is short on assignment or staffing bandwidth.</p>
+    </div>
+
+    <div class="g4 num">
+      <div class="stat">
+        <span class="ic"><i data-lucide="inbox" style="width:16px;height:16px"></i></span>
+        <span class="lbl">Open tickets</span>
+        <span class="val">49</span>
+        <span class="sub">8 in progress · 72% assigned</span>
+      </div>
+      <div class="stat">
+        <span class="ic"><i data-lucide="clock" style="width:16px;height:16px"></i></span>
+        <span class="lbl">Response breached</span>
+        <span class="val">42</span>
+        <span class="sub">71% of tickets · target 0%</span>
+      </div>
+      <div class="stat">
+        <span class="ic"><i data-lucide="alert-triangle" style="width:16px;height:16px"></i></span>
+        <span class="lbl">Resolution breached</span>
+        <span class="val">38</span>
+        <span class="sub">64% of tickets · target 0%</span>
+      </div>
+      <div class="stat">
+        <span class="ic"><i data-lucide="star" style="width:16px;height:16px"></i></span>
+        <span class="lbl">Golden tickets</span>
+        <span class="val">4</span>
+        <span class="sub">2 P1 · senior residents</span>
+      </div>
+    </div>
+
+    <div class="nstack" id="notices">
+      <span class="layer l2"></span><span class="layer l1"></span>
+      <div class="notice">
+        <div class="nhead">
+          <span class="pill" data-n="pill"></span>
+          <span class="ncount" data-n="count"></span>
+          <span class="spacer"></span>
+          <button type="button" class="nav" data-n="prev" aria-label="Previous"><i data-lucide="chevron-left" style="width:14px;height:14px"></i></button>
+          <button type="button" class="nav" data-n="next" aria-label="Next"><i data-lucide="chevron-right" style="width:14px;height:14px"></i></button>
+        </div>
+        <h4 data-n="title"></h4>
+        <p data-n="body"></p>
+        <button type="button" class="go" data-drill="resp_breach"><span data-n="cta"></span><i data-lucide="arrow-right" style="width:14px;height:14px"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="g3 mb14">
+    <section class="card">
+      <div class="chead">
+        <div>
+          <h3 class="ch3">Ticket status<button class="info-btn" onclick="showInfo('ticketStatusChart',this,event)" aria-label="About Ticket status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></h3>
+          <p class="csub2">Where the 59 tickets sit</p>
+        </div>
+      </div>
+      <div class="chx" style="height:160px"><canvas id="ticketStatusChart"></canvas></div>
+    </section>
+    <section class="card">
+      <div class="chead">
+        <div>
+          <h3 class="ch3">Ticket source<button class="info-btn" onclick="showInfo('modeChart',this,event)" aria-label="About Ticket source"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></h3>
+          <p class="csub2">Complaint mode, by channel</p>
+        </div>
+      </div>
+      <div class="chx" style="height:160px"><canvas id="modeChart"></canvas></div>
+    </section>
+    <section class="card">
+      <div class="chead">
+        <div>
+          <h3 class="ch3">Volume by tower<button class="info-btn" onclick="showInfo('tbl_top_tower_wise_ticket_volume',this,event)" aria-label="About Volume by tower"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></h3>
+          <p class="csub2">Tickets raised this period</p>
+        </div>
+      </div>
+      <div class="hbars num" style="--lbl:48px">
+        <div class="hbar"><span>FM</span><div class="htrack"><i style="width:100%"></i></div><b>22</b></div>
+        <div class="hbar"><span>T1</span><div class="htrack"><i style="width:82%"></i></div><b>18</b></div>
+        <div class="hbar"><span>T3</span><div class="htrack"><i style="width:55%"></i></div><b>12</b></div>
+        <div class="hbar"><span>T2</span><div class="htrack"><i style="width:32%"></i></div><b>7</b></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="ins mb14">
+    <span class="ins-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 13.9 10 20.5 12l-6.6 2L12 20.5 10.1 14 3.5 12l6.6-2z"/></svg></span>
+    <span class="tagai">AI INSIGHT</span>
+    <p>FM raises the most tickets, and 32% of all tickets are logged by staff from Common Area and Apartment — matching the low app adoption in FM and T3.</p>
+    <div class="ins-act"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Check whether staff-logged tickets concentrate in FM and T3; fixing adoption there cuts staff workload too.</div>
+  </div>
+
+  <div class="g2 mb14" style="align-items:start">
+    <section class="card">
+      <div class="chead">
+        <div>
+          <h3 class="ch3">SLA performance<button class="info-btn" onclick="showInfo('escalationChart',this,event)" aria-label="About SLA performance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></h3>
+          <p class="csub2">Of 59 tickets this period</p>
+        </div>
+      </div>
+      <div class="hbars num" style="--lbl:160px">
+        <div class="hbar"><span>Response breached <small>(42)</small></span><div class="htrack"><i style="width:71%"></i></div><b>71%</b></div>
+        <div class="hbar"><span>Resolution breached <small>(38)</small></span><div class="htrack"><i style="width:64%"></i></div><b>64%</b></div>
+        <div class="hbar"><span>Proactive · target 70% <small>(35)</small></span><div class="htrack"><i style="width:59%"></i></div><b>59%</b></div>
+      </div>
+      <div class="ins">
+        <span class="ins-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 13.9 10 20.5 12l-6.6 2L12 20.5 10.1 14 3.5 12l6.6-2z"/></svg></span>
+        <span class="tagai">AI INSIGHT</span>
+        <p>Response at 71% breached is the most urgent gap — tickets aren't being picked up fast enough. Proactive is 7 tickets short of target.</p>
+        <div class="ins-act"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Set up auto-assignment rules for Housekeeping and Electrical.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="chead">
+        <div>
+          <h3 class="ch3">Response breach by category<button class="info-btn" onclick="showInfo('categoryChart',this,event)" aria-label="About Response breach by category"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></h3>
+          <p class="csub2">Dashed line is the 71% society average</p>
+        </div>
+      </div>
+      <div>
+        <div class="hbars num" style="--lbl:110px">
+          <div class="hbar"><span>Housekeeping <small>(28)</small></span><div class="htrack"><i class="hl-bad" style="width:85%"></i><span class="ref" style="left:71%"></span></div><b>85%</b></div>
+          <div class="hbar"><span>Other <small>(3)</small></span><div class="htrack"><i style="width:67%"></i><span class="ref" style="left:71%"></span></div><b>67%</b></div>
+          <div class="hbar"><span>Plumbing <small>(5)</small></span><div class="htrack"><i style="width:60%"></i><span class="ref" style="left:71%"></span></div><b>60%</b></div>
+          <div class="hbar"><span>Electrical <small>(15)</small></span><div class="htrack"><i style="width:60%"></i><span class="ref" style="left:71%"></span></div><b>60%</b></div>
+          <div class="hbar"><span>Civil <small>(8)</small></span><div class="htrack"><i style="width:50%"></i><span class="ref" style="left:71%"></span></div><b>50%</b></div>
+        </div>
+        <div class="axis" style="margin-top:8px;--lbl:110px"><span></span><div><span>0%</span><span>50%</span><span>100%</span></div><span></span></div>
+      </div>
+      <div class="ins">
+        <span class="ins-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 13.9 10 20.5 12l-6.6 2L12 20.5 10.1 14 3.5 12l6.6-2z"/></svg></span>
+        <span class="tagai">AI INSIGHT</span>
+        <p>Housekeeping breaches 85% of the time and makes up over half of all breached tickets.</p>
+        <div class="ins-act"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Give Housekeeping a dedicated response-time fix, not a general SLA push.</div>
+      </div>
+    </section>
+  </div>
+
+  <section class="table age">
+    <div class="chead">
+      <div>
+        <h3 class="ch3">Ticket ageing<button class="info-btn" onclick="showInfo('tbl_top_tickets_ageing_matrix',this,event)" aria-label="About Ticket ageing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></h3>
+        <p class="csub2">Priority × days open — click a cell to see its tickets</p>
+      </div>
+      <span class="sub">Avg open age 6.4 days · avg resolution 1 day</span>
+    </div>
+    <div class="tbox">
+      <div class="grid-head"><span>Priority</span><span>0–3 days</span><span>4–7 days</span><span>8–14 days</span><span>15–30 days</span><span>30+ days</span><span>Total</span></div>
+      <div class="num" id="ageing"></div>
+    </div>
+    <div class="ins">
+      <span class="ins-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 13.9 10 20.5 12l-6.6 2L12 20.5 10.1 14 3.5 12l6.6-2z"/></svg></span>
+      <span class="tagai">AI INSIGHT</span>
+      <p>13 P2 tickets are past the 7-day limit, and 14 P3 tickets have been open over two weeks.</p>
+      <div class="ins-act"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Escalate anything past its SLA column to the FM head.</div>
+    </div>
+  </section>
+`;

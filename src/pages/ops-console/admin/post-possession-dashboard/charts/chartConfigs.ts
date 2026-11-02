@@ -283,14 +283,14 @@ export function getSecurityCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Member Vehicles',
             data: [10, 9, 8, 7, 9, 10, 11, 9, 8],
-            backgroundColor: rgba(S[2], 0.75),
+            backgroundColor: '#12A150',
             borderRadius: 5,
             borderSkipped: false,
           },
           {
             label: 'Guest Vehicles',
             data: [2, 3, 4, 3, 5, 14, 18, 12, 4],
-            backgroundColor: rgba(S[0], 0.85),
+            backgroundColor: '#E5484D',
             borderRadius: 5,
             borderSkipped: false,
           },
@@ -305,7 +305,7 @@ export function getSecurityCharts(): Record<string, ChartConfiguration> {
             labels: { boxWidth: 7, font: { size: 10 } },
           },
         },
-        scales: { x: PP_AXIS, y: { ...PP_AXIS, beginAtZero: true } },
+        scales: { x: PP_AXIS, y: { ...PP_AXIS, beginAtZero: true, max: 20 } },
       },
     },
   };
@@ -555,14 +555,16 @@ export function getCommunityCharts(): Record<string, ChartConfiguration> {
         labels: ['FM', 'T1', 'T2', 'T3'],
         datasets: [
           {
-            label: 'Adoption Rate',
+            label: 'Onboarded',
             data: [23, 70, 86, 17],
-            backgroundColor: (ctx) => {
-              const v = (ctx.dataset.data[ctx.dataIndex] as number) ?? 0;
-              if (v < 30) return rgba(S[0], 0.9);
-              if (v > 80) return rgba(S[2], 0.85);
-              return rgba(S[1], 0.7);
-            },
+            backgroundColor: S[0],
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: 'Not onboarded',
+            data: [77, 30, 14, 83],
+            backgroundColor: S[1],
             borderRadius: 6,
             borderSkipped: false,
           },
@@ -578,8 +580,13 @@ export function getCommunityCharts(): Record<string, ChartConfiguration> {
           },
         },
         plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: (c) => `${c.raw}% of residents registered on the app` } },
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: { boxWidth: 7, font: { size: 10 } },
+          },
+          tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.raw}%` } },
         },
       },
     },
@@ -589,21 +596,34 @@ export function getCommunityCharts(): Record<string, ChartConfiguration> {
         labels: ['Test Poll', 'test polls 5454', 'Kids Play Area', 'Poll (generic)'],
         datasets: [
           {
-            label: 'Total Votes',
+            label: 'Votes',
             data: [0, 1, 0, 0],
-            backgroundColor: rgba(S[0], 0.7),
+            backgroundColor: S[0],
+            borderRadius: 5,
+            borderSkipped: false,
+          },
+          {
+            label: 'Target',
+            data: [5, 5, 5, 5],
+            backgroundColor: S[1],
             borderRadius: 5,
             borderSkipped: false,
           },
         ],
       },
       options: {
-        indexAxis: 'y',
-        scales: {
-          x: { ...PP_AXIS, beginAtZero: true, max: 5, ticks: { stepSize: 1 } },
-          y: PP_AXIS,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: { boxWidth: 7, font: { size: 10 } },
+          },
         },
-        plugins: { legend: { display: false } },
+        scales: {
+          x: PP_AXIS,
+          y: { ...PP_AXIS, beginAtZero: true, max: 5, ticks: { stepSize: 1 } },
+        },
       },
     },
     notifChannelChart: {
@@ -614,21 +634,28 @@ export function getCommunityCharts(): Record<string, ChartConfiguration> {
           {
             label: 'Sent',
             data: [19, 12, 14],
-            backgroundColor: ASSET_CHART_BAR.muted,
+            backgroundColor: S[1],
             borderRadius: 5,
             borderSkipped: false,
           },
           {
             label: 'Delivered',
             data: [19, 12, 11],
-            backgroundColor: ASSET_CHART_BAR.solid,
+            backgroundColor: S[0],
             borderRadius: 5,
             borderSkipped: false,
           },
         ],
       },
       options: {
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: { boxWidth: 7, font: { size: 10 } },
+          },
+        },
         scales: { x: PP_AXIS, y: { ...PP_AXIS, beginAtZero: true, max: 25 } },
       },
     },
