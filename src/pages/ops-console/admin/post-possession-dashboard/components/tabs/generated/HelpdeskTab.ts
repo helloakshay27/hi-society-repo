@@ -94,7 +94,7 @@ export const HELPDESKTAB_HTML: string = `
     <div class="ins-act"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Check whether staff-logged tickets concentrate in FM and T3; fixing adoption there cuts staff workload too.</div>
   </div>
 
-  <div class="g2 mb14" style="align-items:start">
+  <div class="g2 mb14">
     <section class="card">
       <div class="chead">
         <div>
