@@ -1,11 +1,13 @@
 export const HELPDESKTAB_HTML: string = `
-  <div class="hd-shell mb14">
-    <div class="hd-head">
+  <div class="phead boxed mb14">
+    <div>
       <div class="eyebrow">Veda Gardens · 59 tickets this period</div>
       <h1 class="ph1">BMS helpdesk — ticket overview</h1>
       <p class="lede">42 of 59 tickets missed first-response targets — the team is short on assignment or staffing bandwidth.</p>
     </div>
+  </div>
 
+  <div class="hd-shell mb14">
     <div class="g4 num">
       <div class="stat">
         <span class="ic"><i data-lucide="inbox" style="width:16px;height:16px"></i></span>
