@@ -40,6 +40,51 @@ const DrillSection = ({ children }: { children: React.ReactNode }) => (
 
 const DrillEmpty = () => <div className="py-3 text-[11px] text-[var(--loyalty-subtle)]">No data returned for this period.</div>;
 
+const TABLE_PAGE_SIZE = 10;
+
+const TablePagination = ({
+  page,
+  pageSize,
+  totalItems,
+  onPageChange,
+}: {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+}) => {
+  const totalPages = Math.ceil(totalItems / pageSize);
+  if (totalPages <= 1) return null;
+
+  const buttonClassName = 'rounded-full border border-[var(--loyalty-divider)] bg-white px-3 py-1.5 text-[10.5px] font-semibold text-[var(--loyalty-text)] transition-colors hover:bg-[var(--loyalty-bg)] disabled:cursor-not-allowed disabled:opacity-40';
+
+  return (
+    <div className="mt-3 flex items-center justify-between gap-3 text-[10.5px] text-[var(--loyalty-subtle)]">
+      <span>
+        Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalItems)} of {totalItems}
+      </span>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => onPageChange(page - 1)}
+          disabled={page === 1}
+          className={buttonClassName}
+        >
+          Previous
+        </button>
+        <button
+          type="button"
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className={buttonClassName}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export function LoyaltyDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Overview');
@@ -56,6 +101,8 @@ export function LoyaltyDashboard() {
   const [ruleCategoryFilter, setRuleCategoryFilter] = useState('All Categories');
   const [ruleStatusFilter, setRuleStatusFilter] = useState('All Statuses');
   const [ledgerSearch, setLedgerSearch] = useState('');
+  const [redemptionPage, setRedemptionPage] = useState(1);
+  const [ordersPage, setOrdersPage] = useState(1);
   const filterRef = useRef<HTMLDivElement>(null);
 
   const dateParams = getDateRange(dateFilter, customRange);
@@ -108,6 +155,16 @@ export function LoyaltyDashboard() {
   const activeRulesData = rulesQuery.data;
   const firesByCategoryData = firesByCategoryQuery.data;
   const dailyFiresData = dailyFiresQuery.data;
+  const pendingEncashments = redemptionData?.pending_encashments_list || [];
+  const stuckOrdersList = ordersData?.stuck_orders_list || [];
+
+  useEffect(() => {
+    setRedemptionPage((page) => Math.min(page, Math.max(1, Math.ceil(pendingEncashments.length / TABLE_PAGE_SIZE))));
+  }, [pendingEncashments.length]);
+
+  useEffect(() => {
+    setOrdersPage((page) => Math.min(page, Math.max(1, Math.ceil(stuckOrdersList.length / TABLE_PAGE_SIZE))));
+  }, [stuckOrdersList.length]);
 
   /* queries backing the tab currently on screen — drives the loading / error banner */
   const tabQueries: Record<string, any[]> = {
@@ -761,6 +818,7 @@ export function LoyaltyDashboard() {
         const totalRedemptions = redemptionData?.total_redemptions_mtd ?? 0;
         const redemptionRate = redemptionData?.redemption_rate_mtd ?? 0;
         const pending = redemptionData?.pending_encashments || { count: 0, points_total: 0, amount_total_inr: 0 };
+        const redemptionPageRows = pendingEncashments.slice((redemptionPage - 1) * TABLE_PAGE_SIZE, redemptionPage * TABLE_PAGE_SIZE);
         
         // Handle both string and object shapes ({ name, share_pct }) from backend
         const rawTopCat = redemptionData?.top_category;
@@ -897,11 +955,11 @@ export function LoyaltyDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {redemptionData?.pending_encashments_list?.map((row: any, i: number) => {
+                    {redemptionPageRows.map((row: any, i: number) => {
                       const isPending = row.status?.toLowerCase() === 'pending';
                       const statusColor = isPending ? 'bg-[var(--loyalty-warning-bg-soft)] text-[var(--loyalty-accent)]' : 'bg-[var(--loyalty-info-light)] text-[var(--loyalty-info)]';
                       return (
-                        <tr key={i} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer border-b border-[var(--loyalty-divider)] last:border-0">
+                        <tr key={row.id ?? row.request_id ?? `${row.member_id ?? row.member_name ?? 'encashment'}-${(redemptionPage - 1) * TABLE_PAGE_SIZE + i}`} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer border-b border-[var(--loyalty-divider)] last:border-0">
                           <td className="p-[12px_8px] font-semibold text-[var(--loyalty-text)]">{row.member_name || row.member || 'N/A'}</td>
                           <td className="p-[12px_8px] text-[var(--loyalty-text)]">{row.points?.toLocaleString()}</td>
                           <td className="p-[12px_8px] font-bold text-[var(--loyalty-text)]">₹{row.amount_inr?.toLocaleString()}</td>
@@ -913,7 +971,7 @@ export function LoyaltyDashboard() {
                         </tr>
                       );
                     })}
-                    {(!redemptionData?.pending_encashments_list || redemptionData.pending_encashments_list.length === 0) && (
+                    {pendingEncashments.length === 0 && (
                       <tr>
                         <td colSpan={6} className="p-[20px] text-center text-[var(--loyalty-subtle)]">No pending encashments found.</td>
                       </tr>
@@ -921,6 +979,12 @@ export function LoyaltyDashboard() {
                   </tbody>
                 </table>
               </div>
+              <TablePagination
+                page={redemptionPage}
+                pageSize={TABLE_PAGE_SIZE}
+                totalItems={pendingEncashments.length}
+                onPageChange={setRedemptionPage}
+              />
             </div>
             
           </div>
@@ -1121,6 +1185,7 @@ export function LoyaltyDashboard() {
       case 'Orders': {
         const totalOrders = ordersData?.total_orders ?? 0;
         const stuckOrders = ordersData?.stuck_orders ?? 0;
+        const orderPageRows = stuckOrdersList.slice((ordersPage - 1) * TABLE_PAGE_SIZE, ordersPage * TABLE_PAGE_SIZE);
         const stuckPercent = ordersData?.stuck_percentage ?? 0;
         const rawStuckCustomer = ordersData?.stuck_customer_concentration;
         const stuckCustomerName = typeof rawStuckCustomer === 'object' && rawStuckCustomer !== null
@@ -1222,10 +1287,10 @@ export function LoyaltyDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ordersData?.stuck_orders_list?.map((o: any, i: number) => {
+                    {orderPageRows.map((o: any, i: number) => {
                       const orderId = o.order_number ?? o.id ?? o.order_no ?? o.order_id ?? 'N/A';
                       return (
-                        <tr key={orderId || i} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer" onClick={() => openDrill('order', `Order ${orderId}`, o)}>
+                        <tr key={o.id ?? o.order_id ?? o.order_number ?? `${orderId}-${(ordersPage - 1) * TABLE_PAGE_SIZE + i}`} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer" onClick={() => openDrill('order', `Order ${orderId}`, o)}>
                           <td className="p-[8px] border-b border-[var(--loyalty-divider)] font-semibold">{orderId}</td>
                           <td className="p-[8px] border-b border-[var(--loyalty-divider)]">{o.customer_name || o.customer || 'N/A'}</td>
                           <td className="p-[8px] border-b border-[var(--loyalty-divider)]">₹{fmtNum(o.amount)}</td>
@@ -1236,7 +1301,7 @@ export function LoyaltyDashboard() {
                         </tr>
                       );
                     })}
-                    {(!ordersData?.stuck_orders_list || ordersData.stuck_orders_list.length === 0) && (
+                    {stuckOrdersList.length === 0 && (
                       <tr>
                         <td colSpan={5} className="p-[20px] text-center text-[var(--loyalty-subtle)]">No stuck orders found.</td>
                       </tr>
@@ -1244,6 +1309,12 @@ export function LoyaltyDashboard() {
                   </tbody>
                 </table>
               </div>
+              <TablePagination
+                page={ordersPage}
+                pageSize={TABLE_PAGE_SIZE}
+                totalItems={stuckOrdersList.length}
+                onPageChange={setOrdersPage}
+              />
             </div>
           </>
         );
