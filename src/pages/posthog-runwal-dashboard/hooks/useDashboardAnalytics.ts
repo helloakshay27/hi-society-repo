@@ -214,13 +214,15 @@ export function useRoles(filters: DashboardFilters, enabled: boolean = true) {
   });
 }
 
-/** Sidebar "Recent Activity" feed — latest identified active users, most recent first. */
+/** Sidebar "Recent Activity" log — one row per event, newest first, refreshed while the tab is open. */
 export function useRecentActiveUsers(filters: DashboardFilters, enabled: boolean = true, limit = 10) {
   return useQuery<RecentActiveUsersResponse>({
     queryKey: ['fm-adoption', 'recent_active_users', ...commonKey(filters), limit],
     queryFn: () => fetchRecentActiveUsers(filters, limit),
     enabled,
     ...CACHE_CONFIG,
+    staleTime: 0,
+    refetchInterval: 30 * 1000,
   });
 }
 

@@ -5,7 +5,7 @@
  */
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import "./usage-dashboard.css";
-import { downloadActiveUsersExport } from "../../pages/posthog-runwal-dashboard/api/api";
+import { activityUserLabel, downloadActiveUsersExport } from "../../pages/posthog-runwal-dashboard/api/api";
 import {
   SITES,
   fetchRecentActiveUsers,
@@ -1546,10 +1546,10 @@ export default function SunteckDashboardPage({ fixedSite = "sunteck" }: { fixedS
                 {recentActivity.map((user, index) => (
                   <div
                     className="sidebar-recent-item"
-                    key={user.user_id || `${user.display_name}-${index}`}
+                    key={index}
                   >
                     <span className="sidebar-recent-name">
-                      {user.display_name}
+                      {activityUserLabel(user)}
                     </span>
                     <span className="sidebar-recent-meta">
                       {user.path || user.last_event || "—"}
