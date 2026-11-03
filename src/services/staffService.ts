@@ -124,7 +124,9 @@ export interface StaffWorking {
 }
 
 export interface StaffDocument {
-  // Add fields as needed based on documents structure
+  id?: number;
+  url?: string;
+  relation?: string;
   [key: string]: unknown;
 }
 
@@ -233,9 +235,9 @@ export interface StaffDetailsApiResponse {
     face_added?: boolean | null;
     qr_code_url: string;
     qr_code_page_url: string;
-    documents: unknown[];
-    staff_documents: unknown[];
-    gallery_documents: unknown[];
+    documents: StaffDocument[];
+    staff_documents: StaffDocument[];
+    gallery_documents: StaffDocument[];
     helpdesk_operations?: HelpdeskOperation[];
     status: {
       value: number;
@@ -542,7 +544,12 @@ export const staffService = {
         qr_code_url: staff.qr_code_url,
         helpdesk_operations: staff.helpdesk_operations || [],
         staff_workings: [],
-        documents: [],
+        documents: [
+          ...(staff.documents ?? []),
+          // staff_documents holds the profile photo, which is already shown in Basic Information
+          ...(staff.staff_documents ?? []).filter((d) => d?.url && d.url !== staff.image_url),
+          ...(staff.gallery_documents ?? []),
+        ].filter((d, i, all) => d?.url && all.findIndex((x) => x.url === d.url) === i),
         associated_flats: (staff.associated_flats as Array<{ id?: number | null; block_no: string | null; flat_no: string; display: string; flat_id?: number | null }>) || [],
       };
 

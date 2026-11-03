@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, User, Paperclip, Clock, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { staffService, SocietyStaffDetails, StaffFormData, StaffFiltersResponse } from '@/services/staffService';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, FormHelperText } from '@mui/material';
@@ -741,8 +741,42 @@ export const EditStaffPage = () => {
               </div>
               
               <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2 block">Documents Upload</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
+                <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-2 block">Documents Upload</Label>
+
+                {/* Existing documents from API */}
+                {staff.documents && staff.documents.length > 0 && (
+                  <div className="mb-3">
+                    <span className="mb-2 block text-sm font-medium text-[#1A1A18]">Current Documents</span>
+                    <div className="flex flex-wrap gap-3">
+                      {staff.documents.map((doc, i) => {
+                        const url = String(doc.url ?? '');
+                        const fileName = decodeURIComponent(url.split('/').pop()?.split('?')[0] || `Document ${i + 1}`);
+                        const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(url);
+                        return isImage ? (
+                          <a key={doc.id ?? i} href={url} target="_blank" rel="noopener noreferrer">
+                            <img
+                              src={url}
+                              alt={fileName}
+                              className="h-24 w-24 rounded-xl border border-[rgba(26,26,24,.12)] object-cover transition-opacity hover:opacity-80"
+                            />
+                          </a>
+                        ) : (
+                          <a
+                            key={doc.id ?? i}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex h-24 w-24 flex-col items-center justify-center gap-2 rounded-xl border border-[rgba(26,26,24,.12)] bg-[#F5F4F0] p-2 text-center transition-opacity hover:opacity-80"
+                          >
+                            <FileText className="h-6 w-6 text-[rgba(26,26,24,.68)]" />
+                            <span className="line-clamp-2 break-all text-[11px] font-medium text-[#1A1A18]">{fileName}</span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-white rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"

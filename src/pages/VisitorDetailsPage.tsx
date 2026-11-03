@@ -154,6 +154,7 @@ interface MimoDetail {
   need_approval?: number;
   reason?: string | null;
   approve_status?: string | null;
+  documents?: { id: number; file_name?: string; url: string }[];
 }
 
 interface VisitorData {
@@ -1213,9 +1214,9 @@ export const VisitorDetailsPage = () => {
           <TabsContent value="additional" className="mt-4 space-y-4 p-0">
             {visitorData.additional_details?.extra_visitors && (
               <div className="space-y-6">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
                   Additional Visitors
-                </h2>
+                </span></div>
                 <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
                   <div className="flex min-w-0 flex-col items-start gap-1 text-[13px]">
                     <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Additional Visitors Count</span>
@@ -1303,9 +1304,9 @@ export const VisitorDetailsPage = () => {
             {(visitorData.additional_details ||
               visitorData.mimo_details?.length ||
               visitorData.item_movements?.length) && (
-              <h2 className="text-lg font-semibold text-gray-900 pt-2">
+              <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
                 Goods Details
-              </h2>
+              </span></div>
             )}
 
             {/* Goods summary (new API: additional_details.goods_details) */}
@@ -1397,16 +1398,16 @@ export const VisitorDetailsPage = () => {
             {visitorData.mimo_details && visitorData.mimo_details.length > 0 && (
               <div className="space-y-6">
                 {visitorData.mimo_details.map((mimo: MimoDetail, index: number) => (
-                  <div key={mimo.id || index} className="border rounded-lg p-6 bg-gray-50">
-                    <h3 className="text-base font-semibold text-gray-900 mb-4">
+                  <div key={mimo.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
+                    <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
                       Movement {index + 1}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                       {hasData(mimo?.type) && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500 min-w-[140px]">Movement Type</span>
-                          <span className="text-gray-500 mx-2">:</span>
-                          <span className="text-gray-900 font-medium capitalize">
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Movement Type</span>
+                          <span className="hidden">:</span>
+                          <span className="text-[13.5px] font-medium capitalize text-[#1A1A18]">
                             {mimo.type?.replace(/_/g, " ")}
                           </span>
                         </div>
@@ -1432,6 +1433,38 @@ export const VisitorDetailsPage = () => {
                           <span className="text-gray-900 font-medium">{mimo.approve_status}</span>
                         </div>
                       )}
+                      {mimo.documents && mimo.documents.length > 0 && (
+                        <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Documents</span>
+                          <div className="flex flex-wrap gap-2">
+                            {mimo.documents.map((doc, i) => {
+                              const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(doc.url || doc.file_name || "");
+                              const open = () => {
+                                setSelectedDoc({
+                                  id: doc.id ?? i,
+                                  url: doc.url,
+                                  document_name: doc.file_name || `Document ${i + 1}`,
+                                });
+                                setIsModalOpen(true);
+                              };
+                              return isImage ? (
+                                <img
+                                  key={doc.id ?? i}
+                                  src={doc.url}
+                                  alt={doc.file_name || `Document ${i + 1}`}
+                                  onClick={open}
+                                  className="h-28 w-28 cursor-pointer rounded-xl border border-[rgba(26,26,24,.12)] object-cover transition-opacity hover:opacity-80"
+                                />
+                              ) : (
+                                <Button key={doc.id ?? i} variant="outline" size="sm" onClick={open}>
+                                  <Eye className="mr-1 h-3.5 w-3.5" />
+                                  {doc.file_name || `Document ${i + 1}`}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -1442,8 +1475,8 @@ export const VisitorDetailsPage = () => {
             {visitorData.item_movements && visitorData.item_movements.length > 0 && (
               <div className="space-y-6">
                 {visitorData.item_movements.map((movement: ItemMovement, index: number) => (
-                  <div key={movement.id || index} className="border rounded-lg p-6 bg-gray-50">
-                    <h3 className="text-base font-semibold text-gray-900 mb-4">
+                  <div key={movement.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
+                    <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
                       Movement {index + 1}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-4">
@@ -1459,23 +1492,23 @@ export const VisitorDetailsPage = () => {
                     {/* Item Details */}
                     {movement.item_details && movement.item_details.length > 0 && (
                       <div className="mt-4">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Items</h4>
+                        <h4 className="mb-3 text-[12px] font-semibold text-[rgba(26,26,24,.68)]">Items</h4>
                         <div className="space-y-3">
                           {movement.item_details.map((item: ItemDetail, itemIndex: number) => (
-                            <div key={item.id || itemIndex} className="border-l-4 border-[#C72030] bg-white p-4 rounded">
+                            <div key={item.id || itemIndex} className="border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] p-4 rounded-xl">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 {hasData(item?.name) && (
-                                  <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[100px]">Item Name</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">{item.name}</span>
+                                  <div className="flex min-w-0 flex-col items-start gap-1">
+                                    <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)] min-w-[100px]">Item Name</span>
+                                    <span className="hidden">:</span>
+                                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{item.name}</span>
                                   </div>
                                 )}
                                 {hasData(item?.number) && (
-                                  <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[100px]">Item Number</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">{item.number}</span>
+                                  <div className="flex min-w-0 flex-col items-start gap-1">
+                                    <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)] min-w-[100px]">Item Number</span>
+                                    <span className="hidden">:</span>
+                                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{item.number}</span>
                                   </div>
                                 )}
                               </div>
@@ -1492,7 +1525,7 @@ export const VisitorDetailsPage = () => {
             {/* Main Visitor's Assets */}
             {visitorData.assets && visitorData.assets.length > 0 && (
               <div className="space-y-6">
-                <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
                   {visitorData?.guest_name
                     ? `${visitorData.guest_name}'s Assets`
                     : 'Main Visitor Assets'}
@@ -1500,10 +1533,10 @@ export const VisitorDetailsPage = () => {
                   <span className="ml-2 text-sm font-normal text-gray-600">
                     (Primary Visitor)
                   </span>
-                </h2>
+                </span></div>
                 {visitorData.assets.map((asset: AssetItem, index: number) => (
-                  <div key={asset.id || index} className="border rounded-lg p-6 bg-gray-50">
-                    <h3 className="text-base font-semibold text-gray-900 mb-4">
+                  <div key={asset.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
+                    <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
                       {/* {asset?.asset_name || asset?.asset_category_name || `Asset ${index + 1}`} */}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
@@ -1575,12 +1608,12 @@ export const VisitorDetailsPage = () => {
               visitorData.additional_visitors.map((visitor: AdditionalVisitor, visitorIndex: number) => (
                 visitor.assets && visitor.assets.length > 0 && (
                   <div key={visitor.id || visitorIndex} className="space-y-6">
-                    <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                    <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
                       {visitor?.name ? `${visitor.name}'s Assets` : `Visitor ${visitorIndex + 1} Assets`}
-                    </h2>
+                    </span></div>
                     {visitor.assets.map((asset: AssetItem, assetIndex: number) => (
-                      <div key={asset.id || assetIndex} className="border rounded-lg p-6 bg-gray-50">
-                        {/* <h3 className="text-base font-semibold text-gray-900 mb-4">
+                      <div key={asset.id || assetIndex} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
+                        {/* <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
                           {asset?.asset_name || asset?.asset_category_name || `Asset ${assetIndex + 1}`}
                         </h3> */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">

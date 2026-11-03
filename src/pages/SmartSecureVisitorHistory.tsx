@@ -164,7 +164,7 @@ const historyColumns: ColumnConfig[] = [
   { key: "visitor_type",      label: "Visitor Type",    sortable: true,  hideable: true,  draggable: true  },
   { key: "visit_purpose",     label: "Purpose",         sortable: true,  hideable: true,  draggable: true  },
   { key: "approve_status",    label: "Host Status",     sortable: true,  hideable: true,  draggable: true  },
-  { key: "approval_mode",     label: "Mode of Approval",sortable: true,  hideable: true,  draggable: true  },
+  // { key: "approval_mode",     label: "Mode of Approval",sortable: true,  hideable: true,  draggable: true  },
   { key: "created_at",        label: "Created Date",    sortable: true,  hideable: true,  draggable: true  },
   { key: "guest_entry_time",  label: "Entry Time",      sortable: true,  hideable: true,  draggable: true  },
   { key: "guest_exit_time",   label: "Exit Time",       sortable: true,  hideable: true,  draggable: true  },
