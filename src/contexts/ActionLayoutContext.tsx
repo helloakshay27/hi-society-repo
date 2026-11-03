@@ -9,6 +9,7 @@ import { useLocation } from "react-router-dom";
 import { usePermissions } from "./PermissionsContext";
 import { getModuleForFunction } from "../utils/moduleDetection";
 import { getUser } from "../utils/auth";
+import { getSidebarEffectivePath } from "../utils/sidebarRouteAliases";
 
 interface LockFunction {
   function_id: number;
@@ -179,9 +180,14 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
       for (const func of module.lock_functions) {
         if (func.function_active === 1 && func.react_link) {
           // Check if current path matches or starts with the function's react_link
+          // Detail/add/edit pages without their own role entry resolve to
+          // their parent menu item (e.g. staff/add -> staff-all)
+          const effectivePath = getSidebarEffectivePath(path);
           if (
             path === func.react_link ||
-            path.startsWith(func.react_link + "/")
+            path.startsWith(func.react_link + "/") ||
+            effectivePath === func.react_link ||
+            effectivePath.startsWith(func.react_link + "/")
           ) {
             foundModule = module.module_name;
             foundFunction = func.function_name;
@@ -330,6 +336,30 @@ export const ActionLayoutProvider: React.FC<ActionLayoutProviderProps> = ({
               (m) => `${m.module_name} (active=${m.module_active})`
             )
           );
+        }
+      }
+    }
+
+    // Last resort for a fresh load (e.g. refresh on an add/edit/details page,
+    // where there is no previously matched module to fall back on): use the
+    // module that owns other routes under the same top-level section.
+    if (!foundMatch && isActionOrgAccount) {
+      const section = "/" + (path.split("/").filter(Boolean)[0] || "");
+      if (section.length > 1) {
+        outerSection: for (const module of userRole.lock_modules) {
+          if (module.module_active !== 1) continue;
+          for (const func of module.lock_functions) {
+            if (
+              func.function_active === 1 &&
+              func.react_link &&
+              func.react_link.startsWith(section + "/")
+            ) {
+              foundModule = module.module_name;
+              foundFunction = func.function_name;
+              foundMatch = true;
+              break outerSection;
+            }
+          }
         }
       }
     }
