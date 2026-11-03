@@ -556,11 +556,11 @@ export const UserQRSetup = () => {
 
     // Check that all location configs are valid
     const invalidConfigs = locationConfigs.filter(
-      (config) => !config.society_id || !config.building_id || !config.flat_id || !config.user_id
+      (config) => !config.society_id
     );
 
     if (invalidConfigs.length > 0) {
-      toast.error("Please fill in all location fields for each configuration", { duration: 3000 });
+      toast.error("Please select a society for each configuration", { duration: 3000 });
       return;
     }
 
@@ -572,9 +572,9 @@ export const UserQRSetup = () => {
         survey_mappings: locationConfigs.map((config) => ({
           survey_id: selectedSurveyId,
           society_id: parseInt(config.society_id),
-          tower_id: parseInt(config.building_id),
-          flat_id: parseInt(config.flat_id),
-          user_society_id: parseInt(config.user_id),
+          ...(config.building_id && { tower_id: parseInt(config.building_id) }),
+          ...(config.flat_id && { flat_id: parseInt(config.flat_id) }),
+          ...(config.user_id && { user_society_id: parseInt(config.user_id) }),
         })),
       };
 
@@ -780,7 +780,7 @@ export const UserQRSetup = () => {
                 {/* Tower Selection */}
                 <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
                   <InputLabel shrink>
-                    Tower <span className="text-[#C72030]">*</span>
+                    Tower
                   </InputLabel>
                   <Select
                     value={config.building_id}
@@ -813,7 +813,7 @@ export const UserQRSetup = () => {
                 {/* Flat Selection */}
                 <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
                   <InputLabel shrink>
-                    Flat <span className="text-[#C72030]">*</span>
+                    Flat
                   </InputLabel>
                   <Select
                     value={config.flat_id}
@@ -845,7 +845,7 @@ export const UserQRSetup = () => {
                 {/* User Selection */}
                 <FormControl fullWidth variant="outlined" sx={{ "& .MuiInputBase-root": fieldStyles }}>
                   <InputLabel shrink>
-                    User <span className="text-[#C72030]">*</span>
+                    User
                   </InputLabel>
                   <Select
                     value={config.user_id}
