@@ -59,11 +59,11 @@ const TablePagination = ({
   const buttonClassName = 'rounded-full border border-[var(--loyalty-divider)] bg-white px-3 py-1.5 text-[10.5px] font-semibold text-[var(--loyalty-text)] transition-colors hover:bg-[var(--loyalty-bg)] disabled:cursor-not-allowed disabled:opacity-40';
 
   return (
-    <div className="mt-3 flex items-center justify-between gap-3 text-[10.5px] text-[var(--loyalty-subtle)]">
-      <span>
+    <div className="mt-3 grid grid-cols-1 items-center gap-3 text-[10.5px] text-[var(--loyalty-subtle)] sm:grid-cols-[1fr_auto_1fr]">
+      <span className="text-center sm:text-left">
         Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalItems)} of {totalItems}
       </span>
-      <div className="flex gap-2">
+      <div className="flex justify-center gap-2 sm:col-start-2">
         <button
           type="button"
           onClick={() => onPageChange(page - 1)}
@@ -81,6 +81,7 @@ const TablePagination = ({
           Next
         </button>
       </div>
+      <span className="hidden sm:block" aria-hidden="true" />
     </div>
   );
 };
