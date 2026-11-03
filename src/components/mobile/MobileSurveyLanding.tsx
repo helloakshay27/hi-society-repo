@@ -103,6 +103,8 @@ export const MobileSurveyLanding: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [surveyData, setSurveyData] = useState<SurveyMapping | null>(null);
+  const [orgLogoUrl, setOrgLogoUrl] = useState<string | null>(null);
+  const logoSrc = orgLogoUrl || surveyData?.company_logo_url || "/LockatedLogo.jpeg";
 
   // Survey flow states
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -200,6 +202,8 @@ export const MobileSurveyLanding: React.FC = () => {
         console.log("form_view:", data.snag_checklist?.form_view);
 
         setSurveyData(data);
+        // Org logo is saved by the baseClient interceptor from get_organizations_by_email
+        setOrgLogoUrl(sessionStorage.getItem("orgLogoUrl"));
       } catch (error) {
         console.error("Failed to fetch survey data:", error);
       } finally {
@@ -1684,25 +1688,15 @@ export const MobileSurveyLanding: React.FC = () => {
         <div className="bg-gray-50 py-4 px-4 text-center">
           <div className="flex justify-center items-center">
             <div className="w-20 h-20 sm:w-32 sm:h-28 flex items-center justify-center overflow-hidden">
-              {window.location.origin === "https://oig.gophygital.work" ? (
-                <img
-                  src="/Without bkg.svg"
-                  alt="OIG Logo"
-                  className="w-full h-full object-contain"
-                />
-              ) : window.location.origin === "https://web.gophygital.work" ? (
-                <img
-                  src="/PSIPL-logo (1).png"
-                  alt="PSIPL Logo"
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <img
-                  src="/gophygital-logo-min.jpg"
-                  alt="gophygital Logo"
-                  className="w-full h-full object-contain"
-                />
-              )}
+              <img
+                src={logoSrc}
+                alt="Company Logo"
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/LockatedLogo.jpeg";
+                }}
+              />
             </div>
           </div>
         </div>
@@ -2051,43 +2045,15 @@ export const MobileSurveyLanding: React.FC = () => {
           </div>
           <div className="flex justify-center">
             <div className="w-40 h-16 sm:w-32 sm:h-20 flex items-center justify-center overflow-hidden">
-              {surveyData?.company_logo_url ? (
-                <img
-                  src={surveyData.company_logo_url}
-                  alt="Company Logo"
-                  className="w-full h-full object-contain"
-                />
-              ) : window.location.origin === "https://oig.gophygital.work" ? (
-                <img
-                  src="/Without bkg.svg"
-                  alt="OIG Logo"
-                  className="w-full h-full object-contain"
-                />
-              ) : window.location.origin === "https://web.gophygital.work" && new URLSearchParams(window.location.search).get("org_id") === "3" ? (
-                <img
-                  src="https://www.persistent.com/wp-content/themes/persistent/dist/images/Persistent-Header-Logo-Black_460dd8e4.svg"
-                  alt="PSIPL Logo"
-                  className="w-full h-full object-contain"
-                />
-              ) : window.location.origin === "https://web.gophygital.work" ? (
-                <img
-                  src="/PSIPL-logo (1).png"
-                  alt="PSIPL Logo"
-                  className="w-full h-full object-contain"
-                />
-              ) : window.location.origin === "https://fm-matrix.lockated.com" ? (
-                <img
-                  src="/gophygital-logo-min.jpg"
-                  alt="gophygital Logo"
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <img
-                  src="/gophygital-logo-min.jpg"
-                  alt="gophygital Logo"
-                  className="w-full h-full object-contain"
-                />
-              )}
+              <img
+                src={logoSrc}
+                alt="Company Logo"
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/LockatedLogo.jpeg";
+                }}
+              />
             </div>
           </div>
         </div>
