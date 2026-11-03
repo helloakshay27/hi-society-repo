@@ -331,14 +331,14 @@ export const BulkUploadDialog: React.FC<BulkUploadDialogProps> = ({
 
           {/* Action Buttons */}
           <div className="flex gap-3">
-            <Button
+            <button
+              type="button"
               onClick={handleDownloadSample}
-              variant="outline"
-              className="flex-1 border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
+              className="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg border border-[rgba(26,26,24,.08)] bg-white px-[22px] text-[13px] font-semibold text-[rgba(26,26,24,.68)] transition-all hover:border-[rgba(26,26,24,.28)] hover:text-[#1A1A18] disabled:pointer-events-none disabled:opacity-50"
               disabled={isUploading}
             >
               Download Sample Format
-            </Button>
+            </button>
             <Button
               onClick={handleImport}
               style={{ backgroundColor: '#C72030' }}
