@@ -14,6 +14,7 @@ import {
   fetchLockAccount,
   Organization,
   getUser,
+  ORG_DASHBOARDS_KEY,
 } from "@/utils/auth";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
@@ -309,6 +310,14 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       localStorage.setItem("org_logo_url", org.logo_url);
     } else {
       localStorage.removeItem("org_logo_url");
+    }
+    if (org.dashboard_access_controls?.length) {
+      localStorage.setItem(
+        ORG_DASHBOARDS_KEY,
+        JSON.stringify(org.dashboard_access_controls)
+      );
+    } else {
+      localStorage.removeItem(ORG_DASHBOARDS_KEY);
     }
 
     // Use saveBaseUrl for normalized URL storage

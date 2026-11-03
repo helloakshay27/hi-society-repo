@@ -29,6 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchWithSuggestions } from "./SearchWithSuggestions";
+import { OrgDashboardsMenuItems } from "./OrgDashboardsMenuItems";
 import { getUser, getToken, clearAuth } from "@/utils/auth";
 import { permissionService } from "@/services/permissionService";
 import { is } from "date-fns/locale";
@@ -878,6 +879,9 @@ export const HiSocietyHeader = () => {
               )}
 
               {/* Menu Items */}
+              <div className="py-1">
+                <OrgDashboardsMenuItems />
+              </div>
 
               <DropdownMenuSeparator className="my-1" />
 

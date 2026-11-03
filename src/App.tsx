@@ -3725,7 +3725,11 @@ function App() {
                       {/* Runwal CP variant — identical UI/data, scoped by project_code=RE-CP01 instead of app_id */}
                       <Route
                         path="/runwal-cp-usage-dashboard"
-                        element={<PosthogRunwalCpDashboard />}
+                        element={
+                          <ProtectedRoute>
+                            <PosthogRunwalCpDashboard />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/my-piramal-usage-dashboard"
