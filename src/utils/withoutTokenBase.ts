@@ -209,6 +209,17 @@ baseClient.interceptors.request.use(
       console.log("📡 Response:", response.data);
       const { organizations, backend_url } = response.data;
 
+      // Persist the organization's logo so public pages (e.g. survey landing) can show it
+      const orgLogoUrl: string | null =
+        response.data?.organization?.logo_url ??
+        organizations?.[0]?.logo_url ??
+        null;
+      if (orgLogoUrl) {
+        sessionStorage.setItem("orgLogoUrl", orgLogoUrl);
+      } else {
+        sessionStorage.removeItem("orgLogoUrl");
+      }
+
       // Priority 1: Use backend_url from API response (highest priority)
       console.log("backend_url", backend_url)
       if (organizations && organizations.length > 0) {
