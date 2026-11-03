@@ -197,34 +197,24 @@ export const fetchWorkflowUsage = (
     })
   );
 
-/** Latest identified active users + the path/screen each is on. No `from`/`to` = today ("currently active"). */
+/** The live activity log: one row per event, newest first. No `from`/`to` = today. */
 export const fetchRecentActiveUsers = (filters: DashboardFilters, limit = 10) =>
   getPosthog<RecentActiveUsersResponse>('recent_active_users', buildPosthogQuery(filters, { limit }));
 
+/** What to call a user in an activity row: their name, else their email's local part, else their id. */
+export const activityUserLabel = (u: { user_name?: string | null; email?: string | null; user_id?: string | null }): string =>
+  u.user_name || u.email?.split('@')[0] || (u.user_id ? `user ${u.user_id}` : 'anonymous');
+
 /**
- * Downloads the `.xlsx` workbook of every active user in the filtered scope
- * (uncapped — `limit` is ignored server-side unless passed deliberately) and
- * saves it via a throwaway anchor, mirroring the blob-download pattern used
- * elsewhere in the app (see WalletTopup.tsx's handleExport).
+ * Downloads the `.xlsx` workbook of every event each user did, with the
+ * dashboard's own filters and date range applied (uncapped), and saves it via
+ * a throwaway anchor, mirroring the blob-download pattern used elsewhere in
+ * the app (see WalletTopup.tsx's handleExport).
  */
-export async function downloadActiveUsersExport(
-  filters: Pick<DashboardFilters, 'appId' | 'projectCode' | 'from' | 'to'>,
-): Promise<void> {
+export async function downloadActiveUsersExport(filters: DashboardFilters): Promise<void> {
   const base = getPosthogApiBase();
   const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-  const params = new URLSearchParams({
-    base_url: 'lockated-api.gophygital.work',
-    from: filters.from,
-    to: filters.to,
-  });
-  const projectCode = filters.projectCode || getProjectCodeFromUrl();
-  if (projectCode) {
-    params.set('project_code', projectCode);
-  } else {
-    const appId = filters.appId || getAppIdFromUrl();
-    if (appId) params.set('app_id', appId);
-  }
-  const url = `${cleanBase}/fm/adoption/active_users_export.json?${params.toString()}`;
+  const url = `${cleanBase}/fm/adoption/user_activity_export?${buildPosthogQuery(filters)}`;
 
   const response = await fetch(url, {
     method: 'GET',
@@ -242,14 +232,13 @@ export async function downloadActiveUsersExport(
   if (worksheet) {
     worksheet['!cols'] = [
       { wch: 14 },
-      { wch: 24 },
+      { wch: 30 },
+      { wch: 30 },
+      { wch: 20 },
+      { wch: 20 },
       { wch: 38 },
-      { wch: 14 },
-      { wch: 14 },
-      { wch: 38 },
-      { wch: 24 },
-      { wch: 14 },
-      { wch: 26 },
+      { wch: 22 },
+      { wch: 12 },
     ];
   }
   const workbookData = XLSX.write(workbook, { bookType: 'xlsx', type: 'array', cellStyles: true });
@@ -260,7 +249,7 @@ export async function downloadActiveUsersExport(
   const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
   const filenameWithoutExtension = (match
     ? decodeURIComponent(match[1])
-    : `active_users_${filters.from || 'today'}_to_${filters.to || 'today'}`)
+    : `user_activity_${filters.from || 'today'}_to_${filters.to || 'today'}`)
     .replace(/\.(?:csv|json|xls|xlsx)$/i, '');
   const filename = `${filenameWithoutExtension}.xlsx`;
 

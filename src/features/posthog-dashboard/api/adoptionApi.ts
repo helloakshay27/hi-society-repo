@@ -79,7 +79,8 @@ export interface RangeFilters {
 
 export interface RecentActiveUser {
   user_id: string;
-  display_name: string;
+  user_name: string | null;
+  email: string | null;
   path: string | null;
   last_event: string | null;
   minutes_ago: number | null;

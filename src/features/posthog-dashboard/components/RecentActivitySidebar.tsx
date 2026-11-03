@@ -1,3 +1,4 @@
+import { activityUserLabel } from '../../../pages/posthog-runwal-dashboard/api/api';
 import { useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
 import { useRecentActiveUsers } from '../api/queries';
@@ -26,7 +27,7 @@ function ActivityUser({ user }: { user: RecentActiveUser }) {
   return (
     <li className="recent-activity-user">
       <div className="recent-activity-user-main">
-        <strong>{user.display_name}</strong>
+        <strong>{activityUserLabel(user)}</strong>
         <span>{user.path || user.last_event || 'Activity recorded'}</span>
       </div>
       <div className="recent-activity-meta">
@@ -81,7 +82,7 @@ export function RecentActivitySidebar({ filters, filtersSettled }: RecentActivit
         <p className="recent-activity-state">No recent activity yet.</p>
       ) : (
         <ul className="recent-activity-list">
-          {users.map((user) => <ActivityUser key={user.user_id} user={user} />)}
+          {users.map((user, index) => <ActivityUser key={index} user={user} />)}
         </ul>
       )}
     </section>

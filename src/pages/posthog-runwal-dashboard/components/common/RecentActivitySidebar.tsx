@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DashboardFilters } from '../../api/types';
-import { downloadActiveUsersExport } from '../../api/api';
+import { activityUserLabel, downloadActiveUsersExport } from '../../api/api';
 import { useRecentActiveUsers } from '../../hooks/useDashboardAnalytics';
 
 interface RecentActivitySidebarProps {
@@ -23,13 +23,13 @@ function formatMinutesAgo(minutes: number): string {
  * (Runwal, Lacircle, My Piramal, …) rather than duplicated per-SideBar, same
  * as FilterBar/InfoPopover. Lives inline in the sidebar itself (no separate
  * page/section): a label row with an inline download button for the full
- * `.xlsx` export, and the live `recent_active_users` list directly beneath.
+ * `.xlsx` export, and the live `recent_active_users` event log directly beneath.
  */
 export const RecentActivitySidebar: React.FC<RecentActivitySidebarProps> = ({
   filters,
   sitesSettled = true,
 }) => {
-  const { data, isLoading } = useRecentActiveUsers(filters, sitesSettled, 10);
+  const { data, isLoading } = useRecentActiveUsers(filters, sitesSettled, 100);
   const [isDownloading, setIsDownloading] = useState(false);
   const users = data?.users ?? [];
 
@@ -39,7 +39,7 @@ export const RecentActivitySidebar: React.FC<RecentActivitySidebarProps> = ({
     try {
       await downloadActiveUsersExport(filters);
     } catch (err) {
-      console.error('Failed to download active users export', err);
+      console.error('Failed to download user activity export', err);
     } finally {
       setIsDownloading(false);
     }
@@ -55,8 +55,8 @@ export const RecentActivitySidebar: React.FC<RecentActivitySidebarProps> = ({
           className="iconbtn recent-activity-download"
           onClick={handleDownload}
           disabled={isDownloading}
-          title="Download active users (.xlsx)"
-          aria-label="Download active users"
+          title="Download user activity (.xlsx)"
+          aria-label="Download user activity"
         >
           <svg
             viewBox="0 0 20 20"
@@ -82,10 +82,11 @@ export const RecentActivitySidebar: React.FC<RecentActivitySidebarProps> = ({
       ) : (
         <div className="recent-activity-list">
           {users.map((u, i) => (
-            <div className="recent-activity-item" key={`${u.user_id || u.display_name}-${i}`}>
-              <span className="recent-activity-name">{u.display_name}</span>
-              <span className="recent-activity-meta">
-                {u.path || u.last_event || '—'}
+            <div className="recent-activity-item" key={i}>
+              <span className="recent-activity-name">{activityUserLabel(u)}</span>
+              <span className="recent-activity-meta" title={u.path || undefined}>{u.path || '—'}</span>
+              <span className="recent-activity-meta" title={u.last_event || undefined}>
+                {u.last_event || '—'}
                 {u.minutes_ago != null ? ` · ${formatMinutesAgo(u.minutes_ago)}` : ''}
               </span>
             </div>

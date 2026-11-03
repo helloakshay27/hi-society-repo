@@ -232,17 +232,17 @@ export interface WorkflowUsageResponse {
   module_funnels?: ModuleFunnel[];
 }
 
-/** One row from `recent_active_users` — a currently/recently active identified user. */
+/** One row from `recent_active_users` — one event by an identified user. */
 export interface RecentActiveUser {
   user_id: string | null;
+  /** `first_name last_name`; empty when the app sends no name. */
   user_name: string | null;
-  /** name → email local part → `user <id>` → `anonymous`, whichever is available first. */
-  display_name: string;
   email: string | null;
   /** `$pathname` on web, `screen` on apps. */
   path: string | null;
+  /** This event's name. */
   last_event: string | null;
-  /** IST. */
+  /** This event's time, IST. */
   last_seen: string | null;
   minutes_ago: number | null;
   user_role: string | null;
@@ -251,6 +251,7 @@ export interface RecentActiveUser {
   device_type: string | null;
   os: string | null;
   distinct_id?: string | null;
+  /** The user's totals in the range. */
   events: number | null;
   sessions: number | null;
 }
