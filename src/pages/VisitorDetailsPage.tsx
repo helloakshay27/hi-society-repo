@@ -1211,29 +1211,35 @@ export const VisitorDetailsPage = () => {
           </TabsContent>
 
           {/* Tab 2: Additional Details */}
-          <TabsContent value="additional" className="mt-4 space-y-4 p-0">
+          <TabsContent value="additional" className="p-6 space-y-6">
             {visitorData.additional_details?.extra_visitors && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
-                  Additional Visitors
-                </span></div>
-                <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
-                  <div className="flex min-w-0 flex-col items-start gap-1 text-[13px]">
-                    <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Additional Visitors Count</span>
-                    <span className="text-[13.5px] font-medium text-[#1A1A18]">
+              <Card className="w-full">
+                <CardHeader className="pb-4 lg:pb-6">
+                  <CardTitle className="flex items-center gap-3 text-lg font-semibold text-[#1A1A1A]">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                      <User className="w-6 h-6" style={{ color: '#C72030' }} />
+                    </div>
+                    <span className="uppercase tracking-wide">Additional Visitors</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex items-start text-sm">
+                    <span className="text-gray-500 min-w-[140px]">Additional Visitors Count</span>
+                    <span className="text-gray-500 mx-2">:</span>
+                    <span className="text-gray-900 font-medium">
                       {visitorData.additional_details.extra_visitors.count ??
                         visitorData.additional_visitors?.length ??
                         0}
                     </span>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
             {visitorData.additional_visitors && visitorData.additional_visitors.length > 0 ? (
               visitorData.additional_visitors.map((visitor: AdditionalVisitor, index: number) => (
                 <div
                   key={visitor?.id || index}
-                  className="border rounded-lg p-6 bg-gray-50 space-y-6"
+                  className="rounded-lg border bg-card text-card-foreground shadow-sm p-6"
                 >
                   <div>
                     <h3 className="text-base font-semibold text-gray-900 mb-4">
@@ -1304,9 +1310,16 @@ export const VisitorDetailsPage = () => {
             {(visitorData.additional_details ||
               visitorData.mimo_details?.length ||
               visitorData.item_movements?.length) && (
-              <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
-                Goods Details
-              </span></div>
+              <Card className="w-full">
+                <CardHeader className="pb-4 lg:pb-6">
+                  <CardTitle className="flex items-center gap-3 text-lg font-semibold text-[#1A1A1A]">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                      <User className="w-6 h-6" style={{ color: '#C72030' }} />
+                    </div>
+                    <span className="uppercase tracking-wide">Goods Details</span>
+                  </CardTitle>
+                </CardHeader>
+              </Card>
             )}
 
             {/* Goods summary (new API: additional_details.goods_details) */}
@@ -1336,28 +1349,28 @@ export const VisitorDetailsPage = () => {
 
               return (
                 <div className="space-y-6">
-                  {/* <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
+                  {/* <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
                     <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
-                      <div className="flex min-w-0 flex-col items-start gap-1">
-                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Carrying Goods</span>
-                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{goods?.carrying_goods ? "Yes" : "No"}</span>
+                      <div className="flex items-start">
+<span className="text-gray-500 min-w-[140px]">Carrying Goods</span>
+                        <span className="text-gray-900 font-medium">{goods?.carrying_goods ? "Yes" : "No"}</span>
                       </div>
                       <div className="flex min-w-0 flex-col items-start gap-1">
-                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Items Count</span>
-                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{goods?.items_count ?? "--"}</span>
+                        <span className="text-gray-500 text-sm">Items Count</span>
+                        <span className="text-gray-900 font-medium">{goods?.items_count ?? "--"}</span>
                       </div>
                       <div className="flex min-w-0 flex-col items-start gap-1">
-                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Item Type</span>
-                        <span className="text-[13.5px] font-medium capitalize text-[#1A1A18]">{hasData(goods?.item_type) ? goods?.item_type?.replace(/_/g, " ") : "--"}</span>
+                        <span className="text-gray-500 text-sm">Item Type</span>
+                        <span className="text-gray-900 font-medium capitalize">{hasData(goods?.item_type) ? goods?.item_type?.replace(/_/g, " ") : "--"}</span>
                       </div>
                       <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
-                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Item Description</span>
-                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{hasData(goods?.item_description) ? goods?.item_description : "--"}</span>
+                        <span className="text-gray-500 text-sm">Item Description</span>
+                        <span className="text-gray-900 font-medium">{hasData(goods?.item_description) ? goods?.item_description : "--"}</span>
                       </div>
                       {goodsItems.length > 0 && (
                         <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
-                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Items</span>
-                          <ul className="list-disc pl-5 text-[13.5px] font-medium text-[#1A1A18]">
+                          <span className="text-gray-500 text-sm">Items</span>
+                          <ul className="list-disc pl-5 text-gray-900 font-medium">
                             {goodsItems.map((item, i) => (
                               <li key={i}>{itemLabel(item)}</li>
                             ))}
@@ -1366,7 +1379,7 @@ export const VisitorDetailsPage = () => {
                       )}
                       {goodsImages.length > 0 && (
                         <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
-                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Item Images</span>
+                          <span className="text-gray-500 text-sm">Item Images</span>
                           <div className="flex flex-wrap gap-2">
                             {goodsImages.map((url, i) => (
                               <Button
@@ -1398,16 +1411,16 @@ export const VisitorDetailsPage = () => {
             {visitorData.mimo_details && visitorData.mimo_details.length > 0 && (
               <div className="space-y-6">
                 {visitorData.mimo_details.map((mimo: MimoDetail, index: number) => (
-                  <div key={mimo.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
-                    <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
+                  <div key={mimo.id || index} className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                    <h3 className="text-base font-semibold text-gray-900 mb-4">
                       Movement {index + 1}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                       {hasData(mimo?.type) && (
                         <div className="flex min-w-0 flex-col items-start gap-1">
-                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Movement Type</span>
-                          <span className="hidden">:</span>
-                          <span className="text-[13.5px] font-medium capitalize text-[#1A1A18]">
+                          <span className="text-gray-500 text-sm">Movement Type</span>
+<span className="text-gray-500 mx-2">:</span>
+<span className="text-gray-900 font-medium capitalize">
                             {mimo.type?.replace(/_/g, " ")}
                           </span>
                         </div>
@@ -1434,8 +1447,8 @@ export const VisitorDetailsPage = () => {
                         </div>
                       )}
                       {mimo.documents && mimo.documents.length > 0 && (
-                        <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
-                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Documents</span>
+                        <div className="flex items-start md:col-span-2">
+<span className="text-gray-500 min-w-[140px]">Documents</span>
                           <div className="flex flex-wrap gap-2">
                             {mimo.documents.map((doc, i) => {
                               const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(doc.url || doc.file_name || "");
@@ -1475,8 +1488,8 @@ export const VisitorDetailsPage = () => {
             {visitorData.item_movements && visitorData.item_movements.length > 0 && (
               <div className="space-y-6">
                 {visitorData.item_movements.map((movement: ItemMovement, index: number) => (
-                  <div key={movement.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
-                    <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
+                  <div key={movement.id || index} className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                    <h3 className="text-base font-semibold text-gray-900 mb-4">
                       Movement {index + 1}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-4">
@@ -1492,23 +1505,23 @@ export const VisitorDetailsPage = () => {
                     {/* Item Details */}
                     {movement.item_details && movement.item_details.length > 0 && (
                       <div className="mt-4">
-                        <h4 className="mb-3 text-[12px] font-semibold text-[rgba(26,26,24,.68)]">Items</h4>
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Items</h4>
                         <div className="space-y-3">
                           {movement.item_details.map((item: ItemDetail, itemIndex: number) => (
-                            <div key={item.id || itemIndex} className="border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] p-4 rounded-xl">
+                            <div key={item.id || itemIndex} className="border-l-4 border-[#C72030] bg-white p-4 rounded">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 {hasData(item?.name) && (
                                   <div className="flex min-w-0 flex-col items-start gap-1">
-                                    <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)] min-w-[100px]">Item Name</span>
-                                    <span className="hidden">:</span>
-                                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{item.name}</span>
+                                    <span className="text-gray-500 text-sm min-w-[100px]">Item Name</span>
+<span className="text-gray-500 mx-2">:</span>
+<span className="text-gray-900 font-medium">{item.name}</span>
                                   </div>
                                 )}
                                 {hasData(item?.number) && (
-                                  <div className="flex min-w-0 flex-col items-start gap-1">
-                                    <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)] min-w-[100px]">Item Number</span>
-                                    <span className="hidden">:</span>
-                                    <span className="text-[13.5px] font-medium text-[#1A1A18]">{item.number}</span>
+                                  <div className="flex items-start">
+<span className="text-gray-500 min-w-[140px]">Item Number</span>
+<span className="text-gray-500 mx-2">:</span>
+<span className="text-gray-900 font-medium">{item.number}</span>
                                   </div>
                                 )}
                               </div>
@@ -1525,7 +1538,7 @@ export const VisitorDetailsPage = () => {
             {/* Main Visitor's Assets */}
             {visitorData.assets && visitorData.assets.length > 0 && (
               <div className="space-y-6">
-                <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
+                <div className="flex items-center gap-3 text-lg font-semibold text-[#1A1A1A]"><div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]"><User className="w-6 h-6" style={{ color: '#C72030' }} /></div><span className="uppercase tracking-wide">
                   {visitorData?.guest_name
                     ? `${visitorData.guest_name}'s Assets`
                     : 'Main Visitor Assets'}
@@ -1535,8 +1548,8 @@ export const VisitorDetailsPage = () => {
                   </span>
                 </span></div>
                 {visitorData.assets.map((asset: AssetItem, index: number) => (
-                  <div key={asset.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
-                    <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
+                  <div key={asset.id || index} className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                    <h3 className="text-base font-semibold text-gray-900 mb-4">
                       {/* {asset?.asset_name || asset?.asset_category_name || `Asset ${index + 1}`} */}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
@@ -1608,12 +1621,12 @@ export const VisitorDetailsPage = () => {
               visitorData.additional_visitors.map((visitor: AdditionalVisitor, visitorIndex: number) => (
                 visitor.assets && visitor.assets.length > 0 && (
                   <div key={visitor.id || visitorIndex} className="space-y-6">
-                    <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
+                    <div className="flex items-center gap-3 text-lg font-semibold text-[#1A1A1A]"><div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3]"><User className="w-6 h-6" style={{ color: '#C72030' }} /></div><span className="uppercase tracking-wide">
                       {visitor?.name ? `${visitor.name}'s Assets` : `Visitor ${visitorIndex + 1} Assets`}
                     </span></div>
                     {visitor.assets.map((asset: AssetItem, assetIndex: number) => (
-                      <div key={asset.id || assetIndex} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
-                        {/* <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
+                      <div key={asset.id || assetIndex} className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                        {/* <h3 className="text-base font-semibold text-gray-900 mb-4">
                           {asset?.asset_name || asset?.asset_category_name || `Asset ${assetIndex + 1}`}
                         </h3> */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
