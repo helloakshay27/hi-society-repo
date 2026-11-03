@@ -1,3 +1,4 @@
+import { isSidebarPathActive } from "@/utils/sidebarRouteAliases";
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useActionLayout } from "../contexts/ActionLayoutContext";
@@ -670,8 +671,7 @@ export const ActionSidebar = () => {
   // Merges into the existing set so manually opened sections stay open.
   useEffect(() => {
     const path = location.pathname;
-    const matchesPath = (link?: string) =>
-      !!link && (path === link || path.startsWith(link + "/"));
+    const matchesPath = (link?: string) => isSidebarPathActive(path, link);
 
     const findActiveAncestors = (nodes: any[], ancestors: string[]): string[] | null => {
       for (const node of nodes) {
@@ -716,8 +716,7 @@ export const ActionSidebar = () => {
   };
 
   const isActiveRoute = (link: string) => {
-    const currentPath = location.pathname;
-    return currentPath === link || currentPath.startsWith(link + "/");
+    return isSidebarPathActive(location.pathname, link);
   };
 
   const toggleExpand = (actionName: string) => {
