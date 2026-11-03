@@ -89,7 +89,29 @@ export interface Organization {
     backend_url?: string;
     frontend_url?: string;
   }>;
+  dashboard_access_controls?: DashboardAccessControl[];
 }
+
+export interface DashboardAccessControl {
+  id?: number;
+  dashboard_name: string;
+  dashboard_type?: string;
+  dashboard_url: string;
+  level?: string;
+  active?: boolean;
+}
+
+export const ORG_DASHBOARDS_KEY = "org_dashboards";
+
+export const getOrgDashboards = (): DashboardAccessControl[] => {
+  try {
+    const raw = localStorage.getItem(ORG_DASHBOARDS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
 
 // Local storage keys
 export const AUTH_KEYS = {

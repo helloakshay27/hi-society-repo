@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { SearchWithSuggestions } from "./SearchWithSuggestions";
+import { OrgDashboardsMenuItems } from "./OrgDashboardsMenuItems";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import {
@@ -1343,6 +1344,7 @@ export const Header = () => {
                   <Settings className="w-4 h-4 mr-2 text-gray-500" />
                   <span className="font-medium">Settings</span>
                 </DropdownMenuItem>
+                <OrgDashboardsMenuItems />
               </div>
 
               <DropdownMenuSeparator className="my-1" />

@@ -102,14 +102,14 @@ function PosthogRunwalCpDashboardContent() {
   // that read it directly off window.location (getFm, fetchAllowedSites) pick
   // it up the same way the app_id-based dashboard relies on ?app_id=... being
   // present — this is a non-navigating URL-bar update, not a redirect.
-  useEffect(() => {
-    try {
-      if (getProjectCodeFromUrl() === RUNWAL_CP_PROJECT_CODE) return;
-      const url = new URL(window.location.href);
-      url.searchParams.set("project_code", RUNWAL_CP_PROJECT_CODE);
-      window.history.replaceState({}, "", url.toString());
-    } catch {}
-  }, []);
+  // useEffect(() => {
+  //   try {
+  //     if (getProjectCodeFromUrl() === RUNWAL_CP_PROJECT_CODE) return;
+  //     const url = new URL(window.location.href);
+  //     url.searchParams.set("project_code", RUNWAL_CP_PROJECT_CODE);
+  //     window.history.replaceState({}, "", url.toString());
+  //   } catch {}
+  // }, []);
 
   // Centralized Filter State (tenant url from backend saved in localStorage)
   const dynamicTenantUrl = useMemo(() => {
