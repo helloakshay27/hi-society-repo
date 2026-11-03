@@ -752,7 +752,7 @@ export const AddStaffPage = () => {
               />
               
               {/* Status Dropdown - from staff_filters API */}
-              <FormControl fullWidth variant="outlined">
+              {/* <FormControl fullWidth variant="outlined">
                 <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
                   Active Status
                 </InputLabel>
@@ -772,7 +772,7 @@ export const AddStaffPage = () => {
                     </MenuItem>
                   ))}
                 </MuiSelect>
-              </FormControl>
+              </FormControl> */}
             </div>
           </div>
         </div>
