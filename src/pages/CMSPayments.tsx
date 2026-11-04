@@ -58,8 +58,14 @@ const columns: ColumnConfig[] = [
     draggable: true
   },
   {
-    key: 'scheduled_on',
-    label: 'Scheduled On',
+    key: 'scheduled_date',
+    label: 'Scheduled Date',
+    sortable: true,
+    draggable: true
+  },
+  {
+    key: 'scheduled_time',
+    label: 'Scheduled Time',
     sortable: true,
     draggable: true
   },
@@ -548,8 +554,10 @@ const CMSPayments = () => {
 
   const renderCell = (item: any, columnKey: string) => {
     switch (columnKey) {
-      case "scheduled_on":
-        return item.scheduled_on.time
+      case "scheduled_date":
+        return item.scheduled_on?.date?.trim() || "-";
+      case "scheduled_time":
+        return item.scheduled_on?.time?.trim() || "-";
       case "total_amount":
         return item.amounts.total
       case "amount_paid":

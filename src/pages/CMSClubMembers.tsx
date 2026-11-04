@@ -70,6 +70,12 @@ const columns: ColumnConfig[] = [
     draggable: true,
   },
   {
+    key: "resident_types",
+    label: "Resident Type",
+    sortable: true,
+    draggable: true,
+  },
+  {
     key: "membership_plan",
     label: "Membership Plan",
     sortable: true,
@@ -522,6 +528,38 @@ const CMSClubMembers = () => {
             )}
           </div>
         );
+
+      case "resident_types": {
+        const residentTypes = item.club_members
+          ?.map((m) => m.resident_type)
+          .filter(Boolean);
+        if (!residentTypes || residentTypes.length === 0)
+          return <span className="text-gray-400">-</span>;
+
+        return (
+          <div className="flex flex-col gap-1">
+            {residentTypes.slice(0, 2).map((type, idx) => (
+              <span key={idx} className="text-sm">
+                {type}
+              </span>
+            ))}
+            {residentTypes.length > 2 && (
+              <span
+                className="text-xs text-black-600 cursor-pointer hover:underline"
+                onClick={() => {
+                  setModalData({
+                    isOpen: true,
+                    title: "Resident Types",
+                    items: residentTypes,
+                  });
+                }}
+              >
+                +{residentTypes.length - 2} more
+              </span>
+            )}
+          </div>
+        );
+      }
 
       case "membership_plan":
         return item?.membership_plan?.name || "-";
