@@ -61,7 +61,8 @@
 .pp-dashboard-root .soc{
   display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;
   background:var(--card);border:none;border-radius:10px;cursor:pointer;transition:all .16s;
-  width:max-content;min-width:0;flex-shrink:0;box-sizing:border-box;font:inherit;text-align:left
+  width:max-content;min-width:0;flex-shrink:0;box-sizing:border-box;font:inherit;text-align:left;
+  position:relative;z-index:2;pointer-events:auto
 }
 .pp-dashboard-root .soc:hover{background:#EFEDE6}
 .pp-dashboard-root .soc:focus-visible{outline:2px solid rgba(26,26,24,.3);outline-offset:2px}
@@ -80,7 +81,7 @@
 .pp-dashboard-root .tp:hover{color:var(--ink)}
 .pp-dashboard-root .tp.on{background:var(--wh);color:var(--ink);box-shadow:var(--tab-shadow)}
 .society-picker-popover{
-  position:fixed;z-index:400!important;width:min(320px,calc(100vw - 24px))!important;max-height:min(380px,calc(100vh - 88px));
+  position:fixed;z-index:2000!important;pointer-events:auto!important;width:min(320px,calc(100vw - 24px))!important;max-height:min(380px,calc(100vh - 88px));
   padding:0!important;overflow:hidden;border:1px solid rgba(26,26,24,.10)!important;border-radius:12px!important;
   background:#fff!important;color:#1A1A18!important;box-shadow:0 12px 30px rgba(26,26,24,.14)!important
 }
