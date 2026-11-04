@@ -677,9 +677,7 @@ export const ResolutionEscalationTab: React.FC = () => {
         console.error("Error loading categories:", categoriesResult.reason);
       }
       if (engineersResult.status === "fulfilled") {
-        setServiceEngineerOptions(
-          engineersResult.value.service_engineers || []
-        );
+        setServiceEngineerOptions(engineersResult.value.helpdesk_users || []);
       } else {
         console.error(
           "Error loading service engineers:",
