@@ -409,18 +409,18 @@ export const HiSocietySidebar: React.FC = () => {
           id: "loyalty",
           label: "Loyalty",
           subItems: [
-            // {
-            //   id: "loyalty-dashboard",
-            //   label: "Dashboard",
-            //   icon: LayoutDashboard,
-            //   path: "/loyalty/home-dashboard",
-            // },
-            // {
-            //   id: "loyalty-dashboard-new",
-            //   label: "Dashboard New",
-            //   icon: LayoutDashboard,
-            //   path: "/loyalty/details-dashboard",
-            // },
+            {
+              id: "loyalty-dashboard",
+              label: "Dashboard",
+              icon: LayoutDashboard,
+              path: "/loyalty/home-dashboard",
+            },
+            {
+              id: "loyalty-details-dashboard",
+              label: "Programme Details",
+              icon: LayoutDashboard,
+              path: "/loyalty/details-dashboard",
+            },
             {
               id: "wallet-management",
               label: "Wallet Management",
@@ -1727,4 +1727,3 @@ export const HiSocietySidebar: React.FC = () => {
 };
 
 export default HiSocietySidebar;
-

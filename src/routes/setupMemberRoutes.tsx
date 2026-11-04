@@ -1,4 +1,4 @@
-import { Route } from "react-router-dom";
+import { Navigate, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ProjectConfigEdit from "@/pages/ProjectConfigEdit";
 import LockFunctionEdit from "@/pages/LockFunctionEdit";
@@ -641,9 +641,20 @@ export const setupMemberRoutes = (
       element={withSuspense(HelpdeskTicketDetails)()}
     />
 
-    {/* Loyalty dashboard routes moved to standalone top-level routes in App.tsx (no sidebar/header) */}
-    {/* <Route path="/loyalty/home-dashboard" element={<LoyaltyDashboardNew />} /> */}
-    {/* <Route path="/loyalty/details-dashboard" element={<LoyaltyDashboard />} /> */}
+    <Route
+      path="/loyalty/dashboard"
+      element={<Navigate to="/loyalty/home-dashboard" replace />}
+    />
+    <Route path="/loyalty/home-dashboard" element={<LoyaltyDashboardNew />} />
+    <Route path="/loyalty/details-dashboard" element={<LoyaltyDashboard />} />
+    <Route
+      path="/loyalty-dashboard"
+      element={<Navigate to="/loyalty/home-dashboard" replace />}
+    />
+    <Route
+      path="/loyalty-dashboard-new"
+      element={<Navigate to="/loyalty/details-dashboard" replace />}
+    />
     <Route path="/loyalty/rule-engine" element={<LoyaltyRuleEngine />} />
     <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
     <Route
