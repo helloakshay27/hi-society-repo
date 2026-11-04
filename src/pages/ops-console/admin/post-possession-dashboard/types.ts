@@ -49,8 +49,6 @@ export interface TabConfig {
   id: TabId;
   label: string;
   icon: LucideIcon;
-  badge?: string;
-  badgeVariant?: 'default' | 'a' | 'ok';
 }
 
 export interface FilterChipConfig {

@@ -1,5 +1,26 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Chart, type ChartConfiguration } from 'chart.js/auto';
+import { createRoot, type Root } from 'react-dom/client';
+import {
+  QuarantineCasesEnhancedTable,
+  type QuarantineCaseRow,
+} from './QuarantineCasesEnhancedTable';
+import {
+  RegisteredSlotsEnhancedTable,
+  type RegisteredSlotRow,
+} from './RegisteredSlotsEnhancedTable';
+import {
+  FacilitySlotsEnhancedTable,
+  type FacilitySlotRow,
+} from './FacilitySlotsEnhancedTable';
+import {
+  ImportantEventsEnhancedTable,
+  type ImportantEventRow,
+} from './ImportantEventsEnhancedTable';
+import {
+  BusinessDirectoryEnhancedTable,
+  type BusinessDirectoryRow,
+} from './BusinessDirectoryEnhancedTable';
 import { applyBrandHexRemap } from '../../charts/chartPalette';
 import {
   centerLabelForChart,
@@ -8,11 +29,15 @@ import {
 } from '../../charts/bgDonut';
 import { colsSpecFromBarConfig, renderBusinessGenieCols } from '../../charts/bgCols';
 import { inlineLucideIcons, normalizeInfoButtons } from '../../utils/lucideInline';
+import { bindPostPossessionApiData } from '../../apiView';
+import type { PostPossessionApiState, PostPossessionTab } from '../../api';
 
 interface TabHtmlContentProps {
   html: string;
   charts?: Record<string, ChartConfiguration>;
   className?: string;
+  apiTab?: PostPossessionTab;
+  apiState?: PostPossessionApiState;
 }
 
 const CANVAS_RE = /<div class="chx"([^>]*)>\s*<canvas id="([^"]+)"><\/canvas>\s*<\/div>/g;
@@ -39,17 +64,175 @@ function injectChartPlaceholders(html: string): string {
   });
 }
 
-function wrapGridTables(container: HTMLElement) {
-  container.querySelectorAll<HTMLTableElement>('.g .card > .tbl').forEach((table) => {
-    if (table.parentElement?.classList.contains('tbl-scroll')) return;
-    const wrap = document.createElement('div');
-    wrap.className = 'tbl-scroll';
-    table.parentNode?.insertBefore(wrap, table);
-    wrap.appendChild(table);
-  });
+function readQuarantineCaseTable(table: HTMLTableElement): {
+  rows: QuarantineCaseRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 7)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      return {
+        id: `${values[0]}-${index}`,
+        resident: values[0],
+        tower: values[1],
+        flat: values[2],
+        type: values[3],
+        start: values[4],
+        end: values[5],
+        status: values[6],
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No quarantine cases found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No quarantine cases found.',
+  };
 }
 
-function dispatchDynamicRenders(container: HTMLElement) {
+function readRegisteredSlotsTable(table: HTMLTableElement): {
+  rows: RegisteredSlotRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 8)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      return {
+        id: `${values[0]}-${index}`,
+        slot: values[0],
+        tower: values[1],
+        flat: values[2],
+        vehicleNumber: values[3],
+        vehicleType: values[4],
+        parkingType: values[5],
+        stickerNumber: values[6],
+        status: values[7],
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No registered slots found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No registered slots found.',
+  };
+}
+
+function readFacilitySlotsTable(table: HTMLTableElement): {
+  rows: FacilitySlotRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 4)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      return {
+        id: `${values[0]}-${index}`,
+        facility: values[0],
+        morning: values[1],
+        evening: values[2],
+        vacantToday: values[3],
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No facility slots found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No facility slots found.',
+  };
+}
+
+function readImportantEventsTable(table: HTMLTableElement): {
+  rows: ImportantEventRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 3)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      return {
+        id: `${values[0]}-${index}`,
+        time: values[0],
+        event: values[1],
+        domain: values[2],
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No important events found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No important events found.',
+  };
+}
+
+function readBusinessDirectoryTable(table: HTMLTableElement): {
+  rows: BusinessDirectoryRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 3)
+    .map((row, index) => {
+      const companyCell = row.cells.item(0);
+      return {
+        id: `${companyCell?.textContent?.trim() ?? 'vendor'}-${index}`,
+        company:
+          companyCell?.querySelector<HTMLElement>('.evt-title')?.textContent?.trim() ??
+          companyCell?.textContent?.trim() ??
+          '',
+        category: row.cells.item(1)?.textContent?.trim() ?? '',
+        status: row.cells.item(2)?.textContent?.trim() ?? '',
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No vendors found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No vendors found.',
+  };
+}
+
+function wrapGridTables(container: HTMLElement) {
+  container
+    .querySelectorAll<HTMLTableElement>(
+      '.g .card > .tbl, .g .card .slottbl, #evTable'
+    )
+    .forEach((table) => {
+      const parent = table.parentElement;
+      if (parent?.classList.contains('tbl-scroll')) {
+        if (table.id === 'evTable') {
+          parent.classList.add('important-events-scroll');
+        }
+        return;
+      }
+      const wrap = document.createElement('div');
+      wrap.className =
+        table.id === 'evTable'
+          ? 'tbl-scroll important-events-scroll'
+          : table.classList.contains('slottbl')
+            ? 'tbl-scroll facility-slots-scroll'
+            : 'tbl-scroll';
+      table.parentNode?.insertBefore(wrap, table);
+      wrap.appendChild(table);
+    });
+}
+
+function dispatchDynamicRenders(container: HTMLElement, apiTab?: PostPossessionTab) {
   const slotBody = container.querySelector('#slotBody');
   if (slotBody && slotBody.children.length === 0) {
     window.dispatchEvent(new CustomEvent('pp-render-slots', { detail: slotBody }));
@@ -57,6 +240,14 @@ function dispatchDynamicRenders(container: HTMLElement) {
   const ageingBody = container.querySelector('#ageingBody');
   if (ageingBody && ageingBody.children.length === 0) {
     window.dispatchEvent(new CustomEvent('pp-render-ageing', { detail: ageingBody }));
+  }
+  const ageing = container.querySelector('#ageing');
+  if (ageing && ageing.children.length === 0) {
+    window.dispatchEvent(new CustomEvent('pp-render-ageing', { detail: ageing }));
+  }
+  const notices = container.querySelector('#notices');
+  if (notices && apiTab !== 'helpdesk' && !notices.getAttribute('data-pp-ready')) {
+    window.dispatchEvent(new CustomEvent('pp-render-notices', { detail: notices }));
   }
   const towerTicketBars = container.querySelector('#towerTicketBars');
   if (towerTicketBars && towerTicketBars.children.length === 0) {
@@ -88,9 +279,13 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
   html,
   charts = {},
   className,
+  apiTab,
+  apiState,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartInstancesRef = useRef<Map<string, Chart>>(new Map());
+  const enhancedTableRootRef = useRef<Root | null>(null);
+  const directoryTableRootRef = useRef<Root | null>(null);
   const chartsRef = useRef(charts);
   chartsRef.current = charts;
   const processedHtml = useMemo(
@@ -108,9 +303,8 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
       if (!id) return;
 
       const config = chartConfigs[id];
-      placeholder.innerHTML = '';
-
       if (!config) return;
+      placeholder.innerHTML = '';
 
       // Business Genie SVG donuts (center total + side legend) instead of Chart.js pie
       if (config.type === 'doughnut') {
@@ -196,7 +390,62 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
 
     container.innerHTML = processedHtml;
     wrapGridTables(container);
-    dispatchDynamicRenders(container);
+    dispatchDynamicRenders(container, apiTab);
+    if (apiTab) bindPostPossessionApiData(container, apiTab, apiState);
+    if (
+      apiTab === 'community' ||
+      apiTab === 'parking' ||
+      apiTab === 'club' ||
+      apiTab === 'overview'
+    ) {
+      const tableSelector =
+        apiTab === 'club'
+          ? 'table.slottbl'
+          : apiTab === 'overview'
+            ? '#evTable'
+            : 'table.tbl';
+      const dataTable = container.querySelector<HTMLTableElement>(tableSelector);
+      if (dataTable) {
+        const mountNode = document.createElement('div');
+        dataTable.replaceWith(mountNode);
+        const root = createRoot(mountNode);
+        enhancedTableRootRef.current = root;
+        if (apiTab === 'community') {
+          const { rows, emptyMessage } = readQuarantineCaseTable(dataTable);
+          root.render(<QuarantineCasesEnhancedTable rows={rows} emptyMessage={emptyMessage} />);
+        } else if (apiTab === 'parking') {
+          const { rows, emptyMessage } = readRegisteredSlotsTable(dataTable);
+          root.render(<RegisteredSlotsEnhancedTable rows={rows} emptyMessage={emptyMessage} />);
+        } else if (apiTab === 'club') {
+          const { rows, emptyMessage } = readFacilitySlotsTable(dataTable);
+          root.render(
+            <FacilitySlotsEnhancedTable
+              rows={rows}
+              emptyMessage={emptyMessage}
+            />
+          );
+        } else {
+          const { rows, emptyMessage } = readImportantEventsTable(dataTable);
+          root.render(
+            <ImportantEventsEnhancedTable rows={rows} emptyMessage={emptyMessage} />
+          );
+        }
+      }
+    }
+    if (apiTab === 'community') {
+      const directoryTable = container.querySelector<HTMLTableElement>('#dirTable');
+      if (directoryTable) {
+        const { rows, emptyMessage } = readBusinessDirectoryTable(directoryTable);
+        const mountNode = document.createElement('div');
+        directoryTable.replaceWith(mountNode);
+        container.querySelector('#dirPgnInfo')?.closest('.pgn')?.remove();
+        const root = createRoot(mountNode);
+        directoryTableRootRef.current = root;
+        root.render(
+          <BusinessDirectoryEnhancedTable rows={rows} emptyMessage={emptyMessage} />
+        );
+      }
+    }
     mountCharts(container);
 
     const showInfoPopover = (btn: HTMLElement) => {
@@ -222,8 +471,14 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
       });
     });
 
-    return () => cleanups.forEach((fn) => fn());
-  }, [processedHtml, mountCharts]);
+    return () => {
+      cleanups.forEach((fn) => fn());
+      enhancedTableRootRef.current?.unmount();
+      enhancedTableRootRef.current = null;
+      directoryTableRootRef.current?.unmount();
+      directoryTableRootRef.current = null;
+    };
+  }, [apiState, apiTab, processedHtml, mountCharts]);
 
   useEffect(() => {
     const container = containerRef.current;

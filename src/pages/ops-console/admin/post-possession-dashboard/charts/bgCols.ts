@@ -8,6 +8,7 @@ export type BgColsSpec = {
   totals?: number[];
   max: number;
   ticks: number[];
+  maxXTicks?: number;
   unit?: string;
   avg?: number;
 };
@@ -16,6 +17,15 @@ export type BgColsSpec = {
 export function renderBusinessGenieCols(host: HTMLElement, c: BgColsSpec): void {
   const unit = c.unit || '';
   const pct = (v: number) => `${(v / c.max) * 100}%`;
+  const maxXTicks = c.maxXTicks && c.maxXTicks > 1 ? Math.floor(c.maxXTicks) : undefined;
+  const visibleLabelIndexes =
+    maxXTicks && c.labels.length > maxXTicks
+      ? new Set(
+          Array.from({ length: maxXTicks }, (_, index) =>
+            Math.round((index * (c.labels.length - 1)) / (maxXTicks - 1))
+          )
+        )
+      : undefined;
   const grid = c.ticks
     .map((t) => `<div class="gl" style="bottom:${pct(t)}"><span>${t}${unit}</span></div>`)
     .join('');
@@ -38,7 +48,9 @@ export function renderBusinessGenieCols(host: HTMLElement, c: BgColsSpec): void 
 
   host.classList.add('cols', 'num');
   host.style.height = 'auto';
-  host.innerHTML = `<div class="plot">${grid}${avg}${groups}</div><div class="xl">${c.labels.map((l) => `<span>${l}</span>`).join('')}</div>`;
+  host.innerHTML = `${legend}<div class="plot">${grid}${avg}${groups}</div><div class="xl">${c.labels
+    .map((label, index) => `<span>${!visibleLabelIndexes || visibleLabelIndexes.has(index) ? label : ''}</span>`)
+    .join('')}</div>`;
 }
 
 /** Build a BG column spec from a Chart.js vertical bar config */
@@ -47,25 +59,44 @@ export function colsSpecFromBarConfig(
   config: ChartConfiguration
 ): BgColsSpec | null {
   if (config.type !== 'bar') return null;
-  const opts = config.options as { indexAxis?: string } | undefined;
+  const opts = config.options as
+    | {
+        indexAxis?: string;
+        scales?: { x?: { ticks?: { maxTicksLimit?: number } } };
+      }
+    | undefined;
   if (opts?.indexAxis === 'y') return null; // horizontal — not a column chart
 
   const labels = (config.data.labels || []).map(String);
   const datasets = config.data.datasets || [];
   if (!datasets.length || !labels.length) return null;
+  const maxXTicks = opts?.scales?.x?.ticks?.maxTicksLimit;
 
-  // Ghost bars: 2 datasets where first = totals (sent) and second = values (delivered)
-  if (chartId === 'notifChannelChart' && datasets.length >= 2) {
-    const totals = (datasets[0].data as number[]) || [];
-    const values = (datasets[1].data as number[]) || [];
-    const maxVal = Math.max(...totals, ...values, 1);
-    const niceMax = maxVal <= 25 ? 25 : Math.ceil(maxVal / 10) * 10;
+  // Grouped twin bars (Sent vs Delivered, Scheduled vs Present, Onboarded vs Not, …)
+  if (datasets.length >= 2) {
+    const series: BgColSeries[] = datasets.map((d, i) => ({
+      label: String(d.label || `Series ${i + 1}`),
+      values: ((d.data as number[]) || []).map(Number),
+      color: resolveSeriesColor(d, i),
+    }));
+    const all = series.flatMap((s) => s.values);
+    const yMax = (config.options as { scales?: { y?: { max?: number } } })?.scales?.y?.max;
+    const max = niceMax(Number(yMax ?? Math.max(...all, 1)));
+    const unit =
+      chartId.includes('adoption') ||
+      chartId.includes('Rejection') ||
+      chartId.toLowerCase().includes('rate')
+        ? '%'
+        : '';
+    const avg = chartId === 'adoptionChart' ? 48 : undefined;
     return {
       labels,
-      values,
-      totals,
-      max: niceMax,
-      ticks: niceMax <= 25 ? [0, 10, 20] : [0, niceMax / 2, niceMax],
+      series,
+      max,
+      ticks: ticksFor(max),
+      ...(typeof maxXTicks === 'number' ? { maxXTicks } : {}),
+      unit,
+      avg,
     };
   }
 
@@ -88,9 +119,10 @@ export function colsSpecFromBarConfig(
 
   return {
     labels,
-    values: values.map(Number),
-    max: Number(max),
-    ticks: ticks.map(Number),
+    values,
+    max,
+    ticks: ticksFor(max),
+    ...(typeof maxXTicks === 'number' ? { maxXTicks } : {}),
     unit,
     avg,
   };

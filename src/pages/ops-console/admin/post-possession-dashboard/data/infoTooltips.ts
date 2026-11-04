@@ -23,7 +23,7 @@ export const INFO_TOOLTIPS: Record<string, InfoTooltipContent> = {
   kpi_top_golden_tickets:{what:`Tickets flagged for priority handling — typically P1-Critical issues involving senior residents.`,note:`This is a manual flag for extra care, not an automatic priority-level calculation.`},
   ticketStatusChart:{what:`How the total tickets are currently split across every possible status.`,note:`"Hold" means work is paused pending a resident or vendor action, not stalled by the team.`},
   proactiveChart:{what:`Whether tickets were raised by the team (Proactive) or by a resident complaint (Reactive).`,formula:`Same underlying split as the Proactive Tickets KPI above`},
-  escalationChart:{what:`Compares how often tickets breach their first-response target versus their resolution target.`,formula:`Each bar = Breached Count ÷ Total Tickets, shown separately for Response and Resolution`},
+  escalationChart:{what:`Compares ticket breaches against the first-response and resolution targets.`,formula:`Bar and value = breached tickets ÷ total tickets × 100; label shows the breached ticket count.`},
   categoryChart:{what:`Which ticket category breaches the response-time target most often — not just which has the most tickets.`,formula:`Category Breaches ÷ Category Ticket Count × 100`,note:`This is a rate, not a volume — a small category can still show a high percentage.`},
   tbl_top_tickets_ageing_matrix:{what:`How long open tickets have been sitting, broken down by priority level.`,note:`Each cell is a count of tickets — read across a row to see if a priority level is ageing badly.`},
   modeChart:{what:`The channel a resident used to raise the ticket — Mobile, App, or logged in person.`},
@@ -54,8 +54,8 @@ export const INFO_TOOLTIPS: Record<string, InfoTooltipContent> = {
   kpi_tst_present:{what:`Staff who actually showed up today, including those who arrived late.`,formula:`On-time + Late arrivals`},
   kpi_tst_absent:{what:`Scheduled staff who did not show up today at all.`,formula:`Scheduled − Present`},
   kpi_tst_evening_shift_gap:{what:`How many fewer staff are present than scheduled, specifically for the evening shift.`,formula:`Evening Present − Evening Scheduled`,note:`Shown as a negative number on purpose — it is a shortfall, not a headcount.`},
-  staffCategoryChart:{what:`Scheduled versus present headcount for each staff type — Housekeeping, Security, Maintenance, Gardening.`,formula:`Each bar pair = Scheduled Count vs Present Count for that category`},
-  shiftCoverageChart:{what:`Scheduled versus present headcount for each shift window across the day.`,formula:`Each bar pair = Scheduled Count vs Present Count for that shift`},
+  staffCategoryChart:{what:`Active staff on record for each staff type. Scheduled headcount is unavailable because no roster is linked.`},
+  shiftCoverageChart:{what:`Staff present by the time window of their gate entry. Scheduled headcount is unavailable because no roster is linked.`},
 
   // ── CLUB & FACILITIES ──
   kpi_tcl_total_members:{what:`Everyone ever registered as a club member, regardless of current status.`},
@@ -64,10 +64,10 @@ export const INFO_TOOLTIPS: Record<string, InfoTooltipContent> = {
   kpi_tcl_pending_payments:{what:`Facility or membership payments that have not cleared yet — not confirmed as successful.`},
   kpi_tcl_failed_payments:{what:`Payments that were attempted but did not go through.`,note:`Different from Pending — a failed payment needs the resident to retry, a pending one may still clear on its own.`},
   kpi_tcl_expiring_soon:{what:`Memberships whose plan period ends within the next 30 days and have not been renewed yet.`},
-  memberStatusChart:{what:`Every member's current state — Active, Pending, Inactive, or Expired — as a share of the total.`,formula:`Each slice = status count ÷ total members × 100`},
+  memberStatusChart:{what:`Every member's current state — Pending, Active, Expired, or Upcoming — as a share of the total.`,formula:`Each slice = status count ÷ total members × 100`},
   planDistChart:{what:`Which membership plan residents are actually signed up for, across all statuses.`},
   facilityChart:{what:`Which facilities get booked most, to see where demand concentrates and where it is weak.`},
-  facilityTypeChart:{what:`Confirmed versus pending bookings, split by whether the facility auto-confirms or needs admin approval.`,note:`Bookable facilities cannot have a pending state by design — only Request-based facilities can.`},
+  facilityTypeChart:{what:`Number of facilities grouped by Bookable versus Request-based type. The facility classification is inferred from booking history.`},
   tbl_tcl_facility_slots_morning_vs_evening:{what:`How full each facility is in the morning versus the evening, and how many slots remain free today.`,formula:`Vacant = Capacity − Booked, shown separately for Morning and Evening`},
   tbl_tcl_memberships_expiring_next_30_days:{what:`The specific members behind the Expiring Soon KPI, so outreach can be targeted by name.`},
 
