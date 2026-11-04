@@ -14,7 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import {
+  FormControl as MuiFormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+} from "@mui/material";
 import { fieldStyles, menuProps } from "../ticket-management/fieldStyles";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -275,7 +280,9 @@ export const ResolutionEscalationTab: React.FC = () => {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editRuleUserLabels, setEditRuleUserLabels] = useState<Record<number, string>>({});
+  const [editRuleUserLabels, setEditRuleUserLabels] = useState<
+    Record<number, string>
+  >({});
 
   // Sub-tab states
   const [activeResolutionTab, setActiveResolutionTab] = useState<
@@ -324,10 +331,16 @@ export const ResolutionEscalationTab: React.FC = () => {
     { id: number; full_name: string }[]
   >([]);
   // Per-modal filtered category options
-  const [addModalCategories, setAddModalCategories] = useState<{ id: number; name: string }[]>([]);
-  const [addModalCategoriesLoading, setAddModalCategoriesLoading] = useState(false);
-  const [editModalCategories, setEditModalCategories] = useState<{ id: number; name: string }[]>([]);
-  const [editModalCategoriesLoading, setEditModalCategoriesLoading] = useState(false);
+  const [addModalCategories, setAddModalCategories] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [addModalCategoriesLoading, setAddModalCategoriesLoading] =
+    useState(false);
+  const [editModalCategories, setEditModalCategories] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [editModalCategoriesLoading, setEditModalCategoriesLoading] =
+    useState(false);
 
   // Edit Assign Rule state
   const [editingAssignRule, setEditingAssignRule] = useState<AssignRule | null>(
@@ -385,8 +398,10 @@ export const ResolutionEscalationTab: React.FC = () => {
     useState("");
   const [escalationFilterCategoryOptions, setEscalationFilterCategoryOptions] =
     useState<{ id: number; name: string }[]>([]);
-  const [escalationFilterCategoriesLoading, setEscalationFilterCategoriesLoading] =
-    useState(false);
+  const [
+    escalationFilterCategoriesLoading,
+    setEscalationFilterCategoriesLoading,
+  ] = useState(false);
   const [isEscalationFilterDialogOpen, setIsEscalationFilterDialogOpen] =
     useState(false);
   const [
@@ -480,11 +495,61 @@ export const ResolutionEscalationTab: React.FC = () => {
     defaultValues: {
       categoryIds: [],
       escalationLevels: {
-        e1: { users: [], copyTo: [], priorities: { p1: { days: 0, hours: 0, minutes: 0 }, p2: { days: 0, hours: 0, minutes: 0 }, p3: { days: 0, hours: 0, minutes: 0 }, p4: { days: 0, hours: 0, minutes: 0 }, p5: { days: 0, hours: 0, minutes: 0 } } },
-        e2: { users: [], copyTo: [], priorities: { p1: { days: 0, hours: 0, minutes: 0 }, p2: { days: 0, hours: 0, minutes: 0 }, p3: { days: 0, hours: 0, minutes: 0 }, p4: { days: 0, hours: 0, minutes: 0 }, p5: { days: 0, hours: 0, minutes: 0 } } },
-        e3: { users: [], copyTo: [], priorities: { p1: { days: 0, hours: 0, minutes: 0 }, p2: { days: 0, hours: 0, minutes: 0 }, p3: { days: 0, hours: 0, minutes: 0 }, p4: { days: 0, hours: 0, minutes: 0 }, p5: { days: 0, hours: 0, minutes: 0 } } },
-        e4: { users: [], copyTo: [], priorities: { p1: { days: 0, hours: 0, minutes: 0 }, p2: { days: 0, hours: 0, minutes: 0 }, p3: { days: 0, hours: 0, minutes: 0 }, p4: { days: 0, hours: 0, minutes: 0 }, p5: { days: 0, hours: 0, minutes: 0 } } },
-        e5: { users: [], copyTo: [], priorities: { p1: { days: 0, hours: 0, minutes: 0 }, p2: { days: 0, hours: 0, minutes: 0 }, p3: { days: 0, hours: 0, minutes: 0 }, p4: { days: 0, hours: 0, minutes: 0 }, p5: { days: 0, hours: 0, minutes: 0 } } },
+        e1: {
+          users: [],
+          copyTo: [],
+          priorities: {
+            p1: { days: 0, hours: 0, minutes: 0 },
+            p2: { days: 0, hours: 0, minutes: 0 },
+            p3: { days: 0, hours: 0, minutes: 0 },
+            p4: { days: 0, hours: 0, minutes: 0 },
+            p5: { days: 0, hours: 0, minutes: 0 },
+          },
+        },
+        e2: {
+          users: [],
+          copyTo: [],
+          priorities: {
+            p1: { days: 0, hours: 0, minutes: 0 },
+            p2: { days: 0, hours: 0, minutes: 0 },
+            p3: { days: 0, hours: 0, minutes: 0 },
+            p4: { days: 0, hours: 0, minutes: 0 },
+            p5: { days: 0, hours: 0, minutes: 0 },
+          },
+        },
+        e3: {
+          users: [],
+          copyTo: [],
+          priorities: {
+            p1: { days: 0, hours: 0, minutes: 0 },
+            p2: { days: 0, hours: 0, minutes: 0 },
+            p3: { days: 0, hours: 0, minutes: 0 },
+            p4: { days: 0, hours: 0, minutes: 0 },
+            p5: { days: 0, hours: 0, minutes: 0 },
+          },
+        },
+        e4: {
+          users: [],
+          copyTo: [],
+          priorities: {
+            p1: { days: 0, hours: 0, minutes: 0 },
+            p2: { days: 0, hours: 0, minutes: 0 },
+            p3: { days: 0, hours: 0, minutes: 0 },
+            p4: { days: 0, hours: 0, minutes: 0 },
+            p5: { days: 0, hours: 0, minutes: 0 },
+          },
+        },
+        e5: {
+          users: [],
+          copyTo: [],
+          priorities: {
+            p1: { days: 0, hours: 0, minutes: 0 },
+            p2: { days: 0, hours: 0, minutes: 0 },
+            p3: { days: 0, hours: 0, minutes: 0 },
+            p4: { days: 0, hours: 0, minutes: 0 },
+            p5: { days: 0, hours: 0, minutes: 0 },
+          },
+        },
       },
     },
   });
@@ -523,7 +588,7 @@ export const ResolutionEscalationTab: React.FC = () => {
   const loadEscalationUsers = async () => {
     setLoadingUsers(true);
     try {
-      const response = await apiClient.get('/crm/admin/escalation_users');
+      const response = await apiClient.get("/crm/admin/escalation_users");
       setEscalationUsers(response.data.escalation_users || []);
     } catch (error) {
       console.error("Error loading escalation users:", error);
@@ -577,7 +642,7 @@ export const ResolutionEscalationTab: React.FC = () => {
     setIsAssignModeUpdating(true);
     try {
       await ticketManagementAPI.updateComplaintAssignMode(
-        automatic ? "auto" : "manual",
+        automatic ? "auto" : "manual"
       );
       setIsAutomatic(automatic);
     } catch (error) {
@@ -591,27 +656,33 @@ export const ResolutionEscalationTab: React.FC = () => {
   // Load dropdowns for assign rule modals
   const loadAssignRuleDropdowns = async () => {
     try {
-      const [issueTypesResult, categoriesResult, engineersResult] = await Promise.allSettled([
-        ticketManagementAPI.getIssueTypesDropdown(),
-        ticketManagementAPI.getCategoriesDropdown(),
-        ticketManagementAPI.getServiceEngineers({ 'q[staff_type_eq]': 'Escalation' }),
-      ]);
-      if (issueTypesResult.status === 'fulfilled') {
+      const [issueTypesResult, categoriesResult, engineersResult] =
+        await Promise.allSettled([
+          ticketManagementAPI.getIssueTypesDropdown(),
+          ticketManagementAPI.getCategoriesDropdown(),
+          ticketManagementAPI.getServiceEngineers({
+            "q[staff_type_eq]": "Escalation",
+          }),
+        ]);
+      if (issueTypesResult.status === "fulfilled") {
         setIssueTypeOptions(issueTypesResult.value.issue_types || []);
       } else {
-        console.error('Error loading issue types:', issueTypesResult.reason);
-        toast.error('Failed to load issue types!');
+        console.error("Error loading issue types:", issueTypesResult.reason);
+        toast.error("Failed to load issue types!");
       }
-      if (categoriesResult.status === 'fulfilled') {
+      if (categoriesResult.status === "fulfilled") {
         setCategoryDropdownOptions(categoriesResult.value.categories || []);
       } else {
-        console.error('Error loading categories:', categoriesResult.reason);
+        console.error("Error loading categories:", categoriesResult.reason);
       }
-      if (engineersResult.status === 'fulfilled') {
-        setServiceEngineerOptions(engineersResult.value.service_engineers || []);
+      if (engineersResult.status === "fulfilled") {
+        setServiceEngineerOptions(engineersResult.value.helpdesk_users || []);
       } else {
-        console.error('Error loading service engineers:', engineersResult.reason);
-        toast.error('Failed to load service engineers!');
+        console.error(
+          "Error loading service engineers:",
+          engineersResult.reason
+        );
+        toast.error("Failed to load service engineers!");
       }
     } catch (error) {
       console.error("Error loading assign rule dropdowns:", error);
@@ -623,8 +694,12 @@ export const ResolutionEscalationTab: React.FC = () => {
     issueTypeId: string,
     target: "add" | "edit"
   ) => {
-    const setLoading = target === "add" ? setAddModalCategoriesLoading : setEditModalCategoriesLoading;
-    const setOptions = target === "add" ? setAddModalCategories : setEditModalCategories;
+    const setLoading =
+      target === "add"
+        ? setAddModalCategoriesLoading
+        : setEditModalCategoriesLoading;
+    const setOptions =
+      target === "add" ? setAddModalCategories : setEditModalCategories;
     if (!issueTypeId) {
       setOptions([]);
       return;
@@ -647,14 +722,24 @@ export const ResolutionEscalationTab: React.FC = () => {
     issueTypeId: string,
     target: "form" | "edit" | "filter"
   ) => {
-    const setLoading = target === "form" ? setEscalationFormCategoriesLoading : target === "edit" ? setEditEscalationCategoriesLoading : setEscalationFilterCategoriesLoading;
-    const setOptions = target === "form" ? setEscalationFormCategoryOptions : target === "edit" ? setEditEscalationCategoryOptions : setEscalationFilterCategoryOptions;
-    
+    const setLoading =
+      target === "form"
+        ? setEscalationFormCategoriesLoading
+        : target === "edit"
+          ? setEditEscalationCategoriesLoading
+          : setEscalationFilterCategoriesLoading;
+    const setOptions =
+      target === "form"
+        ? setEscalationFormCategoryOptions
+        : target === "edit"
+          ? setEditEscalationCategoryOptions
+          : setEscalationFilterCategoryOptions;
+
     if (!issueTypeId) {
       setOptions([]);
       return;
     }
-    
+
     setLoading(true);
     try {
       const res = await apiClient.get("/dropdown/categories", {
@@ -837,8 +922,14 @@ export const ResolutionEscalationTab: React.FC = () => {
 
   // Fetch escalation filter categories when filter issue type changes
   useEffect(() => {
-    if (pendingEscalationFilterIssueTypeId && pendingEscalationFilterIssueTypeId !== "all") {
-      fetchEscalationCategoriesByIssueType(pendingEscalationFilterIssueTypeId, "filter");
+    if (
+      pendingEscalationFilterIssueTypeId &&
+      pendingEscalationFilterIssueTypeId !== "all"
+    ) {
+      fetchEscalationCategoriesByIssueType(
+        pendingEscalationFilterIssueTypeId,
+        "filter"
+      );
     } else {
       setEscalationFilterCategoryOptions([]);
     }
@@ -991,10 +1082,14 @@ export const ResolutionEscalationTab: React.FC = () => {
         }
         if (Array.isArray(escalationMatrix)) {
           const newFormat = escalationMatrix.find(
-            (e: any) => (e.level || "").toUpperCase() === levelName.toUpperCase()
+            (e: any) =>
+              (e.level || "").toUpperCase() === levelName.toUpperCase()
           );
           if (newFormat) return newFormat;
-        } else if (typeof escalationMatrix === "object" && escalationMatrix !== null) {
+        } else if (
+          typeof escalationMatrix === "object" &&
+          escalationMatrix !== null
+        ) {
           const key = levelName.toLowerCase();
           if (escalationMatrix[key]) return escalationMatrix[key];
         }
@@ -1114,7 +1209,10 @@ export const ResolutionEscalationTab: React.FC = () => {
           ? Object.values(escalationMatrix)
           : [];
       (matrixSource as any[]).forEach((lvl: any) => {
-        if (lvl.escalate_to_ids?.length === 1 && lvl.escalate_to_display?.trim()) {
+        if (
+          lvl.escalate_to_ids?.length === 1 &&
+          lvl.escalate_to_display?.trim()
+        ) {
           userLabels[lvl.escalate_to_ids[0]] = lvl.escalate_to_display.trim();
         }
         if (lvl.copy_to_ids?.length === 1 && lvl.copy_to_display?.trim()) {
@@ -1281,250 +1379,227 @@ export const ResolutionEscalationTab: React.FC = () => {
                 Automatic
               </span>
             </div>
-            {isAutomatic && <div className="flex gap-2">
-              <Button
-                onClick={() => setIsAddAssignRuleOpen(true)}
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Plus className="h-4 w-4" />
-                Add
-              </Button>
-              <Button
-                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => {
-                  setPendingFilterIssueTypeId(filterIssueTypeId);
-                  setPendingFilterCategoryId(filterCategoryId);
-                  setPendingFilterAssignTo(filterAssignTo);
-                  setIsFilterDialogOpen(true);
-                }}
-              >
-                <Filter className="h-4 w-4" />
-                Filter
-                {(filterIssueTypeId || filterCategoryId || filterAssignTo) && (
-                  <span className="ml-1 bg-[#C72030] text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
-                    !
-                  </span>
-                )}
-              </Button>
-            </div>}
+            {isAutomatic && (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setIsAddAssignRuleOpen(true)}
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add
+                </Button>
+                <Button
+                  className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    setPendingFilterIssueTypeId(filterIssueTypeId);
+                    setPendingFilterCategoryId(filterCategoryId);
+                    setPendingFilterAssignTo(filterAssignTo);
+                    setIsFilterDialogOpen(true);
+                  }}
+                >
+                  <Filter className="h-4 w-4" />
+                  Filter
+                  {(filterIssueTypeId ||
+                    filterCategoryId ||
+                    filterAssignTo) && (
+                    <span className="ml-1 bg-[#C72030] text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                      !
+                    </span>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Assign Rule Table - only shown in Automatic mode */}
-          {isAutomatic && <div className="border rounded-md overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="font-semibold text-gray-700">
-                    Rule
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700">
-                    Issue Type
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700">
-                    Category Type
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700">
-                    Service Engineer
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 text-center">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {assignRulesLoading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center py-10 text-gray-400 text-sm"
-                    >
-                      Loading...
-                    </TableCell>
+          {isAutomatic && (
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="font-semibold text-gray-700">
+                      Rule
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      Issue Type
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      Category Type
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      Service Engineer
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-center">
+                      Actions
+                    </TableHead>
                   </TableRow>
-                ) : assignRules.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center py-10 text-gray-400 text-sm"
-                    >
-                      No assign rules found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  assignRules.map((rule) => {
-                    const issueTypeName =
-                      typeof rule.issue_type === "string"
-                        ? rule.issue_type
-                        : rule.issue_type?.name;
-                    const categoryTypeName =
-                      rule.category_type ||
-                      (typeof rule.category === "string"
-                        ? rule.category
-                        : rule.category?.name);
+                </TableHeader>
+                <TableBody>
+                  {assignRulesLoading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="text-center py-10 text-gray-400 text-sm"
+                      >
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : assignRules.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="text-center py-10 text-gray-400 text-sm"
+                      >
+                        No assign rules found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    assignRules.map((rule) => {
+                      const issueTypeName =
+                        typeof rule.issue_type === "string"
+                          ? rule.issue_type
+                          : rule.issue_type?.name;
+                      const categoryTypeName =
+                        rule.category_type ||
+                        (typeof rule.category === "string"
+                          ? rule.category
+                          : rule.category?.name);
 
-                    return (
-                      <TableRow key={rule.id} className="border-b">
-                        <TableCell className="font-medium text-gray-700">
-                          Rule {rule.rule_number ?? rule.id}
-                        </TableCell>
-                        <TableCell className="text-gray-600">
-                          {issueTypeName || "-"}
-                        </TableCell>
-                        <TableCell className="text-gray-600">
-                          {categoryTypeName || "-"}
-                        </TableCell>
-                        <TableCell className="text-gray-600">
-                          {rule.service_engineer_name || "-"}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="p-1 h-7 w-7"
-                              onClick={() => handleOpenEditAssignRule(rule)}
-                            >
-                              <Edit className="h-4 w-4 text-gray-600" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="p-1 h-7 w-7 text-red-600"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Confirm Delete
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete this assign
-                                    rule? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() =>
-                                      handleDeleteAssignRule(rule.id)
-                                    }
+                      return (
+                        <TableRow key={rule.id} className="border-b">
+                          <TableCell className="font-medium text-gray-700">
+                            Rule {rule.rule_number ?? rule.id}
+                          </TableCell>
+                          <TableCell className="text-gray-600">
+                            {issueTypeName || "-"}
+                          </TableCell>
+                          <TableCell className="text-gray-600">
+                            {categoryTypeName || "-"}
+                          </TableCell>
+                          <TableCell className="text-gray-600">
+                            {rule.service_engineer_name || "-"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-7 w-7"
+                                onClick={() => handleOpenEditAssignRule(rule)}
+                              >
+                                <Edit className="h-4 w-4 text-gray-600" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="p-1 h-7 w-7 text-red-600"
                                   >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>}
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Confirm Delete
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete this
+                                      assign rule? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() =>
+                                        handleDeleteAssignRule(rule.id)
+                                      }
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
           {/* Pagination */}
-          {isAutomatic && !assignRulesLoading && assignRulesPagination.totalPages > 1 && (
-            <div className="flex items-center justify-between pt-3">
-              <p className="text-sm text-gray-500">
-                Showing{" "}
-                {Math.min(
-                  (assignRulesPagination.currentPage - 1) *
-                    assignRulesPagination.perPage +
-                    1,
-                  assignRulesPagination.totalEntries
-                )}
-                –
-                {Math.min(
-                  assignRulesPagination.currentPage *
-                    assignRulesPagination.perPage,
-                  assignRulesPagination.totalEntries
-                )}{" "}
-                of {assignRulesPagination.totalEntries} rules
-              </p>
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      className={
-                        assignRulesPagination.currentPage === 1
-                          ? "pointer-events-none opacity-50 cursor-default"
-                          : "cursor-pointer"
-                      }
-                      onClick={() => {
-                        if (assignRulesPagination.currentPage > 1)
-                          loadAssignRules(
-                            assignRulesPagination.currentPage - 1,
-                            filterIssueTypeId,
-                            filterCategoryId,
-                            filterAssignTo
-                          );
-                      }}
-                    />
-                  </PaginationItem>
-                  {(() => {
-                    const items = [];
-                    const { currentPage, totalPages } = assignRulesPagination;
-                    const showEllipsis = totalPages > 7;
-                    if (showEllipsis) {
-                      items.push(
-                        <PaginationItem key={1}>
-                          <PaginationLink
-                            className="cursor-pointer"
-                            isActive={currentPage === 1}
-                            onClick={() =>
-                              loadAssignRules(
-                                1,
-                                filterIssueTypeId,
-                                filterCategoryId,
-                                filterAssignTo
-                              )
-                            }
-                          >
-                            1
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                      if (currentPage <= 3) {
-                        for (let i = 2; i <= 4 && i < totalPages; i++) {
-                          items.push(
-                            <PaginationItem key={i}>
-                              <PaginationLink
-                                className="cursor-pointer"
-                                isActive={currentPage === i}
-                                onClick={() =>
-                                  loadAssignRules(
-                                    i,
-                                    filterIssueTypeId,
-                                    filterCategoryId,
-                                    filterAssignTo
-                                  )
-                                }
-                              >
-                                {i}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
+          {isAutomatic &&
+            !assignRulesLoading &&
+            assignRulesPagination.totalPages > 1 && (
+              <div className="flex items-center justify-between pt-3">
+                <p className="text-sm text-gray-500">
+                  Showing{" "}
+                  {Math.min(
+                    (assignRulesPagination.currentPage - 1) *
+                      assignRulesPagination.perPage +
+                      1,
+                    assignRulesPagination.totalEntries
+                  )}
+                  –
+                  {Math.min(
+                    assignRulesPagination.currentPage *
+                      assignRulesPagination.perPage,
+                    assignRulesPagination.totalEntries
+                  )}{" "}
+                  of {assignRulesPagination.totalEntries} rules
+                </p>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        className={
+                          assignRulesPagination.currentPage === 1
+                            ? "pointer-events-none opacity-50 cursor-default"
+                            : "cursor-pointer"
                         }
-                        if (totalPages > 5)
-                          items.push(
-                            <PaginationItem key="e1">
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          );
-                      } else if (currentPage >= totalPages - 2) {
+                        onClick={() => {
+                          if (assignRulesPagination.currentPage > 1)
+                            loadAssignRules(
+                              assignRulesPagination.currentPage - 1,
+                              filterIssueTypeId,
+                              filterCategoryId,
+                              filterAssignTo
+                            );
+                        }}
+                      />
+                    </PaginationItem>
+                    {(() => {
+                      const items = [];
+                      const { currentPage, totalPages } = assignRulesPagination;
+                      const showEllipsis = totalPages > 7;
+                      if (showEllipsis) {
                         items.push(
-                          <PaginationItem key="e1">
-                            <PaginationEllipsis />
+                          <PaginationItem key={1}>
+                            <PaginationLink
+                              className="cursor-pointer"
+                              isActive={currentPage === 1}
+                              onClick={() =>
+                                loadAssignRules(
+                                  1,
+                                  filterIssueTypeId,
+                                  filterCategoryId,
+                                  filterAssignTo
+                                )
+                              }
+                            >
+                              1
+                            </PaginationLink>
                           </PaginationItem>
                         );
-                        for (let i = totalPages - 3; i < totalPages; i++) {
-                          if (i > 1)
+                        if (currentPage <= 3) {
+                          for (let i = 2; i <= 4 && i < totalPages; i++) {
                             items.push(
                               <PaginationItem key={i}>
                                 <PaginationLink
@@ -1543,18 +1618,97 @@ export const ResolutionEscalationTab: React.FC = () => {
                                 </PaginationLink>
                               </PaginationItem>
                             );
+                          }
+                          if (totalPages > 5)
+                            items.push(
+                              <PaginationItem key="e1">
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                        } else if (currentPage >= totalPages - 2) {
+                          items.push(
+                            <PaginationItem key="e1">
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
+                          for (let i = totalPages - 3; i < totalPages; i++) {
+                            if (i > 1)
+                              items.push(
+                                <PaginationItem key={i}>
+                                  <PaginationLink
+                                    className="cursor-pointer"
+                                    isActive={currentPage === i}
+                                    onClick={() =>
+                                      loadAssignRules(
+                                        i,
+                                        filterIssueTypeId,
+                                        filterCategoryId,
+                                        filterAssignTo
+                                      )
+                                    }
+                                  >
+                                    {i}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                          }
+                        } else {
+                          items.push(
+                            <PaginationItem key="e1">
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
+                          for (
+                            let i = currentPage - 1;
+                            i <= currentPage + 1;
+                            i++
+                          ) {
+                            items.push(
+                              <PaginationItem key={i}>
+                                <PaginationLink
+                                  className="cursor-pointer"
+                                  isActive={currentPage === i}
+                                  onClick={() =>
+                                    loadAssignRules(
+                                      i,
+                                      filterIssueTypeId,
+                                      filterCategoryId,
+                                      filterAssignTo
+                                    )
+                                  }
+                                >
+                                  {i}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          }
+                          items.push(
+                            <PaginationItem key="e2">
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
                         }
+                        if (totalPages > 1)
+                          items.push(
+                            <PaginationItem key={totalPages}>
+                              <PaginationLink
+                                className="cursor-pointer"
+                                isActive={currentPage === totalPages}
+                                onClick={() =>
+                                  loadAssignRules(
+                                    totalPages,
+                                    filterIssueTypeId,
+                                    filterCategoryId,
+                                    filterAssignTo
+                                  )
+                                }
+                              >
+                                {totalPages}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
                       } else {
-                        items.push(
-                          <PaginationItem key="e1">
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                        for (
-                          let i = currentPage - 1;
-                          i <= currentPage + 1;
-                          i++
-                        ) {
+                        for (let i = 1; i <= totalPages; i++) {
                           items.push(
                             <PaginationItem key={i}>
                               <PaginationLink
@@ -1574,93 +1728,53 @@ export const ResolutionEscalationTab: React.FC = () => {
                             </PaginationItem>
                           );
                         }
-                        items.push(
-                          <PaginationItem key="e2">
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
                       }
-                      if (totalPages > 1)
-                        items.push(
-                          <PaginationItem key={totalPages}>
-                            <PaginationLink
-                              className="cursor-pointer"
-                              isActive={currentPage === totalPages}
-                              onClick={() =>
-                                loadAssignRules(
-                                  totalPages,
-                                  filterIssueTypeId,
-                                  filterCategoryId,
-                                  filterAssignTo
-                                )
-                              }
-                            >
-                              {totalPages}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                    } else {
-                      for (let i = 1; i <= totalPages; i++) {
-                        items.push(
-                          <PaginationItem key={i}>
-                            <PaginationLink
-                              className="cursor-pointer"
-                              isActive={currentPage === i}
-                              onClick={() =>
-                                loadAssignRules(
-                                  i,
-                                  filterIssueTypeId,
-                                  filterCategoryId,
-                                  filterAssignTo
-                                )
-                              }
-                            >
-                              {i}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      }
-                    }
-                    return items;
-                  })()}
-                  <PaginationItem>
-                    <PaginationNext
-                      className={
-                        assignRulesPagination.currentPage ===
-                        assignRulesPagination.totalPages
-                          ? "pointer-events-none opacity-50 cursor-default"
-                          : "cursor-pointer"
-                      }
-                      onClick={() => {
-                        if (
-                          assignRulesPagination.currentPage <
+                      return items;
+                    })()}
+                    <PaginationItem>
+                      <PaginationNext
+                        className={
+                          assignRulesPagination.currentPage ===
                           assignRulesPagination.totalPages
-                        )
-                          loadAssignRules(
-                            assignRulesPagination.currentPage + 1,
-                            filterIssueTypeId,
-                            filterCategoryId,
-                            filterAssignTo
-                          );
-                      }}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
+                            ? "pointer-events-none opacity-50 cursor-default"
+                            : "cursor-pointer"
+                        }
+                        onClick={() => {
+                          if (
+                            assignRulesPagination.currentPage <
+                            assignRulesPagination.totalPages
+                          )
+                            loadAssignRules(
+                              assignRulesPagination.currentPage + 1,
+                              filterIssueTypeId,
+                              filterCategoryId,
+                              filterAssignTo
+                            );
+                        }}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
         </div>
       )}
 
       {/* ──────────────── FILTER ASSIGN RULE DIALOG ──────────────── */}
-      <Dialog modal={false} open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+      <Dialog
+        modal={false}
+        open={isFilterDialogOpen}
+        onOpenChange={setIsFilterDialogOpen}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Filter Assign Rule</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <MuiFormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Issue Type
+              </InputLabel>
               <MuiSelect
                 value={pendingFilterIssueTypeId}
                 onChange={(e) => setPendingFilterIssueTypeId(e.target.value)}
@@ -1677,7 +1791,9 @@ export const ResolutionEscalationTab: React.FC = () => {
               </MuiSelect>
             </MuiFormControl>
             <MuiFormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Category Type
+              </InputLabel>
               <MuiSelect
                 value={pendingFilterCategoryId}
                 onChange={(e) => setPendingFilterCategoryId(e.target.value)}
@@ -1694,7 +1810,9 @@ export const ResolutionEscalationTab: React.FC = () => {
               </MuiSelect>
             </MuiFormControl>
             <MuiFormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Engineer</InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Engineer
+              </InputLabel>
               <MuiSelect
                 value={pendingFilterAssignTo}
                 onChange={(e) => setPendingFilterAssignTo(e.target.value)}
@@ -1760,7 +1878,12 @@ export const ResolutionEscalationTab: React.FC = () => {
           {/* FM / Project sub-tabs */}
           <div className="flex border-b border-gray-200 bg-white px-6">
             <button
-              onClick={() => { if (activeFmProjectTab !== "fm") { clearEscalationFormState(); setActiveFmProjectTab("fm"); } }}
+              onClick={() => {
+                if (activeFmProjectTab !== "fm") {
+                  clearEscalationFormState();
+                  setActiveFmProjectTab("fm");
+                }
+              }}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeFmProjectTab === "fm"
                   ? "border-[#C72030] text-[#C72030]"
@@ -1770,7 +1893,12 @@ export const ResolutionEscalationTab: React.FC = () => {
               FM
             </button>
             <button
-              onClick={() => { if (activeFmProjectTab !== "project") { clearEscalationFormState(); setActiveFmProjectTab("project"); } }}
+              onClick={() => {
+                if (activeFmProjectTab !== "project") {
+                  clearEscalationFormState();
+                  setActiveFmProjectTab("project");
+                }
+              }}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeFmProjectTab === "project"
                   ? "border-[#C72030] text-[#C72030]"
@@ -1780,7 +1908,12 @@ export const ResolutionEscalationTab: React.FC = () => {
               Project
             </button>
             <button
-              onClick={() => { if (activeFmProjectTab !== "executive") { clearEscalationFormState(); setActiveFmProjectTab("executive"); } }}
+              onClick={() => {
+                if (activeFmProjectTab !== "executive") {
+                  clearEscalationFormState();
+                  setActiveFmProjectTab("executive");
+                }
+              }}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeFmProjectTab === "executive"
                   ? "border-[#C72030] text-[#C72030]"
@@ -1821,60 +1954,87 @@ export const ResolutionEscalationTab: React.FC = () => {
               <ExecutiveEscalationTab />
             </div>
           ) : (
-          <div className="p-6 space-y-6">
-            {/* Create Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Resolution Escalation Configuration</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                  {/* Issue Type + Category Type + Category Selection row */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Issue Type Dropdown */}
-                    <MuiFormControl fullWidth variant="outlined">
-                      <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
-                      <MuiSelect
-                        value={escalationFormIssueTypeId}
-                        onChange={(e) => setEscalationFormIssueTypeId(e.target.value)}
-                        displayEmpty
-                        label="Issue Type"
-                        sx={fieldStyles}
-                        MenuProps={menuProps}
-                      >
-                        <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
-                        {issueTypeOptions.map((it) => (
-                          <MenuItem key={it.id} value={it.id.toString()}>
-                            {it.name}
+            <div className="p-6 space-y-6">
+              {/* Create Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Resolution Escalation Configuration</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    {/* Issue Type + Category Type + Category Selection row */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Issue Type Dropdown */}
+                      <MuiFormControl fullWidth variant="outlined">
+                        <InputLabel
+                          shrink
+                          sx={{ backgroundColor: "white", px: 1 }}
+                        >
+                          Issue Type
+                        </InputLabel>
+                        <MuiSelect
+                          value={escalationFormIssueTypeId}
+                          onChange={(e) =>
+                            setEscalationFormIssueTypeId(e.target.value)
+                          }
+                          displayEmpty
+                          label="Issue Type"
+                          sx={fieldStyles}
+                          MenuProps={menuProps}
+                        >
+                          <MenuItem value="" disabled>
+                            <em>Select Issue Type</em>
                           </MenuItem>
-                        ))}
-                      </MuiSelect>
-                    </MuiFormControl>
+                          {issueTypeOptions.map((it) => (
+                            <MenuItem key={it.id} value={it.id.toString()}>
+                              {it.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </MuiFormControl>
 
-                    {/* Category Type Dropdown */}
-                    <MuiFormControl fullWidth variant="outlined" disabled={!escalationFormIssueTypeId || escalationFormCategoriesLoading}>
-                      <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
-                      <MuiSelect
-                        value={escalationFormCategoryTypeId}
-                        onChange={(e) => setEscalationFormCategoryTypeId(e.target.value)}
-                        displayEmpty
-                        label="Category Type"
-                        sx={fieldStyles}
-                        MenuProps={menuProps}
+                      {/* Category Type Dropdown */}
+                      <MuiFormControl
+                        fullWidth
+                        variant="outlined"
+                        disabled={
+                          !escalationFormIssueTypeId ||
+                          escalationFormCategoriesLoading
+                        }
                       >
-                        <MenuItem value="" disabled>
-                          <em>{escalationFormIssueTypeId ? "Loading categories..." : "Select Issue Type first"}</em>
-                        </MenuItem>
-                        {escalationFormCategoryOptions.map((cat) => (
-                          <MenuItem key={cat.id} value={cat.id.toString()}>
-                            {cat.name}
+                        <InputLabel
+                          shrink
+                          sx={{ backgroundColor: "white", px: 1 }}
+                        >
+                          Category Type
+                        </InputLabel>
+                        <MuiSelect
+                          value={escalationFormCategoryTypeId}
+                          onChange={(e) =>
+                            setEscalationFormCategoryTypeId(e.target.value)
+                          }
+                          displayEmpty
+                          label="Category Type"
+                          sx={fieldStyles}
+                          MenuProps={menuProps}
+                        >
+                          <MenuItem value="" disabled>
+                            <em>
+                              {escalationFormIssueTypeId
+                                ? "Loading categories..."
+                                : "Select Issue Type first"}
+                            </em>
                           </MenuItem>
-                        ))}
-                      </MuiSelect>
-                    </MuiFormControl>
+                          {escalationFormCategoryOptions.map((cat) => (
+                            <MenuItem key={cat.id} value={cat.id.toString()}>
+                              {cat.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </MuiFormControl>
 
-                    {/* Select Categories (multi-select) */}
-                    {/* <div>
+                      {/* Select Categories (multi-select) */}
+                      {/* <div>
                       <Label className={FIELD_LABEL_CLASS}>Select Categories</Label>
                       <ReactSelect
                         isMulti
@@ -1892,688 +2052,751 @@ export const ResolutionEscalationTab: React.FC = () => {
                         <p className="text-sm text-red-500 mt-1">{errors.categoryIds.message}</p>
                       )}
                     </div> */}
-                  </div>
+                    </div>
 
-                  {/* Escalation Matrix Table */}
-                  <div>
-                    <Table className="border">
-                      <TableHeader>
-                        <TableRow className="bg-gray-50">
-                          <TableHead className="font-semibold text-center border-r">
-                            Levels
-                          </TableHead>
-                          <TableHead className="font-semibold text-center border-r">
-                            Escalation To
-                          </TableHead>
-                          <TableHead className="font-semibold text-center border-r">
-                            Copy To
-                          </TableHead>
-                          <TableHead
-                            className="font-semibold text-center border-r"
-                            colSpan={3}
-                          >
-                            P1
-                          </TableHead>
-                          <TableHead
-                            className="font-semibold text-center border-r"
-                            colSpan={3}
-                          >
-                            P2
-                          </TableHead>
-                          <TableHead
-                            className="font-semibold text-center border-r"
-                            colSpan={3}
-                          >
-                            P3
-                          </TableHead>
-                          <TableHead
-                            className="font-semibold text-center border-r"
-                            colSpan={3}
-                          >
-                            P4
-                          </TableHead>
-                          <TableHead
-                            className="font-semibold text-center"
-                            colSpan={3}
-                          >
-                            P5
-                          </TableHead>
-                        </TableRow>
-                        <TableRow className="bg-gray-50">
-                          <TableHead className="border-r"></TableHead>
-                          <TableHead className="border-r"></TableHead>
-                          <TableHead className="border-r"></TableHead>
-                          {priorities.map((priority) => (
-                            <React.Fragment key={priority}>
-                              <TableHead className="text-center text-xs border-r">
-                                Day
-                              </TableHead>
-                              <TableHead className="text-center text-xs border-r">
-                                Hrs
-                              </TableHead>
-                              <TableHead className="text-center text-xs border-r">
-                                Min
-                              </TableHead>
-                            </React.Fragment>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {escalationLevels.map((level) => (
-                          <TableRow key={level} className="border-b">
-                            <TableCell className="font-medium text-center border-r">
-                              {level.toUpperCase()}
-                            </TableCell>
-                            <TableCell className="p-2 border-r">
-                              <ReactSelect
-                                isMulti
-                                options={userOptions}
-                                value={userOptions.filter((option) =>
-                                  watch(
-                                    `escalationLevels.${level}.users`
-                                  )?.includes(option.value)
-                                )}
-                                onChange={(selected) => {
-                                  const selectedIds = selected
-                                    ? selected.map((s) => s.value)
-                                    : [];
-                                  setValue(
-                                    `escalationLevels.${level}.users`,
-                                    selectedIds,
-                                    { shouldValidate: true }
-                                  );
-                                }}
-                                placeholder="Escalate to..."
-                                isLoading={serviceEngineerOptions.length === 0}
-                                className="min-w-[200px]"
-                                menuPlacement="auto"
-                                maxMenuHeight={150}
-                                styles={{
-                                  control: (base) => ({
-                                    ...base,
-                                    minHeight: "32px",
-                                    fontSize: "13px",
-                                    border: "none",
-                                    boxShadow: "none",
-                                  }),
-                                  multiValue: (base) => ({
-                                    ...base,
-                                    fontSize: "11px",
-                                  }),
-                                  menu: (base) => ({
-                                    ...base,
-                                    zIndex: 50,
-                                    position: "relative",
-                                  }),
-                                  menuList: (base) => ({
-                                    ...base,
-                                    maxHeight: "150px",
-                                    overflowY: "auto",
-                                  }),
-                                  option: (base, state) => ({
-                                    ...base,
-                                    fontSize: "13px",
-                                    padding: "6px 10px",
-                                    backgroundColor: state.isSelected
-                                      ? "#3b82f6"
-                                      : state.isFocused
-                                        ? "#e5e7eb"
-                                        : "white",
-                                    color: state.isSelected
-                                      ? "white"
-                                      : "#374151",
-                                    cursor: "pointer",
-                                  }),
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell className="p-2 border-r">
-                              <ReactSelect
-                                isMulti
-                                options={userOptions}
-                                value={userOptions.filter((option) =>
-                                  watch(
-                                    `escalationLevels.${level}.copyTo`
-                                  )?.includes(option.value)
-                                )}
-                                onChange={(selected) => {
-                                  const selectedIds = selected
-                                    ? selected.map((s) => s.value)
-                                    : [];
-                                  setValue(
-                                    `escalationLevels.${level}.copyTo`,
-                                    selectedIds,
-                                    { shouldValidate: true }
-                                  );
-                                }}
-                                placeholder="Copy to..."
-                                isLoading={serviceEngineerOptions.length === 0}
-                                className="min-w-[200px]"
-                                menuPlacement="auto"
-                                maxMenuHeight={150}
-                                styles={{
-                                  control: (base) => ({
-                                    ...base,
-                                    minHeight: "32px",
-                                    fontSize: "13px",
-                                    border: "none",
-                                    boxShadow: "none",
-                                  }),
-                                  multiValue: (base) => ({
-                                    ...base,
-                                    fontSize: "11px",
-                                  }),
-                                  menu: (base) => ({
-                                    ...base,
-                                    zIndex: 50,
-                                    position: "relative",
-                                  }),
-                                  menuList: (base) => ({
-                                    ...base,
-                                    maxHeight: "150px",
-                                    overflowY: "auto",
-                                  }),
-                                  option: (base, state) => ({
-                                    ...base,
-                                    fontSize: "13px",
-                                    padding: "6px 10px",
-                                    backgroundColor: state.isSelected
-                                      ? "#3b82f6"
-                                      : state.isFocused
-                                        ? "#e5e7eb"
-                                        : "white",
-                                    color: state.isSelected
-                                      ? "white"
-                                      : "#374151",
-                                    cursor: "pointer",
-                                  }),
-                                }}
-                              />
-                            </TableCell>
+                    {/* Escalation Matrix Table */}
+                    <div>
+                      <Table className="border">
+                        <TableHeader>
+                          <TableRow className="bg-gray-50">
+                            <TableHead className="font-semibold text-center border-r">
+                              Levels
+                            </TableHead>
+                            <TableHead className="font-semibold text-center border-r">
+                              Escalation To
+                            </TableHead>
+                            <TableHead className="font-semibold text-center border-r">
+                              Copy To
+                            </TableHead>
+                            <TableHead
+                              className="font-semibold text-center border-r"
+                              colSpan={3}
+                            >
+                              P1
+                            </TableHead>
+                            <TableHead
+                              className="font-semibold text-center border-r"
+                              colSpan={3}
+                            >
+                              P2
+                            </TableHead>
+                            <TableHead
+                              className="font-semibold text-center border-r"
+                              colSpan={3}
+                            >
+                              P3
+                            </TableHead>
+                            <TableHead
+                              className="font-semibold text-center border-r"
+                              colSpan={3}
+                            >
+                              P4
+                            </TableHead>
+                            <TableHead
+                              className="font-semibold text-center"
+                              colSpan={3}
+                            >
+                              P5
+                            </TableHead>
+                          </TableRow>
+                          <TableRow className="bg-gray-50">
+                            <TableHead className="border-r"></TableHead>
+                            <TableHead className="border-r"></TableHead>
+                            <TableHead className="border-r"></TableHead>
                             {priorities.map((priority) => (
                               <React.Fragment key={priority}>
-                                <TableCell className="p-1 text-center border-r">
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    {...register(
-                                      `escalationLevels.${level}.priorities.${priority}.days`,
-                                      { valueAsNumber: true }
-                                    )}
-                                    className="w-16 h-8 text-center text-xs border-none focus-visible:ring-0"
-                                    placeholder="0"
-                                  />
-                                </TableCell>
-                                <TableCell className="p-1 text-center border-r">
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    max="23"
-                                    {...register(
-                                      `escalationLevels.${level}.priorities.${priority}.hours`,
-                                      { valueAsNumber: true }
-                                    )}
-                                    className="w-16 h-8 text-center text-xs border-none focus-visible:ring-0"
-                                    placeholder="0"
-                                  />
-                                </TableCell>
-                                <TableCell className="p-1 text-center border-r last:border-r-0">
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    max="59"
-                                    {...register(
-                                      `escalationLevels.${level}.priorities.${priority}.minutes`,
-                                      { valueAsNumber: true }
-                                    )}
-                                    className="w-16 h-8 text-center text-xs border-none focus-visible:ring-0"
-                                    placeholder="0"
-                                  />
-                                </TableCell>
+                                <TableHead className="text-center text-xs border-r">
+                                  Day
+                                </TableHead>
+                                <TableHead className="text-center text-xs border-r">
+                                  Hrs
+                                </TableHead>
+                                <TableHead className="text-center text-xs border-r">
+                                  Min
+                                </TableHead>
                               </React.Fragment>
                             ))}
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                        </TableHeader>
+                        <TableBody>
+                          {escalationLevels.map((level) => (
+                            <TableRow key={level} className="border-b">
+                              <TableCell className="font-medium text-center border-r">
+                                {level.toUpperCase()}
+                              </TableCell>
+                              <TableCell className="p-2 border-r">
+                                <ReactSelect
+                                  isMulti
+                                  options={userOptions}
+                                  value={userOptions.filter((option) =>
+                                    watch(
+                                      `escalationLevels.${level}.users`
+                                    )?.includes(option.value)
+                                  )}
+                                  onChange={(selected) => {
+                                    const selectedIds = selected
+                                      ? selected.map((s) => s.value)
+                                      : [];
+                                    setValue(
+                                      `escalationLevels.${level}.users`,
+                                      selectedIds,
+                                      { shouldValidate: true }
+                                    );
+                                  }}
+                                  placeholder="Escalate to..."
+                                  isLoading={
+                                    serviceEngineerOptions.length === 0
+                                  }
+                                  className="min-w-[200px]"
+                                  menuPlacement="auto"
+                                  maxMenuHeight={150}
+                                  styles={{
+                                    control: (base) => ({
+                                      ...base,
+                                      minHeight: "32px",
+                                      fontSize: "13px",
+                                      border: "none",
+                                      boxShadow: "none",
+                                    }),
+                                    multiValue: (base) => ({
+                                      ...base,
+                                      fontSize: "11px",
+                                    }),
+                                    menu: (base) => ({
+                                      ...base,
+                                      zIndex: 50,
+                                      position: "relative",
+                                    }),
+                                    menuList: (base) => ({
+                                      ...base,
+                                      maxHeight: "150px",
+                                      overflowY: "auto",
+                                    }),
+                                    option: (base, state) => ({
+                                      ...base,
+                                      fontSize: "13px",
+                                      padding: "6px 10px",
+                                      backgroundColor: state.isSelected
+                                        ? "#3b82f6"
+                                        : state.isFocused
+                                          ? "#e5e7eb"
+                                          : "white",
+                                      color: state.isSelected
+                                        ? "white"
+                                        : "#374151",
+                                      cursor: "pointer",
+                                    }),
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell className="p-2 border-r">
+                                <ReactSelect
+                                  isMulti
+                                  options={userOptions}
+                                  value={userOptions.filter((option) =>
+                                    watch(
+                                      `escalationLevels.${level}.copyTo`
+                                    )?.includes(option.value)
+                                  )}
+                                  onChange={(selected) => {
+                                    const selectedIds = selected
+                                      ? selected.map((s) => s.value)
+                                      : [];
+                                    setValue(
+                                      `escalationLevels.${level}.copyTo`,
+                                      selectedIds,
+                                      { shouldValidate: true }
+                                    );
+                                  }}
+                                  placeholder="Copy to..."
+                                  isLoading={
+                                    serviceEngineerOptions.length === 0
+                                  }
+                                  className="min-w-[200px]"
+                                  menuPlacement="auto"
+                                  maxMenuHeight={150}
+                                  styles={{
+                                    control: (base) => ({
+                                      ...base,
+                                      minHeight: "32px",
+                                      fontSize: "13px",
+                                      border: "none",
+                                      boxShadow: "none",
+                                    }),
+                                    multiValue: (base) => ({
+                                      ...base,
+                                      fontSize: "11px",
+                                    }),
+                                    menu: (base) => ({
+                                      ...base,
+                                      zIndex: 50,
+                                      position: "relative",
+                                    }),
+                                    menuList: (base) => ({
+                                      ...base,
+                                      maxHeight: "150px",
+                                      overflowY: "auto",
+                                    }),
+                                    option: (base, state) => ({
+                                      ...base,
+                                      fontSize: "13px",
+                                      padding: "6px 10px",
+                                      backgroundColor: state.isSelected
+                                        ? "#3b82f6"
+                                        : state.isFocused
+                                          ? "#e5e7eb"
+                                          : "white",
+                                      color: state.isSelected
+                                        ? "white"
+                                        : "#374151",
+                                      cursor: "pointer",
+                                    }),
+                                  }}
+                                />
+                              </TableCell>
+                              {priorities.map((priority) => (
+                                <React.Fragment key={priority}>
+                                  <TableCell className="p-1 text-center border-r">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      {...register(
+                                        `escalationLevels.${level}.priorities.${priority}.days`,
+                                        { valueAsNumber: true }
+                                      )}
+                                      className="w-16 h-8 text-center text-xs border-none focus-visible:ring-0"
+                                      placeholder="0"
+                                    />
+                                  </TableCell>
+                                  <TableCell className="p-1 text-center border-r">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="23"
+                                      {...register(
+                                        `escalationLevels.${level}.priorities.${priority}.hours`,
+                                        { valueAsNumber: true }
+                                      )}
+                                      className="w-16 h-8 text-center text-xs border-none focus-visible:ring-0"
+                                      placeholder="0"
+                                    />
+                                  </TableCell>
+                                  <TableCell className="p-1 text-center border-r last:border-r-0">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="59"
+                                      {...register(
+                                        `escalationLevels.${level}.priorities.${priority}.minutes`,
+                                        { valueAsNumber: true }
+                                      )}
+                                      className="w-16 h-8 text-center text-xs border-none focus-visible:ring-0"
+                                      placeholder="0"
+                                    />
+                                  </TableCell>
+                                </React.Fragment>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
 
-                  <div className="flex justify-end">
+                    <div className="flex justify-end">
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loading ? "Creating..." : "Submit"}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Escalation Rules Display */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Escalation Rules</CardTitle>
+                  <div className="flex gap-2">
                     <Button
-                      type="submit"
-                      disabled={loading}
+                      variant="outline"
                       className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => {
+                        setPendingEscalationFilterIssueTypeId(
+                          escalationFilterIssueTypeId
+                        );
+                        setPendingEscalationFilterCategoryId(
+                          escalationFilterCategoryId
+                        );
+                        setIsEscalationFilterDialogOpen(true);
+                      }}
                     >
-                      {loading ? "Creating..." : "Submit"}
+                      <Filter className="h-4 w-4" />
+                      Filter
+                      {(escalationFilterIssueTypeId ||
+                        escalationFilterCategoryId) && (
+                        <span className="ml-1 bg-[#C72030] text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                          !
+                        </span>
+                      )}
                     </Button>
                   </div>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Escalation Rules Display */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Escalation Rules</CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => {
-                      setPendingEscalationFilterIssueTypeId(
-                        escalationFilterIssueTypeId
-                      );
-                      setPendingEscalationFilterCategoryId(
-                        escalationFilterCategoryId
-                      );
-                      setIsEscalationFilterDialogOpen(true);
-                    }}
-                  >
-                    <Filter className="h-4 w-4" />
-                    Filter
-                    {(escalationFilterIssueTypeId ||
-                      escalationFilterCategoryId) && (
-                      <span className="ml-1 bg-[#C72030] text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
-                        !
-                      </span>
-                    )}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                {escalationRulesLoading ? (
-                  <div className="text-center py-8 text-gray-500">
-                    Loading...
-                  </div>
-                ) : escalationRulesList.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    No resolution escalation rules found
-                  </div>
-                ) : (
-                  <div className="space-y-0">
-                    {escalationRulesList.map((rule, index) => {
-                      const categoryName =
-                        rule.category_type || rule.category?.name || "Unknown";
-                      const issueTypeName =
-                        typeof rule.issue_type === "string"
-                          ? rule.issue_type
-                          : rule.issue_type?.name || "-";
-                      return (
-                        <div key={rule.id} className="border-b last:border-b-0">
-                          <div className="flex items-center justify-between p-4 bg-gray-50">
-                            <div className="flex items-center space-x-4">
-                              <span className="font-semibold text-purple-600">
-                                Rule {index + 1}
-                              </span>
-                              <div className="flex items-center space-x-4 text-sm">
-                                <span>
-                                  <strong>Issue Type:</strong> {issueTypeName}
+                </CardHeader>
+                <CardContent className="p-0">
+                  {escalationRulesLoading ? (
+                    <div className="text-center py-8 text-gray-500">
+                      Loading...
+                    </div>
+                  ) : escalationRulesList.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      No resolution escalation rules found
+                    </div>
+                  ) : (
+                    <div className="space-y-0">
+                      {escalationRulesList.map((rule, index) => {
+                        const categoryName =
+                          rule.category_type ||
+                          rule.category?.name ||
+                          "Unknown";
+                        const issueTypeName =
+                          typeof rule.issue_type === "string"
+                            ? rule.issue_type
+                            : rule.issue_type?.name || "-";
+                        return (
+                          <div
+                            key={rule.id}
+                            className="border-b last:border-b-0"
+                          >
+                            <div className="flex items-center justify-between p-4 bg-gray-50">
+                              <div className="flex items-center space-x-4">
+                                <span className="font-semibold text-purple-600">
+                                  Rule {index + 1}
                                 </span>
-                                <span>
-                                  <strong>Category Type:</strong> {categoryName}
-                                </span>
-                                {/* <span><strong>Service Engineer:</strong> {rule.service_engineer_name || '-'}</span> */}
+                                <div className="flex items-center space-x-4 text-sm">
+                                  <span>
+                                    <strong>Issue Type:</strong> {issueTypeName}
+                                  </span>
+                                  <span>
+                                    <strong>Category Type:</strong>{" "}
+                                    {categoryName}
+                                  </span>
+                                  {/* <span><strong>Service Engineer:</strong> {rule.service_engineer_name || '-'}</span> */}
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(rule)}
+                                  disabled={updateLoading}
+                                  className="p-1"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      disabled={deleteLoading}
+                                      className="p-1 text-red-600"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Confirm Delete
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete this
+                                        resolution escalation rule? This action
+                                        cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDelete(rule.id)}
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEdit(rule)}
-                                disabled={updateLoading}
-                                className="p-1"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    disabled={deleteLoading}
-                                    className="p-1 text-red-600"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Confirm Delete
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete this
-                                      resolution escalation rule? This action
-                                      cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDelete(rule.id)}
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+
+                            <div className="p-4 bg-white">
+                              <Table className="border">
+                                <TableHeader>
+                                  <TableRow className="bg-gray-100">
+                                    <TableHead className="font-semibold text-center w-20 border-r">
+                                      Levels
+                                    </TableHead>
+                                    <TableHead className="font-semibold text-center border-r">
+                                      Escalation To
+                                    </TableHead>
+                                    <TableHead className="font-semibold text-center border-r">
+                                      Copy To
+                                    </TableHead>
+                                    <TableHead className="font-semibold text-center w-32 border-r">
+                                      P1
+                                    </TableHead>
+                                    <TableHead className="font-semibold text-center w-32 border-r">
+                                      P2
+                                    </TableHead>
+                                    <TableHead className="font-semibold text-center w-32 border-r">
+                                      P3
+                                    </TableHead>
+                                    <TableHead className="font-semibold text-center w-32 border-r">
+                                      P4
+                                    </TableHead>
+                                    <TableHead className="font-semibold text-center w-32">
+                                      P5
+                                    </TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {["E1", "E2", "E3", "E4", "E5"].map(
+                                    (levelName) => {
+                                      const matrixData =
+                                        rule.escalation_matrix ||
+                                        rule.escalations ||
+                                        {};
+                                      // Find matching level from API data
+                                      const escalation = matrixData.find(
+                                        (e: any) =>
+                                          (
+                                            e.level ||
+                                            e.name ||
+                                            ""
+                                          ).toUpperCase() === levelName
+                                      );
+
+                                      let escalationToDisplay = "-";
+                                      let copyToDisplay = "-";
+
+                                      if (escalation) {
+                                        // Try new display fields first
+                                        if (
+                                          escalation.escalate_to_display !==
+                                          undefined
+                                        ) {
+                                          escalationToDisplay =
+                                            escalation.escalate_to_display ||
+                                            "-";
+                                          if (
+                                            escalation.escalate_to_more_count >
+                                            0
+                                          ) {
+                                            escalationToDisplay += ` +${escalation.escalate_to_more_count} more`;
+                                          }
+                                          copyToDisplay =
+                                            escalation.copy_to_display || "-";
+                                          if (
+                                            escalation.copy_to_more_count > 0
+                                          ) {
+                                            copyToDisplay += ` +${escalation.copy_to_more_count} more`;
+                                          }
+                                        } else if (
+                                          escalation.escalation_to !== undefined
+                                        ) {
+                                          // Secondary new API format
+                                          escalationToDisplay =
+                                            escalation.escalation_to || "-";
+                                          copyToDisplay =
+                                            escalation.copy_to || "-";
+                                        } else if (
+                                          escalation.escalate_to_users
+                                        ) {
+                                          // Old API format: resolve user IDs to names
+                                          let escalateToUsers: (
+                                            | string
+                                            | number
+                                          )[] = [];
+                                          try {
+                                            if (
+                                              typeof escalation.escalate_to_users ===
+                                              "string"
+                                            ) {
+                                              escalateToUsers = JSON.parse(
+                                                escalation.escalate_to_users
+                                              );
+                                            } else if (
+                                              Array.isArray(
+                                                escalation.escalate_to_users
+                                              )
+                                            ) {
+                                              escalateToUsers =
+                                                escalation.escalate_to_users;
+                                            }
+                                          } catch (error) {
+                                            console.error(
+                                              "Error parsing escalate_to_users:",
+                                              error
+                                            );
+                                            escalateToUsers = [];
+                                          }
+                                          escalationToDisplay =
+                                            Array.isArray(escalateToUsers) &&
+                                            escalateToUsers.length > 0
+                                              ? escalateToUsers
+                                                  .map(
+                                                    (
+                                                      userId: string | number
+                                                    ) => {
+                                                      const userIdNum =
+                                                        typeof userId ===
+                                                        "string"
+                                                          ? parseInt(userId)
+                                                          : userId;
+                                                      const user =
+                                                        escalationUsers?.find(
+                                                          (u) =>
+                                                            u.id === userIdNum
+                                                        );
+                                                      return user
+                                                        ? user.full_name
+                                                        : `User ${userId}`;
+                                                    }
+                                                  )
+                                                  .join(", ")
+                                              : "-";
+                                        }
+                                      }
+
+                                      const formatPriority = (p: any) => {
+                                        if (!p) return "-";
+                                        if (typeof p === "string") return p;
+                                        if (typeof p === "number") {
+                                          const { days, hours, minutes } =
+                                            convertFromMinutes(p);
+                                          return `${days}d ${hours}h ${minutes}m`;
+                                        }
+                                        return "-";
+                                      };
+
+                                      return (
+                                        <TableRow
+                                          key={levelName}
+                                          className="border-b"
+                                        >
+                                          <TableCell className="font-medium text-center border-r">
+                                            {levelName}
+                                          </TableCell>
+                                          <TableCell className="text-center border-r">
+                                            {escalationToDisplay}
+                                          </TableCell>
+                                          <TableCell className="text-center border-r">
+                                            {copyToDisplay}
+                                          </TableCell>
+                                          <TableCell className="text-center text-sm border-r">
+                                            {formatPriority(escalation?.p1)}
+                                          </TableCell>
+                                          <TableCell className="text-center text-sm border-r">
+                                            {formatPriority(escalation?.p2)}
+                                          </TableCell>
+                                          <TableCell className="text-center text-sm border-r">
+                                            {formatPriority(escalation?.p3)}
+                                          </TableCell>
+                                          <TableCell className="text-center text-sm border-r">
+                                            {formatPriority(escalation?.p4)}
+                                          </TableCell>
+                                          <TableCell className="text-center text-sm">
+                                            {formatPriority(escalation?.p5)}
+                                          </TableCell>
+                                        </TableRow>
+                                      );
+                                    }
+                                  )}
+                                </TableBody>
+                              </Table>
                             </div>
                           </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
 
-                          <div className="p-4 bg-white">
-                            <Table className="border">
-                              <TableHeader>
-                                <TableRow className="bg-gray-100">
-                                  <TableHead className="font-semibold text-center w-20 border-r">
-                                    Levels
-                                  </TableHead>
-                                  <TableHead className="font-semibold text-center border-r">
-                                    Escalation To
-                                  </TableHead>
-                                  <TableHead className="font-semibold text-center border-r">
-                                    Copy To
-                                  </TableHead>
-                                  <TableHead className="font-semibold text-center w-32 border-r">
-                                    P1
-                                  </TableHead>
-                                  <TableHead className="font-semibold text-center w-32 border-r">
-                                    P2
-                                  </TableHead>
-                                  <TableHead className="font-semibold text-center w-32 border-r">
-                                    P3
-                                  </TableHead>
-                                  <TableHead className="font-semibold text-center w-32 border-r">
-                                    P4
-                                  </TableHead>
-                                  <TableHead className="font-semibold text-center w-32">
-                                    P5
-                                  </TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {["E1", "E2", "E3", "E4", "E5"].map(
-                                  (levelName) => {
-                                    const matrixData =
-                                      rule.escalation_matrix ||
-                                      rule.escalations ||
-                                      {};
-                                    // Find matching level from API data
-                                    const escalation = matrixData.find(
-                                      (e: any) =>
-                                        (
-                                          e.level ||
-                                          e.name ||
-                                          ""
-                                        ).toUpperCase() === levelName
-                                    );
-
-                                    let escalationToDisplay = "-";
-                                    let copyToDisplay = "-";
-
-                                    if (escalation) {
-                                      // Try new display fields first
-                                      if (
-                                        escalation.escalate_to_display !==
-                                        undefined
-                                      ) {
-                                        escalationToDisplay =
-                                          escalation.escalate_to_display || "-";
-                                        if (
-                                          escalation.escalate_to_more_count > 0
-                                        ) {
-                                          escalationToDisplay += ` +${escalation.escalate_to_more_count} more`;
-                                        }
-                                        copyToDisplay =
-                                          escalation.copy_to_display || "-";
-                                        if (escalation.copy_to_more_count > 0) {
-                                          copyToDisplay += ` +${escalation.copy_to_more_count} more`;
-                                        }
-                                      } else if (
-                                        escalation.escalation_to !== undefined
-                                      ) {
-                                        // Secondary new API format
-                                        escalationToDisplay =
-                                          escalation.escalation_to || "-";
-                                        copyToDisplay =
-                                          escalation.copy_to || "-";
-                                      } else if (escalation.escalate_to_users) {
-                                        // Old API format: resolve user IDs to names
-                                        let escalateToUsers: (
-                                          | string
-                                          | number
-                                        )[] = [];
-                                        try {
-                                          if (
-                                            typeof escalation.escalate_to_users ===
-                                            "string"
-                                          ) {
-                                            escalateToUsers = JSON.parse(
-                                              escalation.escalate_to_users
-                                            );
-                                          } else if (
-                                            Array.isArray(
-                                              escalation.escalate_to_users
-                                            )
-                                          ) {
-                                            escalateToUsers =
-                                              escalation.escalate_to_users;
-                                          }
-                                        } catch (error) {
-                                          console.error(
-                                            "Error parsing escalate_to_users:",
-                                            error
-                                          );
-                                          escalateToUsers = [];
-                                        }
-                                        escalationToDisplay =
-                                          Array.isArray(escalateToUsers) &&
-                                          escalateToUsers.length > 0
-                                            ? escalateToUsers
-                                                .map(
-                                                  (userId: string | number) => {
-                                                    const userIdNum =
-                                                      typeof userId === "string"
-                                                        ? parseInt(userId)
-                                                        : userId;
-                                                    const user =
-                                                      escalationUsers?.find(
-                                                        (u) =>
-                                                          u.id === userIdNum
-                                                      );
-                                                    return user
-                                                      ? user.full_name
-                                                      : `User ${userId}`;
-                                                  }
-                                                )
-                                                .join(", ")
-                                            : "-";
-                                      }
+                {/* Pagination */}
+                {!escalationRulesLoading &&
+                  escalationRulesPagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t">
+                      <p className="text-sm text-gray-500">
+                        Showing{" "}
+                        {Math.min(
+                          (escalationRulesPagination.currentPage - 1) *
+                            escalationRulesPagination.perPage +
+                            1,
+                          escalationRulesPagination.totalEntries
+                        )}
+                        –
+                        {Math.min(
+                          escalationRulesPagination.currentPage *
+                            escalationRulesPagination.perPage,
+                          escalationRulesPagination.totalEntries
+                        )}{" "}
+                        of {escalationRulesPagination.totalEntries} rules
+                      </p>
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              className={
+                                escalationRulesPagination.currentPage === 1
+                                  ? "pointer-events-none opacity-50 cursor-default"
+                                  : "cursor-pointer"
+                              }
+                              onClick={() => {
+                                if (escalationRulesPagination.currentPage > 1)
+                                  loadEscalationRules(
+                                    escalationRulesPagination.currentPage - 1,
+                                    escalationFilterIssueTypeId,
+                                    escalationFilterCategoryId
+                                  );
+                              }}
+                            />
+                          </PaginationItem>
+                          {(() => {
+                            const items: React.ReactNode[] = [];
+                            const { currentPage, totalPages } =
+                              escalationRulesPagination;
+                            const showEllipsis = totalPages > 7;
+                            if (showEllipsis) {
+                              items.push(
+                                <PaginationItem key={1}>
+                                  <PaginationLink
+                                    isActive={currentPage === 1}
+                                    onClick={() =>
+                                      loadEscalationRules(
+                                        1,
+                                        escalationFilterIssueTypeId,
+                                        escalationFilterCategoryId
+                                      )
                                     }
-
-                                    const formatPriority = (p: any) => {
-                                      if (!p) return "-";
-                                      if (typeof p === "string") return p;
-                                      if (typeof p === "number") {
-                                        const { days, hours, minutes } =
-                                          convertFromMinutes(p);
-                                        return `${days}d ${hours}h ${minutes}m`;
-                                      }
-                                      return "-";
-                                    };
-
-                                    return (
-                                      <TableRow
-                                        key={levelName}
-                                        className="border-b"
+                                    className="cursor-pointer"
+                                  >
+                                    {1}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                              if (currentPage <= 3) {
+                                for (let i = 2; i <= 4 && i < totalPages; i++) {
+                                  items.push(
+                                    <PaginationItem key={i}>
+                                      <PaginationLink
+                                        isActive={currentPage === i}
+                                        onClick={() =>
+                                          loadEscalationRules(
+                                            i,
+                                            escalationFilterIssueTypeId,
+                                            escalationFilterCategoryId
+                                          )
+                                        }
+                                        className="cursor-pointer"
                                       >
-                                        <TableCell className="font-medium text-center border-r">
-                                          {levelName}
-                                        </TableCell>
-                                        <TableCell className="text-center border-r">
-                                          {escalationToDisplay}
-                                        </TableCell>
-                                        <TableCell className="text-center border-r">
-                                          {copyToDisplay}
-                                        </TableCell>
-                                        <TableCell className="text-center text-sm border-r">
-                                          {formatPriority(escalation?.p1)}
-                                        </TableCell>
-                                        <TableCell className="text-center text-sm border-r">
-                                          {formatPriority(escalation?.p2)}
-                                        </TableCell>
-                                        <TableCell className="text-center text-sm border-r">
-                                          {formatPriority(escalation?.p3)}
-                                        </TableCell>
-                                        <TableCell className="text-center text-sm border-r">
-                                          {formatPriority(escalation?.p4)}
-                                        </TableCell>
-                                        <TableCell className="text-center text-sm">
-                                          {formatPriority(escalation?.p5)}
-                                        </TableCell>
-                                      </TableRow>
-                                    );
-                                  }
-                                )}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-
-              {/* Pagination */}
-              {!escalationRulesLoading &&
-                escalationRulesPagination.totalPages > 1 && (
-                  <div className="flex items-center justify-between px-4 py-3 border-t">
-                    <p className="text-sm text-gray-500">
-                      Showing{" "}
-                      {Math.min(
-                        (escalationRulesPagination.currentPage - 1) *
-                          escalationRulesPagination.perPage +
-                          1,
-                        escalationRulesPagination.totalEntries
-                      )}
-                      –
-                      {Math.min(
-                        escalationRulesPagination.currentPage *
-                          escalationRulesPagination.perPage,
-                        escalationRulesPagination.totalEntries
-                      )}{" "}
-                      of {escalationRulesPagination.totalEntries} rules
-                    </p>
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                            className={
-                              escalationRulesPagination.currentPage === 1
-                                ? "pointer-events-none opacity-50 cursor-default"
-                                : "cursor-pointer"
-                            }
-                            onClick={() => {
-                              if (escalationRulesPagination.currentPage > 1)
-                                loadEscalationRules(
-                                  escalationRulesPagination.currentPage - 1,
-                                  escalationFilterIssueTypeId,
-                                  escalationFilterCategoryId
-                                );
-                            }}
-                          />
-                        </PaginationItem>
-                        {(() => {
-                          const items: React.ReactNode[] = [];
-                          const { currentPage, totalPages } =
-                            escalationRulesPagination;
-                          const showEllipsis = totalPages > 7;
-                          if (showEllipsis) {
-                            items.push(
-                              <PaginationItem key={1}>
-                                <PaginationLink
-                                  isActive={currentPage === 1}
-                                  onClick={() =>
-                                    loadEscalationRules(
-                                      1,
-                                      escalationFilterIssueTypeId,
-                                      escalationFilterCategoryId
-                                    )
-                                  }
-                                  className="cursor-pointer"
-                                >
-                                  {1}
-                                </PaginationLink>
-                              </PaginationItem>
-                            );
-                            if (currentPage <= 3) {
-                              for (let i = 2; i <= 4 && i < totalPages; i++) {
+                                        {i}
+                                      </PaginationLink>
+                                    </PaginationItem>
+                                  );
+                                }
+                                if (totalPages > 5)
+                                  items.push(
+                                    <PaginationItem key="end-ellipsis">
+                                      <PaginationEllipsis />
+                                    </PaginationItem>
+                                  );
+                              } else if (currentPage >= totalPages - 2) {
                                 items.push(
-                                  <PaginationItem key={i}>
-                                    <PaginationLink
-                                      isActive={currentPage === i}
-                                      onClick={() =>
-                                        loadEscalationRules(
-                                          i,
-                                          escalationFilterIssueTypeId,
-                                          escalationFilterCategoryId
-                                        )
-                                      }
-                                      className="cursor-pointer"
-                                    >
-                                      {i}
-                                    </PaginationLink>
+                                  <PaginationItem key="start-ellipsis">
+                                    <PaginationEllipsis />
                                   </PaginationItem>
                                 );
-                              }
-                              if (totalPages > 5)
+                                for (
+                                  let i = totalPages - 3;
+                                  i < totalPages;
+                                  i++
+                                ) {
+                                  items.push(
+                                    <PaginationItem key={i}>
+                                      <PaginationLink
+                                        isActive={currentPage === i}
+                                        onClick={() =>
+                                          loadEscalationRules(
+                                            i,
+                                            escalationFilterIssueTypeId,
+                                            escalationFilterCategoryId
+                                          )
+                                        }
+                                        className="cursor-pointer"
+                                      >
+                                        {i}
+                                      </PaginationLink>
+                                    </PaginationItem>
+                                  );
+                                }
+                              } else {
+                                items.push(
+                                  <PaginationItem key="start-ellipsis">
+                                    <PaginationEllipsis />
+                                  </PaginationItem>
+                                );
+                                for (
+                                  let i = currentPage - 1;
+                                  i <= currentPage + 1;
+                                  i++
+                                ) {
+                                  items.push(
+                                    <PaginationItem key={i}>
+                                      <PaginationLink
+                                        isActive={currentPage === i}
+                                        onClick={() =>
+                                          loadEscalationRules(
+                                            i,
+                                            escalationFilterIssueTypeId,
+                                            escalationFilterCategoryId
+                                          )
+                                        }
+                                        className="cursor-pointer"
+                                      >
+                                        {i}
+                                      </PaginationLink>
+                                    </PaginationItem>
+                                  );
+                                }
                                 items.push(
                                   <PaginationItem key="end-ellipsis">
                                     <PaginationEllipsis />
                                   </PaginationItem>
                                 );
-                            } else if (currentPage >= totalPages - 2) {
-                              items.push(
-                                <PaginationItem key="start-ellipsis">
-                                  <PaginationEllipsis />
-                                </PaginationItem>
-                              );
-                              for (
-                                let i = totalPages - 3;
-                                i < totalPages;
-                                i++
-                              ) {
+                              }
+                              if (totalPages > 1)
                                 items.push(
-                                  <PaginationItem key={i}>
+                                  <PaginationItem key={totalPages}>
                                     <PaginationLink
-                                      isActive={currentPage === i}
+                                      isActive={currentPage === totalPages}
                                       onClick={() =>
                                         loadEscalationRules(
-                                          i,
+                                          totalPages,
                                           escalationFilterIssueTypeId,
                                           escalationFilterCategoryId
                                         )
                                       }
                                       className="cursor-pointer"
                                     >
-                                      {i}
+                                      {totalPages}
                                     </PaginationLink>
                                   </PaginationItem>
                                 );
-                              }
                             } else {
-                              items.push(
-                                <PaginationItem key="start-ellipsis">
-                                  <PaginationEllipsis />
-                                </PaginationItem>
-                              );
-                              for (
-                                let i = currentPage - 1;
-                                i <= currentPage + 1;
-                                i++
-                              ) {
+                              for (let i = 1; i <= totalPages; i++) {
                                 items.push(
                                   <PaginationItem key={i}>
                                     <PaginationLink
@@ -2592,80 +2815,36 @@ export const ResolutionEscalationTab: React.FC = () => {
                                   </PaginationItem>
                                 );
                               }
-                              items.push(
-                                <PaginationItem key="end-ellipsis">
-                                  <PaginationEllipsis />
-                                </PaginationItem>
-                              );
                             }
-                            if (totalPages > 1)
-                              items.push(
-                                <PaginationItem key={totalPages}>
-                                  <PaginationLink
-                                    isActive={currentPage === totalPages}
-                                    onClick={() =>
-                                      loadEscalationRules(
-                                        totalPages,
-                                        escalationFilterIssueTypeId,
-                                        escalationFilterCategoryId
-                                      )
-                                    }
-                                    className="cursor-pointer"
-                                  >
-                                    {totalPages}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              );
-                          } else {
-                            for (let i = 1; i <= totalPages; i++) {
-                              items.push(
-                                <PaginationItem key={i}>
-                                  <PaginationLink
-                                    isActive={currentPage === i}
-                                    onClick={() =>
-                                      loadEscalationRules(
-                                        i,
-                                        escalationFilterIssueTypeId,
-                                        escalationFilterCategoryId
-                                      )
-                                    }
-                                    className="cursor-pointer"
-                                  >
-                                    {i}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              );
-                            }
-                          }
-                          return items;
-                        })()}
-                        <PaginationItem>
-                          <PaginationNext
-                            className={
-                              escalationRulesPagination.currentPage ===
-                              escalationRulesPagination.totalPages
-                                ? "pointer-events-none opacity-50 cursor-default"
-                                : "cursor-pointer"
-                            }
-                            onClick={() => {
-                              if (
-                                escalationRulesPagination.currentPage <
+                            return items;
+                          })()}
+                          <PaginationItem>
+                            <PaginationNext
+                              className={
+                                escalationRulesPagination.currentPage ===
                                 escalationRulesPagination.totalPages
-                              )
-                                loadEscalationRules(
-                                  escalationRulesPagination.currentPage + 1,
-                                  escalationFilterIssueTypeId,
-                                  escalationFilterCategoryId
-                                );
-                            }}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
-            </Card>
-          </div>
+                                  ? "pointer-events-none opacity-50 cursor-default"
+                                  : "cursor-pointer"
+                              }
+                              onClick={() => {
+                                if (
+                                  escalationRulesPagination.currentPage <
+                                  escalationRulesPagination.totalPages
+                                )
+                                  loadEscalationRules(
+                                    escalationRulesPagination.currentPage + 1,
+                                    escalationFilterIssueTypeId,
+                                    escalationFilterCategoryId
+                                  );
+                              }}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+              </Card>
+            </div>
           )}
         </div>
       )}
@@ -2681,10 +2860,14 @@ export const ResolutionEscalationTab: React.FC = () => {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <MuiFormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Issue Type
+              </InputLabel>
               <MuiSelect
                 value={pendingEscalationFilterIssueTypeId}
-                onChange={(e) => setPendingEscalationFilterIssueTypeId(e.target.value)}
+                onChange={(e) =>
+                  setPendingEscalationFilterIssueTypeId(e.target.value)
+                }
                 label="Issue Type"
                 sx={fieldStyles}
                 MenuProps={menuProps}
@@ -2697,11 +2880,23 @@ export const ResolutionEscalationTab: React.FC = () => {
                 ))}
               </MuiSelect>
             </MuiFormControl>
-            <MuiFormControl fullWidth variant="outlined" disabled={!pendingEscalationFilterIssueTypeId || pendingEscalationFilterIssueTypeId === "all" || escalationFilterCategoriesLoading}>
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
+            <MuiFormControl
+              fullWidth
+              variant="outlined"
+              disabled={
+                !pendingEscalationFilterIssueTypeId ||
+                pendingEscalationFilterIssueTypeId === "all" ||
+                escalationFilterCategoriesLoading
+              }
+            >
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Category Type
+              </InputLabel>
               <MuiSelect
                 value={pendingEscalationFilterCategoryId}
-                onChange={(e) => setPendingEscalationFilterCategoryId(e.target.value)}
+                onChange={(e) =>
+                  setPendingEscalationFilterCategoryId(e.target.value)
+                }
                 label="Category Type"
                 sx={fieldStyles}
                 MenuProps={menuProps}
@@ -2754,22 +2949,39 @@ export const ResolutionEscalationTab: React.FC = () => {
       </Dialog>
 
       {/* ──────────────── ADD ASSIGN RULE MODAL ──────────────── */}
-      <Dialog modal={false} open={isAddAssignRuleOpen} onOpenChange={(open) => {
-        if (!open) { setAddModalCategories([]); setAssignRuleForm({ issueType: "", categoryType: "", engineer: "" }); }
-        setIsAddAssignRuleOpen(open);
-      }}>
+      <Dialog
+        modal={false}
+        open={isAddAssignRuleOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAddModalCategories([]);
+            setAssignRuleForm({
+              issueType: "",
+              categoryType: "",
+              engineer: "",
+            });
+          }
+          setIsAddAssignRuleOpen(open);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Add Assign Rule</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <MuiFormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Issue Type
+              </InputLabel>
               <MuiSelect
                 value={assignRuleForm.issueType}
                 onChange={(e) => {
                   const v = e.target.value;
-                  setAssignRuleForm((f) => ({ ...f, issueType: v, categoryType: "" }));
+                  setAssignRuleForm((f) => ({
+                    ...f,
+                    issueType: v,
+                    categoryType: "",
+                  }));
                   fetchCategoriesByIssueType(v, "add");
                 }}
                 displayEmpty
@@ -2777,7 +2989,9 @@ export const ResolutionEscalationTab: React.FC = () => {
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value="" disabled><em>select</em></MenuItem>
+                <MenuItem value="" disabled>
+                  <em>select</em>
+                </MenuItem>
                 {issueTypeOptions.map((it) => (
                   <MenuItem key={it.id} value={it.id.toString()}>
                     {it.name}
@@ -2785,12 +2999,21 @@ export const ResolutionEscalationTab: React.FC = () => {
                 ))}
               </MuiSelect>
             </MuiFormControl>
-            <MuiFormControl fullWidth variant="outlined" disabled={!assignRuleForm.issueType || addModalCategoriesLoading}>
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
+            <MuiFormControl
+              fullWidth
+              variant="outlined"
+              disabled={!assignRuleForm.issueType || addModalCategoriesLoading}
+            >
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Category Type
+              </InputLabel>
               <MuiSelect
                 value={assignRuleForm.categoryType}
                 onChange={(e) =>
-                  setAssignRuleForm((f) => ({ ...f, categoryType: e.target.value }))
+                  setAssignRuleForm((f) => ({
+                    ...f,
+                    categoryType: e.target.value,
+                  }))
                 }
                 displayEmpty
                 label="Category Type"
@@ -2802,8 +3025,8 @@ export const ResolutionEscalationTab: React.FC = () => {
                     {!assignRuleForm.issueType
                       ? "Select issue type first"
                       : addModalCategoriesLoading
-                      ? "Loading..."
-                      : "select"}
+                        ? "Loading..."
+                        : "select"}
                   </em>
                 </MenuItem>
                 {addModalCategories.map((cat) => (
@@ -2814,7 +3037,9 @@ export const ResolutionEscalationTab: React.FC = () => {
               </MuiSelect>
             </MuiFormControl>
             <MuiFormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Service Engineer</InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Service Engineer
+              </InputLabel>
               <MuiSelect
                 value={assignRuleForm.engineer}
                 onChange={(e) =>
@@ -2825,7 +3050,9 @@ export const ResolutionEscalationTab: React.FC = () => {
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value="" disabled><em>select Engineer</em></MenuItem>
+                <MenuItem value="" disabled>
+                  <em>select Engineer</em>
+                </MenuItem>
                 {serviceEngineerOptions.map((eng) => (
                   <MenuItem key={eng.id} value={eng.id.toString()}>
                     {eng.full_name}
@@ -2860,12 +3087,18 @@ export const ResolutionEscalationTab: React.FC = () => {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <MuiFormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Issue Type
+              </InputLabel>
               <MuiSelect
                 value={editAssignRuleForm.issueType}
                 onChange={(e) => {
                   const v = e.target.value;
-                  setEditAssignRuleForm((f) => ({ ...f, issueType: v, categoryType: "" }));
+                  setEditAssignRuleForm((f) => ({
+                    ...f,
+                    issueType: v,
+                    categoryType: "",
+                  }));
                   fetchCategoriesByIssueType(v, "edit");
                 }}
                 displayEmpty
@@ -2873,7 +3106,9 @@ export const ResolutionEscalationTab: React.FC = () => {
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value="" disabled><em>select</em></MenuItem>
+                <MenuItem value="" disabled>
+                  <em>select</em>
+                </MenuItem>
                 {issueTypeOptions.map((it) => (
                   <MenuItem key={it.id} value={it.id.toString()}>
                     {it.name}
@@ -2881,12 +3116,23 @@ export const ResolutionEscalationTab: React.FC = () => {
                 ))}
               </MuiSelect>
             </MuiFormControl>
-            <MuiFormControl fullWidth variant="outlined" disabled={!editAssignRuleForm.issueType || editModalCategoriesLoading}>
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
+            <MuiFormControl
+              fullWidth
+              variant="outlined"
+              disabled={
+                !editAssignRuleForm.issueType || editModalCategoriesLoading
+              }
+            >
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Category Type
+              </InputLabel>
               <MuiSelect
                 value={editAssignRuleForm.categoryType}
                 onChange={(e) =>
-                  setEditAssignRuleForm((f) => ({ ...f, categoryType: e.target.value }))
+                  setEditAssignRuleForm((f) => ({
+                    ...f,
+                    categoryType: e.target.value,
+                  }))
                 }
                 displayEmpty
                 label="Category Type"
@@ -2898,8 +3144,8 @@ export const ResolutionEscalationTab: React.FC = () => {
                     {!editAssignRuleForm.issueType
                       ? "Select issue type first"
                       : editModalCategoriesLoading
-                      ? "Loading..."
-                      : "select"}
+                        ? "Loading..."
+                        : "select"}
                   </em>
                 </MenuItem>
                 {editModalCategories.map((cat) => (
@@ -2910,18 +3156,25 @@ export const ResolutionEscalationTab: React.FC = () => {
               </MuiSelect>
             </MuiFormControl>
             <MuiFormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Service Engineer</InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Service Engineer
+              </InputLabel>
               <MuiSelect
                 value={editAssignRuleForm.engineer}
                 onChange={(e) =>
-                  setEditAssignRuleForm((f) => ({ ...f, engineer: e.target.value }))
+                  setEditAssignRuleForm((f) => ({
+                    ...f,
+                    engineer: e.target.value,
+                  }))
                 }
                 displayEmpty
                 label="Service Engineer"
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value="" disabled><em>select Engineer</em></MenuItem>
+                <MenuItem value="" disabled>
+                  <em>select Engineer</em>
+                </MenuItem>
                 {serviceEngineerOptions.map((eng) => (
                   <MenuItem key={eng.id} value={eng.id.toString()}>
                     {eng.full_name}
@@ -2949,7 +3202,14 @@ export const ResolutionEscalationTab: React.FC = () => {
       </Dialog>
 
       {/* ──────────────── EDIT ESCALATION RULE DIALOG ──────────────── */}
-      <Dialog modal={false} open={isEditDialogOpen} onOpenChange={(open) => { setIsEditDialogOpen(open); if (!open) editReset(); }}>
+      <Dialog
+        modal={false}
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open);
+          if (!open) editReset();
+        }}
+      >
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto overflow-x-visible">
           <DialogHeader>
             <DialogTitle>Edit</DialogTitle>
@@ -2958,7 +3218,9 @@ export const ResolutionEscalationTab: React.FC = () => {
             {/* Issue Type & Category Type Selection */}
             <div className="grid grid-cols-2 gap-4">
               <MuiFormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Issue Type</InputLabel>
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Issue Type
+                </InputLabel>
                 <MuiSelect
                   value={editEscalationIssueTypeId}
                   onChange={(e) => setEditEscalationIssueTypeId(e.target.value)}
@@ -2967,7 +3229,9 @@ export const ResolutionEscalationTab: React.FC = () => {
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                  <MenuItem value="" disabled>
+                    <em>Select Issue Type</em>
+                  </MenuItem>
                   {issueTypeOptions.map((issue) => (
                     <MenuItem key={issue.id} value={issue.id.toString()}>
                       {issue.name}
@@ -2975,18 +3239,32 @@ export const ResolutionEscalationTab: React.FC = () => {
                   ))}
                 </MuiSelect>
               </MuiFormControl>
-              <MuiFormControl fullWidth variant="outlined" disabled={!editEscalationIssueTypeId || editEscalationCategoriesLoading}>
-                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Category Type</InputLabel>
+              <MuiFormControl
+                fullWidth
+                variant="outlined"
+                disabled={
+                  !editEscalationIssueTypeId || editEscalationCategoriesLoading
+                }
+              >
+                <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                  Category Type
+                </InputLabel>
                 <MuiSelect
                   value={editEscalationCategoryTypeId}
-                  onChange={(e) => setEditEscalationCategoryTypeId(e.target.value)}
+                  onChange={(e) =>
+                    setEditEscalationCategoryTypeId(e.target.value)
+                  }
                   displayEmpty
                   label="Category Type"
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
                   <MenuItem value="" disabled>
-                    <em>{editEscalationIssueTypeId ? "Loading categories..." : "Select Issue Type first"}</em>
+                    <em>
+                      {editEscalationIssueTypeId
+                        ? "Loading categories..."
+                        : "Select Issue Type first"}
+                    </em>
                   </MenuItem>
                   {editEscalationCategoryOptions.map((cat) => (
                     <MenuItem key={cat.id} value={cat.id.toString()}>
@@ -3071,11 +3349,18 @@ export const ResolutionEscalationTab: React.FC = () => {
                         <ReactSelect
                           isMulti
                           options={userOptions}
-                          value={(editWatch(`escalationLevels.${level}.users`) || []).map((userId: number) => {
-                            const fromOptions = userOptions.find(o => o.value === userId);
+                          value={(
+                            editWatch(`escalationLevels.${level}.users`) || []
+                          ).map((userId: number) => {
+                            const fromOptions = userOptions.find(
+                              (o) => o.value === userId
+                            );
                             return {
                               value: userId,
-                              label: fromOptions?.label || editRuleUserLabels[userId] || `User ${userId}`,
+                              label:
+                                fromOptions?.label ||
+                                editRuleUserLabels[userId] ||
+                                `User ${userId}`,
                             };
                           })}
                           onChange={(selected) => {
@@ -3134,11 +3419,18 @@ export const ResolutionEscalationTab: React.FC = () => {
                         <ReactSelect
                           isMulti
                           options={userOptions}
-                          value={(editWatch(`escalationLevels.${level}.copyTo`) || []).map((userId: number) => {
-                            const fromOptions = userOptions.find(o => o.value === userId);
+                          value={(
+                            editWatch(`escalationLevels.${level}.copyTo`) || []
+                          ).map((userId: number) => {
+                            const fromOptions = userOptions.find(
+                              (o) => o.value === userId
+                            );
                             return {
                               value: userId,
-                              label: fromOptions?.label || editRuleUserLabels[userId] || `User ${userId}`,
+                              label:
+                                fromOptions?.label ||
+                                editRuleUserLabels[userId] ||
+                                `User ${userId}`,
                             };
                           })}
                           onChange={(selected) => {
@@ -3245,7 +3537,10 @@ export const ResolutionEscalationTab: React.FC = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => { setIsEditDialogOpen(false); editReset(); }}
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  editReset();
+                }}
               >
                 Cancel
               </Button>
