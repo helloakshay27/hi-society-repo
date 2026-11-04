@@ -11,6 +11,11 @@ import { CLUBTAB_HTML } from './generated/ClubTab';
 import { FITOUTTAB_HTML } from './generated/FitoutTab';
 import { PARKINGTAB_HTML } from './generated/ParkingTab';
 import { COMMUNITYTAB_HTML } from './generated/CommunityTab';
+import {
+  POST_POSSESSION_TAB_BY_DASHBOARD_TAB,
+  type PostPossessionTab,
+} from '../../api';
+import { getPostPossessionChartConfigs } from '../../apiView';
 
 const TAB_HTML: Record<TabId, string> = {
   't-lb': LEADERBOARDTAB_HTML,
@@ -35,16 +40,21 @@ export const ParkingTab: React.FC = () => <TabPanel id="t-pk" />;
 export const CommunityTab: React.FC = () => <TabPanel id="t-co" />;
 
 function TabPanel({ id }: { id: TabId }) {
-  const { activeTab, getCharts, initializedTabs } = useDashboard();
+  const { activeTab, getCharts, initializedTabs, postPossessionApi } = useDashboard();
   const isActive = activeTab === id;
   const shouldMount = initializedTabs.has(id);
-  const charts = useMemo(() => getCharts(id), [getCharts, id]);
+  const apiTab: PostPossessionTab | undefined = POST_POSSESSION_TAB_BY_DASHBOARD_TAB[id];
+  const apiState = apiTab ? postPossessionApi[apiTab] : undefined;
+  const charts = useMemo(
+    () => (apiTab ? getPostPossessionChartConfigs(apiTab, apiState) : getCharts(id)),
+    [apiState, apiTab, getCharts, id]
+  );
 
   if (!shouldMount) return null;
 
   return (
     <section id={id} className={`panel${isActive ? ' on' : ''}`}>
-      <TabHtmlContent html={TAB_HTML[id]} charts={charts} />
+      <TabHtmlContent html={TAB_HTML[id]} charts={charts} apiTab={apiTab} apiState={apiState} />
     </section>
   );
 }

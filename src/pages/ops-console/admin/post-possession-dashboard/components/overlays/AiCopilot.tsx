@@ -18,7 +18,8 @@ interface CopilotMessage {
 let msgCounter = 0;
 
 export const AiCopilot: React.FC = () => {
-  const { copilotOpen, setCopilotOpen } = useDashboard();
+  const { copilotOpen, setCopilotOpen, societyId, societies } = useDashboard();
+  const societyName = societies.find((society) => society.id === societyId)?.name ?? SOCIETY_NAME;
   const [messages, setMessages] = useState<CopilotMessage[]>([
     { id: 'greeting', type: 'a', html: COPILOT_GREETING },
   ]);
@@ -68,7 +69,7 @@ export const AiCopilot: React.FC = () => {
           </div>
           <div>
             <div className="cht">Ask Genie</div>
-            <div className="chs">{SOCIETY_NAME} · Business Genie AI</div>
+            <div className="chs">{societyName} · Business Genie AI</div>
           </div>
           <button type="button" className="ccl" onClick={() => setCopilotOpen(false)}>
             <X size={13} color="white" />
@@ -97,7 +98,7 @@ export const AiCopilot: React.FC = () => {
           <input
             className="cinp"
             type="text"
-            placeholder={`Ask about ${SOCIETY_NAME}…`}
+            placeholder={`Ask about ${societyName}…`}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {

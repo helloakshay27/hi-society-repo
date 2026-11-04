@@ -12,7 +12,7 @@ export const BG_DONUT_PALETTE = [
   '#E5484D',
 ] as const;
 
-export type BgDonutRow = [label: string, value: number];
+export type BgDonutRow = [label: string, value: number, color?: string];
 
 /** SVG donut + side legend matching veda-gardens-business-genie.html */
 export function renderBusinessGenieDonut(
@@ -27,10 +27,10 @@ export function renderBusinessGenieDonut(
   const GAP = 2;
   let off = 0;
   const arcs = rows
-    .map(([, v], i) => {
+    .map(([, v, color], i) => {
       const len = (v / total) * C;
       const seg = Math.max(len - GAP, 0.5);
-      const stroke = BG_DONUT_PALETTE[i % BG_DONUT_PALETTE.length];
+      const stroke = color ?? BG_DONUT_PALETTE[i % BG_DONUT_PALETTE.length];
       const a = `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${stroke}" stroke-width="10" stroke-dasharray="${seg} ${C - seg}" stroke-dashoffset="${-off}" stroke-linecap="butt"/>`;
       off += len;
       return a;
@@ -38,9 +38,9 @@ export function renderBusinessGenieDonut(
     .join('');
 
   const legend = rows
-    .map(([label, v], i) => {
+    .map(([label, v, rowColor], i) => {
       const pct = sum ? Math.round((v / sum) * 100) : 0;
-      const color = BG_DONUT_PALETTE[i % BG_DONUT_PALETTE.length];
+      const color = rowColor ?? BG_DONUT_PALETTE[i % BG_DONUT_PALETTE.length];
       return `<div><i style="background:${color}"></i><span>${label}</span><b>${v}</b><em>${pct}%</em></div>`;
     })
     .join('');
@@ -61,13 +61,29 @@ export function renderBusinessGenieDonut(
 
 export function doughnutRowsFromConfig(config: ChartConfiguration): BgDonutRow[] {
   const labels = (config.data.labels || []) as string[];
-  const values = (config.data.datasets[0]?.data || []) as number[];
-  return labels.map((label, i) => [String(label), Number(values[i] || 0)]);
+  const dataset = config.data.datasets[0];
+  const values = (dataset?.data || []) as number[];
+  const background = dataset?.backgroundColor;
+  return labels.map((label, i) => {
+    const color = Array.isArray(background) ? background[i] : background;
+    return [
+      String(label),
+      Number(values[i] || 0),
+      typeof color === 'string' ? color : undefined,
+    ];
+  });
 }
 
 export function centerLabelForChart(chartId: string): string {
   if (chartId.includes('member') || chartId.includes('plan')) return 'members';
-  if (chartId.includes('visit') || chartId.includes('guest')) return 'visitors';
+  if (chartId.includes('poll')) return 'votes';
+  if (chartId.includes('facilityType')) return 'facility types';
+  if (chartId.includes('facility')) return 'bookings';
+  if (
+    chartId.includes('visit') ||
+    chartId.includes('guest') ||
+    chartId.includes('purpose')
+  ) return 'visitors';
   if (chartId.includes('parking') || chartId.includes('vehicle')) return 'vehicles';
   if (chartId.includes('fitout') || chartId.includes('deviation')) return 'requests';
   if (chartId.includes('proactive')) return 'tickets';

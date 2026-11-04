@@ -79,7 +79,7 @@ interface HeaderDatePickerProps {
 }
 
 export const HeaderDatePicker: React.FC<HeaderDatePickerProps> = ({ dateGrain }) => {
-  const { toast } = useDashboard();
+  const { toast, setApiDateRange } = useDashboard();
   const btnRef = useRef<HTMLButtonElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -136,7 +136,28 @@ export const HeaderDatePicker: React.FC<HeaderDatePickerProps> = ({ dateGrain })
     setOpen(false);
     setPickingEnd(false);
     setView(new Date(selected.getFullYear(), selected.getMonth(), 1));
-  }, [dateGrain]);
+  }, [dateGrain, selected]);
+
+  useEffect(() => {
+    let from = selected;
+    let to = selected;
+    if (dateGrain === 'week') {
+      from = startOfDay(new Date(selected));
+      from.setDate(from.getDate() - ((from.getDay() + 6) % 7));
+      to = new Date(from);
+      to.setDate(from.getDate() + 6);
+    } else if (dateGrain === 'month') {
+      from = new Date(selected.getFullYear(), selected.getMonth(), 1);
+      to = new Date(selected.getFullYear(), selected.getMonth() + 1, 0);
+    } else if (dateGrain === 'range') {
+      from = rangeFrom;
+      to = rangeTo;
+    }
+
+    const toDateParam = (date: Date) =>
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    setApiDateRange({ from: toDateParam(from), to: toDateParam(to) });
+  }, [dateGrain, selected, rangeFrom, rangeTo, setApiDateRange]);
 
   const label = useMemo(() => {
     if (dateGrain === 'today') return formatDayLabel(selected);

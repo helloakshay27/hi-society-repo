@@ -8,28 +8,40 @@ export const HELPDESKTAB_HTML: string = `
   </div>
 
   <div class="hd-shell mb14">
-    <div class="g4 num">
+    <div class="g6 num">
+      <div class="stat">
+        <span class="ic"><i data-lucide="ticket" style="width:16px;height:16px"></i></span>
+        <span class="lbl">Total tickets<button class="info-btn" data-info="kpi_top_total_tickets" aria-label="About Total tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></span>
+        <span class="val">59</span>
+        <span class="sub">This period · All statuses</span>
+      </div>
       <div class="stat">
         <span class="ic"><i data-lucide="inbox" style="width:16px;height:16px"></i></span>
-        <span class="lbl">Open tickets</span>
+        <span class="lbl">Open tickets<button class="info-btn" data-info="kpi_top_open_tickets" aria-label="About Open tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></span>
         <span class="val">49</span>
         <span class="sub">8 in progress · 72% assigned</span>
       </div>
       <div class="stat">
         <span class="ic"><i data-lucide="clock" style="width:16px;height:16px"></i></span>
-        <span class="lbl">Response breached</span>
+        <span class="lbl">Response breached<button class="info-btn" data-info="kpi_top_response_breached" aria-label="About Response breached"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></span>
         <span class="val">42</span>
         <span class="sub">71% of tickets · target 0%</span>
       </div>
       <div class="stat">
         <span class="ic"><i data-lucide="alert-triangle" style="width:16px;height:16px"></i></span>
-        <span class="lbl">Resolution breached</span>
+        <span class="lbl">Resolution breached<button class="info-btn" data-info="kpi_top_resolution_breached" aria-label="About Resolution breached"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></span>
         <span class="val">38</span>
         <span class="sub">64% of tickets · target 0%</span>
       </div>
       <div class="stat">
+        <span class="ic"><i data-lucide="activity" style="width:16px;height:16px"></i></span>
+        <span class="lbl">Proactive tickets<button class="info-btn" data-info="kpi_top_proactive_tickets" aria-label="About Proactive tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></span>
+        <span class="val">35</span>
+        <span class="sub">59% ratio · Target 70%+</span>
+      </div>
+      <div class="stat">
         <span class="ic"><i data-lucide="star" style="width:16px;height:16px"></i></span>
-        <span class="lbl">Golden tickets</span>
+        <span class="lbl">Golden tickets<button class="info-btn" data-info="kpi_top_golden_tickets" aria-label="About Golden tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></span>
         <span class="val">4</span>
         <span class="sub">2 P1 · senior residents</span>
       </div>
@@ -51,6 +63,18 @@ export const HELPDESKTAB_HTML: string = `
       </div>
     </div>
   </div>
+
+  <section id="proactiveReactiveCard" class="card mb14" style="display:none">
+    <div class="chead">
+      <h3 class="ch3">Proactive vs Reactive<button class="info-btn" onclick="showInfo('proactiveChart',this,event)" aria-label="About Proactive vs Reactive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></h3>
+      <span class="b bwa" data-proactive-target>Target: 70% Proactive</span>
+    </div>
+    <div class="ci am" style="margin-bottom:0">
+      <div class="ci-h" data-proactive-insight></div>
+      <div class="ci-a" data-proactive-action></div>
+    </div>
+    <div class="chx" style="height:260px"><canvas id="proactiveChart"></canvas></div>
+  </section>
 
   <div class="g3 mb14">
     <section class="card">
@@ -78,7 +102,7 @@ export const HELPDESKTAB_HTML: string = `
           <p class="csub2">Tickets raised this period</p>
         </div>
       </div>
-      <div class="hbars num" style="--lbl:48px">
+      <div class="hbars num" style="--lbl:128px">
         <div class="hbar"><span>FM</span><div class="htrack"><i style="width:100%"></i></div><b>22</b></div>
         <div class="hbar"><span>T1</span><div class="htrack"><i style="width:82%"></i></div><b>18</b></div>
         <div class="hbar"><span>T3</span><div class="htrack"><i style="width:55%"></i></div><b>12</b></div>
@@ -98,19 +122,18 @@ export const HELPDESKTAB_HTML: string = `
     <section class="card">
       <div class="chead">
         <div>
-          <h3 class="ch3">SLA performance<button class="info-btn" onclick="showInfo('escalationChart',this,event)" aria-label="About SLA performance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></h3>
+          <h3 class="ch3">Response vs Resolution escalation<button class="info-btn" onclick="showInfo('escalationChart',this,event)" aria-label="About Response vs Resolution escalation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="16.2" x2="12" y2="11"/><circle cx="12" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg></button></h3>
           <p class="csub2">Of 59 tickets this period</p>
         </div>
       </div>
       <div class="hbars num" style="--lbl:160px">
         <div class="hbar"><span>Response breached <small>(42)</small></span><div class="htrack"><i style="width:71%"></i></div><b>71%</b></div>
         <div class="hbar"><span>Resolution breached <small>(38)</small></span><div class="htrack"><i style="width:64%"></i></div><b>64%</b></div>
-        <div class="hbar"><span>Proactive · target 70% <small>(35)</small></span><div class="htrack"><i style="width:59%"></i></div><b>59%</b></div>
       </div>
       <div class="ins">
         <span class="ins-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 13.9 10 20.5 12l-6.6 2L12 20.5 10.1 14 3.5 12l6.6-2z"/></svg></span>
         <span class="tagai">AI INSIGHT</span>
-        <p>Response at 71% breached is the most urgent gap — tickets aren't being picked up fast enough. Proactive is 7 tickets short of target.</p>
+        <p>Both Response and Resolution escalations are being breached. Response at 71% is the more urgent gap — tickets aren't being picked up fast enough.</p>
         <div class="ins-act"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Set up auto-assignment rules for Housekeeping and Electrical.</div>
       </div>
     </section>

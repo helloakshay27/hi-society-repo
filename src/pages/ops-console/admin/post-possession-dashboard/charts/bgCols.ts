@@ -17,6 +17,7 @@ export type BgColsSpec = {
   series?: BgColSeries[];
   max: number;
   ticks: number[];
+  maxXTicks?: number;
   unit?: string;
   avg?: number;
 };
@@ -54,6 +55,15 @@ function resolveSeriesColor(
 export function renderBusinessGenieCols(host: HTMLElement, c: BgColsSpec): void {
   const unit = c.unit || '';
   const pct = (v: number) => `${(v / c.max) * 100}%`;
+  const maxXTicks = c.maxXTicks && c.maxXTicks > 1 ? Math.floor(c.maxXTicks) : undefined;
+  const visibleLabelIndexes =
+    maxXTicks && c.labels.length > maxXTicks
+      ? new Set(
+          Array.from({ length: maxXTicks }, (_, index) =>
+            Math.round((index * (c.labels.length - 1)) / (maxXTicks - 1))
+          )
+        )
+      : undefined;
   const grid = c.ticks
     .map((t) => `<div class="gl" style="bottom:${pct(t)}"><span>${t}${unit}</span></div>`)
     .join('');
@@ -99,7 +109,9 @@ export function renderBusinessGenieCols(host: HTMLElement, c: BgColsSpec): void 
 
   host.classList.add('cols', 'num');
   host.style.height = 'auto';
-  host.innerHTML = `${legend}<div class="plot">${grid}${avg}${groups}</div><div class="xl">${c.labels.map((l) => `<span>${l}</span>`).join('')}</div>`;
+  host.innerHTML = `${legend}<div class="plot">${grid}${avg}${groups}</div><div class="xl">${c.labels
+    .map((label, index) => `<span>${!visibleLabelIndexes || visibleLabelIndexes.has(index) ? label : ''}</span>`)
+    .join('')}</div>`;
 }
 
 /** Build a BG column spec from a Chart.js vertical bar config */
@@ -108,12 +120,18 @@ export function colsSpecFromBarConfig(
   config: ChartConfiguration
 ): BgColsSpec | null {
   if (config.type !== 'bar') return null;
-  const opts = config.options as { indexAxis?: string } | undefined;
+  const opts = config.options as
+    | {
+        indexAxis?: string;
+        scales?: { x?: { ticks?: { maxTicksLimit?: number } } };
+      }
+    | undefined;
   if (opts?.indexAxis === 'y') return null; // horizontal — not a column chart
 
   const labels = (config.data.labels || []).map(String);
   const datasets = config.data.datasets || [];
   if (!datasets.length || !labels.length) return null;
+  const maxXTicks = opts?.scales?.x?.ticks?.maxTicksLimit;
 
   // Grouped twin bars (Sent vs Delivered, Scheduled vs Present, Onboarded vs Not, …)
   if (datasets.length >= 2) {
@@ -132,7 +150,15 @@ export function colsSpecFromBarConfig(
         ? '%'
         : '';
     const avg = chartId === 'adoptionChart' ? 48 : undefined;
-    return { labels, series, max, ticks: ticksFor(max), unit, avg };
+    return {
+      labels,
+      series,
+      max,
+      ticks: ticksFor(max),
+      ...(typeof maxXTicks === 'number' ? { maxXTicks } : {}),
+      unit,
+      avg,
+    };
   }
 
   const values = ((datasets[0].data as number[]) || []).map(Number);
@@ -152,6 +178,7 @@ export function colsSpecFromBarConfig(
     values,
     max,
     ticks: ticksFor(max),
+    ...(typeof maxXTicks === 'number' ? { maxXTicks } : {}),
     unit,
   };
 }
