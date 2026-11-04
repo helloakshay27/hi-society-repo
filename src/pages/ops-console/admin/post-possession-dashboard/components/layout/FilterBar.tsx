@@ -3,7 +3,7 @@ import { FILTER_CHIPS } from '../../data/mockData';
 import { useDashboard } from '../../context/DashboardContext';
 
 export const FilterBar: React.FC = () => {
-  const { activeChip, setActiveChip, setActiveTab, openDrill } = useDashboard();
+  const { activeChip, setActiveChip, setActiveTab, openChipDrill } = useDashboard();
 
   return (
     <div className="fbar" id="fbar">
@@ -18,7 +18,7 @@ export const FilterBar: React.FC = () => {
               const isOn = activeChip === chip.key;
               setActiveChip(isOn ? null : chip.key);
               setActiveTab(chip.tabId);
-              window.setTimeout(() => openDrill(chip.drillKey), 120);
+              window.setTimeout(() => openChipDrill(chip.key), 120);
             }}
           >
             {chip.label}

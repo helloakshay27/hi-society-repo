@@ -15,6 +15,7 @@ import {
   TOWER_TICKET_BARS,
 } from '../data/mockData';
 import { rgba } from '../charts/chartPalette';
+import { buildChipDrill, CHIP_SOURCES } from '../data/liveChipDrill';
 import {
   createEndpointErrors,
   fetchPostPossessionFilters,
@@ -57,6 +58,8 @@ interface DashboardContextValue {
   markTabInitialized: (tab: TabId) => void;
   getCharts: (tabId: TabId) => Record<string, ChartConfiguration>;
   openDrill: (key: string) => void;
+  /** Fetch the chip's mapped APIs (with the active period + tower filters) and show them in the drill panel */
+  openChipDrill: (chipKey: string) => void;
   closeDrill: () => void;
   drillOpen: boolean;
   drillContent: ReturnType<typeof useDrillPanel>['content'];
@@ -347,7 +350,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   const { toasts, toast, dismiss } = useToast();
-  const { content: drillContent, isOpen: drillOpen, openDrill, closeDrill } = useDrillPanel(toast);
+  const { content: drillContent, isOpen: drillOpen, openDrill, openLiveDrill, closeDrill } = useDrillPanel(toast);
   const selectSociety = useCallback((nextSocietyId: string) => {
     localStorage.setItem('selectedSocietyId', nextSocietyId);
     localStorage.setItem('society_id', nextSocietyId);
@@ -355,6 +358,35 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setSocietyId(nextSocietyId);
     setTowerFilter('All');
   }, []);
+
+  const openChipDrill = useCallback(
+    (chipKey: string) => {
+      const sources = CHIP_SOURCES[chipKey];
+      if (!sources) return;
+      if (!societyId) {
+        openLiveDrill({
+          t: 'Select a society',
+          s: 'A valid society_id is required',
+          b: '<div class="dsec"><div style="font-size:11px;line-height:1.7">Select a society to load this data.</div></div>',
+        });
+        return;
+      }
+      openLiveDrill({
+        t: 'Loading…',
+        s: 'Fetching live data',
+        b: '<div class="dsec"><div style="font-size:11px;color:var(--sto)">Loading from API…</div></div>',
+      });
+      void Promise.all(
+        sources.map(async ({ tab, endpoints }) => {
+          const filters = getRequestFilters(apiFilters.result, towerFilter, apiDateRange, tab);
+          return [tab, await fetchPostPossessionTab(tab, societyId, filters, endpoints)] as const;
+        })
+      ).then((entries) => {
+        openLiveDrill(buildChipDrill(chipKey, Object.fromEntries(entries)));
+      });
+    },
+    [societyId, apiFilters.result, towerFilter, apiDateRange, openLiveDrill]
+  );
 
   const markTabInitialized = useCallback((tab: TabId) => {
     setInitializedTabs((prev) => {
@@ -612,6 +644,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       markTabInitialized,
       getCharts,
       openDrill,
+      openChipDrill,
       closeDrill,
       drillOpen,
       drillContent,
@@ -645,6 +678,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       markTabInitialized,
       getCharts,
       openDrill,
+      openChipDrill,
       closeDrill,
       drillOpen,
       drillContent,
