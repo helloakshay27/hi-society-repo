@@ -661,7 +661,7 @@ export const ResolutionEscalationTab: React.FC = () => {
           ticketManagementAPI.getIssueTypesDropdown(),
           ticketManagementAPI.getCategoriesDropdown(),
           ticketManagementAPI.getServiceEngineers({
-            "q[staff_type_eq]": "Escalation",
+            // "q[staff_type_eq]": "Escalation",
           }),
         ]);
       if (issueTypesResult.status === "fulfilled") {
