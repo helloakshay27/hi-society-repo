@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useMemo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, Check, ChevronsUpDown, Search } from 'lucide-react';
 import {
@@ -9,7 +9,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { SOCIETY_NAME, SOCIETY_SUBTITLE, TOWER_FILTERS, USER_INITIALS } from '../../data/mockData';
+import { SOCIETY_NAME, SOCIETY_SUBTITLE, TOWER_FILTERS } from '../../data/mockData';
+import { getUser } from '@/utils/auth';
 import { useDashboard } from '../../context/DashboardContext';
 import type { DateGrain } from '../../types';
 import { HeaderDatePicker } from './HeaderDatePicker';
@@ -21,7 +22,24 @@ const DATE_GRAINS: [DateGrain, string][] = [
   ['range', 'Custom'],
 ];
 
+const getUserDisplay = (): { initials: string; name: string } => {
+  let user: ReturnType<typeof getUser> = null;
+  try {
+    user = getUser();
+  } catch {
+    user = null;
+  }
+  const first = user?.firstname?.trim() ?? '';
+  const last = user?.lastname?.trim() ?? '';
+  const name = [first, last].filter(Boolean).join(' ') || user?.email || '';
+  const initials =
+    `${first.charAt(0)}${last.charAt(0)}`.toUpperCase() ||
+    (user?.email ? user.email.charAt(0).toUpperCase() : '');
+  return { initials: initials || '?', name };
+};
+
 export const Header: React.FC = () => {
+  const { initials: userInitials, name: userName } = useMemo(getUserDisplay, []);
   const [societyPickerOpen, setSocietyPickerOpen] = useState(false);
   const [societyPopupPosition, setSocietyPopupPosition] = useState({
     top: 0,
@@ -110,7 +128,6 @@ export const Header: React.FC = () => {
           aria-label="Select society"
           aria-expanded={societyPickerOpen}
           aria-controls="society-picker"
-          disabled={societies.length === 0}
           onClick={() => setSocietyPickerOpen((open) => !open)}
         >
           <span className="soc-text">
@@ -204,9 +221,10 @@ export const Header: React.FC = () => {
           type="button"
           className="av"
           onClick={() => toast('Profile settings', 'd')}
-          aria-label="Profile settings"
+          aria-label={userName ? `Profile settings — ${userName}` : 'Profile settings'}
+          title={userName || undefined}
         >
-          {USER_INITIALS}
+          {userInitials}
         </button>
       </div>
     </header>

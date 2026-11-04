@@ -95,14 +95,11 @@ export const POST_POSSESSION_ENDPOINTS: Record<PostPossessionTab, Record<string,
 };
 
 const BASE_PATH = '/api/post-possession/super-admin';
-const EXTENDED_API_DATE_RANGE = {
-  date_from: '2020-01-01',
-  date_to: '2026-11-30',
-} as const;
-
 export interface PostPossessionRequestFilters {
   siteId?: string;
   towerId?: string;
+  period?: 'today' | 'this_week' | 'this_month' | 'custom';
+  month?: string;
   dateFrom?: string;
   dateTo?: string;
   page?: number;
@@ -116,6 +113,45 @@ export function getSelectedSocietyId(): string | null {
     '';
   const societyId = raw.trim();
   return /^\d+$/.test(societyId) && Number(societyId) > 0 ? societyId : null;
+}
+
+function toSocietyOption(raw: unknown): SocietyOption | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const item = raw as Record<string, unknown>;
+  const id = String(item.id ?? '');
+  const rawName = item.building_name ?? item.name;
+  const name = typeof rawName === 'string' ? rawName.trim() : '';
+  return /^\d+$/.test(id) && Number(id) > 0 && name ? { id, name } : null;
+}
+
+/**
+ * Societies the signed-in user can switch between: the account's company
+ * societies (account.json -> society.company_id -> societies/search), always
+ * including the account's own society.
+ */
+export async function fetchAccountSocieties(): Promise<SocietyOption[]> {
+  const account = (await apiClient.get('/api/users/account.json')).data as
+    | { society?: { id?: unknown; building_name?: unknown; company_id?: unknown } }
+    | undefined;
+  const ownSociety = toSocietyOption(account?.society);
+  const companyId = account?.society?.company_id;
+
+  let companySocieties: SocietyOption[] = [];
+  if (companyId) {
+    const response = await apiClient.get(`/api/societies/search.json?q[company_id_eq]=${companyId}`);
+    const list = response.data?.societies;
+    if (Array.isArray(list)) {
+      companySocieties = list.flatMap((society: unknown) => {
+        const option = toSocietyOption(society);
+        return option ? [option] : [];
+      });
+    }
+  }
+
+  const all = ownSociety && !companySocieties.some((s) => s.id === ownSociety.id)
+    ? [ownSociety, ...companySocieties]
+    : companySocieties;
+  return all;
 }
 
 export function getSocietyOptions(data: unknown): SocietyOption[] {
@@ -164,6 +200,8 @@ export async function fetchPostPossessionTab(
     society_id: societyId,
     site_id: filters.siteId,
     tower_id: filters.towerId,
+    period: filters.period,
+    month: filters.month,
     date_from: filters.dateFrom,
     date_to: filters.dateTo,
   };
@@ -172,17 +210,6 @@ export async function fetchPostPossessionTab(
       try {
         const endpointParams = {
           ...params,
-          ...((tab === 'allTowers' ||
-            tab === 'security' ||
-            tab === 'club' ||
-            tab === 'fitout' ||
-            tab === 'parking' ||
-            tab === 'community' ||
-            tab === 'staff' ||
-            (tab === 'helpdesk' &&
-              ['kpis', 'statusAndType', 'breachAndAgeing', 'sourceAndVolume'].includes(key)))
-            ? EXTENDED_API_DATE_RANGE
-            : {}),
           ...(tab === 'overview' && key === 'feedbackAndEvents'
             ? { page: filters.page, per_page: filters.perPage }
             : {}),
@@ -199,9 +226,12 @@ export async function fetchPostPossessionTab(
   return Object.fromEntries(responses);
 }
 
-export async function fetchPostPossessionFilters(): Promise<EndpointResult> {
+export async function fetchPostPossessionFilters(societyId?: string | null): Promise<EndpointResult> {
   try {
-    const response = await apiClient.get(`${BASE_PATH}/filters`);
+    // Without society_id the API returns an empty towers[] (and no site)
+    const response = await apiClient.get(`${BASE_PATH}/filters`, {
+      params: societyId ? { society_id: societyId } : undefined,
+    });
     return { data: response.data };
   } catch (error) {
     return { error: getErrorMessage(error) };

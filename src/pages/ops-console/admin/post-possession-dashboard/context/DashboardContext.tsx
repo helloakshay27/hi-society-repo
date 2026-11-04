@@ -19,6 +19,7 @@ import {
   createEndpointErrors,
   fetchPostPossessionFilters,
   fetchPostPossessionTab,
+  fetchAccountSocieties,
   getSocietyOptions,
   getSelectedSocietyId,
   POST_POSSESSION_TAB_BY_DASHBOARD_TAB,
@@ -40,9 +41,13 @@ const TAB_BADGE_SOURCES: Array<{ tab: PostPossessionTab; endpoint: string }> = [
   { tab: 'parking', endpoint: 'kpis' },
 ];
 
+/** Query params that scope every dashboard API call to the selected period. */
 export interface ApiDateRange {
-  from: string;
-  to: string;
+  period?: 'today' | 'this_week' | 'this_month' | 'custom';
+  /** YYYY-MM, used when a specific month is picked */
+  month?: string;
+  from?: string;
+  to?: string;
 }
 
 interface DashboardContextValue {
@@ -278,8 +283,10 @@ function getRequestFilters(
         return name === normalizedFilter;
       })
     : undefined;
+  // Tower filter (FM / T1 / T2 / T3) applies to every tab except the all-towers
+  // leaderboard, which compares towers against each other.
   const towerId =
-    tab === 'helpdesk' &&
+    tab !== 'allTowers' &&
     typeof tower === 'object' &&
     tower !== null &&
     'id' in tower &&
@@ -290,6 +297,8 @@ function getRequestFilters(
   return {
     siteId,
     towerId,
+    period: apiDateRange?.period,
+    month: apiDateRange?.month,
     dateFrom: apiDateRange?.from,
     dateTo: apiDateRange?.to,
   };
@@ -318,7 +327,24 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     result?: EndpointResult;
   }>({ societyId: null, loading: false });
   const [apiDateRange, setApiDateRange] = useState<ApiDateRange | null>(null);
-  const societies = useMemo(() => getSocietyOptions(apiFilters.result?.data), [apiFilters.result]);
+  const [accountSocieties, setAccountSocieties] = useState<SocietyOption[]>([]);
+  // Prefer the user's account societies; fall back to whatever the filters API lists
+  const societies = useMemo(() => {
+    const fromFilters = getSocietyOptions(apiFilters.result?.data);
+    return accountSocieties.length > 0 ? accountSocieties : fromFilters;
+  }, [accountSocieties, apiFilters.result]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchAccountSocieties()
+      .then((options) => {
+        if (!cancelled) setAccountSocieties(options);
+      })
+      .catch((error) => console.error('Failed to load societies from account', error));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const { toasts, toast, dismiss } = useToast();
   const { content: drillContent, isOpen: drillOpen, openDrill, closeDrill } = useDrillPanel(toast);
@@ -372,7 +398,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     let cancelled = false;
     setApiFilters((current) => ({ societyId, loading: true, result: current.result }));
-    void fetchPostPossessionFilters().then((result) => {
+    void fetchPostPossessionFilters(societyId).then((result) => {
       if (cancelled) return;
       setApiFilters({ societyId, loading: false, result });
     });
