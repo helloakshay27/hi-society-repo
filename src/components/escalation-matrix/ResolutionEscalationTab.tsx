@@ -577,7 +577,7 @@ export const ResolutionEscalationTab: React.FC = () => {
     setIsAssignModeUpdating(true);
     try {
       await ticketManagementAPI.updateComplaintAssignMode(
-        automatic ? "auto" : "",
+        automatic ? "auto" : "manual",
       );
       setIsAutomatic(automatic);
     } catch (error) {

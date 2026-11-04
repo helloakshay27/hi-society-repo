@@ -1871,7 +1871,7 @@ const path = window.location.pathname;
     return response.data;
   },
 
-  async updateComplaintAssignMode(value: "auto" | "") {
+  async updateComplaintAssignMode(value: "auto" | "manual") {
     const response = await apiClient.post('/crm/admin/complaint_assign.json', {
       system_constant: { value },
     });
