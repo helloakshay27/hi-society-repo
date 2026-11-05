@@ -22,6 +22,13 @@ import type {
   WorkflowModuleNode,
 } from "./api";
 
+/** Today as YYYY-MM-DD in local time. Usage data stops at today, so no date range may end after it. */
+const todayYmd = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const clampToToday = (v: string) => (v && v > todayYmd() ? todayYmd() : v);
+
 /* ================================================================
    Usage Analytics Dashboard (live data only — no sample numbers)
    ================================================================ */
@@ -1616,16 +1623,18 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                   <div className="dr-custom-row">
                     <input
                       type="date"
+                      max={todayYmd()}
                       id="dateFrom"
                       value={dateFrom}
-                      onChange={(e) => setDateFrom(e.target.value)}
+                      onChange={(e) => setDateFrom(clampToToday(e.target.value))}
                     />
                     <span className="dr-to">&ndash;</span>
                     <input
                       type="date"
+                      max={todayYmd()}
                       id="dateTo"
                       value={dateTo}
-                      onChange={(e) => setDateTo(e.target.value)}
+                      onChange={(e) => setDateTo(clampToToday(e.target.value))}
                     />
                   </div>
                   <button

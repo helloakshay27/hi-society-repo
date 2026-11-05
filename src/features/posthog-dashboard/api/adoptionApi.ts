@@ -159,7 +159,7 @@ export const fetchRecentActiveUsers = (f: RangeFilters) =>
   ], f.signal);
 
 export async function downloadRecentActiveUsers(f: RangeFilters): Promise<Blob> {
-  const qs = buildQuery([...rangeParams(f), ['limit', 10]]);
+  const qs = buildQuery(rangeParams(f));
   const response = await analyticsClient.get<Blob>(
     `${RECENT_ACTIVE_USERS_EXPORT_ENDPOINT}${qs ? `?${qs}` : ''}`,
     { responseType: 'blob' },

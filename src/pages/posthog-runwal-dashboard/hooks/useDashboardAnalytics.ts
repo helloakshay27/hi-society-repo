@@ -177,6 +177,7 @@ export function useGrowth(filters: DashboardFilters, enabled: boolean = true) {
       'fm-adoption',
       'growth',
       filters.url || '',
+      filters.from,
       filters.to,
       filters.siteIds.join(','),
       filters.devPlatform,

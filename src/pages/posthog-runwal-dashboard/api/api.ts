@@ -197,9 +197,19 @@ export const fetchWorkflowUsage = (
     })
   );
 
+/**
+ * Runwal CP (scoped by project_code) lists only users the app has sent a name or
+ * email for, in Recent Activity and its download alike. Other dashboards list everyone.
+ */
+const namedOnly = (filters: DashboardFilters) =>
+  filters.projectCode || getProjectCodeFromUrl() ? 1 : undefined;
+
 /** The live activity log: one row per event, newest first. No `from`/`to` = today. */
 export const fetchRecentActiveUsers = (filters: DashboardFilters, limit = 10) =>
-  getPosthog<RecentActiveUsersResponse>('recent_active_users', buildPosthogQuery(filters, { limit }));
+  getPosthog<RecentActiveUsersResponse>(
+    'recent_active_users',
+    buildPosthogQuery(filters, { limit, named_only: namedOnly(filters) })
+  );
 
 /** What to call a user in an activity row: their name, else their email's local part, else their id. */
 export const activityUserLabel = (u: { user_name?: string | null; email?: string | null; user_id?: string | null }): string =>
@@ -214,7 +224,7 @@ export const activityUserLabel = (u: { user_name?: string | null; email?: string
 export async function downloadActiveUsersExport(filters: DashboardFilters): Promise<void> {
   const base = getPosthogApiBase();
   const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-  const url = `${cleanBase}/fm/adoption/user_activity_export?${buildPosthogQuery(filters)}`;
+  const url = `${cleanBase}/fm/adoption/active_users_export?${buildPosthogQuery(filters, { named_only: namedOnly(filters) })}`;
 
   const response = await fetch(url, {
     method: 'GET',

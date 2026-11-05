@@ -132,6 +132,8 @@ export interface GrowthWeek {
   returning: number;
   resurrected: number;
   dormant: number;
+  /** false for the week still in progress: its dormant count is users who have not come back yet. */
+  complete?: boolean;
 }
 
 export interface GrowthResponse {

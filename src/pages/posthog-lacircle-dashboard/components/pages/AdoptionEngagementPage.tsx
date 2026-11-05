@@ -153,7 +153,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
   // Growth Accounting Series
   const growthWeeks = (growthData?.weeks || []).map((w) =>
-    w.week ? fmtDateShort(w.week) : "W"
+    w.week ? `${fmtDateShort(w.week)}${w.complete === false ? " (so far)" : ""}` : "W"
   );
   const growthNew = (growthData?.weeks || []).map((w) => w.new || 0);
   const growthRet = (growthData?.weeks || []).map((w) => w.returning || 0);
@@ -347,7 +347,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         <Card
           id="card-growthAccounting"
           infoKey="chart.growth"
-          eyebrow="Growth accounting · Last 6 weeks"
+          eyebrow="Growth accounting · Weekly, selected range"
           title="New · Returning · Resurrecting · Dormant"
           purpose="Breaks the active base into new signups, retained users, win-backs and users going quiet."
         >

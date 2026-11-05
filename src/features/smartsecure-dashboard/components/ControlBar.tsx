@@ -3,6 +3,13 @@ import { useSmartSecureDashboard } from '../context/DashboardContext';
 import { PROJECTS } from '../data/constants';
 import type { DateRangeDays, Device } from '../data/types';
 
+/** Today as YYYY-MM-DD in local time. Usage data stops at today, so no date range may end after it. */
+const todayYmd = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const clampToToday = (v: string) => (v && v > todayYmd() ? todayYmd() : v);
+
 const RANGE_LABELS: Record<DateRangeDays, string> = { 7: 'Last 7 days', 30: 'Last 30 days', 90: 'Last 90 days' };
 
 function DateRangeControl() {
@@ -43,9 +50,9 @@ function DateRangeControl() {
         <div className="dr-custom">
           <div className="dr-custom-label">Custom range</div>
           <div className="dr-custom-row">
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <input type="date" max={todayYmd()} value={from} onChange={(e) => setFrom(clampToToday(e.target.value))} />
             <span className="dr-to">–</span>
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+            <input type="date" max={todayYmd()} value={to} onChange={(e) => setTo(clampToToday(e.target.value))} />
           </div>
           <button
             className={`dr-apply ${applied ? 'applied' : ''}`}

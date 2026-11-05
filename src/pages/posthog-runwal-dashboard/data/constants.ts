@@ -224,7 +224,7 @@ export const INFO: Record<string, InfoEntry> = {
   },
   'chart.growth': {
     t: 'Growth Accounting',
-    f: 'Deconstructs weekly active users into New (first time), Returning (active last week), Resurrecting (returned after inactivity), and Dormant (became inactive).',
+    f: 'One bar per week (Monday to Sunday) in the selected date range. Logged-in users active that week are New (first time), Returning (active the week before) or Resurrecting (back after a gap); Dormant (below the axis) were active the week before but not this week. The current week is marked "so far".',
     d: 'Explains the engine of user growth — whether top-line increase is driven by acquisition or retention.',
   },
   'chart.retention': {
@@ -339,7 +339,7 @@ export const INFO: Record<string, InfoEntry> = {
   },
   A7: {
     t: 'Growth Accounting',
-    f: 'Deconstructs weekly active users into New (first time), Returning (active last week), Resurrecting (returned after inactivity), and Dormant (became inactive).',
+    f: 'One bar per week (Monday to Sunday) in the selected date range. Logged-in users active that week are New (first time), Returning (active the week before) or Resurrecting (back after a gap); Dormant (below the axis) were active the week before but not this week. The current week is marked "so far".',
     d: 'Explains the engine of user growth — whether top-line increase is driven by acquisition or retention.',
   },
   A8: {
