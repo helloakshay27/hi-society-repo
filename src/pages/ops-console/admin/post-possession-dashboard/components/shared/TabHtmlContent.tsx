@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Chart, type ChartConfiguration } from 'chart.js/auto';
 import { createRoot, type Root } from 'react-dom/client';
+import { mountChartGrid } from './ChartGrid';
 import {
   QuarantineCasesEnhancedTable,
   type QuarantineCaseRow,
@@ -54,6 +55,57 @@ interface TabHtmlContentProps {
   className?: string;
   apiTab?: PostPossessionTab;
   apiState?: PostPossessionApiState;
+  /** My Dashboard: render only the cards with these chart_codes (hs-{tab}-{slug}) */
+  myDashboardCodes?: Set<string>;
+}
+
+// Shown while a tab's API data is loading, instead of the static sample content in the tab HTML
+const LOADING_SKELETON_HTML =
+  '<div class="pp-skel" aria-busy="true" aria-label="Loading">' +
+  '<div class="pp-skel-bar"></div>' +
+  '<div class="pp-skel-row"><i></i><i></i><i></i><i></i></div>' +
+  '<div class="pp-skel-grid"><i></i><i></i></div>' +
+  '<div class="pp-skel-grid"><i></i><i></i><i></i></div>' +
+  '</div>';
+
+
+// ---- Sample (dummy) content that the API binders don't replace -------------------------------
+// The tab HTML ships with sample commentary, lists and table rows. Anything of these kinds that
+// is still identical after the API data has been bound is sample content, so it is removed.
+const SAMPLE_SELECTOR =
+  '.aib, .aib-eyebrow, .aib-g, .aib-p, .aib-sig, .aib-conf, .ins, .sub, .evitem, .chip, tbody tr';
+
+function snapshotSamples(container: HTMLElement): Array<[Element, string]> {
+  return Array.from(container.querySelectorAll(SAMPLE_SELECTOR)).map((el) => [el, el.textContent ?? '']);
+}
+
+function removeUnboundSamples(samples: Array<[Element, string]>): void {
+  samples.forEach(([el, text]) => {
+    if (el.isConnected && (el.textContent ?? '') === text) el.remove();
+  });
+  // An AI-briefing card whose sample paragraphs were all removed has nothing left to show
+  document.querySelectorAll<HTMLElement>('.aib').forEach((card) => {
+    if (!card.querySelector('.aib-p, .aib-g, .aib-sig, li')) card.remove();
+  });
+}
+
+/** Small hard-coded figures inside labels/badges that have no API source. */
+function cleanSampleLabels(container: HTMLElement): void {
+  container.querySelectorAll<HTMLElement>('.ct').forEach((heading) => {
+    heading.childNodes.forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+        node.textContent = node.textContent.replace(/\s[—–-]\s\d+\s+open\s*$/i, '');
+      }
+    });
+  });
+  // Sample footnotes that describe made-up incidents
+  container.querySelectorAll<HTMLElement>('div').forEach((el) => {
+    if (el.children.length === 0 && /^Same guard missed both checkpoints/.test((el.textContent ?? '').trim())) el.remove();
+  });
+  container.querySelectorAll<HTMLElement>('.kc-tgt, span.b').forEach((el) => {
+    const text = (el.textContent ?? '').trim();
+    if (/\d+\s*[×x]\s*gap\b/i.test(text) || /^\d+ active · avg \d+ days$/i.test(text)) el.remove();
+  });
 }
 
 const CANVAS_RE = /<div class="chx"([^>]*)>\s*<canvas id="([^"]+)"><\/canvas>\s*<\/div>/g;
@@ -434,8 +486,11 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
   className,
   apiTab,
   apiState,
+  myDashboardCodes,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  // API-backed tabs show a skeleton until their data has loaded — never the static sample HTML
+  const isLoading = !!apiTab && (!apiState || apiState.loading);
   const chartInstancesRef = useRef<Map<string, Chart>>(new Map());
   const enhancedTableRootRef = useRef<Root | null>(null);
   const directoryTableRootRef = useRef<Root | null>(null);
@@ -507,7 +562,7 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
     });
   }, []);
 
-  const handleClick = useCallback((e: React.MouseEvent) => {
+  const handleClick = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
 
     const infoEl = target.closest('[data-info]') as HTMLElement | null;
@@ -540,14 +595,32 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
     }
   }, []);
 
+  // Native listener (not a React onClick): the draggable cards live in their own React root
+  // mounted inside this container, and React synthetic events don't bubble between roots.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.addEventListener('click', handleClick);
+    return () => container.removeEventListener('click', handleClick);
+  }, [handleClick]);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    if (isLoading) {
+      container.innerHTML = LOADING_SKELETON_HTML;
+      return;
+    }
     container.innerHTML = processedHtml;
     wrapGridTables(container);
     dispatchDynamicRenders(container, apiTab);
+    const sampleSnapshot = apiTab ? snapshotSamples(container) : [];
     if (apiTab) bindPostPossessionApiData(container, apiTab, apiState);
+    if (apiTab) {
+      removeUnboundSamples(sampleSnapshot);
+      cleanSampleLabels(container);
+    }
     if (
       apiTab === 'community' ||
       apiTab === 'parking' ||
@@ -714,18 +787,45 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
 
     return () => {
       cleanups.forEach((fn) => fn());
-      enhancedTableRootRef.current?.unmount();
+      // Unmounting a React root while React is rendering logs a race-condition
+      // warning, so collect the roots now and unmount them after this commit.
+      const roots: Root[] = [
+        enhancedTableRootRef.current,
+        directoryTableRootRef.current,
+        missedPatrolTableRootRef.current,
+        ...fitoutTableRootsRef.current,
+        ...genericTableRootsRef.current,
+      ].filter((root): root is Root => root !== null);
       enhancedTableRootRef.current = null;
-      directoryTableRootRef.current?.unmount();
       directoryTableRootRef.current = null;
-      fitoutTableRootsRef.current.forEach((root) => root.unmount());
-      fitoutTableRootsRef.current = [];
-      missedPatrolTableRootRef.current?.unmount();
       missedPatrolTableRootRef.current = null;
-      genericTableRootsRef.current.forEach((root) => root.unmount());
+      fitoutTableRootsRef.current = [];
       genericTableRootsRef.current = [];
+      window.setTimeout(() => roots.forEach((root) => root.unmount()), 0);
     };
-  }, [apiState, apiTab, processedHtml, mountCharts]);
+  // myDashboardCodes: rebuilding My Dashboard's content when a card is added/removed
+  }, [apiState, apiTab, processedHtml, mountCharts, myDashboardCodes, isLoading]);
+
+  // Make every chart card draggable + resizable (react-grid-layout). Declared after the effect
+  // that injects the HTML, so it runs once the cards exist and re-runs whenever they are rebuilt.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || isLoading) return;
+    const societyId = localStorage.getItem('selectedSocietyId') || 'default';
+    const isMy = !!myDashboardCodes;
+    // My Dashboard hides the full tab until it has been cut down to the saved cards
+    if (isMy) container.classList.add('pp-my-pending');
+    const cleanup = mountChartGrid(container, `${isMy ? 'my:' : ''}${societyId}:${apiTab ?? 'static'}`, {
+      tab: apiTab ?? 'allTowers',
+      mode: isMy ? 'my' : 'tab',
+      codes: myDashboardCodes,
+      onMounted: () => container.classList.remove('pp-my-pending'),
+    });
+    return () => {
+      cleanup();
+      container.classList.remove('pp-my-pending');
+    };
+  }, [apiState, apiTab, processedHtml, myDashboardCodes, isLoading]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -751,5 +851,5 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
     };
   }, []);
 
-  return <div ref={containerRef} className={className ?? 'pp-tab-content'} onClick={handleClick} />;
+  return <div ref={containerRef} className={className ?? 'pp-tab-content'} />;
 };

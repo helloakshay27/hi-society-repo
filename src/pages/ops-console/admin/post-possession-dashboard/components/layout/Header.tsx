@@ -10,7 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { SOCIETY_NAME, SOCIETY_SUBTITLE } from '../../data/mockData';
+import { SOCIETY_SUBTITLE } from '../../data/mockData';
 import { clearAuth, getUser } from '@/utils/auth';
 import { permissionService } from '@/services/permissionService';
 import { useDashboard } from '../../context/DashboardContext';
@@ -176,7 +176,7 @@ export const Header: React.FC = () => {
           onClick={() => setSocietyPickerOpen((open) => !open)}
         >
           <span className="soc-text">
-            <span className="soc-n">{selectedSociety?.name ?? SOCIETY_NAME}</span>
+            <span className="soc-n">{selectedSociety?.name ?? (societies.length === 0 ? 'Loading…' : 'Select society')}</span>
             <span className="soc-s">{SOCIETY_SUBTITLE}</span>
           </span>
           <ChevronsUpDown size={16} className="soc-caret" aria-hidden strokeWidth={1.8} />

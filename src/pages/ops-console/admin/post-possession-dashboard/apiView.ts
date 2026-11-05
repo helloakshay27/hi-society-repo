@@ -2208,19 +2208,74 @@ function bindSecurity(container: HTMLElement, state: PostPossessionApiState | un
 
   const flaggedResult = read(state, 'patrolAndFlagged', [['denied_and_flagged', 'items']]);
   const flagged = arrayValue(flaggedResult);
-  setTableByInfo(
-    container,
-    'tbl_tsc_denied_amp_flagged_today',
-    flaggedResult,
-    flagged.map((row) => [
-      row.guest_name ?? row.visitor_name,
-      row.status ?? row.reason,
-      row.tower,
-      row.flat,
-      row.gate,
-    ]),
-    'vis_rejected'
-  );
+  const flaggedCard = container
+    .querySelector<HTMLElement>('[data-info="tbl_tsc_denied_amp_flagged_today"]')
+    ?.closest<HTMLElement>('.card');
+  if (flaggedCard) {
+    // Replace the sample list with the API's denied/flagged visitors
+    flaggedCard.querySelectorAll('.evitem').forEach((item) => item.remove());
+    const appendItem = (build: (item: HTMLElement) => void, drill?: string) => {
+      const item = document.createElement('div');
+      item.className = 'evitem';
+      if (drill) item.dataset.drill = drill;
+      build(item);
+      flaggedCard.append(item);
+    };
+    const appendMessage = (message: string) =>
+      appendItem((item) => {
+        const body = document.createElement('div');
+        body.className = 'ev-b';
+        const text = document.createElement('div');
+        text.className = 'ev-t';
+        text.textContent = message;
+        body.append(text);
+        item.append(body);
+      });
+    if (flaggedResult.kind !== 'value') {
+      appendMessage(
+        flaggedResult.kind === 'error'
+          ? `API error: ${flaggedResult.message}`
+          : flaggedResult.kind === 'unavailable'
+            ? `Data Not Available: ${flaggedResult.reason}`
+            : 'Loading from API…'
+      );
+    } else if (flagged.length === 0) {
+      appendMessage('No denied or flagged visitors in this period.');
+    } else {
+      flagged.forEach((row) => {
+        appendItem((item) => {
+          const dot = document.createElement('span');
+          dot.className = 'ev-dot';
+          dot.style.background = 'var(--crim)';
+          const body = document.createElement('div');
+          body.className = 'ev-b';
+          const title = document.createElement('div');
+          title.className = 'ev-t';
+          title.textContent =
+            [row.reason ?? row.status, row.guest_name ?? row.visitor_name ?? row.name]
+              .filter(Boolean)
+              .map(String)
+              .join(' — ') || `Visitor ${safeText(row.id)}`;
+          const meta = document.createElement('div');
+          meta.className = 'ev-m';
+          meta.textContent = [
+            row.tower && row.flat ? `${row.tower}/${row.flat}` : row.tower ?? row.flat,
+            row.purpose,
+            row.gate,
+            row.remarks,
+          ]
+            .filter(Boolean)
+            .map(String)
+            .join(' · ');
+          const tag = document.createElement('span');
+          tag.className = 'ev-tag bwa';
+          tag.textContent = safeText(row.status ?? 'Flagged');
+          body.append(title, meta);
+          item.append(dot, body, tag);
+        }, 'vis_rejected');
+      });
+    }
+  }
 
   const incidentsResult = read(state, 'patrolAndFlagged', [['missed_patrol_to_incident', 'items']]);
   const incidents = arrayValue(incidentsResult);
@@ -2237,6 +2292,19 @@ function bindSecurity(container: HTMLElement, state: PostPossessionApiState | un
     ]),
     'patrol'
   );
+
+  // "N of M correlated" badge next to the missed-patrol card title
+  const incidentBadge = container
+    .querySelector<HTMLElement>('[data-info="tbl_tsc_missed_patrol_resulting_incidents"]')
+    ?.closest<HTMLElement>('.ch')
+    ?.querySelector<HTMLElement>('.b');
+  if (incidentBadge) {
+    if (incidentCount !== null && correlatedIncidentCount !== null) {
+      incidentBadge.textContent = `${correlatedIncidentCount} of ${incidentCount} correlated`;
+    } else {
+      incidentBadge.hidden = true;
+    }
+  }
 }
 
 function bindStaff(container: HTMLElement, state: PostPossessionApiState | undefined): void {

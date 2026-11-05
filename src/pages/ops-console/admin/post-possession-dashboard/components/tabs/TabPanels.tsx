@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { TabHtmlContent } from '../shared/TabHtmlContent';
 import { useDashboard } from '../../context/DashboardContext';
 import type { TabId } from '../../types';
@@ -16,8 +16,10 @@ import {
   type PostPossessionTab,
 } from '../../api';
 import { getPostPossessionChartConfigs } from '../../apiView';
+import { TABS } from '../../data/mockData';
+import { syncMyDashboardFromServer, useMyDashboardStore } from '../../store/myDashboardStore';
 
-const TAB_HTML: Record<TabId, string> = {
+const TAB_HTML: Partial<Record<TabId, string>> = {
   't-lb': LEADERBOARDTAB_HTML,
   't-ov': OVERVIEWTAB_HTML,
   't-op': HELPDESKTAB_HTML,
@@ -54,13 +56,74 @@ function TabPanel({ id }: { id: TabId }) {
 
   return (
     <section id={id} className={`panel${isActive ? ' on' : ''}`}>
-      <TabHtmlContent html={TAB_HTML[id]} charts={charts} apiTab={apiTab} apiState={apiState} />
+      <TabHtmlContent html={TAB_HTML[id] ?? ''} charts={charts} apiTab={apiTab} apiState={apiState} />
     </section>
   );
 }
 
+/** One module's saved cards inside My Dashboard: the module's full tab, cut down to the saved cards. */
+function MyDashboardGroup({ apiTab, chartIds }: { apiTab: PostPossessionTab; chartIds: string[] }) {
+  const { postPossessionApi } = useDashboard();
+  const tabId = (Object.keys(POST_POSSESSION_TAB_BY_DASHBOARD_TAB) as TabId[]).find(
+    (id) => POST_POSSESSION_TAB_BY_DASHBOARD_TAB[id] === apiTab
+  );
+  const apiState = postPossessionApi[apiTab];
+  const charts = useMemo(() => getPostPossessionChartConfigs(apiTab, apiState), [apiTab, apiState]);
+  const codes = useMemo(() => new Set(chartIds), [chartIds.join('|')]); // eslint-disable-line react-hooks/exhaustive-deps
+  const label = TABS.find((tab) => tab.id === tabId)?.label ?? apiTab;
+  if (!tabId) return null;
+
+  return (
+    <div className="pp-my-group">
+      <div className="pp-my-heading">{label}</div>
+      <TabHtmlContent
+        html={TAB_HTML[tabId] ?? ''}
+        charts={charts}
+        apiTab={apiTab}
+        apiState={apiState}
+        myDashboardCodes={codes}
+        className="pp-tab-content pp-my-content"
+      />
+    </div>
+  );
+}
+
+export const MyDashboardTab: React.FC = () => {
+  const { activeTab, initializedTabs } = useDashboard();
+  const cards = useMyDashboardStore((state) => state.cards);
+  const isActive = activeTab === 't-my';
+
+  // Pull saved cards from /dashboard_layouts whenever My Dashboard is opened
+  useEffect(() => {
+    if (isActive) void syncMyDashboardFromServer();
+  }, [isActive]);
+
+  if (!initializedTabs.has('t-my')) return null;
+
+  const groups = (Object.keys(POST_POSSESSION_TAB_BY_DASHBOARD_TAB) as TabId[])
+    .map((id) => POST_POSSESSION_TAB_BY_DASHBOARD_TAB[id] as PostPossessionTab)
+    .map((apiTab) => ({ apiTab, chartIds: cards.filter((card) => card.tab === apiTab).map((card) => card.chartId) }))
+    .filter((group) => group.chartIds.length > 0);
+
+  return (
+    <section id="t-my" className={`panel${isActive ? ' on' : ''}`}>
+      {groups.length === 0 ? (
+        <div className="pp-my-empty">
+          <div className="pp-my-empty-title">Nothing in My Dashboard yet</div>
+          <div className="pp-my-empty-sub">
+            Hover over any card in the other tabs and click the + button to add it here.
+          </div>
+        </div>
+      ) : (
+        groups.map((group) => <MyDashboardGroup key={group.apiTab} apiTab={group.apiTab} chartIds={group.chartIds} />)
+      )}
+    </section>
+  );
+};
+
 export const TabPanels: React.FC = () => (
   <>
+    <MyDashboardTab />
     <LeaderboardTab />
     <OverviewTab />
     <HelpdeskTab />

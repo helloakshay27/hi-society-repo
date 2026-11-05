@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChartConfiguration } from 'chart.js';
 import type { DateGrain, TabId, ToastType } from '../types';
 import { useToast } from '../hooks/useToast';
@@ -16,6 +16,8 @@ import {
 } from '../data/mockData';
 import { rgba } from '../charts/chartPalette';
 import { buildChipDrill, CHIP_SOURCES } from '../data/liveChipDrill';
+import { buildKpiDrill, CHIP_BY_DRILL_KEY, resolveKpiDrill, type KpiDrillSource } from '../data/liveKpiDrill';
+import { useMyDashboardStore } from '../store/myDashboardStore';
 import {
   createEndpointErrors,
   fetchPostPossessionFilters,
@@ -92,7 +94,13 @@ interface DashboardContextValue {
   setApiDateRange: (range: ApiDateRange) => void;
 }
 
-const DashboardContext = createContext<DashboardContextValue | null>(null);
+// Keep ONE context object across dev hot reloads of this file. A reload would otherwise create a
+// new context, leaving the mounted <DashboardProvider> on the old one and every consumer on the
+// new one — which throws "useDashboard must be used within DashboardProvider".
+const DashboardContext: React.Context<DashboardContextValue | null> =
+  (import.meta.hot?.data?.dashboardContext as React.Context<DashboardContextValue | null> | undefined) ??
+  createContext<DashboardContextValue | null>(null);
+if (import.meta.hot) import.meta.hot.data.dashboardContext = DashboardContext;
 
 export function useDashboard() {
   const ctx = useContext(DashboardContext);
@@ -389,7 +397,20 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [apiFilters.result, societyTowers]);
 
   const { toasts, toast, dismiss } = useToast();
-  const { content: drillContent, isOpen: drillOpen, openDrill, openLiveDrill, closeDrill } = useDrillPanel(toast);
+  const {
+    content: drillContent,
+    isOpen: drillOpen,
+    openDrill: openStaticDrill,
+    openLiveDrill,
+    closeDrill: closeDrillPanel,
+  } = useDrillPanel(toast);
+  // Latest chip-drill request; older/late responses must not overwrite a newer
+  // panel or reopen one the user already closed.
+  const chipDrillRequestRef = useRef(0);
+  const closeDrill = useCallback(() => {
+    chipDrillRequestRef.current += 1;
+    closeDrillPanel();
+  }, [closeDrillPanel]);
   const selectSociety = useCallback((nextSocietyId: string) => {
     localStorage.setItem('selectedSocietyId', nextSocietyId);
     localStorage.setItem('society_id', nextSocietyId);
@@ -410,6 +431,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         });
         return;
       }
+      const requestId = ++chipDrillRequestRef.current;
       openLiveDrill({
         t: 'Loading…',
         s: 'Fetching live data',
@@ -421,10 +443,56 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           return [tab, await fetchPostPossessionTab(tab, societyId, filters, endpoints)] as const;
         })
       ).then((entries) => {
+        if (requestId !== chipDrillRequestRef.current) return;
         openLiveDrill(buildChipDrill(chipKey, Object.fromEntries(entries)));
       });
     },
     [societyId, filtersForRequest, towerFilter, apiDateRange, openLiveDrill]
+  );
+
+  const openKpiDrill = useCallback(
+    (key: string, source: KpiDrillSource) => {
+      if (!societyId) {
+        openLiveDrill({
+          t: 'Select a society',
+          s: 'A valid society_id is required',
+          b: '<div class="dsec"><div style="font-size:11px;line-height:1.7">Select a society to load this data.</div></div>',
+        });
+        return;
+      }
+      const requestId = ++chipDrillRequestRef.current;
+      openLiveDrill({
+        t: source.title,
+        s: 'Fetching live data',
+        b: '<div class="dsec"><div style="font-size:11px;color:var(--sto)">Loading from API…</div></div>',
+      });
+      const filters = getRequestFilters(filtersForRequest, towerFilter, apiDateRange, source.tab);
+      void fetchPostPossessionTab(source.tab, societyId, filters, source.endpoints).then((endpoints) => {
+        if (requestId !== chipDrillRequestRef.current) return;
+        openLiveDrill(buildKpiDrill(key, source, { [source.tab]: endpoints }));
+      });
+    },
+    [societyId, filtersForRequest, towerFilter, apiDateRange, openLiveDrill]
+  );
+
+  // Every card/row click lands here: filter-chip keys and KPI keys open live panels built from
+  // the API (with the active period + tower filters); anything else gets the "not available" notice.
+  const openDrill = useCallback(
+    (key: string) => {
+      const chipKey = CHIP_BY_DRILL_KEY[key];
+      if (chipKey) {
+        openChipDrill(chipKey);
+        return;
+      }
+      const source = resolveKpiDrill(key);
+      if (source) {
+        openKpiDrill(key, source);
+        return;
+      }
+      chipDrillRequestRef.current += 1;
+      openStaticDrill(key);
+    },
+    [openChipDrill, openKpiDrill, openStaticDrill]
   );
 
   const markTabInitialized = useCallback((tab: TabId) => {
@@ -508,56 +576,63 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   }, [societyId, apiFilters, filtersForRequest, towerFilter, apiDateRange]);
 
+  // Tabs whose data the current view needs: the active tab, or — on My Dashboard — every tab
+  // that has a saved card.
+  const myDashboardTabs = useMyDashboardStore((state) =>
+    Array.from(new Set(state.cards.map((card) => card.tab))).sort().join(',')
+  );
+
   useEffect(() => {
-    const apiTab = POST_POSSESSION_TAB_BY_DASHBOARD_TAB[activeTab];
-    if (!apiTab) return;
+    const mapped = POST_POSSESSION_TAB_BY_DASHBOARD_TAB[activeTab];
+    const apiTabs: PostPossessionTab[] =
+      activeTab === 't-my'
+        ? ((myDashboardTabs ? myDashboardTabs.split(',') : []) as PostPossessionTab[])
+        : mapped
+          ? [mapped]
+          : [];
+    if (apiTabs.length === 0) return;
 
     let cancelled = false;
-    setPostPossessionApi((current) => ({
-      ...current,
-      [apiTab]: { societyId, loading: true, endpoints: {} },
-    }));
-
-    if (!societyId) {
+    apiTabs.forEach((apiTab) => {
       setPostPossessionApi((current) => ({
         ...current,
-        [apiTab]: {
-          societyId: null,
-          loading: false,
-          endpoints: createEndpointErrors(
-            apiTab,
-            'A valid society_id is required. Select a society and reopen this tab.'
-          ),
-        },
+        [apiTab]: { societyId, loading: true, endpoints: {} },
       }));
-      return () => {
-        cancelled = true;
-      };
-    }
-    if (apiFilters.loading || apiFilters.societyId !== societyId) return;
 
-    const requestFilters = getRequestFilters(
-      filtersForRequest,
-      towerFilter,
-      apiDateRange,
-      apiTab
-    );
-    const pageFilters =
-      apiTab === 'overview'
-        ? { ...requestFilters, page: 1, perPage: IMPORTANT_EVENTS_PER_PAGE }
-        : requestFilters;
-    void fetchPostPossessionTab(apiTab, societyId, pageFilters).then((endpoints) => {
-      if (cancelled) return;
-      setPostPossessionApi((current) => ({
-        ...current,
-        [apiTab]: { societyId, loading: false, endpoints },
-      }));
+      if (!societyId) {
+        setPostPossessionApi((current) => ({
+          ...current,
+          [apiTab]: {
+            societyId: null,
+            loading: false,
+            endpoints: createEndpointErrors(
+              apiTab,
+              'A valid society_id is required. Select a society and reopen this tab.'
+            ),
+          },
+        }));
+        return;
+      }
+      if (apiFilters.loading || apiFilters.societyId !== societyId) return;
+
+      const requestFilters = getRequestFilters(filtersForRequest, towerFilter, apiDateRange, apiTab);
+      const pageFilters =
+        apiTab === 'overview'
+          ? { ...requestFilters, page: 1, perPage: IMPORTANT_EVENTS_PER_PAGE }
+          : requestFilters;
+      void fetchPostPossessionTab(apiTab, societyId, pageFilters).then((endpoints) => {
+        if (cancelled) return;
+        setPostPossessionApi((current) => ({
+          ...current,
+          [apiTab]: { societyId, loading: false, endpoints },
+        }));
+      });
     });
 
     return () => {
       cancelled = true;
     };
-  }, [activeTab, societyId, apiFilters, filtersForRequest, towerFilter, apiDateRange]);
+  }, [activeTab, myDashboardTabs, societyId, apiFilters, filtersForRequest, towerFilter, apiDateRange]);
 
   useEffect(() => {
     if (activeTab === 't-ov' || !societyId || apiFilters.loading || apiFilters.societyId !== societyId) {
