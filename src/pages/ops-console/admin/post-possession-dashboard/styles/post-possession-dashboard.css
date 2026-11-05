@@ -449,6 +449,9 @@
 .pp-dashboard-root .registered-slots-scroll,
 .pp-dashboard-root .facility-slots-scroll,
 .pp-dashboard-root .important-events-scroll,
+.pp-dashboard-root .pending-requests-scroll,
+.pp-dashboard-root .compliance-checklist-scroll,
+.pp-dashboard-root .missed-patrol-incidents-scroll,
 .pp-dashboard-root .directory-vendors-scroll{
   max-height:650px;overflow:auto;overscroll-behavior:contain
 }
@@ -456,6 +459,9 @@
 .pp-dashboard-root .registered-slots-scroll thead th,
 .pp-dashboard-root .facility-slots-scroll thead th,
 .pp-dashboard-root .important-events-scroll thead th,
+.pp-dashboard-root .pending-requests-scroll thead th,
+.pp-dashboard-root .compliance-checklist-scroll thead th,
+.pp-dashboard-root .missed-patrol-incidents-scroll thead th,
 .pp-dashboard-root .directory-vendors-scroll thead th{position:sticky;top:0;z-index:2}
 .pp-dashboard-root .dashboard-enhanced-table-root > .space-y-4 > div:first-child{display:none}
 .pp-dashboard-root .dashboard-enhanced-table-root > .space-y-4 > div:nth-child(2){
@@ -464,6 +470,15 @@
 .pp-dashboard-root .dashboard-enhanced-table-root .table-container > div{overflow:visible !important}
 .pp-dashboard-root table.dashboard-enhanced-table{
   width:100% !important;min-width:100% !important;table-layout:fixed;border-collapse:separate;border-spacing:0
+}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table{
+  width:100% !important;min-width:1200px !important
+}
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table{
+  width:100% !important;min-width:100% !important
+}
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table{
+  width:100% !important;min-width:960px !important
 }
 .pp-dashboard-root table.dashboard-enhanced-table th,
 .pp-dashboard-root table.dashboard-enhanced-table td{
@@ -477,19 +492,110 @@
 }
 .pp-dashboard-root table.dashboard-enhanced-table thead th:first-child{border-top-left-radius:16px}
 .pp-dashboard-root table.dashboard-enhanced-table thead th:last-child{border-top-right-radius:16px}
-.pp-dashboard-root .quarantine-cases-scroll table.dashboard-enhanced-table thead{
+.pp-dashboard-root .quarantine-cases-scroll table.dashboard-enhanced-table thead,
+.pp-dashboard-root .registered-slots-scroll table.dashboard-enhanced-table thead,
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table thead,
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table thead,
+.pp-dashboard-root .facility-slots-scroll table.dashboard-enhanced-table thead,
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table thead,
+.pp-dashboard-root .important-events-scroll table.dashboard-enhanced-table thead,
+.pp-dashboard-root .directory-vendors-scroll table.dashboard-enhanced-table thead{
   position:sticky;top:0;z-index:4;background:#EFEDE6 !important
 }
 .pp-dashboard-root .quarantine-cases-scroll table.dashboard-enhanced-table thead tr,
-.pp-dashboard-root .quarantine-cases-scroll table.dashboard-enhanced-table thead th{
+.pp-dashboard-root .quarantine-cases-scroll table.dashboard-enhanced-table thead th,
+.pp-dashboard-root .registered-slots-scroll table.dashboard-enhanced-table thead tr,
+.pp-dashboard-root .registered-slots-scroll table.dashboard-enhanced-table thead th,
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table thead tr,
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table thead th,
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table thead tr,
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table thead th,
+.pp-dashboard-root .facility-slots-scroll table.dashboard-enhanced-table thead tr,
+.pp-dashboard-root .facility-slots-scroll table.dashboard-enhanced-table thead th,
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table thead tr,
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table thead th,
+.pp-dashboard-root .important-events-scroll table.dashboard-enhanced-table thead tr,
+.pp-dashboard-root .important-events-scroll table.dashboard-enhanced-table thead th,
+.pp-dashboard-root .directory-vendors-scroll table.dashboard-enhanced-table thead tr,
+.pp-dashboard-root .directory-vendors-scroll table.dashboard-enhanced-table thead th{
   background:#EFEDE6 !important;background-clip:padding-box
 }
-.pp-dashboard-root .quarantine-cases-scroll table.dashboard-enhanced-table thead th:first-child{
+.pp-dashboard-root .quarantine-cases-scroll table.dashboard-enhanced-table thead th:first-child,
+.pp-dashboard-root .registered-slots-scroll table.dashboard-enhanced-table thead th:first-child,
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table thead th:first-child,
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table thead th:first-child,
+.pp-dashboard-root .facility-slots-scroll table.dashboard-enhanced-table thead th:first-child,
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table thead th:first-child,
+.pp-dashboard-root .important-events-scroll table.dashboard-enhanced-table thead th:first-child,
+.pp-dashboard-root .directory-vendors-scroll table.dashboard-enhanced-table thead th:first-child{
   border-top-left-radius:16px !important
 }
-.pp-dashboard-root .quarantine-cases-scroll table.dashboard-enhanced-table thead th:last-child{
+.pp-dashboard-root .quarantine-cases-scroll table.dashboard-enhanced-table thead th:last-child,
+.pp-dashboard-root .registered-slots-scroll table.dashboard-enhanced-table thead th:last-child,
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table thead th:last-child,
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table thead th:last-child,
+.pp-dashboard-root .facility-slots-scroll table.dashboard-enhanced-table thead th:last-child,
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table thead th:last-child,
+.pp-dashboard-root .important-events-scroll table.dashboard-enhanced-table thead th:last-child,
+.pp-dashboard-root .directory-vendors-scroll table.dashboard-enhanced-table thead th:last-child{
   border-top-right-radius:16px !important
 }
+.pp-dashboard-root .registered-slots-scroll table.dashboard-enhanced-table thead th:not(:last-child),
+.pp-dashboard-root .facility-slots-scroll table.dashboard-enhanced-table thead th:not(:last-child),
+.pp-dashboard-root .important-events-scroll table.dashboard-enhanced-table thead th:not(:last-child){
+  border-right:1px solid #fff
+}
+.pp-dashboard-root .directory-vendors-scroll table.dashboard-enhanced-table thead th:not(:last-child){
+  border-right:1px solid #fff
+}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table th:nth-child(1),
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table td:nth-child(1){width:6% !important}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table th:nth-child(2),
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table td:nth-child(2){width:11% !important}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table th:nth-child(3),
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table td:nth-child(3){width:6% !important}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table th:nth-child(4),
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table td:nth-child(4){width:6% !important}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table th:nth-child(5),
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table td:nth-child(5){width:8% !important}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table th:nth-child(6),
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table td:nth-child(6){width:8% !important}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table th:nth-child(7),
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table td:nth-child(7){width:13% !important}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table th:nth-child(8),
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table td:nth-child(8){width:9% !important}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table th:nth-child(9),
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table td:nth-child(9){width:10% !important}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table th:nth-child(10),
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table td:nth-child(10){width:9% !important}
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table th:nth-child(11),
+.pp-dashboard-root .pending-requests-scroll table.dashboard-enhanced-table td:nth-child(11){width:14% !important}
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table th:nth-child(1),
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table td:nth-child(1){width:26% !important}
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table th:nth-child(2),
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table td:nth-child(2){width:16% !important}
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table th:nth-child(3),
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table td:nth-child(3){width:23% !important}
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table th:nth-child(4),
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table td:nth-child(4){width:24% !important}
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table th:nth-child(5),
+.pp-dashboard-root .missed-patrol-incidents-scroll table.dashboard-enhanced-table td:nth-child(5){width:11% !important}
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table th:nth-child(1),
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table td:nth-child(1){width:7% !important}
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table th:nth-child(2),
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table td:nth-child(2){width:14% !important}
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table th:nth-child(3),
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table td:nth-child(3){width:8% !important}
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table th:nth-child(4),
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table td:nth-child(4){width:9% !important}
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table th:nth-child(5),
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table td:nth-child(5){width:10% !important}
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table th:nth-child(6),
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table td:nth-child(6){width:30% !important}
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table th:nth-child(7),
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table td:nth-child(7){width:12% !important}
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table th:nth-child(8),
+.pp-dashboard-root .compliance-checklist-scroll table.dashboard-enhanced-table td:nth-child(8){width:10% !important}
 .pp-dashboard-root table.dashboard-enhanced-table td{
   color:var(--ink-soft) !important;white-space:normal !important;overflow-wrap:anywhere
 }

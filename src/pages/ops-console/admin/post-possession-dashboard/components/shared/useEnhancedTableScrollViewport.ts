@@ -3,7 +3,8 @@ import { useLayoutEffect, useRef } from 'react';
 export function useEnhancedTableScrollViewport(
   viewportClassName: string,
   rows: readonly unknown[],
-  trailingContentSelector?: string
+  trailingContentSelector?: string,
+  visibleRowCount = 10
 ) {
   const tableRootRef = useRef<HTMLDivElement>(null);
 
@@ -15,7 +16,10 @@ export function useEnhancedTableScrollViewport(
 
     const fitViewport = () => {
       const headerHeight = table.tHead?.getBoundingClientRect().height ?? 0;
-      const visibleRows = Array.from(table.tBodies.item(0)?.rows ?? []).slice(0, 10);
+      const visibleRows = Array.from(table.tBodies.item(0)?.rows ?? []).slice(
+        0,
+        visibleRowCount
+      );
       const rowsHeight = visibleRows.reduce(
         (height, row) => height + row.getBoundingClientRect().height,
         0
@@ -32,7 +36,7 @@ export function useEnhancedTableScrollViewport(
     fitViewport();
     window.addEventListener('resize', fitViewport);
     return () => window.removeEventListener('resize', fitViewport);
-  }, [rows, trailingContentSelector, viewportClassName]);
+  }, [rows, trailingContentSelector, viewportClassName, visibleRowCount]);
 
   return tableRootRef;
 }
