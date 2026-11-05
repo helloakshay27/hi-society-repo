@@ -13,7 +13,36 @@ export type BgColsSpec = {
   avg?: number;
 };
 
-/** Vertical column chart matching veda-gardens-vertical-bars.html */
+function niceMax(n: number): number {
+  if (n <= 5) return 5;
+  if (n <= 10) return 10;
+  if (n <= 20) return 20;
+  if (n <= 25) return 25;
+  if (n <= 50) return 50;
+  if (n <= 100) return 100;
+  return Math.ceil(n / 10) * 10;
+}
+
+export function ticksFor(max: number): number[] {
+  if (max === 100) return [0, 50, 100];
+  if (max <= 5) return [0, 1, 2, 3, 4, 5].filter((t) => t <= max);
+  if (max <= 10) return [0, 5, 10];
+  if (max <= 20) return [0, 10, 20];
+  if (max <= 25) return [0, 10, 20];
+  return [0, max / 2, max];
+}
+
+function resolveSeriesColor(
+  dataset: { backgroundColor?: unknown; label?: unknown },
+  index: number
+): string {
+  const bg = dataset.backgroundColor;
+  if (typeof bg === 'string' && bg.startsWith('#')) return bg;
+  // Prefer theme palette indices over translucent rgba so twin bars stay vivid
+  return BG_DONUT_PALETTE[index % BG_DONUT_PALETTE.length];
+}
+
+/** Vertical column chart matching veda-gardens-vertical-bars.html (+ grouped twin bars) */
 export function renderBusinessGenieCols(host: HTMLElement, c: BgColsSpec): void {
   const unit = c.unit || '';
   const pct = (v: number) => `${(v / c.max) * 100}%`;
