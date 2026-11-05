@@ -14,6 +14,7 @@ import { useEnsureProjectCode } from "../../pages/posthog-runwal-dashboard/hooks
 // import { useEnsureAppId } from "../../pages/posthog-runwal-dashboard/hooks/useEnsureAppId";
 import { RecentActivitySidebar } from "../../pages/posthog-runwal-dashboard/components/common/RecentActivitySidebar";
 import type { DashboardFilters } from "../../pages/posthog-runwal-dashboard/api/types";
+import { ADOPTION_API } from "../../pages/posthog-runwal-dashboard/api/api";
 import type { ActivePage } from "./data/types";
 
 const SMARTSECURE_PROJECT_CODE = "SMSE-01";
@@ -93,6 +94,7 @@ function DashboardLayout() {
     subModule: null,
     appId: appId || undefined,
     projectCode: projectCode || SMARTSECURE_PROJECT_CODE,
+    apiPath: ADOPTION_API.smartsecure,
   };
 
   return (

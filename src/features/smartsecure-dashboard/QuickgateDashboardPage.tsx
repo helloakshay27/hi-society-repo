@@ -10,6 +10,7 @@ import { WorkflowSection } from './sections/WorkflowSection';
 import { useEnsureAppId } from '../../pages/posthog-runwal-dashboard/hooks/useEnsureAppId';
 import { RecentActivitySidebar } from '../../pages/posthog-runwal-dashboard/components/common/RecentActivitySidebar';
 import type { DashboardFilters } from '../../pages/posthog-runwal-dashboard/api/types';
+import { ADOPTION_API } from "../../pages/posthog-runwal-dashboard/api/api";
 import type { ActivePage } from './data/types';
 
 const PAGES: { key: ActivePage; title: string; icon: JSX.Element }[] = [
@@ -58,6 +59,7 @@ function DashboardLayout() {
     subModule: null,
     appId: appId || QUIKGATE_APP_ID,
     projectCode: projectCode || undefined,
+    apiPath: ADOPTION_API.quikgate,
   };
 
   return (

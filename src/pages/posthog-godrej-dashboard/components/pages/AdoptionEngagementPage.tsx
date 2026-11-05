@@ -1,4 +1,5 @@
 import React from 'react';
+import { ModuleAdoptionCard } from "../../../posthog-runwal-dashboard/components/adoption/ModuleAdoptionCard";
 import { DashboardFilters, SiteLookupItem } from '../../../posthog-runwal-dashboard/api/types';
 import { QuestionBox } from '../../../posthog-runwal-dashboard/components/common/QuestionBox';
 import { KpiTile } from '../../../posthog-runwal-dashboard/components/common/KpiTile';
@@ -332,6 +333,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
             </div>
           )}
         </Card>
+
+        <ModuleAdoptionCard filters={filters} enabled={sitesSettled} />
 
         <Card
           id="card-dormant"

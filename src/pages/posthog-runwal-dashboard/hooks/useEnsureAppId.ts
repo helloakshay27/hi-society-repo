@@ -1,28 +1,20 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { clearDashboardScope, pinDashboardScope, stripScopeFromUrl } from '../api/api';
 
 /**
- * Pins the current URL's `app_id` query param to a fixed value for a
- * dedicated single-tenant dashboard route. Every Usage/FM Matrix API call
- * in this product family reads `app_id` straight off `window.location.search`
- * (see `getAppIdFromUrl()` in `api/api.ts`), so the URL must carry the right
- * value *before* any data-fetching hook mounts. Returns `false` (render
- * nothing) until the URL has been corrected, then `true` once it's pinned.
+ * Pins a dedicated single-tenant dashboard's app_id in memory (see pinDashboardScope) before any
+ * data hook mounts, and removes app_id / project_code from the browser URL so the code is never
+ * exposed. Returns false (render nothing) until pinned.
  */
 export function useEnsureAppId(appId: string): boolean {
-  const navigate = useNavigate();
-  const location = useLocation();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('app_id') !== appId) {
-      params.set('app_id', appId);
-      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-      return;
-    }
+    pinDashboardScope({ appId });
+    stripScopeFromUrl();
     setReady(true);
-  }, [location.pathname, location.search, navigate, appId]);
+    return () => clearDashboardScope();
+  }, [appId]);
 
   return ready;
 }

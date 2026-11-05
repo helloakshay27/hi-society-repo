@@ -2,6 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { Device } from '../data/types';
 import { RANGE_LABELS } from '../data/constants';
 
+/** Today as YYYY-MM-DD in local time. Usage data stops at today, so no date range may end after it. */
+const todayYmd = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const clampToToday = (v: string) => (v && v > todayYmd() ? todayYmd() : v);
+
 interface FilterBarProps {
   range: number;
   rangeLabel: string;
@@ -103,20 +110,22 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <div className="dr-custom-row">
               <input
                 type="date"
+                max={todayYmd()}
                 id="dateFrom"
                 value={customFrom}
                 onChange={(e) => {
-                  setCustomFrom(e.target.value);
+                  setCustomFrom(clampToToday(e.target.value));
                   setIsCustomApplied(false);
                 }}
               />
               <span className="dr-to">&ndash;</span>
               <input
                 type="date"
+                max={todayYmd()}
                 id="dateTo"
                 value={customTo}
                 onChange={(e) => {
-                  setCustomTo(e.target.value);
+                  setCustomTo(clampToToday(e.target.value));
                   setIsCustomApplied(false);
                 }}
               />

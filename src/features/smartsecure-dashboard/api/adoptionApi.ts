@@ -55,6 +55,8 @@ export interface RangeFilters {
 export interface WeeklyFilters {
   to: string; // YYYY-MM-DD
   weeks: number;
+  /** Start of the selected range. Only growth reads it: its weeks follow the range. */
+  from?: string;
   siteIds?: string[];
   devices?: DeviceType[];
   url?: string;
@@ -105,7 +107,10 @@ async function get<T>(path: string, params: Record<string, string>): Promise<T> 
     // Append site_id with literal commas, not encoded
     qs += (qs ? '&' : '') + 'site_id=' + params.site_id;
   }
-  const res = await client.get<T>(`/fm/adoption/${path}?${qs}`);
+  // Each product has its own usage-analytics API, which fixes its scope on the server: QuikGate
+  // (app_id 23) or SmartSecure (project_code SMSE-01).
+  const api = params.app_id === '23' ? 'commercial/quikgate' : 'commercial/smartsecure';
+  const res = await client.get<T>(`/${api}/adoption/${path}?${qs}`);
   return res.data;
 }
 
@@ -259,7 +264,8 @@ export interface GrowthResponse {
   info?: AdoptionInfo;
 }
 
-export const fetchGrowth = (f: WeeklyFilters) => get<GrowthResponse>('growth', weeklyParams(f));
+export const fetchGrowth = (f: WeeklyFilters) =>
+  get<GrowthResponse>('growth', { ...weeklyParams(f), ...(f.from ? { from: f.from } : {}) });
 
 /* ---------------------------------------------------- Layer 2 · retention */
 
