@@ -32,7 +32,7 @@ function niceMax(n: number): number {
   return Math.ceil(n / 10) * 10;
 }
 
-function ticksFor(max: number): number[] {
+export function ticksFor(max: number): number[] {
   if (max === 100) return [0, 50, 100];
   if (max <= 5) return [0, 1, 2, 3, 4, 5].filter((t) => t <= max);
   if (max <= 10) return [0, 5, 10];

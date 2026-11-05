@@ -226,6 +226,26 @@ export async function fetchPostPossessionTab(
   return Object.fromEntries(responses);
 }
 
+export interface TowerOption {
+  id: string;
+  name: string;
+}
+
+/** Towers (society blocks) of a society — same API the Manage Users page uses. */
+export async function fetchSocietyTowers(societyId: string): Promise<TowerOption[]> {
+  const response = await apiClient.get('/get_society_blocks.json', { params: { society_id: societyId } });
+  const blocks = response.data?.society_blocks;
+  if (!Array.isArray(blocks)) return [];
+  return blocks.flatMap((block: unknown): TowerOption[] => {
+    if (typeof block !== 'object' || block === null) return [];
+    const item = block as Record<string, unknown>;
+    const id = String(item.id ?? '');
+    const rawName = item.name ?? item.block_no;
+    const name = typeof rawName === 'string' ? rawName.trim() : '';
+    return id && name ? [{ id, name }] : [];
+  });
+}
+
 export async function fetchPostPossessionFilters(societyId?: string | null): Promise<EndpointResult> {
   try {
     // Without society_id the API returns an empty towers[] (and no site)

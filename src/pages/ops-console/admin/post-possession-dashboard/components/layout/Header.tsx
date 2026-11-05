@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, Check, ChevronsUpDown, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, Check, ChevronsUpDown, Home, LogOut, Search } from 'lucide-react';
 import {
   Command,
   CommandEmpty,
@@ -9,8 +10,9 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { SOCIETY_NAME, SOCIETY_SUBTITLE, TOWER_FILTERS } from '../../data/mockData';
-import { getUser } from '@/utils/auth';
+import { SOCIETY_NAME, SOCIETY_SUBTITLE } from '../../data/mockData';
+import { clearAuth, getUser } from '@/utils/auth';
+import { permissionService } from '@/services/permissionService';
 import { useDashboard } from '../../context/DashboardContext';
 import type { DateGrain } from '../../types';
 import { HeaderDatePicker } from './HeaderDatePicker';
@@ -40,6 +42,48 @@ const getUserDisplay = (): { initials: string; name: string } => {
 
 export const Header: React.FC = () => {
   const { initials: userInitials, name: userName } = useMemo(getUserDisplay, []);
+  const navigate = useNavigate();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profilePos, setProfilePos] = useState({ top: 0, right: 12 });
+  const profileTriggerRef = useRef<HTMLButtonElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    const trigger = profileTriggerRef.current;
+    if (trigger) {
+      const rect = trigger.getBoundingClientRect();
+      setProfilePos({ top: rect.bottom + 8, right: Math.max(12, window.innerWidth - rect.right) });
+    }
+    const onMouseDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (profileTriggerRef.current?.contains(target) || profileMenuRef.current?.contains(target)) return;
+      setProfileOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setProfileOpen(false);
+    };
+    const close = () => setProfileOpen(false);
+    const timer = window.setTimeout(() => document.addEventListener('mousedown', onMouseDown), 0);
+    document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('resize', close);
+    window.addEventListener('scroll', close, true);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', close, true);
+    };
+  }, [profileOpen]);
+
+  const handleLogout = () => {
+    setProfileOpen(false);
+    navigate('/login');
+    permissionService.clearUserData();
+    clearAuth();
+    window.location.reload();
+  };
   const [societyPickerOpen, setSocietyPickerOpen] = useState(false);
   const [societyPopupPosition, setSocietyPopupPosition] = useState({
     top: 0,
@@ -52,6 +96,7 @@ export const Header: React.FC = () => {
   const {
     societyId,
     societies,
+    towerOptions,
     selectSociety,
     towerFilter,
     setTowerFilter,
@@ -175,7 +220,7 @@ export const Header: React.FC = () => {
             document.body
           )}
         <div className="tw">
-          {TOWER_FILTERS.map((tower) => (
+          {towerOptions.map((tower) => (
             <button
               key={tower}
               type="button"
@@ -218,14 +263,45 @@ export const Header: React.FC = () => {
           Live
         </div>
         <button
+          ref={profileTriggerRef}
           type="button"
           className="av"
-          onClick={() => toast('Profile settings', 'd')}
-          aria-label={userName ? `Profile settings — ${userName}` : 'Profile settings'}
+          onClick={() => setProfileOpen((open) => !open)}
+          aria-label={userName ? `Profile menu — ${userName}` : 'Profile menu'}
+          aria-haspopup="menu"
+          aria-expanded={profileOpen}
           title={userName || undefined}
         >
           {userInitials}
         </button>
+        {profileOpen &&
+          createPortal(
+            <div
+              ref={profileMenuRef}
+              role="menu"
+              className="profile-menu-popover"
+              style={{ top: profilePos.top, right: profilePos.right }}
+            >
+              {userName && <div className="profile-menu-name">{userName}</div>}
+              <button
+                type="button"
+                role="menuitem"
+                className="profile-menu-item"
+                onClick={() => {
+                  setProfileOpen(false);
+                  navigate('/');
+                }}
+              >
+                <Home size={15} aria-hidden strokeWidth={1.8} />
+                <span>Back to Home</span>
+              </button>
+              <button type="button" role="menuitem" className="profile-menu-item danger" onClick={handleLogout}>
+                <LogOut size={15} aria-hidden strokeWidth={1.8} />
+                <span>Logout</span>
+              </button>
+            </div>,
+            document.body
+          )}
       </div>
     </header>
   );

@@ -136,6 +136,24 @@
   color:#fff !important;cursor:pointer;flex-shrink:0;font-family:inherit
 }
 .pp-dashboard-root .av:hover{filter:none;opacity:.92}
+/* Profile menu is portaled to body — keep styles unscoped */
+.profile-menu-popover{
+  position:fixed;z-index:2000;min-width:200px;padding:6px;
+  background:#fff;border:1px solid rgba(26,26,24,.10);border-radius:12px;
+  box-shadow:0 12px 30px rgba(26,26,24,.14);font-family:'Poppins',system-ui,sans-serif
+}
+.profile-menu-name{
+  padding:8px 10px 10px;margin-bottom:4px;border-bottom:1px solid rgba(26,26,24,.08);
+  font-size:12px;font-weight:600;color:#1A1A18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px
+}
+.profile-menu-item{
+  display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:none;border-radius:8px;
+  background:transparent;color:#1A1A18;font:500 12.5px 'Poppins',system-ui,sans-serif;text-align:left;cursor:pointer;
+  transition:background .16s
+}
+.profile-menu-item:hover{background:#F5F4F0}
+.profile-menu-item.danger{color:#C0392B}
+.profile-menu-item.danger:hover{background:rgba(192,57,43,.08)}
 @media(max-width:1600px){
   .pp-dashboard-root .hdr{
     position:sticky;top:0;display:flex;flex-wrap:nowrap;align-items:center;
