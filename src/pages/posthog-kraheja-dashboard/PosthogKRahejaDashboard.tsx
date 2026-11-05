@@ -15,13 +15,15 @@ import { SideBar } from "./components/common/SideBar";
 import { FilterBar } from "../posthog-runwal-dashboard/components/common/FilterBar";
 import { TrafficSessionPage } from "./components/pages/TrafficSessionPage";
 import { AdoptionEngagementPage } from "./components/pages/AdoptionEngagementPage";
-import { WorkflowUsagePage } from "./components/pages/WorkflowUsagePage";
+// The shared Runwal-family page: modules on one row, the selected module's screens (sub-modules) below.
+import { WorkflowUsagePage } from "../posthog-runwal-dashboard/components/pages/WorkflowUsagePage";
 import {
   useDashboardSites,
   useTrafficSession,
 } from "../posthog-runwal-dashboard/hooks/useDashboardAnalytics";
 import { useEnsureAppId } from "../posthog-runwal-dashboard/hooks/useEnsureAppId";
 import { DashboardFilters } from "../posthog-runwal-dashboard/api/types";
+import { ADOPTION_API } from "../posthog-runwal-dashboard/api/api";
 import { getToken, getUser } from "../../utils/auth";
 import "../posthog-runwal-dashboard/styles/dashboard.css";
 
@@ -99,6 +101,7 @@ function PosthogKRahejaDashboardContent() {
       licensedSeats: null,
       module: null,
       subModule: null,
+      apiPath: ADOPTION_API.kraheja,
     };
   }, [selectedSiteId, devPlatform, rangeFrom, rangeTo]);
 

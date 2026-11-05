@@ -15,7 +15,7 @@ import {
   useTrafficSession,
   useUserAccountSiteId,
 } from "./hooks/useDashboardAnalytics";
-import { getProjectCodeFromUrl } from "./api/api";
+import { ADOPTION_API, clearDashboardScope, pinDashboardScope, stripScopeFromUrl } from "./api/api";
 import { DashboardFilters } from "./api/types";
 import { getToken, getBaseUrlDomain, getUser } from "../../utils/auth";
 import "./styles/dashboard.css";
@@ -98,7 +98,16 @@ function PosthogRunwalCpDashboardContent() {
     ...BM_DEFAULTS,
   });
 
-  // Keep the URL carrying ?project_code=RE-CP01 so the handful of API helpers
+  // Runwal CP's project code is held in memory for the API helpers that read the dashboard scope
+  // (getFm, fetchAllowedSites) and removed from the address bar, so it never shows in the URL.
+  useMemo(() => pinDashboardScope({ projectCode: RUNWAL_CP_PROJECT_CODE }), []);
+  useEffect(() => {
+    pinDashboardScope({ projectCode: RUNWAL_CP_PROJECT_CODE });
+    stripScopeFromUrl();
+    return () => clearDashboardScope();
+  }, []);
+
+  // (Old approach, kept for reference: keep the URL carrying ?project_code=RE-CP01 so the handful of API helpers
   // that read it directly off window.location (getFm, fetchAllowedSites) pick
   // it up the same way the app_id-based dashboard relies on ?app_id=... being
   // present — this is a non-navigating URL-bar update, not a redirect.
@@ -174,6 +183,7 @@ function PosthogRunwalCpDashboardContent() {
       displayView: undefined,
       appId: undefined,
       projectCode: RUNWAL_CP_PROJECT_CODE,
+      apiPath: ADOPTION_API.runwalCp,
     };
   }, [accountSiteId, devPlatform, rangeFrom, rangeTo, dynamicTenantUrl]);
 

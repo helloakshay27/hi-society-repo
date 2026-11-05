@@ -29,7 +29,8 @@ export const RecentActivitySidebar: React.FC<RecentActivitySidebarProps> = ({
   filters,
   sitesSettled = true,
 }) => {
-  const { data, isLoading } = useRecentActiveUsers(filters, sitesSettled, 100);
+  // The 10 newest events (one row per thing a user did, logins and logouts included), live.
+  const { data, isLoading } = useRecentActiveUsers(filters, sitesSettled, 10);
   const [isDownloading, setIsDownloading] = useState(false);
   const users = data?.users ?? [];
 

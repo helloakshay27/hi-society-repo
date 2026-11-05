@@ -43,19 +43,19 @@ export const BM_DEFAULTS: Record<string, number> = {
 
 export const KPI_INFO: Record<string, KpiInfo> = {
   'Active Users': {
-    f: 'Unique customers (user_id) who fired at least one event with journey = post_sales during the selected period.',
+    f: 'Different people (each user_id counted once) who did at least one thing in the app during the selected period.',
     m: "Shows the reach of the app among booked homebuyers — pulled directly from person-level usage activity.",
   },
   'Screen Views': {
-    f: 'Count of all screen-viewed style events across modules (e.g. home_page_viewed, document_viewed, project_details_viewed).',
+    f: 'Count of every screen-load (view) event in the period: a page view on web, a <screen>_viewed / <screen>_opened event in the app.',
     m: 'Overall content consumption across the app.',
   },
   'Total Sessions': {
-    f: 'Count of distinct app sessions started in the period (from app_launched / splash_routing_decided).',
+    f: 'Count of distinct sessions (visits) in the period.',
     m: 'Usage volume across all customers.',
   },
   'Sessions': {
-    f: 'Count of distinct app sessions started in the period (from app_launched / splash_routing_decided).',
+    f: 'Count of distinct sessions (visits) in the period.',
     m: 'Usage volume across all customers.',
   },
   'Average Session Duration': {
@@ -67,7 +67,7 @@ export const KPI_INFO: Record<string, KpiInfo> = {
     m: 'Engagement depth per visit.',
   },
   'Bounce Rate': {
-    f: '% of sessions with only app_launched/home_page_viewed and no further interaction.',
+    f: 'Sessions that only saw the launch or home screen ÷ all sessions × 100. Lower is better.',
     m: 'Immediate exits or a poor first impression.',
   },
   'Returning Users': {
@@ -83,7 +83,7 @@ export const KPI_INFO: Record<string, KpiInfo> = {
     m: 'How much of the app a customer explores per visit.',
   },
   'Device / Platform Split': {
-    f: 'Share of active users and sessions by device_platform (android vs ios).',
+    f: 'Users on each OS ÷ all active users × 100 (Android vs iOS).',
     m: 'Shows device platform distribution for engineering and QA priorities.',
   },
   'Seat Utilisation': {
@@ -95,11 +95,11 @@ export const KPI_INFO: Record<string, KpiInfo> = {
     m: 'Measures how habitually and repeatedly customers return to the app.',
   },
   'Adoption Trend': {
-    f: '% change in weekly active users over the prior 8 weeks.',
+    f: "This week's active users (the last 7 days) compared with the average of the 8 weeks before: (this week − average) ÷ average × 100. Weeks before the app went live are left out of the average.",
     m: 'Highlights whether app adoption is accelerating or plateauing over time.',
   },
   '14-Day Activation': {
-    f: '% of new users who complete key setup actions within 14 days.',
+    f: '% of new users who do a first real action within 14 days of first appearing.',
     m: 'Early onboarding health indicator.',
   },
   'Module Breadth': {
@@ -107,19 +107,19 @@ export const KPI_INFO: Record<string, KpiInfo> = {
     m: 'How much of the platform a customer base has actually adopted.',
   },
   'Workflow Adoption': {
-    f: "% of active users who started the workflow.",
+    f: "Users who did the workflow's first step ÷ active users × 100.",
     m: 'Shows how many customers attempt this process.',
   },
   'Completion Rate': {
-    f: "% of users who reached the workflow's terminal success event after starting.",
+    f: 'Users who reached the final step ÷ users who started × 100.',
     m: 'How effectively the workflow converts.',
   },
   'Biggest Step Drop': {
-    f: 'Step with the highest drop-off percentage in the sequential funnel.',
+    f: 'The % lost at every step (users lost ÷ users at the step before); the largest is shown.',
     m: 'Pinpoints UX friction and abandonment points.',
   },
   'Usage Volume': {
-    f: "Total count of users who completed the workflow in the period.",
+    f: 'Count of users who reached the final step in the period.',
     m: 'Absolute volume of successful business transactions.',
   },
 };
@@ -134,27 +134,27 @@ export interface InfoEntry {
 export const INFO: Record<string, InfoEntry> = {
   U1: {
     t: 'Active Users (U1)',
-    f: 'Count of distinct customers (user_id) who were active at least once during the selected date window.',
+    f: 'Count of different people (each user_id once) who did at least one thing during the selected period.',
     d: 'Each person is counted only once no matter how many times they log in. Shows your net audience reach.',
   },
   U2: {
     t: 'Screen Views (U2)',
-    f: 'Total number of screens/pages opened across everyone, added up over the selected date range.',
+    f: 'Count of every screen-load (view) event in the period: a page view on web, a <screen>_viewed / <screen>_opened event in the app.',
     d: 'Counts every screen transition — climbs when users browse deeply, not just when more people log in.',
   },
   U3: {
     t: 'Total Sessions (U3)',
-    f: 'Count of distinct app sessions started in the period (via app_launched or splash screen routing).',
+    f: 'Count of distinct sessions (visits) in the period. One visit runs from opening the app to leaving it.',
     d: 'Reflects total visit frequency and customer interaction touchpoints across all channels.',
   },
   U4: {
     t: 'Average Session Duration (U4)',
-    f: 'Total aggregated session active time ÷ total sessions started in the period.',
+    f: 'Total time of all sessions ÷ number of sessions (a session runs from its first to its last event).',
     d: 'Measures engagement depth and how much time users spend browsing content per visit.',
   },
   U5: {
     t: 'Bounce Rate (U5)',
-    f: '% of sessions with only splash/home opened and zero subsequent interactions or feature actions.',
+    f: 'Sessions that only saw the launch or home screen (splash, login, home) ÷ all sessions × 100.',
     d: 'Lower is better. High bounce rate indicates onboarding confusion or premature exits.',
   },
   U6: {
@@ -174,12 +174,12 @@ export const INFO: Record<string, InfoEntry> = {
   },
   A3: {
     t: 'Adoption Trend (A3)',
-    f: '% change in weekly active users (WAU) comparing current 8 weeks against prior baseline period.',
+    f: "This week's active users (the last 7 days) vs the average of the 8 weeks before: (this week − average) ÷ average × 100. Weeks before the app went live are left out of the average.",
     d: 'Signals whether customer engagement is accelerating, steady, or decelerating.',
   },
   A4: {
     t: '14-Day Activation (A4)',
-    f: '% of newly onboarded users who completed key actions within 14 days of account creation.',
+    f: 'New users who did a first real action (used a feature, not just sign-in or home) within 14 days of first appearing ÷ all new users in the period × 100.',
     d: 'Critical onboarding metric. Users active within their first 2 weeks have significantly higher long-term retention.',
   },
   A5: {
@@ -189,22 +189,22 @@ export const INFO: Record<string, InfoEntry> = {
   },
   F1: {
     t: 'Workflow Adoption (F1)',
-    f: 'Count of unique users who initiated step 1 of this workflow ÷ Total active users in the period.',
+    f: "Users who did the workflow's first step ÷ users active in the period × 100.",
     d: 'Shows how widely a specific operational workflow has been discovered and used by customers.',
   },
   F2: {
     t: 'Completion Rate (F2)',
-    f: 'Users reaching the final confirmation/success step ÷ Users who initiated step 1.',
+    f: 'Users who reached the final step ÷ users who did the first step × 100.',
     d: 'Measures funnel efficiency. A high completion rate shows frictionless user journeys.',
   },
   F3: {
     t: 'Biggest Step Drop (F3)',
-    f: 'Specific funnel step transition with the largest percentage drop-off in entrants.',
+    f: 'At every step: users lost ÷ users at the step before × 100. The largest loss is shown.',
     d: 'Pinpoints UX friction, validation errors, or confusion where users abandon the process.',
   },
   F4: {
     t: 'Usage Volume (F4)',
-    f: 'Count of sessions that entered the funnel in the selected period; with All Modules, added up across modules.',
+    f: 'Count of users who reached the final step in the period; with All Modules, added up across modules.',
     d: 'Reflects the business throughput and operational transaction volume processed via the app.',
   },
   'chart.usage': {
@@ -214,7 +214,7 @@ export const INFO: Record<string, InfoEntry> = {
   },
   'chart.devices': {
     t: 'Device / Platform Breakdown',
-    f: 'Proportion of active users and sessions originating from iOS, Android, and Desktop Web browsers.',
+    f: 'Users on each platform (iOS, Android, Desktop Web) ÷ all active users × 100.',
     d: 'Guides mobile vs desktop feature parity and OS-specific testing priorities.',
   },
   'chart.adoptionTrend': {
@@ -229,8 +229,13 @@ export const INFO: Record<string, InfoEntry> = {
   },
   'chart.retention': {
     t: 'Cohort Retention Matrix',
-    f: 'Weekly cohort analysis showing the % of new user cohorts remaining active across successive weeks W+0 through W+5.',
+    f: 'Users grouped by the week they first appeared. Each cell = users from that group active N weeks later ÷ group size × 100.',
     d: 'True indicator of product-market fit and long-term customer engagement stickiness.',
+  },
+  'chart.moduleAdoption': {
+    t: 'Adoption by Workflow Bucket',
+    f: 'Users who used at least one feature in the group (any screen of the module) ÷ all active users × 100.',
+    d: 'Shows which group of features is used most, and which are barely touched.',
   },
   'chart.roles': {
     t: 'Persona / Role Distribution',
@@ -239,7 +244,7 @@ export const INFO: Record<string, InfoEntry> = {
   },
   'chart.dormant': {
     t: 'Dormant Accounts Analysis',
-    f: 'Count and percentage of registered accounts with zero activity in the last 30+ days.',
+    f: 'Count of users seen before who have had no activity for 14 or more days.',
     d: 'Target population for re-engagement campaigns and push notification lifecycle triggers.',
   },
   'chart.sitewise': {
@@ -249,17 +254,17 @@ export const INFO: Record<string, InfoEntry> = {
   },
   'chart.funnel': {
     t: 'Step-by-Step Conversion Funnel',
-    f: 'Sequential progression from initiation step down to terminal success state with stage-by-stage drop-off %.',
+    f: "Users at each step ÷ users at the first step × 100, with the % lost against the step before. Where the app declares workflows, the module's busiest one is drawn.",
     d: 'Identifies exactly where users drop out of multi-step processes like payments, bookings, or service requests.',
   },
   'chart.screens': {
     t: 'Screen-Level Activity & Drop-off',
-    f: 'Aggregate screen impressions, unique visitor counts, average time spent, and stage exit rates.',
+    f: 'Views per screen, ranked high to low, with the users and sessions that viewed it.',
     d: 'Detailed screen telemetry for optimizing UX layouts and micro-interactions.',
   },
   'chart.entries': {
     t: 'Top Entry Screens',
-    f: 'First screen rendered when a user opens the application (e.g. splash screen, deep link, push notification, home tab).',
+    f: 'Only the first screen of each session is counted, ranked high to low (e.g. splash, a deep link, a notification, the home tab).',
     d: 'Shows how customers enter the app and which notification campaigns drive direct session starts.',
   },
   'crm.leases': {
@@ -329,7 +334,7 @@ export const INFO: Record<string, InfoEntry> = {
   },
   U8: {
     t: 'Device / Platform Breakdown',
-    f: 'Proportion of active users and sessions originating from iOS, Android, and Desktop Web browsers.',
+    f: 'Users on each platform (iOS, Android, Desktop Web) ÷ all active users × 100.',
     d: 'Guides mobile vs desktop feature parity and OS-specific testing priorities.',
   },
   A6: {
@@ -344,7 +349,7 @@ export const INFO: Record<string, InfoEntry> = {
   },
   A8: {
     t: 'Cohort Retention Matrix',
-    f: 'Weekly cohort analysis showing the % of new user cohorts remaining active across successive weeks W+0 through W+5.',
+    f: 'Users grouped by the week they first appeared. Each cell = users from that group active N weeks later ÷ group size × 100.',
     d: 'True indicator of product-market fit and long-term customer engagement stickiness.',
   },
   A9: {
@@ -354,7 +359,7 @@ export const INFO: Record<string, InfoEntry> = {
   },
   A10: {
     t: 'Dormant Accounts Analysis',
-    f: 'Count and percentage of registered accounts with zero activity in the last 30+ days.',
+    f: 'Count of users seen before who have had no activity for 14 or more days.',
     d: 'Target population for re-engagement campaigns and push notification lifecycle triggers.',
   },
   A11: {

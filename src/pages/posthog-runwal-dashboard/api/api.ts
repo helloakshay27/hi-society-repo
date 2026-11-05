@@ -8,7 +8,6 @@
  */
 
 import { getBaseUrl, getToken, getUser } from '../../../utils/auth';
-import * as XLSX from 'xlsx';
 import {
   DashboardFilters,
   TrafficSessionResponse,
@@ -57,28 +56,104 @@ function getPosthogApiBase(): string {
   );
 }
 
-/** Read the `app_id` query param off the current URL (e.g. /posthog-runwal-dashboard?app_id=35). */
-export function getAppIdFromUrl(): string | null {
-  try {
-    if (typeof window === 'undefined') return null;
-    return new URLSearchParams(window.location.search).get('app_id');
-  } catch {
-    return null;
+/**
+ * Each dashboard has its own adoption API in posthog_backend (see its config/routes.rb), and that API
+ * fixes on the server which app's events it reads, so no app_id / project_code is sent. A dashboard
+ * names its API with `filters.apiPath`.
+ */
+export const ADOPTION_API = {
+  runwalConnect: 'residential/runwal/connect',
+  runwalEnterprise: 'residential/runwal/enterprise',
+  runwalCp: 'residential/runwal/cp',
+  godrej: 'residential/godrej',
+  kraheja: 'residential/kraheja',
+  lacircle: 'residential/lacircle',
+  mypiramal: 'residential/mypiramal',
+  artesia: 'residential/artesia',
+  sunteck: 'residential/sunteck',
+  suncity: 'residential/suncity',
+  hiSociety: 'residential/hi_society',
+  lockated: 'commercial/lockated',
+  smartsecure: 'commercial/smartsecure',
+  quikgate: 'commercial/quikgate',
+} as const;
+
+export type AdoptionApiPath = (typeof ADOPTION_API)[keyof typeof ADOPTION_API];
+
+/** The Runwal dashboard serves two apps from one page: ?app_id=35 is Enterprise, anything else Connect. */
+export const runwalApiPath = (appId?: string | null): AdoptionApiPath =>
+  appId === '35' ? ADOPTION_API.runwalEnterprise : ADOPTION_API.runwalConnect;
+
+function adoptionUrl(filters: Pick<DashboardFilters, 'apiPath'>, endpoint: string, query: string): string {
+  if (!filters.apiPath) {
+    throw new Error('This dashboard has no adoption API yet');
   }
+  const base = getPosthogApiBase();
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  return `${cleanBase}/${filters.apiPath}/adoption/${endpoint}?${query}`;
 }
 
 /**
- * Read the `project_code` query param off the current URL (e.g.
- * /posthog-runwal-cp-dashboard?project_code=RE-CP01). Runwal CP identifies
- * itself this way instead of by app_id — mirrors getAppIdFromUrl() above.
+ * The open dashboard's app_id / project_code, kept in memory rather than in the browser URL so the
+ * codes are never shown or shared in a link. A dashboard pins its own scope (useEnsureAppId /
+ * useEnsureProjectCode / pinDashboardScope); an old link that still carries ?app_id= or
+ * ?project_code= is read once and then removed from the address bar (stripScopeFromUrl).
  */
-export function getProjectCodeFromUrl(): string | null {
+const pinnedScope: { appId: string | null; projectCode: string | null; pinned: boolean } = {
+  appId: null,
+  projectCode: null,
+  pinned: false,
+};
+
+export function pinDashboardScope(scope: { appId?: string | null; projectCode?: string | null }): void {
+  pinnedScope.appId = scope.appId ?? null;
+  pinnedScope.projectCode = scope.projectCode ?? null;
+  pinnedScope.pinned = true;
+}
+
+export function clearDashboardScope(): void {
+  pinnedScope.appId = null;
+  pinnedScope.projectCode = null;
+  pinnedScope.pinned = false;
+}
+
+const SCOPE_PARAMS = ['app_id', 'appId', 'project_code', 'projectCode'];
+
+function readUrlParam(...names: string[]): string | null {
   try {
     if (typeof window === 'undefined') return null;
-    return new URLSearchParams(window.location.search).get('project_code');
+    const params = new URLSearchParams(window.location.search);
+    for (const name of names) {
+      const value = params.get(name);
+      if (value) return value;
+    }
   } catch {
-    return null;
+    /* no URL */
   }
+  return null;
+}
+
+/** Removes app_id / project_code from the address bar without reloading or adding history. */
+export function stripScopeFromUrl(): void {
+  try {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (!SCOPE_PARAMS.some((name) => url.searchParams.has(name))) return;
+    SCOPE_PARAMS.forEach((name) => url.searchParams.delete(name));
+    window.history.replaceState(window.history.state, '', url.toString());
+  } catch {
+    /* no URL */
+  }
+}
+
+/** The dashboard's app_id: the pinned scope, else an old link's ?app_id= (before it is stripped). */
+export function getAppIdFromUrl(): string | null {
+  return pinnedScope.pinned ? pinnedScope.appId : readUrlParam('app_id', 'appId');
+}
+
+/** The dashboard's project_code: the pinned scope, else an old link's ?project_code=. */
+export function getProjectCodeFromUrl(): string | null {
+  return pinnedScope.pinned ? pinnedScope.projectCode : readUrlParam('project_code', 'projectCode');
 }
 
 export function getDynamicTenantUrl(): string {
@@ -86,13 +161,17 @@ export function getDynamicTenantUrl(): string {
   return baseUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
 }
 
-function getDeviceParams(dev: DashboardFilters['devPlatform']): Record<string, string> {
+function getDeviceParams(dev?: DashboardFilters['devPlatform']): Record<string, string> {
   if (dev === 'ios') return { device_type: 'Mobile', os: 'ios' };
   if (dev === 'android') return { device_type: 'Mobile', os: 'Android' };
   return { device_type: 'Mobile' };
 }
 
-function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any> = {}): string {
+/** What an adoption request reads off the filters. The download is also called with just these. */
+type AdoptionQueryFilters = Pick<DashboardFilters, 'apiPath' | 'from' | 'to'> &
+  Partial<Pick<DashboardFilters, 'devPlatform' | 'deviceType' | 'includeAnonymous' | 'displayView'>>;
+
+function buildPosthogQuery(filters: AdoptionQueryFilters, extra: Record<string, any> = {}): string {
   const parts: string[] = [];
 
   // const tenantUrl = (filters.url || getDynamicTenantUrl()).replace(/^https?:\/\//, '').replace(/\/+$/, '');
@@ -107,16 +186,6 @@ function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any>
   }
   for (const [k, v] of Object.entries(deviceParams)) {
     parts.push(`${k}=${encodeURIComponent(v)}`);
-  }
-
-  // Support project_code and app_id dynamically
-  const projectCode = filters.projectCode || getProjectCodeFromUrl();
-  if (projectCode) {
-    parts.push(`project_code=${encodeURIComponent(projectCode)}`);
-  }
-  const appId = filters.appId || getAppIdFromUrl();
-  if (appId) {
-    parts.push(`app_id=${encodeURIComponent(appId)}`);
   }
 
   if (filters.includeAnonymous) {
@@ -136,10 +205,8 @@ function buildPosthogQuery(filters: DashboardFilters, extra: Record<string, any>
   return parts.join('&');
 }
 
-async function getPosthog<T>(endpoint: string, queryStr: string): Promise<T> {
-  const base = getPosthogApiBase();
-  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-  const url = `${cleanBase}/fm/adoption/${endpoint}?${queryStr}`;
+async function getPosthog<T>(filters: DashboardFilters, endpoint: string, queryStr: string): Promise<T> {
+  const url = adoptionUrl(filters, endpoint, queryStr);
 
   const response = await fetch(url, {
     method: 'GET',
@@ -156,33 +223,33 @@ async function getPosthog<T>(endpoint: string, queryStr: string): Promise<T> {
 }
 
 export const fetchTrafficSession = (filters: DashboardFilters) =>
-  getPosthog<TrafficSessionResponse>('traffic_session', buildPosthogQuery(filters));
+  getPosthog<TrafficSessionResponse>(filters, 'traffic_session', buildPosthogQuery(filters));
 
 export const fetchUsageAndDistribution = (filters: DashboardFilters) =>
-  getPosthog<UsageDistributionResponse>('usage_and_distribution', buildPosthogQuery(filters));
+  getPosthog<UsageDistributionResponse>(filters, 'usage_and_distribution', buildPosthogQuery(filters));
 
 export const fetchAdoptionEngagement = (filters: DashboardFilters) =>
   getPosthog<AdoptionEngagementResponse>(
-    'adoption_engagement',
+    filters, 'adoption_engagement',
     buildPosthogQuery(filters, {
       licensed_seats: filters.licensedSeats || undefined,
     })
   );
 
 export const fetchAdoptionTrend = (filters: DashboardFilters) =>
-  getPosthog<AdoptionTrendResponse>('adoption_trend', buildPosthogQuery(filters, { weeks: 8 }));
+  getPosthog<AdoptionTrendResponse>(filters, 'adoption_trend', buildPosthogQuery(filters, { weeks: 8 }));
 
 export const fetchGrowth = (filters: DashboardFilters) =>
-  getPosthog<GrowthResponse>('growth', buildPosthogQuery(filters, { weeks: 6 }));
+  getPosthog<GrowthResponse>(filters, 'growth', buildPosthogQuery(filters, { weeks: 6 }));
 
 export const fetchRetention = (filters: DashboardFilters) =>
-  getPosthog<RetentionResponse>('retention', buildPosthogQuery(filters, { weeks: 8 }));
+  getPosthog<RetentionResponse>(filters, 'retention', buildPosthogQuery(filters, { weeks: 8 }));
 
 export const fetchRoles = (filters: DashboardFilters) =>
-  getPosthog<RolesResponse>('roles', buildPosthogQuery(filters));
+  getPosthog<RolesResponse>(filters, 'roles', buildPosthogQuery(filters));
 
 export const fetchModules = (filters: DashboardFilters, module?: string | null) =>
-  getPosthog<ModulesResponse>('modules', buildPosthogQuery(filters, { module: module || undefined }));
+  getPosthog<ModulesResponse>(filters, 'modules', buildPosthogQuery(filters, { module: module || undefined }));
 
 export const fetchWorkflowUsage = (
   filters: DashboardFilters,
@@ -190,7 +257,7 @@ export const fetchWorkflowUsage = (
   subModule?: string | null
 ) =>
   getPosthog<WorkflowUsageResponse>(
-    'workflow_usage',
+    filters, 'workflow_usage',
     buildPosthogQuery(filters, {
       module: module || undefined,
       sub_module: subModule || undefined,
@@ -199,7 +266,10 @@ export const fetchWorkflowUsage = (
 
 /** The live activity log: one row per event, newest first. No `from`/`to` = today. */
 export const fetchRecentActiveUsers = (filters: DashboardFilters, limit = 10) =>
-  getPosthog<RecentActiveUsersResponse>('recent_active_users', buildPosthogQuery(filters, { limit }));
+  getPosthog<RecentActiveUsersResponse>(
+    filters, 'recent_active_users',
+    buildPosthogQuery(filters, { limit })
+  );
 
 /** What to call a user in an activity row: their name, else their email's local part, else their id. */
 export const activityUserLabel = (u: { user_name?: string | null; email?: string | null; user_id?: string | null }): string =>
@@ -208,13 +278,10 @@ export const activityUserLabel = (u: { user_name?: string | null; email?: string
 /**
  * Downloads the `.xlsx` workbook of every event each user did, with the
  * dashboard's own filters and date range applied (uncapped), and saves it via
- * a throwaway anchor, mirroring the blob-download pattern used elsewhere in
- * the app (see WalletTopup.tsx's handleExport).
+ * a throwaway anchor.
  */
-export async function downloadActiveUsersExport(filters: DashboardFilters): Promise<void> {
-  const base = getPosthogApiBase();
-  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-  const url = `${cleanBase}/fm/adoption/user_activity_export?${buildPosthogQuery(filters)}`;
+export async function downloadActiveUsersExport(filters: AdoptionQueryFilters): Promise<void> {
+  const url = adoptionUrl(filters, 'active_users_export', buildPosthogQuery(filters));
 
   const response = await fetch(url, {
     method: 'GET',
@@ -225,26 +292,10 @@ export async function downloadActiveUsersExport(filters: DashboardFilters): Prom
     throw new Error(`Active users export failed (${response.status}): ${response.statusText || 'Failed to fetch'}`);
   }
 
-  const responseBlob = await response.blob();
-  const workbook = XLSX.read(await responseBlob.arrayBuffer(), { type: 'array', cellStyles: true });
-  const firstSheetName = workbook.SheetNames[0];
-  const worksheet = firstSheetName ? workbook.Sheets[firstSheetName] : undefined;
-  if (worksheet) {
-    worksheet['!cols'] = [
-      { wch: 14 },
-      { wch: 30 },
-      { wch: 30 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 38 },
-      { wch: 22 },
-      { wch: 12 },
-    ];
-  }
-  const workbookData = XLSX.write(workbook, { bookType: 'xlsx', type: 'array', cellStyles: true });
-  const blob = new Blob([workbookData], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  });
+  // The server already builds the finished workbook (bold header, column widths),
+  // so save it as-is. Re-reading it with SheetJS here multiplied a large export
+  // roughly tenfold in browser memory.
+  const blob = await response.blob();
   const disposition = response.headers.get('content-disposition') || '';
   const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
   const filenameWithoutExtension = (match
@@ -260,7 +311,8 @@ export async function downloadActiveUsersExport(filters: DashboardFilters): Prom
   document.body.appendChild(link);
   link.click();
   link.remove();
-  window.URL.revokeObjectURL(blobUrl);
+  // Revoking straight away can cancel the download in Safari.
+  setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
 }
 
 // ==========================================

@@ -190,9 +190,9 @@ export function useAdoptionTrend(f: QueryFilters) {
 
 export function useGrowth(f: QueryFilters) {
   return useQuery({
-    queryKey: ['fm-adoption', 'growth', f.to, f.siteIds.join(','), f.devices.join(','), f.requestId ?? 0],
+    queryKey: ['fm-adoption', 'growth', f.from, f.to, f.siteIds.join(','), f.devices.join(','), f.requestId ?? 0],
     queryFn: () =>
-      fetchGrowth({ to: f.to, weeks: GROWTH_WEEKS, siteIds: f.siteIds, devices: f.devices, appId: f.appId, os: f.os }),
+      fetchGrowth({ from: f.from, to: f.to, weeks: GROWTH_WEEKS, siteIds: f.siteIds, devices: f.devices, appId: f.appId, os: f.os }),
     enabled: f.enabled,
     ...CACHE,
   });

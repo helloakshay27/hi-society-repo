@@ -16,13 +16,15 @@ import { FilterBar } from "../posthog-runwal-dashboard/components/common/FilterB
 // exact same live PostHog/FM Matrix hooks/APIs as Runwal underneath.
 import { TrafficSessionPage } from "./components/pages/TrafficSessionPage";
 import { AdoptionEngagementPage } from "./components/pages/AdoptionEngagementPage";
-import { WorkflowUsagePage } from "./components/pages/WorkflowUsagePage";
+// The shared Runwal-family page: modules on one row, the selected module's screens (sub-modules) below.
+import { WorkflowUsagePage } from "../posthog-runwal-dashboard/components/pages/WorkflowUsagePage";
 import {
   useDashboardSites,
   useTrafficSession,
 } from "../posthog-runwal-dashboard/hooks/useDashboardAnalytics";
 import { useEnsureAppId } from "../posthog-runwal-dashboard/hooks/useEnsureAppId";
 import { DashboardFilters } from "../posthog-runwal-dashboard/api/types";
+import { ADOPTION_API } from "../posthog-runwal-dashboard/api/api";
 import { getToken, getUser } from "../../utils/auth";
 import { AdminScope } from "./data/wireframeData";
 import "../posthog-runwal-dashboard/styles/dashboard.css";
@@ -108,6 +110,7 @@ function PosthogGodrejDashboardContent() {
       licensedSeats: null,
       module: null,
       subModule: null,
+      apiPath: ADOPTION_API.godrej,
     };
   }, [selectedSiteId, devPlatform, rangeFrom, rangeTo]);
 

@@ -2,7 +2,7 @@
  * Usage Dashboard — LIVE PostHog API client.
  *
  * Same backend as the Runwal dashboard (`/posthog-runwal-dashboard?app_id=12`):
- *   {base}/fm/adoption/{endpoint}?from=&to=&device_type=&os=&app_id=
+ *   {base}/residential/<site>/adoption/{endpoint}?from=&to=&device_type=&os=  (the API fixes the app_id)
  * where base = '/posthog-api' on localhost, else posthog-api.lockated.com.
  *
  * Difference: app_id is STATIC per site (not read from the URL):
@@ -20,6 +20,7 @@ import type {
   UsageDistributionResponse,
   WorkflowUsageResponse,
 } from '../../pages/posthog-runwal-dashboard/api/types';
+import { ADOPTION_API, type AdoptionApiPath } from '../../pages/posthog-runwal-dashboard/api/api';
 
 export type SiteKey = 'artesia' | 'sunteck' | 'suncity';
 export type DeviceKey = 'all' | 'ios' | 'android';
@@ -28,12 +29,14 @@ export interface SiteRef {
   key: SiteKey;
   label: string;
   appId: string;
+  /** The site's own adoption API in posthog_backend; it fixes the app on the server. */
+  apiPath: AdoptionApiPath;
 }
 
 export const SITES: SiteRef[] = [
-  { key: 'artesia', label: 'Artesia', appId: '27' },
-  { key: 'sunteck', label: 'Sunteck', appId: '16' },
-  { key: 'suncity', label: 'Suncity', appId: '6' },
+  { key: 'artesia', label: 'Artesia', appId: '27', apiPath: ADOPTION_API.artesia },
+  { key: 'sunteck', label: 'Sunteck', appId: '16', apiPath: ADOPTION_API.sunteck },
+  { key: 'suncity', label: 'Suncity', appId: '6', apiPath: ADOPTION_API.suncity },
 ];
 
 export function siteByKey(key: SiteKey): SiteRef {
@@ -53,6 +56,10 @@ export function siteByKey(key: SiteKey): SiteRef {
  *   4. Default shared host https://posthog-api.lockated.com
  */
 function getPosthogApiBase(): string {
+  // Local dev goes through Vite's /posthog-api proxy, like the other dashboards.
+  if (typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)) {
+    return '/posthog-api';
+  }
   const env =
     (import.meta as any).env?.VITE_FM_ADOPTION_API_URL ||
     (import.meta as any).env?.VITE_POSTHOG_API_URL;
@@ -93,7 +100,6 @@ function buildQuery(input: QueryInput, extra: Record<string, any> = {}): string 
   for (const [k, v] of Object.entries(deviceParams(input.dev))) {
     parts.push(`${k}=${encodeURIComponent(v)}`);
   }
-  parts.push(`app_id=${encodeURIComponent(input.appId)}`);
   for (const [k, v] of Object.entries(extra)) {
     if (v !== undefined && v !== null && v !== '') {
       parts.push(`${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`);
@@ -109,18 +115,24 @@ export async function fetchRecentActiveUsers(
   limit = 10,
 ): Promise<RecentActiveUsersResponse> {
   const params = new URLSearchParams({
-    app_id: input.appId,
     device_type: 'mobile',
     from: input.from,
     to: input.to,
     limit: String(limit),
   });
-  return getPosthog<RecentActiveUsersResponse>('recent_active_users', params.toString());
+  return getPosthog<RecentActiveUsersResponse>(input.appId, 'recent_active_users', params.toString());
 }
 
-async function getFrom<T>(base: string, endpoint: string, query: string): Promise<T> {
+/** The site's own adoption API, by its app_id. */
+function apiPathFor(appId: string): AdoptionApiPath {
+  const site = SITES.find((s) => s.appId === appId);
+  if (!site) throw new Error(`No adoption API for app_id ${appId}`);
+  return site.apiPath;
+}
+
+async function getFrom<T>(base: string, apiPath: AdoptionApiPath, endpoint: string, query: string): Promise<T> {
   const clean = base.endsWith('/') ? base.slice(0, -1) : base;
-  const res = await fetch(`${clean}/fm/adoption/${endpoint}?${query}`, {
+  const res = await fetch(`${clean}/${apiPath}/adoption/${endpoint}?${query}`, {
     method: 'GET',
     headers: { Accept: 'application/json' },
   });
@@ -128,16 +140,17 @@ async function getFrom<T>(base: string, endpoint: string, query: string): Promis
   return (await res.json()) as T;
 }
 
-async function getPosthog<T>(endpoint: string, query: string): Promise<T> {
+async function getPosthog<T>(appId: string, endpoint: string, query: string): Promise<T> {
   const base = getPosthogApiBase();
+  const apiPath = apiPathFor(appId);
   try {
-    return await getFrom<T>(base, endpoint, query);
+    return await getFrom<T>(base, apiPath, endpoint, query);
   } catch (e) {
-    // Tenant baseUrl doesn't serve /fm/adoption everywhere — retry once on the
+    // Tenant baseUrl doesn't serve the adoption APIs everywhere — retry once on the
     // shared host before giving up (page falls back to mock per-card anyway).
     const norm = (u: string) => u.replace(/\/+$/, '').toLowerCase();
     if (norm(base) !== norm(DEFAULT_POSTHOG_API)) {
-      return getFrom<T>(DEFAULT_POSTHOG_API, endpoint, query);
+      return getFrom<T>(DEFAULT_POSTHOG_API, apiPath, endpoint, query);
     }
     throw e;
   }
@@ -283,8 +296,8 @@ const settled = async <T>(p: Promise<T>): Promise<T | null> => {
 export async function fetchTrafficSection(input: QueryInput): Promise<TrafficSlice> {
   const q = (extra: Record<string, any> = {}) => buildQuery(input, extra);
   const [traffic, usage] = await Promise.all([
-    settled(getPosthog<TrafficSessionResponse>('traffic_session', q())),
-    settled(getPosthog<UsageDistributionResponse>('usage_and_distribution', q())),
+    settled(getPosthog<TrafficSessionResponse>(input.appId, 'traffic_session', q())),
+    settled(getPosthog<UsageDistributionResponse>(input.appId, 'usage_and_distribution', q())),
   ]);
 
   // --- device shares from os_breakdown (fallback: device session_share) ---
@@ -347,12 +360,12 @@ export async function fetchTrafficSection(input: QueryInput): Promise<TrafficSli
 export async function fetchAdoptionSection(input: QueryInput): Promise<AdoptionSlice> {
   const q = (extra: Record<string, any> = {}) => buildQuery(input, extra);
   const [engagement, trend, growth, retention, roles, modules] = await Promise.all([
-    settled(getPosthog<AdoptionEngagementResponse>('adoption_engagement', q())),
-    settled(getPosthog<AdoptionTrendResponse>('adoption_trend', q({ weeks: 8 }))),
-    settled(getPosthog<GrowthResponse>('growth', q({ weeks: 6 }))),
-    settled(getPosthog<RetentionResponse>('retention', q({ weeks: 8 }))),
-    settled(getPosthog<RolesResponse>('roles', q())),
-    settled(getPosthog<ModulesResponse>('modules', q())),
+    settled(getPosthog<AdoptionEngagementResponse>(input.appId, 'adoption_engagement', q())),
+    settled(getPosthog<AdoptionTrendResponse>(input.appId, 'adoption_trend', q({ weeks: 8 }))),
+    settled(getPosthog<GrowthResponse>(input.appId, 'growth', q({ weeks: 6 }))),
+    settled(getPosthog<RetentionResponse>(input.appId, 'retention', q({ weeks: 8 }))),
+    settled(getPosthog<RolesResponse>(input.appId, 'roles', q())),
+    settled(getPosthog<ModulesResponse>(input.appId, 'modules', q())),
   ]);
 
   // --- retention cohorts: keep insertion order, skip cohort_week/size ---
@@ -419,6 +432,10 @@ export interface WorkflowModuleNode {
   users: number;
   events: number;
   sessions: number;
+  /** Set when the app declares modules: the ?module= value. Otherwise `name` is a screen and the value. */
+  key?: string;
+  /** The module's screens, the ?sub_module= values. */
+  subModules?: { key: string; name: string; users: number }[];
 }
 
 /** Module catalogue for the workflow picker — raw backend names (same as Runwal's ModuleNav). */
@@ -426,7 +443,18 @@ export async function fetchWorkflowModules(
   input: QueryInput,
 ): Promise<WorkflowModuleNode[] | null> {
   try {
-    const res = await getPosthog<ModulesResponse>('modules', buildQuery(input, {}));
+    const res = await getPosthog<ModulesResponse>(input.appId, 'modules', buildQuery(input, {}));
+    // Apps that declare modules (config/workflows.yml) get modules > screens, like Runwal.
+    if (res && Array.isArray(res.modules) && res.modules.length > 0) {
+      return res.modules.map((m) => ({
+        name: m.name,
+        key: m.key ?? m.name,
+        users: num(m.users),
+        events: num(m.events),
+        sessions: num(m.sessions),
+        subModules: (m.sub_modules ?? []).map((sm) => ({ key: sm.key, name: sm.name, users: num(sm.users) })),
+      }));
+    }
     if (!res || !Array.isArray(res.tree)) return null;
     return res.tree.map((m) => ({
       name: m.name,
@@ -460,8 +488,18 @@ export interface LiveEntryRow {
   views: number;
   bounce: number;
 }
+export interface LiveModuleFunnel {
+  key: string;
+  name: string;
+  started: number;
+  completed: number;
+  completionPct: number;
+  biggestDropPct: number;
+}
 export interface LiveWorkflow {
   funnel: LiveFunnelStep[];
+  /** All Modules on an app that declares modules: one funnel per module instead of one funnel. */
+  moduleFunnels: LiveModuleFunnel[];
   adoptionPct: number | null;
   completionPct: number | null;
   flows: LiveFlowRow[];
@@ -471,15 +509,16 @@ export interface LiveWorkflow {
 export async function fetchLiveWorkflow(
   input: QueryInput,
   module: string | null,
+  subModule: string | null = null,
 ): Promise<LiveWorkflow> {
   const err = (e: unknown) => (e instanceof Error ? e.message : String(e));
-  const label = module ?? "all modules";
+  const label = [module ?? "all modules", subModule].filter(Boolean).join(' / ');
   // 1) Module-scoped funnel first (backend's own module name).
   if (module) {
     try {
       const scoped = await getPosthog<WorkflowUsageResponse>(
-        'workflow_usage',
-        buildQuery(input, { module }),
+        input.appId, 'workflow_usage',
+        buildQuery(input, { module, sub_module: subModule ?? undefined }),
       );
       const mapped = mapWorkflow(scoped);
       if (mapped) return mapped;
@@ -490,7 +529,7 @@ export async function fetchLiveWorkflow(
   // 2) Fallback: aggregate funnel without module filter (same default the
   // Runwal dashboard uses — module: null).
   const res = await getPosthog<WorkflowUsageResponse>(
-    'workflow_usage',
+    input.appId, 'workflow_usage',
     buildQuery(input, {}),
   ).catch((e) => {
     throw new Error(
@@ -508,7 +547,15 @@ export async function fetchLiveWorkflow(
 
 function mapWorkflow(res: WorkflowUsageResponse | null): LiveWorkflow | null {
   try {
-    if (!res || !Array.isArray(res.funnel) || res.funnel.length === 0) return null;
+    const moduleFunnels: LiveModuleFunnel[] = (res?.module_funnels ?? []).map((f) => ({
+      key: f.key,
+      name: f.name,
+      started: num(f.started),
+      completed: num(f.completed),
+      completionPct: num(f.completion_pct),
+      biggestDropPct: num(f.biggest_drop_pct),
+    }));
+    if (!res || !Array.isArray(res.funnel) || (res.funnel.length === 0 && moduleFunnels.length === 0)) return null;
     const funnel: LiveFunnelStep[] = res.funnel.map((s) => ({
       step: s.step,
       reach: num(s.reach),
@@ -522,13 +569,14 @@ function mapWorkflow(res: WorkflowUsageResponse | null): LiveWorkflow | null {
       }
       return null;
     };
-    let completionPct = pick('completion_rate', 'completion', 'conversion_rate');
+    let completionPct = pick('f_comp', 'completion_rate', 'completion', 'conversion_rate');
     if (completionPct === null && funnel.length > 1 && funnel[0].reach > 0) {
       completionPct = (funnel[funnel.length - 1].reach / funnel[0].reach) * 100;
     }
     return {
       funnel,
-      adoptionPct: pick('adoption', 'adoption_rate', 'workflow_adoption'),
+      moduleFunnels,
+      adoptionPct: pick('f_adopt', 'adoption', 'adoption_rate', 'workflow_adoption'),
       completionPct,
       flows: (res.flows ?? []).map((f) => ({
         path: f.path,
@@ -565,6 +613,7 @@ export async function fetchSitesLeague(input: Omit<QueryInput, 'appId'>): Promis
     SITES.map(async (s) => {
       const t = await settled(
         getPosthog<TrafficSessionResponse>(
+          s.appId,
           'traffic_session',
           buildQuery({ ...input, appId: s.appId }),
         ),

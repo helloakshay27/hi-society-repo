@@ -1253,3 +1253,13 @@
 @keyframes ud-spin {
   to { transform: rotate(360deg); }
 }
+
+/* Module and sub-module rows: one line each, scrolling sideways when they don't fit,
+   so every module stays one click away and its sub-modules appear on the line below. */
+.artesia-dashboard .mnav{min-width:0;max-width:100%}
+.artesia-dashboard .mnav-buckets{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.artesia-dashboard .mnav-buckets > *{flex:0 0 auto}
+.artesia-dashboard .mnav-buckets button{margin-bottom:0}
+.artesia-dashboard .mnav-mods{min-width:0}
+.artesia-dashboard .mnav-mods .segbar{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:100%;padding-bottom:4px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.artesia-dashboard .mnav-mods .segbar > *{flex:0 0 auto}
