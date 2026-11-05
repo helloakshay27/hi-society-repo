@@ -99,7 +99,7 @@ const CardHead = ({ title, info, sub, action }: { title: string; info: string; s
   <div className="mb-3 flex items-start justify-between gap-2">
     <div className="min-w-0">
       <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#1A1A18]">
-        {title} <InfoIcon details={info} />
+        {title} <InfoIcon details={info} className="z-0" />
       </div>
       {sub && <div className="mt-0.5 text-[11px] text-[rgba(26,26,24,0.48)]">{sub}</div>}
     </div>
@@ -439,9 +439,9 @@ export const LoyaltyDashboardNew = () => {
   ];
 
   return (
-    <div className="loyalty-dashboard-theme min-h-screen overflow-x-hidden bg-[var(--loyalty-bg)] text-[12px] text-[var(--loyalty-text)]" style={FONT}>
+    <div className="loyalty-dashboard-theme h-[calc(100dvh-7rem)] overflow-x-hidden overflow-y-auto bg-[var(--loyalty-bg)] text-[12px] text-[var(--loyalty-text)]" style={FONT}>
       {/* ── TOPBAR ── */}
-      <div className="sticky top-0 z-[300] flex min-h-[50px] flex-wrap items-center justify-between gap-2 border-b border-[var(--loyalty-border)] bg-white px-4 py-2 shadow-[0_1px_6px_rgba(var(--color-text-rgb),.08)] md:px-5">
+      <div className="relative z-10 flex min-h-[50px] flex-wrap items-center justify-between gap-2 border-b border-[var(--loyalty-border)] bg-white px-4 py-2 shadow-[0_1px_6px_rgba(var(--color-text-rgb),.08)] md:px-5">
         <div className="flex items-center gap-2.5">
           <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md !bg-[#1a1a18]" style={{ backgroundColor: '#1a1a18' }}>
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-white" strokeWidth="2.2">
@@ -463,7 +463,7 @@ export const LoyaltyDashboardNew = () => {
               <span className="text-[8px] text-[var(--loyalty-subtle)]">▾</span>
             </button>
             {filterOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-[400] w-[260px] rounded-[10px] border border-[var(--loyalty-border)] bg-white p-2.5 shadow-[0_6px_24px_rgba(var(--color-text-rgb),0.16)]">
+              <div className="absolute right-0 top-[calc(100%+8px)] z-30 w-[260px] rounded-[10px] border border-[var(--loyalty-border)] bg-white p-2.5 shadow-[0_6px_24px_rgba(var(--color-text-rgb),0.16)]">
                 <div className="mb-2 flex flex-wrap gap-1">
                   {DATE_PRESETS.filter((p) => p !== "Custom").map((p) => (
                     <button
@@ -540,7 +540,7 @@ export const LoyaltyDashboardNew = () => {
               style={FONT}
             >
               <div className="mb-[5px] flex items-center gap-1 text-[11.5px] font-medium text-[rgba(26,26,24,0.68)]">
-                {k.label} <InfoIcon details={k.info} />
+                {k.label} <InfoIcon details={k.info} className="z-0" />
               </div>
               <div className="text-[24px] font-semibold leading-tight tracking-tight text-[#1A1A18]">{val(k.value)}</div>
               <div className="mt-[5px] text-[10px] text-[var(--loyalty-subtle)]">{loading ? " " : k.sub}</div>
@@ -808,7 +808,7 @@ export const LoyaltyDashboardNew = () => {
         <button
           onClick={() => setAiOpen(true)}
           title="Ask Genie"
-          className="fixed bottom-7 right-7 z-[400] flex h-12 w-12 items-center justify-center rounded-[14px] !text-white shadow-[0_6px_16px_-4px_rgba(96,74,199,0.8)] transition-all hover:-translate-y-0.5 border-none cursor-pointer"
+          className="fixed bottom-7 right-7 z-20 flex h-12 w-12 items-center justify-center rounded-[14px] !text-white shadow-[0_6px_16px_-4px_rgba(96,74,199,0.8)] transition-all hover:-translate-y-0.5 border-none cursor-pointer"
           style={{ ...FONT, background: 'linear-gradient(135deg, #5A4BE0 0%, #6B5AE8 52%, #7B6BF0 100%)', color: '#ffffff' }}
         >
           <Sparkles className="h-5 w-5 text-white" />

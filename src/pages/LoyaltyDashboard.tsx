@@ -127,6 +127,21 @@ export function LoyaltyDashboard() {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
+  /* this page scrolls inside its own container — lock the window scroll so the
+     page can't slide up under the fixed app header/nav */
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prev = { html: html.style.overflow, body: body.style.overflow };
+    window.scrollTo(0, 0);
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    return () => {
+      html.style.overflow = prev.html;
+      body.style.overflow = prev.body;
+    };
+  }, []);
+
   const useLoyaltyQuery = (name: string, endpoint: string, dated = true) =>
     useQuery({
       queryKey: ['loyalty-dashboard', name, dated ? dateKey : 'all-time'],
@@ -1476,9 +1491,11 @@ export function LoyaltyDashboard() {
   };
 
   return (
-    <div className="loyalty-dashboard-theme min-h-screen bg-[var(--loyalty-bg)] font-[Poppins] text-[var(--loyalty-text)]">
+    <div className="loyalty-dashboard-theme h-[calc(100dvh-7rem)] overflow-x-hidden overflow-y-auto bg-[var(--loyalty-bg)] font-[Poppins] text-[var(--loyalty-text)]">
+      {/* Header + tabs scroll away with the content; the app header/nav above stays fixed */}
+      <div className="relative z-[15] bg-[#FDFDFB]">
       {/* Topbar */}
-      <div className="loyalty-detail-header flex flex-wrap items-center justify-between gap-y-2 bg-[#FDFDFB] border-b border-[rgba(26,26,24,0.07)] px-4 md:px-6 py-3 min-h-[60px] sticky top-0 z-[300] backdrop-blur-md">
+      <div className="loyalty-detail-header relative z-20 flex flex-wrap items-center justify-between gap-y-2 bg-[#FDFDFB] border-b border-[rgba(26,26,24,0.07)] px-4 md:px-6 py-3 min-h-[60px]">
 
         {/* ── LEFT GROUP ── */}
         <div className="flex items-center gap-3 min-w-0">
@@ -1561,7 +1578,7 @@ export function LoyaltyDashboard() {
       </div>
 
       {/* TabNav — Business Genie Segmented Control (.seg .lg) */}
-      <div className="loyalty-detail-tabs flex px-4 md:px-6 py-2.5 bg-[#FDFDFB] border-b border-[rgba(26,26,24,0.07)] md:sticky md:top-[60px] z-[299] overflow-x-auto scrollbar-hide">
+      <div className="loyalty-detail-tabs relative z-10 flex px-4 md:px-6 py-2.5 bg-[#FDFDFB] border-b border-[rgba(26,26,24,0.07)] overflow-x-auto scrollbar-hide">
         <div className="inline-flex items-center gap-1 p-1 rounded-[12px] bg-[#F5F4F0] min-w-fit">
           {tabs.map(tab => (
             <button 
@@ -1581,6 +1598,7 @@ export function LoyaltyDashboard() {
             </button>
           ))}
         </div>
+      </div>
       </div>
 
       {/* Main Content */}
