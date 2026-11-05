@@ -25,6 +25,45 @@ export const KpiStrip: React.FC = () => {
       : value === null || value === undefined
         ? '—'
         : String(value);
+  const metricNumber = (value: unknown, depth = 0): number | null => {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    if (
+      depth >= 3 ||
+      typeof value !== 'object' ||
+      value === null ||
+      Array.isArray(value)
+    ) {
+      return null;
+    }
+
+    const record = value as Record<string, unknown>;
+    for (const key of [
+      'count',
+      'total',
+      'value',
+      'visitors',
+      'visitor_count',
+      'visitors_in',
+      'visitors_out',
+      'in_count',
+      'out_count',
+      'entry_count',
+      'exit_count',
+      'number',
+    ]) {
+      const count = metricNumber(record[key], depth + 1);
+      if (count !== null) return count;
+    }
+    return null;
+  };
+  const formatMetricNumber = (value: unknown) => {
+    const count = metricNumber(value);
+    return count === null ? '—' : format(count);
+  };
   const apiError = kpis?.error;
   const getLiveKpi = (id: string) => {
     if (overview?.loading) return { value: '…', suffix: undefined, trend: 'Loading from API…' };
@@ -58,7 +97,7 @@ export const KpiStrip: React.FC = () => {
         return {
           value: format(getMetric(['visitors_today', 'total'])),
           suffix: undefined,
-          trend: `${format(getMetric(['visitors_today', 'in']))} in · ${format(getMetric(['visitors_today', 'out']))} out`,
+          trend: `${formatMetricNumber(getMetric(['visitors_today', 'in']))} in · ${formatMetricNumber(getMetric(['visitors_today', 'out']))} out`,
         };
       case 'pending-vis':
         return {

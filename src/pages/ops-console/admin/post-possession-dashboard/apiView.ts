@@ -171,6 +171,31 @@ function formatNumber(value: unknown): string {
   return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 }).format(number);
 }
 
+function formatMetricNumber(value: unknown, depth = 0): string {
+  const number = numberValue(value);
+  if (number !== null) return formatNumber(number);
+  if (depth >= 3 || !isRecord(value)) return '—';
+
+  for (const key of [
+    'count',
+    'total',
+    'value',
+    'visitors',
+    'visitor_count',
+    'visitors_in',
+    'visitors_out',
+    'in_count',
+    'out_count',
+    'entry_count',
+    'exit_count',
+    'number',
+  ]) {
+    const formatted = formatMetricNumber(value[key], depth + 1);
+    if (formatted !== '—') return formatted;
+  }
+  return '—';
+}
+
 function formatPercent(value: unknown): string {
   const number = numberValue(value);
   return number === null ? '—' : `${formatNumber(number)}%`;
@@ -1504,9 +1529,9 @@ function bindOverview(container: HTMLElement, state: PostPossessionApiState | un
       : displayDimension(patrolSummary, ['compliance_percent']);
   setPulse(
     'pulse_security',
-    isRecord(security) ? `${formatNumber(security.visitors_in)} in` : '—',
+    isRecord(security) ? `${formatMetricNumber(security.visitors_in)} in` : '—',
     isRecord(security)
-      ? `${formatNumber(security.visitors_out)} out · ${formatNumber(security.pending_post_approval)} pending`
+      ? `${formatMetricNumber(security.visitors_out)} out · ${formatNumber(security.pending_post_approval)} pending`
       : 'Data Not Available',
     `Patrol compliance: ${patrolSummaryText}`
   );
@@ -1564,7 +1589,7 @@ function bindOverview(container: HTMLElement, state: PostPossessionApiState | un
     [`${formatNumber(getPath(fitoutPending, ['pending']))} fitout requests pending`, `${formatNumber(getPath(fitoutPending, ['closed_this_month']))} closed this month`],
     [`${formatNumber(getPath(clubActivation, ['pending_activation']))} club memberships pending`, `${formatNumber(getPath(clubActivation, ['active']))} active of ${formatNumber(getPath(clubActivation, ['total']))}`],
     [`${formatNumber(getPath(pendingApproval, ['count']))} visitor approvals pending`, `${formatNumber(getPath(pendingApproval, ['waiting_70_plus_min']))} waiting over 70 minutes`],
-    [`${formatNumber(getPath(visitorsToday, ['total']))} visitors today`, `${formatNumber(getPath(visitorsToday, ['in']))} in · ${formatNumber(getPath(visitorsToday, ['out']))} out`],
+    [`${formatNumber(getPath(visitorsToday, ['total']))} visitors today`, `${formatMetricNumber(getPath(visitorsToday, ['in']))} in · ${formatMetricNumber(getPath(visitorsToday, ['out']))} out`],
   ];
   priorityItems.slice(0, priorityData.length).forEach((item, index) => {
     const title = item.querySelector<HTMLElement>('.pi-t');
@@ -1980,7 +2005,7 @@ function bindSecurity(container: HTMLElement, state: PostPossessionApiState | un
 
   setKpi(container, 'kpi_tsc_visitors_today', unwrapCount(visitors, ['total']), {
     trend: visitors.kind === 'value' && isRecord(visitors.value)
-      ? `${formatNumber(visitors.value.in)} in · ${formatNumber(visitors.value.out)} out`
+      ? `${formatMetricNumber(visitors.value.in)} in · ${formatMetricNumber(visitors.value.out)} out`
       : '',
   });
   setKpi(container, 'kpi_tsc_pre_approved', unwrapCount(preApproved, ['count']), {
@@ -3040,7 +3065,20 @@ function bindFitout(container: HTMLElement, state: PostPossessionApiState | unde
       : tableMessage(complianceResult, fitoutRows),
     'fitout_compliance'
   );
+  const complianceTable = container.querySelectorAll<HTMLTableElement>('table.tbl')[1];
+  const inProgressBadge = complianceTable
+    ?.closest<HTMLElement>('.card')
+    ?.querySelector<HTMLElement>('.ch > .b');
+  if (inProgressBadge) {
+    inProgressBadge.textContent = `${formatNumber(fitoutRows.length)} in progress`;
+  }
   const requestTable = container.querySelectorAll<HTMLTableElement>('table.tbl')[0];
+  const pendingRequestBadge = requestTable
+    ?.closest<HTMLElement>('.card')
+    ?.querySelector<HTMLElement>('.ch > .b');
+  if (pendingRequestBadge) {
+    pendingRequestBadge.textContent = `${formatNumber(requestTableRows.length)} pending`;
+  }
   requestTable?.tBodies.item(0)?.querySelectorAll('tr[data-drill]').forEach((row) => {
     row.setAttribute('data-drill', 'fitout_pending');
   });
@@ -3156,7 +3194,9 @@ function bindParking(container: HTMLElement, state: PostPossessionApiState | und
     ]);
   setTable(container, 0, slotTableRows, tableMessage(parkingData, slotTableRows), 'parking_all');
   const slotsTable = container.querySelectorAll<HTMLTableElement>('table.tbl')[0];
-  if (slotsTable) setTableScrollViewport(slotsTable, 10, 'registered-slots-scroll');
+  if (slotsTable) {
+    setTableScrollViewport(slotsTable, 10, 'registered-slots-scroll');
+  }
 
   const bars = container.querySelector<HTMLElement>('#parkingTowerBars');
   if (bars) {

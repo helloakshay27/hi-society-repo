@@ -21,6 +21,18 @@ import {
   BusinessDirectoryEnhancedTable,
   type BusinessDirectoryRow,
 } from './BusinessDirectoryEnhancedTable';
+import {
+  ComplianceChecklistEnhancedTable,
+  COMPLIANCE_CHECKLIST_SCROLL_CLASS,
+  PendingRequestsEnhancedTable,
+  PENDING_REQUESTS_SCROLL_CLASS,
+  type FitoutTableRow,
+} from './FitoutEnhancedTables';
+import {
+  MissedPatrolIncidentsEnhancedTable,
+  MISSED_PATROL_INCIDENTS_SCROLL_CLASS,
+  type MissedPatrolIncidentRow,
+} from './MissedPatrolIncidentsEnhancedTable';
 import { applyBrandHexRemap } from '../../charts/chartPalette';
 import {
   centerLabelForChart,
@@ -125,6 +137,31 @@ function readRegisteredSlotsTable(table: HTMLTableElement): {
   };
 }
 
+function readFitoutTable(
+  table: HTMLTableElement,
+  columnCount: number
+): { rows: FitoutTableRow[]; emptyMessage: string } {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= columnCount)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      const record: FitoutTableRow = { id: `${values[0]}-${index}` };
+      values.forEach((value, cellIndex) => {
+        record[`c${cellIndex}`] = value;
+      });
+      return record;
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No data found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No data found.',
+  };
+}
+
 function readFacilitySlotsTable(table: HTMLTableElement): {
   rows: FacilitySlotRow[];
   emptyMessage: string;
@@ -175,6 +212,35 @@ function readImportantEventsTable(table: HTMLTableElement): {
       rows.length > 0
         ? 'No important events found.'
         : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No important events found.',
+  };
+}
+
+function readMissedPatrolIncidentsTable(table: HTMLTableElement): {
+  rows: MissedPatrolIncidentRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 5)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      return {
+        id: `missed-patrol-${index}`,
+        c0: values[0],
+        c1: values[1],
+        c2: values[2],
+        c3: values[3],
+        c4: values[4],
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No missed patrol incidents found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() ||
+          'No missed patrol incidents found.',
   };
 }
 
@@ -286,6 +352,8 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
   const chartInstancesRef = useRef<Map<string, Chart>>(new Map());
   const enhancedTableRootRef = useRef<Root | null>(null);
   const directoryTableRootRef = useRef<Root | null>(null);
+  const fitoutTableRootsRef = useRef<Root[]>([]);
+  const missedPatrolTableRootRef = useRef<Root | null>(null);
   const chartsRef = useRef(charts);
   chartsRef.current = charts;
   const processedHtml = useMemo(
@@ -432,6 +500,61 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
         }
       }
     }
+    if (apiTab === 'fitout') {
+      const fitoutTables = [
+        {
+          table: container.querySelectorAll<HTMLTableElement>('table.tbl')[0],
+          columnCount: 11,
+          scrollClass: PENDING_REQUESTS_SCROLL_CLASS,
+          Component: PendingRequestsEnhancedTable,
+        },
+        {
+          table: container.querySelectorAll<HTMLTableElement>('table.tbl')[1],
+          columnCount: 8,
+          scrollClass: COMPLIANCE_CHECKLIST_SCROLL_CLASS,
+          Component: ComplianceChecklistEnhancedTable,
+        },
+      ];
+      fitoutTables.forEach(({ table, columnCount, scrollClass, Component }) => {
+        if (!table) return;
+        const { rows, emptyMessage } = readFitoutTable(table, columnCount);
+        let viewport = table.parentElement;
+        if (!viewport?.classList.contains('tbl-scroll')) {
+          viewport = document.createElement('div');
+          viewport.className = 'tbl-scroll';
+          table.before(viewport);
+          viewport.append(table);
+        }
+        viewport.classList.add(scrollClass);
+        const mountNode = document.createElement('div');
+        table.replaceWith(mountNode);
+        const root = createRoot(mountNode);
+        fitoutTableRootsRef.current.push(root);
+        root.render(<Component rows={rows} emptyMessage={emptyMessage} />);
+      });
+    }
+    if (apiTab === 'security') {
+      const infoButton = container.querySelector<HTMLElement>(
+        '[data-info="tbl_tsc_missed_patrol_resulting_incidents"]'
+      );
+      const table = infoButton
+        ?.closest<HTMLElement>('.card, .table-block')
+        ?.querySelector<HTMLTableElement>('table.tbl');
+      if (table) {
+        const { rows, emptyMessage } = readMissedPatrolIncidentsTable(table);
+        const viewport = document.createElement('div');
+        viewport.className = `tbl-scroll ${MISSED_PATROL_INCIDENTS_SCROLL_CLASS}`;
+        table.before(viewport);
+        viewport.append(table);
+        const mountNode = document.createElement('div');
+        table.replaceWith(mountNode);
+        const root = createRoot(mountNode);
+        missedPatrolTableRootRef.current = root;
+        root.render(
+          <MissedPatrolIncidentsEnhancedTable rows={rows} emptyMessage={emptyMessage} />
+        );
+      }
+    }
     if (apiTab === 'community') {
       const directoryTable = container.querySelector<HTMLTableElement>('#dirTable');
       if (directoryTable) {
@@ -477,6 +600,10 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
       enhancedTableRootRef.current = null;
       directoryTableRootRef.current?.unmount();
       directoryTableRootRef.current = null;
+      fitoutTableRootsRef.current.forEach((root) => root.unmount());
+      fitoutTableRootsRef.current = [];
+      missedPatrolTableRootRef.current?.unmount();
+      missedPatrolTableRootRef.current = null;
     };
   }, [apiState, apiTab, processedHtml, mountCharts]);
 
