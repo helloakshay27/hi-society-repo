@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DashboardFilters } from '../../api/types';
 import { KpiTile } from '../common/KpiTile';
 import { Card } from '../common/Card';
@@ -9,6 +9,7 @@ import { ErrorState } from '../common/DashboardStates';
 import { FunnelSkeleton, TableSkeleton } from '../common/Skeleton';
 import {
   useModuleTree,
+  useSubModuleTree,
   useWorkflowUsage,
 } from '../../hooks/useDashboardAnalytics';
 
@@ -35,6 +36,23 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
     data: moduleTreeData,
     isLoading: isModulesLoading,
   } = useModuleTree(filters, sitesSettled);
+  const moduleHierarchy = moduleTreeData?.modules;
+  const hasModuleHierarchy = !!moduleHierarchy?.length;
+  const moduleList = hasModuleHierarchy ? moduleHierarchy : moduleTreeData?.tree || [];
+  const activeModule =
+    selectedModule ?? (moduleList[0] ? moduleList[0].key ?? moduleList[0].name : null);
+  const selectedNode = moduleList.find((module) => (module.key ?? module.name) === activeModule);
+
+  const {
+    data: subModuleTreeData,
+    isLoading: isSubModulesLoading,
+  } = useSubModuleTree(filters, activeModule, sitesSettled && !hasModuleHierarchy);
+  const subModuleList = hasModuleHierarchy
+    ? selectedNode?.sub_modules || []
+    : subModuleTreeData?.tree || [];
+  const activeSubModule =
+    selectedSubModule ??
+    (subModuleList[0] ? subModuleList[0].key ?? subModuleList[0].name : null);
 
   const {
     data: wfData,
@@ -42,25 +60,24 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
     isError: isWfError,
     error: wfError,
     refetch: refetchWf,
-  } = useWorkflowUsage(filters, selectedModule, selectedSubModule, sitesSettled);
-
-  // Refetch workflow usage when the selected module changes to ensure fresh data
-  useEffect(() => {
-    refetchWf();
-  }, [selectedModule, selectedSubModule]);
-
-  const isWfActiveLoading = isWfLoading || isRefreshing;
-  const isModulesActiveLoading = isModulesLoading || isRefreshing;
-
-  // Scopes whose app declares modules get screens arranged under them; others keep the flat tree.
-  const hierarchy = moduleTreeData?.modules;
-  const moduleList = hierarchy && hierarchy.length > 0 ? hierarchy : moduleTreeData?.tree || [];
-  const selectedNode = moduleList.find((m) => (m.key ?? m.name) === selectedModule);
+  } = useWorkflowUsage(
+    filters,
+    activeModule,
+    activeSubModule,
+    sitesSettled && (!activeModule || hasModuleHierarchy || !isSubModulesLoading)
+  );
 
   const handleSelectModule = (moduleName: string | null) => {
     setSelectedModule(moduleName);
     setSelectedSubModule(null);
   };
+
+  const selectedSubModuleName = subModuleList.find(
+    (subModule) => (subModule.key ?? subModule.name) === activeSubModule
+  )?.name;
+
+  const isWfActiveLoading = isWfLoading || isRefreshing;
+  const isModulesActiveLoading = isModulesLoading || isRefreshing;
 
   const kpis = wfData?.kpis;
 
@@ -118,11 +135,13 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
 
       <ModuleNav
         modules={moduleList}
-        selectedModule={selectedModule}
+        subModules={subModuleList}
+        selectedModule={activeModule}
+        selectedSubModule={activeSubModule}
         onSelectModule={handleSelectModule}
-        isLoading={isModulesActiveLoading}
-        selectedSubModule={selectedSubModule}
         onSelectSubModule={setSelectedSubModule}
+        isLoading={isModulesActiveLoading}
+        isSubModulesLoading={isSubModulesLoading}
       />
 
       {isWfError && (
@@ -190,7 +209,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         id="card-wfFunnel"
         infoKey="chart.funnel"
         eyebrow="Workflow funnel (real event sequence)"
-        title={`${selectedSubModule ? formatModuleName(selectedSubModule) : selectedNode?.key ? selectedNode.name : selectedModule ? formatModuleName(selectedModule) : moduleFunnels.length > 0 ? 'All Modules' : 'All Workflows'} — completion funnel`}
+        title={`${selectedSubModuleName ? formatModuleName(selectedSubModuleName) : selectedNode?.name ? formatModuleName(selectedNode.name) : activeModule ? formatModuleName(activeModule) : moduleFunnels.length > 0 ? 'All Modules' : 'All Workflows'} — completion funnel`}
         purpose="Shows step-by-step completion and drop-off for the selected workflow, using real instrumented usage event sequences."
         style={{ margin: '16px 0' }}
       >
