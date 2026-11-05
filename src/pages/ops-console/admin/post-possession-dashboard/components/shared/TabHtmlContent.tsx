@@ -409,6 +409,7 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
   const directoryTableRootRef = useRef<Root | null>(null);
   const fitoutTableRootsRef = useRef<Root[]>([]);
   const missedPatrolTableRootRef = useRef<Root | null>(null);
+  const genericTableRootsRef = useRef<Root[]>([]);
   const chartsRef = useRef(charts);
   chartsRef.current = charts;
   const processedHtml = useMemo(

@@ -1,11 +1,20 @@
 import type { ChartConfiguration } from 'chart.js';
 import { BG_DONUT_PALETTE } from './bgDonut';
 
+export type BgColSeries = {
+  label: string;
+  values: number[];
+  color: string;
+};
+
 export type BgColsSpec = {
   labels: string[];
-  values: number[];
+  /** Single-series values (ignored when `series` is set) */
+  values?: number[];
   /** Optional “sent” totals — draws a white ghost bar behind the fill */
   totals?: number[];
+  /** Grouped side-by-side series (e.g. Member vs Guest) */
+  series?: BgColSeries[];
   max: number;
   ticks: number[];
   maxXTicks?: number;
@@ -62,18 +71,41 @@ export function renderBusinessGenieCols(host: HTMLElement, c: BgColsSpec): void 
     c.avg != null
       ? `<div class="avg" style="bottom:${pct(c.avg)}"><span>Avg ${c.avg}${unit}</span></div>`
       : '';
-  const groups = c.labels
-    .map((label, i) => {
-      const v = c.values[i] ?? 0;
-      const t = c.totals?.[i];
-      const color = BG_DONUT_PALETTE[i % BG_DONUT_PALETTE.length];
-      if (t != null) {
-        const fillPct = t ? (v / t) * 100 : 0;
-        return `<div class="grp"><div class="col ghost" title="${label} · ${v} of ${t} delivered" style="height:${pct(t)}"><i style="height:${fillPct}%;background:${color}"></i><b>${v}/${t}</b></div></div>`;
-      }
-      return `<div class="grp"><div class="col" title="${label} · ${v}${unit}" style="height:${pct(v)};background:${color}"><b>${v}${unit}</b></div></div>`;
-    })
-    .join('');
+
+  let groups: string;
+  let legend = '';
+
+  if (c.series && c.series.length >= 2) {
+    legend = `<div class="leg">${c.series
+      .map((s) => `<span><i style="background:${s.color}"></i>${s.label}</span>`)
+      .join('')}</div>`;
+    groups = c.labels
+      .map((label, i) => {
+        const bars = c.series!
+          .map((s) => {
+            const v = s.values[i] ?? 0;
+            const h = Math.max((v / c.max) * 100, v > 0 ? 2 : 0);
+            return `<div class="col twin" title="${s.label} · ${label}: ${v}${unit}" style="height:${h}%;background:${s.color}"><b>${v}${unit}</b></div>`;
+          })
+          .join('');
+        return `<div class="grp twin">${bars}</div>`;
+      })
+      .join('');
+  } else {
+    const values = c.values || [];
+    groups = c.labels
+      .map((label, i) => {
+        const v = values[i] ?? 0;
+        const t = c.totals?.[i];
+        const color = BG_DONUT_PALETTE[i % BG_DONUT_PALETTE.length];
+        if (t != null) {
+          const fillPct = t ? (v / t) * 100 : 0;
+          return `<div class="grp"><div class="col ghost" title="${label} · ${v} of ${t} delivered" style="height:${pct(t)}"><i style="height:${fillPct}%;background:${color}"></i><b>${v}/${t}</b></div></div>`;
+        }
+        return `<div class="grp"><div class="col" title="${label} · ${v}${unit}" style="height:${pct(v)};background:${color}"><b>${v}${unit}</b></div></div>`;
+      })
+      .join('');
+  }
 
   host.classList.add('cols', 'num');
   host.style.height = 'auto';
@@ -129,7 +161,7 @@ export function colsSpecFromBarConfig(
     };
   }
 
-  const values = (datasets[0].data as number[]) || [];
+  const values = ((datasets[0].data as number[]) || []).map(Number);
   const yScale = (config.options as { scales?: { y?: { max?: number } } })?.scales?.y;
   const isPct =
     chartId.includes('adoption') ||
@@ -137,15 +169,10 @@ export function colsSpecFromBarConfig(
     chartId.toLowerCase().includes('rate') ||
     chartId.includes('escalation') ||
     chartId.includes('category');
-  const max = yScale?.max ?? (isPct ? 100 : Math.max(...values.map(Number), 1));
+  const max = niceMax(Number(yScale?.max ?? (isPct ? 100 : Math.max(...values, 1))));
   const unit = isPct ? '%' : '';
-  const ticks =
-    max === 100 ? [0, 50, 100] : max <= 5 ? [0, 1, 2, 3, 4, 5].filter((t) => t <= max) : [0, max / 2, max];
 
   let avg: number | undefined;
-  // Society-wide adoption (not a simple mean of tower rates)
-  if (chartId === 'adoptionChart') avg = 48;
-
   return {
     labels,
     values,
@@ -153,6 +180,5 @@ export function colsSpecFromBarConfig(
     ticks: ticksFor(max),
     ...(typeof maxXTicks === 'number' ? { maxXTicks } : {}),
     unit,
-    avg,
   };
 }
