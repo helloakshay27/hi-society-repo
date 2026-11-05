@@ -2,6 +2,7 @@ import type { ChartConfiguration } from 'chart.js';
 import type { LucideIcon } from 'lucide-react';
 
 export type TabId =
+  | 't-my'
   | 't-lb'
   | 't-ov'
   | 't-op'

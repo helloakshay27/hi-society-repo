@@ -1,5 +1,8 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 
+const CHUNK_RELOAD_KEY = "eb_chunk_reload";
+const hasReloadedForChunk = () => sessionStorage.getItem(CHUNK_RELOAD_KEY) === "1";
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
@@ -37,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[ErrorBoundary] Caught error:", error, errorInfo);
     // Auto-reload immediately on stale-chunk errors (new deploy invalidated old hashes)
-    if (this.state.isChunkError) {
+    if (this.state.isChunkError && !hasReloadedForChunk()) {
       this.handleReload();
     }
   }
@@ -55,22 +58,23 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   handleReload = () => {
-    // Mark that we already tried reloading to avoid infinite reload loops
-    const reloadKey = "eb_chunk_reload";
-    if (!sessionStorage.getItem(reloadKey)) {
-      sessionStorage.setItem(reloadKey, "1");
+    // Reload once only; if the chunk still fails afterwards, show the error UI
+    // (below) instead of reloading in a loop or leaving a blank page.
+    if (!hasReloadedForChunk()) {
+      sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
       window.location.reload();
-    } else {
-      sessionStorage.removeItem(reloadKey);
-      this.handleReset();
     }
   };
 
+  componentDidMount() {
+    // A healthy mount means the last deploy's chunks load fine again
+    window.setTimeout(() => sessionStorage.removeItem(CHUNK_RELOAD_KEY), 10000);
+  }
+
   render() {
     if (this.state.hasError) {
-      if (this.state.isChunkError) {
-        // On chunk errors, reload immediately and render nothing (or null)
-        // The reload is triggered in componentDidCatch, so just return null here
+      if (this.state.isChunkError && !hasReloadedForChunk()) {
+        // The one-time reload is triggered in componentDidCatch
         return null;
       }
       if (this.props.fallback) {
@@ -169,27 +173,27 @@ export class RouteErrorBoundary extends Component<
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[RouteErrorBoundary] Caught error:", error, errorInfo);
     // Auto-reload immediately on stale-chunk errors (new deploy invalidated old hashes)
-    if (this.state.isChunkError) {
+    if (this.state.isChunkError && !hasReloadedForChunk()) {
       this.handleReload();
     }
   }
 
   handleReload = () => {
-    const reloadKey = "eb_chunk_reload";
-    if (!sessionStorage.getItem(reloadKey)) {
-      sessionStorage.setItem(reloadKey, "1");
+    // Reload once only; if the chunk still fails afterwards, show the error UI
+    if (!hasReloadedForChunk()) {
+      sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
       window.location.reload();
-    } else {
-      sessionStorage.removeItem(reloadKey);
-      this.setState({ hasError: false, error: null, isChunkError: false });
     }
   };
 
+  componentDidMount() {
+    window.setTimeout(() => sessionStorage.removeItem(CHUNK_RELOAD_KEY), 10000);
+  }
+
   render() {
     if (this.state.hasError) {
-      if (this.state.isChunkError) {
-        // On chunk errors, reload immediately and render nothing (or null)
-        // The reload is triggered in componentDidCatch, so just return null here
+      if (this.state.isChunkError && !hasReloadedForChunk()) {
+        // The one-time reload is triggered in componentDidCatch
         return null;
       }
       return (

@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
 import { Send, Star, X } from 'lucide-react';
-import {
-  COPILOT_DEFAULT_REPLY,
-  COPILOT_GREETING,
-  COPILOT_PROMPT_LABELS,
-  COPILOT_RESPONSES,
-} from '../../data/copilotResponses';
-import { SOCIETY_NAME } from '../../data/mockData';
+import { COPILOT_GREETING, COPILOT_PROMPT_LABELS } from '../../data/copilotResponses';
 import { useDashboard } from '../../context/DashboardContext';
+import { getUser } from '@/utils/auth';
 
 interface CopilotMessage {
   id: string;
@@ -17,11 +12,23 @@ interface CopilotMessage {
 
 let msgCounter = 0;
 
+// Genie has no live-data backend yet; the canned sample answers (with made-up figures) were removed.
+const COPILOT_NOT_CONNECTED =
+  "Genie isn't connected to live data yet, so I can't answer that. Your dashboard figures are live — answers will appear here once Genie is connected.";
+
 export const AiCopilot: React.FC = () => {
   const { copilotOpen, setCopilotOpen, societyId, societies } = useDashboard();
-  const societyName = societies.find((society) => society.id === societyId)?.name ?? SOCIETY_NAME;
+  const societyName = societies.find((society) => society.id === societyId)?.name ?? 'this society';
+  const firstName = (() => {
+    try {
+      return getUser()?.firstname?.trim() || '';
+    } catch {
+      return '';
+    }
+  })();
+  const greeting = firstName ? `Hi ${firstName}` : 'Hi';
   const [messages, setMessages] = useState<CopilotMessage[]>([
-    { id: 'greeting', type: 'a', html: COPILOT_GREETING },
+    { id: 'greeting', type: 'a', html: COPILOT_GREETING.replace('Hi Komal', greeting) },
   ]);
   const [typing, setTyping] = useState(false);
   const [input, setInput] = useState('');
@@ -35,7 +42,7 @@ export const AiCopilot: React.FC = () => {
     setTyping(true);
     window.setTimeout(() => {
       setTyping(false);
-      addMessage(COPILOT_RESPONSES[key] || 'I can answer questions about your BMS data once connected.', 'a');
+      addMessage(COPILOT_NOT_CONNECTED, 'a');
     }, 1100);
   };
 
@@ -47,7 +54,7 @@ export const AiCopilot: React.FC = () => {
     setTyping(true);
     window.setTimeout(() => {
       setTyping(false);
-      addMessage(COPILOT_DEFAULT_REPLY, 'a');
+      addMessage(COPILOT_NOT_CONNECTED, 'a');
     }, 900);
   };
 

@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Megaphone,
   Shield,
+  Star,
   Trophy,
   UserCheck,
   Users,
@@ -25,6 +26,7 @@ export const USER_INITIALS = 'KD';
 export const TOWER_FILTERS = ['All', 'FM', 'T1', 'T2', 'T3'];
 
 export const TABS: TabConfig[] = [
+  { id: 't-my', label: 'My Dashboard', icon: Star },
   { id: 't-lb', label: 'All Towers', icon: Trophy },
   { id: 't-ov', label: 'Overview', icon: LayoutDashboard },
   { id: 't-op', label: 'Helpdesk', icon: ClipboardList },

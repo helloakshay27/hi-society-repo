@@ -32,44 +32,44 @@ export const CHIP_SOURCES: Record<string, ChipSource[]> = {
   po: [{ tab: 'helpdesk', endpoints: ['kpis'] }],
 };
 
-type Rec = Record<string, unknown>;
+export type Rec = Record<string, unknown>;
 
-const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
-const asRec = (v: unknown): Rec => (isRec(v) ? v : {});
-const asArr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+export const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
+export const asRec = (v: unknown): Rec => (isRec(v) ? v : {});
+export const asArr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 
-const esc = (v: unknown): string =>
+export const esc = (v: unknown): string =>
   String(v ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-const num = (v: unknown): string =>
+export const num = (v: unknown): string =>
   typeof v === 'number' && Number.isFinite(v)
     ? new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 }).format(v)
     : v === null || v === undefined || v === ''
       ? '—'
       : esc(v);
 
-const row = (label: string, value: unknown, color?: string) =>
+export const row = (label: string, value: unknown, color?: string) =>
   `<div class="drow"><span class="dl">${esc(label)}</span><span class="dv"${color ? ` style="color:var(${color})"` : ''}>${typeof value === 'number' ? num(value) : esc(value ?? '—')}</span></div>`;
 
-const section = (title: string, inner: string) =>
+export const section = (title: string, inner: string) =>
   `<div class="dsec"><div class="dst">${esc(title)}</div>${inner}</div>`;
 
-const note = (text: unknown) =>
+export const note = (text: unknown) =>
   text
     ? `<div style="font-size:11px;line-height:1.7;background:var(--surface);padding:10px;border-radius:8px;margin-bottom:14px">${esc(text)}</div>`
     : '';
 
-const empty = (text: string) =>
+export const empty = (text: string) =>
   `<div style="font-size:11px;line-height:1.7;color:var(--sto);padding:6px 0">${esc(text)}</div>`;
 
-const card = (title: string, sub: string) =>
+export const card = (title: string, sub: string) =>
   `<div class="dflat"><div><div class="dflat-tower" style="font-size:13px">${esc(title)}</div><div class="dflat-res">${esc(sub)}</div></div></div>`;
 
-const fmtDate = (v: unknown): string => {
+export const fmtDate = (v: unknown): string => {
   if (typeof v !== 'string' || !v) return '';
   const d = new Date(v);
   return Number.isNaN(d.getTime())
@@ -80,7 +80,7 @@ const fmtDate = (v: unknown): string => {
 const unavailable = (v: unknown): string | null =>
   isRec(v) && v.available === false ? String(v.reason ?? 'Data not available') : null;
 
-const errorBlock = (message: string): DrillContent => ({
+export const errorBlock = (message: string): DrillContent => ({
   t: 'Could not load data',
   s: 'The API request failed',
   b: section('Error', note(message)),
