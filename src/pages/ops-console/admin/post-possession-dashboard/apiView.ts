@@ -1185,12 +1185,18 @@ function setHorizontalBars(
   infoKey: string,
   rows: Array<{ label: string; value: number; display?: string }>,
   maximum?: number,
-  emptyResult: ReadResult = { kind: 'value', value: [] }
+  emptyResult: ReadResult = { kind: 'value', value: [] },
+  maxVisibleRows?: number,
+  rowLayoutClass?: string
 ): void {
   const infoButton = container.querySelector<HTMLElement>(`[data-info="${infoKey}"]`);
   const host = infoButton?.closest<HTMLElement>('.card')?.querySelector<HTMLElement>('.hbars');
   if (!host) return;
   host.replaceChildren();
+  host.classList.remove('tower-bar-list', 'hbars-scrollable');
+  host.style.removeProperty('max-height');
+  host.style.removeProperty('overflow-y');
+  host.removeAttribute('tabindex');
   if (!rows.length) {
     setContentMessage(host, emptyResult);
     return;
@@ -1211,6 +1217,19 @@ function setHorizontalBars(
     row.append(label, track, value);
     host.append(row);
   }
+  if (maxVisibleRows !== undefined) {
+    if (rowLayoutClass) host.classList.add(rowLayoutClass);
+    if (rows.length > maxVisibleRows) {
+      host.classList.add('hbars-scrollable');
+      host.tabIndex = 0;
+      const visibleBars = Array.from(host.children).slice(0, maxVisibleRows);
+      const rowGap = Number.parseFloat(window.getComputedStyle(host).rowGap) || 0;
+      const visibleHeight =
+        visibleBars.reduce((height, bar) => height + bar.getBoundingClientRect().height, 0) +
+        rowGap * Math.max(0, visibleBars.length - 1);
+      if (visibleHeight > 0) host.style.maxHeight = `${visibleHeight}px`;
+    }
+  }
 }
 
 function displayDimension(value: unknown, fields: string[], suffix = '%'): string {
@@ -1230,30 +1249,14 @@ function displayDimension(value: unknown, fields: string[], suffix = '%'): strin
 
 function bindAllTowers(container: HTMLElement, state: PostPossessionApiState | undefined): void {
   const result = read(state, 'summary', [['towers']]);
-  const responseTowers = arrayValue(result);
-  const towerOrder = ['t1', 't3', 't2', 'fm'];
-  const requestedTowerNames = new Set(towerOrder);
-  const towers = towerOrder.flatMap((name) => {
-    const tower = responseTowers.find(
-      (item) => safeText(item.tower_name).trim().toLowerCase() === name
-    );
-    return tower ? [tower] : [];
-  });
+  const towers = arrayValue(result);
   const summary = endpointData(state, 'summary')?.data;
   const summaryBestTower =
     isRecord(summary) && isRecord(summary.best_tower) ? summary.best_tower : null;
   const summaryWorstTower =
     isRecord(summary) && isRecord(summary.worst_tower) ? summary.worst_tower : null;
-  const bestTower =
-    summaryBestTower &&
-    requestedTowerNames.has(safeText(summaryBestTower.tower_name).trim().toLowerCase())
-      ? summaryBestTower
-      : null;
-  const worstTower =
-    summaryWorstTower &&
-    requestedTowerNames.has(safeText(summaryWorstTower.tower_name).trim().toLowerCase())
-      ? summaryWorstTower
-      : null;
+  const bestTower = summaryBestTower;
+  const worstTower = summaryWorstTower;
   const bestTowerName = bestTower ? safeText(bestTower.tower_name) : '—';
   const worstTowerName = worstTower ? safeText(worstTower.tower_name) : '—';
   const scoredTowers = towers.filter((tower) => numberValue(tower.composite) !== null);
@@ -1267,7 +1270,7 @@ function bindAllTowers(container: HTMLElement, state: PostPossessionApiState | u
   const comparisonText = comparisonWindow && comparisonWindow.from && comparisonWindow.to
     ? `${safeText(comparisonWindow.from)} – ${safeText(comparisonWindow.to)}`
     : '';
-  const tableRows = towers.map((tower) => {
+  const tableRows = towers.map((tower, index) => {
     const trend = isRecord(tower.trend) ? safeText(tower.trend.label) : '—';
     const fitout = isRecord(tower.fitout)
       ? tower.fitout.available === false
@@ -1275,7 +1278,7 @@ function bindAllTowers(container: HTMLElement, state: PostPossessionApiState | u
         : `${displayDimension(tower.fitout, ['avg_days_to_decision'], 'd')} · ${displayDimension(tower.fitout, ['rejection_rate_percent'])}`
       : 'Data Not Available';
     return [
-      tower.rank,
+      index + 1,
       tower.tower_name,
       tower.composite,
       trend,
@@ -1313,7 +1316,9 @@ function bindAllTowers(container: HTMLElement, state: PostPossessionApiState | u
       display: numberValue(tower.composite) === null ? 'N/A' : formatNumber(tower.composite),
     })),
     100,
-    result
+    result,
+    10,
+    'tower-bar-list'
   );
   setHorizontalBars(
     container,
@@ -1330,7 +1335,9 @@ function bindAllTowers(container: HTMLElement, state: PostPossessionApiState | u
       };
     }),
     100,
-    result
+    result,
+    10,
+    'tower-bar-list'
   );
 
   const header = container.querySelector<HTMLElement>('.phead .eyebrow');
@@ -1843,7 +1850,7 @@ function bindHelpdesk(container: HTMLElement, state: PostPossessionApiState | un
     { label: `Response breached (${formatNumber(responseValue?.count)})`, value: numberValue(responseValue?.breach_rate_percent) ?? 0, display: formatPercent(responseValue?.breach_rate_percent) },
     { label: `Resolution breached (${formatNumber(resolutionValue?.count)})`, value: numberValue(resolutionValue?.breach_rate_percent) ?? 0, display: formatPercent(resolutionValue?.breach_rate_percent) },
   ];
-  setHorizontalBars(container, 'escalationChart', slaBars, 100);
+  setHorizontalBars(container, 'escalationChart', slaBars, 100, undefined, 10);
 
   const sourceRows = arrayValue(read(state, 'sourceAndVolume', [['tower_wise_ticket_volume', 'breakdown']]));
   const sourceResult = read(state, 'sourceAndVolume', [['tower_wise_ticket_volume', 'breakdown']]);
@@ -1893,7 +1900,8 @@ function bindHelpdesk(container: HTMLElement, state: PostPossessionApiState | un
       display: formatPercent(row.rate),
     })),
     100,
-    categoryResult
+    categoryResult,
+    10
   );
   const categoryCard = container
     .querySelector<HTMLElement>('[data-info="categoryChart"]')
@@ -2622,6 +2630,23 @@ function bindClub(container: HTMLElement, state: PostPossessionApiState | undefi
   const expiringCard = expiringInfo?.closest<HTMLElement>('.card');
   if (expiringCard) {
     expiringCard.querySelectorAll('.evitem').forEach((item) => item.remove());
+    const existingExpiringList =
+      expiringCard.querySelector<HTMLElement>('.membership-expiring-list');
+    const expiringListContainer =
+      existingExpiringList ?? document.createElement('div');
+    if (!existingExpiringList) {
+      expiringListContainer.className = 'membership-expiring-list';
+      expiringListContainer.setAttribute(
+        'aria-label',
+        'Memberships expiring within 30 days'
+      );
+      expiringCard.append(expiringListContainer);
+    }
+    expiringListContainer.replaceChildren();
+    expiringListContainer.style.removeProperty('max-height');
+    expiringListContainer.style.removeProperty('overflow-y');
+    expiringListContainer.removeAttribute('tabindex');
+
     const appendMessage = (message: string) => {
       const item = document.createElement('div');
       item.className = 'evitem';
@@ -2632,7 +2657,7 @@ function bindClub(container: HTMLElement, state: PostPossessionApiState | undefi
       text.textContent = message;
       body.append(text);
       item.append(body);
-      expiringCard.append(item);
+      expiringListContainer.append(item);
     };
     if (expiringList.kind !== 'value') {
       appendMessage(
@@ -2673,8 +2698,21 @@ function bindClub(container: HTMLElement, state: PostPossessionApiState | undefi
         status.textContent = safeText(member.status ?? 'Expiring');
         memberBody.append(title, meta);
         item.append(dot, memberBody, status);
-        expiringCard.append(item);
+        expiringListContainer.append(item);
       }
+    }
+
+    const expiringItems = Array.from(expiringListContainer.children);
+    if (expiringItems.length > 10) {
+      const tenItemsHeight = expiringItems
+        .slice(0, 10)
+        .reduce(
+          (height, item) => height + item.getBoundingClientRect().height,
+          0
+        );
+      expiringListContainer.style.maxHeight = `${tenItemsHeight}px`;
+      expiringListContainer.style.overflowY = 'auto';
+      expiringListContainer.tabIndex = 0;
     }
   }
 

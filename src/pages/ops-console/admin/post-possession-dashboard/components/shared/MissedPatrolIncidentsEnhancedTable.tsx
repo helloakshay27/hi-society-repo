@@ -48,6 +48,7 @@ export const MissedPatrolIncidentsEnhancedTable: React.FC<
           window.dispatchEvent(new CustomEvent('pp-open-drill', { detail: 'patrol' }))
         }
         className="dashboard-enhanced-table"
+        truncateCells
         emptyMessage={emptyMessage}
         pagination={false}
         hideTableSearch

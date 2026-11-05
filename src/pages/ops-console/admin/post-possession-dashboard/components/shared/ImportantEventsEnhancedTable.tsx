@@ -41,6 +41,7 @@ export const ImportantEventsEnhancedTable: React.FC<ImportantEventsEnhancedTable
           window.dispatchEvent(new CustomEvent('pp-open-drill', { detail: 'events' }))
         }
         className="dashboard-enhanced-table important-events-enhanced-table"
+        truncateCells
         emptyMessage={emptyMessage}
         pagination={false}
         hideTableSearch

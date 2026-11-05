@@ -33,6 +33,10 @@ import {
   MISSED_PATROL_INCIDENTS_SCROLL_CLASS,
   type MissedPatrolIncidentRow,
 } from './MissedPatrolIncidentsEnhancedTable';
+import {
+  HtmlTableEnhancedTable,
+  type HtmlTableEnhancedRow,
+} from './HtmlTableEnhancedTable';
 import { applyBrandHexRemap } from '../../charts/chartPalette';
 import {
   centerLabelForChart,
@@ -273,6 +277,89 @@ function readBusinessDirectoryTable(table: HTMLTableElement): {
   };
 }
 
+function renderCellNodes(parent: Element, keyPrefix: string): React.ReactNode[] {
+  return Array.from(parent.childNodes).map((node, index) => {
+    const key = `${keyPrefix}-${index}`;
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+    if (!(node instanceof HTMLElement)) return null;
+
+    const children = renderCellNodes(node, key);
+    const className = node.className || undefined;
+    const title = node.title || undefined;
+    switch (node.tagName) {
+      case 'SPAN':
+        return (
+          <span key={key} className={className} title={title}>
+            {children}
+          </span>
+        );
+      case 'B':
+        return <b key={key}>{children}</b>;
+      case 'STRONG':
+        return <strong key={key}>{children}</strong>;
+      case 'EM':
+        return <em key={key}>{children}</em>;
+      case 'BR':
+        return <br key={key} />;
+      default:
+        return children;
+    }
+  });
+}
+
+function readGenericTable(table: HTMLTableElement): {
+  headers: string[];
+  rows: HtmlTableEnhancedRow[];
+  emptyMessage: string;
+} | null {
+  const sourceRows = Array.from(table.rows);
+  const headerRow =
+    table.tHead?.rows.item(0) ??
+    sourceRows.find((row) => Array.from(row.cells).some((cell) => cell.tagName === 'TH')) ??
+    sourceRows[0];
+  if (!headerRow) return null;
+
+  const headerCells = Array.from(headerRow.cells);
+  if (headerCells.length === 0) return null;
+  const headers = headerCells.map((cell, index) => cell.textContent?.trim() || `Column ${index + 1}`);
+  const dataRows = sourceRows.filter(
+    (row) =>
+      row !== headerRow &&
+      !Array.from(row.cells).some((cell) => cell.tagName === 'TH') &&
+      row.cells.length >= headers.length
+  );
+  const rows = dataRows.map((row, rowIndex) => {
+    const drill =
+      row.dataset.drill ??
+      row.querySelector<HTMLElement>('[data-drill]')?.dataset.drill ??
+      '';
+    const values: HtmlTableEnhancedRow = {
+      id: `${table.id || table.className || 'table'}-${rowIndex}`,
+      drill,
+    };
+
+    headers.forEach((_header, index) => {
+      const cell = row.cells.item(index);
+      values[`c${index}`] = cell ? renderCellNodes(cell, `${rowIndex}-${index}`) : '';
+      values[`c${index}Text`] = cell?.textContent?.trim() ?? '';
+      values[`c${index}Class`] = cell?.className ?? '';
+      values[`c${index}Title`] = cell?.title ?? '';
+    });
+
+    return values;
+  });
+
+  return {
+    headers,
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No data available.'
+        : sourceRows.find((row) => row !== headerRow)?.cells.item(0)?.textContent?.trim() ||
+          'No data available.',
+  };
+}
+
 function wrapGridTables(container: HTMLElement) {
   container
     .querySelectorAll<HTMLTableElement>(
@@ -354,6 +441,7 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
   const directoryTableRootRef = useRef<Root | null>(null);
   const fitoutTableRootsRef = useRef<Root[]>([]);
   const missedPatrolTableRootRef = useRef<Root | null>(null);
+  const genericTableRootsRef = useRef<Root[]>([]);
   const chartsRef = useRef(charts);
   chartsRef.current = charts;
   const processedHtml = useMemo(
@@ -569,6 +657,36 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
         );
       }
     }
+    container
+      .querySelectorAll<HTMLTableElement>('table:not(.dashboard-enhanced-table)')
+      .forEach((table) => {
+        const parsedTable = readGenericTable(table);
+        if (!parsedTable) return;
+
+        let viewport = table.parentElement;
+        if (!viewport?.classList.contains('tbl-scroll')) {
+          viewport = document.createElement('div');
+          table.before(viewport);
+          viewport.append(table);
+        }
+        viewport.classList.add('tbl-scroll', 'dashboard-html-table-scroll');
+        if (table.classList.contains('lb-tbl')) {
+          viewport.classList.add('leaderboard-scorecard-scroll');
+        }
+
+        const mountNode = document.createElement('div');
+        table.replaceWith(mountNode);
+        const root = createRoot(mountNode);
+        genericTableRootsRef.current.push(root);
+        root.render(
+          <HtmlTableEnhancedTable
+            headers={parsedTable.headers}
+            tableClassName={table.className}
+            rows={parsedTable.rows}
+            emptyMessage={parsedTable.emptyMessage}
+          />
+        );
+      });
     mountCharts(container);
 
     const showInfoPopover = (btn: HTMLElement) => {
@@ -604,6 +722,8 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
       fitoutTableRootsRef.current = [];
       missedPatrolTableRootRef.current?.unmount();
       missedPatrolTableRootRef.current = null;
+      genericTableRootsRef.current.forEach((root) => root.unmount());
+      genericTableRootsRef.current = [];
     };
   }, [apiState, apiTab, processedHtml, mountCharts]);
 

@@ -46,6 +46,7 @@ export const QuarantineCasesEnhancedTable: React.FC<QuarantineCasesEnhancedTable
           window.dispatchEvent(new CustomEvent('pp-open-drill', { detail: 'quarantine' }))
         }
         className="dashboard-enhanced-table"
+        truncateCells
         emptyMessage={emptyMessage}
         pagination={false}
         hideTableSearch

@@ -94,6 +94,7 @@ export const FacilitySlotsEnhancedTable: React.FC<FacilitySlotsEnhancedTableProp
           window.dispatchEvent(new CustomEvent('pp-open-drill', { detail: 'bookings_today' }))
         }
         className="dashboard-enhanced-table"
+        truncateCells
         emptyMessage={emptyMessage}
         pagination={false}
         hideTableSearch

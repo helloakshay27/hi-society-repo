@@ -69,6 +69,7 @@ const FitoutEnhancedTable: React.FC<BaseProps> = ({
         getItemId={(row) => row.id}
         onRowClick={() => window.dispatchEvent(new CustomEvent('pp-open-drill', { detail: drill }))}
         className="dashboard-enhanced-table"
+        truncateCells
         emptyMessage={emptyMessage}
         pagination={false}
         hideTableSearch

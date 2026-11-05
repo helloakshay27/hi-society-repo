@@ -50,6 +50,7 @@ export const BusinessDirectoryEnhancedTable: React.FC<BusinessDirectoryEnhancedT
               window.dispatchEvent(new CustomEvent('pp-open-drill', { detail: 'directory_all' }))
             }
             className="dashboard-enhanced-table"
+            truncateCells
             emptyMessage={emptyMessage}
             pagination={false}
             hideTableSearch

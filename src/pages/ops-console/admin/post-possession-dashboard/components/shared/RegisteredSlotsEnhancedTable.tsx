@@ -59,7 +59,12 @@ export const RegisteredSlotsEnhancedTable: React.FC<RegisteredSlotsEnhancedTable
   rows,
   emptyMessage,
 }) => {
-  const tableRootRef = useEnhancedTableScrollViewport('registered-slots-scroll', rows);
+  const tableRootRef = useEnhancedTableScrollViewport(
+    'registered-slots-scroll',
+    rows,
+    undefined,
+    6
+  );
 
   useEffect(() => {
     const title = Array.from(document.querySelectorAll<HTMLElement>('.ct')).find((element) =>
@@ -80,6 +85,7 @@ export const RegisteredSlotsEnhancedTable: React.FC<RegisteredSlotsEnhancedTable
           window.dispatchEvent(new CustomEvent('pp-open-drill', { detail: 'parking_all' }))
         }
         className="dashboard-enhanced-table"
+        truncateCells
         emptyMessage={emptyMessage}
         pagination={false}
         hideTableSearch
