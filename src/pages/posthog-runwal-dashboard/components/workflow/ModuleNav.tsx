@@ -7,12 +7,14 @@ interface ModuleNavProps {
   selectedModule: string | null;
   selectedSubModule: string | null;
   onSelectModule: (moduleName: string | null) => void;
-  onSelectSubModule: (subModuleKey: string) => void;
+  /** null = the whole module. */
+  onSelectSubModule: (subModuleKey: string | null) => void;
   isLoading?: boolean;
   isSubModulesLoading?: boolean;
 }
 
-const VISIBLE_ITEMS = 8;
+// Every module and sub-module gets its own button: each row is one line that scrolls sideways (see .mnav-buckets).
+const VISIBLE_ITEMS = Infinity;
 
 // "main_home6" -> "Main Home 6" — display only; selections use raw keys/names.
 export const formatModuleName = (name: string) => {
@@ -65,6 +67,14 @@ export const ModuleNav: React.FC<ModuleNavProps> = ({
       style={{ marginBottom: '14px' }}
     >
       <div className="mnav-buckets">
+        <button
+          type="button"
+          className={selectedModule === null ? 'on' : ''}
+          onClick={() => onSelectModule(null)}
+          title="Every module side by side"
+        >
+          All Modules
+        </button>
         {shownModules.map((module) => (
           <button
             key={moduleValue(module)}
@@ -102,6 +112,13 @@ export const ModuleNav: React.FC<ModuleNavProps> = ({
               <span className="mnav-loading">Loading submodules…</span>
             ) : (
               <>
+                <button
+                  type="button"
+                  className={selectedSubModule === null ? 'on' : ''}
+                  onClick={() => onSelectSubModule(null)}
+                >
+                  All
+                </button>
                 {shownSubModules.map((subModule) => (
                   <button
                     key={moduleValue(subModule)}

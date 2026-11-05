@@ -64,6 +64,8 @@ export interface RangeFilters {
 export interface WeeklyFilters {
   to: string; // YYYY-MM-DD
   weeks: number;
+  /** Start of the selected range. Only growth reads it: its weeks follow the range. */
+  from?: string;
   siteIds?: string[];
   devices?: DeviceType[];
   url?: string;
@@ -119,7 +121,9 @@ async function get<T>(path: string, params: Record<string, string>): Promise<T> 
     // Append site_id with literal commas, not encoded
     qs += (qs ? '&' : '') + 'site_id=' + params.site_id;
   }
-  const res = await client.get<T>(`https://posthog-api.lockated.com/fm/adoption/${path}?${qs}`);
+  // Relative, so the client's baseURL applies: the /posthog-api proxy on localhost, the API host elsewhere.
+  // Lockated's own usage-analytics API (app_id 1, fixed on the server).
+  const res = await client.get<T>(`/commercial/lockated/adoption/${path}?${qs}`);
   return res.data;
 }
 
@@ -273,7 +277,8 @@ export interface GrowthResponse {
   info?: AdoptionInfo;
 }
 
-export const fetchGrowth = (f: WeeklyFilters) => get<GrowthResponse>('growth', weeklyParams(f));
+export const fetchGrowth = (f: WeeklyFilters) =>
+  get<GrowthResponse>('growth', { ...weeklyParams(f), ...(f.from ? { from: f.from } : {}) });
 
 /* ---------------------------------------------------- Layer 2 · retention */
 

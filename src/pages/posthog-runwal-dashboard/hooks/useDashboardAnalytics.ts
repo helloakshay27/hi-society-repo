@@ -69,6 +69,8 @@ export const CACHE_CONFIG = {
 };
 
 const commonKey = (f: DashboardFilters) => [
+  // Each dashboard's own API: without it, two dashboards with the same dates shared cached answers.
+  f.apiPath || '',
   f.url || '',
   f.from,
   f.to,
@@ -223,7 +225,8 @@ export function useRecentActiveUsers(filters: DashboardFilters, enabled: boolean
     enabled,
     ...CACHE_CONFIG,
     staleTime: 0,
-    refetchInterval: 30 * 1000,
+    // A live log of the newest events (not distinct users): refreshed every 15 s.
+    refetchInterval: 15 * 1000,
   });
 }
 

@@ -1,3 +1,4 @@
+import type { AdoptionApiPath } from './api';
 /**
  * Typed response contracts for PostHog Adoption Analytics & FM Matrix Dashboard APIs
  */
@@ -178,6 +179,8 @@ export interface ModuleNode {
   key?: string;
   name: string;
   users: number;
+  /** users who used it / users active in the period * 100 (adoption by module). */
+  share_pct?: number | null;
   events: number;
   sessions: number;
   sub_modules?: SubModuleNode[];
@@ -188,6 +191,8 @@ export interface ModulesResponse {
   tree: ModuleNode[];
   /** Live screens arranged under modules; empty unless the scope's app declares them (e.g. RE-CP01). */
   modules?: ModuleNode[];
+  /** Users active in the period: the denominator of share_pct. */
+  active_users?: number;
 }
 
 export interface FunnelStep {
@@ -232,6 +237,9 @@ export interface WorkflowUsageResponse {
   entry_screens: EntryScreenItem[];
   /** All modules of a catalogue app: each module's own funnel, which the KPIs roll up. */
   module_funnels?: ModuleFunnel[];
+  /** "workflows" when the funnel is the module's busiest declared workflow (named here). */
+  funnel_source?: 'workflows' | 'events' | 'modules' | 'none';
+  funnel_workflow?: { key: string; name: string } | null;
 }
 
 /** One row from `recent_active_users` — one event by an identified user. */
@@ -457,6 +465,9 @@ export interface DashboardFilters {
   projectCode?: string;
   deviceType?: string;
   includeAnonymous?: boolean;
+  // This dashboard's own adoption API (ADOPTION_API in ./api.ts), e.g. 'residential/runwal/cp'. The
+  // server fixes which app it reads, so appId / projectCode are no longer sent to it.
+  apiPath?: AdoptionApiPath;
 }
 
 export interface SiteLookupItem {

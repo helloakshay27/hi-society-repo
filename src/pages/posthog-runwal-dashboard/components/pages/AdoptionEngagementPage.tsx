@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ModuleAdoptionCard } from "../adoption/ModuleAdoptionCard";
 import { DashboardFilters } from "../../api/types";
 import { QuestionBox } from "../common/QuestionBox";
 import { KpiTile } from "../common/KpiTile";
@@ -598,6 +599,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
             </div>
           )}
         </Card> */}
+
+        <ModuleAdoptionCard filters={filters} enabled={sitesSettled} />
 
         <Card
           id="card-dormant"

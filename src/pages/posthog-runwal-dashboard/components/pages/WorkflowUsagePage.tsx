@@ -39,8 +39,9 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   const moduleHierarchy = moduleTreeData?.modules;
   const hasModuleHierarchy = !!moduleHierarchy?.length;
   const moduleList = hasModuleHierarchy ? moduleHierarchy : moduleTreeData?.tree || [];
-  const activeModule =
-    selectedModule ?? (moduleList[0] ? moduleList[0].key ?? moduleList[0].name : null);
+  // null = All Modules (the per-module overview). Defaulting to the first module and its first screen
+  // narrowed every first view to one screen, whose derived funnel is often empty.
+  const activeModule = selectedModule;
   const selectedNode = moduleList.find((module) => (module.key ?? module.name) === activeModule);
 
   const {
@@ -50,9 +51,8 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   const subModuleList = hasModuleHierarchy
     ? selectedNode?.sub_modules || []
     : subModuleTreeData?.tree || [];
-  const activeSubModule =
-    selectedSubModule ??
-    (subModuleList[0] ? subModuleList[0].key ?? subModuleList[0].name : null);
+  // null = the whole selected module.
+  const activeSubModule = selectedSubModule;
 
   const {
     data: wfData,
@@ -209,7 +209,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         id="card-wfFunnel"
         infoKey="chart.funnel"
         eyebrow="Workflow funnel (real event sequence)"
-        title={`${selectedSubModuleName ? formatModuleName(selectedSubModuleName) : selectedNode?.name ? formatModuleName(selectedNode.name) : activeModule ? formatModuleName(activeModule) : moduleFunnels.length > 0 ? 'All Modules' : 'All Workflows'} — completion funnel`}
+        title={`${selectedSubModuleName ? formatModuleName(selectedSubModuleName) : selectedNode?.name ? formatModuleName(selectedNode.name) : activeModule ? formatModuleName(activeModule) : moduleFunnels.length > 0 ? 'All Modules' : 'All Workflows'}${wfData?.funnel_workflow ? ` · ${wfData.funnel_workflow.name}` : ''} — completion funnel`}
         purpose="Shows step-by-step completion and drop-off for the selected workflow, using real instrumented usage event sequences."
         style={{ margin: '16px 0' }}
       >

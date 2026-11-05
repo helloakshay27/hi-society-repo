@@ -119,5 +119,5 @@ export const TOTAL_MODULES = MODULES_LIST.length;
 
 export const TREND_WEEKS = 8;
 export const GROWTH_WEEKS = 6;
-export const RETENTION_WEEKS = 6;
+export const RETENTION_WEEKS = 8;
 
