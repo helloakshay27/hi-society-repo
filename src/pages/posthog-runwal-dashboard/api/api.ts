@@ -76,6 +76,7 @@ export const ADOPTION_API = {
   lockated: 'commercial/lockated',
   smartsecure: 'commercial/smartsecure',
   quikgate: 'commercial/quikgate',
+  accounting: 'commercial/accounting',
 } as const;
 
 export type AdoptionApiPath = (typeof ADOPTION_API)[keyof typeof ADOPTION_API];
