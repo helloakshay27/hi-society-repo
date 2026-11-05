@@ -3,10 +3,16 @@ import { ModuleNode } from '../../api/types';
 
 interface ModuleNavProps {
   modules: ModuleNode[];
+  subModules: ModuleNode[];
   selectedModule: string | null;
+  selectedSubModule: string | null;
   onSelectModule: (moduleName: string | null) => void;
+  onSelectSubModule: (subModuleName: string) => void;
   isLoading?: boolean;
+  isSubModulesLoading?: boolean;
 }
+
+const VISIBLE_ITEMS = 8;
 
 // "main_home6" -> "Main Home 6" — display only; onSelectModule/selection
 // comparisons keep using the raw m.name.
@@ -21,9 +27,13 @@ export const formatModuleName = (name: string) => {
 
 export const ModuleNav: React.FC<ModuleNavProps> = ({
   modules,
+  subModules,
   selectedModule,
+  selectedSubModule,
   onSelectModule,
+  onSelectSubModule,
   isLoading,
+  isSubModulesLoading,
 }) => {
   if (isLoading) {
     return (
@@ -39,36 +49,92 @@ export const ModuleNav: React.FC<ModuleNavProps> = ({
     return null;
   }
 
+  const shownModules = modules.slice(0, VISIBLE_ITEMS);
+  const restModules = modules.slice(VISIBLE_ITEMS);
+  const selectedModuleIsHidden = !!selectedModule && !shownModules.some((module) => module.name === selectedModule);
+  const shownSubModules = subModules.slice(0, VISIBLE_ITEMS);
+  const restSubModules = subModules.slice(VISIBLE_ITEMS);
+  const selectedSubModuleIsHidden =
+    !!selectedSubModule && !shownSubModules.some((subModule) => subModule.name === selectedSubModule);
+
   return (
     <div
       className="mnav"
       id="modNav"
-      title="Choose a module to inspect its completion funnel and flows"
+      title="Choose a module and submodule to inspect its completion funnel and flows"
       style={{ marginBottom: '14px' }}
     >
-      <div className="mnav-mods">
-        <div className="segbar" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+      <div className="mnav-buckets">
+        {shownModules.map((module) => (
           <button
+            key={module.name}
             type="button"
-            className={selectedModule === null ? 'on' : ''}
-            onClick={() => onSelectModule(null)}
+            className={selectedModule === module.name ? 'on' : ''}
+            onClick={() => onSelectModule(module.name)}
+            title={`${module.users.toLocaleString()} users · ${module.sessions.toLocaleString()} sessions`}
           >
-            All Modules
+            {formatModuleName(module.name)}
           </button>
-          {modules.map((m) => (
-            <button
-              key={m.name}
-              type="button"
-              className={selectedModule === m.name ? 'on' : ''}
-              onClick={() => onSelectModule(m.name)}
-              title={`${m.users ? m.users.toLocaleString() + ' users' : ''}`}
-            >
-              {formatModuleName(m.name)}
-              {m.users > 0 && <span className="mcount" style={{ marginLeft: '4px' }}>{m.users}</span>}
-            </button>
-          ))}
-        </div>
+        ))}
+        {restModules.length > 0 && (
+          <select
+            className="mmore"
+            aria-label="More modules"
+            value={selectedModuleIsHidden ? selectedModule : ''}
+            onChange={(event) => {
+              if (event.target.value) onSelectModule(event.target.value);
+            }}
+          >
+            <option value="">More ({restModules.length})…</option>
+            {restModules.map((module) => (
+              <option key={module.name} value={module.name}>
+                {formatModuleName(module.name)}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
+
+      {selectedModule && (
+        <div className="mnav-mods">
+          <div className="segbar">
+            {isSubModulesLoading ? (
+              <span className="mnav-loading">Loading submodules…</span>
+            ) : (
+              <>
+                {shownSubModules.map((subModule) => (
+                  <button
+                    key={subModule.name}
+                    type="button"
+                    className={selectedSubModule === subModule.name ? 'on' : ''}
+                    onClick={() => onSelectSubModule(subModule.name)}
+                    title={`${subModule.users.toLocaleString()} users · ${subModule.events.toLocaleString()} events`}
+                  >
+                    {formatModuleName(subModule.name)}
+                  </button>
+                ))}
+                {restSubModules.length > 0 && (
+                  <select
+                    className="mmore"
+                    aria-label="More submodules"
+                    value={selectedSubModuleIsHidden ? selectedSubModule : ''}
+                    onChange={(event) => {
+                      if (event.target.value) onSelectSubModule(event.target.value);
+                    }}
+                  >
+                    <option value="">More ({restSubModules.length})…</option>
+                    {restSubModules.map((subModule) => (
+                      <option key={subModule.name} value={subModule.name}>
+                        {formatModuleName(subModule.name)}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DashboardFilters } from '../../api/types';
 import { KpiTile } from '../common/KpiTile';
 import { Card } from '../common/Card';
@@ -9,6 +9,7 @@ import { ErrorState } from '../common/DashboardStates';
 import { FunnelSkeleton, TableSkeleton } from '../common/Skeleton';
 import {
   useModuleTree,
+  useSubModuleTree,
   useWorkflowUsage,
 } from '../../hooks/useDashboardAnalytics';
 
@@ -29,11 +30,21 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
 }) => {
 
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [selectedSubModule, setSelectedSubModule] = useState<string | null>(null);
 
   const {
     data: moduleTreeData,
     isLoading: isModulesLoading,
   } = useModuleTree(filters, sitesSettled);
+  const moduleList = moduleTreeData?.tree || [];
+  const activeModule = selectedModule ?? moduleList[0]?.name ?? null;
+
+  const {
+    data: subModuleTreeData,
+    isLoading: isSubModulesLoading,
+  } = useSubModuleTree(filters, activeModule, sitesSettled);
+  const subModuleList = subModuleTreeData?.tree || [];
+  const activeSubModule = selectedSubModule ?? subModuleList[0]?.name ?? null;
 
   const {
     data: wfData,
@@ -41,17 +52,16 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
     isError: isWfError,
     error: wfError,
     refetch: refetchWf,
-  } = useWorkflowUsage(filters, selectedModule, null, sitesSettled);
-
-  // Refetch workflow usage when the selected module changes to ensure fresh data
-  useEffect(() => {
-    refetchWf();
-  }, [selectedModule]);
+  } = useWorkflowUsage(
+    filters,
+    activeModule,
+    activeSubModule,
+    sitesSettled && (!activeModule || !isSubModulesLoading)
+  );
 
   const isWfActiveLoading = isWfLoading || isRefreshing;
   const isModulesActiveLoading = isModulesLoading || isRefreshing;
 
-  const moduleList = moduleTreeData?.tree || [];
   const kpis = wfData?.kpis;
 
   // Adoption KPI
@@ -107,9 +117,16 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
 
       <ModuleNav
         modules={moduleList}
-        selectedModule={selectedModule}
-        onSelectModule={setSelectedModule}
+        subModules={subModuleList}
+        selectedModule={activeModule}
+        selectedSubModule={activeSubModule}
+        onSelectModule={(moduleName) => {
+          setSelectedModule(moduleName);
+          setSelectedSubModule(null);
+        }}
+        onSelectSubModule={setSelectedSubModule}
         isLoading={isModulesActiveLoading}
+        isSubModulesLoading={isSubModulesLoading}
       />
 
       {isWfError && (
