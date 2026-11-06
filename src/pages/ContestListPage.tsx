@@ -25,9 +25,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { TextField, InputAdornment } from "@mui/material";
 import { Switch } from "@/components/ui/switch";
-import { useDebounce } from "@/hooks/useDebounce";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
-import { startTransition, useRef } from "react";
 
 interface ContestRecord {
   id: number;
@@ -66,15 +64,8 @@ export const ContestListPage: React.FC = () => {
 
   const [contests, setContests] = useState<ContestRecord[]>([]);
   const [filteredContests, setFilteredContests] = useState<ContestRecord[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchInput, setSearchInput] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const isSearchingRef = useRef(false);
-
-  // Debounce the search input to avoid excessive API calls
-  const debouncedSearchQuery = useDebounce(searchInput, 800);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages] = useState(1);
@@ -87,17 +78,11 @@ export const ContestListPage: React.FC = () => {
   });
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  /* ---------------- API FETCH ---------------- */
+  /* ---------------- API FETCH (single call on first mount) ---------------- */
 
   const fetchContests = useCallback(async () => {
     try {
-      // Use different loading states based on whether it's a search operation
-      const isSearch = searchQuery.trim() !== "";
-      if (isSearch) {
-        setSearchLoading(true);
-      } else {
-        setLoading(true);
-      }
+      setLoading(true);
 
       const baseUrl = localStorage.getItem('baseUrl');
       const token = localStorage.getItem('token');
@@ -112,17 +97,9 @@ export const ContestListPage: React.FC = () => {
       // Ensure protocol is present
       const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
 
-      // Build URL with query parameters based on selected status and search query
+      // All data is loaded in one request; search/filter happen client-side via EnhancedTable.
       const queryParams = new URLSearchParams();
       queryParams.append('source', 'web');
-
-      // Add search query parameter if exists
-      if (searchQuery.trim()) {
-        queryParams.append(
-          'q[name_or_description_or_content_type_or_status_or_attemp_required_text_or_start_at_text_or_end_at_text_or_prizes_title_cont]',
-          searchQuery.trim()
-        );
-      }
 
       const apiUrl = `${url}/contests.json?${queryParams.toString()}`;
 
@@ -178,44 +155,19 @@ export const ContestListPage: React.FC = () => {
     } catch (error) {
       console.error("Error fetching contests", error);
     } finally {
-      // Clear loading states immediately
-      if (searchQuery.trim() !== "") {
-        setSearchLoading(false);
-      } else {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, [searchQuery]);
+  }, []);
 
-  // Initial load
+  // Initial load - single API call. Search is handled client-side by EnhancedTable.
   useEffect(() => {
     fetchContests();
-  }, []);
+  }, [fetchContests]);
 
-  /* ---------------- FILTER & SEARCH ---------------- */
-
-  // Handle search input change
-  const handleSearch = useCallback((query: string) => {
-    setSearchInput(query);
-  }, []);
-
-  // Effect to handle debounced search
-  useEffect(() => {
-    // Update search query when debounced input changes
-    const trimmedQuery = debouncedSearchQuery.trim();
-
-    if (searchQuery !== trimmedQuery) {
-      setSearchQuery(trimmedQuery);
-      setCurrentPage(1);
-      // Trigger fetch after state update
-      const timer = setTimeout(() => {
-        fetchContests();
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [debouncedSearchQuery]);
+  /* ---------------- FILTER (status card) ---------------- */
 
   // Card filter is applied client-side so the card counts always reflect the full list
+  // Text search is handled internally by EnhancedTable via enableSearch (frontend filter on `data`).
   useEffect(() => {
     setFilteredContests(
       selectedStatus ? contests.filter(c => c.status === selectedStatus) : contests
@@ -542,13 +494,11 @@ export const ContestListPage: React.FC = () => {
             ),
           })}
           enableSearch={true}
-          enableGlobalSearch={true}
-          onGlobalSearch={handleSearch}
           searchPlaceholder="Search contests..."
           enableSelection={false}
           enableExport={false}
-          loading={loading || searchLoading}
-          loadingMessage={searchLoading ? "Searching contests..." : "Loading contests..."}
+          loading={loading}
+          loadingMessage="Loading contests..."
           leftActions={
             <div className="flex items-center gap-2">
               {shouldShow("Contest", "create") && (
