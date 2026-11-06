@@ -109,18 +109,6 @@ const AggregatorInventorySection = () => {
             case "action":
                 return (
                     <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            checked={selectedProductIds.includes(item.id)}
-                            onChange={(e) => {
-                                if (e.target.checked) {
-                                    setSelectedProductIds([...selectedProductIds, item.id]);
-                                } else {
-                                    setSelectedProductIds(selectedProductIds.filter(id => id !== item.id));
-                                }
-                            }}
-                            className="w-4 h-4 cursor-pointer"
-                        />
                         {shouldShow("Aggregator Inventory", "show") && (
                         <Button
                             variant="ghost"
@@ -224,6 +212,25 @@ const AggregatorInventorySection = () => {
             default:
                 return <span className="text-sm">-</span>;
         }
+    };
+
+    // Row selection (EnhancedTable works with string ids; we keep numeric ids in state)
+    const handleSelectItem = (itemId: string, checked: boolean) => {
+        const numericId = Number(itemId);
+        setSelectedProductIds(prev =>
+            checked
+                ? prev.includes(numericId) ? prev : [...prev, numericId]
+                : prev.filter(id => id !== numericId)
+        );
+    };
+
+    const handleSelectAll = (checked: boolean) => {
+        const pageIds = inventoryData.map((p: any) => p.id);
+        setSelectedProductIds(prev =>
+            checked
+                ? Array.from(new Set([...prev, ...pageIds]))
+                : prev.filter(id => !pageIds.includes(id))
+        );
     };
 
     const handleGlobalSearch = (term: string) => {
@@ -549,6 +556,11 @@ const AggregatorInventorySection = () => {
                                 data={inventoryData}
                                 columns={columns}
                                 renderCell={renderCell}
+                                selectable={true}
+                                selectedItems={selectedProductIds.map(String)}
+                                onSelectItem={handleSelectItem}
+                                onSelectAll={handleSelectAll}
+                                getItemId={(item: any) => String(item.id)}
                                 enableExport={false}
                                 enableGlobalSearch={true}
                                 leftActions={
