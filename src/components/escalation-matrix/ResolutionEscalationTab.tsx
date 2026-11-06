@@ -2851,6 +2851,7 @@ export const ResolutionEscalationTab: React.FC = () => {
 
       {/* ──────────────── ESCALATION RULE FILTER DIALOG ──────────────── */}
       <Dialog
+        modal={false}
         open={isEscalationFilterDialogOpen}
         onOpenChange={setIsEscalationFilterDialogOpen}
       >
@@ -3075,6 +3076,7 @@ export const ResolutionEscalationTab: React.FC = () => {
 
       {/* ──────────────── EDIT ASSIGN RULE MODAL ──────────────── */}
       <Dialog
+        modal={false}
         open={isEditAssignRuleOpen}
         onOpenChange={(open) => {
           if (!open) setEditModalCategories([]);
@@ -3547,7 +3549,7 @@ export const ResolutionEscalationTab: React.FC = () => {
               <Button
                 type="submit"
                 disabled={updateLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="text-white"
               >
                 {updateLoading ? "Updating..." : "Update"}
               </Button>
