@@ -1,6 +1,7 @@
 import { Menu, ArrowLeft, Moon, Sun } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSmartSecureDashboard } from '../context/DashboardContext';
+import { UserProfileMenu } from '../../posthog-dashboard/components/UserProfileMenu';
 
 export function Header() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export function Header() {
         {state.theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
       </button>
       <span className="badge-sample">Wireframe · sample data</span>
-      <div className="avatar">{isQuikgate ? 'QG' : 'SS'}</div>
+      <UserProfileMenu />
     </header>
   );
 }
