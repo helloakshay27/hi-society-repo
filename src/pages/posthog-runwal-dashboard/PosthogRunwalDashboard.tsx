@@ -15,7 +15,13 @@ import {
   useTrafficSession,
   useUserAccountSiteId,
 } from "./hooks/useDashboardAnalytics";
-import { clearDashboardScope, getAppIdFromUrl, pinDashboardScope, runwalApiPath, stripScopeFromUrl } from "./api/api";
+import {
+  clearDashboardScope,
+  getAppIdFromUrl,
+  pinDashboardScope,
+  runwalApiPath,
+  stripScopeFromUrl,
+} from "./api/api";
 import { DashboardFilters } from "./api/types";
 import { getToken, getBaseUrlDomain } from "../../utils/auth";
 import "./styles/dashboard.css";
@@ -29,7 +35,11 @@ function dateRangeFor(days: number) {
   return { from: ymd(from), to: ymd(to) };
 }
 
-function PosthogRunwalDashboardContent({ fixedAppId }: { fixedAppId?: string }) {
+function PosthogRunwalDashboardContent({
+  fixedAppId,
+}: {
+  fixedAppId?: string;
+}) {
   const queryClient = useQueryClient();
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     try {
@@ -402,7 +412,7 @@ function PosthogRunwalDashboardContent({ fixedAppId }: { fixedAppId?: string }) 
       data-theme={theme}
     >
       <TopBar
-        title={orgName}
+        title="Runwal Group"
         theme={theme}
         onToggleTheme={handleToggleTheme}
         isNavCollapsed={isNavCollapsed}
@@ -427,10 +437,6 @@ function PosthogRunwalDashboardContent({ fixedAppId }: { fixedAppId?: string }) 
         <main className="main">
           <div className="page-head">
             <h2 id="pageTitle">{PAGE_TITLES[activePage]}</h2>
-            <p className="page-sub">
-              <span id="custName">{orgName} Analytics</span> ·{" "}
-              <span id="scopeLabel">{currentSiteName}</span>
-            </p>
           </div>
 
           <FilterBar
@@ -507,7 +513,9 @@ function PosthogRunwalDashboardContent({ fixedAppId }: { fixedAppId?: string }) 
 }
 
 /** fixedAppId: "12" = Runwal Connect, "35" = Runwal Enterprise; omitted = read from an old ?app_id= link. */
-export const PosthogRunwalDashboard: React.FC<{ fixedAppId?: string }> = ({ fixedAppId }) => {
+export const PosthogRunwalDashboard: React.FC<{ fixedAppId?: string }> = ({
+  fixedAppId,
+}) => {
   return (
     <DashboardProvider>
       <PosthogRunwalDashboardContent fixedAppId={fixedAppId} />
