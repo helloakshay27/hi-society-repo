@@ -527,6 +527,7 @@ const OrdersList = () => {
               options={statusOptions.filter((opt) => opt.value !== "")}
               defaultValue={item.status}
               onChange={(value) => handleStatusChange(item.id, value)}
+              menuPortalTarget={typeof document !== "undefined" ? document.body : undefined}
             />
             {updatingStatus === item.id && (
               <div className="mt-1 text-xs text-gray-500">Updating...</div>
