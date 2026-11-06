@@ -42,6 +42,9 @@ const DrillEmpty = () => <div className="py-3 text-[11px] text-[var(--loyalty-su
 
 const TABLE_PAGE_SIZE = 10;
 
+const getPageRows = <T,>(rows: T[], page: number) =>
+  rows.slice((page - 1) * TABLE_PAGE_SIZE, page * TABLE_PAGE_SIZE);
+
 const TablePagination = ({
   page,
   pageSize,
@@ -102,8 +105,12 @@ export function LoyaltyDashboard() {
   const [ruleCategoryFilter, setRuleCategoryFilter] = useState('All Categories');
   const [ruleStatusFilter, setRuleStatusFilter] = useState('All Statuses');
   const [ledgerSearch, setLedgerSearch] = useState('');
+  const [rulesPage, setRulesPage] = useState(1);
+  const [membersPage, setMembersPage] = useState(1);
   const [redemptionPage, setRedemptionPage] = useState(1);
+  const [ledgerPage, setLedgerPage] = useState(1);
   const [ordersPage, setOrdersPage] = useState(1);
+  const [storeFixPage, setStoreFixPage] = useState(1);
   const filterRef = useRef<HTMLDivElement>(null);
 
   const dateParams = getDateRange(dateFilter, customRange);
@@ -173,14 +180,61 @@ export function LoyaltyDashboard() {
   const dailyFiresData = dailyFiresQuery.data;
   const pendingEncashments = redemptionData?.pending_encashments_list || [];
   const stuckOrdersList = ordersData?.stuck_orders_list || [];
+  const memberRows = Array.isArray(membersData?.members) ? membersData.members : [];
+  const ledgerRows = (walletData?.transaction_ledger || []).filter(
+    (row: any) =>
+      !ledgerSearch.trim() ||
+      String(row.member || '').toLowerCase().includes(ledgerSearch.trim().toLowerCase())
+  );
+  const storeFixRows = Array.isArray(storeData?.how_to_fix) ? storeData.how_to_fix : [];
+  const rawRules = Array.isArray(activeRulesData?.rules) ? activeRulesData.rules : [];
+  const filteredRules = rawRules.filter((rule: any) => {
+    const name = String(rule.rule_name || '').toLowerCase();
+    const cat = String(rule.category || '').toLowerCase();
+    const id = String(rule.n8n_rule_id || '').toLowerCase();
+    const q = ruleSearch.toLowerCase().trim();
+    if (q && !name.includes(q) && !cat.includes(q) && !id.includes(q)) return false;
+
+    if (ruleCategoryFilter !== 'All Categories') {
+      const selectedCat = ruleCategoryFilter.toLowerCase();
+      if (!cat.includes(selectedCat.replace(/s$/, '')) && !selectedCat.includes(cat)) return false;
+    }
+
+    if (ruleStatusFilter !== 'All Statuses') {
+      const status = String(rule.status || 'active').toLowerCase();
+      if (status !== ruleStatusFilter.toLowerCase()) return false;
+    }
+
+    return true;
+  });
+  const rulesPageRows = getPageRows(filteredRules, rulesPage);
+  const memberPageRows = getPageRows(memberRows, membersPage);
+  const ledgerPageRows = getPageRows(ledgerRows, ledgerPage);
+  const storeFixPageRows = getPageRows(storeFixRows, storeFixPage);
+
+  useEffect(() => {
+    setRulesPage((page) => Math.min(page, Math.max(1, Math.ceil(filteredRules.length / TABLE_PAGE_SIZE))));
+  }, [filteredRules.length]);
+
+  useEffect(() => {
+    setMembersPage((page) => Math.min(page, Math.max(1, Math.ceil(memberRows.length / TABLE_PAGE_SIZE))));
+  }, [memberRows.length]);
 
   useEffect(() => {
     setRedemptionPage((page) => Math.min(page, Math.max(1, Math.ceil(pendingEncashments.length / TABLE_PAGE_SIZE))));
   }, [pendingEncashments.length]);
 
   useEffect(() => {
+    setLedgerPage((page) => Math.min(page, Math.max(1, Math.ceil(ledgerRows.length / TABLE_PAGE_SIZE))));
+  }, [ledgerRows.length]);
+
+  useEffect(() => {
     setOrdersPage((page) => Math.min(page, Math.max(1, Math.ceil(stuckOrdersList.length / TABLE_PAGE_SIZE))));
   }, [stuckOrdersList.length]);
+
+  useEffect(() => {
+    setStoreFixPage((page) => Math.min(page, Math.max(1, Math.ceil(storeFixRows.length / TABLE_PAGE_SIZE))));
+  }, [storeFixRows.length]);
 
   /* queries backing the tab currently on screen — drives the loading / error banner */
   const tabQueries: Record<string, any[]> = {
@@ -542,27 +596,6 @@ export function LoyaltyDashboard() {
           def: 'line'
         } : undefined;
 
-        const rawRules = Array.isArray(activeRulesData?.rules) ? activeRulesData.rules : [];
-        const filteredRules = rawRules.filter((rule: any) => {
-          const name = String(rule.rule_name || '').toLowerCase();
-          const cat = String(rule.category || '').toLowerCase();
-          const id = String(rule.n8n_rule_id || '').toLowerCase();
-          const q = ruleSearch.toLowerCase().trim();
-          if (q && !name.includes(q) && !cat.includes(q) && !id.includes(q)) return false;
-
-          if (ruleCategoryFilter !== 'All Categories') {
-            const selectedCat = ruleCategoryFilter.toLowerCase();
-            if (!cat.includes(selectedCat.replace(/s$/, '')) && !selectedCat.includes(cat)) return false;
-          }
-
-          if (ruleStatusFilter !== 'All Statuses') {
-            const status = String(rule.status || 'active').toLowerCase();
-            if (status !== ruleStatusFilter.toLowerCase()) return false;
-          }
-
-          return true;
-        });
-
         return (
           <>
             {/* Top Control Bar */}
@@ -570,7 +603,10 @@ export function LoyaltyDashboard() {
               <div className="relative">
                 <select
                   value={ruleCategoryFilter}
-                  onChange={(e) => setRuleCategoryFilter(e.target.value)}
+                  onChange={(e) => {
+                    setRuleCategoryFilter(e.target.value);
+                    setRulesPage(1);
+                  }}
                   className="appearance-none bg-white border border-[var(--loyalty-divider)] rounded-full px-4 py-2 pr-8 text-[11px] font-semibold text-[var(--loyalty-text)] focus:outline-none focus:border-[var(--loyalty-accent)] cursor-pointer min-w-[140px]"
                 >
                   <option>All Categories</option>
@@ -587,7 +623,10 @@ export function LoyaltyDashboard() {
               <div className="relative">
                 <select
                   value={ruleStatusFilter}
-                  onChange={(e) => setRuleStatusFilter(e.target.value)}
+                  onChange={(e) => {
+                    setRuleStatusFilter(e.target.value);
+                    setRulesPage(1);
+                  }}
                   className="appearance-none bg-white border border-[var(--loyalty-divider)] rounded-full px-4 py-2 pr-8 text-[11px] font-semibold text-[var(--loyalty-text)] focus:outline-none focus:border-[var(--loyalty-accent)] cursor-pointer min-w-[120px]"
                 >
                   <option>All Statuses</option>
@@ -604,7 +643,10 @@ export function LoyaltyDashboard() {
                   type="text"
                   placeholder="Search rules..."
                   value={ruleSearch}
-                  onChange={(e) => setRuleSearch(e.target.value)}
+                  onChange={(e) => {
+                    setRuleSearch(e.target.value);
+                    setRulesPage(1);
+                  }}
                   className="w-full bg-white border border-[var(--loyalty-divider)] rounded-full pl-9 pr-4 py-2 text-[11px] font-medium text-[var(--loyalty-text)] focus:outline-none focus:border-[var(--loyalty-accent)] placeholder:text-[var(--loyalty-subtle)]"
                 />
               </div>
@@ -651,7 +693,8 @@ export function LoyaltyDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredRules.map((rule: any, i: number) => {
+                    {rulesPageRows.map((rule: any, i: number) => {
+                      const ruleIndex = (rulesPage - 1) * TABLE_PAGE_SIZE + i;
                       let catBg = 'bg-[var(--loyalty-warning-bg-soft)]';
                       let catText = 'text-[var(--loyalty-accent)]';
                       if (rule.category === 'Engagement') {
@@ -663,7 +706,7 @@ export function LoyaltyDashboard() {
                       }
 
                       return (
-                      <tr key={rule.n8n_rule_id || i} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer border-b border-[var(--loyalty-divider)] last:border-0">
+                      <tr key={rule.n8n_rule_id || ruleIndex} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer border-b border-[var(--loyalty-divider)] last:border-0">
                         <td className="p-[12px_8px] font-semibold text-[var(--loyalty-text)]">{rule.rule_name || '-'}</td>
                         <td className="p-[12px_8px]">
                           {rule.category ? (
@@ -693,6 +736,12 @@ export function LoyaltyDashboard() {
                   </tbody>
                 </table>
               </div>
+              <TablePagination
+                page={rulesPage}
+                pageSize={TABLE_PAGE_SIZE}
+                totalItems={filteredRules.length}
+                onPageChange={setRulesPage}
+              />
             </div>
 
             {/* Charts Section */}
@@ -795,8 +844,8 @@ export function LoyaltyDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {membersData?.members?.map((member: any, i: number) => (
-                      <tr key={i} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer border-b border-[var(--loyalty-divider)] last:border-0">
+                    {memberPageRows.map((member: any, i: number) => (
+                      <tr key={member.id ?? member.member_id ?? `${member.name ?? 'member'}-${(membersPage - 1) * TABLE_PAGE_SIZE + i}`} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer border-b border-[var(--loyalty-divider)] last:border-0">
                         <td className="p-[12px_8px] font-semibold text-[var(--loyalty-text)]">{member.name}</td>
                         <td className="p-[12px_8px] text-[var(--loyalty-text)]">{member.society}</td>
                         <td className="p-[12px_8px]">
@@ -818,7 +867,7 @@ export function LoyaltyDashboard() {
                         </td>
                       </tr>
                     ))}
-                    {(!membersData?.members || membersData.members.length === 0) && (
+                    {memberRows.length === 0 && (
                       <tr>
                         <td colSpan={9} className="p-[20px] text-center text-[var(--loyalty-subtle)]">No members found.</td>
                       </tr>
@@ -826,6 +875,12 @@ export function LoyaltyDashboard() {
                   </tbody>
                 </table>
               </div>
+              <TablePagination
+                page={membersPage}
+                pageSize={TABLE_PAGE_SIZE}
+                totalItems={memberRows.length}
+                onPageChange={setMembersPage}
+              />
             </div>
           </>
         );
@@ -1038,8 +1093,6 @@ export function LoyaltyDashboard() {
         const mtdCost = currentMonthData.issued * 1;
         const mtdOutflow = currentMonthData.redeemed * 1;
 
-        const ledgerRows = (walletData?.transaction_ledger || []).filter((row: any) => !ledgerSearch.trim() || String(row.member || '').toLowerCase().includes(ledgerSearch.trim().toLowerCase()));
-
         const handleExportLedger = () => {
           const exportUrl = `${getLoyaltyBaseUrl()}${ENDPOINTS.LOYALTY_DASHBOARD_WALLET}?export=xlsx&token=${encodeURIComponent(API_CONFIG.TOKEN || '')}`;
           window.open(exportUrl, '_blank');
@@ -1136,7 +1189,7 @@ export function LoyaltyDashboard() {
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 text-[var(--loyalty-subtle)] absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input type="text" placeholder="Search member..." value={ledgerSearch} onChange={(e) => setLedgerSearch(e.target.value)} className="pl-9 pr-3 py-1.5 border border-[var(--loyalty-divider)] rounded-full text-[11px] w-[200px] focus:outline-none focus:border-[var(--loyalty-accent)] text-[var(--loyalty-text)] placeholder:text-[var(--loyalty-subtle)]" />
+                    <input type="text" placeholder="Search member..." value={ledgerSearch} onChange={(e) => { setLedgerSearch(e.target.value); setLedgerPage(1); }} className="pl-9 pr-3 py-1.5 border border-[var(--loyalty-divider)] rounded-full text-[11px] w-[200px] focus:outline-none focus:border-[var(--loyalty-accent)] text-[var(--loyalty-text)] placeholder:text-[var(--loyalty-subtle)]" />
                   </div>
                   <button onClick={handleExportLedger} className="flex items-center gap-1.5 px-3 py-1.5 border border-[var(--loyalty-divider)] rounded-full text-[11px] font-semibold text-[var(--loyalty-text)] hover:bg-[var(--loyalty-bg)] transition-colors cursor-pointer">
                     <Download className="w-3.5 h-3.5" /> Export
@@ -1158,7 +1211,7 @@ export function LoyaltyDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ledgerRows.map((row: any, i: number) => {
+                    {ledgerPageRows.map((row: any, i: number) => {
                       const isCredit = row.direction === 'credit';
                       return (
                         <tr key={i} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors cursor-pointer border-b border-[var(--loyalty-divider)] last:border-0">
@@ -1182,6 +1235,12 @@ export function LoyaltyDashboard() {
                   </tbody>
                 </table>
               </div>
+              <TablePagination
+                page={ledgerPage}
+                pageSize={TABLE_PAGE_SIZE}
+                totalItems={ledgerRows.length}
+                onPageChange={setLedgerPage}
+              />
             </div>
 
             {/* Graph */}
@@ -1465,14 +1524,14 @@ export function LoyaltyDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {storeData?.how_to_fix?.map((row: any, i: number) => (
+                    {storeFixPageRows.map((row: any, i: number) => (
                       <tr key={i} className="hover:bg-[var(--loyalty-bg)]/50 transition-colors">
                         <td className="p-[8px] border-b border-[var(--loyalty-divider)] font-semibold text-[var(--loyalty-accent)]">Step {row.step}</td>
                         <td className="p-[8px] border-b border-[var(--loyalty-divider)] text-[var(--loyalty-text)]">{row.action}</td>
                         <td className="p-[8px] border-b border-[var(--loyalty-divider)] text-[var(--loyalty-green)] font-medium">{row.owner}</td>
                       </tr>
                     ))}
-                    {(!storeData?.how_to_fix || storeData.how_to_fix.length === 0) && (
+                    {storeFixRows.length === 0 && (
                       <tr>
                         <td colSpan={3} className="p-[20px] text-center text-[var(--loyalty-subtle)]">No recommendations available.</td>
                       </tr>
@@ -1480,6 +1539,12 @@ export function LoyaltyDashboard() {
                   </tbody>
                 </table>
               </div>
+              <TablePagination
+                page={storeFixPage}
+                pageSize={TABLE_PAGE_SIZE}
+                totalItems={storeFixRows.length}
+                onPageChange={setStoreFixPage}
+              />
             </div>
 
           </div>
