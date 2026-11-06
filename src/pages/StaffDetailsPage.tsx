@@ -904,7 +904,7 @@ export const StaffDetailsPage = () => {
             <Button
               onClick={handleAddFlat}
               disabled={savingFlat || !selectedFlat}
-              className="bg-[#C72030] hover:bg-[#A01828] !text-white"
+             className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
             >
               {savingFlat ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving...</> : 'Submit'}
             </Button>

@@ -96,7 +96,7 @@ const SmartSecureVisitorReport: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* From Date */}
               <TextField
-                label="From Date"
+                label="Visitor In From Date"
                 type="date"
                 value={toInputValue(fromDate)}
                 onChange={(e) => setFromDate(fromInputValue(e.target.value))}
@@ -108,7 +108,7 @@ const SmartSecureVisitorReport: React.FC = () => {
 
               {/* To Date */}
               <TextField
-                label="To Date"
+                label="Visitor In To Date"
                 type="date"
                 value={toInputValue(toDate)}
                 onChange={(e) => setToDate(fromInputValue(e.target.value))}
