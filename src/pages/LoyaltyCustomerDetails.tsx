@@ -42,6 +42,7 @@ const LoyaltyCustomerDetails = () => {
     const [creditAmount, setCreditAmount] = useState("");
     const [creditRemarks, setCreditRemarks] = useState("");
     const [creditPaymentMode, setCreditPaymentMode] = useState("cash");
+    const [creditExternalTxnId, setCreditExternalTxnId] = useState("");
     const [creditLoading, setCreditLoading] = useState(false);
     const [exportLoading, setExportLoading] = useState(false);
 
@@ -228,6 +229,7 @@ const LoyaltyCustomerDetails = () => {
                     amount: parseFloat(creditAmount),
                     remarks: creditRemarks.trim(),
                     payment_mode: creditPaymentMode,
+                    external_transaction_id: creditExternalTxnId.trim(),
                     topup_by: "admin",
                 }),
             });
@@ -240,6 +242,7 @@ const LoyaltyCustomerDetails = () => {
                 setCreditAmount("");
                 setCreditRemarks("");
                 setCreditPaymentMode("cash");
+                setCreditExternalTxnId("");
                 // Refresh customer data
                 window.location.reload();
             } else {
@@ -932,6 +935,18 @@ const LoyaltyCustomerDetails = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
+                                External Transaction ID
+                            </label>
+                            <input
+                                type="text"
+                                value={creditExternalTxnId}
+                                onChange={(e) => setCreditExternalTxnId(e.target.value)}
+                                placeholder="Enter external transaction ID"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00A651] focus:border-transparent"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Remarks <span className="text-red-500">*</span>
                             </label>
                             <textarea
@@ -951,6 +966,7 @@ const LoyaltyCustomerDetails = () => {
                                 setCreditAmount("");
                                 setCreditRemarks("");
                                 setCreditPaymentMode("cash");
+                                setCreditExternalTxnId("");
                             }}
                             disabled={creditLoading}
                         >

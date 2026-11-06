@@ -29,7 +29,7 @@ interface Transaction {
   customer_code: string | null;
   resource_id: number | null;
   resource_type: string | null;
-  redirect_ur: string | null;
+  redirect_url: string | null;
 }
 
 // Define wallet data type
@@ -126,7 +126,20 @@ const RedemptionReport = () => {
       case "customer_code":
         return item.customer_code || "-";
       case "resource_type":
-        return <a className="text-blue-600 underline" target="_blank" href={item.redirect_ur}>{item.resource_type}</a>;
+        if (!item.redirect_url) {
+          return <span>{item.resource_type || "-"}</span>;
+        }
+        return (
+          <a
+            className="text-blue-600 underline cursor-pointer"
+            target="_blank"
+            rel="noopener noreferrer"
+            href={item.redirect_url}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {item.resource_type || "View"}
+          </a>
+        );
       default:
         return <span>{item[columnKey as keyof Transaction] || "-"}</span>;
     }

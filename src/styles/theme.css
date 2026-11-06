@@ -1248,6 +1248,25 @@ button[data-state="checked"][class*="data-[state=checked]:bg-[#C72030]"]
   stroke: white !important;
 }
 
+/* Partially selected select-all checkbox: filled box with a white dash (not a tick)
+   so it's visually distinct from "all selected" */
+button[role="checkbox"][data-state="indeterminate"] {
+  position: relative;
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+button[role="checkbox"][data-state="indeterminate"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 2px;
+  background-color: #ffffff;
+  border-radius: 1px;
+  transform: translate(-50%, -50%);
+}
+
 /* Checkbox hover states with #C72030 */
 [class*="hover:border-[#C72030]"]:hover,
 .hover\:border-\[\#C72030\]:hover {

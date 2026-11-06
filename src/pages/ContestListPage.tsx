@@ -42,11 +42,22 @@ interface ContestRecord {
 }
 
 const statusCards = [
-  { title: "Total Contest", icon: Trophy, status: null, queryParam: null },
-  { title: "Active", icon: Circle, status: "Active", queryParam: "q[active_cont]=true" },
-  { title: "Inactive", icon: Ban, status: "Inactive", queryParam: "q[active_cont]=false" },
-  { title: "Expired", icon: AlertCircle, status: "Expired", queryParam: "q[status_cont]=expired" },
+  { title: "Total Contest", icon: Trophy, status: null },
+  { title: "Active", icon: Circle, status: "Active" },
+  { title: "Inactive", icon: Ban, status: "Inactive" },
+  { title: "Expired", icon: AlertCircle, status: "Expired" },
 ];
+
+// API "status" is a lifecycle value (e.g. "running", "expired"); the cards need
+// Active / Inactive / Expired derived from it + the "active" flag + end date.
+const EXPIRED_API_STATUSES = ["expired", "ended", "completed", "closed"];
+const deriveContestStatus = (item: any): "Active" | "Inactive" | "Expired" => {
+  const apiStatus = String(item.status ?? "").toLowerCase();
+  const end = item.end_at ? new Date(item.end_at) : null;
+  const isPastEnd = !!end && !isNaN(end.getTime()) && end.getTime() < Date.now();
+  if (EXPIRED_API_STATUSES.includes(apiStatus) || isPastEnd) return "Expired";
+  return item.active ? "Active" : "Inactive";
+};
 
 export const ContestListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -112,15 +123,6 @@ export const ContestListPage: React.FC = () => {
         );
       }
 
-      // Add status filter if selected
-      if (selectedStatus) {
-        const card = statusCards.find(c => c.status === selectedStatus);
-        if (card?.queryParam) {
-          const [key, value] = card.queryParam.split('=');
-          queryParams.append(key, value);
-        }
-      }
-
       const apiUrl = `${url}/contests.json?${queryParams.toString()}`;
 
       const response = await fetch(
@@ -146,8 +148,6 @@ export const ContestListPage: React.FC = () => {
 
       if (!contestArray.length) {
         setContests([]);
-        setFilteredContests([]);
-        setStatusCounts({ total: 0, active: 0, inactive: 0, expired: 0 });
         return;
       }
 
@@ -167,21 +167,13 @@ export const ContestListPage: React.FC = () => {
                 ? "Scratch Card"
                 : "Card Flip",
           attempt: item.attemp_required ?? 1,
-          status: item.status ?? "Inactive",
+          status: deriveContestStatus(item),
           isActive: item.active ?? false,
           contentStatus: item.status ?? "-",
         };
       });
 
       setContests(formatted);
-      setFilteredContests(formatted);
-
-      setStatusCounts({
-        total: formatted.length,
-        active: formatted.filter(c => c.status === "Active").length,
-        inactive: formatted.filter(c => c.status === "Inactive").length,
-        expired: formatted.filter(c => c.status === "Expired").length,
-      });
     } catch (error) {
       console.error("Error fetching contests", error);
     } finally {
@@ -192,7 +184,7 @@ export const ContestListPage: React.FC = () => {
         setLoading(false);
       }
     }
-  }, [searchQuery, selectedStatus]);
+  }, [searchQuery]);
 
   // Initial load
   useEffect(() => {
@@ -222,15 +214,20 @@ export const ContestListPage: React.FC = () => {
     }
   }, [debouncedSearchQuery]);
 
-  // Effect to handle status filter changes
+  // Card filter is applied client-side so the card counts always reflect the full list
   useEffect(() => {
-    fetchContests();
-  }, [selectedStatus]);
+    setFilteredContests(
+      selectedStatus ? contests.filter(c => c.status === selectedStatus) : contests
+    );
+  }, [contests, selectedStatus]);
 
   useEffect(() => {
-    // Backend handles both search and status filtering
-    // No client-side filtering needed
-    setFilteredContests(contests);
+    setStatusCounts({
+      total: contests.length,
+      active: contests.filter(c => c.status === "Active").length,
+      inactive: contests.filter(c => c.status === "Inactive").length,
+      expired: contests.filter(c => c.status === "Expired").length,
+    });
   }, [contests]);
 
   /* ---------------- HELPERS ---------------- */
@@ -283,22 +280,18 @@ export const ContestListPage: React.FC = () => {
           return {
             ...contest,
             isActive: newActiveState,
-            status: newActiveState ? "Active" : "Inactive",
-          };
+            status:
+              contest.status === "Expired"
+                ? "Expired"
+                : newActiveState
+                  ? "Active"
+                  : "Inactive",
+          } as ContestRecord;
         }
         return contest;
       });
 
       setContests(updatedContests);
-
-      // Update status counts
-      const activeCounts = updatedContests.filter(c => c.status === "Active").length;
-      const inactiveCounts = updatedContests.filter(c => c.status === "Inactive").length;
-      setStatusCounts(prev => ({
-        ...prev,
-        active: activeCounts,
-        inactive: inactiveCounts,
-      }));
 
       console.log(`Contest ${contestId} toggled to ${newActiveState ? "Active" : "Inactive"}`);
     } catch (error) {
@@ -440,7 +433,9 @@ export const ContestListPage: React.FC = () => {
                   selectedStatus === card.status ? null : card.status
                 )
               }
-              className="bg-[#F6F4EE] p-6 rounded-lg cursor-pointer shadow hover:shadow-md flex gap-4"
+              className={`bg-[#F6F4EE] p-6 rounded-lg cursor-pointer shadow hover:shadow-md flex gap-4 border-2 transition-colors ${
+                selectedStatus === card.status ? "border-[#C72030]" : "border-transparent"
+              }`}
             >
               <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
                 <Icon className="w-6 h-6 text-[#C72030]" />
@@ -526,7 +521,7 @@ export const ContestListPage: React.FC = () => {
             attempt: String(contest.attempt).padStart(2, "0"),
             contestStatus: (
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                {contest.status}
+                {contest.contentStatus}
               </span>
             ),
             status: (
