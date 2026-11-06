@@ -401,11 +401,6 @@ function PosthogRunwalDashboardContent({
     pgFlows: "Workflow Usage",
   };
 
-  const currentSiteName = accountSiteId
-    ? sites.find((s) => String(s.id) === accountSiteId)?.name ||
-      `Site ${accountSiteId}`
-    : "All Live Sites / Projects";
-
   return (
     <div
       className={`posthog-dashboard-root ${isNavCollapsed ? "nav-collapsed" : ""}`}
@@ -421,7 +416,6 @@ function PosthogRunwalDashboardContent({
         userRole={userRole}
         userEmail={userEmail}
         orgName={orgName}
-        siteName={currentSiteName}
         isFetching={isTrafficFetching}
       />
 
