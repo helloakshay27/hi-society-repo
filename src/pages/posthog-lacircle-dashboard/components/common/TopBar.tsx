@@ -1,4 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { clearAuth } from '../../../../utils/auth';
 
 interface TopBarProps {
   theme: 'light' | 'dark';
@@ -29,6 +32,15 @@ export const TopBar: React.FC<TopBarProps> = ({
 }) => {
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const handleLogout = () => {
+    setShowProfile(false);
+    queryClient.clear();
+    clearAuth();
+    navigate('/login', { replace: true });
+  };
 
   // Close profile popup when clicking outside
   useEffect(() => {
@@ -316,6 +328,47 @@ export const TopBar: React.FC<TopBarProps> = ({
               <span>Organization</span>
               <span style={{ fontWeight: 600, color: 'var(--ink, #141413)' }}>{orgName}</span>
             </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              style={{
+                marginTop: '12px',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '7px 10px',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: 'var(--neg, #c0392b)',
+                background: 'transparent',
+                border: '1px solid var(--border, #e6e4de)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'background 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2, #f5f4f1)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              <svg
+                viewBox="0 0 20 20"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M8 17H4.5A1.5 1.5 0 0 1 3 15.5v-11A1.5 1.5 0 0 1 4.5 3H8" />
+                <path d="M13 14l4-4-4-4" />
+                <path d="M17 10H8" />
+              </svg>
+              Logout
+            </button>
           </div>
         )}
       </div>
