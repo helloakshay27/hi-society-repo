@@ -36,6 +36,39 @@ import {
 } from "@mui/material";
 import { X } from "lucide-react";
 
+type StatusTone = "success" | "pending" | "failed" | "neutral";
+
+// Case-insensitive mapping — the API sends values like "SUCCESS", "Success", "pending", "FAILED"
+const getStatusTone = (status?: string | null): StatusTone => {
+  const s = String(status ?? "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (["success", "successful", "paid", "completed", "complete", "captured", "approved", "accepted"].includes(s)) {
+    return "success";
+  }
+  if (["pending", "initiated", "processing", "in_progress", "partially_paid", "partial", "awaiting", "na", ""].includes(s)) {
+    return "pending";
+  }
+  if (["failed", "failure", "rejected", "declined", "cancelled", "canceled", "error", "expired", "refused", "aborted"].includes(s)) {
+    return "failed";
+  }
+  return "neutral"; // e.g. refunded / unknown values
+};
+
+// Solid badge (Payment Details section) — same colours as the booking Status badge
+const STATUS_BADGE_SOLID: Record<StatusTone, string> = {
+  success: "bg-[#16B364] text-white hover:bg-[#16B364]",
+  pending: "bg-[#F7941D] text-white hover:bg-[#F7941D]",
+  failed: "bg-[#D92E14] text-white hover:bg-[#D92E14]",
+  neutral: "bg-gray-400 text-white hover:bg-gray-400",
+};
+
+// Soft badge (payment card)
+const STATUS_BADGE_SOFT: Record<StatusTone, string> = {
+  success: "bg-green-100 text-green-800 border-green-200 hover:bg-green-100",
+  pending: "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100",
+  failed: "bg-red-100 text-red-800 border-red-200 hover:bg-red-100",
+  neutral: "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100",
+};
+
 const BookingDetailsPage = () => {
   const { id } = useParams();
   const dispatch = useAppDispatch();
@@ -585,11 +618,7 @@ const BookingDetailsPage = () => {
                   <Badge
                     className={cn(
                       "px-2 py-0.5 text-[11px] font-semibold rounded",
-                      bookings?.pg_state === "Success"
-                        ? "bg-[#16B364] text-white hover:bg-[#16B364]"
-                        : bookings?.pg_state === "Failed"
-                          ? "bg-[#D92E14] text-white hover:bg-[#D92E14]"
-                          : "bg-[#F7941D] text-white hover:bg-[#F7941D]"
+                      STATUS_BADGE_SOLID[getStatusTone(bookings?.pg_state)]
                     )}
                   >
                     {bookings?.pg_state || "Pending"}
@@ -760,11 +789,7 @@ const BookingDetailsPage = () => {
                     <Badge
                       className={cn(
                         "px-3 py-1 text-xs font-semibold rounded-full border capitalize",
-                        bookings.lock_payment.payment_status?.toLowerCase() === 'success'
-                          ? 'bg-green-100 text-green-800 border-green-200'
-                          : bookings.lock_payment.payment_status?.toLowerCase() === 'pending'
-                            ? 'bg-orange-100 text-orange-800 border-orange-200'
-                            : 'bg-red-100 text-red-800 border-red-200'
+                        STATUS_BADGE_SOFT[getStatusTone(bookings.lock_payment.payment_status)]
                       )}
                     >
                       {bookings.lock_payment.payment_status || 'Pending'}
