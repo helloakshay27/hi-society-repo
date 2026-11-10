@@ -14,8 +14,8 @@ import {
   Clock,
   UserX,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { CMSClubMembersFilterModal } from "@/components/CMSClubMembersFilterModal";
 import { StatsCard } from "@/components/StatsCard";
@@ -29,8 +29,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-
-const PAGE_SIZE = 10;
 
 const columns: ColumnConfig[] = [
   {
@@ -125,8 +123,19 @@ const CMSClubMembers = () => {
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  // The URL (?page=N) is the source of truth for the current page, so refresh/back/shared links keep it
+  const parsedPage = parseInt(searchParams.get("page") || "1", 10);
+  const currentPage = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+
   const [members, setMembers] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    total_count: 0,
+    per_page: 20,
+    current_page: 1,
+    total_pages: 1,
+  });
+  const requestIdRef = useRef(0);
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -176,156 +185,119 @@ const CMSClubMembers = () => {
     return params;
   };
 
-  const fetchMembers = async (filters: MemberFilters = appliedFilters) => {
+  const fetchMembers = async (page: number, filters: MemberFilters) => {
+    // Ignore responses from older requests when the user changes page/filters quickly
+    const requestId = ++requestIdRef.current;
     try {
       setIsLoading(true);
-      const queryString = buildFilterParams(filters).toString();
-      const url = `https://${baseUrl}/club_member_allocations.json${queryString ? `?${queryString}` : ""}`;
+      const params = buildFilterParams(filters);
+      params.append("page", page.toString());
+      const url = `https://${baseUrl}/club_member_allocations.json?${params.toString()}`;
 
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      if (requestId !== requestIdRef.current) return;
 
-      setMembers(response.data?.club_member_allocations);
-      setCurrentPage(1);
+      const meta = response.data?.pagination;
+      const totalPagesFromApi = Math.max(1, Number(meta?.total_pages) || 1);
+
+      // Page in the URL is beyond the last page (e.g. records were deleted) — clamp it
+      if (page > totalPagesFromApi) {
+        handlePageChange(totalPagesFromApi, true);
+        return;
+      }
+
+      setMembers(response.data?.club_member_allocations || []);
+      setPagination({
+        total_count: Number(meta?.total_count) || 0,
+        per_page: Number(meta?.per_page) || 20,
+        current_page: Number(meta?.current_page) || page,
+        total_pages: totalPagesFromApi,
+      });
       if (response.data?.summary) {
         setSummaryData(response.data.summary);
       }
     } catch (error) {
-      console.log(error);
+      if (requestId !== requestIdRef.current) return;
+      console.error("Error fetching club members:", error);
+      toast.error("Failed to load club members");
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) setIsLoading(false);
     }
   };
 
-  const handleFilterApply = (filters: any) => {
+  const totalPages = pagination.total_pages;
+
+  // Updating the URL triggers the fetch effect below; other query params are preserved
+  const handlePageChange = (page: number, replace = false) => {
+    if (page < 1 || (page > totalPages && !replace)) return;
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (page === 1) next.delete("page");
+        else next.set("page", page.toString());
+        return next;
+      },
+      { replace }
+    );
+  };
+
+  const handleFilterApply = (filters: MemberFilters) => {
     setAppliedFilters(filters);
-    fetchMembers(filters);
+    // New filter → back to the first page
+    handlePageChange(1, true);
   };
 
-  const totalPages = Math.ceil((members?.length || 0) / PAGE_SIZE) || 1;
-  const paginatedMembers = (members || []).slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+  const renderPageLink = (page: number) => (
+    <PaginationItem key={page} className="cursor-pointer">
+      <PaginationLink
+        onClick={() => handlePageChange(page)}
+        isActive={currentPage === page}
+      >
+        {page}
+      </PaginationLink>
+    </PaginationItem>
   );
-
-  const handlePageChange = (page: number) => {
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
 
   const renderPaginationItems = () => {
     if (!totalPages || totalPages <= 0) return null;
+
+    // Always show first, last and current ±1. Near either end, show the first/last 4
+    // so the next page is always one click away.
+    const pages = new Set<number>([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
+    if (currentPage <= 3) [2, 3, 4].forEach((p) => pages.add(p));
+    if (currentPage >= totalPages - 2) [totalPages - 3, totalPages - 2, totalPages - 1].forEach((p) => pages.add(p));
+
+    const sorted = [...pages].filter((p) => p >= 1 && p <= totalPages).sort((a, b) => a - b);
+
     const items = [];
-    const showEllipsis = totalPages > 5;
-
-    if (showEllipsis) {
-      items.push(
-        <PaginationItem key={1} className="cursor-pointer">
-          <PaginationLink
-            onClick={() => handlePageChange(1)}
-            isActive={currentPage === 1}
-          >
-            1
-          </PaginationLink>
-        </PaginationItem>
-      );
-
-      if (currentPage > 4) {
-        items.push(
-          <PaginationItem key="ellipsis1">
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
-      } else {
-        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+    sorted.forEach((page, idx) => {
+      const prev = sorted[idx - 1];
+      if (prev !== undefined && page - prev > 1) {
+        if (page - prev === 2) {
+          // A gap of exactly one page: show that page instead of "…"
+          items.push(renderPageLink(prev + 1));
+        } else {
           items.push(
-            <PaginationItem key={i} className="cursor-pointer">
-              <PaginationLink
-                onClick={() => handlePageChange(i)}
-                isActive={currentPage === i}
-              >
-                {i}
-              </PaginationLink>
+            <PaginationItem key={`ellipsis-${prev}`}>
+              <PaginationEllipsis />
             </PaginationItem>
           );
         }
       }
-
-      if (currentPage > 3 && currentPage < totalPages - 2) {
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          items.push(
-            <PaginationItem key={i} className="cursor-pointer">
-              <PaginationLink
-                onClick={() => handlePageChange(i)}
-                isActive={currentPage === i}
-              >
-                {i}
-              </PaginationLink>
-            </PaginationItem>
-          );
-        }
-      }
-
-      if (currentPage < totalPages - 3) {
-        items.push(
-          <PaginationItem key="ellipsis2">
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
-      } else {
-        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
-          if (!items.find((item) => item.key === i.toString())) {
-            items.push(
-              <PaginationItem key={i} className="cursor-pointer">
-                <PaginationLink
-                  onClick={() => handlePageChange(i)}
-                  isActive={currentPage === i}
-                >
-                  {i}
-                </PaginationLink>
-              </PaginationItem>
-            );
-          }
-        }
-      }
-
-      if (totalPages > 1) {
-        items.push(
-          <PaginationItem key={totalPages} className="cursor-pointer">
-            <PaginationLink
-              onClick={() => handlePageChange(totalPages)}
-              isActive={currentPage === totalPages}
-            >
-              {totalPages}
-            </PaginationLink>
-          </PaginationItem>
-        );
-      }
-    } else {
-      for (let i = 1; i <= totalPages; i++) {
-        items.push(
-          <PaginationItem key={i} className="cursor-pointer">
-            <PaginationLink
-              onClick={() => handlePageChange(i)}
-              isActive={currentPage === i}
-            >
-              {i}
-            </PaginationLink>
-          </PaginationItem>
-        );
-      }
-    }
+      items.push(renderPageLink(page));
+    });
 
     return items;
   };
 
   useEffect(() => {
-    fetchMembers();
-  }, []);
+    fetchMembers(currentPage, appliedFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, appliedFilters]);
 
   // GET /club_member_allocations/export.xlsx — same filters as the list (no
   // pagination), one row per club member
@@ -641,7 +613,8 @@ const CMSClubMembers = () => {
 
       <EnhancedTable
         storageKey="cms-club-members-table"
-        data={paginatedMembers}
+        data={members}
+        pagination={false}
         columns={columns}
         renderCell={renderCell}
         renderActions={renderActions}
@@ -652,15 +625,15 @@ const CMSClubMembers = () => {
         onExport={handleExport}
       />
 
-      {(members?.length || 0) > 0 && (
-        <div className="mt-6 flex justify-center">
+      {pagination.total_count > 0 && (
+        <div className="mt-6 flex flex-col items-center gap-2">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() => handlePageChange(currentPage - 1)}
                   className={
-                    currentPage === 1
+                    currentPage === 1 || isLoading
                       ? "pointer-events-none opacity-50"
                       : "cursor-pointer"
                   }
@@ -671,7 +644,7 @@ const CMSClubMembers = () => {
                 <PaginationNext
                   onClick={() => handlePageChange(currentPage + 1)}
                   className={
-                    currentPage === totalPages
+                    currentPage >= totalPages || isLoading
                       ? "pointer-events-none opacity-50"
                       : "cursor-pointer"
                   }
@@ -679,6 +652,11 @@ const CMSClubMembers = () => {
               </PaginationItem>
             </PaginationContent>
           </Pagination>
+          <span className="text-sm text-gray-500">
+            Showing {(currentPage - 1) * pagination.per_page + 1}–
+            {Math.min(currentPage * pagination.per_page, pagination.total_count)} of{" "}
+            {pagination.total_count}
+          </span>
         </div>
       )}
 
