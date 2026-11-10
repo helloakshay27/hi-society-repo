@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronRight, FileText, Paperclip, Trash2, Search } from "lucide-react";
+import { ArrowLeft, ChevronRight, FileText, Paperclip, Trash2, Search, Loader2 } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -19,6 +20,36 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import { MemberFilterPanel, MemberFilterState } from "@/components/MemberFilterPanel";
+
+const MEMBER_ROW_HEIGHT = 45;
+
+const getMemberDisplayName = (member) => {
+  if (!member?.user) return "";
+  const name = `${member.user.firstname || ''} ${member.user.lastname || ''}`.trim();
+  const flat = member.user_flat?.flat ? ` - Flat ${member.user_flat.flat}` : '';
+  const block = member.user_flat?.block ? ` (${member.user_flat.block})` : '';
+  return name + flat + block;
+};
+
+// Memoized so toggling one member re-renders only that row, not every visible row
+const MemberRow = memo(
+  ({ id, label, checked, onToggle }: { id: number; label: string; checked: boolean; onToggle: (id: number, checked: boolean) => void }) => (
+    <div className="flex items-center p-3 hover:bg-gray-50 transition-colors border-b border-gray-100" style={{ height: MEMBER_ROW_HEIGHT }}>
+      <input
+        type="checkbox"
+        id={`user-${id}`}
+        checked={checked}
+        onChange={(e) => onToggle(id, e.target.checked)}
+        className="w-4 h-4 rounded flex-shrink-0"
+        style={{ accentColor: '#C72030' }}
+      />
+      <label htmlFor={`user-${id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1 truncate" title={label}>
+        {label}
+      </label>
+    </div>
+  )
+);
+MemberRow.displayName = "MemberRow";
 
 const HiSocNoticeCreate = () => {
   const navigate = useNavigate();
@@ -64,6 +95,9 @@ const HiSocNoticeCreate = () => {
   const [memberFilter, setMemberFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
   const [groupFilter, setGroupFilter] = useState<MemberFilterState>({ roles: [], towers: [] });
   const [individualSearchTerm, setIndividualSearchTerm] = useState("");
+  const [usersLoading, setUsersLoading] = useState(false);
+  const usersRequestId = useRef(0);
+  const memberListRef = useRef<HTMLDivElement>(null);
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -377,6 +411,9 @@ const HiSocNoticeCreate = () => {
     activeFilters.roles.forEach((r) => params.append("values[]", r));
     activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
     const qs = params.toString();
+    // Ignore responses from older requests if the filter changed while they were in flight
+    const requestId = ++usersRequestId.current;
+    setUsersLoading(true);
     try {
       const response = await axios.get(
         getFullUrl(`/usergroups/get_members_list.json${qs ? `?${qs}` : ""}`),
@@ -387,9 +424,14 @@ const HiSocNoticeCreate = () => {
           },
         }
       );
-      setUsers(response?.data || []);
+      if (requestId !== usersRequestId.current) return;
+      const list = Array.isArray(response?.data) ? response.data : [];
+      setUsers(list.filter((m) => m?.id != null));
     } catch (error) {
+      if (requestId !== usersRequestId.current) return;
       console.error("Error fetching users:", error);
+    } finally {
+      if (requestId === usersRequestId.current) setUsersLoading(false);
     }
   };
 
@@ -419,17 +461,71 @@ const HiSocNoticeCreate = () => {
     navigate(-1);
   };
 
-  const getMemberDisplayName = (member) => {
-    if (!member?.user) return "";
-    const name = `${member.user.firstname || ''} ${member.user.lastname || ''}`.trim();
-    const flat = member.user_flat?.flat ? ` - Flat ${member.user_flat.flat}` : '';
-    const block = member.user_flat?.block ? ` (${member.user_flat.block})` : '';
-    return name + flat + block;
+  // Build labels + lowercased search text once per fetch, not on every render/keystroke
+  const userOptions = useMemo(
+    () =>
+      users.map((member) => {
+        const label = getMemberDisplayName(member);
+        return { id: member.id, label, search: label.toLowerCase() };
+      }),
+    [users]
+  );
+
+  // Defer filtering so typing stays responsive with thousands of members
+  const deferredSearch = useDeferredValue(individualSearchTerm);
+
+  const filteredUsers = useMemo(() => {
+    const q = deferredSearch.trim().toLowerCase();
+    if (!q) return userOptions;
+    return userOptions.filter((u) => u.search.includes(q));
+  }, [userOptions, deferredSearch]);
+
+  // O(1) membership checks instead of Array.includes per row
+  const selectedUserIds = useMemo(() => new Set(formData.user_ids), [formData.user_ids]);
+
+  const allFilteredSelected = useMemo(
+    () => filteredUsers.length > 0 && filteredUsers.every((u) => selectedUserIds.has(u.id)),
+    [filteredUsers, selectedUserIds]
+  );
+
+  const handleToggleUser = useCallback((id: number, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      user_ids: checked
+        ? prev.user_ids.includes(id) ? prev.user_ids : [...prev.user_ids, id]
+        : prev.user_ids.filter((uid) => uid !== id),
+    }));
+  }, []);
+
+  const handleSelectAllFiltered = (checked: boolean) => {
+    const filteredIds = filteredUsers.map((u) => u.id);
+    if (checked) {
+      setFormData((prev) => ({
+        ...prev,
+        user_ids: Array.from(new Set([...prev.user_ids, ...filteredIds])),
+      }));
+    } else {
+      const toRemove = new Set(filteredIds);
+      setFormData((prev) => ({
+        ...prev,
+        user_ids: prev.user_ids.filter((id) => !toRemove.has(id)),
+      }));
+    }
   };
 
-  const filteredUsers = users.filter((member) =>
-    getMemberDisplayName(member).toLowerCase().includes(individualSearchTerm.trim().toLowerCase())
-  );
+  // Only rows in view (plus overscan) are mounted
+  const memberVirtualizer = useVirtualizer({
+    count: filteredUsers.length,
+    getScrollElement: () => memberListRef.current,
+    estimateSize: () => MEMBER_ROW_HEIGHT,
+    overscan: 10,
+  });
+
+  // Back to the top when the result set changes
+  useEffect(() => {
+    memberVirtualizer.scrollToOffset(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deferredSearch, users]);
 
   const fetchGroups = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
     const params = new URLSearchParams();
@@ -938,26 +1034,13 @@ const HiSocNoticeCreate = () => {
                     </div>
 
                     {/* Select All Checkbox */}
-                    {filteredUsers.length > 0 && (
+                    {!usersLoading && filteredUsers.length > 0 && (
                       <div className="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 mb-2">
                         <input
                           type="checkbox"
                           id="selectAllUsers"
-                          checked={filteredUsers.every((u) => formData.user_ids.includes(u.id))}
-                          onChange={(e) => {
-                            const filteredIds = filteredUsers.map((u) => u.id);
-                            if (e.target.checked) {
-                              setFormData((prev) => ({
-                                ...prev,
-                                user_ids: Array.from(new Set([...prev.user_ids, ...filteredIds])),
-                              }));
-                            } else {
-                              setFormData((prev) => ({
-                                ...prev,
-                                user_ids: prev.user_ids.filter((id) => !filteredIds.includes(id)),
-                              }));
-                            }
-                          }}
+                          checked={allFilteredSelected}
+                          onChange={(e) => handleSelectAllFiltered(e.target.checked)}
                           className="w-4 h-4 rounded"
                           style={{ accentColor: '#C72030' }}
                         />
@@ -968,54 +1051,57 @@ const HiSocNoticeCreate = () => {
                     )}
 
                     {/* Members List with Checkboxes */}
-                    {users.length > 0 ? (
-                      filteredUsers.length > 0 ? (
-                        <div className="border border-gray-200 rounded-md max-h-64 overflow-y-auto">
-                          <div className="divide-y">
-                            {filteredUsers.map((member) => {
-                              const displayName = getMemberDisplayName(member);
-                              const isChecked = formData.user_ids.includes(member.id);
-
-                              return (
-                                <div key={member.id} className="flex items-center p-3 hover:bg-gray-50 transition-colors">
-                                  <input
-                                    type="checkbox"
-                                    id={`user-${member.id}`}
-                                    checked={isChecked}
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          user_ids: [...prev.user_ids, member.id],
-                                        }));
-                                      } else {
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          user_ids: prev.user_ids.filter((id) => id !== member.id),
-                                        }));
-                                      }
-                                    }}
-                                    className="w-4 h-4 rounded"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <label htmlFor={`user-${member.id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
-                                    {displayName}
-                                  </label>
-                                </div>
-                              );
-                            })}
-                          </div>
+                    {/* Virtualized list — the scroll container always exists so the virtualizer can measure it */}
+                    <div
+                      ref={memberListRef}
+                      className="border border-gray-200 rounded-md overflow-y-auto"
+                      style={{
+                        height: !usersLoading && filteredUsers.length > 0
+                          ? Math.min(256, filteredUsers.length * MEMBER_ROW_HEIGHT)
+                          : undefined,
+                      }}
+                      aria-busy={usersLoading}
+                    >
+                      {usersLoading ? (
+                        // While a fetch (initial load or newly applied filters) is in flight, hide the stale list
+                        <div className="flex items-center justify-center gap-2 py-6 text-sm text-gray-500">
+                          <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#C72030' }} />
+                          Loading members...
+                        </div>
+                      ) : filteredUsers.length > 0 ? (
+                        <div style={{ height: memberVirtualizer.getTotalSize(), position: "relative", width: "100%" }}>
+                          {memberVirtualizer.getVirtualItems().map((virtualRow) => {
+                            const option = filteredUsers[virtualRow.index];
+                            return (
+                              <div
+                                key={option.id}
+                                style={{
+                                  position: "absolute",
+                                  top: 0,
+                                  left: 0,
+                                  width: "100%",
+                                  height: virtualRow.size,
+                                  transform: `translateY(${virtualRow.start}px)`,
+                                }}
+                              >
+                                <MemberRow
+                                  id={option.id}
+                                  label={option.label}
+                                  checked={selectedUserIds.has(option.id)}
+                                  onToggle={handleToggleUser}
+                                />
+                              </div>
+                            );
+                          })}
                         </div>
                       ) : (
-                        <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
-                          No members match "{individualSearchTerm}"
+                        <div className="text-center py-4 text-sm text-gray-500">
+                          {users.length > 0
+                            ? `No members match "${individualSearchTerm}"`
+                            : "No members available"}
                         </div>
-                      )
-                    ) : (
-                      <div className="text-center py-4 text-sm text-gray-500 border border-gray-200 rounded-md">
-                        No members available
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 )}
 

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { X } from 'lucide-react';
@@ -23,13 +24,64 @@ const fieldStyles = {
   },
 };
 
+type Member = {
+  id: number;
+  id_user: number;
+  firstname: string;
+  lastname: string;
+  email: string;
+  mobile: string;
+  flat: string;
+  block: string;
+  building_name: string;
+  roles: string[];
+  block_id: string;
+  key: string;        // id as string — the form used in selectedMembers
+  searchText: string; // pre-lowercased haystack for search
+};
+
+const MEMBER_ROW_HEIGHT = 68;
+
+// Memoized so toggling one checkbox re-renders only that row, not all visible rows.
+const MemberRow = memo(({ member, checked, onToggle }: { member: Member; checked: boolean; onToggle: (id: string) => void }) => (
+  <div className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+    <Checkbox
+      id={`group-member-${member.key}`}
+      checked={checked}
+      onCheckedChange={() => onToggle(member.key)}
+    />
+    <Label
+      htmlFor={`group-member-${member.key}`}
+      className="text-sm font-normal cursor-pointer flex-1 min-w-0"
+    >
+      <div className="flex flex-col">
+        <span className="font-medium truncate">
+          {member.firstname} {member.lastname}
+        </span>
+        <span className="text-gray-500 text-xs truncate">
+          {member.email}{" "}
+          {member.mobile && `• ${member.mobile}`}
+        </span>
+        <span className="text-gray-400 text-xs truncate">
+          {member.flat}{" "}
+          {member.block && `• ${member.block}`}
+        </span>
+      </div>
+    </Label>
+  </div>
+));
+MemberRow.displayName = 'MemberRow';
+
 export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record }: AddHiSocGroupModalProps) => {
   const baseURL = API_CONFIG.BASE_URL;
 
   const [groupName, setGroupName] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [members, setMembers] = useState<{ id: number; id_user: number; firstname: string; lastname: string; email: string; mobile: string; flat: string; block: string; building_name: string; roles: string[]; block_id: string }[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const membersRequestId = useRef(0);
+  const listRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<MemberFilterState>({ roles: [], towers: [] });
@@ -44,19 +96,29 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
     society?: { building_name?: string };
   };
 
-  const transformMember = (item: MemberItem) => ({
-    id: item.id,
-    id_user: item.id_user,
-    firstname: item.user?.firstname || '',
-    lastname: item.user?.lastname || '',
-    email: item.user?.email || '',
-    mobile: item.user?.mobile || '',
-    flat: item.user_flat?.flat || 'N/A',
-    block: item.user_flat?.block || 'N/A',
-    building_name: item.society?.building_name || '',
-    roles: item.user_type ? [item.user_type] : [],
-    block_id: item.society_block_id ? item.society_block_id.toString() : '',
-  });
+  const transformMember = (item: MemberItem): Member => {
+    const firstname = String(item.user?.firstname ?? '');
+    const lastname = String(item.user?.lastname ?? '');
+    const email = String(item.user?.email ?? '');
+    const mobile = String(item.user?.mobile ?? '');
+    const flat = String(item.user_flat?.flat || 'N/A');
+    const block = String(item.user_flat?.block || 'N/A');
+    return {
+      id: item.id,
+      id_user: item.id_user,
+      firstname,
+      lastname,
+      email,
+      mobile,
+      flat,
+      block,
+      building_name: item.society?.building_name || '',
+      roles: item.user_type ? [item.user_type] : [],
+      block_id: item.society_block_id ? item.society_block_id.toString() : '',
+      key: String(item.id),
+      searchText: `${firstname} ${lastname}\n${email}\n${mobile}\n${flat}\n${block}`.toLowerCase(),
+    };
+  };
 
   // Fetch members — no params initially (returns all); params only sent when filters are active
   const fetchUsers = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
@@ -71,6 +133,9 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
     const queryString = params.toString();
     const url = `${baseURL}/usergroups/get_members_list.json${queryString ? `?${queryString}` : ""}`;
 
+    // Ignore responses from older requests if the filter changed while they were in flight
+    const requestId = ++membersRequestId.current;
+    setMembersLoading(true);
     try {
       const response = await axios.get(url, {
         headers: {
@@ -86,10 +151,14 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
           ? ((raw as { members: MemberItem[] }).members as MemberItem[])
           : [];
 
-      setMembers(list.map(transformMember));
+      if (requestId !== membersRequestId.current) return;
+      setMembers(list.filter((item) => item?.id != null).map(transformMember));
     } catch (error) {
+      if (requestId !== membersRequestId.current) return;
       console.error("Error fetching members:", error);
       toast.error("Failed to fetch members");
+    } finally {
+      if (requestId === membersRequestId.current) setMembersLoading(false);
     }
   };
 
@@ -149,30 +218,58 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
     setSelectAll(!selectAll);
   };
 
-  const handleMemberToggle = (memberId: string) => {
-    if (selectedMembers.includes(memberId)) {
-      setSelectedMembers(selectedMembers.filter(m => m !== memberId));
-    } else {
-      setSelectedMembers([...selectedMembers, memberId]);
-    }
-  };
+  // Stable callback (functional update) so memoized rows don't re-render on every toggle
+  const handleMemberToggle = useCallback((memberId: string) => {
+    setSelectedMembers((prev) =>
+      prev.includes(memberId) ? prev.filter((m) => m !== memberId) : [...prev, memberId]
+    );
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  const filteredMembers = members.filter(member => {
-    if (!searchTerm.trim()) return true;
-    const fullName = `${member.firstname} ${member.lastname}`.toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      fullName.includes(searchLower) ||
-      member.email.toLowerCase().includes(searchLower) ||
-      member.mobile?.includes(searchTerm) ||
-      member.flat?.toLowerCase().includes(searchLower) ||
-      member.block?.toLowerCase().includes(searchLower)
-    );
+  // Filtering 5000 rows on every keystroke blocks typing; defer it so the input stays responsive
+  const deferredSearch = useDeferredValue(searchTerm);
+
+  const filteredMembers = useMemo(() => {
+    const q = deferredSearch.trim().toLowerCase();
+    if (!q) return members;
+    return members.filter((member) => member.searchText.includes(q));
+  }, [members, deferredSearch]);
+
+  // O(1) lookup instead of Array.includes per row
+  const selectedSet = useMemo(() => new Set(selectedMembers), [selectedMembers]);
+
+  const allFilteredSelected = useMemo(
+    () => filteredMembers.length > 0 && filteredMembers.every((m) => selectedSet.has(m.key)),
+    [filteredMembers, selectedSet]
+  );
+
+  const handleSelectAllFiltered = (checked: boolean) => {
+    const filteredKeys = filteredMembers.map((m) => m.key);
+    if (checked) {
+      // Add the visible (filtered) members without dropping ones selected under another search/filter
+      setSelectedMembers((prev) => Array.from(new Set([...prev, ...filteredKeys])));
+    } else {
+      const toRemove = new Set(filteredKeys);
+      setSelectedMembers((prev) => prev.filter((id) => !toRemove.has(id)));
+    }
+  };
+
+  // Only the rows in view (plus a small overscan) are mounted
+  const rowVirtualizer = useVirtualizer({
+    count: filteredMembers.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => MEMBER_ROW_HEIGHT,
+    overscan: 8,
   });
+
+  // Jump back to the top when the result set changes
+  useEffect(() => {
+    rowVirtualizer.scrollToOffset(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deferredSearch, members]);
 
   const handleClose = () => {
     setGroupName('');
@@ -386,67 +483,56 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
                 className="flex items-center p-3 border border-gray-200 rounded-md bg-gray-50"
               >
                 <Checkbox
-                  checked={
-                    selectedMembers.length === filteredMembers.length &&
-                    filteredMembers.length > 0
-                  }
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedMembers(
-                        filteredMembers.map((member) => member.id.toString())
-                      );
-                    } else {
-                      setSelectedMembers([]);
-                    }
-                  }}
+                  id="group-select-all-members"
+                  checked={allFilteredSelected}
+                  onCheckedChange={(checked) => handleSelectAllFiltered(checked === true)}
                 />
 
-                <Label className="text-sm font-medium cursor-pointer ms-2">
-                  Select All Members ({selectedMembers.length}/{filteredMembers.length})
+                <Label htmlFor="group-select-all-members" className="text-sm font-medium cursor-pointer ms-2">
+                  Select All Members ({selectedMembers.length}/{members.length})
                 </Label>
               </div>
             )}
 
-            <div className="space-y-2 max-h-60 overflow-y-auto border rounded-md p-1">
+            {/* Virtualized list: the container always exists so the virtualizer can measure it */}
+            <div
+              ref={listRef}
+              className="overflow-y-auto border rounded-md p-1"
+              style={{
+                height: filteredMembers.length > 0
+                  ? Math.min(240, filteredMembers.length * MEMBER_ROW_HEIGHT + 8)
+                  : undefined,
+              }}
+            >
               {filteredMembers.length > 0 ? (
-                filteredMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded"
-                  >
-                    <Checkbox
-                      id={member.id.toString()}
-                      checked={selectedMembers.includes(member.id.toString())}
-                      onCheckedChange={() =>
-                        handleMemberToggle(member.id.toString())
-                      }
-                    />
-
-                    <Label
-                      htmlFor={member.id.toString()}
-                      className="text-sm font-normal cursor-pointer flex-1"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {member.firstname} {member.lastname}
-                        </span>
-
-                        <span className="text-gray-500 text-xs">
-                          {member.email}{" "}
-                          {member.mobile && `• ${member.mobile}`}
-                        </span>
-
-                        <span className="text-gray-400 text-xs">
-                          {member.flat}{" "}
-                          {member.block && `• ${member.block}`}
-                        </span>
+                <div style={{ height: rowVirtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
+                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const member = filteredMembers[virtualRow.index];
+                    return (
+                      <div
+                        key={member.key}
+                        data-index={virtualRow.index}
+                        ref={rowVirtualizer.measureElement}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        <MemberRow
+                          member={member}
+                          checked={selectedSet.has(member.key)}
+                          onToggle={handleMemberToggle}
+                        />
                       </div>
-                    </Label>
-                  </div>
-                ))
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="text-center text-gray-500 py-4">
-                  No members found
+                  {membersLoading ? 'Loading members...' : 'No members found'}
                 </div>
               )}
             </div>
