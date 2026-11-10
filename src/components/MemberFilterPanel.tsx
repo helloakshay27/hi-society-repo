@@ -6,8 +6,8 @@ import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface MemberFilterState {
-  roles: string[];      // e.g. ["owner", "tenant"]
-  towers: string[];     // block IDs as strings
+  roles: string[]; // e.g. ["owner", "tenant"]
+  towers: string[]; // block IDs as strings
 }
 
 interface Tower {
@@ -27,11 +27,11 @@ interface MemberFilterPanelProps {
 // ─── Static role definitions ─────────────────────────────────────────────────
 
 const ROLE_OPTIONS: { label: string; value: string; color: string }[] = [
-  { label: "Owner",       value: "owner",      color: "#C72030" },
-  { label: "Tenant",      value: "tenant",     color: "#3B82F6" },
-  { label: "Primary",     value: "primary",    color: "#C72030" },
-  { label: "Secondary",   value: "secondary",  color: "#9CA3AF" },
-  { label: "Lives Here",  value: "lives_here", color: "#22C55E" },
+  { label: "Owner", value: "owner", color: "#C72030" },
+  { label: "Tenant", value: "tenant", color: "#3B82F6" },
+  { label: "Primary", value: "primary", color: "#C72030" },
+  { label: "Secondary", value: "secondary", color: "#9CA3AF" },
+  { label: "Lives Here", value: "lives_here", color: "#22C55E" },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -43,8 +43,8 @@ export const MemberFilterPanel = ({
 }: MemberFilterPanelProps) => {
   const baseURL = API_CONFIG.BASE_URL;
 
-  const [open, setOpen]           = useState(false);
-  const [towers, setTowers]       = useState<Tower[]>([]);
+  const [open, setOpen] = useState(false);
+  const [towers, setTowers] = useState<Tower[]>([]);
   const [towerSearch, setTowerSearch] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -64,7 +64,9 @@ export const MemberFilterPanel = ({
         );
         setTowers(blocks);
       })
-      .catch(() => {/* silently ignore – towers are optional */});
+      .catch(() => {
+        /* silently ignore – towers are optional */
+      });
   }, [open, baseURL]);
 
   // ── close on outside click ────────────────────────────────────────────────
@@ -100,7 +102,7 @@ export const MemberFilterPanel = ({
   const activeCount = value.roles.length + value.towers.length;
 
   const filteredTowers = towers.filter((t) =>
-    t.name.toLowerCase().includes(towerSearch.toLowerCase())
+    t.name?.toLowerCase()?.includes(towerSearch?.toLowerCase())
   );
 
   // ── render ────────────────────────────────────────────────────────────────
@@ -111,9 +113,10 @@ export const MemberFilterPanel = ({
         type="button"
         onClick={() => setOpen((p) => !p)}
         className={`flex items-center gap-1.5 h-10 px-3 rounded-md border text-sm font-medium transition-colors
-          ${activeCount > 0
-            ? "bg-[#C72030] text-white border-[#C72030]"
-            : "bg-white text-gray-700 border-gray-300 hover:border-[#C72030] hover:text-[#C72030]"
+          ${
+            activeCount > 0
+              ? "bg-[#C72030] text-white border-[#C72030]"
+              : "bg-white text-gray-700 border-gray-300 hover:border-[#C72030] hover:text-[#C72030]"
           }`}
       >
         <SlidersHorizontal className="w-4 h-4" />
@@ -209,7 +212,9 @@ export const MemberFilterPanel = ({
                     className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: opt.color }}
                   />
-                  <span className="text-sm text-gray-700 flex-1">{opt.label}</span>
+                  <span className="text-sm text-gray-700 flex-1">
+                    {opt.label}
+                  </span>
                   {active && (
                     <span
                       className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
@@ -263,7 +268,9 @@ export const MemberFilterPanel = ({
                         className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                         style={{ backgroundColor: "#C72030" }}
                       />
-                      <span className="text-sm text-gray-700 flex-1">{tower.name}</span>
+                      <span className="text-sm text-gray-700 flex-1">
+                        {tower.name}
+                      </span>
                       {active && (
                         <span className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 bg-[#C72030]">
                           ✓
