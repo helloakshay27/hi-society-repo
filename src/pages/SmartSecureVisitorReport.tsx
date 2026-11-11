@@ -64,7 +64,7 @@ const SmartSecureVisitorReport: React.FC = () => {
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = downloadUrl;
-      link.download = `visitor_report_${format(fromDate, "ddMMyyy")}_to_${format(toDate, "ddMMyyyy")}.csv`;
+      link.download = `visitor_report_${format(fromDate, "ddMMyyyy")}_to_${format(toDate, "ddMMyyyy")}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

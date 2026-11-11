@@ -60,7 +60,7 @@ export const AiCopilot: React.FC = () => {
 
   return (
     <>
-      <button
+      {/* <button
         type="button"
         className="cbtn"
         onClick={() => setCopilotOpen(!copilotOpen)}
@@ -68,7 +68,7 @@ export const AiCopilot: React.FC = () => {
       >
         <Star size={16} color="white" fill="white" />
         Ask Genie
-      </button>
+      </button> */}
       <div className={`cpan${copilotOpen ? ' on' : ''}`} id="cpan">
         <div className="chdr">
           <div className="chi">

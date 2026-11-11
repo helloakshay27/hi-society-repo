@@ -1186,6 +1186,8 @@
 .pp-dashboard-root .htrack{position:relative;height:6px;border-radius:999px;background:var(--wh);overflow:visible}
 .pp-dashboard-root .htrack>i{position:absolute;inset:0 auto 0 0;height:100%;border-radius:999px;background:var(--warning)}
 .pp-dashboard-root .num{font-variant-numeric:tabular-nums;text-align:left}
+/* TEMP: AI Insight cards hidden — API not available yet. Delete the rule below to bring them back. */
+.pp-dashboard-root .ins{display:none !important}
 /* Hide legacy insight cards when .ins is used */
 .pp-dashboard-root .ci{background:var(--ai-wash);border-radius:12px;border:none;padding:14px 16px}
 .pp-dashboard-root .ci-h{font-size:12.5px;font-weight:500;color:var(--ink-soft);line-height:1.6}
