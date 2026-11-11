@@ -526,11 +526,8 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
         }
       }
       if (organisationLogo && !usedOrgLogo) {
-        toast({
-          title: 'Organisation logo unavailable',
-          description: 'The logo host blocks cross-origin access (CORS), and it could not be loaded, so the default logo was used in the PDF.',
-          variant: 'destructive'
-        });
+        // Not user-facing: the PDF still downloads with the default logo.
+        console.warn('Organisation logo could not be embedded in the PDF; used default logo.');
       }
       const headerHTML = `
       <div style="width: 100%; height: 72px; box-sizing: border-box; padding: 10px 30px; background: ${pdfLogoBg}; border-bottom: 1px solid #D9D9D9; display: flex; align-items: center;">

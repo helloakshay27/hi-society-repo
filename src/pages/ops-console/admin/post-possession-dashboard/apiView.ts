@@ -2205,7 +2205,7 @@ function bindSecurity(container: HTMLElement, state: PostPossessionApiState | un
     ?.closest<HTMLElement>('.card');
   if (flaggedCard) {
     // Replace the sample list with the API's denied/flagged visitors
-    flaggedCard.querySelectorAll('.evitem').forEach((item) => item.remove());
+    flaggedCard.querySelectorAll('.evitem, .ev-pager').forEach((item) => item.remove());
     const appendItem = (build: (item: HTMLElement) => void, drill?: string) => {
       const item = document.createElement('div');
       item.className = 'evitem';
@@ -2234,7 +2234,13 @@ function bindSecurity(container: HTMLElement, state: PostPossessionApiState | un
     } else if (flagged.length === 0) {
       appendMessage('No denied or flagged visitors in this period.');
     } else {
-      flagged.forEach((row) => {
+      const FLAGGED_PAGE_SIZE = 10;
+      const totalPages = Math.max(1, Math.ceil(flagged.length / FLAGGED_PAGE_SIZE));
+      const renderFlaggedPage = (requestedPage: number) => {
+      const page = Math.min(Math.max(1, requestedPage), totalPages);
+      flaggedCard.dataset.flaggedPage = String(page);
+      flaggedCard.querySelectorAll('.evitem, .ev-pager').forEach((el) => el.remove());
+      flagged.slice((page - 1) * FLAGGED_PAGE_SIZE, page * FLAGGED_PAGE_SIZE).forEach((row) => {
         appendItem((item) => {
           const dot = document.createElement('span');
           dot.className = 'ev-dot';
@@ -2266,6 +2272,36 @@ function bindSecurity(container: HTMLElement, state: PostPossessionApiState | un
           item.append(dot, body, tag);
         }, 'vis_rejected');
       });
+      if (flagged.length > FLAGGED_PAGE_SIZE) {
+        const pager = document.createElement('div');
+        pager.className = 'ev-pager';
+        const info = document.createElement('span');
+        const from = (page - 1) * FLAGGED_PAGE_SIZE + 1;
+        const to = Math.min(page * FLAGGED_PAGE_SIZE, flagged.length);
+        info.textContent = `${from}–${to} of ${flagged.length}`;
+        const makeButton = (label: string, target: number, disabled: boolean) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = label;
+          button.disabled = disabled;
+          button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            renderFlaggedPage(target);
+          });
+          return button;
+        };
+        const pageLabel = document.createElement('span');
+        pageLabel.textContent = `Page ${page} / ${totalPages}`;
+        pager.append(
+          info,
+          makeButton('Prev', page - 1, page <= 1),
+          pageLabel,
+          makeButton('Next', page + 1, page >= totalPages)
+        );
+        flaggedCard.append(pager);
+      }
+      };
+      renderFlaggedPage(Number(flaggedCard.dataset.flaggedPage) || 1);
     }
   }
 

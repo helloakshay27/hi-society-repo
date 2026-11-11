@@ -1392,3 +1392,8 @@
 .pp-dashboard-root .pp-skel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .pp-dashboard-root .pp-skel-grid i{height:260px}
 @keyframes pp-skel{0%{background-position:100% 50%}100%{background-position:0 50%}}
+
+/* Denied & flagged — pagination */
+.pp-dashboard-root .ev-pager{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:12px 4px 2px;font-size:12px;color:var(--ink-soft)}
+.pp-dashboard-root .ev-pager button{border:1px solid var(--line,#e5e5e5);background:#fff;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink)}
+.pp-dashboard-root .ev-pager button:disabled{opacity:.4;cursor:not-allowed}
