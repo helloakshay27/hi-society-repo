@@ -8,10 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import html2pdf from 'html2pdf.js';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { OIG_LOGO_CODE } from "@/assets/pdf/oig-logo-code";
-import { VI_LOGO_CODE } from "@/assets/vi-logo-code";
-import { DEFAULT_LOGO_CODE } from "@/assets/default-logo-code";
 import { API_CONFIG } from '@/config/apiConfig';
 
 interface TicketComment {
@@ -57,6 +53,8 @@ interface TicketData {
   society_name?: string;
   society_address?: string;
   building_name?: string;
+  flat_number?: string;
+  unit_name?: string;
   wing_name?: string;
   floor_name?: string;
   area_name?: string;
@@ -409,22 +407,134 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
     try {
       const element = contentRef.current;
 
-      // Render the logo components as JSX elements
-      const defaultLogo = renderToStaticMarkup(<DEFAULT_LOGO_CODE />);
+      // The signed-in navbar uses org_logo_url; public/mobile survey flows also
+      // cache the organisation logo in sessionStorage as orgLogoUrl.
+      const organisationLogo =
+        localStorage.getItem('org_logo_url') ||
+        sessionStorage.getItem('orgLogoUrl') ||
+        document.querySelector<HTMLImageElement>('header img[alt="Organization Logo"]')?.currentSrc ||
+        document.querySelector<HTMLImageElement>('header img[alt="Organization Logo"]')?.src ||
+        '';
+      // Same fallback order as MobileSurveyLanding: org logo -> default logo.
+      const DEFAULT_LOGO = '/LockatedLogo.jpeg';
+      const toDataUrl = async (src: string): Promise<{ dataUrl: string; bg: string }> => {
+        const loadImage = (url: string) =>
+          new Promise<HTMLImageElement>((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error(`Logo failed to load: ${url}`));
+            img.src = url;
+          });
+        let img: HTMLImageElement;
+        try {
+          // Fetch as blob first (works when the host allows CORS)
+          const res = await fetch(src, { mode: 'cors', cache: 'reload' });
+          if (!res.ok) throw new Error(`Logo request failed (${res.status})`);
+          const objectUrl = URL.createObjectURL(await res.blob());
+          try {
+            img = await loadImage(objectUrl);
+          } finally {
+            URL.revokeObjectURL(objectUrl);
+          }
+        } catch {
+          // Fallback: cache-busted <img> load, which avoids stale non-CORS cached copies
+          img = await loadImage(src + (src.includes('?') ? '&' : '?') + 'pdfLogo=' + Date.now());
+        }
+        // Draw at full size first so we can detect the logo's background colour
+        // and trim its empty padding (the org logos are square with big margins).
+        const full = document.createElement('canvas');
+        full.width = img.naturalWidth;
+        full.height = img.naturalHeight;
+        const fctx = full.getContext('2d', { willReadFrequently: true });
+        if (!fctx) throw new Error('Canvas unavailable');
+        fctx.fillStyle = '#ffffff';
+        fctx.fillRect(0, 0, full.width, full.height);
+        fctx.drawImage(img, 0, 0);
 
+        let bg = '#ffffff';
+        let crop = { x: 0, y: 0, w: full.width, h: full.height };
+        try {
+          const { data, width, height } = fctx.getImageData(0, 0, full.width, full.height);
+          const px = (x: number, y: number) => {
+            const i = (y * width + x) * 4;
+            return [data[i], data[i + 1], data[i + 2]];
+          };
+          const [br, bgc, bb] = px(2, 2);
+          bg = `rgb(${br}, ${bgc}, ${bb})`;
+          const isBg = (x: number, y: number) => {
+            const [r, g, b] = px(x, y);
+            return Math.abs(r - br) + Math.abs(g - bgc) + Math.abs(b - bb) < 40;
+          };
+          let top = height, bottom = -1, left = width, right = -1;
+          for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+              if (!isBg(x, y)) {
+                if (y < top) top = y;
+                if (y > bottom) bottom = y;
+                if (x < left) left = x;
+                if (x > right) right = x;
+              }
+            }
+          }
+          // Only trim when the logo content is found and the logo isn't a
+          // full-bleed tile (e.g. app-icon style logos keep their shape).
+          if (bottom >= 0 && right >= 0 && top > 4 && left > 4) {
+            const pad = Math.round(Math.max(width, height) * 0.03);
+            const x = Math.max(0, left - pad);
+            const y = Math.max(0, top - pad);
+            crop = {
+              x,
+              y,
+              w: Math.min(width - x, right - left + 1 + pad * 2),
+              h: Math.min(height - y, bottom - top + 1 + pad * 2),
+            };
+          }
+        } catch {
+          // Pixel access blocked (tainted canvas) - use the untrimmed logo.
+        }
+
+        const scale = Math.min(3, 1200 / crop.w, 240 / crop.h);
+        const out = document.createElement('canvas');
+        out.width = Math.max(1, Math.round(crop.w * scale));
+        out.height = Math.max(1, Math.round(crop.h * scale));
+        const octx = out.getContext('2d');
+        if (!octx) throw new Error('Canvas unavailable');
+        octx.drawImage(full, crop.x, crop.y, crop.w, crop.h, 0, 0, out.width, out.height);
+        return { dataUrl: out.toDataURL('image/png'), bg };
+      };
+
+      let pdfLogo = '';
+      let pdfLogoBg = '#F6F4EE';
+      let usedOrgLogo = false;
+      // Logo hosts such as the public S3 bucket send no CORS headers, so the browser
+      // refuses to read the pixels. For http(s) logos, retry through an image CDN that
+      // adds CORS headers (the logos are public) before falling back to the default.
+      const corsSafeLogo = /^https?:\/\//i.test(organisationLogo)
+        ? `https://wsrv.nl/?url=${encodeURIComponent(organisationLogo.replace(/^https?:\/\//i, ''))}&output=png&w=800`
+        : '';
+      for (const candidate of [organisationLogo, corsSafeLogo, DEFAULT_LOGO]) {
+        if (!candidate) continue;
+        try {
+          const result = await toDataUrl(candidate);
+          pdfLogo = result.dataUrl;
+          pdfLogoBg = result.bg;
+          usedOrgLogo = candidate !== DEFAULT_LOGO;
+          break;
+        } catch (logoError) {
+          console.error('Could not prepare logo for PDF:', candidate, logoError);
+        }
+      }
+      if (organisationLogo && !usedOrgLogo) {
+        toast({
+          title: 'Organisation logo unavailable',
+          description: 'The logo host blocks cross-origin access (CORS), and it could not be loaded, so the default logo was used in the PDF.',
+          variant: 'destructive'
+        });
+      }
       const headerHTML = `
-      <div style="position: relative; width: 100%; height: 50px;">
-        <div style="
-          position: absolute;
-          top: 0;
-          left: 0;
-          z-index: 10;
-          background-color: #C4B89D59;
-          height: 45px;
-          width: 1000px;
-          display: inline-block;
-          padding: 8px 0 0 8px;
-        ">${defaultLogo}</div>
+      <div style="width: 100%; height: 72px; box-sizing: border-box; padding: 10px 30px; background: ${pdfLogoBg}; border-bottom: 1px solid #D9D9D9; display: flex; align-items: center;">
+        ${pdfLogo ? `<img src="${pdfLogo.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" alt="Organisation logo" crossorigin="anonymous" style="height: 52px; max-width: 260px; object-fit: contain;" />` : ''}
       </div>
     `;
 
@@ -541,7 +651,7 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
         margin: 0,
         filename: `ticket_job_sheet_${ticketData.ticket_number || ticketData.ticket_id || ticketData.id}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
-        html2canvas: { scale: 2, logging: false, useCORS: true },
+        html2canvas: { scale: 2, logging: false, useCORS: true, imageTimeout: 15000 },
         jsPDF: { unit: "in", format: "a4", orientation: "portrait" as const },
       };
 
@@ -555,7 +665,7 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
       console.error('Error generating PDF:', error);
       toast({
         title: 'Error',
-        description: 'Failed to generate PDF. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to generate PDF. Please try again.',
         variant: 'destructive'
       });
     } finally {
@@ -719,6 +829,24 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
                           ticketData?.area_name,
                           ticketData?.room_name
                         ].filter(Boolean).join(', ') || '-'}
+                      </td>
+                    </tr>
+
+                    {/* Tower and flat are returned together by the ticket API as "Tower-FlatNo". */}
+                    <tr>
+                      <td className="header-cell col-header">Tower</td>
+                      <td className="data-cell col-data">
+                        {ticketData?.flat_number && String(ticketData.flat_number).includes('-')
+                          ? String(ticketData.flat_number).split('-')[0].trim()
+                          : '-'}
+                      </td>
+                      <td className="header-cell col-header">Flat</td>
+                      <td className="data-cell col-data">
+                        {ticketData?.flat_number
+                          ? (String(ticketData.flat_number).includes('-')
+                              ? String(ticketData.flat_number).split('-').slice(1).join('-').trim()
+                              : String(ticketData.flat_number).trim())
+                          : ticketData?.unit_name || '-'}
                       </td>
                     </tr>
                     
