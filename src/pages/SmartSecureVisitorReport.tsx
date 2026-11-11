@@ -1,13 +1,25 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Download } from "lucide-react";
+import { TextField } from "@mui/material";
+import { Download } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
-import { TextField } from "@mui/material";
+
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": { borderColor: "#ddd" },
+    "&:hover fieldset": { borderColor: "#C72030" },
+    "&.Mui-focused fieldset": { borderColor: "#C72030" },
+  },
+};
+
+const toInputValue = (d?: Date) => (d ? format(d, "yyyy-MM-dd") : "");
+const fromInputValue = (v: string) => (v ? new Date(`${v}T00:00:00`) : undefined);
 
 const SmartSecureVisitorReport: React.FC = () => {
   const [fromDate, setFromDate] = useState<Date>();
@@ -47,6 +59,7 @@ const SmartSecureVisitorReport: React.FC = () => {
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
       }
+      
 
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -70,8 +83,8 @@ const SmartSecureVisitorReport: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] p-6">
       {/* Header */}
-      <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
-        <div className="px-6 py-4">
+      <div className="mb-6">
+        <div className="px-6">
           <h1 className="text-2xl font-semibold text-gray-900">Visitor Report</h1>
         </div>
       </div>
