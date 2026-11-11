@@ -15,7 +15,13 @@ import {
   useTrafficSession,
   useUserAccountSiteId,
 } from "./hooks/useDashboardAnalytics";
-import { getAppIdFromUrl } from "./api/api";
+import {
+  clearDashboardScope,
+  getAppIdFromUrl,
+  pinDashboardScope,
+  runwalApiPath,
+  stripScopeFromUrl,
+} from "./api/api";
 import { DashboardFilters } from "./api/types";
 import { getToken, getBaseUrlDomain } from "../../utils/auth";
 import "./styles/dashboard.css";
@@ -29,7 +35,11 @@ function dateRangeFor(days: number) {
   return { from: ymd(from), to: ymd(to) };
 }
 
-function PosthogRunwalDashboardContent() {
+function PosthogRunwalDashboardContent({
+  fixedAppId,
+}: {
+  fixedAppId?: string;
+}) {
   const queryClient = useQueryClient();
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     try {
@@ -68,10 +78,20 @@ function PosthogRunwalDashboardContent() {
   // the site dropdown was removed from the filter bar.
   const { data: accountSiteId } = useUserAccountSiteId();
 
-  // The "All residents / Pre Sales / Post Sales" tab is only shown for
-  // ?app_id=35 (read once — the query param isn't expected to change without
-  // a page reload).
-  const appId = useMemo(() => getAppIdFromUrl(), []);
+  // Which Runwal app: fixed by the route (/runwal-connect-usage-dashboard = 12,
+  // /runwal-enterprise-usage-dashboard = 35), or read once from an old
+  // /runwal-usage-dashboard?app_id= link. It is pinned in memory and removed
+  // from the address bar, so the code never shows in the URL.
+  const appId = useMemo(() => {
+    const id = fixedAppId ?? getAppIdFromUrl() ?? "12";
+    pinDashboardScope({ appId: id });
+    return id;
+  }, [fixedAppId]);
+  useEffect(() => {
+    pinDashboardScope({ appId });
+    stripScopeFromUrl();
+    return () => clearDashboardScope();
+  }, [appId]);
   const showResidentSegment = appId === "12";
   const [residentSegment, setResidentSegment] = useState<
     "all" | "pre" | "post"
@@ -163,6 +183,8 @@ function PosthogRunwalDashboardContent() {
       url: dynamicTenantUrl,
       displayView,
       appId: appId || undefined,
+      // ?app_id=35 is Runwal Enterprise, anything else Runwal Connect: each has its own API.
+      apiPath: runwalApiPath(appId),
     };
   }, [
     accountSiteId,
@@ -379,18 +401,13 @@ function PosthogRunwalDashboardContent() {
     pgFlows: "Workflow Usage",
   };
 
-  const currentSiteName = accountSiteId
-    ? sites.find((s) => String(s.id) === accountSiteId)?.name ||
-      `Site ${accountSiteId}`
-    : "All Live Sites / Projects";
-
   return (
     <div
       className={`posthog-dashboard-root ${isNavCollapsed ? "nav-collapsed" : ""}`}
       data-theme={theme}
     >
       <TopBar
-        title={orgName}
+        title="Runwal Group"
         theme={theme}
         onToggleTheme={handleToggleTheme}
         isNavCollapsed={isNavCollapsed}
@@ -399,7 +416,6 @@ function PosthogRunwalDashboardContent() {
         userRole={userRole}
         userEmail={userEmail}
         orgName={orgName}
-        siteName={currentSiteName}
         isFetching={isTrafficFetching}
       />
 
@@ -415,10 +431,6 @@ function PosthogRunwalDashboardContent() {
         <main className="main">
           <div className="page-head">
             <h2 id="pageTitle">{PAGE_TITLES[activePage]}</h2>
-            <p className="page-sub">
-              <span id="custName">{orgName} Analytics</span> ·{" "}
-              <span id="scopeLabel">{currentSiteName}</span>
-            </p>
           </div>
 
           <FilterBar
@@ -494,10 +506,13 @@ function PosthogRunwalDashboardContent() {
   );
 }
 
-export const PosthogRunwalDashboard: React.FC = () => {
+/** fixedAppId: "12" = Runwal Connect, "35" = Runwal Enterprise; omitted = read from an old ?app_id= link. */
+export const PosthogRunwalDashboard: React.FC<{ fixedAppId?: string }> = ({
+  fixedAppId,
+}) => {
   return (
     <DashboardProvider>
-      <PosthogRunwalDashboardContent />
+      <PosthogRunwalDashboardContent fixedAppId={fixedAppId} />
     </DashboardProvider>
   );
 };

@@ -12,6 +12,7 @@ import { FilterBar } from '../posthog-runwal-dashboard/components/common/FilterB
 import { useDashboardSites, useTrafficSession } from '../posthog-runwal-dashboard/hooks/useDashboardAnalytics';
 import { useEnsureAppId } from '../posthog-runwal-dashboard/hooks/useEnsureAppId';
 import { DashboardFilters } from '../posthog-runwal-dashboard/api/types';
+import { ADOPTION_API } from '../posthog-runwal-dashboard/api/api';
 import { TopBar } from '../posthog-godrej-dashboard/components/common/TopBar';
 import { AdminScope } from '../posthog-godrej-dashboard/data/wireframeData';
 import { SideBar } from './components/SideBar';
@@ -95,6 +96,7 @@ function PosthogAccountingDashboardContent() {
       licensedSeats: null,
       module: null,
       subModule: null,
+      apiPath: ADOPTION_API.accounting,
     };
   }, [selectedSiteId, devPlatform, rangeFrom, rangeTo]);
 

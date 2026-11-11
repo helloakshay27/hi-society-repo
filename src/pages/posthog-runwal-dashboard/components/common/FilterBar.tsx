@@ -43,6 +43,12 @@ interface FilterBarProps {
   isRefreshing?: boolean;
 }
 
+/** Today as YYYY-MM-DD in the viewer's local time, the same format the date inputs use. */
+function todayYmd(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export const FilterBar: React.FC<FilterBarProps> = ({
   range,
   rangeLabel,
@@ -98,10 +104,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
   const handleApplyCustom = () => {
     if (!customFrom || !customTo) return;
+    // The dashboard has no data past today, so a range never ends after it.
+    const today = todayYmd();
+    const fromYmd = customFrom > today ? today : customFrom;
+    const toYmd = customTo > today ? today : customTo;
+    setCustomFrom(fromYmd);
+    setCustomTo(toYmd);
     const days = Math.max(
       1,
       Math.round(
-        (new Date(customTo).getTime() - new Date(customFrom).getTime()) /
+        (new Date(toYmd).getTime() - new Date(fromYmd).getTime()) /
           86400000
       ) + 1
     );
@@ -109,9 +121,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       const dt = new Date(d);
       return dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     };
-    const label = `${fmt(customFrom)} – ${fmt(customTo)}`;
+    const label = `${fmt(fromYmd)} – ${fmt(toYmd)}`;
     setIsCustomApplied(true);
-    onSetCustomRange(customFrom, customTo, days, label);
+    onSetCustomRange(fromYmd, toYmd, days, label);
     setIsDateOpen(false);
   };
 
@@ -165,18 +177,20 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <div className="dr-custom-row">
                 <input
                   type="date"
+                  max={todayYmd()}
                   value={customFrom}
                   onChange={(e) => {
-                    setCustomFrom(e.target.value);
+                    setCustomFrom(e.target.value > todayYmd() ? todayYmd() : e.target.value);
                     setIsCustomApplied(false);
                   }}
                 />
                 <span className="dr-to">–</span>
                 <input
                   type="date"
+                  max={todayYmd()}
                   value={customTo}
                   onChange={(e) => {
-                    setCustomTo(e.target.value);
+                    setCustomTo(e.target.value > todayYmd() ? todayYmd() : e.target.value);
                     setIsCustomApplied(false);
                   }}
                 />

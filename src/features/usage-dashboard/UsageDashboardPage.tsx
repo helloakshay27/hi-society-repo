@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import "./usage-dashboard.css";
-import { downloadActiveUsersExport } from "../../pages/posthog-runwal-dashboard/api/api";
+import { activityUserLabel, downloadActiveUsersExport, stripScopeFromUrl } from "../../pages/posthog-runwal-dashboard/api/api";
 import {
   SITES,
   fetchRecentActiveUsers,
@@ -21,6 +21,13 @@ import type {
   SiteKey,
   WorkflowModuleNode,
 } from "./api";
+
+/** Today as YYYY-MM-DD in local time. Usage data stops at today, so no date range may end after it. */
+const todayYmd = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const clampToToday = (v: string) => (v && v > todayYmd() ? todayYmd() : v);
 
 /* ================================================================
    Usage Analytics Dashboard (live data only — no sample numbers)
@@ -829,6 +836,8 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
 
   // Workflow state — backend module name (null = All Modules, like Runwal's ModuleNav).
   const [activeWfKey, setActiveWfKey] = useState<string | null>(null);
+  // The selected module's screen (sub-module), on apps that declare modules.
+  const [activeWfSub, setActiveWfSub] = useState<string | null>(null);
   const [wfModules, setWfModules] = useState<WorkflowModuleNode[] | null>(null);
 
   // Benchmark targets (user-editable)
@@ -885,11 +894,10 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
   // Live-only dashboard: no factor-scaled mock series.
   const siteRef = siteByKey(site);
 
+  // The app id is never put in the address bar (each site has its own API); an old link's
+  // ?app_id= / ?project_code= is removed.
   useEffect(() => {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("app_id") === siteRef.appId) return;
-    url.searchParams.set("app_id", siteRef.appId);
-    window.history.replaceState(window.history.state, "", url);
+    stripScopeFromUrl();
   }, [siteRef.appId]);
 
   // Effective API window: preset range → rolling window ending today; custom → chosen dates.
@@ -980,25 +988,31 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
   const trafficReady = trafficSig === sig && live?.tiles != null;
   const adoptionReady = adoptionSig === sig;
 
+  // Recent Activity is a live log: the 10 newest events (not distinct users), refreshed every 15 s.
   useEffect(() => {
     let cancelled = false;
-    setRecentActivityLoading(true);
-    fetchRecentActiveUsers(
-      { appId: siteRef.appId, from: effRange.from, to: effRange.to },
-      10
-    )
-      .then((response) => {
-        if (!cancelled) setRecentActivity(response.users ?? []);
-      })
-      .catch((error) => {
-        console.warn("[usage-dashboard] recent_active_users failed:", error);
-        if (!cancelled) setRecentActivity([]);
-      })
-      .finally(() => {
-        if (!cancelled) setRecentActivityLoading(false);
-      });
+    const load = (first: boolean) => {
+      if (first) setRecentActivityLoading(true);
+      fetchRecentActiveUsers(
+        { appId: siteRef.appId, from: effRange.from, to: effRange.to },
+        10
+      )
+        .then((response) => {
+          if (!cancelled) setRecentActivity(response.users ?? []);
+        })
+        .catch((error) => {
+          console.warn("[usage-dashboard] recent_active_users failed:", error);
+          if (!cancelled && first) setRecentActivity([]);
+        })
+        .finally(() => {
+          if (!cancelled && first) setRecentActivityLoading(false);
+        });
+    };
+    load(true);
+    const timer = window.setInterval(() => load(false), 15 * 1000);
     return () => {
       cancelled = true;
+      window.clearInterval(timer);
     };
   }, [siteRef.appId, effRange.from, effRange.to, retryKey]);
 
@@ -1159,11 +1173,23 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
 
   // Workflow layer — fires only while open: module catalogue once per
   // signature, funnel per selected backend module (null = All Modules).
-  const wfCacheKey = `${sig}|${activeWfKey ?? "all"}`;
+  const wfCacheKey = `${sig}|${activeWfKey ?? "all"}|${activeWfSub ?? ""}`;
   const wfCacheKeyRef = useRef(wfCacheKey);
   wfCacheKeyRef.current = wfCacheKey;
-  const wfModuleLabel =
-    activeWfKey === null ? "All Modules" : formatModuleName(activeWfKey);
+  // Apps that declare modules: modules on one row, the selected module's screens on the next.
+  const wfHierarchy = (wfModules ?? []).some((m) => m.key);
+  const activeWfNode = (wfModules ?? []).find((m) => (m.key ?? m.name) === activeWfKey) ?? null;
+  const wfModuleLabel = activeWfSub
+    ? formatModuleName(activeWfSub)
+    : activeWfKey === null
+      ? "All Modules"
+      : activeWfNode?.key
+        ? activeWfNode.name
+        : formatModuleName(activeWfKey);
+  const selectWfModule = (key: string | null) => {
+    setActiveWfKey(key);
+    setActiveWfSub(null);
+  };
   // Module catalogue and funnel run in separate effects: when they shared one,
   // the catalogue resolving re-ran the effect, cancelled the in-flight funnel
   // and fired workflow_usage a second time.
@@ -1195,7 +1221,8 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     setWfError(null);
     fetchLiveWorkflow(
       { appId: siteRef.appId, from: effRange.from, to: effRange.to, dev },
-      activeWfKey
+      activeWfKey,
+      activeWfSub
     )
       .then((w) => {
         setLiveWf((prev) => ({ ...prev, [key]: w }));
@@ -1210,7 +1237,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
         wfInFlight.current.delete(key);
         if (wfCacheKeyRef.current === key) setWfLoading(false);
       });
-  }, [page, wfCacheKey, activeWfKey, liveWf, siteRef.appId, effRange.from, effRange.to, dev]);
+  }, [page, wfCacheKey, activeWfKey, activeWfSub, liveWf, siteRef.appId, effRange.from, effRange.to, dev]);
 
   const activeLiveWf = liveWf[wfCacheKey] ?? null;
   const wfReady = activeLiveWf != null;
@@ -1278,7 +1305,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     setRecentActivityExporting(true);
     try {
       await downloadActiveUsersExport({
-        appId: siteRef.appId,
+        apiPath: siteRef.apiPath,
         from: effRange.from,
         to: effRange.to,
       });
@@ -1541,10 +1568,10 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                 {recentActivity.map((user, index) => (
                   <div
                     className="sidebar-recent-item"
-                    key={user.user_id || `${user.display_name}-${index}`}
+                    key={index}
                   >
                     <span className="sidebar-recent-name">
-                      {user.display_name}
+                      {activityUserLabel(user)}
                     </span>
                     <span className="sidebar-recent-meta">
                       {user.path || user.last_event || "—"}
@@ -1616,16 +1643,18 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                   <div className="dr-custom-row">
                     <input
                       type="date"
+                      max={todayYmd()}
                       id="dateFrom"
                       value={dateFrom}
-                      onChange={(e) => setDateFrom(e.target.value)}
+                      onChange={(e) => setDateFrom(clampToToday(e.target.value))}
                     />
                     <span className="dr-to">&ndash;</span>
                     <input
                       type="date"
+                      max={todayYmd()}
                       id="dateTo"
                       value={dateTo}
-                      onChange={(e) => setDateTo(e.target.value)}
+                      onChange={(e) => setDateTo(clampToToday(e.target.value))}
                     />
                   </div>
                   <button
@@ -2642,32 +2671,79 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                 </div>
               ) : null}
 
-              {/* Module Nav (backend catalogue, like Runwal's ModuleNav) */}
+              {/* Module Nav (backend catalogue, like Runwal's ModuleNav): modules on one scrolling row,
+                  and on apps that declare modules the selected module's screens on the row below. */}
               <div
                 className="mnav"
                 id="modNav"
                 title="Choose a module — this filter applies to the per-module cards only"
               >
-                <div className="mnav-mods">
-                  <div className="segbar">
-                    <button
-                      className={activeWfKey === null ? "on" : ""}
-                      onClick={() => setActiveWfKey(null)}
-                    >
-                      All Modules
-                    </button>
-                    {(sortedWfModules ?? []).map((m) => (
+                {wfHierarchy ? (
+                  <>
+                    <div className="mnav-buckets">
                       <button
-                        key={m.name}
-                        className={m.name === activeWfKey ? "on" : ""}
-                        onClick={() => setActiveWfKey(m.name)}
-                        title={`${m.users.toLocaleString()} users · ${m.sessions.toLocaleString()} sessions`}
+                        className={activeWfKey === null ? "on" : ""}
+                        onClick={() => selectWfModule(null)}
                       >
-                        {formatModuleName(m.name)}
+                        All Modules
                       </button>
-                    ))}
+                      {(sortedWfModules ?? []).map((m) => (
+                        <button
+                          key={m.key ?? m.name}
+                          className={(m.key ?? m.name) === activeWfKey ? "on" : ""}
+                          onClick={() => selectWfModule(m.key ?? m.name)}
+                          title={`${m.users.toLocaleString()} users`}
+                        >
+                          {m.name}
+                          <span className="mcount">{m.subModules?.length ?? 0}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {activeWfNode?.subModules && activeWfNode.subModules.length > 0 && (
+                      <div className="mnav-mods">
+                        <div className="segbar">
+                          <button
+                            className={activeWfSub === null ? "on" : ""}
+                            onClick={() => setActiveWfSub(null)}
+                          >
+                            All
+                          </button>
+                          {activeWfNode.subModules.map((sm) => (
+                            <button
+                              key={sm.key}
+                              className={sm.key === activeWfSub ? "on" : ""}
+                              onClick={() => setActiveWfSub(sm.key)}
+                              title={`${sm.users.toLocaleString()} users`}
+                            >
+                              {formatModuleName(sm.name)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="mnav-mods">
+                    <div className="segbar">
+                      <button
+                        className={activeWfKey === null ? "on" : ""}
+                        onClick={() => selectWfModule(null)}
+                      >
+                        All Modules
+                      </button>
+                      {(sortedWfModules ?? []).map((m) => (
+                        <button
+                          key={m.name}
+                          className={m.name === activeWfKey ? "on" : ""}
+                          onClick={() => selectWfModule(m.name)}
+                          title={`${m.users.toLocaleString()} users · ${m.sessions.toLocaleString()} sessions`}
+                        >
+                          {formatModuleName(m.name)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Workflow KPI tiles */}
@@ -2754,6 +2830,33 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                 </div>
                 <div className="card-body">
                   {(() => {
+                    // All Modules on an app that declares modules: one funnel per module.
+                    if (activeLiveWf && activeLiveWf.moduleFunnels.length > 0) {
+                      return (
+                        <table className="pathtbl">
+                          <thead>
+                            <tr>
+                              <th>Module</th>
+                              <th className="num">Started</th>
+                              <th className="num">Completed</th>
+                              <th className="num">Completion</th>
+                              <th className="num">Biggest Drop</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {activeLiveWf.moduleFunnels.map((f) => (
+                              <tr key={f.key}>
+                                <td>{f.name}</td>
+                                <td className="num">{f.started.toLocaleString()}</td>
+                                <td className="num">{f.completed.toLocaleString()}</td>
+                                <td className="num">{Math.round(f.completionPct)}%</td>
+                                <td className="num">{Math.round(f.biggestDropPct)}%</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      );
+                    }
                     // Live funnel from workflow_usage (reach per step).
                     if (activeLiveWf && activeLiveWf.funnel.length > 0) {
                       const maxReach = Math.max(

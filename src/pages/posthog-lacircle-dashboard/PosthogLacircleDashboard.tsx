@@ -29,6 +29,7 @@ import {
 } from "../posthog-runwal-dashboard/hooks/useDashboardAnalytics";
 import { useEnsureAppId } from "../posthog-runwal-dashboard/hooks/useEnsureAppId";
 import { DashboardFilters } from "../posthog-runwal-dashboard/api/types";
+import { ADOPTION_API } from "../posthog-runwal-dashboard/api/api";
 import { getToken, getUser } from "../../utils/auth";
 import "../posthog-runwal-dashboard/styles/dashboard.css";
 
@@ -111,12 +112,11 @@ function PosthogLacircleDashboardContent() {
       licensedSeats: null,
       module: null,
       subModule: null,
-      // Lacircle sends both identifiers on every PostHog Adoption API call —
-      // app_id and project_code together (same pattern as My Piramal) —
-      // since buildPosthogQuery() only falls back to the URL's app_id when
-      // no project_code is set on the filters at all.
       appId: LACIRCLE_APP_ID,
       projectCode: "RMP-01",
+      // Its own adoption API reads app_id 32 on the server. (It used to send project_code RMP-01 as
+      // well, which no LaCircle event carries, so every adoption card came back empty.)
+      apiPath: ADOPTION_API.lacircle,
     };
   }, [selectedSiteId, devPlatform, rangeFrom, rangeTo]);
 

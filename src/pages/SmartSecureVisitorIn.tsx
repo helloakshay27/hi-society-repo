@@ -124,17 +124,20 @@ const formatDateTime = (iso: string | null | undefined): string => {
   });
 };
 
-const getHostDisplay = (v: ApiGatekeeper): string => {
+const getHostList = (v: ApiGatekeeper): { name: string; flat: string }[] => {
   if (v.visitor_hosts && v.visitor_hosts.length > 0) {
-    const h = v.visitor_hosts[0];
-    const block = h.block_name ? `${h.block_name}/` : "";
-    return `${block}${h.flat_name} - ${h.name}`;
+    return v.visitor_hosts
+      .filter((h) => h.name)
+      .map((h) => ({
+        name: h.name,
+        flat: [h.block_name, h.flat_name].filter(Boolean).join("/"),
+      }));
   }
-  const flat = v.user_flat ? `${v.user_flat.block}/${v.user_flat.flat}` : "";
   if (v.visit_to) {
-    return flat ? `${flat} - ${v.visit_to}` : v.visit_to;
+    const flat = v.user_flat ? `${v.user_flat.block}/${v.user_flat.flat}` : "";
+    return [{ name: v.visit_to, flat }];
   }
-  return flat || "--";
+  return [];
 };
 
 // ─── API Actions ──────────────────────────────────────────────────────────────
@@ -230,7 +233,7 @@ const visitorInColumns: ColumnConfig[] = [
   { key: "primary_host",    label: "Host",           sortable: false, hideable: true,  draggable: true  },
   { key: "visit_purpose",   label: "Purpose",        sortable: true,  hideable: true,  draggable: true  },
   { key: "society_gate",    label: "Gate",           sortable: false, hideable: true,  draggable: true  },
-  { key: "guest_entry_time",label: "Entry Time",     sortable: true,  hideable: true,  draggable: true  },
+  // { key: "guest_entry_time",label: "Entry Time",     sortable: true,  hideable: true,  draggable: true  },
   // { key: "check_in_action", label: "Check In",       sortable: false, hideable: false, draggable: false },
   // { key: "out_action",      label: "OUT",            sortable: false, hideable: false, draggable: false },
 ];
@@ -482,9 +485,24 @@ const SmartSecureVisitorIn: React.FC = () => {
       }
 
       case "primary_host":
-        return (
-          <span className="text-sm text-gray-700">{getHostDisplay(visitor)}</span>
-        );
+        {
+          const hosts = getHostList(visitor);
+          if (hosts.length === 0) {
+            return <span className="text-sm text-gray-700">--</span>;
+          }
+          return (
+            <div className="flex flex-col gap-0.5">
+              {hosts.map((h, i) => (
+                <span key={i} className="text-sm text-gray-700">
+                  {h.name}
+                  {h.flat && (
+                    <span className="ml-1 text-xs text-gray-400">({h.flat})</span>
+                  )}
+                </span>
+              ))}
+            </div>
+          );
+        }
 
       case "visit_purpose":
         return (
@@ -737,7 +755,7 @@ const SmartSecureVisitorIn: React.FC = () => {
         hideColumnsButton={false}
         loading={isLoading}
         leftActions={leftActions}
-        rightActions={rightActions}
+        // rightActions={rightActions}
       />
 
       {/* Pagination */}

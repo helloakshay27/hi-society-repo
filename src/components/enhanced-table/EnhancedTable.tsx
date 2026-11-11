@@ -138,6 +138,7 @@ interface EnhancedTableProps<T> {
   onSort?: (columnKey: string) => void;
   storageKey?: string;
   className?: string;
+  truncateCells?: boolean;
   emptyMessage?: string;
   selectable?: boolean;
   selectedItems?: string[];
@@ -196,6 +197,15 @@ interface EnhancedTableProps<T> {
   renderChildrenRows?: (children: any[], parentId: string) => React.ReactNode;
 }
 
+function getCellText(value: React.ReactNode): string {
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (Array.isArray(value)) return value.map(getCellText).join("");
+  if (React.isValidElement<{ children?: React.ReactNode }>(value)) {
+    return getCellText(value.props.children);
+  }
+  return "";
+}
+
 export function EnhancedTable<T extends Record<string, any>>({
   handleExport,
   data,
@@ -207,6 +217,7 @@ export function EnhancedTable<T extends Record<string, any>>({
   onSort,
   storageKey,
   className,
+  truncateCells = false,
   emptyMessage = "No data available",
   selectable = false,
   selectedItems = [],
@@ -1256,10 +1267,15 @@ export function EnhancedTable<T extends Record<string, any>>({
                             const cellContent = renderRow
                               ? renderedRow[column.key]
                               : renderCell?.(item, column.key, index);
+                            const cellTitle = truncateCells ? getCellText(cellContent).trim() : "";
                             return (
                               <TableCell
                                 key={column.key}
-                                className="p-4 text-left min-w-32"
+                                className={cn(
+                                  "p-4 text-left min-w-32",
+                                  truncateCells && "dashboard-table-cell-truncate"
+                                )}
+                                title={cellTitle || undefined}
                                 style={{
                                   width: columnWidths[column.key]
                                     ? `${columnWidths[column.key]}px`

@@ -69,6 +69,8 @@ export const CACHE_CONFIG = {
 };
 
 const commonKey = (f: DashboardFilters) => [
+  // Each dashboard's own API: without it, two dashboards with the same dates shared cached answers.
+  f.apiPath || '',
   f.url || '',
   f.from,
   f.to,
@@ -177,6 +179,7 @@ export function useGrowth(filters: DashboardFilters, enabled: boolean = true) {
       'fm-adoption',
       'growth',
       filters.url || '',
+      filters.from,
       filters.to,
       filters.siteIds.join(','),
       filters.devPlatform,
@@ -214,13 +217,16 @@ export function useRoles(filters: DashboardFilters, enabled: boolean = true) {
   });
 }
 
-/** Sidebar "Recent Activity" feed — latest identified active users, most recent first. */
+/** Sidebar "Recent Activity" log — one row per event, newest first, refreshed while the tab is open. */
 export function useRecentActiveUsers(filters: DashboardFilters, enabled: boolean = true, limit = 10) {
   return useQuery<RecentActiveUsersResponse>({
     queryKey: ['fm-adoption', 'recent_active_users', ...commonKey(filters), limit],
     queryFn: () => fetchRecentActiveUsers(filters, limit),
     enabled,
     ...CACHE_CONFIG,
+    staleTime: 0,
+    // A live log of the newest events (not distinct users): refreshed every 15 s.
+    refetchInterval: 15 * 1000,
   });
 }
 

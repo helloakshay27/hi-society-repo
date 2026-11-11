@@ -29,6 +29,7 @@ interface StaffInfo {
   last_name: string;
   mobile: string;
   document: string;
+  image_url?: string | null;
 }
 
 interface StaffInoutRecord {
@@ -108,6 +109,7 @@ const SmartSecureStaffsOut: React.FC = () => {
   const [previewImageOpen, setPreviewImageOpen] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [previewImageName, setPreviewImageName] = useState<string>("");
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -199,16 +201,40 @@ const SmartSecureStaffsOut: React.FC = () => {
             </span>
           );
 
-        case "photo":
+        case "photo": {
+          const imageUrl = record.staff.image_url;
+          const hasImage = !!imageUrl && !imageUrl.startsWith("/images/") && !failedImages.has(record.id);
+          const fullName = `${record.staff.first_name} ${record.staff.last_name}`.trim();
           return (
             <div className="flex justify-center">
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-              </svg>
-              </div>
+              {hasImage ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewImageUrl(imageUrl!);
+                    setPreviewImageName(fullName || "Staff");
+                    setPreviewImageOpen(true);
+                  }}
+                  className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[#C72030] cursor-pointer transition-all"
+                  title="Click to preview"
+                >
+                  <img
+                    src={imageUrl!}
+                    alt={fullName}
+                    className="w-full h-full object-cover"
+                    onError={() => setFailedImages((prev) => new Set(prev).add(record.id))}
+                  />
+                </button>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center" title="No image">
+                  <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                </div>
+              )}
             </div>
           );
+        }
 
         case "full_name":
           return (
@@ -321,7 +347,7 @@ const SmartSecureStaffsOut: React.FC = () => {
         }
       }
     },
-    [currentPage, loadingIds, handleCheckAction]
+    [currentPage, loadingIds, handleCheckAction, failedImages]
   );
 
   const renderPaginationItems = () => {

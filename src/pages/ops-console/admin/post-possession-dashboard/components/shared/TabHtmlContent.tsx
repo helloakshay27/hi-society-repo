@@ -1,5 +1,43 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Chart, type ChartConfiguration } from 'chart.js/auto';
+import { createRoot, type Root } from 'react-dom/client';
+import { mountChartGrid } from './ChartGrid';
+import {
+  QuarantineCasesEnhancedTable,
+  type QuarantineCaseRow,
+} from './QuarantineCasesEnhancedTable';
+import {
+  RegisteredSlotsEnhancedTable,
+  type RegisteredSlotRow,
+} from './RegisteredSlotsEnhancedTable';
+import {
+  FacilitySlotsEnhancedTable,
+  type FacilitySlotRow,
+} from './FacilitySlotsEnhancedTable';
+import {
+  ImportantEventsEnhancedTable,
+  type ImportantEventRow,
+} from './ImportantEventsEnhancedTable';
+import {
+  BusinessDirectoryEnhancedTable,
+  type BusinessDirectoryRow,
+} from './BusinessDirectoryEnhancedTable';
+import {
+  ComplianceChecklistEnhancedTable,
+  COMPLIANCE_CHECKLIST_SCROLL_CLASS,
+  PendingRequestsEnhancedTable,
+  PENDING_REQUESTS_SCROLL_CLASS,
+  type FitoutTableRow,
+} from './FitoutEnhancedTables';
+import {
+  MissedPatrolIncidentsEnhancedTable,
+  MISSED_PATROL_INCIDENTS_SCROLL_CLASS,
+  type MissedPatrolIncidentRow,
+} from './MissedPatrolIncidentsEnhancedTable';
+import {
+  HtmlTableEnhancedTable,
+  type HtmlTableEnhancedRow,
+} from './HtmlTableEnhancedTable';
 import { applyBrandHexRemap } from '../../charts/chartPalette';
 import {
   centerLabelForChart,
@@ -8,11 +46,66 @@ import {
 } from '../../charts/bgDonut';
 import { colsSpecFromBarConfig, renderBusinessGenieCols } from '../../charts/bgCols';
 import { inlineLucideIcons, normalizeInfoButtons } from '../../utils/lucideInline';
+import { bindPostPossessionApiData } from '../../apiView';
+import type { PostPossessionApiState, PostPossessionTab } from '../../api';
 
 interface TabHtmlContentProps {
   html: string;
   charts?: Record<string, ChartConfiguration>;
   className?: string;
+  apiTab?: PostPossessionTab;
+  apiState?: PostPossessionApiState;
+  /** My Dashboard: render only the cards with these chart_codes (hs-{tab}-{slug}) */
+  myDashboardCodes?: Set<string>;
+}
+
+// Shown while a tab's API data is loading, instead of the static sample content in the tab HTML
+const LOADING_SKELETON_HTML =
+  '<div class="pp-skel" aria-busy="true" aria-label="Loading">' +
+  '<div class="pp-skel-bar"></div>' +
+  '<div class="pp-skel-row"><i></i><i></i><i></i><i></i></div>' +
+  '<div class="pp-skel-grid"><i></i><i></i></div>' +
+  '<div class="pp-skel-grid"><i></i><i></i><i></i></div>' +
+  '</div>';
+
+
+// ---- Sample (dummy) content that the API binders don't replace -------------------------------
+// The tab HTML ships with sample commentary, lists and table rows. Anything of these kinds that
+// is still identical after the API data has been bound is sample content, so it is removed.
+const SAMPLE_SELECTOR =
+  '.aib, .aib-eyebrow, .aib-g, .aib-p, .aib-sig, .aib-conf, .ins, .sub, .evitem, .chip, tbody tr';
+
+function snapshotSamples(container: HTMLElement): Array<[Element, string]> {
+  return Array.from(container.querySelectorAll(SAMPLE_SELECTOR)).map((el) => [el, el.textContent ?? '']);
+}
+
+function removeUnboundSamples(samples: Array<[Element, string]>): void {
+  samples.forEach(([el, text]) => {
+    if (el.isConnected && (el.textContent ?? '') === text) el.remove();
+  });
+  // An AI-briefing card whose sample paragraphs were all removed has nothing left to show
+  document.querySelectorAll<HTMLElement>('.aib').forEach((card) => {
+    if (!card.querySelector('.aib-p, .aib-g, .aib-sig, li')) card.remove();
+  });
+}
+
+/** Small hard-coded figures inside labels/badges that have no API source. */
+function cleanSampleLabels(container: HTMLElement): void {
+  container.querySelectorAll<HTMLElement>('.ct').forEach((heading) => {
+    heading.childNodes.forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+        node.textContent = node.textContent.replace(/\s[—–-]\s\d+\s+open\s*$/i, '');
+      }
+    });
+  });
+  // Sample footnotes that describe made-up incidents
+  container.querySelectorAll<HTMLElement>('div').forEach((el) => {
+    if (el.children.length === 0 && /^Same guard missed both checkpoints/.test((el.textContent ?? '').trim())) el.remove();
+  });
+  container.querySelectorAll<HTMLElement>('.kc-tgt, span.b').forEach((el) => {
+    const text = (el.textContent ?? '').trim();
+    if (/\d+\s*[×x]\s*gap\b/i.test(text) || /^\d+ active · avg \d+ days$/i.test(text)) el.remove();
+  });
 }
 
 const CANVAS_RE = /<div class="chx"([^>]*)>\s*<canvas id="([^"]+)"><\/canvas>\s*<\/div>/g;
@@ -39,17 +132,312 @@ function injectChartPlaceholders(html: string): string {
   });
 }
 
-function wrapGridTables(container: HTMLElement) {
-  container.querySelectorAll<HTMLTableElement>('.g .card > .tbl').forEach((table) => {
-    if (table.parentElement?.classList.contains('tbl-scroll')) return;
-    const wrap = document.createElement('div');
-    wrap.className = 'tbl-scroll';
-    table.parentNode?.insertBefore(wrap, table);
-    wrap.appendChild(table);
+function readQuarantineCaseTable(table: HTMLTableElement): {
+  rows: QuarantineCaseRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 7)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      return {
+        id: `${values[0]}-${index}`,
+        resident: values[0],
+        tower: values[1],
+        flat: values[2],
+        type: values[3],
+        start: values[4],
+        end: values[5],
+        status: values[6],
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No quarantine cases found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No quarantine cases found.',
+  };
+}
+
+function readRegisteredSlotsTable(table: HTMLTableElement): {
+  rows: RegisteredSlotRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 8)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      return {
+        id: `${values[0]}-${index}`,
+        slot: values[0],
+        tower: values[1],
+        flat: values[2],
+        vehicleNumber: values[3],
+        vehicleType: values[4],
+        parkingType: values[5],
+        stickerNumber: values[6],
+        status: values[7],
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No registered slots found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No registered slots found.',
+  };
+}
+
+function readFitoutTable(
+  table: HTMLTableElement,
+  columnCount: number
+): { rows: FitoutTableRow[]; emptyMessage: string } {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= columnCount)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      const record: FitoutTableRow = { id: `${values[0]}-${index}` };
+      values.forEach((value, cellIndex) => {
+        record[`c${cellIndex}`] = value;
+      });
+      return record;
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No data found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No data found.',
+  };
+}
+
+function readFacilitySlotsTable(table: HTMLTableElement): {
+  rows: FacilitySlotRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 4)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      return {
+        id: `${values[0]}-${index}`,
+        facility: values[0],
+        morning: values[1],
+        evening: values[2],
+        vacantToday: values[3],
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No facility slots found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No facility slots found.',
+  };
+}
+
+function readImportantEventsTable(table: HTMLTableElement): {
+  rows: ImportantEventRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 3)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      return {
+        id: `${values[0]}-${index}`,
+        time: values[0],
+        event: values[1],
+        domain: values[2],
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No important events found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No important events found.',
+  };
+}
+
+function readMissedPatrolIncidentsTable(table: HTMLTableElement): {
+  rows: MissedPatrolIncidentRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 5)
+    .map((row, index) => {
+      const values = Array.from(row.cells, (cell) => cell.textContent?.trim() ?? '');
+      return {
+        id: `missed-patrol-${index}`,
+        c0: values[0],
+        c1: values[1],
+        c2: values[2],
+        c3: values[3],
+        c4: values[4],
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No missed patrol incidents found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() ||
+          'No missed patrol incidents found.',
+  };
+}
+
+function readBusinessDirectoryTable(table: HTMLTableElement): {
+  rows: BusinessDirectoryRow[];
+  emptyMessage: string;
+} {
+  const sourceRows = Array.from(table.tBodies.item(0)?.rows ?? []);
+  const rows = sourceRows
+    .filter((row) => row.cells.length >= 3)
+    .map((row, index) => {
+      const companyCell = row.cells.item(0);
+      return {
+        id: `${companyCell?.textContent?.trim() ?? 'vendor'}-${index}`,
+        company:
+          companyCell?.querySelector<HTMLElement>('.evt-title')?.textContent?.trim() ??
+          companyCell?.textContent?.trim() ??
+          '',
+        category: row.cells.item(1)?.textContent?.trim() ?? '',
+        status: row.cells.item(2)?.textContent?.trim() ?? '',
+      };
+    });
+
+  return {
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No vendors found.'
+        : sourceRows[0]?.cells.item(0)?.textContent?.trim() || 'No vendors found.',
+  };
+}
+
+function renderCellNodes(parent: Element, keyPrefix: string): React.ReactNode[] {
+  return Array.from(parent.childNodes).map((node, index) => {
+    const key = `${keyPrefix}-${index}`;
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+    if (!(node instanceof HTMLElement)) return null;
+
+    const children = renderCellNodes(node, key);
+    const className = node.className || undefined;
+    const title = node.title || undefined;
+    switch (node.tagName) {
+      case 'SPAN':
+        return (
+          <span key={key} className={className} title={title}>
+            {children}
+          </span>
+        );
+      case 'B':
+        return <b key={key}>{children}</b>;
+      case 'STRONG':
+        return <strong key={key}>{children}</strong>;
+      case 'EM':
+        return <em key={key}>{children}</em>;
+      case 'BR':
+        return <br key={key} />;
+      default:
+        return children;
+    }
   });
 }
 
-function dispatchDynamicRenders(container: HTMLElement) {
+function readGenericTable(table: HTMLTableElement): {
+  headers: string[];
+  rows: HtmlTableEnhancedRow[];
+  emptyMessage: string;
+} | null {
+  const sourceRows = Array.from(table.rows);
+  const headerRow =
+    table.tHead?.rows.item(0) ??
+    sourceRows.find((row) => Array.from(row.cells).some((cell) => cell.tagName === 'TH')) ??
+    sourceRows[0];
+  if (!headerRow) return null;
+
+  const headerCells = Array.from(headerRow.cells);
+  if (headerCells.length === 0) return null;
+  const headers = headerCells.map((cell, index) => cell.textContent?.trim() || `Column ${index + 1}`);
+  const dataRows = sourceRows.filter(
+    (row) =>
+      row !== headerRow &&
+      !Array.from(row.cells).some((cell) => cell.tagName === 'TH') &&
+      row.cells.length >= headers.length
+  );
+  const rows = dataRows.map((row, rowIndex) => {
+    const drill =
+      row.dataset.drill ??
+      row.querySelector<HTMLElement>('[data-drill]')?.dataset.drill ??
+      '';
+    const values: HtmlTableEnhancedRow = {
+      id: `${table.id || table.className || 'table'}-${rowIndex}`,
+      drill,
+    };
+
+    headers.forEach((_header, index) => {
+      const cell = row.cells.item(index);
+      values[`c${index}`] = cell ? renderCellNodes(cell, `${rowIndex}-${index}`) : '';
+      values[`c${index}Text`] = cell?.textContent?.trim() ?? '';
+      values[`c${index}Class`] = cell?.className ?? '';
+      values[`c${index}Title`] = cell?.title ?? '';
+    });
+
+    return values;
+  });
+
+  return {
+    headers,
+    rows,
+    emptyMessage:
+      rows.length > 0
+        ? 'No data available.'
+        : sourceRows.find((row) => row !== headerRow)?.cells.item(0)?.textContent?.trim() ||
+          'No data available.',
+  };
+}
+
+function wrapGridTables(container: HTMLElement) {
+  container
+    .querySelectorAll<HTMLTableElement>(
+      '.g .card > .tbl, .g .card .slottbl, #evTable'
+    )
+    .forEach((table) => {
+      const parent = table.parentElement;
+      if (parent?.classList.contains('tbl-scroll')) {
+        if (table.id === 'evTable') {
+          parent.classList.add('important-events-scroll');
+        }
+        return;
+      }
+      const wrap = document.createElement('div');
+      wrap.className =
+        table.id === 'evTable'
+          ? 'tbl-scroll important-events-scroll'
+          : table.classList.contains('slottbl')
+            ? 'tbl-scroll facility-slots-scroll'
+            : 'tbl-scroll';
+      table.parentNode?.insertBefore(wrap, table);
+      wrap.appendChild(table);
+    });
+}
+
+function dispatchDynamicRenders(container: HTMLElement, apiTab?: PostPossessionTab) {
   const slotBody = container.querySelector('#slotBody');
   if (slotBody && slotBody.children.length === 0) {
     window.dispatchEvent(new CustomEvent('pp-render-slots', { detail: slotBody }));
@@ -63,7 +451,7 @@ function dispatchDynamicRenders(container: HTMLElement) {
     window.dispatchEvent(new CustomEvent('pp-render-ageing', { detail: ageing }));
   }
   const notices = container.querySelector('#notices');
-  if (notices && !notices.getAttribute('data-pp-ready')) {
+  if (notices && apiTab !== 'helpdesk' && !notices.getAttribute('data-pp-ready')) {
     window.dispatchEvent(new CustomEvent('pp-render-notices', { detail: notices }));
   }
   const towerTicketBars = container.querySelector('#towerTicketBars');
@@ -96,9 +484,19 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
   html,
   charts = {},
   className,
+  apiTab,
+  apiState,
+  myDashboardCodes,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  // API-backed tabs show a skeleton until their data has loaded — never the static sample HTML
+  const isLoading = !!apiTab && (!apiState || apiState.loading);
   const chartInstancesRef = useRef<Map<string, Chart>>(new Map());
+  const enhancedTableRootRef = useRef<Root | null>(null);
+  const directoryTableRootRef = useRef<Root | null>(null);
+  const fitoutTableRootsRef = useRef<Root[]>([]);
+  const missedPatrolTableRootRef = useRef<Root | null>(null);
+  const genericTableRootsRef = useRef<Root[]>([]);
   const chartsRef = useRef(charts);
   chartsRef.current = charts;
   const processedHtml = useMemo(
@@ -116,9 +514,8 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
       if (!id) return;
 
       const config = chartConfigs[id];
-      placeholder.innerHTML = '';
-
       if (!config) return;
+      placeholder.innerHTML = '';
 
       // Business Genie SVG donuts (center total + side legend) instead of Chart.js pie
       if (config.type === 'doughnut') {
@@ -165,7 +562,7 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
     });
   }, []);
 
-  const handleClick = useCallback((e: React.MouseEvent) => {
+  const handleClick = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
 
     const infoEl = target.closest('[data-info]') as HTMLElement | null;
@@ -198,13 +595,171 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
     }
   }, []);
 
+  // Native listener (not a React onClick): the draggable cards live in their own React root
+  // mounted inside this container, and React synthetic events don't bubble between roots.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.addEventListener('click', handleClick);
+    return () => container.removeEventListener('click', handleClick);
+  }, [handleClick]);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    if (isLoading) {
+      container.innerHTML = LOADING_SKELETON_HTML;
+      return;
+    }
     container.innerHTML = processedHtml;
     wrapGridTables(container);
-    dispatchDynamicRenders(container);
+    dispatchDynamicRenders(container, apiTab);
+    const sampleSnapshot = apiTab ? snapshotSamples(container) : [];
+    if (apiTab) bindPostPossessionApiData(container, apiTab, apiState);
+    if (apiTab) {
+      removeUnboundSamples(sampleSnapshot);
+      cleanSampleLabels(container);
+    }
+    if (
+      apiTab === 'community' ||
+      apiTab === 'parking' ||
+      apiTab === 'club' ||
+      apiTab === 'overview'
+    ) {
+      const tableSelector =
+        apiTab === 'club'
+          ? 'table.slottbl'
+          : apiTab === 'overview'
+            ? '#evTable'
+            : 'table.tbl';
+      const dataTable = container.querySelector<HTMLTableElement>(tableSelector);
+      if (dataTable) {
+        const mountNode = document.createElement('div');
+        dataTable.replaceWith(mountNode);
+        const root = createRoot(mountNode);
+        enhancedTableRootRef.current = root;
+        if (apiTab === 'community') {
+          const { rows, emptyMessage } = readQuarantineCaseTable(dataTable);
+          root.render(<QuarantineCasesEnhancedTable rows={rows} emptyMessage={emptyMessage} />);
+        } else if (apiTab === 'parking') {
+          const { rows, emptyMessage } = readRegisteredSlotsTable(dataTable);
+          root.render(<RegisteredSlotsEnhancedTable rows={rows} emptyMessage={emptyMessage} />);
+        } else if (apiTab === 'club') {
+          const { rows, emptyMessage } = readFacilitySlotsTable(dataTable);
+          root.render(
+            <FacilitySlotsEnhancedTable
+              rows={rows}
+              emptyMessage={emptyMessage}
+            />
+          );
+        } else {
+          const { rows, emptyMessage } = readImportantEventsTable(dataTable);
+          root.render(
+            <ImportantEventsEnhancedTable rows={rows} emptyMessage={emptyMessage} />
+          );
+        }
+      }
+    }
+    if (apiTab === 'fitout') {
+      const fitoutTables = [
+        {
+          table: container.querySelectorAll<HTMLTableElement>('table.tbl')[0],
+          columnCount: 11,
+          scrollClass: PENDING_REQUESTS_SCROLL_CLASS,
+          Component: PendingRequestsEnhancedTable,
+        },
+        {
+          table: container.querySelectorAll<HTMLTableElement>('table.tbl')[1],
+          columnCount: 8,
+          scrollClass: COMPLIANCE_CHECKLIST_SCROLL_CLASS,
+          Component: ComplianceChecklistEnhancedTable,
+        },
+      ];
+      fitoutTables.forEach(({ table, columnCount, scrollClass, Component }) => {
+        if (!table) return;
+        const { rows, emptyMessage } = readFitoutTable(table, columnCount);
+        let viewport = table.parentElement;
+        if (!viewport?.classList.contains('tbl-scroll')) {
+          viewport = document.createElement('div');
+          viewport.className = 'tbl-scroll';
+          table.before(viewport);
+          viewport.append(table);
+        }
+        viewport.classList.add(scrollClass);
+        const mountNode = document.createElement('div');
+        table.replaceWith(mountNode);
+        const root = createRoot(mountNode);
+        fitoutTableRootsRef.current.push(root);
+        root.render(<Component rows={rows} emptyMessage={emptyMessage} />);
+      });
+    }
+    if (apiTab === 'security') {
+      const infoButton = container.querySelector<HTMLElement>(
+        '[data-info="tbl_tsc_missed_patrol_resulting_incidents"]'
+      );
+      const table = infoButton
+        ?.closest<HTMLElement>('.card, .table-block')
+        ?.querySelector<HTMLTableElement>('table.tbl');
+      if (table) {
+        const { rows, emptyMessage } = readMissedPatrolIncidentsTable(table);
+        const viewport = document.createElement('div');
+        viewport.className = `tbl-scroll ${MISSED_PATROL_INCIDENTS_SCROLL_CLASS}`;
+        table.before(viewport);
+        viewport.append(table);
+        const mountNode = document.createElement('div');
+        table.replaceWith(mountNode);
+        const root = createRoot(mountNode);
+        missedPatrolTableRootRef.current = root;
+        root.render(
+          <MissedPatrolIncidentsEnhancedTable rows={rows} emptyMessage={emptyMessage} />
+        );
+      }
+    }
+    if (apiTab === 'community') {
+      const directoryTable = container.querySelector<HTMLTableElement>('#dirTable');
+      if (directoryTable) {
+        const { rows, emptyMessage } = readBusinessDirectoryTable(directoryTable);
+        const mountNode = document.createElement('div');
+        directoryTable.replaceWith(mountNode);
+        container.querySelector('#dirPgnInfo')?.closest('.pgn')?.remove();
+        const root = createRoot(mountNode);
+        directoryTableRootRef.current = root;
+        root.render(
+          <BusinessDirectoryEnhancedTable rows={rows} emptyMessage={emptyMessage} />
+        );
+      }
+    }
+    container
+      .querySelectorAll<HTMLTableElement>('table:not(.dashboard-enhanced-table)')
+      .forEach((table) => {
+        const parsedTable = readGenericTable(table);
+        if (!parsedTable) return;
+
+        let viewport = table.parentElement;
+        if (!viewport?.classList.contains('tbl-scroll')) {
+          viewport = document.createElement('div');
+          table.before(viewport);
+          viewport.append(table);
+        }
+        viewport.classList.add('tbl-scroll', 'dashboard-html-table-scroll');
+        if (table.classList.contains('lb-tbl')) {
+          viewport.classList.add('leaderboard-scorecard-scroll');
+        }
+
+        const mountNode = document.createElement('div');
+        table.replaceWith(mountNode);
+        const root = createRoot(mountNode);
+        genericTableRootsRef.current.push(root);
+        root.render(
+          <HtmlTableEnhancedTable
+            headers={parsedTable.headers}
+            tableClassName={table.className}
+            rows={parsedTable.rows}
+            emptyMessage={parsedTable.emptyMessage}
+          />
+        );
+      });
     mountCharts(container);
 
     const showInfoPopover = (btn: HTMLElement) => {
@@ -230,8 +785,47 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
       });
     });
 
-    return () => cleanups.forEach((fn) => fn());
-  }, [processedHtml, mountCharts]);
+    return () => {
+      cleanups.forEach((fn) => fn());
+      // Unmounting a React root while React is rendering logs a race-condition
+      // warning, so collect the roots now and unmount them after this commit.
+      const roots: Root[] = [
+        enhancedTableRootRef.current,
+        directoryTableRootRef.current,
+        missedPatrolTableRootRef.current,
+        ...fitoutTableRootsRef.current,
+        ...genericTableRootsRef.current,
+      ].filter((root): root is Root => root !== null);
+      enhancedTableRootRef.current = null;
+      directoryTableRootRef.current = null;
+      missedPatrolTableRootRef.current = null;
+      fitoutTableRootsRef.current = [];
+      genericTableRootsRef.current = [];
+      window.setTimeout(() => roots.forEach((root) => root.unmount()), 0);
+    };
+  // myDashboardCodes: rebuilding My Dashboard's content when a card is added/removed
+  }, [apiState, apiTab, processedHtml, mountCharts, myDashboardCodes, isLoading]);
+
+  // Make every chart card draggable + resizable (react-grid-layout). Declared after the effect
+  // that injects the HTML, so it runs once the cards exist and re-runs whenever they are rebuilt.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || isLoading) return;
+    const societyId = localStorage.getItem('selectedSocietyId') || 'default';
+    const isMy = !!myDashboardCodes;
+    // My Dashboard hides the full tab until it has been cut down to the saved cards
+    if (isMy) container.classList.add('pp-my-pending');
+    const cleanup = mountChartGrid(container, `${isMy ? 'my:' : ''}${societyId}:${apiTab ?? 'static'}`, {
+      tab: apiTab ?? 'allTowers',
+      mode: isMy ? 'my' : 'tab',
+      codes: myDashboardCodes,
+      onMounted: () => container.classList.remove('pp-my-pending'),
+    });
+    return () => {
+      cleanup();
+      container.classList.remove('pp-my-pending');
+    };
+  }, [apiState, apiTab, processedHtml, myDashboardCodes, isLoading]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -257,5 +851,5 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
     };
   }, []);
 
-  return <div ref={containerRef} className={className ?? 'pp-tab-content'} onClick={handleClick} />;
+  return <div ref={containerRef} className={className ?? 'pp-tab-content'} />;
 };

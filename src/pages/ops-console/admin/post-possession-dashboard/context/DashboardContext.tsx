@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChartConfiguration } from 'chart.js';
 import type { DateGrain, TabId, ToastType } from '../types';
 import { useToast } from '../hooks/useToast';
@@ -15,6 +15,45 @@ import {
   TOWER_TICKET_BARS,
 } from '../data/mockData';
 import { rgba } from '../charts/chartPalette';
+import { buildChipDrill, CHIP_SOURCES } from '../data/liveChipDrill';
+import { buildKpiDrill, CHIP_BY_DRILL_KEY, resolveKpiDrill, type KpiDrillSource } from '../data/liveKpiDrill';
+import { useMyDashboardStore } from '../store/myDashboardStore';
+import {
+  createEndpointErrors,
+  fetchPostPossessionFilters,
+  fetchPostPossessionTab,
+  fetchAccountSocieties,
+  fetchSocietyTowers,
+  getSocietyOptions,
+  getSelectedSocietyId,
+  POST_POSSESSION_TAB_BY_DASHBOARD_TAB,
+  type EndpointResult,
+  type PostPossessionApiState,
+  type PostPossessionRequestFilters,
+  type PostPossessionTab,
+  type SocietyOption,
+  type TowerOption,
+} from '../api';
+
+const IMPORTANT_EVENTS_PER_PAGE = 20;
+const TAB_BADGE_SOURCES: Array<{ tab: PostPossessionTab; endpoint: string }> = [
+  { tab: 'allTowers', endpoint: 'summary' },
+  { tab: 'helpdesk', endpoint: 'kpis' },
+  { tab: 'security', endpoint: 'kpis' },
+  { tab: 'staff', endpoint: 'kpis' },
+  { tab: 'club', endpoint: 'kpis' },
+  { tab: 'fitout', endpoint: 'kpis' },
+  { tab: 'parking', endpoint: 'kpis' },
+];
+
+/** Query params that scope every dashboard API call to the selected period. */
+export interface ApiDateRange {
+  period?: 'today' | 'this_week' | 'this_month' | 'custom';
+  /** YYYY-MM, used when a specific month is picked */
+  month?: string;
+  from?: string;
+  to?: string;
+}
 
 interface DashboardContextValue {
   activeTab: TabId;
@@ -23,6 +62,8 @@ interface DashboardContextValue {
   markTabInitialized: (tab: TabId) => void;
   getCharts: (tabId: TabId) => Record<string, ChartConfiguration>;
   openDrill: (key: string) => void;
+  /** Fetch the chip's mapped APIs (with the active period + tower filters) and show them in the drill panel */
+  openChipDrill: (chipKey: string) => void;
   closeDrill: () => void;
   drillOpen: boolean;
   drillContent: ReturnType<typeof useDrillPanel>['content'];
@@ -42,9 +83,24 @@ interface DashboardContextValue {
   infoKey: string | null;
   infoAnchor: HTMLElement | null;
   flashSectionId: string | null;
+  societyId: string | null;
+  societies: SocietyOption[];
+  /** Tower filter pills: 'All' plus the selected society's towers */
+  towerOptions: string[];
+  selectSociety: (societyId: string) => void;
+  postPossessionApi: Partial<Record<PostPossessionTab, PostPossessionApiState>>;
+  tabBadgeApi: Partial<Record<PostPossessionTab, EndpointResult>>;
+  apiDateRange: ApiDateRange | null;
+  setApiDateRange: (range: ApiDateRange) => void;
 }
 
-const DashboardContext = createContext<DashboardContextValue | null>(null);
+// Keep ONE context object across dev hot reloads of this file. A reload would otherwise create a
+// new context, leaving the mounted <DashboardProvider> on the old one and every consumer on the
+// new one — which throws "useDashboard must be used within DashboardProvider".
+const DashboardContext: React.Context<DashboardContextValue | null> =
+  (import.meta.hot?.data?.dashboardContext as React.Context<DashboardContextValue | null> | undefined) ??
+  createContext<DashboardContextValue | null>(null);
+if (import.meta.hot) import.meta.hot.data.dashboardContext = DashboardContext;
 
 export function useDashboard() {
   const ctx = useContext(DashboardContext);
@@ -209,6 +265,60 @@ function renderSlots(tbody: HTMLElement, openDrill: (k: string) => void) {
   });
 }
 
+function getPath(source: unknown, path: string[]): unknown {
+  let value = source;
+  for (const key of path) {
+    if (typeof value !== 'object' || value === null || !(key in value)) return undefined;
+    value = (value as Record<string, unknown>)[key];
+  }
+  return value;
+}
+
+function getRequestFilters(
+  result: EndpointResult | undefined,
+  towerFilter: string,
+  apiDateRange: ApiDateRange | null,
+  tab: PostPossessionTab
+): PostPossessionRequestFilters {
+  const data = result?.data;
+  const site = getPath(data, ['site']);
+  const siteId =
+    typeof site === 'object' &&
+    site !== null &&
+    'id' in site &&
+    (typeof site.id === 'number' || typeof site.id === 'string')
+      ? String(site.id)
+      : undefined;
+  const towers = getPath(data, ['towers']);
+  const normalizedFilter = towerFilter.toLowerCase().replace(/^tower\s*/, '').replace(/^t(?=\d)/, '');
+  const tower = towerFilter !== 'All' && Array.isArray(towers)
+    ? towers.find((item) => {
+        if (typeof item !== 'object' || item === null || !('name' in item)) return false;
+        const name = String(item.name).toLowerCase().replace(/^tower\s*/, '').replace(/^t(?=\d)/, '');
+        return name === normalizedFilter;
+      })
+    : undefined;
+  // Tower filter (FM / T1 / T2 / T3) applies to every tab except the all-towers
+  // leaderboard, which compares towers against each other.
+  const towerId =
+    tab !== 'allTowers' &&
+    typeof tower === 'object' &&
+    tower !== null &&
+    'id' in tower &&
+    (typeof tower.id === 'number' || typeof tower.id === 'string')
+      ? String(tower.id)
+      : undefined;
+
+  return {
+    siteId,
+    towerId,
+    period: apiDateRange?.period,
+    month: apiDateRange?.month,
+    dateFrom: apiDateRange?.from,
+    dateTo: apiDateRange?.to,
+  };
+}
+
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<TabId>('t-lb');
   const [initializedTabs, setInitializedTabs] = useState<Set<string>>(() => new Set(['t-lb']));
@@ -219,9 +329,171 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [infoKey, setInfoKey] = useState<string | null>(null);
   const [infoAnchor, setInfoAnchor] = useState<HTMLElement | null>(null);
   const [flashSectionId, setFlashSectionId] = useState<string | null>(null);
+  const [societyId, setSocietyId] = useState<string | null>(() => getSelectedSocietyId());
+  const [postPossessionApi, setPostPossessionApi] = useState<
+    Partial<Record<PostPossessionTab, PostPossessionApiState>>
+  >({});
+  const [tabBadgeApi, setTabBadgeApi] = useState<
+    Partial<Record<PostPossessionTab, EndpointResult>>
+  >({});
+  const [apiFilters, setApiFilters] = useState<{
+    societyId: string | null;
+    loading: boolean;
+    result?: EndpointResult;
+  }>({ societyId: null, loading: false });
+  const [apiDateRange, setApiDateRange] = useState<ApiDateRange | null>(null);
+  const [accountSocieties, setAccountSocieties] = useState<SocietyOption[]>([]);
+  // Prefer the user's account societies; fall back to whatever the filters API lists
+  const societies = useMemo(() => {
+    const fromFilters = getSocietyOptions(apiFilters.result?.data);
+    return accountSocieties.length > 0 ? accountSocieties : fromFilters;
+  }, [accountSocieties, apiFilters.result]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchAccountSocieties()
+      .then((options) => {
+        if (!cancelled) setAccountSocieties(options);
+      })
+      .catch((error) => console.error('Failed to load societies from account', error));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const [societyTowers, setSocietyTowers] = useState<TowerOption[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    setSocietyTowers([]);
+    if (!societyId) return;
+    fetchSocietyTowers(societyId)
+      .then((towers) => {
+        if (!cancelled) setSocietyTowers(towers);
+      })
+      .catch((error) => console.error('Failed to load towers', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [societyId]);
+
+  const towerOptions = useMemo(() => ['All', ...societyTowers.map((tower) => tower.name)], [societyTowers]);
+
+  // Drop a stale tower selection (e.g. after switching society)
+  useEffect(() => {
+    if (towerFilter !== 'All' && societyTowers.length > 0 && !societyTowers.some((tower) => tower.name === towerFilter)) {
+      setTowerFilter('All');
+    }
+  }, [societyTowers, towerFilter]);
+
+  // /filters towers first; the society's own towers fill in when /filters has none
+  const filtersForRequest = useMemo<EndpointResult | undefined>(() => {
+    const data = apiFilters.result?.data;
+    const base = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
+    const fromFilters = Array.isArray(base.towers) ? base.towers : [];
+    return {
+      ...apiFilters.result,
+      data: { ...base, towers: [...fromFilters, ...societyTowers] },
+    };
+  }, [apiFilters.result, societyTowers]);
 
   const { toasts, toast, dismiss } = useToast();
-  const { content: drillContent, isOpen: drillOpen, openDrill, closeDrill } = useDrillPanel(toast);
+  const {
+    content: drillContent,
+    isOpen: drillOpen,
+    openDrill: openStaticDrill,
+    openLiveDrill,
+    closeDrill: closeDrillPanel,
+  } = useDrillPanel(toast);
+  // Latest chip-drill request; older/late responses must not overwrite a newer
+  // panel or reopen one the user already closed.
+  const chipDrillRequestRef = useRef(0);
+  const closeDrill = useCallback(() => {
+    chipDrillRequestRef.current += 1;
+    closeDrillPanel();
+  }, [closeDrillPanel]);
+  const selectSociety = useCallback((nextSocietyId: string) => {
+    localStorage.setItem('selectedSocietyId', nextSocietyId);
+    localStorage.setItem('society_id', nextSocietyId);
+    sessionStorage.setItem('selectedSocietyId', nextSocietyId);
+    setSocietyId(nextSocietyId);
+    setTowerFilter('All');
+  }, []);
+
+  const openChipDrill = useCallback(
+    (chipKey: string) => {
+      const sources = CHIP_SOURCES[chipKey];
+      if (!sources) return;
+      if (!societyId) {
+        openLiveDrill({
+          t: 'Select a society',
+          s: 'A valid society_id is required',
+          b: '<div class="dsec"><div style="font-size:11px;line-height:1.7">Select a society to load this data.</div></div>',
+        });
+        return;
+      }
+      const requestId = ++chipDrillRequestRef.current;
+      openLiveDrill({
+        t: 'Loading…',
+        s: 'Fetching live data',
+        b: '<div class="dsec"><div style="font-size:11px;color:var(--sto)">Loading from API…</div></div>',
+      });
+      void Promise.all(
+        sources.map(async ({ tab, endpoints }) => {
+          const filters = getRequestFilters(filtersForRequest, towerFilter, apiDateRange, tab);
+          return [tab, await fetchPostPossessionTab(tab, societyId, filters, endpoints)] as const;
+        })
+      ).then((entries) => {
+        if (requestId !== chipDrillRequestRef.current) return;
+        openLiveDrill(buildChipDrill(chipKey, Object.fromEntries(entries)));
+      });
+    },
+    [societyId, filtersForRequest, towerFilter, apiDateRange, openLiveDrill]
+  );
+
+  const openKpiDrill = useCallback(
+    (key: string, source: KpiDrillSource) => {
+      if (!societyId) {
+        openLiveDrill({
+          t: 'Select a society',
+          s: 'A valid society_id is required',
+          b: '<div class="dsec"><div style="font-size:11px;line-height:1.7">Select a society to load this data.</div></div>',
+        });
+        return;
+      }
+      const requestId = ++chipDrillRequestRef.current;
+      openLiveDrill({
+        t: source.title,
+        s: 'Fetching live data',
+        b: '<div class="dsec"><div style="font-size:11px;color:var(--sto)">Loading from API…</div></div>',
+      });
+      const filters = getRequestFilters(filtersForRequest, towerFilter, apiDateRange, source.tab);
+      void fetchPostPossessionTab(source.tab, societyId, filters, source.endpoints).then((endpoints) => {
+        if (requestId !== chipDrillRequestRef.current) return;
+        openLiveDrill(buildKpiDrill(key, source, { [source.tab]: endpoints }));
+      });
+    },
+    [societyId, filtersForRequest, towerFilter, apiDateRange, openLiveDrill]
+  );
+
+  // Every card/row click lands here: filter-chip keys and KPI keys open live panels built from
+  // the API (with the active period + tower filters); anything else gets the "not available" notice.
+  const openDrill = useCallback(
+    (key: string) => {
+      const chipKey = CHIP_BY_DRILL_KEY[key];
+      if (chipKey) {
+        openChipDrill(chipKey);
+        return;
+      }
+      const source = resolveKpiDrill(key);
+      if (source) {
+        openKpiDrill(key, source);
+        return;
+      }
+      chipDrillRequestRef.current += 1;
+      openStaticDrill(key);
+    },
+    [openChipDrill, openKpiDrill, openStaticDrill]
+  );
 
   const markTabInitialized = useCallback((tab: TabId) => {
     setInitializedTabs((prev) => {
@@ -263,6 +535,139 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [activeTab, markTabInitialized]);
 
   useEffect(() => {
+    let cancelled = false;
+    setApiFilters((current) => ({ societyId, loading: true, result: current.result }));
+    void fetchPostPossessionFilters(societyId).then((result) => {
+      if (cancelled) return;
+      setApiFilters({ societyId, loading: false, result });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [societyId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setTabBadgeApi({});
+    if (!societyId || apiFilters.loading || apiFilters.societyId !== societyId) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const requests = TAB_BADGE_SOURCES.map(async ({ tab, endpoint }) => {
+      const requestFilters = getRequestFilters(filtersForRequest, towerFilter, apiDateRange, tab);
+      const endpoints = await fetchPostPossessionTab(tab, societyId, requestFilters, [endpoint]);
+      return [tab, endpoints[endpoint]] as const;
+    });
+
+    void Promise.all(requests).then((results) => {
+      if (cancelled) return;
+      const next: Partial<Record<PostPossessionTab, EndpointResult>> = {};
+      for (const [tab, result] of results) {
+        if (result) next[tab] = result;
+      }
+      setTabBadgeApi(next);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [societyId, apiFilters, filtersForRequest, towerFilter, apiDateRange]);
+
+  // Tabs whose data the current view needs: the active tab, or — on My Dashboard — every tab
+  // that has a saved card.
+  const myDashboardTabs = useMyDashboardStore((state) =>
+    Array.from(new Set(state.cards.map((card) => card.tab))).sort().join(',')
+  );
+
+  useEffect(() => {
+    const mapped = POST_POSSESSION_TAB_BY_DASHBOARD_TAB[activeTab];
+    const apiTabs: PostPossessionTab[] =
+      activeTab === 't-my'
+        ? ((myDashboardTabs ? myDashboardTabs.split(',') : []) as PostPossessionTab[])
+        : mapped
+          ? [mapped]
+          : [];
+    if (apiTabs.length === 0) return;
+
+    let cancelled = false;
+    apiTabs.forEach((apiTab) => {
+      setPostPossessionApi((current) => ({
+        ...current,
+        [apiTab]: { societyId, loading: true, endpoints: {} },
+      }));
+
+      if (!societyId) {
+        setPostPossessionApi((current) => ({
+          ...current,
+          [apiTab]: {
+            societyId: null,
+            loading: false,
+            endpoints: createEndpointErrors(
+              apiTab,
+              'A valid society_id is required. Select a society and reopen this tab.'
+            ),
+          },
+        }));
+        return;
+      }
+      if (apiFilters.loading || apiFilters.societyId !== societyId) return;
+
+      const requestFilters = getRequestFilters(filtersForRequest, towerFilter, apiDateRange, apiTab);
+      const pageFilters =
+        apiTab === 'overview'
+          ? { ...requestFilters, page: 1, perPage: IMPORTANT_EVENTS_PER_PAGE }
+          : requestFilters;
+      void fetchPostPossessionTab(apiTab, societyId, pageFilters).then((endpoints) => {
+        if (cancelled) return;
+        setPostPossessionApi((current) => ({
+          ...current,
+          [apiTab]: { societyId, loading: false, endpoints },
+        }));
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, myDashboardTabs, societyId, apiFilters, filtersForRequest, towerFilter, apiDateRange]);
+
+  useEffect(() => {
+    if (activeTab === 't-ov' || !societyId || apiFilters.loading || apiFilters.societyId !== societyId) {
+      return;
+    }
+
+    let cancelled = false;
+    const requestFilters = getRequestFilters(
+      filtersForRequest,
+      towerFilter,
+      apiDateRange,
+      'overview'
+    );
+    setPostPossessionApi((current) => ({
+      ...current,
+      overview: { societyId, loading: true, endpoints: {} },
+    }));
+    void fetchPostPossessionTab('overview', societyId, {
+      ...requestFilters,
+      page: 1,
+      perPage: IMPORTANT_EVENTS_PER_PAGE,
+    }).then((endpoints) => {
+      if (cancelled) return;
+      setPostPossessionApi((current) => ({
+        ...current,
+        overview: { societyId, loading: false, endpoints },
+      }));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, societyId, apiFilters, filtersForRequest, towerFilter, apiDateRange]);
+
+  useEffect(() => {
     const onDrill = (e: Event) => openDrill((e as CustomEvent<string>).detail);
     const onTab = (e: Event) => setActiveTab((e as CustomEvent<TabId>).detail);
     const onInfo = (e: Event) => {
@@ -285,7 +690,31 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
     const onDirectory = (e: Event) => {
       const { tbody, container } = (e as CustomEvent<{ tbody: HTMLElement; container: HTMLElement }>).detail;
-      renderDirectoryPage(1, 4, tbody, container, openDrill);
+      renderDirectoryPage(1, 20, tbody, container, openDrill);
+    };
+    const onEventsPage = (e: Event) => {
+      const page = Number((e as CustomEvent<number>).detail);
+      if (!Number.isInteger(page) || page < 1 || !societyId || apiFilters.loading) return;
+      const requestFilters = getRequestFilters(
+        filtersForRequest,
+        towerFilter,
+        apiDateRange,
+        'overview'
+      );
+      setPostPossessionApi((current) => ({
+        ...current,
+        overview: { societyId, loading: true, endpoints: current.overview?.endpoints ?? {} },
+      }));
+      void fetchPostPossessionTab('overview', societyId, {
+        ...requestFilters,
+        page,
+        perPage: IMPORTANT_EVENTS_PER_PAGE,
+      }).then((endpoints) => {
+        setPostPossessionApi((current) => ({
+          ...current,
+          overview: { societyId, loading: false, endpoints },
+        }));
+      });
     };
 
     window.addEventListener('pp-open-drill', onDrill);
@@ -302,6 +731,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     window.addEventListener('pp-render-slots', onSlots);
     window.addEventListener('pp-render-events', onEvents);
     window.addEventListener('pp-render-directory', onDirectory);
+    window.addEventListener('pp-overview-events-page', onEventsPage);
 
     return () => {
       window.removeEventListener('pp-open-drill', onDrill);
@@ -316,8 +746,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       window.removeEventListener('pp-render-slots', onSlots);
       window.removeEventListener('pp-render-events', onEvents);
       window.removeEventListener('pp-render-directory', onDirectory);
+      window.removeEventListener('pp-overview-events-page', onEventsPage);
     };
-  }, [openDrill, showInfo, toast]);
+  }, [activeTab, apiDateRange, apiFilters, filtersForRequest, openDrill, societyId, showInfo, toast, towerFilter]);
 
   const value = useMemo<DashboardContextValue>(
     () => ({
@@ -327,6 +758,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       markTabInitialized,
       getCharts,
       openDrill,
+      openChipDrill,
       closeDrill,
       drillOpen,
       drillContent,
@@ -346,6 +778,14 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       infoKey,
       infoAnchor,
       flashSectionId,
+      societyId,
+      societies,
+      towerOptions,
+      selectSociety,
+      postPossessionApi,
+      tabBadgeApi,
+      apiDateRange,
+      setApiDateRange,
     }),
     [
       activeTab,
@@ -353,6 +793,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       markTabInitialized,
       getCharts,
       openDrill,
+      openChipDrill,
       closeDrill,
       drillOpen,
       drillContent,
@@ -368,6 +809,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       infoKey,
       infoAnchor,
       flashSectionId,
+      societyId,
+      societies,
+      towerOptions,
+      selectSociety,
+      postPossessionApi,
+      tabBadgeApi,
+      apiDateRange,
     ]
   );
 

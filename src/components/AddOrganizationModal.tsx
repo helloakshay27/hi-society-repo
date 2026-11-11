@@ -19,7 +19,7 @@ import { Upload, X, Building, Globe, Flag, Image } from "lucide-react";
 import { toast } from "sonner";
 import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddOrganizationModalProps {
   isOpen: boolean;
@@ -52,6 +52,35 @@ const PRODUCT_OPTIONS = [
   { label: "FM Matrix", value: "FM Matrix", code: "FM" },
   { label: "Snagging", value: "Snagging", code: "Snag" },
 ];
+
+const DASHBOARD_TYPE_OPTIONS = [
+  { label: "Usage Dashboard", value: "usage_dashboard" },
+  { label: "Analytics Dashboard", value: "analytics_dashboard" },
+  { label: "Executive Dashboard", value: "executive_dashboard" },
+  { label: "Sitewise Dashboard", value: "sitewise_dashboard" },
+];
+
+const DASHBOARD_LEVEL_OPTIONS = [
+  { label: "Chart", value: "chart" },
+  { label: "Dashboard", value: "dashboard" },
+];
+
+interface DashboardEntry {
+  dashboard_name: string;
+  dashboard_type: string;
+  dashboard_url: string;
+  level: string;
+  active: boolean;
+}
+
+const EMPTY_DASHBOARD: DashboardEntry = {
+  dashboard_name: "",
+  dashboard_type: "",
+  dashboard_url: "",
+  level: "dashboard",
+  active: true,
+};
+
 interface WelcomeDescription {
   description: string;
   active: boolean;
@@ -74,8 +103,6 @@ interface CEOInfo {
   video: File | null;
   videoUrl: string | null;
 }
-
-
 
 const fieldStyles = {
   height: { xs: 28, sm: 36, md: 45 },
@@ -112,7 +139,9 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Local preview URLs for selected images (support multiple previews)
   const [logoPreviewUrls, setLogoPreviewUrls] = useState<string[]>([]);
-  const [poweredByPreviewUrls, setPoweredByPreviewUrls] = useState<string[]>([]);
+  const [poweredByPreviewUrls, setPoweredByPreviewUrls] = useState<string[]>(
+    []
+  );
   const [formData, setFormData] = useState<OrganizationFormData>({
     name: "",
     description: "",
@@ -122,18 +151,36 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
     powered_by_logo: null,
   });
   const [products, setProducts] = useState<ProductEntry[]>([
-    { product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" },
+    {
+      product_name: "HiSociety",
+      product_code: "HS",
+      domain: "",
+      sub_domain: "",
+      front_domain: "",
+      front_subdomain: "",
+    },
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const addProduct = () => {
     setProducts((prev) => [
       ...prev,
-      { product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" },
+      {
+        product_name: "HiSociety",
+        product_code: "HS",
+        domain: "",
+        sub_domain: "",
+        front_domain: "",
+        front_subdomain: "",
+      },
     ]);
   };
 
-  const updateProduct = (index: number, field: keyof ProductEntry, value: string) => {
+  const updateProduct = (
+    index: number,
+    field: keyof ProductEntry,
+    value: string
+  ) => {
     setProducts((prev) =>
       prev.map((item, i) => {
         if (i !== index) return item;
@@ -150,9 +197,31 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
   const removeProduct = (index: number) => {
     setProducts((prev) => prev.filter((_, i) => i !== index));
   };
-  const [welcomeDescriptions, setWelcomeDescriptions] = useState<WelcomeDescription[]>([
-    { description: "", active: false },
+
+  const [dashboards, setDashboards] = useState<DashboardEntry[]>([
+    { ...EMPTY_DASHBOARD },
   ]);
+
+  const addDashboard = () => {
+    setDashboards((prev) => [...prev, { ...EMPTY_DASHBOARD }]);
+  };
+
+  const updateDashboard = (
+    index: number,
+    field: keyof DashboardEntry,
+    value: string | boolean
+  ) => {
+    setDashboards((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    );
+  };
+
+  const removeDashboard = (index: number) => {
+    setDashboards((prev) => prev.filter((_, i) => i !== index));
+  };
+  const [welcomeDescriptions, setWelcomeDescriptions] = useState<
+    WelcomeDescription[]
+  >([{ description: "", active: false }]);
 
   const addWelcomeDescription = () => {
     setWelcomeDescriptions((prev) => [
@@ -167,16 +236,13 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
     value: string | boolean
   ) => {
     setWelcomeDescriptions((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
-      )
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
   };
 
   const removeWelcomeDescription = (index: number) => {
     setWelcomeDescriptions((prev) => prev.filter((_, i) => i !== index));
   };
-
 
   const [visionList, setVisionList] = useState<VisionItem[]>([
     { description: "", active: false },
@@ -191,9 +257,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
     value: string | boolean
   ) => {
     setVisionList((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
-      )
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
   };
 
@@ -214,9 +278,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
     value: string | boolean
   ) => {
     setMissionList((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
-      )
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
   };
 
@@ -263,10 +325,10 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
   // Validate domains like example.com and with more segments (e.g., app.example.co.in)
   const isValidDomain = (value: string) => {
     if (!value) return false;
-    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;
+    const domainRegex =
+      /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;
     return domainRegex.test(value.trim());
   };
-
 
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
@@ -274,8 +336,20 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
       newErrors.name = "Organization name is required";
     }
     products.forEach((p, i) => {
-      if (!p.domain.trim()) newErrors[`product_${i}_domain`] = "Domain is required";
-      if (!p.sub_domain.trim()) newErrors[`product_${i}_sub_domain`] = "Sub domain is required";
+      if (!p.domain.trim())
+        newErrors[`product_${i}_domain`] = "Domain is required";
+      if (!p.sub_domain.trim())
+        newErrors[`product_${i}_sub_domain`] = "Sub domain is required";
+    });
+    // Blank dashboard rows are skipped; partially filled ones need both fields
+    dashboards.forEach((d, i) => {
+      const hasName = !!d.dashboard_name.trim();
+      const hasUrl = !!d.dashboard_url.trim();
+      if (!hasName && !hasUrl) return;
+      if (!hasName)
+        newErrors[`dashboard_${i}_name`] = "Dashboard name is required";
+      if (!hasUrl)
+        newErrors[`dashboard_${i}_url`] = "Dashboard URL is required";
     });
 
     setErrors(newErrors);
@@ -295,13 +369,55 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
     submitFormData.append("organization[name]", formData.name);
     submitFormData.append("organization[description]", formData.description);
     products.forEach((product, index) => {
-      submitFormData.append(`organization[organization_products_attributes][${index}][product_name]`, product.product_name);
-      submitFormData.append(`organization[organization_products_attributes][${index}][product_code]`, product.product_code);
-      submitFormData.append(`organization[organization_products_attributes][${index}][domain]`, product.domain);
-      submitFormData.append(`organization[organization_products_attributes][${index}][sub_domain]`, product.sub_domain);
-      submitFormData.append(`organization[organization_products_attributes][${index}][front_domain]`, product.front_domain);
-      submitFormData.append(`organization[organization_products_attributes][${index}][front_subdomain]`, product.front_subdomain);
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][product_name]`,
+        product.product_name
+      );
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][product_code]`,
+        product.product_code
+      );
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][domain]`,
+        product.domain
+      );
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][sub_domain]`,
+        product.sub_domain
+      );
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][front_domain]`,
+        product.front_domain
+      );
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][front_subdomain]`,
+        product.front_subdomain
+      );
     });
+    dashboards
+      .filter((d) => d.dashboard_name.trim() || d.dashboard_url.trim())
+      .forEach((dashboard, index) => {
+        submitFormData.append(
+          `organization[dashboard_access_controls_attributes][${index}][dashboard_name]`,
+          dashboard.dashboard_name.trim()
+        );
+        submitFormData.append(
+          `organization[dashboard_access_controls_attributes][${index}][dashboard_type]`,
+          dashboard.dashboard_type
+        );
+        submitFormData.append(
+          `organization[dashboard_access_controls_attributes][${index}][dashboard_url]`,
+          dashboard.dashboard_url.trim()
+        );
+        submitFormData.append(
+          `organization[dashboard_access_controls_attributes][${index}][level]`,
+          dashboard.level
+        );
+        submitFormData.append(
+          `organization[dashboard_access_controls_attributes][${index}][active]`,
+          dashboard.active.toString()
+        );
+      });
     if (formData.country_id && formData.country_id !== "none") {
       submitFormData.append("organization[country_id]", formData.country_id);
     }
@@ -392,7 +508,6 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
       }
     }
 
-
     try {
       const response = await fetch(getFullUrl("/organizations.json"), {
         method: "POST",
@@ -408,7 +523,9 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
         onSuccess();
       } else {
         const errorData = await response.json().catch(() => null);
-        toast.error(formatApiErrorMessage(errorData, "Failed to create organization"));
+        toast.error(
+          formatApiErrorMessage(errorData, "Failed to create organization")
+        );
       }
     } catch (error) {
       console.error("Error creating organization:", error);
@@ -445,7 +562,10 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
     const files = event.target.files;
     if (files && files.length > 0) {
       const first = files[0];
-      setFormData((prev) => ({ ...prev, powered_by_logo: prev.powered_by_logo ?? first }));
+      setFormData((prev) => ({
+        ...prev,
+        powered_by_logo: prev.powered_by_logo ?? first,
+      }));
       const newUrls: string[] = Array.from(files).map((f) =>
         URL.createObjectURL(f)
       );
@@ -502,7 +622,18 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
       logo: null,
       powered_by_logo: null,
     });
-    setProducts([{ product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" }]);
+    setProducts([
+      {
+        product_name: "HiSociety",
+        product_code: "HS",
+        domain: "",
+        sub_domain: "",
+        front_domain: "",
+        front_subdomain: "",
+      },
+    ]);
+    setDashboards([{ ...EMPTY_DASHBOARD }]);
+    setErrors({});
     logoPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
     poweredByPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
     setLogoPreviewUrls([]);
@@ -521,7 +652,6 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
     }));
   };
 
-
   const removeCeoVideo = () => {
     setCeoInfo((prev) => ({
       ...prev,
@@ -529,8 +659,6 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
       videoUrl: null,
     }));
   };
-
-
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose} modal={false}>
@@ -660,15 +788,27 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
             </h3>
             <div className="space-y-4">
               {products.map((product, index) => (
-                <div key={index} className="border rounded-lg p-4 bg-gray-50 space-y-4">
+                <div
+                  key={index}
+                  className="border rounded-lg p-4 bg-gray-50 space-y-4"
+                >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Product {index + 1}</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Product {index + 1}
+                    </span>
                     {products.length > 1 && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => removeProduct(index)}
-                        style={{ padding: 0, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center" }}
+                        style={{
+                          padding: 0,
+                          width: 24,
+                          height: 24,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
                         disabled={isSubmitting}
                       >
                         <X style={{ color: "red", width: 16, height: 16 }} />
@@ -676,10 +816,18 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                     )}
                   </div>
                   <FormControl fullWidth variant="outlined">
-                    <InputLabel shrink required sx={{ "& .MuiFormLabel-asterisk": { color: "#C72030" } }}>Product</InputLabel>
+                    <InputLabel
+                      shrink
+                      required
+                      sx={{ "& .MuiFormLabel-asterisk": { color: "#C72030" } }}
+                    >
+                      Product
+                    </InputLabel>
                     <MuiSelect
                       value={product.product_name}
-                      onChange={(e) => updateProduct(index, "product_name", e.target.value)}
+                      onChange={(e) =>
+                        updateProduct(index, "product_name", e.target.value)
+                      }
                       label="Product"
                       displayEmpty
                       MenuProps={selectMenuProps}
@@ -687,7 +835,9 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                       disabled={isSubmitting}
                     >
                       {PRODUCT_OPTIONS.map((opt) => (
-                        <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                        <MenuItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </MenuItem>
                       ))}
                     </MuiSelect>
                   </FormControl>
@@ -698,11 +848,20 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                       value={product.domain}
                       onChange={(e) => {
                         updateProduct(index, "domain", e.target.value);
-                        setErrors((prev) => ({ ...prev, [`product_${index}_domain`]: "" }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          [`product_${index}_domain`]: "",
+                        }));
                       }}
                       fullWidth
                       variant="outlined"
-                      InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#C72030" } } }}
+                      InputLabelProps={{
+                        shrink: true,
+                        required: true,
+                        sx: {
+                          "& .MuiFormLabel-asterisk": { color: "#C72030" },
+                        },
+                      }}
                       InputProps={{ sx: fieldStyles }}
                       disabled={isSubmitting}
                       required
@@ -715,11 +874,20 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                       value={product.sub_domain}
                       onChange={(e) => {
                         updateProduct(index, "sub_domain", e.target.value);
-                        setErrors((prev) => ({ ...prev, [`product_${index}_sub_domain`]: "" }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          [`product_${index}_sub_domain`]: "",
+                        }));
                       }}
                       fullWidth
                       variant="outlined"
-                      InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#C72030" } } }}
+                      InputLabelProps={{
+                        shrink: true,
+                        required: true,
+                        sx: {
+                          "& .MuiFormLabel-asterisk": { color: "#C72030" },
+                        },
+                      }}
                       InputProps={{ sx: fieldStyles }}
                       disabled={isSubmitting}
                       required
@@ -732,7 +900,9 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                       label="Frontend Domain"
                       placeholder="example.com"
                       value={product.front_domain}
-                      onChange={(e) => updateProduct(index, "front_domain", e.target.value)}
+                      onChange={(e) =>
+                        updateProduct(index, "front_domain", e.target.value)
+                      }
                       fullWidth
                       variant="outlined"
                       InputLabelProps={{ shrink: true }}
@@ -743,7 +913,9 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                       label="Frontend Subdomain"
                       placeholder="web"
                       value={product.front_subdomain}
-                      onChange={(e) => updateProduct(index, "front_subdomain", e.target.value)}
+                      onChange={(e) =>
+                        updateProduct(index, "front_subdomain", e.target.value)
+                      }
                       fullWidth
                       variant="outlined"
                       InputLabelProps={{ shrink: true }}
@@ -761,6 +933,159 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
               disabled={isSubmitting}
             >
               + Add Product
+            </Button>
+          </div>
+
+          {/* Dashboard Configuration Section */}
+          <div>
+            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+              Dashboard Configuration
+            </h3>
+            <div className="space-y-4">
+              {dashboards.map((dashboard, index) => (
+                <div
+                  key={index}
+                  className="border rounded-lg p-4 bg-gray-50 space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">
+                      Dashboard {index + 1}
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={dashboard.active}
+                          onCheckedChange={(checked) =>
+                            updateDashboard(index, "active", checked)
+                          }
+                          disabled={isSubmitting}
+                        />
+                        <Badge
+                          variant={dashboard.active ? "default" : "secondary"}
+                        >
+                          {dashboard.active ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      {dashboards.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeDashboard(index)}
+                          style={{
+                            padding: 0,
+                            width: 24,
+                            height: 24,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                          disabled={isSubmitting}
+                        >
+                          <X style={{ color: "red", width: 16, height: 16 }} />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <TextField
+                      label="Dashboard Name"
+                      placeholder="Enter dashboard name"
+                      value={dashboard.dashboard_name}
+                      onChange={(e) => {
+                        updateDashboard(
+                          index,
+                          "dashboard_name",
+                          e.target.value
+                        );
+                        setErrors((prev) => ({
+                          ...prev,
+                          [`dashboard_${index}_name`]: "",
+                        }));
+                      }}
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
+                      disabled={isSubmitting}
+                      error={!!errors[`dashboard_${index}_name`]}
+                      helperText={errors[`dashboard_${index}_name`] || ""}
+                    />
+                    <TextField
+                      label="Dashboard URL"
+                      placeholder="https://example.com/dashboard"
+                      value={dashboard.dashboard_url}
+                      onChange={(e) => {
+                        updateDashboard(index, "dashboard_url", e.target.value);
+                        setErrors((prev) => ({
+                          ...prev,
+                          [`dashboard_${index}_url`]: "",
+                        }));
+                      }}
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
+                      disabled={isSubmitting}
+                      error={!!errors[`dashboard_${index}_url`]}
+                      helperText={errors[`dashboard_${index}_url`] || ""}
+                    />
+                  </div>
+                  {/* Type & Level dropdowns hidden for now
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel shrink>Type</InputLabel>
+                      <MuiSelect
+                        value={dashboard.dashboard_type}
+                        onChange={(e) =>
+                          updateDashboard(index, "dashboard_type", e.target.value)
+                        }
+                        label="Type"
+                        displayEmpty
+                        MenuProps={selectMenuProps}
+                        sx={fieldStyles}
+                        disabled={isSubmitting}
+                      >
+                        <MenuItem value="">
+                          <em>Select Type</em>
+                        </MenuItem>
+                        {DASHBOARD_TYPE_OPTIONS.map((opt) => (
+                          <MenuItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </FormControl>
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel shrink>Level</InputLabel>
+                      <MuiSelect
+                        value={dashboard.level}
+                        onChange={(e) =>
+                          updateDashboard(index, "level", e.target.value)
+                        }
+                        label="Level"
+                        MenuProps={selectMenuProps}
+                        sx={fieldStyles}
+                        disabled={isSubmitting}
+                      >
+                        {DASHBOARD_LEVEL_OPTIONS.map((opt) => (
+                          <MenuItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </FormControl>
+                  </div>
+                  */}
+                </div>
+              ))}
+            </div>
+            <Button
+              type="button"
+              onClick={addDashboard}
+              className="mt-4 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              disabled={isSubmitting}
+            >
+              + Add Dashboard
             </Button>
           </div>
 
@@ -859,15 +1184,13 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                     Upload Guidelines
                   </p>
                   <p className="text-xs text-white/90">
-                    Recommended formats: PNG, JPG, SVG • Max size: 2MB • Min dimensions: 200x200px
+                    Recommended formats: PNG, JPG, SVG • Max size: 2MB • Min
+                    dimensions: 200x200px
                   </p>
                 </div>
               </div>
             </div>
-
-
           </div>
-
 
           {/* Welcome Description Section */}
           {/* <div>
@@ -1152,7 +1475,6 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 disabled={isSubmitting}
               /> */}
 
-
               {/* <TextField
                 label="Designation"
                 value={ceoInfo.designation}
@@ -1162,7 +1484,6 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 disabled
               /> */}
             </div>
-
 
             {/* <div className="mt-4">
               <TextField
@@ -1216,7 +1537,6 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 disabled={isSubmitting}
               /> */}
             </div>
-
 
             {/* Photo Upload */}
             {/* <div className="mt-4">
@@ -1303,9 +1623,6 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
               )}
             </div> */}
 
-
-
-
             {/* Video Upload */}
             {/* <div className="mt-4">
               <span className="text-sm font-medium">Video</span>
@@ -1324,7 +1641,6 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 />
               )} */}
             {/* </div> */}
-
 
             {/* <div className="mt-4 space-y-2">
               <span className="text-sm font-medium">Video</span>
@@ -1372,11 +1688,7 @@ export const AddOrganizationModal: React.FC<AddOrganizationModalProps> = ({
                 </div>
               )}
             </div> */}
-
           </div>
-
-
-
         </div>
 
         {/* Action Buttons */}

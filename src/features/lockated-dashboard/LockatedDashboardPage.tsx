@@ -14,36 +14,24 @@ import {
 } from './context/LockatedDashboardContext';
 // import { useEnsureProjectCode } from '../../pages/posthog-runwal-dashboard/hooks/useEnsureProjectCode';
 import type { DashboardFilters } from '../../pages/posthog-runwal-dashboard/api/types';
+import { ADOPTION_API, clearDashboardScope, pinDashboardScope, stripScopeFromUrl } from '../../pages/posthog-runwal-dashboard/api/api';
 
 // const LOCKATED_PROJECT_CODE = 'HS-01';
 const LOCKATED_APP_ID = '1';
 
 /**
- * Pins `?app_id=` in the URL and removes any `project_code` (shared API helpers
- * fall back to reading it off the URL), so only app_id is sent to PostHog.
+ * Pins Lockated's app_id in memory (not in the browser URL, so the code is never exposed) and
+ * removes any app_id / project_code an old link put in the address bar.
  */
 function useEnsureAppIdOnly(appId: string): boolean {
-  const navigate = useNavigate();
-  const location = useLocation();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    let changed = false;
-    if (params.get('app_id') !== appId) {
-      params.set('app_id', appId);
-      changed = true;
-    }
-    if (params.has('project_code')) {
-      params.delete('project_code');
-      changed = true;
-    }
-    if (changed) {
-      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-      return;
-    }
+    pinDashboardScope({ appId });
+    stripScopeFromUrl();
     setReady(true);
-  }, [location.pathname, location.search, navigate, appId]);
+    return () => clearDashboardScope();
+  }, [appId]);
 
   return ready;
 }
@@ -131,8 +119,9 @@ function DashboardLayout() {
     licensedSeats: null,
     module: null,
     subModule: null,
-    appId: appId || LOCKATED_APP_ID
+    appId: appId || LOCKATED_APP_ID,
     // projectCode: projectCode || LOCKATED_PROJECT_CODE
+    apiPath: ADOPTION_API.lockated,
   };
 
   // Live recently-online count from traffic metrics
@@ -254,7 +243,7 @@ export default function LockatedDashboardPage({
   // const projectCodeReady = useEnsureProjectCode(projectCode);
   // if (!projectCodeReady) return null;
 
-  // For now only app_id is sent — pin ?app_id= and strip any project_code.
+  // Lockated is scoped by app_id, held in memory (never in the URL).
   const appIdReady = useEnsureAppIdOnly(appId);
   if (!appIdReady) return null;
 

@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
 import { Send, Star, X } from 'lucide-react';
-import {
-  COPILOT_DEFAULT_REPLY,
-  COPILOT_GREETING,
-  COPILOT_PROMPT_LABELS,
-  COPILOT_RESPONSES,
-} from '../../data/copilotResponses';
-import { SOCIETY_NAME } from '../../data/mockData';
+import { COPILOT_GREETING, COPILOT_PROMPT_LABELS } from '../../data/copilotResponses';
 import { useDashboard } from '../../context/DashboardContext';
+import { getUser } from '@/utils/auth';
 
 interface CopilotMessage {
   id: string;
@@ -17,10 +12,23 @@ interface CopilotMessage {
 
 let msgCounter = 0;
 
+// Genie has no live-data backend yet; the canned sample answers (with made-up figures) were removed.
+const COPILOT_NOT_CONNECTED =
+  "Genie isn't connected to live data yet, so I can't answer that. Your dashboard figures are live — answers will appear here once Genie is connected.";
+
 export const AiCopilot: React.FC = () => {
-  const { copilotOpen, setCopilotOpen } = useDashboard();
+  const { copilotOpen, setCopilotOpen, societyId, societies } = useDashboard();
+  const societyName = societies.find((society) => society.id === societyId)?.name ?? 'this society';
+  const firstName = (() => {
+    try {
+      return getUser()?.firstname?.trim() || '';
+    } catch {
+      return '';
+    }
+  })();
+  const greeting = firstName ? `Hi ${firstName}` : 'Hi';
   const [messages, setMessages] = useState<CopilotMessage[]>([
-    { id: 'greeting', type: 'a', html: COPILOT_GREETING },
+    { id: 'greeting', type: 'a', html: COPILOT_GREETING.replace('Hi Komal', greeting) },
   ]);
   const [typing, setTyping] = useState(false);
   const [input, setInput] = useState('');
@@ -34,7 +42,7 @@ export const AiCopilot: React.FC = () => {
     setTyping(true);
     window.setTimeout(() => {
       setTyping(false);
-      addMessage(COPILOT_RESPONSES[key] || 'I can answer questions about your BMS data once connected.', 'a');
+      addMessage(COPILOT_NOT_CONNECTED, 'a');
     }, 1100);
   };
 
@@ -46,13 +54,13 @@ export const AiCopilot: React.FC = () => {
     setTyping(true);
     window.setTimeout(() => {
       setTyping(false);
-      addMessage(COPILOT_DEFAULT_REPLY, 'a');
+      addMessage(COPILOT_NOT_CONNECTED, 'a');
     }, 900);
   };
 
   return (
     <>
-      <button
+      {/* <button
         type="button"
         className="cbtn"
         onClick={() => setCopilotOpen(!copilotOpen)}
@@ -60,7 +68,7 @@ export const AiCopilot: React.FC = () => {
       >
         <Star size={16} color="white" fill="white" />
         Ask Genie
-      </button>
+      </button> */}
       <div className={`cpan${copilotOpen ? ' on' : ''}`} id="cpan">
         <div className="chdr">
           <div className="chi">
@@ -68,7 +76,7 @@ export const AiCopilot: React.FC = () => {
           </div>
           <div>
             <div className="cht">Ask Genie</div>
-            <div className="chs">{SOCIETY_NAME} · Business Genie AI</div>
+            <div className="chs">{societyName} · Business Genie AI</div>
           </div>
           <button type="button" className="ccl" onClick={() => setCopilotOpen(false)}>
             <X size={13} color="white" />
@@ -97,7 +105,7 @@ export const AiCopilot: React.FC = () => {
           <input
             className="cinp"
             type="text"
-            placeholder={`Ask about ${SOCIETY_NAME}…`}
+            placeholder={`Ask about ${societyName}…`}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {

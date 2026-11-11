@@ -7,15 +7,16 @@ interface ModuleNavProps {
   selectedModule: string | null;
   selectedSubModule: string | null;
   onSelectModule: (moduleName: string | null) => void;
-  onSelectSubModule: (subModuleName: string) => void;
+  /** null = the whole module. */
+  onSelectSubModule: (subModuleKey: string | null) => void;
   isLoading?: boolean;
   isSubModulesLoading?: boolean;
 }
 
-const VISIBLE_ITEMS = 8;
+// Every module and sub-module gets its own button: each row is one line that scrolls sideways (see .mnav-buckets).
+const VISIBLE_ITEMS = Infinity;
 
-// "main_home6" -> "Main Home 6" — display only; onSelectModule/selection
-// comparisons keep using the raw m.name.
+// "main_home6" -> "Main Home 6" — display only; selections use raw keys/names.
 export const formatModuleName = (name: string) => {
   const spaced = name.replace(/_/g, ' ').replace(/([a-zA-Z])(\d)/g, '$1 $2');
   return spaced
@@ -24,6 +25,8 @@ export const formatModuleName = (name: string) => {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 };
+
+const moduleValue = (module: ModuleNode) => module.key ?? module.name;
 
 export const ModuleNav: React.FC<ModuleNavProps> = ({
   modules,
@@ -45,9 +48,16 @@ export const ModuleNav: React.FC<ModuleNavProps> = ({
     );
   }
 
-  if (!modules || modules.length === 0) {
-    return null;
-  }
+  if (!modules.length) return null;
+
+  const shownModules = modules.slice(0, VISIBLE_ITEMS);
+  const restModules = modules.slice(VISIBLE_ITEMS);
+  const selectedModuleIsHidden = !!selectedModule && !shownModules.some((module) => moduleValue(module) === selectedModule);
+  const shownSubModules = subModules.slice(0, VISIBLE_ITEMS);
+  const restSubModules = subModules.slice(VISIBLE_ITEMS);
+  const selectedSubModuleIsHidden =
+    !!selectedSubModule &&
+    !shownSubModules.some((subModule) => moduleValue(subModule) === selectedSubModule);
 
   const shownModules = modules.slice(0, VISIBLE_ITEMS);
   const restModules = modules.slice(VISIBLE_ITEMS);
@@ -65,12 +75,20 @@ export const ModuleNav: React.FC<ModuleNavProps> = ({
       style={{ marginBottom: '14px' }}
     >
       <div className="mnav-buckets">
+        <button
+          type="button"
+          className={selectedModule === null ? 'on' : ''}
+          onClick={() => onSelectModule(null)}
+          title="Every module side by side"
+        >
+          All Modules
+        </button>
         {shownModules.map((module) => (
           <button
-            key={module.name}
+            key={moduleValue(module)}
             type="button"
-            className={selectedModule === module.name ? 'on' : ''}
-            onClick={() => onSelectModule(module.name)}
+            className={selectedModule === moduleValue(module) ? 'on' : ''}
+            onClick={() => onSelectModule(moduleValue(module))}
             title={`${module.users.toLocaleString()} users · ${module.sessions.toLocaleString()} sessions`}
           >
             {formatModuleName(module.name)}
@@ -87,7 +105,7 @@ export const ModuleNav: React.FC<ModuleNavProps> = ({
           >
             <option value="">More ({restModules.length})…</option>
             {restModules.map((module) => (
-              <option key={module.name} value={module.name}>
+              <option key={moduleValue(module)} value={moduleValue(module)}>
                 {formatModuleName(module.name)}
               </option>
             ))}
@@ -102,12 +120,19 @@ export const ModuleNav: React.FC<ModuleNavProps> = ({
               <span className="mnav-loading">Loading submodules…</span>
             ) : (
               <>
+                <button
+                  type="button"
+                  className={selectedSubModule === null ? 'on' : ''}
+                  onClick={() => onSelectSubModule(null)}
+                >
+                  All
+                </button>
                 {shownSubModules.map((subModule) => (
                   <button
-                    key={subModule.name}
+                    key={moduleValue(subModule)}
                     type="button"
-                    className={selectedSubModule === subModule.name ? 'on' : ''}
-                    onClick={() => onSelectSubModule(subModule.name)}
+                    className={selectedSubModule === moduleValue(subModule) ? 'on' : ''}
+                    onClick={() => onSelectSubModule(moduleValue(subModule))}
                     title={`${subModule.users.toLocaleString()} users · ${subModule.events.toLocaleString()} events`}
                   >
                     {formatModuleName(subModule.name)}
@@ -124,7 +149,7 @@ export const ModuleNav: React.FC<ModuleNavProps> = ({
                   >
                     <option value="">More ({restSubModules.length})…</option>
                     {restSubModules.map((subModule) => (
-                      <option key={subModule.name} value={subModule.name}>
+                      <option key={moduleValue(subModule)} value={moduleValue(subModule)}>
                         {formatModuleName(subModule.name)}
                       </option>
                     ))}

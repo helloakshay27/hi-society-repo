@@ -39,6 +39,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 interface ApiVisitor {
   id: number;
   guest_name: string;
+  image?: string | null;
   guest_number: string;
   guest_vehicle_number: string;
   guest_type: string;
@@ -178,6 +179,8 @@ const SmartSecureVisitorOut: React.FC = () => {
   const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
 
   // ── OUT Modal State ─────────────────────────────────────────────────
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
+  const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
   const [outModalOpen, setOutModalOpen] = useState(false);
   const [outModalVisitor, setOutModalVisitor] = useState<ApiVisitor | null>(null);
   const [selectedGateId, setSelectedGateId] = useState<string>("");
@@ -239,16 +242,34 @@ const SmartSecureVisitorOut: React.FC = () => {
         );
       }
 
-      case "visitor_image":
+      case "visitor_image": {
+        const hasImage = !!visitor.image && !failedImages.has(visitor.id);
         return (
           <div className="flex justify-center">
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-              </svg>
-            </div>
+            {hasImage ? (
+              <button
+                type="button"
+                onClick={() => setPreviewImage({ url: visitor.image!, name: visitor.guest_name || "Visitor" })}
+                className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[#C72030] cursor-pointer transition-all"
+                title="Click to preview"
+              >
+                <img
+                  src={visitor.image!}
+                  alt={visitor.guest_name}
+                  className="w-full h-full object-cover"
+                  onError={() => setFailedImages((prev) => new Set(prev).add(visitor.id))}
+                />
+              </button>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center" title="No image">
+                <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              </div>
+            )}
           </div>
         );
+      }
 
       case "guest_name":
         return (
@@ -399,7 +420,7 @@ const SmartSecureVisitorOut: React.FC = () => {
         return val ? String(val) : "--";
       }
     }
-    }, [currentPage, perPage, rows, loadingIds, queryClient, setOutModalVisitor, setSelectedGateId, setOutModalOpen, navigate, shouldShow]);
+    }, [currentPage, perPage, rows, loadingIds, queryClient, setOutModalVisitor, setSelectedGateId, setOutModalOpen, navigate, shouldShow, failedImages]);
 
   const handlePageChange = (page: number) => {
     if (page > 0 && page <= totalPages) {
@@ -540,6 +561,20 @@ const SmartSecureVisitorOut: React.FC = () => {
         //   </div>
         // }
       />
+
+      {/* Photo Preview Dialog */}
+      <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{previewImage?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg overflow-auto">
+            {previewImage && (
+              <img src={previewImage.url} alt={previewImage.name} className="max-w-full max-h-[70vh] object-contain" />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* OUT Gate Selection Dialog */}
       <Dialog

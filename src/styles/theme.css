@@ -6442,20 +6442,21 @@ html body [role="dialog"] button[role="checkbox"] {
   border-radius: 4px !important;
 }
 
-/* Partially selected select-all checkbox: show the same white tick as a checked box */
+/* Partially selected select-all checkbox: show a white dash (not a tick) so it's
+   visually distinct from "all selected" */
 html body button[role="checkbox"][data-state="indeterminate"] {
   position: relative;
 }
 html body button[role="checkbox"][data-state="indeterminate"]::after {
   content: "";
   position: absolute;
-  top: 45%;
+  top: 50%;
   left: 50%;
-  width: 4px;
-  height: 8px;
-  border: solid #ffffff;
-  border-width: 0 2px 2px 0;
-  transform: translate(-50%, -50%) rotate(45deg);
+  width: 8px;
+  height: 2px;
+  background-color: #ffffff;
+  border-radius: 1px;
+  transform: translate(-50%, -50%);
 }
 
 /* Import toolbar button: keep the same light border as the Columns button, even when focused/active */

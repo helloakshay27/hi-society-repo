@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Loader2, User, Paperclip, Clock } from 'lucide-react';
+import { ArrowLeft, Loader2, User, Paperclip, Clock, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { staffService, SocietyStaffDetails, StaffFormData, StaffFiltersResponse } from '@/services/staffService';
-import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, FormHelperText } from '@mui/material';
 
 // Field styles for Material-UI components
 const fieldStyles = {
@@ -118,6 +118,8 @@ export const EditStaffPage = () => {
 
     fetchFilters();
   }, []);
+
+  const [staffTypeError, setStaffTypeError] = useState('');
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -313,6 +315,12 @@ export const EditStaffPage = () => {
   const handleSubmit = async () => {
     if (!id || !staff) {
       toast.error('Staff ID not available');
+      return;
+    }
+
+    if (!formData.staffType) {
+      setStaffTypeError('Staff Type is required');
+      toast.error('Please select a staff type');
       return;
     }
 
@@ -523,14 +531,17 @@ export const EditStaffPage = () => {
               />
               
               {/* Staff Type Dropdown - from staff_filters API */}
-              <FormControl fullWidth variant="outlined">
+              <FormControl fullWidth variant="outlined" error={!!staffTypeError}>
                 <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
-                  Staff Type
+                  Staff Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
                 </InputLabel>
                 <MuiSelect
                   value={formData.staffType}
-                  onChange={(e) => handleInputChange('staffType', e.target.value)}
-                  label="Staff Type"
+                  onChange={(e) => {
+                    handleInputChange('staffType', e.target.value);
+                    setStaffTypeError('');
+                  }}
+                  label={<span>Staff Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></span>}
                   displayEmpty
                   sx={fieldStyles}
                 >
@@ -543,6 +554,7 @@ export const EditStaffPage = () => {
                     </MenuItem>
                   ))}
                 </MuiSelect>
+                {staffTypeError && <FormHelperText>{staffTypeError}</FormHelperText>}
               </FormControl>
 
               {/* Work Type Dropdown - from staff_filters API */}
@@ -766,6 +778,40 @@ export const EditStaffPage = () => {
               
               <div>
                 <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-2 block">Documents Upload</Label>
+
+                {/* Existing documents from API */}
+                {staff.documents && staff.documents.length > 0 && (
+                  <div className="mb-3">
+                    <span className="mb-2 block text-sm font-medium text-[#1A1A18]">Current Documents</span>
+                    <div className="flex flex-wrap gap-3">
+                      {staff.documents.map((doc, i) => {
+                        const url = String(doc.url ?? '');
+                        const fileName = decodeURIComponent(url.split('/').pop()?.split('?')[0] || `Document ${i + 1}`);
+                        const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(url);
+                        return isImage ? (
+                          <a key={doc.id ?? i} href={url} target="_blank" rel="noopener noreferrer">
+                            <img
+                              src={url}
+                              alt={fileName}
+                              className="h-24 w-24 rounded-xl border border-[rgba(26,26,24,.12)] object-cover transition-opacity hover:opacity-80"
+                            />
+                          </a>
+                        ) : (
+                          <a
+                            key={doc.id ?? i}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex h-24 w-24 flex-col items-center justify-center gap-2 rounded-xl border border-[rgba(26,26,24,.12)] bg-[#F5F4F0] p-2 text-center transition-opacity hover:opacity-80"
+                          >
+                            <FileText className="h-6 w-6 text-[rgba(26,26,24,.68)]" />
+                            <span className="line-clamp-2 break-all text-[11px] font-medium text-[#1A1A18]">{fileName}</span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 <div className="border-2 border-dashed border-[rgba(26,26,24,.15)] bg-white rounded-xl p-8 text-center hover:border-[rgba(26,26,24,.3)] transition-colors cursor-pointer">
                   <input
                     type="file"

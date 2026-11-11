@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Megaphone,
   Shield,
+  Star,
   Trophy,
   UserCheck,
   Users,
@@ -25,14 +26,15 @@ export const USER_INITIALS = 'KD';
 export const TOWER_FILTERS = ['All', 'FM', 'T1', 'T2', 'T3'];
 
 export const TABS: TabConfig[] = [
-  { id: 't-lb', label: 'All Towers', icon: Trophy, badge: '1', badgeVariant: 'a' },
+  { id: 't-my', label: 'My Dashboard', icon: Star },
+  { id: 't-lb', label: 'All Towers', icon: Trophy },
   { id: 't-ov', label: 'Overview', icon: LayoutDashboard },
-  { id: 't-op', label: 'Helpdesk', icon: ClipboardList, badge: '14' },
-  { id: 't-sc', label: 'Security', icon: Shield, badge: '18', badgeVariant: 'a' },
-  { id: 't-st', label: 'Staff', icon: UserCheck, badge: '5', badgeVariant: 'a' },
-  { id: 't-cl', label: 'Club & Facilities', icon: Users, badge: '78' },
-  { id: 't-ft', label: 'Fitout', icon: HardHat, badge: '24', badgeVariant: 'a' },
-  { id: 't-pk', label: 'Parking', icon: Car, badge: '1', badgeVariant: 'a' },
+  { id: 't-op', label: 'Helpdesk', icon: ClipboardList },
+  { id: 't-sc', label: 'Security', icon: Shield },
+  { id: 't-st', label: 'Staff', icon: UserCheck },
+  { id: 't-cl', label: 'Club & Facilities', icon: Users },
+  { id: 't-ft', label: 'Fitout', icon: HardHat },
+  { id: 't-pk', label: 'Parking', icon: Car },
   { id: 't-co', label: 'Community', icon: Megaphone },
 ];
 

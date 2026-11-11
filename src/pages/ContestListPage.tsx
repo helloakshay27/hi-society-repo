@@ -25,9 +25,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { TextField, InputAdornment } from "@mui/material";
 import { Switch } from "@/components/ui/switch";
-import { useDebounce } from "@/hooks/useDebounce";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
-import { startTransition, useRef } from "react";
 
 interface ContestRecord {
   id: number;
@@ -43,11 +41,22 @@ interface ContestRecord {
 }
 
 const statusCards = [
-  { title: "Total Contest", icon: Trophy, status: null, queryParam: null },
-  { title: "Active", icon: Circle, status: "Active", queryParam: "q[active_cont]=true" },
-  { title: "Inactive", icon: Ban, status: "Inactive", queryParam: "q[active_cont]=false" },
-  { title: "Expired", icon: AlertCircle, status: "Expired", queryParam: "q[status_cont]=expired" },
+  { title: "Total Contest", icon: Trophy, status: null },
+  { title: "Active", icon: Circle, status: "Active" },
+  { title: "Inactive", icon: Ban, status: "Inactive" },
+  { title: "Expired", icon: AlertCircle, status: "Expired" },
 ];
+
+// API "status" is a lifecycle value (e.g. "running", "expired"); the cards need
+// Active / Inactive / Expired derived from it + the "active" flag + end date.
+const EXPIRED_API_STATUSES = ["expired", "ended", "completed", "closed"];
+const deriveContestStatus = (item: any): "Active" | "Inactive" | "Expired" => {
+  const apiStatus = String(item.status ?? "").toLowerCase();
+  const end = item.end_at ? new Date(item.end_at) : null;
+  const isPastEnd = !!end && !isNaN(end.getTime()) && end.getTime() < Date.now();
+  if (EXPIRED_API_STATUSES.includes(apiStatus) || isPastEnd) return "Expired";
+  return item.active ? "Active" : "Inactive";
+};
 
 export const ContestListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -55,15 +64,8 @@ export const ContestListPage: React.FC = () => {
 
   const [contests, setContests] = useState<ContestRecord[]>([]);
   const [filteredContests, setFilteredContests] = useState<ContestRecord[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchInput, setSearchInput] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const isSearchingRef = useRef(false);
-
-  // Debounce the search input to avoid excessive API calls
-  const debouncedSearchQuery = useDebounce(searchInput, 800);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages] = useState(1);
@@ -76,17 +78,11 @@ export const ContestListPage: React.FC = () => {
   });
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  /* ---------------- API FETCH ---------------- */
+  /* ---------------- API FETCH (single call on first mount) ---------------- */
 
   const fetchContests = useCallback(async () => {
     try {
-      // Use different loading states based on whether it's a search operation
-      const isSearch = searchQuery.trim() !== "";
-      if (isSearch) {
-        setSearchLoading(true);
-      } else {
-        setLoading(true);
-      }
+      setLoading(true);
 
       const baseUrl = localStorage.getItem('baseUrl');
       const token = localStorage.getItem('token');
@@ -101,26 +97,9 @@ export const ContestListPage: React.FC = () => {
       // Ensure protocol is present
       const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
 
-      // Build URL with query parameters based on selected status and search query
+      // All data is loaded in one request; search/filter happen client-side via EnhancedTable.
       const queryParams = new URLSearchParams();
       queryParams.append('source', 'web');
-
-      // Add search query parameter if exists
-      if (searchQuery.trim()) {
-        queryParams.append(
-          'q[name_or_description_or_content_type_or_status_or_attemp_required_text_or_start_at_text_or_end_at_text_or_prizes_title_cont]',
-          searchQuery.trim()
-        );
-      }
-
-      // Add status filter if selected
-      if (selectedStatus) {
-        const card = statusCards.find(c => c.status === selectedStatus);
-        if (card?.queryParam) {
-          const [key, value] = card.queryParam.split('=');
-          queryParams.append(key, value);
-        }
-      }
 
       const apiUrl = `${url}/contests.json?${queryParams.toString()}`;
 
@@ -147,8 +126,6 @@ export const ContestListPage: React.FC = () => {
 
       if (!contestArray.length) {
         setContests([]);
-        setFilteredContests([]);
-        setStatusCounts({ total: 0, active: 0, inactive: 0, expired: 0 });
         return;
       }
 
@@ -168,70 +145,42 @@ export const ContestListPage: React.FC = () => {
                 ? "Scratch Card"
                 : "Card Flip",
           attempt: item.attemp_required ?? 1,
-          status: item.status ?? "Inactive",
+          status: deriveContestStatus(item),
           isActive: item.active ?? false,
           contentStatus: item.status ?? "-",
         };
       });
 
       setContests(formatted);
-      setFilteredContests(formatted);
-
-      setStatusCounts({
-        total: formatted.length,
-        active: formatted.filter(c => c.status === "Active").length,
-        inactive: formatted.filter(c => c.status === "Inactive").length,
-        expired: formatted.filter(c => c.status === "Expired").length,
-      });
     } catch (error) {
       console.error("Error fetching contests", error);
     } finally {
-      // Clear loading states immediately
-      if (searchQuery.trim() !== "") {
-        setSearchLoading(false);
-      } else {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, [searchQuery, selectedStatus]);
-
-  // Initial load
-  useEffect(() => {
-    fetchContests();
   }, []);
 
-  /* ---------------- FILTER & SEARCH ---------------- */
-
-  // Handle search input change
-  const handleSearch = useCallback((query: string) => {
-    setSearchInput(query);
-  }, []);
-
-  // Effect to handle debounced search
-  useEffect(() => {
-    // Update search query when debounced input changes
-    const trimmedQuery = debouncedSearchQuery.trim();
-
-    if (searchQuery !== trimmedQuery) {
-      setSearchQuery(trimmedQuery);
-      setCurrentPage(1);
-      // Trigger fetch after state update
-      const timer = setTimeout(() => {
-        fetchContests();
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [debouncedSearchQuery]);
-
-  // Effect to handle status filter changes
+  // Initial load - single API call. Search is handled client-side by EnhancedTable.
   useEffect(() => {
     fetchContests();
-  }, [selectedStatus]);
+  }, [fetchContests]);
+
+  /* ---------------- FILTER (status card) ---------------- */
+
+  // Card filter is applied client-side so the card counts always reflect the full list
+  // Text search is handled internally by EnhancedTable via enableSearch (frontend filter on `data`).
+  useEffect(() => {
+    setFilteredContests(
+      selectedStatus ? contests.filter(c => c.status === selectedStatus) : contests
+    );
+  }, [contests, selectedStatus]);
 
   useEffect(() => {
-    // Backend handles both search and status filtering
-    // No client-side filtering needed
-    setFilteredContests(contests);
+    setStatusCounts({
+      total: contests.length,
+      active: contests.filter(c => c.status === "Active").length,
+      inactive: contests.filter(c => c.status === "Inactive").length,
+      expired: contests.filter(c => c.status === "Expired").length,
+    });
   }, [contests]);
 
   /* ---------------- HELPERS ---------------- */
@@ -284,22 +233,18 @@ export const ContestListPage: React.FC = () => {
           return {
             ...contest,
             isActive: newActiveState,
-            status: newActiveState ? "Active" : "Inactive",
-          };
+            status:
+              contest.status === "Expired"
+                ? "Expired"
+                : newActiveState
+                  ? "Active"
+                  : "Inactive",
+          } as ContestRecord;
         }
         return contest;
       });
 
       setContests(updatedContests);
-
-      // Update status counts
-      const activeCounts = updatedContests.filter(c => c.status === "Active").length;
-      const inactiveCounts = updatedContests.filter(c => c.status === "Inactive").length;
-      setStatusCounts(prev => ({
-        ...prev,
-        active: activeCounts,
-        inactive: inactiveCounts,
-      }));
 
       console.log(`Contest ${contestId} toggled to ${newActiveState ? "Active" : "Inactive"}`);
     } catch (error) {
@@ -441,7 +386,9 @@ export const ContestListPage: React.FC = () => {
                   selectedStatus === card.status ? null : card.status
                 )
               }
-              className="bg-[#F6F4EE] p-6 rounded-lg cursor-pointer shadow hover:shadow-md flex gap-4"
+              className={`bg-[#F6F4EE] p-6 rounded-lg cursor-pointer shadow hover:shadow-md flex gap-4 border-2 transition-colors ${
+                selectedStatus === card.status ? "border-[#C72030]" : "border-transparent"
+              }`}
             >
               <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
                 <Icon className="w-6 h-6 text-[#C72030]" />
@@ -527,7 +474,7 @@ export const ContestListPage: React.FC = () => {
             attempt: String(contest.attempt).padStart(2, "0"),
             contestStatus: (
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                {contest.status}
+                {contest.contentStatus}
               </span>
             ),
             status: (
@@ -547,13 +494,11 @@ export const ContestListPage: React.FC = () => {
             ),
           })}
           enableSearch={true}
-          enableGlobalSearch={true}
-          onGlobalSearch={handleSearch}
           searchPlaceholder="Search contests..."
           enableSelection={false}
           enableExport={false}
-          loading={loading || searchLoading}
-          loadingMessage={searchLoading ? "Searching contests..." : "Loading contests..."}
+          loading={loading}
+          loadingMessage="Loading contests..."
           leftActions={
             <div className="flex items-center gap-2">
               {shouldShow("Contest", "create") && (

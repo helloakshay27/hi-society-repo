@@ -127,6 +127,25 @@ interface HealthCheck {
   mask_checked?: string | null;
 }
 
+type GoodsItem = Record<string, unknown> | string;
+
+interface GoodsDetails {
+  carrying_goods?: boolean | null;
+  items_count?: number | string | null;
+  item_type?: string | null;
+  item_description?: string | null;
+  items?: GoodsItem[];
+  item_images?: (string | Record<string, unknown>)[];
+}
+
+interface AdditionalDetails {
+  goods_details?: GoodsDetails;
+  extra_visitors?: {
+    count?: number;
+    visitors?: Record<string, any>[];
+  };
+}
+
 interface MimoDetail {
   id: number;
   type?: string;
@@ -135,6 +154,7 @@ interface MimoDetail {
   need_approval?: number;
   reason?: string | null;
   approve_status?: string | null;
+  documents?: { id: number; file_name?: string; url: string }[];
 }
 
 interface VisitorData {
@@ -201,6 +221,7 @@ interface VisitorData {
   otp_info?: OtpInfo;
   health_check?: HealthCheck;
   mimo_details?: MimoDetail[];
+  additional_details?: AdditionalDetails;
   // Extra display fields
   remarks?: string;
   guest_entry_time_show?: string;
@@ -277,8 +298,48 @@ export const VisitorDetailsPage = () => {
           ? rawVisitor.visitor_hosts
           : [];
 
+        // New API shape: additional_details.extra_visitors.visitors[]
+        const extraVisitors: Record<string, any>[] = Array.isArray(
+          rawVisitor.additional_details?.extra_visitors?.visitors
+        )
+          ? rawVisitor.additional_details.extra_visitors.visitors
+          : [];
+        const normalizedExtraVisitors: AdditionalVisitor[] = extraVisitors.map(
+          (v, i) => ({
+            ...v,
+            id: v.id ?? i,
+            name: v.name ?? v.guest_name,
+            mobile: v.mobile ?? v.guest_number ?? v.mobile_number,
+            email: v.email ?? v.guest_email,
+            vehicle_type: v.vehicle_type ?? v.vehicle_info?.vehicle_type,
+            vehicle_number: v.vehicle_number ?? v.vehicle_info?.vehicle_number,
+            parking_slot_number:
+              v.parking_slot_number ?? v.vehicle_info?.parking_slot_number,
+          })
+        );
+
+        // New API documents use `url`; the UI reads `document_url`
+        const normalizeDocs = (docs: any): DocumentItem[] =>
+          Array.isArray(docs)
+            ? docs
+                .map((d: any) => ({
+                  ...d,
+                  document_url: d.document_url ?? d.url,
+                }))
+                .filter((d: DocumentItem) => !!d.document_url)
+            : [];
+        // Avoid showing the govt id image twice (it also appears in documents)
+        const idvDocuments = normalizeDocs(idv?.documents).filter(
+          (d) => d.document_url !== idv?.govt_id_image
+        );
+
         const visitor: VisitorData = {
           ...rawVisitor,
+          additional_visitors:
+            Array.isArray(rawVisitor.additional_visitors) &&
+            rawVisitor.additional_visitors.length > 0
+              ? rawVisitor.additional_visitors
+              : normalizedExtraVisitors,
           visitor_identity:
             rawVisitor.visitor_identity ||
             (idvHasData
@@ -287,7 +348,7 @@ export const VisitorDetailsPage = () => {
                   identity_type: idv.identity_type,
                   government_id_number: idv.govt_id_number,
                   govt_id_image: idv.govt_id_image,
-                  documents: idv.documents || [],
+                  documents: idvDocuments,
                 }
               : undefined),
           // Flatten vehicle_info
@@ -1152,6 +1213,23 @@ export const VisitorDetailsPage = () => {
 
           {/* Tab 2: Additional Details */}
           <TabsContent value="additional" className="mt-4 space-y-4 p-0">
+            {visitorData.additional_details?.extra_visitors && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
+                  Additional Visitors
+                </span></div>
+                <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
+                  <div className="flex min-w-0 flex-col items-start gap-1 text-[13px]">
+                    <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Additional Visitors Count</span>
+                    <span className="text-[13.5px] font-medium text-[#1A1A18]">
+                      {visitorData.additional_details.extra_visitors.count ??
+                        visitorData.additional_visitors?.length ??
+                        0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
             {visitorData.additional_visitors && visitorData.additional_visitors.length > 0 ? (
               visitorData.additional_visitors.map((visitor: AdditionalVisitor, index: number) => (
                 <div
@@ -1224,16 +1302,105 @@ export const VisitorDetailsPage = () => {
               ))
             ) : null}
 
-            {/* Goods Details (shown in the Additional Details tab) */}
+            {(visitorData.additional_details ||
+              visitorData.mimo_details?.length ||
+              visitorData.item_movements?.length) && (
+              <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
+                Goods Details
+              </span></div>
+            )}
+
+            {/* Goods summary (new API: additional_details.goods_details) */}
+            {(() => {
+              const goods = visitorData.additional_details?.goods_details;
+              const goodsItems = goods?.items ?? [];
+              const goodsImages = (goods?.item_images ?? [])
+                .map((img) =>
+                  typeof img === "string"
+                    ? img
+                    : String(
+                        img?.document_url ?? img?.url ?? img?.image_url ?? ""
+                      )
+                )
+                .filter(Boolean);
+              if (!visitorData.additional_details) return null;
+
+              const itemLabel = (item: GoodsItem): string => {
+                if (typeof item === "string") return item;
+                const name = item.name ?? item.item_name ?? item.title;
+                const number = item.number ?? item.item_number ?? item.quantity;
+                const desc = item.description ?? item.details;
+                return [name, number, desc]
+                  .filter((v) => v !== null && v !== undefined && v !== "")
+                  .join(" - ");
+              };
+
+              return (
+                <div className="space-y-6">
+                  {/* <div className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
+                    <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Carrying Goods</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{goods?.carrying_goods ? "Yes" : "No"}</span>
+                      </div>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Items Count</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{goods?.items_count ?? "--"}</span>
+                      </div>
+                      <div className="flex min-w-0 flex-col items-start gap-1">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Item Type</span>
+                        <span className="text-[13.5px] font-medium capitalize text-[#1A1A18]">{hasData(goods?.item_type) ? goods?.item_type?.replace(/_/g, " ") : "--"}</span>
+                      </div>
+                      <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
+                        <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Item Description</span>
+                        <span className="text-[13.5px] font-medium text-[#1A1A18]">{hasData(goods?.item_description) ? goods?.item_description : "--"}</span>
+                      </div>
+                      {goodsItems.length > 0 && (
+                        <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Items</span>
+                          <ul className="list-disc pl-5 text-[13.5px] font-medium text-[#1A1A18]">
+                            {goodsItems.map((item, i) => (
+                              <li key={i}>{itemLabel(item)}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {goodsImages.length > 0 && (
+                        <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Item Images</span>
+                          <div className="flex flex-wrap gap-2">
+                            {goodsImages.map((url, i) => (
+                              <Button
+                                key={i}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedDoc({
+                                    id: i,
+                                    url,
+                                    document_name: `Item Image ${i + 1}`,
+                                  });
+                                  setIsModalOpen(true);
+                                }}
+                              >
+                                Image {i + 1}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div> */}
+                </div>
+              );
+            })()}
+
             {/* MIMO Details Section (new API) */}
             {visitorData.mimo_details && visitorData.mimo_details.length > 0 && (
               <div className="space-y-6">
-                <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                  Goods Details
-                </h2>
                 {visitorData.mimo_details.map((mimo: MimoDetail, index: number) => (
                   <div key={mimo.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
-                    <h3 className="text-base font-semibold text-gray-900 mb-4">
+                    <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
                       Movement {index + 1}
                     </h3>
                     <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
@@ -1241,7 +1408,7 @@ export const VisitorDetailsPage = () => {
                         <div className="flex min-w-0 flex-col items-start gap-1">
                           <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Movement Type</span>
                           <span className="hidden">:</span>
-                          <span className="text-gray-900 font-medium capitalize">
+                          <span className="text-[13.5px] font-medium capitalize text-[#1A1A18]">
                             {mimo.type?.replace(/_/g, " ")}
                           </span>
                         </div>
@@ -1267,6 +1434,38 @@ export const VisitorDetailsPage = () => {
                           <span className="text-[13.5px] font-medium text-[#1A1A18]">{mimo.approve_status}</span>
                         </div>
                       )}
+                      {mimo.documents && mimo.documents.length > 0 && (
+                        <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
+                          <span className="min-w-0 text-[11px] font-medium text-[rgba(26,26,24,.48)]">Documents</span>
+                          <div className="flex flex-wrap gap-2">
+                            {mimo.documents.map((doc, i) => {
+                              const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(doc.url || doc.file_name || "");
+                              const open = () => {
+                                setSelectedDoc({
+                                  id: doc.id ?? i,
+                                  url: doc.url,
+                                  document_name: doc.file_name || `Document ${i + 1}`,
+                                });
+                                setIsModalOpen(true);
+                              };
+                              return isImage ? (
+                                <img
+                                  key={doc.id ?? i}
+                                  src={doc.url}
+                                  alt={doc.file_name || `Document ${i + 1}`}
+                                  onClick={open}
+                                  className="h-28 w-28 cursor-pointer rounded-xl border border-[rgba(26,26,24,.12)] object-cover transition-opacity hover:opacity-80"
+                                />
+                              ) : (
+                                <Button key={doc.id ?? i} variant="outline" size="sm" onClick={open}>
+                                  <Eye className="mr-1 h-3.5 w-3.5" />
+                                  {doc.file_name || `Document ${i + 1}`}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -1276,12 +1475,9 @@ export const VisitorDetailsPage = () => {
             {/* Item Movements Section (legacy API) */}
             {visitorData.item_movements && visitorData.item_movements.length > 0 && (
               <div className="space-y-6">
-                <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                  Goods Details
-                </h2>
                 {visitorData.item_movements.map((movement: ItemMovement, index: number) => (
                   <div key={movement.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
-                    <h3 className="text-base font-semibold text-gray-900 mb-4">
+                    <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
                       Movement {index + 1}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-4">
@@ -1297,21 +1493,21 @@ export const VisitorDetailsPage = () => {
                     {/* Item Details */}
                     {movement.item_details && movement.item_details.length > 0 && (
                       <div className="mt-4">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Items</h4>
+                        <h4 className="mb-3 text-[12px] font-semibold text-[rgba(26,26,24,.68)]">Items</h4>
                         <div className="space-y-3">
                           {movement.item_details.map((item: ItemDetail, itemIndex: number) => (
-                            <div key={item.id || itemIndex} className="border-l-4 border-[#C72030] bg-white p-4 rounded">
+                            <div key={item.id || itemIndex} className="border border-[rgba(26,26,24,.09)] bg-[#F5F4F0] p-4 rounded-xl">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 {hasData(item?.name) && (
                                   <div className="flex min-w-0 flex-col items-start gap-1">
-                                    <span className="text-gray-500 min-w-[100px]">Item Name</span>
+                                    <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)] min-w-[100px]">Item Name</span>
                                     <span className="hidden">:</span>
                                     <span className="text-[13.5px] font-medium text-[#1A1A18]">{item.name}</span>
                                   </div>
                                 )}
                                 {hasData(item?.number) && (
                                   <div className="flex min-w-0 flex-col items-start gap-1">
-                                    <span className="text-gray-500 min-w-[100px]">Item Number</span>
+                                    <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)] min-w-[100px]">Item Number</span>
                                     <span className="hidden">:</span>
                                     <span className="text-[13.5px] font-medium text-[#1A1A18]">{item.number}</span>
                                   </div>
@@ -1330,7 +1526,7 @@ export const VisitorDetailsPage = () => {
             {/* Main Visitor's Assets */}
             {visitorData.assets && visitorData.assets.length > 0 && (
               <div className="space-y-6">
-                <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
                   {visitorData?.guest_name
                     ? `${visitorData.guest_name}'s Assets`
                     : 'Main Visitor Assets'}
@@ -1338,10 +1534,10 @@ export const VisitorDetailsPage = () => {
                   <span className="ml-2 text-sm font-normal text-gray-600">
                     (Primary Visitor)
                   </span>
-                </h2>
+                </span></div>
                 {visitorData.assets.map((asset: AssetItem, index: number) => (
                   <div key={asset.id || index} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
-                    <h3 className="text-base font-semibold text-gray-900 mb-4">
+                    <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
                       {/* {asset?.asset_name || asset?.asset_category_name || `Asset ${index + 1}`} */}
                     </h3>
                     <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
@@ -1413,12 +1609,12 @@ export const VisitorDetailsPage = () => {
               visitorData.additional_visitors.map((visitor: AdditionalVisitor, visitorIndex: number) => (
                 visitor.assets && visitor.assets.length > 0 && (
                   <div key={visitor.id || visitorIndex} className="space-y-6">
-                    <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                    <div className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F4F0]"><User className="h-[14px] w-[14px] text-[#1A1A18]" /></div><span>
                       {visitor?.name ? `${visitor.name}'s Assets` : `Visitor ${visitorIndex + 1} Assets`}
-                    </h2>
+                    </span></div>
                     {visitor.assets.map((asset: AssetItem, assetIndex: number) => (
                       <div key={asset.id || assetIndex} className="rounded-2xl border border-[rgba(26,26,24,.09)] bg-white p-6">
-                        {/* <h3 className="text-base font-semibold text-gray-900 mb-4">
+                        {/* <h3 className="mb-4 text-[14px] font-semibold text-[#1A1A18]">
                           {asset?.asset_name || asset?.asset_category_name || `Asset ${assetIndex + 1}`}
                         </h3> */}
                         <div className="grid grid-cols-1 gap-x-6 gap-y-5 text-[13px] md:grid-cols-2">
@@ -1487,7 +1683,7 @@ export const VisitorDetailsPage = () => {
               ))
             )}
 
-            {!visitorData.additional_visitors?.length && !visitorData.mimo_details?.length && !visitorData.item_movements?.length && !visitorData.assets?.length && (
+            {!visitorData.additional_visitors?.length && !visitorData.mimo_details?.length && !visitorData.item_movements?.length && !visitorData.assets?.length && !visitorData.additional_details && (
               <div className="text-center py-12 text-gray-500">
                 No additional visitor or goods details found
               </div>

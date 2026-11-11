@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ModuleAdoptionCard } from "../adoption/ModuleAdoptionCard";
 import { DashboardFilters } from "../../api/types";
 import { QuestionBox } from "../common/QuestionBox";
 import { KpiTile } from "../common/KpiTile";
@@ -250,15 +251,18 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   const stickinessVal = adoptData?.stickiness?.value;
   const stickinessDisplay =
     stickinessVal != null
-      ? pct(stickinessVal <= 1 ? stickinessVal * 100 : stickinessVal)
+      ? pct(stickinessVal)
       : isAdoptActiveLoading
         ? "..."
         : "—";
   const stickinessDelta = formatDelta(adoptData?.stickiness?.delta_pct);
 
   // Adoption Trend KPI
+  // The tile compares against the prior 8 weeks, so it reads the API's 8-week average form.
   const adoptTrendVal =
-    adoptData?.adoption_trend?.value ?? trendData?.trend_pct;
+    trendData?.avg_trend_pct !== undefined
+      ? trendData.avg_trend_pct
+      : (adoptData?.adoption_trend?.value ?? trendData?.trend_pct);
   const adoptTrendDisplay =
     adoptTrendVal != null
       ? `${adoptTrendVal > 0 ? "+" : ""}${adoptTrendVal.toFixed(1)}%`
@@ -270,7 +274,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   const activationVal = adoptData?.activation?.value;
   const activationDisplay =
     activationVal != null
-      ? `${Math.round(activationVal <= 1 ? activationVal * 100 : activationVal)}%`
+      ? `${Math.round(activationVal)}%`
       : isAdoptActiveLoading
         ? "..."
         : "—";
@@ -301,7 +305,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
   // Growth Accounting Series
   const growthWeeks = (growthData?.weeks || []).map((w) =>
-    w.week ? fmtDateShort(w.week) : "W"
+    w.week ? `${fmtDateShort(w.week)}${w.complete === false ? " (so far)" : ""}` : "W"
   );
   const growthNew = (growthData?.weeks || []).map((w) => w.new || 0);
   const growthRet = (growthData?.weeks || []).map((w) => w.returning || 0);
@@ -366,9 +370,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           sub="average DAU / MAU"
           raw={
             stickinessVal != null
-              ? stickinessVal <= 1
-                ? stickinessVal * 100
-                : stickinessVal
+              ? stickinessVal
               : undefined
           }
           unit="%"
@@ -404,9 +406,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           sub="activated within 14 days"
           raw={
             activationVal != null
-              ? activationVal <= 1
-                ? activationVal * 100
-                : activationVal
+              ? activationVal
               : undefined
           }
           unit="%"
@@ -476,7 +476,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         <Card
           id="card-growthAccounting"
           infoKey="chart.growth"
-          eyebrow="Growth accounting · Last 6 weeks"
+          eyebrow="Growth accounting · Weekly, selected range"
           title="New · Returning · Resurrecting · Dormant"
           purpose="Breaks the active base into new signups, retained users, resurrected accounts, and dormant users."
         >
@@ -577,7 +577,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           ) : (
             <div className="hbars">
               {rolesList.map((r, idx) => {
-                const sharePct = Math.round(r.active_share <= 1 ? r.active_share * 100 : r.active_share);
+                const sharePct = Math.round(r.active_share);
                 const color = roleColors[idx % roleColors.length];
                 return (
                   <div className="role" key={idx}>
@@ -599,6 +599,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
             </div>
           )}
         </Card> */}
+
+        <ModuleAdoptionCard filters={filters} enabled={sitesSettled} />
 
         <Card
           id="card-dormant"

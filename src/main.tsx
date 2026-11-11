@@ -13,7 +13,7 @@ import { getPostHogSuperProperties } from "./utils/posthogContext";
 import { attachPostHogDebugLogger } from "./utils/posthogDebug";
 import { installNetworkMonitor } from "./utils/networkMonitor";
 
-// App-wide toasts for slow requests, unreachable server and offline/online —
+// App-wide toasts for slow requests, timeouts and genuine offline/online —
 // see utils/networkMonitor.ts for why this patches fetch/XHR globally.
 installNetworkMonitor();
 

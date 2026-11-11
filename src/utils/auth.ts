@@ -89,7 +89,29 @@ export interface Organization {
     backend_url?: string;
     frontend_url?: string;
   }>;
+  dashboard_access_controls?: DashboardAccessControl[];
 }
+
+export interface DashboardAccessControl {
+  id?: number;
+  dashboard_name: string;
+  dashboard_type?: string;
+  dashboard_url: string;
+  level?: string;
+  active?: boolean;
+}
+
+export const ORG_DASHBOARDS_KEY = "org_dashboards";
+
+export const getOrgDashboards = (): DashboardAccessControl[] => {
+  try {
+    const raw = localStorage.getItem(ORG_DASHBOARDS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
 
 // Local storage keys
 export const AUTH_KEYS = {
@@ -196,6 +218,10 @@ export const getBaseUrlDomain = (): string | null => {
   if (!savedUrl) return null;
   return stripProtocol(savedUrl);
 };
+
+// Public survey links work without a login, so they must not depend on session APIs
+export const isPublicSurveyRoute = (): boolean =>
+  /^\/(survey_mappings|mobile\/survey)\//.test(window.location.pathname);
 
 // Check if user is authenticated
 export const isAuthenticated = (): boolean => {

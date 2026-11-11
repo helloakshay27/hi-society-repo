@@ -2,6 +2,7 @@ import type { ChartConfiguration } from 'chart.js';
 import type { LucideIcon } from 'lucide-react';
 
 export type TabId =
+  | 't-my'
   | 't-lb'
   | 't-ov'
   | 't-op'
@@ -49,8 +50,6 @@ export interface TabConfig {
   id: TabId;
   label: string;
   icon: LucideIcon;
-  badge?: string;
-  badgeVariant?: 'default' | 'a' | 'ok';
 }
 
 export interface FilterChipConfig {

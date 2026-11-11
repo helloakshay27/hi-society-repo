@@ -79,7 +79,8 @@ export interface RangeFilters {
 
 export interface RecentActiveUser {
   user_id: string;
-  display_name: string;
+  user_name: string | null;
+  email: string | null;
   path: string | null;
   last_event: string | null;
   minutes_ago: number | null;
@@ -94,6 +95,8 @@ export interface RecentActiveUsersResponse {
 export interface WeeklyFilters {
   to: string; // YYYY-MM-DD
   weeks: number;
+  /** Start of the selected range. Only growth reads it: its weeks follow the range. */
+  from?: string;
   /** Optional product scoping for dashboards that share these endpoints. */
   projectCode?: string;
   /** Optional analytics tenant override; the tenant is independent of projectCode. */
@@ -135,14 +138,17 @@ const buildQuery = (pairs: Array<[string, string | string[] | number | undefined
  * GET helper: appends a manually built query string (raw commas preserved for
  * site_id) to the endpoint and returns the parsed response.
  */
+const HI_SOCIETY_ADOPTION_PATH = '/residential/hi_society/adoption';
+
 const get = async <T>(endpoint: string, pairs: Array<[string, string | string[] | number | undefined | null]>, signal?: AbortSignal): Promise<T> => {
   const qs = buildQuery(pairs);
-  const url = `/fm/adoption/${endpoint}${qs ? `?${qs}` : ''}`;
+  // The Hi-Society web usage-analytics API (Residential::HiSocietyController: project_code HS-01).
+  const url = `${HI_SOCIETY_ADOPTION_PATH}/${endpoint}${qs ? `?${qs}` : ''}`;
   const { data } = await analyticsClient.get<T>(url, { signal });
   return data;
 };
 
-export const RECENT_ACTIVE_USERS_EXPORT_ENDPOINT = '/fm/adoption/active_users_export.json';
+export const RECENT_ACTIVE_USERS_EXPORT_ENDPOINT = `${HI_SOCIETY_ADOPTION_PATH}/active_users_export`;
 
 export const fetchRecentActiveUsers = (f: RangeFilters) =>
   get<RecentActiveUsersResponse>('recent_active_users', [
@@ -158,7 +164,7 @@ export const fetchRecentActiveUsers = (f: RangeFilters) =>
   ], f.signal);
 
 export async function downloadRecentActiveUsers(f: RangeFilters): Promise<Blob> {
-  const qs = buildQuery([...rangeParams(f), ['limit', 10]]);
+  const qs = buildQuery(rangeParams(f));
   const response = await analyticsClient.get<Blob>(
     `${RECENT_ACTIVE_USERS_EXPORT_ENDPOINT}${qs ? `?${qs}` : ''}`,
     { responseType: 'blob' },
@@ -288,7 +294,8 @@ export interface AdoptionEngagementResponse {
     delta_pct: number | null;
   };
   stickiness: { value: number; avg_dau: number; mau: number; delta_pct: number | null };
-  adoption_trend: { value: number | null; wau_now: number; wau_4wk_ago: number };
+  /** value = this week's WAU vs the average of the 8 weeks before it (baseline_avg), in %. */
+  adoption_trend: { value: number | null; wau_now: number; wau_4wk_ago: number; baseline_avg?: number | null };
   activation: { value: number; joiners: number; delta_pct: number | null };
   module_breadth: { in_use: number; total: number };
   dormant_users: { value: number; band: string };
@@ -340,7 +347,8 @@ export interface GrowthResponse {
   info?: AdoptionInfo;
 }
 
-export const fetchGrowth = (f: WeeklyFilters) => get<GrowthResponse>('growth', weeklyParams(f), f.signal);
+export const fetchGrowth = (f: WeeklyFilters) =>
+  get<GrowthResponse>('growth', [...weeklyParams(f), ['from', f.from]], f.signal);
 
 /* ---------------------------------------------------- Layer 2 · retention */
 

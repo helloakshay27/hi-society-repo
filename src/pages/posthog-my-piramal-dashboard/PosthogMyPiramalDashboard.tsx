@@ -18,6 +18,7 @@ import {
   useUserAccountSiteId,
 } from "../posthog-runwal-dashboard/hooks/useDashboardAnalytics";
 import { DashboardFilters } from "../posthog-runwal-dashboard/api/types";
+import { ADOPTION_API, stripScopeFromUrl } from "../posthog-runwal-dashboard/api/api";
 import { getToken, getUser } from "../../utils/auth";
 import "../posthog-runwal-dashboard/styles/dashboard.css";
 
@@ -82,21 +83,20 @@ function PosthogMyPiramalDashboardContent() {
     ...BM_DEFAULTS,
   });
 
+  // An old link's ?app_id= / ?project_code= is removed from the address bar.
+  useEffect(() => {
+    stripScopeFromUrl();
+  }, []);
+
   // Centralized Filter State
   const filters: DashboardFilters = useMemo(() => {
     // Site scope comes from the logged-in user's own account (site_id),
     // not a manual picker — falls back to [] (tenant-wide) until it loads.
     const siteIds = accountSiteId ? [accountSiteId] : [];
-    const urlParams =
-      typeof window !== "undefined"
-        ? new URLSearchParams(window.location.search)
-        : null;
-    const dynamicAppId =
-      urlParams?.get("app_id") || urlParams?.get("appId") || "30";
-    const dynamicProjectCode =
-      urlParams?.get("project_code") ||
-      urlParams?.get("projectCode") ||
-      "PIR-01";
+    // MyPiramal's app id and project code are fixed (its API applies them on the server); they are
+    // never read from or shown in the browser URL.
+    const dynamicAppId = "30";
+    const dynamicProjectCode = "PIR-01";
 
     return {
       siteIds,
@@ -114,6 +114,7 @@ function PosthogMyPiramalDashboardContent() {
       appId: dynamicAppId,
       projectCode: dynamicProjectCode,
       includeAnonymous: true,
+      apiPath: ADOPTION_API.mypiramal,
     };
   }, [accountSiteId, devPlatform, rangeFrom, rangeTo]);
 

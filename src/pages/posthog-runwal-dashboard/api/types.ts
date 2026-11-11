@@ -1,3 +1,4 @@
+import type { AdoptionApiPath } from './api';
 /**
  * Typed response contracts for PostHog Adoption Analytics & FM Matrix Dashboard APIs
  */
@@ -120,6 +121,8 @@ export interface AdoptionTrendResponse {
     previous: AdoptionTrendWeek[];
   };
   trend_pct: number | null;
+  /** Mean WAU of the last 8 complete weeks vs the 8 before; null when that baseline is 0. */
+  avg_trend_pct?: number | null;
   wau_now: number;
   wau_4wk_ago: number;
 }
@@ -130,6 +133,8 @@ export interface GrowthWeek {
   returning: number;
   resurrected: number;
   dormant: number;
+  /** false for the week still in progress: its dormant count is users who have not come back yet. */
+  complete?: boolean;
 }
 
 export interface GrowthResponse {
@@ -161,16 +166,33 @@ export interface RolesResponse {
   roles: RoleStat[];
 }
 
-export interface ModuleNode {
+export interface SubModuleNode {
+  key: string;
   name: string;
   users: number;
   events: number;
   sessions: number;
 }
 
+export interface ModuleNode {
+  /** Present on `modules` rows: the ?module= value. On `tree` rows, `name` is that value. */
+  key?: string;
+  name: string;
+  users: number;
+  /** users who used it / users active in the period * 100 (adoption by module). */
+  share_pct?: number | null;
+  events: number;
+  sessions: number;
+  sub_modules?: SubModuleNode[];
+}
+
 export interface ModulesResponse {
   meta: AdoptionMeta;
   tree: ModuleNode[];
+  /** Live screens arranged under modules; empty unless the scope's app declares them (e.g. RE-CP01). */
+  modules?: ModuleNode[];
+  /** Users active in the period: the denominator of share_pct. */
+  active_users?: number;
 }
 
 export interface FunnelStep {
@@ -198,25 +220,39 @@ export interface EntryScreenItem {
   bounce_trend: number | null;
 }
 
+export interface ModuleFunnel {
+  key: string;
+  name: string;
+  started: number;
+  completed: number;
+  completion_pct: number;
+  biggest_drop_pct: number;
+}
+
 export interface WorkflowUsageResponse {
   meta: AdoptionMeta;
   kpis: Record<string, { value: number | null; delta_pct: number | null }>;
   funnel: FunnelStep[];
   flows: FlowItem[];
   entry_screens: EntryScreenItem[];
+  /** All modules of a catalogue app: each module's own funnel, which the KPIs roll up. */
+  module_funnels?: ModuleFunnel[];
+  /** "workflows" when the funnel is the module's busiest declared workflow (named here). */
+  funnel_source?: 'workflows' | 'events' | 'modules' | 'none';
+  funnel_workflow?: { key: string; name: string } | null;
 }
 
-/** One row from `recent_active_users` — a currently/recently active identified user. */
+/** One row from `recent_active_users` — one event by an identified user. */
 export interface RecentActiveUser {
   user_id: string | null;
+  /** `first_name last_name`; empty when the app sends no name. */
   user_name: string | null;
-  /** name → email local part → `user <id>` → `anonymous`, whichever is available first. */
-  display_name: string;
   email: string | null;
   /** `$pathname` on web, `screen` on apps. */
   path: string | null;
+  /** This event's name. */
   last_event: string | null;
-  /** IST. */
+  /** This event's time, IST. */
   last_seen: string | null;
   minutes_ago: number | null;
   user_role: string | null;
@@ -225,6 +261,7 @@ export interface RecentActiveUser {
   device_type: string | null;
   os: string | null;
   distinct_id?: string | null;
+  /** The user's totals in the range. */
   events: number | null;
   sessions: number | null;
 }
@@ -428,6 +465,9 @@ export interface DashboardFilters {
   projectCode?: string;
   deviceType?: string;
   includeAnonymous?: boolean;
+  // This dashboard's own adoption API (ADOPTION_API in ./api.ts), e.g. 'residential/runwal/cp'. The
+  // server fixes which app it reads, so appId / projectCode are no longer sent to it.
+  apiPath?: AdoptionApiPath;
 }
 
 export interface SiteLookupItem {

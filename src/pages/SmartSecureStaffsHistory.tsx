@@ -170,19 +170,19 @@ const SmartSecureStaffsHistory: React.FC = () => {
     }
 
     if (filters.work_type_id) {
-      params.append("q[type_id_in][]", filters.work_type_id);
+      params.append("q[society_staff_type_id_in][]", filters.work_type_id);
     }
     if (filters.staff_type) {
-      params.append("q[staff_type_in][]", filters.staff_type);
+      params.append("q[society_staff_staff_type_in][]", filters.staff_type);
     }
     if (filters.tower_id) {
-      params.set("q[staff_workings_society_flat_society_block_id_eq]", filters.tower_id);
+      params.set("q[society_staff_staff_workings_society_flat_society_block_id_eq]", filters.tower_id);
     }
     if (filters.flat_id) {
-      params.append("q[staff_workings_society_flat_id_in][]", filters.flat_id);
+      params.append("q[society_staff_staff_workings_society_flat_id_in][]", filters.flat_id);
     }
     if (filters.company_name) {
-      params.set("q[notes_cont]", filters.company_name);
+      params.set("q[society_staff_notes_cont]", filters.company_name);
     }
     if (filters.date_from) {
       params.set("q[created_at_gteq]", filters.date_from);

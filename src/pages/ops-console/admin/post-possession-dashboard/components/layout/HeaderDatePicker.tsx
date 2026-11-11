@@ -79,15 +79,21 @@ interface HeaderDatePickerProps {
 }
 
 export const HeaderDatePicker: React.FC<HeaderDatePickerProps> = ({ dateGrain }) => {
-  const { toast } = useDashboard();
+  const { toast, setApiDateRange } = useDashboard();
   const btnRef = useRef<HTMLButtonElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(() => startOfDay(new Date(2026, 5, 27)));
-  const [rangeFrom, setRangeFrom] = useState(() => startOfDay(new Date(2026, 5, 1)));
-  const [rangeTo, setRangeTo] = useState(() => startOfDay(new Date(2026, 5, 27)));
+  const [selected, setSelected] = useState(() => startOfDay(new Date()));
+  const [rangeFrom, setRangeFrom] = useState(() => {
+    const now = new Date();
+    return startOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
+  });
+  const [rangeTo, setRangeTo] = useState(() => startOfDay(new Date()));
   const [pickingEnd, setPickingEnd] = useState(false);
-  const [view, setView] = useState(() => new Date(2026, 5, 1));
+  const [view, setView] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
   const [pos, setPos] = useState({ top: 0, left: 0 });
 
   const placePop = () => {
@@ -136,6 +142,51 @@ export const HeaderDatePicker: React.FC<HeaderDatePickerProps> = ({ dateGrain })
     setOpen(false);
     setPickingEnd(false);
     setView(new Date(selected.getFullYear(), selected.getMonth(), 1));
+  }, [dateGrain, selected]);
+
+  useEffect(() => {
+    const today = startOfDay(new Date());
+    const toDateParam = (date: Date) =>
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const weekStart = (date: Date) => {
+      const start = startOfDay(date);
+      start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+      return start;
+    };
+
+    if (dateGrain === 'today') {
+      // period=today, or a single custom day when another date was picked
+      setApiDateRange(
+        sameDay(selected, today)
+          ? { period: 'today' }
+          : { period: 'custom', from: toDateParam(selected), to: toDateParam(selected) }
+      );
+    } else if (dateGrain === 'week') {
+      const from = weekStart(selected);
+      const to = new Date(from);
+      to.setDate(from.getDate() + 6);
+      setApiDateRange(
+        sameDay(from, weekStart(today))
+          ? { period: 'this_week' }
+          : { period: 'custom', from: toDateParam(from), to: toDateParam(to) }
+      );
+    } else if (dateGrain === 'month') {
+      const isCurrentMonth =
+        selected.getFullYear() === today.getFullYear() && selected.getMonth() === today.getMonth();
+      setApiDateRange(
+        isCurrentMonth
+          ? { period: 'this_month' }
+          : { month: `${selected.getFullYear()}-${String(selected.getMonth() + 1).padStart(2, '0')}` }
+      );
+    } else {
+      setApiDateRange({ period: 'custom', from: toDateParam(rangeFrom), to: toDateParam(rangeTo) });
+    }
+  }, [dateGrain, selected, rangeFrom, rangeTo, setApiDateRange]);
+
+  // Today / This week / This month always use the current period; only
+  // Custom exposes the calendar, so reset any earlier pick when leaving it.
+  useEffect(() => {
+    if (dateGrain !== 'range') setSelected(startOfDay(new Date()));
   }, [dateGrain]);
 
   const label = useMemo(() => {
@@ -263,6 +314,10 @@ export const HeaderDatePicker: React.FC<HeaderDatePickerProps> = ({ dateGrain })
         document.body
       )
     : null;
+
+  // Keep this component mounted (it derives the API period params above) but
+  // only show the calendar button for the Custom range.
+  if (dateGrain !== 'range') return null;
 
   return (
     <div className={`fdate${open ? ' open' : ''}`}>

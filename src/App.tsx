@@ -3720,10 +3720,23 @@ function App() {
                         path="/runwal-usage-dashboard"
                         element={<PosthogRunwalDashboard />}
                       />
+                      {/* Runwal Connect / Enterprise: the app is fixed by the route, so no app_id shows in the URL */}
+                      <Route
+                        path="/runwal-connect-usage-dashboard"
+                        element={<PosthogRunwalDashboard fixedAppId="12" />}
+                      />
+                      <Route
+                        path="/runwal-enterprise-usage-dashboard"
+                        element={<PosthogRunwalDashboard fixedAppId="35" />}
+                      />
                       {/* Runwal CP variant — identical UI/data, scoped by project_code=RE-CP01 instead of app_id */}
                       <Route
                         path="/runwal-cp-usage-dashboard"
-                        element={<PosthogRunwalCpDashboard />}
+                        element={
+                          <ProtectedRoute>
+                            <PosthogRunwalCpDashboard />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/my-piramal-usage-dashboard"

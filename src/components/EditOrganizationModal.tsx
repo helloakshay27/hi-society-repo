@@ -19,7 +19,7 @@ import { Upload, X, Building, Globe, Flag, Image, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatApiErrorMessage } from "@/utils/apiErrorMessage";
 import { useApiConfig } from "@/hooks/useApiConfig";
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface EditOrganizationModalProps {
   isOpen: boolean;
@@ -57,6 +57,36 @@ const PRODUCT_OPTIONS = [
   { label: "FM Matrix", value: "FM Matrix", code: "FM" },
   { label: "Snagging", value: "Snagging", code: "Snag" },
 ];
+
+const DASHBOARD_TYPE_OPTIONS = [
+  { label: "Usage Dashboard", value: "usage_dashboard" },
+  { label: "Analytics Dashboard", value: "analytics_dashboard" },
+  { label: "Executive Dashboard", value: "executive_dashboard" },
+  { label: "Sitewise Dashboard", value: "sitewise_dashboard" },
+];
+
+const DASHBOARD_LEVEL_OPTIONS = [
+  { label: "Chart", value: "chart" },
+  { label: "Dashboard", value: "dashboard" },
+];
+
+interface DashboardEntry {
+  id?: number;
+  dashboard_name: string;
+  dashboard_type: string;
+  dashboard_url: string;
+  level: string;
+  active: boolean;
+  _destroy?: boolean;
+}
+
+const EMPTY_DASHBOARD: DashboardEntry = {
+  dashboard_name: "",
+  dashboard_type: "",
+  dashboard_url: "",
+  level: "dashboard",
+  active: true,
+};
 
 interface WelcomeDescription {
   description: string;
@@ -124,18 +154,36 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
     powered_by_logo: null,
   });
   const [products, setProducts] = useState<ProductEntry[]>([
-    { product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" },
+    {
+      product_name: "HiSociety",
+      product_code: "HS",
+      domain: "",
+      sub_domain: "",
+      front_domain: "",
+      front_subdomain: "",
+    },
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const addProduct = () => {
     setProducts((prev) => [
       ...prev,
-      { product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" },
+      {
+        product_name: "HiSociety",
+        product_code: "HS",
+        domain: "",
+        sub_domain: "",
+        front_domain: "",
+        front_subdomain: "",
+      },
     ]);
   };
 
-  const updateProduct = (index: number, field: keyof ProductEntry, value: string) => {
+  const updateProduct = (
+    index: number,
+    field: keyof ProductEntry,
+    value: string
+  ) => {
     setProducts((prev) =>
       prev.map((item, i) => {
         if (i !== index) return item;
@@ -150,17 +198,51 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
   };
 
   const removeProduct = (index: number) => {
-    setProducts((prev) =>
-      prev.map((item, i) => {
-        if (i !== index) return item;
-        if (item.id) return { ...item, _destroy: true };
-        return null;
-      }).filter(Boolean) as ProductEntry[]
+    setProducts(
+      (prev) =>
+        prev
+          .map((item, i) => {
+            if (i !== index) return item;
+            if (item.id) return { ...item, _destroy: true };
+            return null;
+          })
+          .filter(Boolean) as ProductEntry[]
     );
   };
-  const [welcomeDescriptions, setWelcomeDescriptions] = useState<WelcomeDescription[]>([
-    { description: "", active: false },
+
+  const [dashboards, setDashboards] = useState<DashboardEntry[]>([
+    { ...EMPTY_DASHBOARD },
   ]);
+
+  const addDashboard = () => {
+    setDashboards((prev) => [...prev, { ...EMPTY_DASHBOARD }]);
+  };
+
+  const updateDashboard = (
+    index: number,
+    field: keyof DashboardEntry,
+    value: string | boolean
+  ) => {
+    setDashboards((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    );
+  };
+
+  const removeDashboard = (index: number) => {
+    setDashboards(
+      (prev) =>
+        prev
+          .map((item, i) => {
+            if (i !== index) return item;
+            if (item.id) return { ...item, _destroy: true };
+            return null;
+          })
+          .filter(Boolean) as DashboardEntry[]
+    );
+  };
+  const [welcomeDescriptions, setWelcomeDescriptions] = useState<
+    WelcomeDescription[]
+  >([{ description: "", active: false }]);
 
   const addWelcomeDescription = () => {
     setWelcomeDescriptions((prev) => [
@@ -175,16 +257,13 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
     value: string | boolean
   ) => {
     setWelcomeDescriptions((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
-      )
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
   };
 
   const removeWelcomeDescription = (index: number) => {
     setWelcomeDescriptions((prev) => prev.filter((_, i) => i !== index));
   };
-
 
   const [visionList, setVisionList] = useState<VisionItem[]>([
     { description: "", active: false },
@@ -199,9 +278,7 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
     value: string | boolean
   ) => {
     setVisionList((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
-      )
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
   };
 
@@ -222,9 +299,7 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
     value: string | boolean
   ) => {
     setMissionList((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
-      )
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
   };
 
@@ -310,18 +385,66 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
           poweredByLogoUrl: org?.powered_by_attachfile?.document_url || null,
         });
 
-        const existingProducts: ProductEntry[] = Array.isArray(org?.organization_products) && org.organization_products.length > 0
-          ? org.organization_products.map((p: { id?: number; product_name?: string; product_code?: string; domain?: string; sub_domain?: string; front_domain?: string; front_subdomain?: string }) => ({
-            id: p.id,
-            product_name: p.product_name || "HiSociety",
-            product_code: p.product_code || "HS",
-            domain: p.domain || "",
-            sub_domain: p.sub_domain || "",
-            front_domain: p.front_domain || "",
-            front_subdomain: p.front_subdomain || "",
-          }))
-          : [{ product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" }];
+        const existingProducts: ProductEntry[] =
+          Array.isArray(org?.organization_products) &&
+          org.organization_products.length > 0
+            ? org.organization_products.map(
+                (p: {
+                  id?: number;
+                  product_name?: string;
+                  product_code?: string;
+                  domain?: string;
+                  sub_domain?: string;
+                  front_domain?: string;
+                  front_subdomain?: string;
+                }) => ({
+                  id: p.id,
+                  product_name: p.product_name || "HiSociety",
+                  product_code: p.product_code || "HS",
+                  domain: p.domain || "",
+                  sub_domain: p.sub_domain || "",
+                  front_domain: p.front_domain || "",
+                  front_subdomain: p.front_subdomain || "",
+                })
+              )
+            : [
+                {
+                  product_name: "HiSociety",
+                  product_code: "HS",
+                  domain: "",
+                  sub_domain: "",
+                  front_domain: "",
+                  front_subdomain: "",
+                },
+              ];
         setProducts(existingProducts);
+
+        const savedDashboards =
+          org?.dashboard_access_controls ?? org?.usage_dashboards;
+        const existingDashboards: DashboardEntry[] =
+          Array.isArray(savedDashboards) && savedDashboards.length > 0
+            ? savedDashboards.map(
+                (d: {
+                  id?: number;
+                  dashboard_name?: string;
+                  dashboard_type?: string;
+                  dashboard_url?: string;
+                  level?: string;
+                  active?: boolean;
+                }) => ({
+                  id: d.id,
+                  dashboard_name: d.dashboard_name || "",
+                  dashboard_type: d.dashboard_type || "",
+                  dashboard_url: d.dashboard_url || "",
+                  level: d.level || "dashboard",
+                  active:
+                    d.active !== undefined && d.active !== null
+                      ? !!d.active
+                      : true,
+                })
+              )
+            : [{ ...EMPTY_DASHBOARD }];
+        setDashboards(existingDashboards);
 
         setWelcomeDescriptions(
           mapDescriptionObjectToArray(otherConfig?.welcome?.description)
@@ -367,10 +490,26 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
     if (!formData.name.trim()) {
       newErrors.name = "Organization name is required";
     }
-    products.filter((p) => !p._destroy).forEach((p, i) => {
-      const realIndex = products.indexOf(p);
-      if (!p.domain.trim()) newErrors[`product_${realIndex}_domain`] = "Domain is required";
-      if (!p.sub_domain.trim()) newErrors[`product_${realIndex}_sub_domain`] = "Sub domain is required";
+    products
+      .filter((p) => !p._destroy)
+      .forEach((p, i) => {
+        const realIndex = products.indexOf(p);
+        if (!p.domain.trim())
+          newErrors[`product_${realIndex}_domain`] = "Domain is required";
+        if (!p.sub_domain.trim())
+          newErrors[`product_${realIndex}_sub_domain`] =
+            "Sub domain is required";
+      });
+    // Blank dashboard rows are skipped (or destroyed if saved); partially filled ones need both fields
+    dashboards.forEach((d, i) => {
+      if (d._destroy) return;
+      const hasName = !!d.dashboard_name.trim();
+      const hasUrl = !!d.dashboard_url.trim();
+      if (!hasName && !hasUrl) return;
+      if (!hasName)
+        newErrors[`dashboard_${i}_name`] = "Dashboard name is required";
+      if (!hasUrl)
+        newErrors[`dashboard_${i}_url`] = "Dashboard URL is required";
     });
 
     setErrors(newErrors);
@@ -391,19 +530,82 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
     submitFormData.append("organization[description]", formData.description);
     products.forEach((product, index) => {
       if (product.id) {
-        submitFormData.append(`organization[organization_products_attributes][${index}][id]`, product.id.toString());
+        submitFormData.append(
+          `organization[organization_products_attributes][${index}][id]`,
+          product.id.toString()
+        );
       }
       if (product._destroy) {
-        submitFormData.append(`organization[organization_products_attributes][${index}][_destroy]`, "true");
+        submitFormData.append(
+          `organization[organization_products_attributes][${index}][_destroy]`,
+          "true"
+        );
         return;
       }
-      submitFormData.append(`organization[organization_products_attributes][${index}][product_name]`, product.product_name);
-      submitFormData.append(`organization[organization_products_attributes][${index}][product_code]`, product.product_code);
-      submitFormData.append(`organization[organization_products_attributes][${index}][domain]`, product.domain);
-      submitFormData.append(`organization[organization_products_attributes][${index}][sub_domain]`, product.sub_domain);
-      submitFormData.append(`organization[organization_products_attributes][${index}][front_domain]`, product.front_domain);
-      submitFormData.append(`organization[organization_products_attributes][${index}][front_subdomain]`, product.front_subdomain);
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][product_name]`,
+        product.product_name
+      );
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][product_code]`,
+        product.product_code
+      );
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][domain]`,
+        product.domain
+      );
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][sub_domain]`,
+        product.sub_domain
+      );
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][front_domain]`,
+        product.front_domain
+      );
+      submitFormData.append(
+        `organization[organization_products_attributes][${index}][front_subdomain]`,
+        product.front_subdomain
+      );
     });
+    dashboards
+      .filter((d) => d.id || d.dashboard_name.trim() || d.dashboard_url.trim())
+      .forEach((dashboard, index) => {
+        if (dashboard.id) {
+          submitFormData.append(
+            `organization[dashboard_access_controls_attributes][${index}][id]`,
+            dashboard.id.toString()
+          );
+        }
+        const isBlank =
+          !dashboard.dashboard_name.trim() && !dashboard.dashboard_url.trim();
+        if (dashboard._destroy || isBlank) {
+          submitFormData.append(
+            `organization[dashboard_access_controls_attributes][${index}][_destroy]`,
+            "true"
+          );
+          return;
+        }
+        submitFormData.append(
+          `organization[dashboard_access_controls_attributes][${index}][dashboard_name]`,
+          dashboard.dashboard_name.trim()
+        );
+        submitFormData.append(
+          `organization[dashboard_access_controls_attributes][${index}][dashboard_type]`,
+          dashboard.dashboard_type
+        );
+        submitFormData.append(
+          `organization[dashboard_access_controls_attributes][${index}][dashboard_url]`,
+          dashboard.dashboard_url.trim()
+        );
+        submitFormData.append(
+          `organization[dashboard_access_controls_attributes][${index}][level]`,
+          dashboard.level
+        );
+        submitFormData.append(
+          `organization[dashboard_access_controls_attributes][${index}][active]`,
+          dashboard.active.toString()
+        );
+      });
     if (formData.country_id && formData.country_id !== "none") {
       submitFormData.append("organization[country_id]", formData.country_id);
     }
@@ -418,7 +620,6 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
         formData.powered_by_logo
       );
     }
-
 
     if (welcomeDescriptions && welcomeDescriptions.length > 0) {
       welcomeDescriptions.forEach((desc, index) => {
@@ -495,7 +696,6 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
       }
     }
 
-
     try {
       const response = await fetch(
         getFullUrl(`/organizations/${organizationId}.json`),
@@ -513,7 +713,9 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
         onSuccess();
       } else {
         const errorData = await response.json().catch(() => null);
-        toast.error(formatApiErrorMessage(errorData, "Failed to update organization"));
+        toast.error(
+          formatApiErrorMessage(errorData, "Failed to update organization")
+        );
       }
     } catch (error) {
       console.error("Error updating organization:", error);
@@ -558,7 +760,17 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
       logoUrl: null,
       poweredByLogoUrl: null,
     });
-    setProducts([{ product_name: "HiSociety", product_code: "HS", domain: "", sub_domain: "", front_domain: "", front_subdomain: "" }]);
+    setProducts([
+      {
+        product_name: "HiSociety",
+        product_code: "HS",
+        domain: "",
+        sub_domain: "",
+        front_domain: "",
+        front_subdomain: "",
+      },
+    ]);
+    setDashboards([{ ...EMPTY_DASHBOARD }]);
     setErrors({});
   };
 
@@ -574,7 +786,6 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
       photoPreviewUrl: null,
     }));
   };
-
 
   const removeCeoVideo = () => {
     setCeoInfo((prev) => ({
@@ -736,103 +947,181 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
                 Domain Configuration
               </h3>
               <div className="space-y-4">
-                {products.filter((p) => !p._destroy).map((product, visibleIndex) => {
-                  const realIndex = products.indexOf(product);
-                  return (
-                    <div key={realIndex} className="border rounded-lg p-4 bg-gray-50 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">Product {visibleIndex + 1}</span>
-                        {products.filter((p) => !p._destroy).length > 1 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeProduct(realIndex)}
-                            style={{ padding: 0, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center" }}
+                {products
+                  .filter((p) => !p._destroy)
+                  .map((product, visibleIndex) => {
+                    const realIndex = products.indexOf(product);
+                    return (
+                      <div
+                        key={realIndex}
+                        className="border rounded-lg p-4 bg-gray-50 space-y-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">
+                            Product {visibleIndex + 1}
+                          </span>
+                          {products.filter((p) => !p._destroy).length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeProduct(realIndex)}
+                              style={{
+                                padding: 0,
+                                width: 24,
+                                height: 24,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                              disabled={isSubmitting}
+                            >
+                              <X
+                                style={{ color: "red", width: 16, height: 16 }}
+                              />
+                            </Button>
+                          )}
+                        </div>
+                        <FormControl fullWidth variant="outlined">
+                          <InputLabel
+                            shrink
+                            required
+                            sx={{
+                              "& .MuiFormLabel-asterisk": { color: "#DA7756" },
+                            }}
+                          >
+                            Product
+                          </InputLabel>
+                          <MuiSelect
+                            value={product.product_name}
+                            onChange={(e) =>
+                              updateProduct(
+                                realIndex,
+                                "product_name",
+                                e.target.value
+                              )
+                            }
+                            label="Product"
+                            displayEmpty
+                            MenuProps={selectMenuProps}
+                            sx={fieldStyles}
                             disabled={isSubmitting}
                           >
-                            <X style={{ color: "red", width: 16, height: 16 }} />
-                          </Button>
-                        )}
+                            {PRODUCT_OPTIONS.map((opt) => (
+                              <MenuItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </MenuItem>
+                            ))}
+                          </MuiSelect>
+                        </FormControl>
+                        <div className="grid grid-cols-2 gap-4">
+                          <TextField
+                            label="Domain"
+                            placeholder="example.com"
+                            value={product.domain}
+                            onChange={(e) => {
+                              updateProduct(
+                                realIndex,
+                                "domain",
+                                e.target.value
+                              );
+                              setErrors((prev) => ({
+                                ...prev,
+                                [`product_${realIndex}_domain`]: "",
+                              }));
+                            }}
+                            fullWidth
+                            variant="outlined"
+                            InputLabelProps={{
+                              shrink: true,
+                              required: true,
+                              sx: {
+                                "& .MuiFormLabel-asterisk": {
+                                  color: "#DA7756",
+                                },
+                              },
+                            }}
+                            InputProps={{ sx: fieldStyles }}
+                            disabled={isSubmitting}
+                            required
+                            error={!!errors[`product_${realIndex}_domain`]}
+                            helperText={
+                              errors[`product_${realIndex}_domain`] || ""
+                            }
+                          />
+                          <TextField
+                            label="Sub Domain"
+                            placeholder="app"
+                            value={product.sub_domain}
+                            onChange={(e) => {
+                              updateProduct(
+                                realIndex,
+                                "sub_domain",
+                                e.target.value
+                              );
+                              setErrors((prev) => ({
+                                ...prev,
+                                [`product_${realIndex}_sub_domain`]: "",
+                              }));
+                            }}
+                            fullWidth
+                            variant="outlined"
+                            InputLabelProps={{
+                              shrink: true,
+                              required: true,
+                              sx: {
+                                "& .MuiFormLabel-asterisk": {
+                                  color: "#DA7756",
+                                },
+                              },
+                            }}
+                            InputProps={{ sx: fieldStyles }}
+                            disabled={isSubmitting}
+                            required
+                            error={!!errors[`product_${realIndex}_sub_domain`]}
+                            helperText={
+                              errors[`product_${realIndex}_sub_domain`] || ""
+                            }
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <TextField
+                            label="Frontend Domain"
+                            placeholder="example.com"
+                            value={product.front_domain}
+                            onChange={(e) =>
+                              updateProduct(
+                                realIndex,
+                                "front_domain",
+                                e.target.value
+                              )
+                            }
+                            fullWidth
+                            variant="outlined"
+                            InputLabelProps={{ shrink: true }}
+                            InputProps={{ sx: fieldStyles }}
+                            disabled={isSubmitting}
+                          />
+                          <TextField
+                            label="Frontend Subdomain"
+                            placeholder="web"
+                            value={product.front_subdomain}
+                            onChange={(e) =>
+                              updateProduct(
+                                realIndex,
+                                "front_subdomain",
+                                e.target.value
+                              )
+                            }
+                            fullWidth
+                            variant="outlined"
+                            InputLabelProps={{ shrink: true }}
+                            InputProps={{ sx: fieldStyles }}
+                            disabled={isSubmitting}
+                          />
+                        </div>
                       </div>
-                      <FormControl fullWidth variant="outlined">
-                        <InputLabel shrink required sx={{ "& .MuiFormLabel-asterisk": { color: "#DA7756" } }}>Product</InputLabel>
-                        <MuiSelect
-                          value={product.product_name}
-                          onChange={(e) => updateProduct(realIndex, "product_name", e.target.value)}
-                          label="Product"
-                          displayEmpty
-                          MenuProps={selectMenuProps}
-                          sx={fieldStyles}
-                          disabled={isSubmitting}
-                        >
-                          {PRODUCT_OPTIONS.map((opt) => (
-                            <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                          ))}
-                        </MuiSelect>
-                      </FormControl>
-                      <div className="grid grid-cols-2 gap-4">
-                        <TextField
-                          label="Domain"
-                          placeholder="example.com"
-                          value={product.domain}
-                          onChange={(e) => {
-                            updateProduct(realIndex, "domain", e.target.value);
-                            setErrors((prev) => ({ ...prev, [`product_${realIndex}_domain`]: "" }));
-                          }}
-                          fullWidth
-                          variant="outlined"
-                          InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#DA7756" } } }}
-                          InputProps={{ sx: fieldStyles }}
-                          disabled={isSubmitting}
-                          required
-                          error={!!errors[`product_${realIndex}_domain`]}
-                          helperText={errors[`product_${realIndex}_domain`] || ""}
-                        />
-                        <TextField
-                          label="Sub Domain"
-                          placeholder="app"
-                          value={product.sub_domain}
-                          onChange={(e) => {
-                            updateProduct(realIndex, "sub_domain", e.target.value);
-                            setErrors((prev) => ({ ...prev, [`product_${realIndex}_sub_domain`]: "" }));
-                          }}
-                          fullWidth
-                          variant="outlined"
-                          InputLabelProps={{ shrink: true, required: true, sx: { "& .MuiFormLabel-asterisk": { color: "#DA7756" } } }}
-                          InputProps={{ sx: fieldStyles }}
-                          disabled={isSubmitting}
-                          required
-                          error={!!errors[`product_${realIndex}_sub_domain`]}
-                          helperText={errors[`product_${realIndex}_sub_domain`] || ""}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <TextField
-                          label="Frontend Domain"
-                          placeholder="example.com"
-                          value={product.front_domain}
-                          onChange={(e) => updateProduct(realIndex, "front_domain", e.target.value)}
-                          fullWidth
-                          variant="outlined"
-                          InputLabelProps={{ shrink: true }}
-                          InputProps={{ sx: fieldStyles }}
-                          disabled={isSubmitting}
-                        />
-                        <TextField
-                          label="Frontend Subdomain"
-                          placeholder="web"
-                          value={product.front_subdomain}
-                          onChange={(e) => updateProduct(realIndex, "front_subdomain", e.target.value)}
-                          fullWidth
-                          variant="outlined"
-                          InputLabelProps={{ shrink: true }}
-                          InputProps={{ sx: fieldStyles }}
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
               <Button
                 type="button"
@@ -841,6 +1130,191 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
                 disabled={isSubmitting}
               >
                 + Add Product
+              </Button>
+            </div>
+
+            {/* Dashboard Configuration Section */}
+            <div>
+              <h3 className="text-sm font-medium text-[#C72030] mb-4">
+                Dashboard Configuration
+              </h3>
+              <div className="space-y-4">
+                {dashboards.every((d) => d._destroy) && (
+                  <p className="text-sm text-gray-500">
+                    No dashboards configured
+                  </p>
+                )}
+                {dashboards
+                  .filter((d) => !d._destroy)
+                  .map((dashboard, visibleIndex) => {
+                    const realIndex = dashboards.indexOf(dashboard);
+                    return (
+                      <div
+                        key={realIndex}
+                        className="border rounded-lg p-4 bg-gray-50 space-y-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">
+                            Dashboard {visibleIndex + 1}
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={dashboard.active}
+                                onCheckedChange={(checked) =>
+                                  updateDashboard(realIndex, "active", checked)
+                                }
+                                disabled={isSubmitting}
+                              />
+                              <Badge
+                                variant={
+                                  dashboard.active ? "default" : "secondary"
+                                }
+                              >
+                                {dashboard.active ? "Active" : "Inactive"}
+                              </Badge>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeDashboard(realIndex)}
+                                style={{
+                                  padding: 0,
+                                  width: 24,
+                                  height: 24,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                                disabled={isSubmitting}
+                              >
+                                <X
+                                  style={{
+                                    color: "red",
+                                    width: 16,
+                                    height: 16,
+                                  }}
+                                />
+                              </Button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <TextField
+                            label="Dashboard Name"
+                            placeholder="Enter dashboard name"
+                            value={dashboard.dashboard_name}
+                            onChange={(e) => {
+                              updateDashboard(
+                                realIndex,
+                                "dashboard_name",
+                                e.target.value
+                              );
+                              setErrors((prev) => ({
+                                ...prev,
+                                [`dashboard_${realIndex}_name`]: "",
+                              }));
+                            }}
+                            fullWidth
+                            variant="outlined"
+                            InputLabelProps={{ shrink: true }}
+                            InputProps={{ sx: fieldStyles }}
+                            disabled={isSubmitting}
+                            error={!!errors[`dashboard_${realIndex}_name`]}
+                            helperText={
+                              errors[`dashboard_${realIndex}_name`] || ""
+                            }
+                          />
+                          <TextField
+                            label="Dashboard URL"
+                            placeholder="https://example.com/dashboard"
+                            value={dashboard.dashboard_url}
+                            onChange={(e) => {
+                              updateDashboard(
+                                realIndex,
+                                "dashboard_url",
+                                e.target.value
+                              );
+                              setErrors((prev) => ({
+                                ...prev,
+                                [`dashboard_${realIndex}_url`]: "",
+                              }));
+                            }}
+                            fullWidth
+                            variant="outlined"
+                            InputLabelProps={{ shrink: true }}
+                            InputProps={{ sx: fieldStyles }}
+                            disabled={isSubmitting}
+                            error={!!errors[`dashboard_${realIndex}_url`]}
+                            helperText={
+                              errors[`dashboard_${realIndex}_url`] || ""
+                            }
+                          />
+                        </div>
+                        {/* Type & Level dropdowns hidden for now
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormControl fullWidth variant="outlined">
+                            <InputLabel shrink>Type</InputLabel>
+                            <MuiSelect
+                              value={dashboard.dashboard_type}
+                              onChange={(e) =>
+                                updateDashboard(
+                                  realIndex,
+                                  "dashboard_type",
+                                  e.target.value
+                                )
+                              }
+                              label="Type"
+                              displayEmpty
+                              MenuProps={selectMenuProps}
+                              sx={fieldStyles}
+                              disabled={isSubmitting}
+                            >
+                              <MenuItem value="">
+                                <em>Select Type</em>
+                              </MenuItem>
+                              {DASHBOARD_TYPE_OPTIONS.map((opt) => (
+                                <MenuItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+                          <FormControl fullWidth variant="outlined">
+                            <InputLabel shrink>Level</InputLabel>
+                            <MuiSelect
+                              value={dashboard.level}
+                              onChange={(e) =>
+                                updateDashboard(
+                                  realIndex,
+                                  "level",
+                                  e.target.value
+                                )
+                              }
+                              label="Level"
+                              MenuProps={selectMenuProps}
+                              sx={fieldStyles}
+                              disabled={isSubmitting}
+                            >
+                              {DASHBOARD_LEVEL_OPTIONS.map((opt) => (
+                                <MenuItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+                        </div>
+                        */}
+                      </div>
+                    );
+                  })}
+              </div>
+              <Button
+                type="button"
+                onClick={addDashboard}
+                className="mt-4 bg-[#C72030] text-white hover:bg-[#C72030]/90"
+                disabled={isSubmitting}
+              >
+                + Add Dashboard
               </Button>
             </div>
 
@@ -947,7 +1421,6 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
                   </div>
                 </div>
               </div>
-
 
               {/* Welcome Description Section */}
               {/* <div className="mt-5">
@@ -1297,7 +1770,6 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
                   />
                 </div> */}
 
-
                 {/* Photo Upload */}
                 {/* <div className="mt-4">
                   <span className="text-sm font-medium">Photo</span>
@@ -1355,7 +1827,6 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
             </div> */}
                 {/* Video Upload */}
 
-
                 {/* <div className="mt-4 space-y-2">
               <span className="text-sm font-medium">Video</span>
 
@@ -1402,7 +1873,6 @@ export const EditOrganizationModal: React.FC<EditOrganizationModalProps> = ({
                 </div>
               )}
             </div> */}
-
               </div>
             </div>
           </div>

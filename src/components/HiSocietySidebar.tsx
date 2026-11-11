@@ -1,5 +1,6 @@
 import React, { useState, useEffect, startTransition } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { isSidebarPathActive } from "@/utils/sidebarRouteAliases";
 import { useLayout } from "../contexts/LayoutContext";
 import { trackSidebarClick } from "@/utils/posthogHelpers";
 import {
@@ -1502,12 +1503,8 @@ export const HiSocietySidebar: React.FC = () => {
   };
 
   // Check if path is active
-  const isActive = (path?: string) => {
-    if (!path) return false;
-    return (
-      location.pathname === path || location.pathname.startsWith(path + "/")
-    );
-  };
+  const isActive = (path?: string) =>
+    isSidebarPathActive(location.pathname, path);
 
   const handleNavigation = (path: string, navState?: Record<string, any>) => {
     setIsMobileSidebarOpen(false);

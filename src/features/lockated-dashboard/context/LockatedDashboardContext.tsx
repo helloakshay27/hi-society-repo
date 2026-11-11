@@ -226,6 +226,7 @@ export function LockatedDashboardProvider({
     queryKey: ['lockated-growth', filters],
     queryFn: () =>
       fetchGrowth({
+        from: filters.from,
         to: filters.to,
         weeks: 6,
         siteIds: filters.siteIds,
@@ -244,7 +245,7 @@ export function LockatedDashboardProvider({
     queryFn: () =>
       fetchRetention({
         to: filters.to,
-        weeks: 6,
+        weeks: 8,
         siteIds: filters.siteIds,
         devices: filters.devices,
         appId: filters.appId,

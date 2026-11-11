@@ -89,7 +89,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   const trendLabels = weeklyCurrent.map((w) => (w.week ? fmtDateShort(w.week) : 'W'));
 
   const growthWeeks = growthData?.weeks || [];
-  const growthLabels = growthWeeks.map((w) => (w.week ? fmtDateShort(w.week) : 'W'));
+  const growthLabels = growthWeeks.map((w) => (w.week ? `${fmtDateShort(w.week)}${w.complete === false ? " (so far)" : ""}` : 'W'));
 
   // Adoption by module: users who touched each module ÷ active users in scope.
   const activeUsers = trafficData?.tiles?.active_users || 0;
@@ -230,7 +230,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
         <Card
           id="card-growthAccounting"
           infoKey="chart.growth"
-          eyebrow="Growth accounting · Last 6 weeks"
+          eyebrow="Growth accounting · Weekly, selected range"
           title="New · Returning · Resurrecting · Dormant"
           purpose="Breaks the active base into new users, retained users, win-backs and users going quiet."
         >

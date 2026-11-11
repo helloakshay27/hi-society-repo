@@ -44,8 +44,10 @@ export const StaffDetailsPage = () => {
     workInfo: true,
     scheduleInfo: true,
     qrInfo: true,
-    associateFlat: true
+    associateFlat: true,
+    documents: true
   });
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
 
   // Helper function to check if value has data
   const hasData = (value: unknown) => {
@@ -609,6 +611,13 @@ export const StaffDetailsPage = () => {
                 <span className="text-[13.5px] font-medium text-[#1A1A18]">{formatDate(staff.created_at)}</span>
               </div>
             )}
+
+            {hasData(staff.notes) && (
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Notes</span>
+                <span className="break-words text-[13.5px] font-medium text-[#1A1A18]">{staff.notes}</span>
+              </div>
+            )}
             
             {/* <div className="flex min-w-0 flex-col items-start gap-1">
               <span className="text-[11px] font-medium text-[rgba(26,26,24,.48)]">Number Verified</span>
@@ -745,6 +754,59 @@ export const StaffDetailsPage = () => {
         )}
       </Card>
 
+      {/* Documents */}
+      <ExpandableSection
+        title="Documents"
+        icon={FileText}
+        isExpanded={expandedSections.documents}
+        onToggle={() => toggleSection('documents')}
+        hasData={(staff.documents?.length ?? 0) > 0}
+      >
+        {staff.documents && staff.documents.length > 0 ? (
+          <div className="flex flex-wrap gap-3">
+            {staff.documents.map((doc, i) => {
+              const url = String(doc.url ?? '');
+              const fileName = decodeURIComponent(url.split('/').pop()?.split('?')[0] || `Document ${i + 1}`);
+              const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(url);
+              const open = () => setPreviewDoc({ url, name: fileName });
+              return isImage ? (
+                <img
+                  key={doc.id ?? i}
+                  src={url}
+                  alt={fileName}
+                  onClick={open}
+                  className="h-28 w-28 cursor-pointer rounded-xl border border-[rgba(26,26,24,.12)] object-cover transition-opacity hover:opacity-80"
+                />
+              ) : (
+                <a
+                  key={doc.id ?? i}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-28 w-28 flex-col items-center justify-center gap-2 rounded-xl border border-[rgba(26,26,24,.12)] bg-[#F5F4F0] p-2 text-center transition-opacity hover:opacity-80"
+                >
+                  <FileText className="h-7 w-7 text-[rgba(26,26,24,.68)]" />
+                  <span className="line-clamp-2 break-all text-[11px] font-medium text-[#1A1A18]">{fileName}</span>
+                </a>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="py-4 text-center text-gray-500">No documents uploaded</p>
+        )}
+      </ExpandableSection>
+
+      <Dialog open={!!previewDoc} onOpenChange={(o) => !o && setPreviewDoc(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="break-all text-[14px]">{previewDoc?.name}</DialogTitle>
+          </DialogHeader>
+          {previewDoc && (
+            <img src={previewDoc.url} alt={previewDoc.name} className="max-h-[75vh] w-full object-contain" />
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Section 4: QR Code Information */}
       <ExpandableSection
         title="QR Code"
@@ -842,7 +904,7 @@ export const StaffDetailsPage = () => {
             <Button
               onClick={handleAddFlat}
               disabled={savingFlat || !selectedFlat}
-              className="bg-[#C72030] hover:bg-[#A01828] !text-white"
+             className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
             >
               {savingFlat ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving...</> : 'Submit'}
             </Button>
