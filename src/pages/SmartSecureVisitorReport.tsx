@@ -59,6 +59,7 @@ const SmartSecureVisitorReport: React.FC = () => {
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
       }
+      
 
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
