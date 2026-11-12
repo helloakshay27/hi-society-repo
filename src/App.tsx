@@ -40,6 +40,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const PublicSiteScheduleBooking = lazy(
   () => import("./pages/PublicSiteScheduleBooking")
 );
+const AppDeepLinkFallback = lazy(() => import("./pages/AppDeepLinkFallback"));
 
 // Import Invoice Approvals page
 const InvoiceApprovalsPage = lazy(() =>
@@ -9689,6 +9690,11 @@ function App() {
                         path="/site_schedule_requests/:encryptedId/schedule"
                         element={<PublicSiteScheduleBooking />}
                       />
+                      {/* Runwal Connect mobile deep links (/app/payments-due, ...):
+                          store fallback shown only when the app did not open.
+                          More specific /app/... routes above (e.g.
+                          /app/direct-pdf-download/:taskId) still win over this splat. */}
+                      <Route path="/app/*" element={<AppDeepLinkFallback />} />
                     </Routes>
                   </Suspense>
                   {/* Mail Inbound Routes */}

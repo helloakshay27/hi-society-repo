@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.lockated.Runwal",
+      "sha256_cert_fingerprints": ["56:93:29:C7:7B:EB:DA:01:D5:BB:65:39:A1:AA:E6:F7:47:DE:56:49:83:50:D6:D3:90:B1:46:69:FE:4E:57:E5"]
+    }
+  }
+]
