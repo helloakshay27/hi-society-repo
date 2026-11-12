@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Chart, type ChartConfiguration } from 'chart.js/auto';
 import { createRoot, type Root } from 'react-dom/client';
 import { mountChartGrid } from './ChartGrid';
+import { DashboardTablePagination } from './DashboardTablePagination';
 import {
   QuarantineCasesEnhancedTable,
   type QuarantineCaseRow,
@@ -641,17 +642,38 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
         enhancedTableRootRef.current = root;
         if (apiTab === 'community') {
           const { rows, emptyMessage } = readQuarantineCaseTable(dataTable);
-          root.render(<QuarantineCasesEnhancedTable rows={rows} emptyMessage={emptyMessage} />);
+          root.render(
+            <DashboardTablePagination rows={rows}>
+              {(pageRows) => (
+                <QuarantineCasesEnhancedTable rows={pageRows} emptyMessage={emptyMessage} />
+              )}
+            </DashboardTablePagination>
+          );
         } else if (apiTab === 'parking') {
           const { rows, emptyMessage } = readRegisteredSlotsTable(dataTable);
-          root.render(<RegisteredSlotsEnhancedTable rows={rows} emptyMessage={emptyMessage} />);
+          root.render(
+            <DashboardTablePagination rows={rows}>
+              {(pageRows) => (
+                <RegisteredSlotsEnhancedTable
+                  rows={pageRows}
+                  totalRows={rows.length}
+                  emptyMessage={emptyMessage}
+                />
+              )}
+            </DashboardTablePagination>
+          );
         } else if (apiTab === 'club') {
           const { rows, emptyMessage } = readFacilitySlotsTable(dataTable);
           root.render(
-            <FacilitySlotsEnhancedTable
-              rows={rows}
-              emptyMessage={emptyMessage}
-            />
+            <DashboardTablePagination rows={rows}>
+              {(pageRows) => (
+                <FacilitySlotsEnhancedTable
+                  rows={pageRows}
+                  allRows={rows}
+                  emptyMessage={emptyMessage}
+                />
+              )}
+            </DashboardTablePagination>
           );
         } else {
           const { rows, emptyMessage } = readImportantEventsTable(dataTable);
@@ -691,7 +713,11 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
         table.replaceWith(mountNode);
         const root = createRoot(mountNode);
         fitoutTableRootsRef.current.push(root);
-        root.render(<Component rows={rows} emptyMessage={emptyMessage} />);
+        root.render(
+          <DashboardTablePagination rows={rows}>
+            {(pageRows) => <Component rows={pageRows} emptyMessage={emptyMessage} />}
+          </DashboardTablePagination>
+        );
       });
     }
     if (apiTab === 'security') {
@@ -712,7 +738,11 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
         const root = createRoot(mountNode);
         missedPatrolTableRootRef.current = root;
         root.render(
-          <MissedPatrolIncidentsEnhancedTable rows={rows} emptyMessage={emptyMessage} />
+          <DashboardTablePagination rows={rows}>
+            {(pageRows) => (
+              <MissedPatrolIncidentsEnhancedTable rows={pageRows} emptyMessage={emptyMessage} />
+            )}
+          </DashboardTablePagination>
         );
       }
     }
@@ -720,13 +750,21 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
       const directoryTable = container.querySelector<HTMLTableElement>('#dirTable');
       if (directoryTable) {
         const { rows, emptyMessage } = readBusinessDirectoryTable(directoryTable);
+        const viewport = document.createElement('div');
+        viewport.className = 'tbl-scroll directory-vendors-scroll';
+        directoryTable.before(viewport);
+        viewport.append(directoryTable);
         const mountNode = document.createElement('div');
         directoryTable.replaceWith(mountNode);
         container.querySelector('#dirPgnInfo')?.closest('.pgn')?.remove();
         const root = createRoot(mountNode);
         directoryTableRootRef.current = root;
         root.render(
-          <BusinessDirectoryEnhancedTable rows={rows} emptyMessage={emptyMessage} />
+          <DashboardTablePagination rows={rows}>
+            {(pageRows) => (
+              <BusinessDirectoryEnhancedTable rows={pageRows} emptyMessage={emptyMessage} />
+            )}
+          </DashboardTablePagination>
         );
       }
     }
@@ -752,12 +790,16 @@ export const TabHtmlContent: React.FC<TabHtmlContentProps> = ({
         const root = createRoot(mountNode);
         genericTableRootsRef.current.push(root);
         root.render(
-          <HtmlTableEnhancedTable
-            headers={parsedTable.headers}
-            tableClassName={table.className}
-            rows={parsedTable.rows}
-            emptyMessage={parsedTable.emptyMessage}
-          />
+          <DashboardTablePagination rows={parsedTable.rows}>
+            {(pageRows) => (
+              <HtmlTableEnhancedTable
+                headers={parsedTable.headers}
+                tableClassName={table.className}
+                rows={pageRows}
+                emptyMessage={parsedTable.emptyMessage}
+              />
+            )}
+          </DashboardTablePagination>
         );
       });
     mountCharts(container);

@@ -366,7 +366,7 @@
 .pp-dashboard-root .qchip.on.qc-po{background:var(--ink);color:#fff;font-weight:500}
 @keyframes sectionFlash{0%{box-shadow:0 0 0 0 rgba(218,119,86,.4)}60%{box-shadow:0 0 0 8px rgba(218,119,86,0)}100%{box-shadow:none}}
 .pp-dashboard-root .flash{animation:sectionFlash .7s ease-out}
-.pp-dashboard-root .pg{width:100%;max-width:none;margin:0;padding:20px 24px 64px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px}
+.pp-dashboard-root .pg{width:100%;max-width:1100px;margin:0 auto;padding:22px 28px 80px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px}
 .pp-dashboard-root .panel{display:none}
 .pp-dashboard-root .panel.on{display:block}
 .pp-dashboard-root .g{display:grid;gap:14px;width:100%}
@@ -501,6 +501,12 @@
 .pp-dashboard-root .dashboard-enhanced-table-root > .space-y-4 > div:first-child{display:none}
 .pp-dashboard-root .dashboard-enhanced-table-root > .space-y-4 > div:nth-child(2){
   background:transparent !important;border:0 !important;border-radius:0 !important;overflow:visible !important
+}
+.pp-dashboard-root .dashboard-enhanced-table-root nav[aria-label="pagination"]{
+  justify-content:flex-end !important;margin-left:auto !important;margin-right:0 !important
+}
+.pp-dashboard-root .dashboard-enhanced-table-root nav[aria-label="pagination"] ul{
+  list-style:none;margin:0;padding:0
 }
 .pp-dashboard-root .dashboard-enhanced-table-root .table-container > div{overflow:visible !important}
 .pp-dashboard-root table.dashboard-enhanced-table{
@@ -962,6 +968,9 @@
   max-width:100%;overscroll-behavior:contain;scroll-behavior:smooth;
   scrollbar-width:thin;scrollbar-color:#c4b89d #f6f4ee
 }
+.pp-dashboard-root .membership-expiring-list-scrollable{
+  max-height:520px;overflow-y:auto
+}
 .pp-dashboard-root .membership-expiring-list::-webkit-scrollbar{width:8px}
 .pp-dashboard-root .membership-expiring-list::-webkit-scrollbar-track{background:#f6f4ee}
 .pp-dashboard-root .membership-expiring-list::-webkit-scrollbar-thumb{
@@ -1093,7 +1102,7 @@
 @media(max-width:768px){
   .pp-dashboard-root .tnav,
   .pp-dashboard-root .fbar{padding:0 8px}
-  .pp-dashboard-root .pg{padding:12px 8px 80px}
+  .pp-dashboard-root .pg{padding:14px 14px 80px}
   .pp-dashboard-root .aib-right{display:none}
   .pp-dashboard-root .rg,
   .pp-dashboard-root .pcols{grid-template-columns:1fr}

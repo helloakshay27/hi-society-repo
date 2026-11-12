@@ -58,7 +58,7 @@ const FitoutEnhancedTable: React.FC<BaseProps> = ({
   viewportClassName,
   drill,
 }) => {
-  const tableRootRef = useEnhancedTableScrollViewport(viewportClassName, rows, undefined, 5);
+  const tableRootRef = useEnhancedTableScrollViewport(viewportClassName, rows, undefined, 10);
 
   return (
     <div ref={tableRootRef} className="dashboard-enhanced-table-root">

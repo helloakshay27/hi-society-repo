@@ -15,6 +15,7 @@ import {
   TOWER_TICKET_BARS,
 } from '../data/mockData';
 import { rgba } from '../charts/chartPalette';
+import { renderDashboardTablePagination } from '../components/shared/DashboardTablePagination';
 import { buildChipDrill, CHIP_SOURCES } from '../data/liveChipDrill';
 import { buildKpiDrill, CHIP_BY_DRILL_KEY, resolveKpiDrill, type KpiDrillSource } from '../data/liveKpiDrill';
 import { useMyDashboardStore } from '../store/myDashboardStore';
@@ -35,7 +36,7 @@ import {
   type TowerOption,
 } from '../api';
 
-const IMPORTANT_EVENTS_PER_PAGE = 20;
+const IMPORTANT_EVENTS_PER_PAGE = 10;
 const TAB_BADGE_SOURCES: Array<{ tab: PostPossessionTab; endpoint: string }> = [
   { tab: 'allTowers', endpoint: 'summary' },
   { tab: 'helpdesk', endpoint: 'kpis' },
@@ -177,21 +178,7 @@ function mountNoticeStack(root: HTMLElement, openDrill: (k: string) => void) {
 }
 
 function renderAgeingMatrix(host: HTMLElement, openDrill: (k: string) => void) {
-  // Business Genie: ink tint deepening with age × volume (veda-gardens-vertical-bars.html)
-  const rowsHtml = AGEING_MATRIX.map((r) => {
-    const tot = r.cols.reduce((a, b) => a + b, 0);
-    const cells = r.cols
-      .map((n, i) => {
-        if (!n) return `<span class="cell z">—</span>`;
-        const bg =
-          i === 0 ? '#FFFFFF' : `rgba(26,26,24,${(0.03 + i * 0.02 + n * 0.008).toFixed(3)})`;
-        return `<span class="cell" style="background:${bg}" data-drill="tickets_open">${n}</span>`;
-      })
-      .join('');
-    return `<div class="grid-row"><span>${r.pri}</span>${cells}<span class="tot">${tot}</span></div>`;
-  }).join('');
-
-  // Support both legacy <tbody> and BG .age grid host
+  let rowHost = host;
   if (host.tagName === 'TBODY') {
     const table = host.closest('table');
     const wrap = table?.parentElement;
@@ -199,22 +186,50 @@ function renderAgeingMatrix(host: HTMLElement, openDrill: (k: string) => void) {
       const age = document.createElement('div');
       age.className = 'tbox num';
       age.id = 'ageing';
-      age.innerHTML =
-        `<div class="grid-head"><span>Priority</span><span>0–3 days</span><span>4–7 days</span><span>8–14 days</span><span>15–30 days</span><span>30+ days</span><span>Total</span></div>${rowsHtml}`;
       wrap.replaceChild(age, table);
-      age.querySelectorAll('[data-drill]').forEach((el) => {
-        el.addEventListener('click', () => openDrill('tickets_open'));
-      });
-      return;
+      rowHost = age;
     }
   }
 
-  host.classList.add('num');
-  // #ageing sits under an existing .grid-head in the BG markup — rows only
-  host.innerHTML = rowsHtml;
-  host.querySelectorAll('[data-drill]').forEach((el) => {
-    el.addEventListener('click', () => openDrill('tickets_open'));
-  });
+  rowHost.classList.add('num');
+  let activePage = 1;
+  const renderPage = (requestedPage: number) => {
+    const totalPages = Math.max(1, Math.ceil(AGEING_MATRIX.length / 10));
+    activePage = Math.min(Math.max(requestedPage, 1), totalPages);
+    const start = (activePage - 1) * 10;
+    const rowsHtml = AGEING_MATRIX.slice(start, start + 10)
+      .map((row) => {
+        const total = row.cols.reduce((sum, value) => sum + value, 0);
+        const cells = row.cols
+          .map((value, index) => {
+            if (!value) return '<span class="cell z">—</span>';
+            const background =
+              index === 0
+                ? '#FFFFFF'
+                : `rgba(26,26,24,${(0.03 + index * 0.02 + value * 0.008).toFixed(3)})`;
+            return `<span class="cell" style="background:${background}" data-drill="tickets_open">${value}</span>`;
+          })
+          .join('');
+        return `<div class="grid-row"><span>${row.pri}</span>${cells}<span class="tot">${total}</span></div>`;
+      })
+      .join('');
+    const headerHtml = rowHost.classList.contains('tbox')
+      ? '<div class="grid-head"><span>Priority</span><span>0–3 days</span><span>4–7 days</span><span>8–14 days</span><span>15–30 days</span><span>30+ days</span><span>Total</span></div>'
+      : '';
+    rowHost.innerHTML = `${headerHtml}${rowsHtml}`;
+    rowHost.querySelectorAll('[data-drill]').forEach((element) => {
+      element.addEventListener('click', () => openDrill('tickets_open'));
+    });
+    const paginationAnchor = rowHost.closest<HTMLElement>('.tbox') ?? rowHost;
+    renderDashboardTablePagination(
+      paginationAnchor,
+      AGEING_MATRIX.length,
+      activePage,
+      renderPage,
+      'ageing-pagination'
+    );
+  };
+  renderPage(activePage);
 }
 
 function renderTowerBars(container: HTMLElement, openDrill: (k: string) => void) {

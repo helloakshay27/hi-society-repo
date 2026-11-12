@@ -52,18 +52,20 @@ const COLUMNS: ColumnConfig[] = [
 
 interface RegisteredSlotsEnhancedTableProps {
   rows: RegisteredSlotRow[];
+  totalRows?: number;
   emptyMessage: string;
 }
 
 export const RegisteredSlotsEnhancedTable: React.FC<RegisteredSlotsEnhancedTableProps> = ({
   rows,
+  totalRows = rows.length,
   emptyMessage,
 }) => {
   const tableRootRef = useEnhancedTableScrollViewport(
     'registered-slots-scroll',
     rows,
     undefined,
-    6
+    10
   );
 
   useEffect(() => {
@@ -71,8 +73,8 @@ export const RegisteredSlotsEnhancedTable: React.FC<RegisteredSlotsEnhancedTable
       element.textContent?.trim().startsWith('All registered slots')
     );
     const badge = title?.closest<HTMLElement>('.ch')?.querySelector<HTMLElement>('.b');
-    if (badge) badge.textContent = `${rows.length} total`;
-  }, [rows]);
+    if (badge) badge.textContent = `${totalRows} total`;
+  }, [totalRows]);
 
   return (
     <div ref={tableRootRef} className="dashboard-enhanced-table-root">

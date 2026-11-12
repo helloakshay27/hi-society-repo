@@ -24,18 +24,32 @@ export function useEnhancedTableScrollViewport(
         (height, row) => height + row.getBoundingClientRect().height,
         0
       );
+      const paginationHeight =
+        viewport
+          ?.querySelector<HTMLElement>(
+            'nav[aria-label="Table pagination"], nav[aria-label="pagination"]'
+          )
+          ?.getBoundingClientRect().height ?? 0;
       const trailingContentHeight =
-        trailingContentSelector && rows.length <= 10
+        trailingContentSelector
           ? root?.querySelector<HTMLElement>(trailingContentSelector)?.getBoundingClientRect().height ?? 0
           : 0;
       if (headerHeight > 0) {
-        viewport.style.maxHeight = `${headerHeight + rowsHeight + trailingContentHeight}px`;
+        viewport.style.maxHeight = `${
+          headerHeight + rowsHeight + paginationHeight + trailingContentHeight
+        }px`;
       }
     };
 
     fitViewport();
+    const body = table.tBodies.item(0);
+    const observer = body ? new MutationObserver(fitViewport) : null;
+    if (body) observer?.observe(body, { childList: true });
     window.addEventListener('resize', fitViewport);
-    return () => window.removeEventListener('resize', fitViewport);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', fitViewport);
+    };
   }, [rows, trailingContentSelector, viewportClassName, visibleRowCount]);
 
   return tableRootRef;
