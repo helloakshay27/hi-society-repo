@@ -426,43 +426,34 @@ export function buildFlows(
   const activeWorkflow =
     WORKFLOWS.find((workflow) => workflow.key === state.wf) || WORKFLOWS[0];
 
-  const kpis = workflowQ?.kpis;
-  const adoptRate =
-    kpis?.f_adopt?.value != null
-      ? `${Math.round(kpis.f_adopt.value)}%`
-      : `${activeWorkflow.adoption}%`;
+  // The selected workflow as the API counted it (config/workflows.yml lockated). Every number comes from
+  // the API; when the app does not send a workflow's events the cards show '—' (never sample numbers).
+  const declared = workflowQ?.workflows?.find((w) => w.key === activeWorkflow.key);
+  const measured = (declared?.steps ?? []).filter((st) => st.instrumented);
+  const fmtPct = (v: number | null | undefined) => (v != null ? `${Math.round(v)}%` : '—');
+  const adoptRate = fmtPct(declared?.adoption_pct != null && declared.volume > 0 ? declared.adoption_pct : null);
+  const compRate = fmtPct(declared?.completion_pct);
+  const dropVal = fmtPct(declared?.biggest_drop_pct);
+  const volVal = declared?.completions != null ? fmtC(declared.completions) : '—';
 
-  const compRate =
-    kpis?.f_comp?.value != null
-      ? `${Math.round(kpis.f_comp.value)}%`
-      : `${activeWorkflow.completionRate}%`;
-
-  const dropVal =
-    kpis?.f_step?.value != null
-      ? `${Math.round(kpis.f_step.value)}%`
-      : `${activeWorkflow.dropoffRate}%`;
-
-  const volVal =
-    kpis?.f_vol?.value != null
-      ? fmtC(kpis.f_vol.value)
-      : activeWorkflow.completions;
-
-  const biggestStep =
-    workflowQ?.funnel?.find((step) => step.biggest)?.step ??
-    (activeWorkflow.steps[1] || '--');
+  const worstStep = measured.reduce<{ step: string; drop: number } | null>(
+    (worst, st) => (st.drop_pct != null && (!worst || st.drop_pct > worst.drop) ? { step: st.step, drop: st.drop_pct } : worst),
+    null
+  );
+  const biggestStep = worstStep?.step ?? '--';
 
   const tiles: TileData[] = [
     {
       label: 'Workflow Adoption',
       val: adoptRate,
       dir: 'up',
-      delta: fmtDelta(kpis?.f_adopt?.delta_pct)
+      delta: null
     },
     {
       label: 'Completion Rate',
       val: compRate,
       dir: 'up',
-      delta: fmtDelta(kpis?.f_comp?.delta_pct)
+      delta: null
     },
     {
       label: 'Biggest Step Drop',
@@ -475,25 +466,14 @@ export function buildFlows(
       label: 'Usage Volume',
       val: volVal,
       dir: 'up',
-      delta: fmtDelta(kpis?.f_vol?.delta_pct),
-      sub: 'completions'
+      delta: null,
+      sub: declared && declared.measured_steps === 0 ? "app doesn't send these events yet" : 'users who completed'
     }
   ];
 
-  let funnelSteps: string[];
-  let funnelDrops: (number | null)[];
-
-  if (workflowQ?.funnel && workflowQ.funnel.length > 0) {
-    funnelSteps = workflowQ.funnel.map((step) => step.step);
-    funnelDrops = workflowQ.funnel.map((step) => step.drop_pct);
-  } else {
-    funnelSteps = activeWorkflow.steps;
-    funnelDrops = activeWorkflow.steps.map((_, i) =>
-      i === 0
-        ? null
-        : Math.round(activeWorkflow.dropoffRate / (activeWorkflow.steps.length - 1 || 1))
-    );
-  }
+  // The funnel: the selected workflow's steps the app sends, with the API's drop at each.
+  const funnelSteps: string[] = measured.map((st) => st.step);
+  const funnelDrops: (number | null)[] = measured.map((st) => st.drop_pct);
 
   const screenRows =
     workflowQ?.flows && workflowQ.flows.length > 0

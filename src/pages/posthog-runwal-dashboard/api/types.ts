@@ -223,7 +223,8 @@ export interface ModuleFunnel {
   name: string;
   started: number;
   completed: number;
-  completion_pct: number;
+  /** null when none of the module's declared workflows can be measured (first or final step not sent). */
+  completion_pct: number | null;
   biggest_drop_pct: number;
 }
 

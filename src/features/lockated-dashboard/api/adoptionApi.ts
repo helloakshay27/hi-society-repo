@@ -363,8 +363,24 @@ export interface WorkflowEntryScreen {
   bounce_trend: number | null;
 }
 
+/** A named workflow from config/workflows.yml (the lockated entry), counted on real events. */
+export interface DeclaredWorkflow {
+  key: string;
+  name: string;
+  bucket: string;
+  adoption_pct: number | null;
+  completion_pct: number | null;   // null unless the app sends the first and final steps
+  biggest_drop_pct: number | null;
+  volume: number;                  // users reaching the first measured step
+  completions: number | null;      // users reaching the final step
+  measured_steps: number;
+  steps: { step: string; reach: number | null; drop_pct: number | null; instrumented: boolean }[];
+  missing_steps: string[];
+}
+
 export interface WorkflowUsageResponse {
   meta: AdoptionMeta;
+  workflows?: DeclaredWorkflow[];
   kpis: {
     f_adopt: WorkflowKpi;
     f_comp: WorkflowKpi;

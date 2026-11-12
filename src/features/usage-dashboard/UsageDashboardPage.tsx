@@ -57,16 +57,16 @@ const KPI_INFO: Record<string, { f: string; m: string }> = {
     f: "Count of all View-typed screen-load events across modules (e.g. home_page_viewed, service_request_list_viewed, event_details_viewed).",
     m: "Overall screen/content consumption across the app.",
   },
-  "Total Sessions": {
-    f: "Count of distinct app sessions started in the period (from app_launched, the first event of every session).",
+  Sessions: {
+    f: "Count of distinct sessions (visits) with activity in the selected period.",
     m: "Usage volume across all resident devices.",
   },
-  "Average Session Duration": {
-    f: "Total session time ÷ total sessions.",
+  "Session Duration": {
+    f: "Total time of all sessions ÷ number of sessions (a session runs from its first to its last event; sessions started in the period).",
     m: "Engagement depth per visit.",
   },
   "Bounce Rate": {
-    f: "% of sessions with only app_launched/home_page_viewed and no further interaction.",
+    f: "Sessions that never get past the launch, sign-in or home screen (splash, login, OTP, home) ÷ all sessions × 100.",
     m: "Immediate exits or the app opened and left idle.",
   },
   "Recently Online": {
@@ -78,35 +78,35 @@ const KPI_INFO: Record<string, { f: string; m: string }> = {
     m: "What fraction of registered residents are actively logging in and generating events.",
   },
   Stickiness: {
-    f: "Daily active users (DAU) ÷ monthly active users (MAU).",
+    f: "Average daily active users (DAU) over the period ÷ monthly active users (MAU, the 30 days ending on the end date) × 100.",
     m: "Reflects daily return habits versus casual monthly usage.",
   },
   "Adoption Trend": {
-    f: "Growth in weekly active users over the past 8 weeks.",
+    f: "This week's active users (the last 7 days) vs the average of the 8 weeks before: (this week − average) ÷ average × 100. Weeks before the app went live are left out of the average.",
     m: "Shows the trajectory and momentum of app adoption across residents.",
   },
   "14-Day Activation": {
-    f: "% of newly registered residents who return within 14 days of registration.",
+    f: "New users (first seen in the period) who did a first real action — used a feature, not just sign-in or home — within 14 days of first appearing ÷ all new users × 100.",
     m: "Key indicator of early onboarding success and sustained adoption.",
   },
   "Module Breadth": {
-    f: "Distinct modules used at least once ÷ total enabled modules available.",
+    f: "Modules used at least once in the period ÷ all modules in the app's module list.",
     m: "Whether residents use the full platform or only a single utility tile like Helpdesk.",
   },
   "Workflow Adoption": {
-    f: "Share of active users who fired the workflow's opening event.",
+    f: "Users who did the workflow's first step ÷ users active in the period × 100. On All Modules: users who got past sign-in into any module ÷ active users.",
     m: "How widely this specific workflow is discovered and initiated.",
   },
   "Completion Rate": {
-    f: "Users who fired the terminal success event ÷ users who started.",
+    f: "Users who reached the final step ÷ users who did the first step × 100 (All Modules: summed over the modules).",
     m: "Conversion efficiency and lack of friction in the workflow.",
   },
   "Biggest Step Drop": {
-    f: "Step transition with the largest percentage drop-off.",
+    f: "At every step: users lost ÷ users at the step before × 100. The largest loss is shown (All Modules: the largest of any module).",
     m: "The exact screen/dialog where resident abandonment is highest.",
   },
   "Usage Volume": {
-    f: "Total successful completions during the selected period.",
+    f: "Count of users who reached the final step in the period; with All Modules, added up across modules.",
     m: "Real operational throughput delivered by the workflow.",
   },
 };
@@ -1141,7 +1141,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
   // Adoption Page Metrics (live data only)
   const seatUtil = live?.engagement.seatUtil ?? 0;
   const stickiness = live?.engagement.stickiness ?? 0;
-  const adoptionTrend = live?.engagement.adoptionDeltaPct ?? 0;
+  const adoptionTrend = live?.engagement.adoptionTrendPct ?? 0;
   const activation14 =
     live?.engagement.activation14 != null
       ? Math.round(live.engagement.activation14 * 100)
@@ -1288,6 +1288,11 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
         }
       }
       return { step: maxStep, pct: Math.round(maxDrop) };
+    }
+    // All Modules: no single funnel is drawn; use the API's roll-up (kpis.f_step) and name the module.
+    if (lwf && lwf.stepDropPct != null && lwf.moduleFunnels.length > 0) {
+      const worst = lwf.moduleFunnels.reduce((a, b) => (b.biggestDropPct > a.biggestDropPct ? b : a));
+      return { step: worst.name, pct: Math.round(lwf.stepDropPct) };
     }
     return null;
   }, [liveWf, wfCacheKey]);
@@ -2009,9 +2014,8 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                         </button>
                         <div className="info-pop">
                           <b>Purpose</b>
-                          Share of active residents by platform — Artesia is
-                          mobile-only (Flutter), so this shows where release
-                          testing and support effort should concentrate.
+                          Users on each platform (iOS, Android) ÷ all active users × 100.
+                          A user on both platforms counts in both.
                         </div>
                       </span>
                     </div>
@@ -2029,7 +2033,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                       const iosShare =
                         dev === "android" ? 0 : dev === "ios" ? 1 : ds;
                       const andShare =
-                        dev === "ios" ? 0 : dev === "android" ? 1 : 1 - ds;
+                        dev === "ios" ? 0 : dev === "android" ? 1 : live.deviceShares.android;
                       const rows = [
                         { name: "iOS", share: iosShare, color: colors.violet },
                         {
@@ -2123,7 +2127,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                   id: "stickiness",
                   label: "Stickiness",
                   val: live?.engagement.stickiness != null ? pct(stickiness * 100) : "–",
-                  ...deltaProps(live?.engagement.adoptionDeltaPct ?? null),
+                  ...deltaProps(live?.engagement.stickinessDeltaPct ?? null),
                   sub: "avg DAU/MAU",
                   raw: stickiness * 100,
                   unit: "%",
@@ -2132,9 +2136,12 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                 {renderTile({
                   id: "adoptionTrend",
                   label: "Adoption Trend",
-                  val: live?.engagement.adoptionDeltaPct != null ? `+${adoptionTrend}%` : "–",
+                  val:
+                    live?.engagement.adoptionTrendPct != null
+                      ? `${adoptionTrend > 0 ? "+" : ""}${adoptionTrend.toFixed(1)}%`
+                      : "–",
                   ...deltaProps(null),
-                  sub: "weekly active users",
+                  sub: "last 7 days vs 8-week average",
                   noTarget: true,
                 })}
                 {renderTile({
@@ -2143,7 +2150,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                   val: live?.engagement.activation14 != null ? `${activation14}%` : "–",
                   dir: "up",
                   delta: null,
-                  sub: "of new registrations",
+                  sub: "of new users",
                   raw: activation14,
                   unit: "%",
                   goodUp: true,
@@ -2417,13 +2424,9 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                         </button>
                         <div className="info-pop">
                           <b>Purpose</b>
-                          Active users ÷ registered users, split by which
-                          top-level tab a resident&#39;s events fall under (home
-                          vs. building) — shows whether adoption is concentrated
-                          on the Home tab&#39;s day-to-day tiles (Helpdesk,
-                          Visitors, Bill Payment) or also reaching the Building
-                          tab&#39;s community features (Events, Notice, Polls,
-                          Gallery).
+                          Active users per person role ÷ active users that
+                          have a role × 100. Users whose profile carries no role
+                          are not in this chart.
                         </div>
                       </span>
                     </div>
@@ -2491,9 +2494,8 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                         </button>
                         <div className="info-pop">
                           <b>Purpose</b>
-                          Registered residents with no activity in the last 14
-                          days — out of scope for the 14-Day Activation tile
-                          above.
+                          Users seen before whose last activity is 14 or more
+                          days ago.
                         </div>
                       </span>
                     </div>
@@ -2778,14 +2780,16 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                 {renderTile({
                   label: "Usage Volume",
                   val:
-                    activeLiveWf && activeLiveWf.funnel.length > 0
-                      ? activeLiveWf.funnel[
-                          activeLiveWf.funnel.length - 1
-                        ].reach.toLocaleString()
-                      : "–",
+                    activeLiveWf?.volume != null
+                      ? Math.round(activeLiveWf.volume).toLocaleString()
+                      : activeLiveWf && activeLiveWf.funnel.length > 0
+                        ? activeLiveWf.funnel[
+                            activeLiveWf.funnel.length - 1
+                          ].reach.toLocaleString()
+                        : "–",
                   dir: "flat",
                   delta: null,
-                  sub: "completions",
+                  sub: "users who completed",
                   noTarget: true,
                 })}
               </div>
@@ -2840,7 +2844,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                                 <td>{f.name}</td>
                                 <td className="num">{f.started.toLocaleString()}</td>
                                 <td className="num">{f.completed.toLocaleString()}</td>
-                                <td className="num">{Math.round(f.completionPct)}%</td>
+                                <td className="num">{f.completionPct == null ? "–" : `${Math.round(f.completionPct)}%`}</td>
                                 <td className="num">{Math.round(f.biggestDropPct)}%</td>
                               </tr>
                             ))}

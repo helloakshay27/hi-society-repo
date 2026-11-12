@@ -103,7 +103,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   const stickinessVal = adoptData?.stickiness?.value;
   const stickinessDisplay =
     stickinessVal != null
-      ? pct(stickinessVal <= 1 ? stickinessVal * 100 : stickinessVal)
+      ? pct(stickinessVal)
       : isAdoptLoading
         ? "..."
         : "—";
@@ -123,7 +123,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   const activationVal = adoptData?.activation?.value;
   const activationDisplay =
     activationVal != null
-      ? `${Math.round(activationVal <= 1 ? activationVal * 100 : activationVal)}%`
+      ? `${Math.round(activationVal)}%`
       : isAdoptLoading
         ? "..."
         : "—";
@@ -250,7 +250,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           val={activationDisplay}
           dir={activationDelta.dir}
           delta={activationDelta.text}
-          sub="of new bookings"
+          sub="of new users"
           raw={
             activationVal != null
               ? activationVal <= 1
@@ -477,7 +477,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
             <div className="hbars">
               {rolesList.map((r, idx) => {
                 const sharePct = Math.round(
-                  r.active_share <= 1 ? r.active_share * 100 : r.active_share
+                  r.active_share
                 );
                 const color = roleColors[idx % roleColors.length];
                 return (

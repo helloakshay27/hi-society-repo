@@ -57,11 +57,11 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
     useRoles(filters, sitesSettled);
 
   const seatUtilVal = adoptData?.seat_utilisation?.value;
-  const seatUtilDisplay = seatUtilVal != null ? pct(seatUtilVal <= 1 ? seatUtilVal * 100 : seatUtilVal) : isAdoptLoading ? '...' : '—';
+  const seatUtilDisplay = seatUtilVal != null ? pct(seatUtilVal) : isAdoptLoading ? '...' : '—';
   const seatUtilDelta = formatDelta(adoptData?.seat_utilisation?.delta_pct);
 
   const stickinessVal = adoptData?.stickiness?.value;
-  const stickinessDisplay = stickinessVal != null ? pct(stickinessVal <= 1 ? stickinessVal * 100 : stickinessVal) : isAdoptLoading ? '...' : '—';
+  const stickinessDisplay = stickinessVal != null ? pct(stickinessVal) : isAdoptLoading ? '...' : '—';
   const stickinessDelta = formatDelta(adoptData?.stickiness?.delta_pct);
 
   const adoptTrendVal = adoptData?.adoption_trend?.value ?? trendData?.trend_pct;
@@ -69,7 +69,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
 
   const activationVal = adoptData?.activation?.value;
   const activationDisplay =
-    activationVal != null ? `${Math.round(activationVal <= 1 ? activationVal * 100 : activationVal)}%` : isAdoptLoading ? '...' : '—';
+    activationVal != null ? `${Math.round(activationVal)}%` : isAdoptLoading ? '...' : '—';
   const activationDelta = formatDelta(adoptData?.activation?.delta_pct);
 
   const modInUse = adoptData?.module_breadth?.in_use;
@@ -129,7 +129,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           dir={seatUtilDelta.dir}
           delta={seatUtilDelta.text}
           sub="active ÷ registered users"
-          raw={seatUtilVal != null ? (seatUtilVal <= 1 ? seatUtilVal * 100 : seatUtilVal) : undefined}
+          raw={seatUtilVal != null ? seatUtilVal : undefined}
           unit="%"
           goodUp={true}
           benchmark={benchmarks.seatUtil}
@@ -145,7 +145,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           dir={stickinessDelta.dir}
           delta={stickinessDelta.text}
           sub="avg DAU/MAU"
-          raw={stickinessVal != null ? (stickinessVal <= 1 ? stickinessVal * 100 : stickinessVal) : undefined}
+          raw={stickinessVal != null ? stickinessVal : undefined}
           unit="%"
           goodUp={true}
           // benchmark={benchmarks.stickiness}
@@ -172,7 +172,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           dir={activationDelta.dir}
           delta={activationDelta.text}
           sub="of new registration/enquiry starts"
-          raw={activationVal != null ? (activationVal <= 1 ? activationVal * 100 : activationVal) : undefined}
+          raw={activationVal != null ? activationVal : undefined}
           unit="%"
           goodUp={true}
           // benchmark={benchmarks.activation14}
@@ -316,7 +316,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           ) : (
             <div className="hbars">
               {rolesList.map((r, idx) => {
-                const sharePct = Math.round(r.active_share <= 1 ? r.active_share * 100 : r.active_share);
+                const sharePct = Math.round(r.active_share);
                 const color = roleColors[idx % roleColors.length];
                 return (
                   <div className="role" key={idx}>

@@ -195,7 +195,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           val={fVolDisplay}
           dir="up"
           delta="this period"
-          sub="sessions started"
+          sub="users who completed"
           noTarget={true}
           isLoading={isWfActiveLoading}
         />
@@ -229,7 +229,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
                     <td className="strong">{f.name}</td>
                     <td className="num">{f.started.toLocaleString()}</td>
                     <td className="num">{f.completed.toLocaleString()}</td>
-                    <td className="num">{Math.round(f.completion_pct)}%</td>
+                    <td className="num">{f.completion_pct == null ? "–" : `${Math.round(f.completion_pct)}%`}</td>
                     <td className="num">{Math.round(f.biggest_drop_pct)}%</td>
                   </tr>
                 ))}

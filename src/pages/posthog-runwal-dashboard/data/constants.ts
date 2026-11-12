@@ -189,7 +189,7 @@ export const INFO: Record<string, InfoEntry> = {
   },
   F1: {
     t: 'Workflow Adoption (F1)',
-    f: "Users who did the workflow's first step ÷ users active in the period × 100.",
+    f: "Users who did the workflow's first step ÷ users active in the period × 100. With All Modules: users who got past launch and sign-in into any module ÷ active users.",
     d: 'Shows how widely a specific operational workflow has been discovered and used by customers.',
   },
   F2: {
