@@ -703,6 +703,22 @@ const getBalanceTATSeconds = (
   }
 };
 
+// Merge ticket-level documents with documents attached to complaint log comments (deduped by id)
+const getAllTicketDocuments = (ticketData: any): any[] => {
+  if (!ticketData) return [];
+  const ticketDocs = Array.isArray(ticketData.documents) ? ticketData.documents : [];
+  const logDocs = (ticketData.complaint_logs || []).flatMap((log: any) =>
+    Array.isArray(log?.documents) ? log.documents : []
+  );
+  const seen = new Set<string>();
+  return [...ticketDocs, ...logDocs].filter((doc: any) => {
+    const key = doc?.id != null ? `id:${doc.id}` : `url:${doc?.document || doc?.document_url || doc?.url}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 export const TicketDetailsPage = () => {
   const isAssignedToRequired =
     typeof window !== "undefined" &&
@@ -1206,7 +1222,7 @@ export const TicketDetailsPage = () => {
           hasData(ticketData.resolution_time) ||
           hasData(ticketData.escalation_response_name) ||
           hasData(ticketData.escalation_resolution_name),
-        attachments: ticketData.documents && ticketData.documents.length > 0,
+        attachments: getAllTicketDocuments(ticketData).length > 0,
         costApproval:
           ticketData.cost_approval_enabled &&
           ticketData.requests &&
@@ -5379,6 +5395,8 @@ export const TicketDetailsPage = () => {
 
   console.log("ticketData:-", ticketData);
 
+  const allTicketDocuments = getAllTicketDocuments(ticketData);
+
   // Process complaint logs for table display - filter out logs with both null log_comment and log_status
   const complaintLogs = (ticketData?.complaint_logs || []).filter(
     (log: any) => {
@@ -6121,7 +6139,7 @@ export const TicketDetailsPage = () => {
                               )}
                             </td>
                             <td className="p-4 text-center border border-gray-300 bg-white">
-                              {ticketData?.documents?.length > 0 ? (
+                              {allTicketDocuments.length > 0 ? (
                                 <Check className="w-6 h-6 text-green-600 mx-auto" />
                               ) : (
                                 <X className="w-6 h-6 text-red-500 mx-auto" />
@@ -9325,7 +9343,7 @@ export const TicketDetailsPage = () => {
             </div> */}
 
             {/* Attachments */}
-            {ticketData.documents && (
+            {allTicketDocuments && (
               <Card className="w-full bg-white rounded-lg shadow-sm border">
                 <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
@@ -9340,10 +9358,9 @@ export const TicketDetailsPage = () => {
                 </div>
 
                 <CardContent className="pt-4 bg-[#FAFAF8] border border-t-0 border-[#D9D9D9]">
-                  {Array.isArray(ticketData.documents) &&
-                  ticketData.documents.length > 0 ? (
+                  {allTicketDocuments.length > 0 ? (
                     <div className="flex items-center flex-wrap gap-4">
-                      {ticketData.documents.map(
+                      {allTicketDocuments.map(
                         (attachment: any, idx: number) => {
                           const url =
                             attachment.document ||
@@ -10881,7 +10898,7 @@ export const TicketDetailsPage = () => {
                     Ticket Attachments
                   </span>
                   <span className="text-xs text-[#C72030]">
-                    {ticketData.documents?.length || 0} Files
+                    {allTicketDocuments.length} Files
                   </span>
                 </Button>
               </div>
@@ -10890,9 +10907,9 @@ export const TicketDetailsPage = () => {
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-gray-900">Files</h3>
 
-                {ticketData.documents && ticketData.documents.length > 0 ? (
+                {allTicketDocuments.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {ticketData.documents.map((document, index) => {
+                    {allTicketDocuments.map((document, index) => {
                       // Updated to use the correct field name from API response
                       const documentUrl =
                         document.document ||
