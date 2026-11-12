@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogContent,
-    TextField,
     createTheme,
     ThemeProvider,
     IconButton,
@@ -99,7 +98,6 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
     const [flats, setFlats] = useState([]);
 
     const [filters, setFilters] = useState({
-        search: '',
         towerId: '',
         flatId: '',
         residentType: '',
@@ -164,7 +162,6 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
 
     const handleReset = () => {
         const resetFilters = {
-            search: '',
             towerId: '',
             flatId: '',
             residentType: '',
@@ -202,15 +199,7 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
                         </div>
 
                         <div className="space-y-6">
-                            <TextField
-                                fullWidth
-                                label="Mobile/Email/Name search"
-                                value={filters.search}
-                                onChange={(e) => handleInputChange('search', e.target.value)}
-                                size="small"
-                                placeholder="Search..."
-                            />
-
+                            {/* Member search (name/email/mobile/membership no.) lives in the table's search box */}
                             <div className="grid grid-cols-2 gap-4">
                                 <FormControl fullWidth size="small">
                                     <InputLabel shrink>Select Tower</InputLabel>
@@ -271,8 +260,9 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
                                         notched
                                     >
                                         <MenuItem value="">Select Status</MenuItem>
-                                        <MenuItem value="approved">Approved</MenuItem>
-                                        <MenuItem value="expired">Expired</MenuItem>
+                                        {/* Values are the exact lowercase ones GET /club_member_allocations accepts for `status` */}
+                                        <MenuItem value="active">Approved</MenuItem>
+                                        <MenuItem value="inactive">Expired</MenuItem>
                                         <MenuItem value="pending">Pending</MenuItem>
                                     </Select>
                                 </FormControl>

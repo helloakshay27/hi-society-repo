@@ -107,7 +107,6 @@ const columns: ColumnConfig[] = [
 ];
 
 interface MemberFilters {
-  search?: string;
   towerId?: string;
   flatId?: string;
   residentType?: string;
@@ -153,15 +152,18 @@ const CMSClubMembers = () => {
     total_pending: 0,
   });
 
+  // Toolbar search box → `member_search` (matches first/last name, email,
+  // mobile or membership number). Kept apart from the modal filters so
+  // applying the modal doesn't wipe the search.
+  const [memberSearch, setMemberSearch] = useState("");
+
   // Shared by the list and the export so both always apply the same filters
-  const buildFilterParams = (filters: MemberFilters) => {
+  const buildFilterParams = (filters: MemberFilters, search = memberSearch) => {
     const params = new URLSearchParams();
 
-    if (filters.search) {
-      params.append(
-        "q[email_or_mobile_or_first_name_or_last_name_cont]",
-        filters.search
-      );
+    const trimmedSearch = search.trim();
+    if (trimmedSearch) {
+      params.append("member_search", trimmedSearch);
     }
     if (filters.towerId) {
       params.append("q[society_flat_society_block_id_eq]", filters.towerId);
@@ -172,8 +174,10 @@ const CMSClubMembers = () => {
     if (filters.residentType) {
       params.append("q[resident_type_in]", filters.residentType);
     }
-    if (filters.status) {
-      params.append("q[club_member_check_eq]", filters.status);
+    // Membership Status: the API only reads `status` = active | inactive | pending
+    // (Approved | Expired | Pending). Omit it to get all three.
+    if (filters.status && ["active", "inactive", "pending"].includes(filters.status)) {
+      params.append("status", filters.status);
     }
     if (filters.cardAllocated) {
       params.append("q[access_card_check_eq]", filters.cardAllocated);
@@ -185,12 +189,12 @@ const CMSClubMembers = () => {
     return params;
   };
 
-  const fetchMembers = async (page: number, filters: MemberFilters) => {
+  const fetchMembers = async (page: number, filters: MemberFilters, search: string) => {
     // Ignore responses from older requests when the user changes page/filters quickly
     const requestId = ++requestIdRef.current;
     try {
       setIsLoading(true);
-      const params = buildFilterParams(filters);
+      const params = buildFilterParams(filters, search);
       params.append("page", page.toString());
       const url = `https://${baseUrl}/club_member_allocations.json?${params.toString()}`;
 
@@ -251,6 +255,15 @@ const CMSClubMembers = () => {
     handlePageChange(1, true);
   };
 
+  // Called by EnhancedTable after the user stops typing (debounced)
+  const handleMemberSearch = (term: string) => {
+    const next = term.trim();
+    if (next === memberSearch) return;
+    setMemberSearch(next);
+    // New search → back to the first page
+    handlePageChange(1, true);
+  };
+
   const renderPageLink = (page: number) => (
     <PaginationItem key={page} className="cursor-pointer">
       <PaginationLink
@@ -295,9 +308,9 @@ const CMSClubMembers = () => {
   };
 
   useEffect(() => {
-    fetchMembers(currentPage, appliedFilters);
+    fetchMembers(currentPage, appliedFilters, memberSearch);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, appliedFilters]);
+  }, [currentPage, appliedFilters, memberSearch]);
 
   // GET /club_member_allocations/export.xlsx — same filters as the list (no
   // pagination), one row per club member
@@ -621,6 +634,9 @@ const CMSClubMembers = () => {
         leftActions={leftActions}
         loading={isLoading}
         onFilterClick={() => setIsFilterModalOpen(true)}
+        enableGlobalSearch={true}
+        onGlobalSearch={handleMemberSearch}
+        searchPlaceholder="Search name, email, mobile or membership no."
         enableExport={true}
         onExport={handleExport}
       />
