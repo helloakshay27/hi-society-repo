@@ -33,7 +33,7 @@ export function Header() {
       >
         {state.theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
       </button>
-      <span className="badge-sample">Wireframe · sample data</span>
+      <span className="badge-sample">Live API data</span>
       <UserProfileMenu />
     </header>
   );

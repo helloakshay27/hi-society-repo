@@ -5,67 +5,67 @@ export interface KpiInfoItem {
 
 export const KPI_INFO: Record<string, KpiInfoItem> = {
   "Active Users": {
-    f: "Unique residents (user_id) who fired at least one event during the selected period, scaled by date range × device × Admin Scope.",
+    f: "Count of different people (each user_id once) who did at least one thing during the selected period.",
     m: "Shows the reach of the app among Lockated's registered residents."
   },
   "Screen Views": {
-    f: "Count of all View-typed screen-load events across the 14 catalogued categories.",
+    f: "Count of every screen-load (view) event in the period: a <screen>_viewed / <screen>_opened event in the app.",
     m: "Overall content consumption across the app."
   },
   "Sessions": {
-    f: "Count of distinct app sessions started in the period.",
+    f: "Count of distinct sessions (visits) with activity in the selected period.",
     m: "Usage volume across all residents."
   },
   "Session Duration": {
-    f: "Total session time ÷ total sessions.",
+    f: "Total time of all sessions ÷ number of sessions (a session runs from its first to its last event; sessions started in the period).",
     m: "Engagement depth per visit."
   },
   "Bounce Rate": {
-    f: "% of sessions with only a launch/home-view event and no further interaction.",
+    f: "Sessions that never get past the launch, sign-in or home screen (splash, login, OTP, home) ÷ all sessions × 100.",
     m: "Immediate exits or a poor first impression."
   },
   "Recently Online": {
-    f: "Distinct residents with an event in the last 30 minutes.",
+    f: "Distinct residents with at least one event in the last 30 minutes.",
     m: "A live pulse of who is in the app right now."
   },
   "Seat Utilisation": {
-    f: "Active residents this period ÷ an illustrative registered-residents ceiling (not yet sourced from a live resident-management table).",
+    f: "Active residents ÷ licensed seats × 100 (needs the licensed seat count).",
     m: "How much of the resident base is actually opening the app."
   },
   "Stickiness": {
-    f: "Average daily active users ÷ monthly active users (DAU/MAU) over the period.",
+    f: "Average daily active users (DAU) over the period ÷ monthly active users (MAU, the 30 days ending on the end date) × 100.",
     m: "Whether app use is habitual or occasional."
   },
   "Adoption Trend": {
-    f: "% change in weekly active users versus the prior 8-week average.",
+    f: "This week's active users (the last 7 days) vs the average of the 8 weeks before: (this week − average) ÷ average × 100. Weeks before the app went live are left out of the average.",
     m: "Whether adoption is accelerating or plateauing."
   },
   "14-Day Activation": {
-    f: "% of newly registered residents who fire a first Action-typed event within 14 days of first_seen (proposed property name).",
+    f: "New residents (first seen in the period) who did a first real action — used a feature, not just sign-in or home — within 14 days of first appearing ÷ all new residents × 100.",
     m: "Whether new residents actually start using the app, not just completing onboarding."
   },
   "Module Breadth": {
-    f: "Count of distinct categories used at least once ÷ 13 categories in the Lockated catalogue.",
+    f: "Screens used at least once in the period ÷ every screen the Lockated app has ever sent (Lockated has no module list yet).",
     m: "How much of the platform a resident base has actually adopted, not just Home."
   },
   "Dormant Users": {
-    f: "Count of residents with no activity in the last 14+ days.",
+    f: "Count of residents seen before whose last activity is 14 or more days ago.",
     m: "Residents who may need a re-engagement nudge."
   },
   "Workflow Adoption": {
-    f: "% of active users who fired the workflow's first event.",
+    f: "Users who did the workflow's first step ÷ users active in the period × 100.",
     m: "Shows how many residents attempt this process."
   },
   "Completion Rate": {
-    f: "% of users who reached the workflow's terminal event after starting it.",
+    f: "Users who reached the final step ÷ users who did the first step × 100. Shown only when the app sends both steps.",
     m: "How effectively the workflow converts an attempt into a completed action."
   },
   "Biggest Step Drop": {
-    f: "The single step in the funnel with the largest % of entrants lost, based on the seeded funnel model.",
+    f: "At every step: users lost ÷ users at the step before × 100. The largest loss is shown, with the step it happens at.",
     m: "Points to exactly where in the process residents are abandoning."
   },
   "Usage Volume": {
-    f: "Count of users who fired the workflow's terminal event this period, scaled to the selected date range.",
+    f: "Count of users who reached the workflow's final step in the period.",
     m: "Absolute volume of completed requests, bookings, or engagements — the raw workload this workflow represents."
   }
 };

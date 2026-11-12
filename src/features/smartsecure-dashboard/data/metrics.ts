@@ -274,7 +274,7 @@ export function buildAdoption(
   const stickinessVal = engagementQ?.stickiness?.value;
   const stickiness    = stickinessVal != null ? stickinessVal : 0;
   const stickyDelta   = fmtDelta(engagementQ?.stickiness?.delta_pct);
-  const stickyDisplay = pct(stickiness * 100);
+  const stickyDisplay = pct(stickiness); // the API sends a percentage (24.2), not a ratio
 
   const adoptionTrendVal = trendQ?.trend_pct ?? engagementQ?.adoption_trend?.value ?? null;
   const trendDisplay     = adoptionTrendVal != null ? (adoptionTrendVal > 0 ? '+' : '') + adoptionTrendVal.toFixed(1) + '%' : '—';
@@ -307,7 +307,7 @@ export function buildAdoption(
       dir: (engagementQ?.stickiness?.delta_pct != null && engagementQ.stickiness.delta_pct < 0 ? 'dn' : 'up') as 'up' | 'dn' | 'flat',
       delta: stickyDelta,
       sub: 'avg DAU/MAU',
-      raw: stickiness * 100,
+      raw: stickiness,
       unit: '%',
       goodUp: true,
     },

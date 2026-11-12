@@ -160,9 +160,11 @@ const num = (v: unknown, fb = 0): number =>
   typeof v === 'number' && !Number.isNaN(v) ? v : fb;
 
 /** API may return a ratio (0.72) or a percent (72) — normalize to 0..1. */
+// The API sends every share as a percentage (0–100), never a 0–1 ratio. Guessing from the size of the
+// number turned a real 0.6% into 60%.
 const ratio = (v: unknown): number | null => {
   if (typeof v !== 'number' || Number.isNaN(v)) return null;
-  return v > 1 ? v / 100 : v;
+  return v / 100;
 };
 
 const dayLabel = (day: string): string => {
@@ -238,7 +240,10 @@ export interface LiveDashboard {
   engagement: {
     seatUtil: number | null; // 0..1
     stickiness: number | null; // 0..1
-    adoptionDeltaPct: number | null;
+    /** stickiness.delta_pct: change of stickiness vs the previous period. */
+    stickinessDeltaPct: number | null;
+    /** adoption_trend.value (A3): last 7 days vs the average of the 8 weeks before, in %. */
+    adoptionTrendPct: number | null;
     activation14: number | null; // 0..1
     breadthInUse: number | null;
     breadthTotal: number | null;
@@ -270,7 +275,8 @@ export const EMPTY_DASHBOARD: LiveDashboard = {
   engagement: {
     seatUtil: null,
     stickiness: null,
-    adoptionDeltaPct: null,
+    stickinessDeltaPct: null,
+    adoptionTrendPct: null,
     activation14: null,
     breadthInUse: null,
     breadthTotal: null,
@@ -300,10 +306,15 @@ export async function fetchTrafficSection(input: QueryInput): Promise<TrafficSli
     settled(getPosthog<UsageDistributionResponse>(input.appId, 'usage_and_distribution', q())),
   ]);
 
-  // --- device shares from os_breakdown (fallback: device session_share) ---
+  // --- platform shares: the API's platform_usage (users on iOS / Android ÷ all active users; a user on
+  // both counts in both, as the backend defines it). Older responses: from os_breakdown. ---
   let deviceShares: LiveDashboard['deviceShares'] = null;
+  const platforms = (usage as any)?.platform_usage?.platforms as Array<{ platform: string; user_share: number }> | undefined;
   const devs = usage?.device_split?.devices;
-  if (Array.isArray(devs) && devs.length > 0) {
+  if (Array.isArray(platforms) && platforms.length > 0) {
+    const share = (name: string) => num(platforms.find((p) => p.platform === name)?.user_share) / 100;
+    deviceShares = { ios: share('iOS'), android: share('Android') };
+  } else if (Array.isArray(devs) && devs.length > 0) {
     let ios = 0;
     let and = 0;
     for (const d of devs) {
@@ -375,7 +386,7 @@ export async function fetchAdoptionSection(input: QueryInput): Promise<AdoptionS
       const values: (number | null)[] = [];
       for (const [k, v] of Object.entries(c)) {
         if (k === 'cohort_week' || k === 'size') continue;
-        if (typeof v === 'number') values.push(v <= 1 ? Math.round(v * 100) : Math.round(v));
+        if (typeof v === 'number') values.push(Math.round(v)); // already a percentage
         else values.push(null);
         if (values.length >= 6) break;
       }
@@ -387,8 +398,10 @@ export async function fetchAdoptionSection(input: QueryInput): Promise<AdoptionS
     engagement: {
       seatUtil: ratio(engagement?.seat_utilisation?.value),
       stickiness: ratio(engagement?.stickiness?.value),
-      adoptionDeltaPct:
+      stickinessDeltaPct:
         typeof engagement?.stickiness?.delta_pct === 'number' ? engagement.stickiness.delta_pct : null,
+      adoptionTrendPct:
+        typeof engagement?.adoption_trend?.value === 'number' ? engagement.adoption_trend.value : null,
       activation14: ratio(engagement?.activation?.value),
       breadthInUse: engagement ? num(engagement.module_breadth?.in_use, -1) : null,
       breadthTotal: engagement ? num(engagement.module_breadth?.total, -1) : null,
@@ -493,7 +506,8 @@ export interface LiveModuleFunnel {
   name: string;
   started: number;
   completed: number;
-  completionPct: number;
+  /** null when none of the module's declared workflows can be measured (first or final step not sent). */
+  completionPct: number | null;
   biggestDropPct: number;
 }
 export interface LiveWorkflow {
@@ -502,6 +516,9 @@ export interface LiveWorkflow {
   moduleFunnels: LiveModuleFunnel[];
   adoptionPct: number | null;
   completionPct: number | null;
+  /** kpis.f_step / kpis.f_vol: on All Modules these roll up the module funnels (no single funnel). */
+  stepDropPct: number | null;
+  volume: number | null;
   flows: LiveFlowRow[];
   entry: LiveEntryRow[];
 }
@@ -552,7 +569,7 @@ function mapWorkflow(res: WorkflowUsageResponse | null): LiveWorkflow | null {
       name: f.name,
       started: num(f.started),
       completed: num(f.completed),
-      completionPct: num(f.completion_pct),
+      completionPct: typeof f.completion_pct === 'number' ? f.completion_pct : null,
       biggestDropPct: num(f.biggest_drop_pct),
     }));
     if (!res || !Array.isArray(res.funnel) || (res.funnel.length === 0 && moduleFunnels.length === 0)) return null;
@@ -565,7 +582,7 @@ function mapWorkflow(res: WorkflowUsageResponse | null): LiveWorkflow | null {
     const pick = (...keys: string[]): number | null => {
       for (const k of keys) {
         const v = (kpis as Record<string, any>)[k]?.value;
-        if (typeof v === 'number') return v <= 1 ? v * 100 : v;
+        if (typeof v === 'number') return v; // percentages arrive as 0–100
       }
       return null;
     };
@@ -578,6 +595,8 @@ function mapWorkflow(res: WorkflowUsageResponse | null): LiveWorkflow | null {
       moduleFunnels,
       adoptionPct: pick('f_adopt', 'adoption', 'adoption_rate', 'workflow_adoption'),
       completionPct,
+      stepDropPct: pick('f_step'),
+      volume: pick('f_vol'),
       flows: (res.flows ?? []).map((f) => ({
         path: f.path,
         users: num(f.users),
