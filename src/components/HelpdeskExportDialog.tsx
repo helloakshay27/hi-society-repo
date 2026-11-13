@@ -523,10 +523,17 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        toast.success(report.message ?? "Helpdesk report exported successfully!");
+        toast.success(
+          report.message ?? "Helpdesk report exported successfully!"
+        );
         onClose();
-      } else if (report.status === "failed" || report.status === "not_started") {
-        toast.error(report.message ?? "Failed to export report. Please try again.");
+      } else if (
+        report.status === "failed" ||
+        report.status === "not_started"
+      ) {
+        toast.error(
+          report.message ?? "Failed to export report. Please try again."
+        );
       } else {
         throw new Error(`Unexpected report status: ${report.status}`);
       }
@@ -809,7 +816,7 @@ export const HelpdeskExportDialog: React.FC<HelpdeskExportDialogProps> = ({
           <Button
             onClick={handleExport}
             disabled={exporting}
-            className="px-8 bg-primary"
+            className="bg-[#C72030] hover:bg-[#A01828] !text-white"
           >
             <Download className="w-4 h-4 mr-2" />
             {exporting ? "Exporting..." : "Export"}

@@ -1,14 +1,36 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { X, Download, Loader2, FileText, User, MapPin, Clock, CheckCircle, MessageSquare } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { TextField } from '@mui/material';
-import { useToast } from '@/hooks/use-toast';
-import { Card } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import html2pdf from 'html2pdf.js';
-import { API_CONFIG } from '@/config/apiConfig';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  X,
+  Download,
+  Loader2,
+  FileText,
+  User,
+  MapPin,
+  Clock,
+  CheckCircle,
+  MessageSquare,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { TextField } from "@mui/material";
+import { useToast } from "@/hooks/use-toast";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import html2pdf from "html2pdf.js";
+import { API_CONFIG } from "@/config/apiConfig";
 
 interface TicketComment {
   id?: number;
@@ -95,41 +117,43 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
   ticketId,
   ticketData,
   jobSheetData,
-  jobSheetLoading
+  jobSheetLoading,
 }) => {
   const { toast } = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
-  const [communicationTemplates, setCommunicationTemplates] = useState<CommunicationTemplate[]>([]);
+  const [communicationTemplates, setCommunicationTemplates] = useState<
+    CommunicationTemplate[]
+  >([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Priority labels mapping
   const priorityLabels: { [key: string]: string } = {
-    "P1": "P1 - Critical",
-    "P2": "P2 - Very High", 
-    "P3": "P3 - High",
-    "P4": "P4 - Medium",
-    "P5": "P5 - Low"
+    P1: "P1 - Critical",
+    P2: "P2 - Very High",
+    P3: "P3 - High",
+    P4: "P4 - Medium",
+    P5: "P5 - Low",
   };
 
   const getPriorityDisplay = (priority: string | undefined) => {
-    if (!priority) return '-';
-    return priorityLabels[priority] || '-';
+    if (!priority) return "-";
+    return priorityLabels[priority] || "-";
   };
 
   // Fetch communication templates from API
   const fetchCommunicationTemplates = useCallback(async () => {
-    console.log('Fetching communication templates...');
-    console.log('API Config:', {
+    console.log("Fetching communication templates...");
+    console.log("API Config:", {
       BASE_URL: API_CONFIG.BASE_URL,
       TOKEN_present: !!API_CONFIG.TOKEN,
-      ENDPOINT: API_CONFIG.ENDPOINTS.COMMUNICATION_TEMPLATES
+      ENDPOINT: API_CONFIG.ENDPOINTS.COMMUNICATION_TEMPLATES,
     });
 
     if (!API_CONFIG.BASE_URL || !API_CONFIG.TOKEN) {
-      console.warn('Missing API configuration', {
+      console.warn("Missing API configuration", {
         BASE_URL: API_CONFIG.BASE_URL,
-        TOKEN: !!API_CONFIG.TOKEN
+        TOKEN: !!API_CONFIG.TOKEN,
       });
       return;
     }
@@ -137,45 +161,49 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
     setLoadingTemplates(true);
     try {
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.COMMUNICATION_TEMPLATES}`;
-      console.log('Fetching from URL:', url);
+      console.log("Fetching from URL:", url);
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${API_CONFIG.TOKEN}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${API_CONFIG.TOKEN}`,
+          "Content-Type": "application/json",
         },
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Response error:', errorText);
-        throw new Error(`Failed to fetch communication templates: ${response.status} - ${errorText}`);
+        console.error("Response error:", errorText);
+        throw new Error(
+          `Failed to fetch communication templates: ${response.status} - ${errorText}`
+        );
       }
 
       const templates = await response.json();
-      console.log('Received templates:', {
+      console.log("Received templates:", {
         count: templates?.length || 0,
         sample: templates?.slice(0, 3),
-        rcaTemplates: templates?.filter((t: CommunicationTemplate) => t.identifier === "Root Cause Analysis")
+        rcaTemplates: templates?.filter(
+          (t: CommunicationTemplate) => t.identifier === "Root Cause Analysis"
+        ),
       });
 
       setCommunicationTemplates(templates || []);
-      
+
       // Log success
-    //   toast({
-    //     title: 'Success',
-    //     description: `Loaded ${templates?.length || 0} communication templates`,
-    //   });
+      //   toast({
+      //     title: 'Success',
+      //     description: `Loaded ${templates?.length || 0} communication templates`,
+      //   });
     } catch (error) {
-      console.error('Error fetching communication templates:', error);
+      console.error("Error fetching communication templates:", error);
       toast({
-        title: 'Error',
-        description: `Could not load communication templates: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: 'destructive'
+        title: "Error",
+        description: `Could not load communication templates: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
       });
     } finally {
       setLoadingTemplates(false);
@@ -185,7 +213,7 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
   // Fetch templates when modal opens
   useEffect(() => {
     if (isOpen && communicationTemplates.length === 0) {
-      console.log('Modal opened, fetching communication templates...');
+      console.log("Modal opened, fetching communication templates...");
       fetchCommunicationTemplates();
     }
   }, [isOpen, communicationTemplates.length, fetchCommunicationTemplates]);
@@ -193,212 +221,255 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
   // Debug ticket data
   useEffect(() => {
     if (ticketData) {
-      console.log('Ticket data received:', {
+      console.log("Ticket data received:", {
         id: ticketData.id,
         rca_template_ids: ticketData.rca_template_ids,
-        corrective_action_template_ids: ticketData.corrective_action_template_ids,
-        preventive_action_template_ids: ticketData.preventive_action_template_ids,
+        corrective_action_template_ids:
+          ticketData.corrective_action_template_ids,
+        preventive_action_template_ids:
+          ticketData.preventive_action_template_ids,
         hasRcaIds: !!ticketData.rca_template_ids?.length,
         hasCorrectiveIds: !!ticketData.corrective_action_template_ids?.length,
         hasPreventiveIds: !!ticketData.preventive_action_template_ids?.length,
-        allTicketKeys: Object.keys(ticketData)
+        allTicketKeys: Object.keys(ticketData),
       });
     }
   }, [ticketData]);
 
   const getRootCauseDisplay = () => {
     // Debug logging
-    console.log('getRootCauseDisplay called:', {
+    console.log("getRootCauseDisplay called:", {
       ticketData_rca_template_ids: ticketData?.rca_template_ids,
       communicationTemplates_length: communicationTemplates.length,
       loadingTemplates,
-      communicationTemplates_sample: communicationTemplates.slice(0, 3)
+      communicationTemplates_sample: communicationTemplates.slice(0, 3),
     });
 
-    if (!ticketData?.rca_template_ids || ticketData.rca_template_ids.length === 0) {
-      console.log('No rca_template_ids found');
-      return '-';
+    if (
+      !ticketData?.rca_template_ids ||
+      ticketData.rca_template_ids.length === 0
+    ) {
+      console.log("No rca_template_ids found");
+      return "-";
     }
 
     if (loadingTemplates) {
-      return 'Loading...';
+      return "Loading...";
     }
 
     if (communicationTemplates.length === 0) {
-      console.log('No communication templates loaded');
-      return 'No templates loaded';
+      console.log("No communication templates loaded");
+      return "No templates loaded";
     }
 
     // Find templates that match the IDs in rca_template_ids
-    const rcaTemplates = communicationTemplates.filter(
-      template => {
-        const matchesId = ticketData.rca_template_ids!.includes(template.id);
-        const matchesIdentifier = template.identifier === "Root Cause Analysis";
-        
-        console.log(`Template ${template.id}:`, {
-          id: template.id,
-          identifier: template.identifier,
-          matchesId,
-          matchesIdentifier,
-         identifier_action: template.identifier_action.substring(0, 50) + '...'
-        });
-        
-        return matchesId && matchesIdentifier;
-      }
-    );
+    const rcaTemplates = communicationTemplates.filter((template) => {
+      const matchesId = ticketData.rca_template_ids!.includes(template.id);
+      const matchesIdentifier = template.identifier === "Root Cause Analysis";
 
-    console.log('Filtered RCA templates:', rcaTemplates.length, rcaTemplates);
+      console.log(`Template ${template.id}:`, {
+        id: template.id,
+        identifier: template.identifier,
+        matchesId,
+        matchesIdentifier,
+        identifier_action: template.identifier_action.substring(0, 50) + "...",
+      });
+
+      return matchesId && matchesIdentifier;
+    });
+
+    console.log("Filtered RCA templates:", rcaTemplates.length, rcaTemplates);
 
     if (rcaTemplates.length === 0) {
       // Try to find any templates with matching IDs regardless of identifier
-      const anyMatchingTemplates = communicationTemplates.filter(
-        template => ticketData.rca_template_ids!.includes(template.id)
+      const anyMatchingTemplates = communicationTemplates.filter((template) =>
+        ticketData.rca_template_ids!.includes(template.id)
       );
-      console.log('Any matching templates by ID:', anyMatchingTemplates);
-      
+      console.log("Any matching templates by ID:", anyMatchingTemplates);
+
       if (anyMatchingTemplates.length > 0) {
-        return anyMatchingTemplates.map(template => template.identifier_action).join(', ');
+        return anyMatchingTemplates
+          .map((template) => template.identifier_action)
+          .join(", ");
       }
-      
-      return 'No matching templates found';
+
+      return "No matching templates found";
     }
 
     // Return the body content of matching templates
-    const result = rcaTemplates.map(template => template.identifier_action).join(', ');
-    console.log('Final result:', result);
+    const result = rcaTemplates
+      .map((template) => template.identifier_action)
+      .join(", ");
+    console.log("Final result:", result);
     return result;
   };
 
   const getCorrectiveActionDisplay = () => {
     // Debug logging
-    console.log('getCorrectiveActionDisplay called:', {
-      ticketData_corrective_action_template_ids: ticketData?.corrective_action_template_ids,
+    console.log("getCorrectiveActionDisplay called:", {
+      ticketData_corrective_action_template_ids:
+        ticketData?.corrective_action_template_ids,
       communicationTemplates_length: communicationTemplates.length,
-      loadingTemplates
+      loadingTemplates,
     });
 
-    if (!ticketData?.corrective_action_template_ids || ticketData.corrective_action_template_ids.length === 0) {
-      console.log('No corrective_action_template_ids found');
-      return '-';
+    if (
+      !ticketData?.corrective_action_template_ids ||
+      ticketData.corrective_action_template_ids.length === 0
+    ) {
+      console.log("No corrective_action_template_ids found");
+      return "-";
     }
 
     if (loadingTemplates) {
-      return 'Loading...';
+      return "Loading...";
     }
 
     if (communicationTemplates.length === 0) {
-      console.log('No communication templates loaded');
-      return 'No templates loaded';
+      console.log("No communication templates loaded");
+      return "No templates loaded";
     }
 
     // Find templates that match the IDs in corrective_action_template_ids
     const correctiveActionTemplates = communicationTemplates.filter(
-      template => {
-        const matchesId = ticketData.corrective_action_template_ids!.includes(template.id);
+      (template) => {
+        const matchesId = ticketData.corrective_action_template_ids!.includes(
+          template.id
+        );
         const matchesIdentifier = template.identifier === "Corrective Action";
-        
+
         console.log(`Corrective Action Template ${template.id}:`, {
           id: template.id,
           identifier: template.identifier,
           matchesId,
           matchesIdentifier,
-          identifier_action: template.identifier_action.substring(0, 50) + '...'
+          identifier_action:
+            template.identifier_action.substring(0, 50) + "...",
         });
-        
+
         return matchesId && matchesIdentifier;
       }
     );
 
-    console.log('Filtered Corrective Action templates:', correctiveActionTemplates.length, correctiveActionTemplates);
+    console.log(
+      "Filtered Corrective Action templates:",
+      correctiveActionTemplates.length,
+      correctiveActionTemplates
+    );
 
     if (correctiveActionTemplates.length === 0) {
       // Try to find any templates with matching IDs regardless of identifier
-      const anyMatchingTemplates = communicationTemplates.filter(
-        template => ticketData.corrective_action_template_ids!.includes(template.id)
+      const anyMatchingTemplates = communicationTemplates.filter((template) =>
+        ticketData.corrective_action_template_ids!.includes(template.id)
       );
-      console.log('Any matching corrective action templates by ID:', anyMatchingTemplates);
-      
+      console.log(
+        "Any matching corrective action templates by ID:",
+        anyMatchingTemplates
+      );
+
       if (anyMatchingTemplates.length > 0) {
-        return anyMatchingTemplates.map(template => template.identifier_action).join(', ');
+        return anyMatchingTemplates
+          .map((template) => template.identifier_action)
+          .join(", ");
       }
-      
-      return 'No matching templates found';
+
+      return "No matching templates found";
     }
 
     // Return the identifier_action content of matching templates
-    const result = correctiveActionTemplates.map(template => template.identifier_action).join(', ');
-    console.log('Final corrective action result:', result);
+    const result = correctiveActionTemplates
+      .map((template) => template.identifier_action)
+      .join(", ");
+    console.log("Final corrective action result:", result);
     return result;
   };
 
   const getPreventiveActionDisplay = () => {
     // Debug logging
-    console.log('getPreventiveActionDisplay called:', {
-      ticketData_preventive_action_template_ids: ticketData?.preventive_action_template_ids,
+    console.log("getPreventiveActionDisplay called:", {
+      ticketData_preventive_action_template_ids:
+        ticketData?.preventive_action_template_ids,
       communicationTemplates_length: communicationTemplates.length,
-      loadingTemplates
+      loadingTemplates,
     });
 
-    if (!ticketData?.preventive_action_template_ids || ticketData.preventive_action_template_ids.length === 0) {
-      console.log('No preventive_action_template_ids found');
-      return '-';
+    if (
+      !ticketData?.preventive_action_template_ids ||
+      ticketData.preventive_action_template_ids.length === 0
+    ) {
+      console.log("No preventive_action_template_ids found");
+      return "-";
     }
 
     if (loadingTemplates) {
-      return 'Loading...';
+      return "Loading...";
     }
 
     if (communicationTemplates.length === 0) {
-      console.log('No communication templates loaded');
-      return 'No templates loaded';
+      console.log("No communication templates loaded");
+      return "No templates loaded";
     }
 
     // Find templates that match the IDs in preventive_action_template_ids
     const preventiveActionTemplates = communicationTemplates.filter(
-      template => {
-        const matchesId = ticketData.preventive_action_template_ids!.includes(template.id);
+      (template) => {
+        const matchesId = ticketData.preventive_action_template_ids!.includes(
+          template.id
+        );
         const matchesIdentifier = template.identifier === "Preventive Action";
-        
+
         console.log(`Preventive Action Template ${template.id}:`, {
           id: template.id,
           identifier: template.identifier,
           matchesId,
           matchesIdentifier,
-          identifier_action: template.identifier_action.substring(0, 50) + '...'
+          identifier_action:
+            template.identifier_action.substring(0, 50) + "...",
         });
-        
+
         return matchesId && matchesIdentifier;
       }
     );
 
-    console.log('Filtered Preventive Action templates:', preventiveActionTemplates.length, preventiveActionTemplates);
+    console.log(
+      "Filtered Preventive Action templates:",
+      preventiveActionTemplates.length,
+      preventiveActionTemplates
+    );
 
     if (preventiveActionTemplates.length === 0) {
       // Try to find any templates with matching IDs regardless of identifier
-      const anyMatchingTemplates = communicationTemplates.filter(
-        template => ticketData.preventive_action_template_ids!.includes(template.id)
+      const anyMatchingTemplates = communicationTemplates.filter((template) =>
+        ticketData.preventive_action_template_ids!.includes(template.id)
       );
-      console.log('Any matching preventive action templates by ID:', anyMatchingTemplates);
-      
+      console.log(
+        "Any matching preventive action templates by ID:",
+        anyMatchingTemplates
+      );
+
       if (anyMatchingTemplates.length > 0) {
-        return anyMatchingTemplates.map(template => template.identifier_action).join(', ');
+        return anyMatchingTemplates
+          .map((template) => template.identifier_action)
+          .join(", ");
       }
-      
-      return 'No matching templates found';
+
+      return "No matching templates found";
     }
 
     // Return the identifier_action content of matching templates
-    const result = preventiveActionTemplates.map(template => template.identifier_action).join(', ');
-    console.log('Final preventive action result:', result);
+    const result = preventiveActionTemplates
+      .map((template) => template.identifier_action)
+      .join(", ");
+    console.log("Final preventive action result:", result);
     return result;
   };
 
   const handleDownloadPDF = async () => {
     if (!ticketData || !contentRef.current) {
       toast({
-        title: 'Error',
-        description: 'No ticket data available to download',
-        variant: 'destructive'
+        title: "Error",
+        description: "No ticket data available to download",
+        variant: "destructive",
       });
       return;
     }
@@ -410,26 +481,33 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
       // The signed-in navbar uses org_logo_url; public/mobile survey flows also
       // cache the organisation logo in sessionStorage as orgLogoUrl.
       const organisationLogo =
-        localStorage.getItem('org_logo_url') ||
-        sessionStorage.getItem('orgLogoUrl') ||
-        document.querySelector<HTMLImageElement>('header img[alt="Organization Logo"]')?.currentSrc ||
-        document.querySelector<HTMLImageElement>('header img[alt="Organization Logo"]')?.src ||
-        '';
+        localStorage.getItem("org_logo_url") ||
+        sessionStorage.getItem("orgLogoUrl") ||
+        document.querySelector<HTMLImageElement>(
+          'header img[alt="Organization Logo"]'
+        )?.currentSrc ||
+        document.querySelector<HTMLImageElement>(
+          'header img[alt="Organization Logo"]'
+        )?.src ||
+        "";
       // Same fallback order as MobileSurveyLanding: org logo -> default logo.
-      const DEFAULT_LOGO = '/LockatedLogo.jpeg';
-      const toDataUrl = async (src: string): Promise<{ dataUrl: string; bg: string }> => {
+      const DEFAULT_LOGO = "/LockatedLogo.jpeg";
+      const toDataUrl = async (
+        src: string
+      ): Promise<{ dataUrl: string; bg: string }> => {
         const loadImage = (url: string) =>
           new Promise<HTMLImageElement>((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = 'anonymous';
+            img.crossOrigin = "anonymous";
             img.onload = () => resolve(img);
-            img.onerror = () => reject(new Error(`Logo failed to load: ${url}`));
+            img.onerror = () =>
+              reject(new Error(`Logo failed to load: ${url}`));
             img.src = url;
           });
         let img: HTMLImageElement;
         try {
           // Fetch as blob first (works when the host allows CORS)
-          const res = await fetch(src, { mode: 'cors', cache: 'reload' });
+          const res = await fetch(src, { mode: "cors", cache: "reload" });
           if (!res.ok) throw new Error(`Logo request failed (${res.status})`);
           const objectUrl = URL.createObjectURL(await res.blob());
           try {
@@ -439,23 +517,30 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
           }
         } catch {
           // Fallback: cache-busted <img> load, which avoids stale non-CORS cached copies
-          img = await loadImage(src + (src.includes('?') ? '&' : '?') + 'pdfLogo=' + Date.now());
+          img = await loadImage(
+            src + (src.includes("?") ? "&" : "?") + "pdfLogo=" + Date.now()
+          );
         }
         // Draw at full size first so we can detect the logo's background colour
         // and trim its empty padding (the org logos are square with big margins).
-        const full = document.createElement('canvas');
+        const full = document.createElement("canvas");
         full.width = img.naturalWidth;
         full.height = img.naturalHeight;
-        const fctx = full.getContext('2d', { willReadFrequently: true });
-        if (!fctx) throw new Error('Canvas unavailable');
-        fctx.fillStyle = '#ffffff';
+        const fctx = full.getContext("2d", { willReadFrequently: true });
+        if (!fctx) throw new Error("Canvas unavailable");
+        fctx.fillStyle = "#ffffff";
         fctx.fillRect(0, 0, full.width, full.height);
         fctx.drawImage(img, 0, 0);
 
-        let bg = '#ffffff';
+        let bg = "#ffffff";
         let crop = { x: 0, y: 0, w: full.width, h: full.height };
         try {
-          const { data, width, height } = fctx.getImageData(0, 0, full.width, full.height);
+          const { data, width, height } = fctx.getImageData(
+            0,
+            0,
+            full.width,
+            full.height
+          );
           const px = (x: number, y: number) => {
             const i = (y * width + x) * 4;
             return [data[i], data[i + 1], data[i + 2]];
@@ -466,7 +551,10 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
             const [r, g, b] = px(x, y);
             return Math.abs(r - br) + Math.abs(g - bgc) + Math.abs(b - bb) < 40;
           };
-          let top = height, bottom = -1, left = width, right = -1;
+          let top = height,
+            bottom = -1,
+            left = width,
+            right = -1;
           for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
               if (!isBg(x, y)) {
@@ -495,24 +583,34 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
         }
 
         const scale = Math.min(3, 1200 / crop.w, 240 / crop.h);
-        const out = document.createElement('canvas');
+        const out = document.createElement("canvas");
         out.width = Math.max(1, Math.round(crop.w * scale));
         out.height = Math.max(1, Math.round(crop.h * scale));
-        const octx = out.getContext('2d');
-        if (!octx) throw new Error('Canvas unavailable');
-        octx.drawImage(full, crop.x, crop.y, crop.w, crop.h, 0, 0, out.width, out.height);
-        return { dataUrl: out.toDataURL('image/png'), bg };
+        const octx = out.getContext("2d");
+        if (!octx) throw new Error("Canvas unavailable");
+        octx.drawImage(
+          full,
+          crop.x,
+          crop.y,
+          crop.w,
+          crop.h,
+          0,
+          0,
+          out.width,
+          out.height
+        );
+        return { dataUrl: out.toDataURL("image/png"), bg };
       };
 
-      let pdfLogo = '';
-      let pdfLogoBg = '#F6F4EE';
+      let pdfLogo = "";
+      let pdfLogoBg = "#F6F4EE";
       let usedOrgLogo = false;
       // Logo hosts such as the public S3 bucket send no CORS headers, so the browser
       // refuses to read the pixels. For http(s) logos, retry through an image CDN that
       // adds CORS headers (the logos are public) before falling back to the default.
       const corsSafeLogo = /^https?:\/\//i.test(organisationLogo)
-        ? `https://wsrv.nl/?url=${encodeURIComponent(organisationLogo.replace(/^https?:\/\//i, ''))}&output=png&w=800`
-        : '';
+        ? `https://wsrv.nl/?url=${encodeURIComponent(organisationLogo.replace(/^https?:\/\//i, ""))}&output=png&w=800`
+        : "";
       for (const candidate of [organisationLogo, corsSafeLogo, DEFAULT_LOGO]) {
         if (!candidate) continue;
         try {
@@ -522,16 +620,22 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
           usedOrgLogo = candidate !== DEFAULT_LOGO;
           break;
         } catch (logoError) {
-          console.error('Could not prepare logo for PDF:', candidate, logoError);
+          console.error(
+            "Could not prepare logo for PDF:",
+            candidate,
+            logoError
+          );
         }
       }
       if (organisationLogo && !usedOrgLogo) {
         // Not user-facing: the PDF still downloads with the default logo.
-        console.warn('Organisation logo could not be embedded in the PDF; used default logo.');
+        console.warn(
+          "Organisation logo could not be embedded in the PDF; used default logo."
+        );
       }
       const headerHTML = `
       <div style="width: 100%; height: 72px; box-sizing: border-box; padding: 10px 30px; background: ${pdfLogoBg}; border-bottom: 1px solid #D9D9D9; display: flex; align-items: center;">
-        ${pdfLogo ? `<img src="${pdfLogo.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" alt="Organisation logo" crossorigin="anonymous" style="height: 52px; max-width: 260px; object-fit: contain;" />` : ''}
+        ${pdfLogo ? `<img src="${pdfLogo.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" alt="Organisation logo" crossorigin="anonymous" style="height: 52px; max-width: 260px; object-fit: contain;" />` : ""}
       </div>
     `;
 
@@ -648,22 +752,30 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
         margin: 0,
         filename: `ticket_job_sheet_${ticketData.ticket_number || ticketData.ticket_id || ticketData.id}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
-        html2canvas: { scale: 2, logging: false, useCORS: true, imageTimeout: 15000 },
+        html2canvas: {
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          imageTimeout: 15000,
+        },
         jsPDF: { unit: "in", format: "a4", orientation: "portrait" as const },
       };
 
       await html2pdf().from(fullContent).set(opt).save();
 
       toast({
-        title: 'Success',
-        description: 'Ticket job sheet PDF downloaded successfully!'
+        title: "Success",
+        description: "Ticket job sheet PDF downloaded successfully!",
       });
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error("Error generating PDF:", error);
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to generate PDF. Please try again.',
-        variant: 'destructive'
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to generate PDF. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsDownloading(false);
@@ -672,31 +784,31 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'open':
-        return 'bg-blue-100 text-blue-700';
-      case 'in progress':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'resolved':
-        return 'bg-green-100 text-green-700';
-      case 'closed':
-        return 'bg-gray-100 text-gray-700';
-      case 'pending':
-        return 'bg-orange-100 text-orange-700';
+      case "open":
+        return "bg-blue-100 text-blue-700";
+      case "in progress":
+        return "bg-yellow-100 text-yellow-700";
+      case "resolved":
+        return "bg-green-100 text-green-700";
+      case "closed":
+        return "bg-gray-100 text-gray-700";
+      case "pending":
+        return "bg-orange-100 text-orange-700";
       default:
-        return 'bg-gray-100 text-gray-700';
+        return "bg-gray-100 text-gray-700";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority?.toLowerCase()) {
-      case 'high':
-        return 'bg-red-100 text-red-700';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'low':
-        return 'bg-green-100 text-green-700';
+      case "high":
+        return "bg-red-100 text-red-700";
+      case "medium":
+        return "bg-yellow-100 text-yellow-700";
+      case "low":
+        return "bg-green-100 text-green-700";
       default:
-        return 'bg-gray-100 text-gray-700';
+        return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -709,7 +821,8 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
         aria-describedby="ticket-job-sheet-dialog-description"
       >
         <span id="ticket-job-sheet-dialog-description" className="sr-only">
-          View and manage job sheet details for the ticket with PDF download functionality.
+          View and manage job sheet details for the ticket with PDF download
+          functionality.
         </span>
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="text-xl font-semibold text-[#C72030]">
@@ -718,7 +831,7 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
           <div className="flex items-center gap-3">
             <Button
               onClick={handleDownloadPDF}
-              className="bg-[#1e40af] hover:bg-[#1e40af]/90 text-white px-4 py-2"
+              className="bg-[#C72030] hover:bg-[#A01828] !text-white"
               disabled={isDownloading}
             >
               {isDownloading ? (
@@ -767,56 +880,87 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
                     <tr>
                       <td className="header-cell col-header">Description</td>
                       <td colSpan={3} className="data-cell col-full">
-                        {ticketData?.heading || ticketData?.description || 'No description provided'}
+                        {ticketData?.heading ||
+                          ticketData?.description ||
+                          "No description provided"}
                       </td>
                     </tr>
-                    
+
                     {/* Row 1 */}
                     <tr>
                       <td className="header-cell col-header">Ticket Id</td>
-                      <td className="data-cell col-data">{ticketData?.ticket_number || ticketData?.ticket_id || ticketData?.id || '-'}</td>
+                      <td className="data-cell col-data">
+                        {ticketData?.ticket_number ||
+                          ticketData?.ticket_id ||
+                          ticketData?.id ||
+                          "-"}
+                      </td>
                       <td className="header-cell col-header">Status</td>
-                      <td className="data-cell col-data">{ticketData?.issue_status || '-'}</td>
+                      <td className="data-cell col-data">
+                        {ticketData?.issue_status || "-"}
+                      </td>
                     </tr>
-                    
+
                     {/* Row 2 */}
                     <tr>
                       <td className="header-cell col-header">Category</td>
-                      <td className="data-cell col-data">{ticketData?.category_type || ticketData?.category_name || '-'}</td>
+                      <td className="data-cell col-data">
+                        {ticketData?.category_type ||
+                          ticketData?.category_name ||
+                          "-"}
+                      </td>
                       <td className="header-cell col-header">Sub Category</td>
-                      <td className="data-cell col-data">{ticketData?.sub_category_type || ticketData?.subcategory_name || '-'}</td>
+                      <td className="data-cell col-data">
+                        {ticketData?.sub_category_type ||
+                          ticketData?.subcategory_name ||
+                          "-"}
+                      </td>
                     </tr>
-                    
+
                     {/* Row 3 */}
                     <tr>
                       <td className="header-cell col-header">Created On</td>
                       <td className="data-cell col-data">
-                        {ticketData?.created_at ? new Date(ticketData.created_at).toLocaleDateString('en-GB') : 'DD/MM/YYYY'}
+                        {ticketData?.created_at
+                          ? new Date(ticketData.created_at).toLocaleDateString(
+                              "en-GB"
+                            )
+                          : "DD/MM/YYYY"}
                       </td>
                       <td className="header-cell col-header">Created By</td>
-                      <td className="data-cell col-data">{ticketData?.created_by_name || 'User'}</td>
+                      <td className="data-cell col-data">
+                        {ticketData?.created_by_name || "User"}
+                      </td>
                     </tr>
-                    
+
                     {/* Row 4 */}
                     <tr>
                       <td className="header-cell col-header">Priority</td>
-                      <td className="data-cell col-data">{getPriorityDisplay(ticketData?.priority)}</td>
+                      <td className="data-cell col-data">
+                        {getPriorityDisplay(ticketData?.priority)}
+                      </td>
                       <td className="header-cell col-header">Assigned to</td>
-                      <td className="data-cell col-data">{ticketData?.assigned_to || '-'}</td>
+                      <td className="data-cell col-data">
+                        {ticketData?.assigned_to || "-"}
+                      </td>
                     </tr>
-                    
+
                     {/* Row 5 */}
                     <tr>
                       <td className="header-cell col-header">Issue Type</td>
                       <td className="data-cell col-data">Complaint</td>
                       <td className="header-cell col-header">Related to</td>
-                      <td className="data-cell col-data">{ticketData?.issue_related_to || '-'}</td>
+                      <td className="data-cell col-data">
+                        {ticketData?.issue_related_to || "-"}
+                      </td>
                     </tr>
-                    
+
                     {/* Row 6 */}
                     <tr>
                       <td className="header-cell col-header">Associated To</td>
-                      <td className="data-cell col-data">{ticketData?.asset_service || '-'}</td>
+                      <td className="data-cell col-data">
+                        {ticketData?.asset_service || "-"}
+                      </td>
                       <td className="header-cell col-header">Location</td>
                       <td className="data-cell col-data">
                         {[
@@ -824,8 +968,10 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
                           ticketData?.wing_name,
                           ticketData?.floor_name,
                           ticketData?.area_name,
-                          ticketData?.room_name
-                        ].filter(Boolean).join(', ') || '-'}
+                          ticketData?.room_name,
+                        ]
+                          .filter(Boolean)
+                          .join(", ") || "-"}
                       </td>
                     </tr>
 
@@ -833,112 +979,163 @@ export const TicketJobSheetModal: React.FC<TicketJobSheetModalProps> = ({
                     <tr>
                       <td className="header-cell col-header">Tower</td>
                       <td className="data-cell col-data">
-                        {ticketData?.flat_number && String(ticketData.flat_number).includes('-')
-                          ? String(ticketData.flat_number).split('-')[0].trim()
-                          : '-'}
+                        {ticketData?.flat_number &&
+                        String(ticketData.flat_number).includes("-")
+                          ? String(ticketData.flat_number).split("-")[0].trim()
+                          : "-"}
                       </td>
                       <td className="header-cell col-header">Flat</td>
                       <td className="data-cell col-data">
                         {ticketData?.flat_number
-                          ? (String(ticketData.flat_number).includes('-')
-                              ? String(ticketData.flat_number).split('-').slice(1).join('-').trim()
-                              : String(ticketData.flat_number).trim())
-                          : ticketData?.unit_name || '-'}
+                          ? String(ticketData.flat_number).includes("-")
+                            ? String(ticketData.flat_number)
+                                .split("-")
+                                .slice(1)
+                                .join("-")
+                                .trim()
+                            : String(ticketData.flat_number).trim()
+                          : ticketData?.unit_name || "-"}
                       </td>
                     </tr>
-                    
+
                     {/* Row 7 */}
                     <tr>
                       <td className="header-cell col-header">Response TAT</td>
                       <td className="data-cell col-data">
-                        {ticketData?.response_tat ? `${ticketData.response_tat} Mins` : '30 Mins'}
+                        {ticketData?.response_tat
+                          ? `${ticketData.response_tat} Mins`
+                          : "30 Mins"}
                       </td>
                       <td className="header-cell col-header">Resolution TAT</td>
                       <td className="data-cell col-data">
-                        {ticketData?.resolution_tat ? `${ticketData.resolution_tat} Hour` : '1 Hour'}
+                        {ticketData?.resolution_tat
+                          ? `${ticketData.resolution_tat} Hour`
+                          : "1 Hour"}
                       </td>
                     </tr>
-                    
+
                     {/* Row 8 */}
                     <tr>
-                      <td className="header-cell col-header">Preventive Action</td>
+                      <td className="header-cell col-header">
+                        Preventive Action
+                      </td>
                       <td className="data-cell col-data">
                         {getPreventiveActionDisplay()}
                       </td>
-                      <td className="header-cell col-header">Corrective Action</td>
+                      <td className="header-cell col-header">
+                        Corrective Action
+                      </td>
                       <td className="data-cell col-data">
                         {getCorrectiveActionDisplay()}
                       </td>
                     </tr>
-                    
+
                     {/* Row 9 */}
                     <tr>
-                      <td className="header-cell col-header">Expected Visit Date</td>
-                      <td className="data-cell col-data">
-                        {ticketData?.visit_date || '-'}
+                      <td className="header-cell col-header">
+                        Expected Visit Date
                       </td>
-                      <td className="header-cell col-header">Expected Closer Date</td>
                       <td className="data-cell col-data">
-                        {ticketData?.expected_completion_date ? new Date(ticketData.expected_completion_date).toLocaleDateString('en-GB') : '-'}
+                        {ticketData?.visit_date || "-"}
+                      </td>
+                      <td className="header-cell col-header">
+                        Expected Closer Date
+                      </td>
+                      <td className="data-cell col-data">
+                        {ticketData?.expected_completion_date
+                          ? new Date(
+                              ticketData.expected_completion_date
+                            ).toLocaleDateString("en-GB")
+                          : "-"}
                       </td>
                     </tr>
-                    
+
                     {/* Row 10 */}
                     <tr>
                       <td className="header-cell col-header">Severity</td>
-                      <td className="data-cell col-data">{ticketData?.severity || '-'}</td>
+                      <td className="data-cell col-data">
+                        {ticketData?.severity || "-"}
+                      </td>
                       <td className="header-cell col-header">Root Cause</td>
-                      <td className="data-cell col-data">{getRootCauseDisplay()}</td>
+                      <td className="data-cell col-data">
+                        {getRootCauseDisplay()}
+                      </td>
                     </tr>
-                    
+
                     {/* Comments Row */}
                     <tr>
                       <td className="header-cell col-header">Comments</td>
                       <td colSpan={3} className="data-cell col-full">
-                        {ticketData?.description || '-'}
+                        {ticketData?.description || "-"}
                       </td>
                     </tr>
-                    
+
                     {/* Feedback Checkboxes Row */}
                     <tr>
                       <td className="header-cell col-header">Feedback</td>
                       <td className="data-cell col-data text-center">
-                        <input type="checkbox" className="transform scale-110" disabled />
+                        <input
+                          type="checkbox"
+                          className="transform scale-110"
+                          disabled
+                        />
                       </td>
                       <td className="data-cell col-data text-center">
-                        <input type="checkbox" className="transform scale-110" disabled />
+                        <input
+                          type="checkbox"
+                          className="transform scale-110"
+                          disabled
+                        />
                       </td>
                       <td className="data-cell col-data text-center">
-                        <input type="checkbox" className="transform scale-110" disabled />
+                        <input
+                          type="checkbox"
+                          className="transform scale-110"
+                          disabled
+                        />
                       </td>
                     </tr>
-                    
+
                     {/* Feedback Labels Row */}
                     <tr>
                       <td className="header-cell col-header"></td>
                       <td className="data-cell col-data text-center">
-                        <div className="text-xs font-bold text-gray-800">Need Improvement</div>
+                        <div className="text-xs font-bold text-gray-800">
+                          Need Improvement
+                        </div>
                       </td>
                       <td className="data-cell col-data text-center">
-                        <div className="text-xs font-bold text-gray-800">Satisfied</div>
+                        <div className="text-xs font-bold text-gray-800">
+                          Satisfied
+                        </div>
                       </td>
                       <td className="data-cell col-data text-center">
-                        <div className="text-xs font-bold text-gray-800">Not Satisfied</div>
+                        <div className="text-xs font-bold text-gray-800">
+                          Not Satisfied
+                        </div>
                       </td>
                     </tr>
-                    
+
                     {/* Your Valuable Feedback Row */}
                     <tr>
-                      <td className="header-cell col-header">Your Valuable Feedback</td>
+                      <td className="header-cell col-header">
+                        Your Valuable Feedback
+                      </td>
                       <td colSpan={3} className="data-cell col-full">
-                        {ticketData?.feedback || ''}
+                        {ticketData?.feedback || ""}
                       </td>
                     </tr>
-                    
+
                     {/* Customer Signature Row */}
                     <tr>
-                      <td className="header-cell col-header">Customer Signature</td>
-                      <td colSpan={3} className="data-cell col-full" style={{minHeight: '100px'}}>
+                      <td className="header-cell col-header">
+                        Customer Signature
+                      </td>
+                      <td
+                        colSpan={3}
+                        className="data-cell col-full"
+                        style={{ minHeight: "100px" }}
+                      >
                         {/* Signature area - could be an image or empty for manual signature */}
                       </td>
                     </tr>
