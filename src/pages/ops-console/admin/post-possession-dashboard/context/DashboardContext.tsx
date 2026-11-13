@@ -15,6 +15,7 @@ import {
   TOWER_TICKET_BARS,
 } from '../data/mockData';
 import { rgba } from '../charts/chartPalette';
+import { renderDashboardTablePagination } from '../components/shared/DashboardTablePagination';
 import { buildChipDrill, CHIP_SOURCES } from '../data/liveChipDrill';
 import { buildKpiDrill, CHIP_BY_DRILL_KEY, resolveKpiDrill, type KpiDrillSource } from '../data/liveKpiDrill';
 import { useMyDashboardStore } from '../store/myDashboardStore';
@@ -35,7 +36,7 @@ import {
   type TowerOption,
 } from '../api';
 
-const IMPORTANT_EVENTS_PER_PAGE = 20;
+const IMPORTANT_EVENTS_PER_PAGE = 10;
 const TAB_BADGE_SOURCES: Array<{ tab: PostPossessionTab; endpoint: string }> = [
   { tab: 'allTowers', endpoint: 'summary' },
   { tab: 'helpdesk', endpoint: 'kpis' },
@@ -117,20 +118,39 @@ function renderAgeingMatrix(tbody: HTMLElement, openDrill: (k: string) => void) 
     'rgba(229,72,77,.1)',
     'rgba(229,72,77,.14)',
   ];
-  tbody.innerHTML = AGEING_MATRIX.map((r) => {
-    const tot = r.cols.reduce((a, b) => a + b, 0);
-    const cells = r.cols
-      .map((v, i) =>
-        v > 0
-          ? `<td style="text-align:center;cursor:pointer;background:${bgs[i]};color:${colors[i]};font-weight:700" data-drill="tickets_open">${v}</td>`
-          : `<td style="text-align:center;color:var(--sto)">—</td>`
-      )
+  const pageSize = 10;
+  let activePage = 1;
+  const renderPage = (requestedPage: number) => {
+    const totalPages = Math.max(1, Math.ceil(AGEING_MATRIX.length / pageSize));
+    activePage = Math.min(Math.max(requestedPage, 1), totalPages);
+    const start = (activePage - 1) * pageSize;
+    tbody.innerHTML = AGEING_MATRIX.slice(start, start + pageSize)
+      .map((r) => {
+        const tot = r.cols.reduce((a, b) => a + b, 0);
+        const cells = r.cols
+          .map((v, i) =>
+            v > 0
+              ? `<td style="text-align:center;cursor:pointer;background:${bgs[i]};color:${colors[i]};font-weight:700" data-drill="tickets_open">${v}</td>`
+              : `<td style="text-align:center;color:var(--sto)">—</td>`
+          )
+          .join('');
+        return `<tr><td><span style="font-size:11px;font-weight:600;color:${r.color}">${r.pri}</span></td>${cells}<td style="text-align:center;font-weight:700;font-size:12px">${tot}</td></tr>`;
+      })
       .join('');
-    return `<tr><td><span style="font-size:11px;font-weight:600;color:${r.color}">${r.pri}</span></td>${cells}<td style="text-align:center;font-weight:700;font-size:12px">${tot}</td></tr>`;
-  }).join('');
-  tbody.querySelectorAll('[data-drill]').forEach((el) => {
-    el.addEventListener('click', () => openDrill('tickets_open'));
-  });
+    tbody.querySelectorAll('[data-drill]').forEach((el) => {
+      el.addEventListener('click', () => openDrill('tickets_open'));
+    });
+    // Pagination bar goes right after the ageing table
+    const paginationAnchor = tbody.closest<HTMLElement>('table') ?? tbody;
+    renderDashboardTablePagination(
+      paginationAnchor,
+      AGEING_MATRIX.length,
+      activePage,
+      renderPage,
+      'ageing-pagination'
+    );
+  };
+  renderPage(activePage);
 }
 
 function renderTowerBars(container: HTMLElement, openDrill: (k: string) => void) {

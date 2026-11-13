@@ -20,6 +20,7 @@ const COLUMNS: ColumnConfig[] = [
 
 interface FacilitySlotsEnhancedTableProps {
   rows: FacilitySlotRow[];
+  allRows?: FacilitySlotRow[];
   emptyMessage: string;
 }
 
@@ -44,6 +45,7 @@ function renderBookedCapacity(value: string): React.ReactNode {
 
 export const FacilitySlotsEnhancedTable: React.FC<FacilitySlotsEnhancedTableProps> = ({
   rows,
+  allRows = rows,
   emptyMessage,
 }) => {
   const tableRootRef = useEnhancedTableScrollViewport(
@@ -51,7 +53,7 @@ export const FacilitySlotsEnhancedTable: React.FC<FacilitySlotsEnhancedTableProp
     rows,
     '.facility-slots-total'
   );
-  const totals = rows.map((row) => ({
+  const totals = allRows.map((row) => ({
     morning: parseBookedCapacity(row.morning),
     evening: parseBookedCapacity(row.evening),
     vacant: Number(row.vacantToday),
