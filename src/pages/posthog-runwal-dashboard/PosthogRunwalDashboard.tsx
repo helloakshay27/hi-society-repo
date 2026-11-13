@@ -407,7 +407,7 @@ function PosthogRunwalDashboardContent({
       data-theme={theme}
     >
       <TopBar
-        title="Runwal Group"
+        title="Runwal Enterprises"
         theme={theme}
         onToggleTheme={handleToggleTheme}
         isNavCollapsed={isNavCollapsed}
