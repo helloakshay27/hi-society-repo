@@ -39,6 +39,12 @@ const fieldStyles = {
     backgroundColor: "#fff",
 };
 
+// Today as YYYY-MM-DD in the user's local timezone (toISOString would use UTC)
+const getTodayLocal = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -649,9 +655,6 @@ const AddCMSClubMembers = () => {
                                         onChange={(e) => setGlobalStartDate(e.target.value)}
                                         InputLabelProps={{ shrink: true }}
                                         sx={fieldStyles}
-                                        inputProps={{
-                                            min: new Date().toISOString().split("T")[0],   // 👈 disables previous dates
-                                        }}
                                     />
                                     <TextField
                                         type="date"
@@ -664,6 +667,11 @@ const AddCMSClubMembers = () => {
                                         InputLabelProps={{ shrink: true }}
                                         sx={fieldStyles}
                                     />
+                                    {globalStartDate && globalStartDate < getTodayLocal() && (
+                                        <p className="md:col-span-full text-[12.5px] text-amber-700">
+                                            Start date is in the past. Bills for past periods will be created as overdue.
+                                        </p>
+                                    )}
                                     <FormControl fullWidth sx={fieldStyles}>
                                         <InputLabel className="bg-white px-1">
                                             Membership Type

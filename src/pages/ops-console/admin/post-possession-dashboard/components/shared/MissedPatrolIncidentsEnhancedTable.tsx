@@ -34,7 +34,7 @@ export const MissedPatrolIncidentsEnhancedTable: React.FC<
     MISSED_PATROL_INCIDENTS_SCROLL_CLASS,
     rows,
     undefined,
-    5
+    10
   );
 
   return (

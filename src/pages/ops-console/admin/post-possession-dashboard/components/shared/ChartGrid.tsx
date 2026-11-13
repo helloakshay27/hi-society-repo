@@ -86,6 +86,15 @@ function reconcile(defaults: Layout[], stored: Layout[] | null): Layout[] {
   });
 }
 
+/** Match CSS grid's equal-height rows for cards that share the same grid row. */
+function alignRows(layout: Layout[]): Layout[] {
+  const rowHeights = new Map<number, number>();
+  layout.forEach((item) => {
+    rowHeights.set(item.y, Math.max(rowHeights.get(item.y) ?? 0, item.h));
+  });
+  return layout.map((item) => ({ ...item, h: rowHeights.get(item.y) ?? item.h }));
+}
+
 /** Stack full width at narrow breakpoints instead of squeezing columns. */
 function stackFullWidth(layout: Layout[], cols: number): Layout[] {
   const ordered = [...layout].sort((a, b) => a.y - b.y || a.x - b.x);
@@ -116,34 +125,38 @@ interface ChartGridProps {
 }
 
 const ChartGrid: React.FC<ChartGridProps> = ({ cards, storageKey, showReset, tab, mode }) => {
-  const defaults: Layout[] = cards.map((card) => ({
-    i: card.key,
-    ...card.layout,
-    minW: Math.min(MIN_W, card.layout.w),
-    minH: Math.min(MIN_H, card.layout.h),
-    ...(card.fixedSize ? { isResizable: false } : {}),
-  }));
+  const defaults = alignRows(
+    cards.map((card) => ({
+      i: card.key,
+      ...card.layout,
+      minW: Math.min(MIN_W, card.layout.w),
+      minH: Math.min(MIN_H, card.layout.h),
+      ...(card.fixedSize ? { isResizable: false } : {}),
+    }))
+  );
   const [layout, setLayout] = useState<Layout[]>(() => {
     if (mode === 'my') {
       // Start from each card's saved My Dashboard size/position
       const saved = useMyDashboardStore.getState().cards;
-      return defaults.map((item) => {
-        const card = cards.find((c) => c.key === item.i);
-        const entry = saved.find((c) => c.chartId === card?.chartId);
-        if (!entry) return item;
-        const [x, y] = entry.position.split(',').map(Number);
-        const w = Number(entry.width);
-        const h = Number(entry.height);
-        return {
-          ...item,
-          x: Number.isFinite(x) ? x : item.x,
-          y: Number.isFinite(y) ? y : item.y,
-          w: w > 0 ? Math.min(12, w) : item.w,
-          h: h > 0 ? h : item.h,
-        };
-      });
+      return alignRows(
+        defaults.map((item) => {
+          const card = cards.find((c) => c.key === item.i);
+          const entry = saved.find((c) => c.chartId === card?.chartId);
+          if (!entry) return item;
+          const [x, y] = entry.position.split(',').map(Number);
+          const w = Number(entry.width);
+          const h = Number(entry.height);
+          return {
+            ...item,
+            x: Number.isFinite(x) ? x : item.x,
+            y: Number.isFinite(y) ? y : item.y,
+            w: w > 0 ? Math.min(12, w) : item.w,
+            h: h > 0 ? h : item.h,
+          };
+        })
+      );
     }
-    return reconcile(defaults, loadLayout(storageKey));
+    return alignRows(reconcile(defaults, loadLayout(storageKey)));
   });
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
@@ -177,10 +190,11 @@ const ChartGrid: React.FC<ChartGridProps> = ({ cards, storageKey, showReset, tab
   // normal tabs persist the whole layout to localStorage.
   const persist = useCallback(
     (next: Layout[]) => {
-      setLayout(next);
+      const aligned = alignRows(next);
+      setLayout(aligned);
       if (mode === 'my') {
         const { updateCardLayout } = useMyDashboardStore.getState();
-        next.forEach((item) => {
+        aligned.forEach((item) => {
           const card = cards.find((c) => c.key === item.i);
           if (!card) return;
           updateCardLayout(card.chartId, {
@@ -192,7 +206,7 @@ const ChartGrid: React.FC<ChartGridProps> = ({ cards, storageKey, showReset, tab
         return;
       }
       try {
-        localStorage.setItem(storageKey, JSON.stringify(next));
+        localStorage.setItem(storageKey, JSON.stringify(aligned));
       } catch {
         /* storage unavailable — layout just won't persist */
       }

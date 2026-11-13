@@ -33,6 +33,13 @@ interface Attachment {
     document: string;
 }
 
+// Shape of each file on a member in GET /club_member_allocations/:id
+interface MemberFile {
+    id: number;
+    url: string;
+    active: number | null; // only 0 means switched off; null and 1 are live
+}
+
 interface Address {
     id: number;
     address: string | null;
@@ -65,7 +72,10 @@ interface ClubMember {
     email: string;
     mobile: string;
     attachments: Attachment[];
-    identification_image: string | null;
+    identification_image: MemberFile | null;
+    profile_image?: MemberFile | null;
+    other_documents?: MemberFile[];
+    flat_attachment?: MemberFile | null;
     avatar: string;
     emergency_contact_name?: string;
     referred_by?: string;
@@ -521,6 +531,47 @@ export const CMSClubMembersDetails = () => {
         }
         return avatar;
     };
+
+    // A file is live unless active is exactly 0 (null and 1 both mean live)
+    const isLiveFile = (file?: MemberFile | null): file is MemberFile =>
+        !!file && !!file.url && file.active !== 0;
+
+    const isImageUrl = (url: string) =>
+        /\.(jpe?g|png|gif|webp|bmp|svg)(\?|#|$)/i.test(url);
+
+    const getFileName = (url: string) => {
+        try {
+            return decodeURIComponent(new URL(url).pathname.split('/').pop() || 'File');
+        } catch {
+            return url.split('/').pop() || 'File';
+        }
+    };
+
+    // url is already a full https:// address — use it as is
+    const renderMemberFile = (file: MemberFile, alt: string) =>
+        isImageUrl(file.url) ? (
+            <button
+                key={file.id}
+                type="button"
+                onClick={() => setSelectedImage(file.url)}
+                className="w-32 h-32 rounded-xl border border-[rgba(26,26,24,0.1)] overflow-hidden bg-[#FAF9F7] hover:opacity-90"
+                title="Click to preview"
+            >
+                <img src={file.url} alt={alt} className="w-full h-full object-cover" />
+            </button>
+        ) : (
+            <a
+                key={file.id}
+                href={file.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-32 h-32 rounded-xl border border-[rgba(26,26,24,0.1)] bg-[#FAF9F7] flex flex-col items-center justify-center gap-2 p-2 text-center hover:bg-[#F5F4F0]"
+                title={getFileName(file.url)}
+            >
+                <FileText className="w-8 h-8 text-[#1A1A18]" />
+                <span className="text-[11px] text-gray-700 break-all line-clamp-2">{getFileName(file.url)}</span>
+            </a>
+        );
 
     // Helper function to parse answers from snag_answers format
     const parseAnswers = (snagAnswers: any[]) => {
@@ -1228,6 +1279,12 @@ export const CMSClubMembersDetails = () => {
                                             </TabsTrigger>
                                         )}
                                         <TabsTrigger
+                                            value="attachments"
+                                            className="ref-tab"
+                                        >
+                                            Attachments
+                                        </TabsTrigger>
+                                        <TabsTrigger
                                             value="system"
                                             className="ref-tab"
                                         >
@@ -1398,6 +1455,64 @@ export const CMSClubMembersDetails = () => {
                                             </div>
                                         </TabsContent>
                                     )}
+
+                                    {/* Attachments Tab — files belong to the selected member */}
+                                    <TabsContent value="attachments" className="mt-0">
+                                        {(() => {
+                                            const idCard = isLiveFile(selectedMember.identification_image)
+                                                ? selectedMember.identification_image
+                                                : null;
+                                            const photo = isLiveFile(selectedMember.profile_image)
+                                                ? selectedMember.profile_image
+                                                : null;
+                                            const otherFiles = [
+                                                ...(Array.isArray(selectedMember.other_documents) ? selectedMember.other_documents : []),
+                                                ...(selectedMember.flat_attachment ? [selectedMember.flat_attachment] : []),
+                                            ].filter(isLiveFile);
+
+                                            return (
+                                                <div className="space-y-8">
+                                                    <div>
+                                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-4 flex items-center gap-2.5">
+                                                            <CreditCard className="w-4 h-4 text-[#1A1A18]" />
+                                                            ID Card
+                                                        </h3>
+                                                        {idCard ? (
+                                                            <div className="flex flex-wrap gap-4">{renderMemberFile(idCard, 'ID card')}</div>
+                                                        ) : (
+                                                            <p className="text-sm text-gray-500">No ID card uploaded</p>
+                                                        )}
+                                                    </div>
+
+                                                    <div>
+                                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-4 flex items-center gap-2.5">
+                                                            <ImageIcon className="w-4 h-4 text-[#1A1A18]" />
+                                                            Resident's Photo
+                                                        </h3>
+                                                        {photo ? (
+                                                            <div className="flex flex-wrap gap-4">{renderMemberFile(photo, "Resident's photo")}</div>
+                                                        ) : (
+                                                            <p className="text-sm text-gray-500">No resident's photo uploaded</p>
+                                                        )}
+                                                    </div>
+
+                                                    <div>
+                                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-4 flex items-center gap-2.5">
+                                                            <FileText className="w-4 h-4 text-[#1A1A18]" />
+                                                            Attachments
+                                                        </h3>
+                                                        {otherFiles.length > 0 ? (
+                                                            <div className="flex flex-wrap gap-4">
+                                                                {otherFiles.map((file) => renderMemberFile(file, 'Attachment'))}
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-sm text-gray-500">No attachments uploaded</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </TabsContent>
 
                                     {/* System Information Tab */}
                                     <TabsContent value="system" className="mt-0">

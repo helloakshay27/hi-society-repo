@@ -262,7 +262,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           }
           dir={sessionsDelta.dir}
           delta={sessionsDelta.text}
-          sub="app sessions started"
+          sub="sessions in period"
           raw={tiles?.sessions}
           noTarget={true}
           isLoading={isTrafficLoading}

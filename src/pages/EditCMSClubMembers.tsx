@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +45,12 @@ const fieldStyles = {
     backgroundColor: "#fff",
 };
 
+// Today as YYYY-MM-DD in the user's local timezone (toISOString would use UTC)
+const getTodayLocal = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -82,6 +88,8 @@ const EditCMSClubMembers = () => {
     const [globalMembershipPlanId, setGlobalMembershipPlanId] = useState("");
     const [globalMembershipType, setGlobalMembershipType] = useState("paid");
     const [remark, setRemark] = useState("");
+    // Dates/plan as loaded, to detect changes that rebuild bills
+    const originalValuesRef = useRef<{ start: string; end: string; plan: string } | null>(null);
 
     // Cost Summary States
     const [editablePlanCost, setEditablePlanCost] = useState<string>("");
@@ -167,9 +175,14 @@ const EditCMSClubMembers = () => {
 
             setTower(data.tower?.id?.toString() || "");
             setFlat(data.flat?.id?.toString() || "");
-            setGlobalStartDate(data.start_date.split("T")[0] || "");
-            setGlobalEndDate(data.end_date.split("T")[0] || "");
-            setGlobalMembershipPlanId(data.membership_plan_id?.toString() || "");
+            // start/end can be null (Pending memberships) — don't crash on .split
+            const loadedStart = data.start_date ? String(data.start_date).split("T")[0] : "";
+            const loadedEnd = data.end_date ? String(data.end_date).split("T")[0] : "";
+            const loadedPlan = data.membership_plan_id?.toString() || "";
+            setGlobalStartDate(loadedStart);
+            setGlobalEndDate(loadedEnd);
+            setGlobalMembershipPlanId(loadedPlan);
+            originalValuesRef.current = { start: loadedStart, end: loadedEnd, plan: loadedPlan };
             setGlobalMembershipType(data.membership_type || "paid");
             setRemark(data.remark || "");
 
@@ -205,8 +218,9 @@ const EditCMSClubMembers = () => {
                     accessCardId: m.access_card_id || "",
                     idCard: null,
                     residentPhoto: null,
-                    idCardUrl: m.identification_image?.url, // API usually returns URL string or obj
-                    residentPhotoUrl: m.flat_attachment?.url,
+                    // Details API returns { id, url, active } objects (or null)
+                    idCardUrl: m.identification_image?.url,
+                    residentPhotoUrl: m.profile_image?.url,
                 }));
                 setMembers(mappedMembers);
             }
@@ -282,6 +296,39 @@ const EditCMSClubMembers = () => {
     };
 
     const handleSubmit = async () => {
+        // The API does not validate dates, so the form must
+        if (globalMembershipPlanId && !globalStartDate) {
+            toast.error("Please select a Start Date");
+            return;
+        }
+        if (!globalEndDate) {
+            toast.error("Please select an End Date");
+            return;
+        }
+        if (globalStartDate && globalEndDate < globalStartDate) {
+            toast.error("End Date must be on or after Start Date");
+            return;
+        }
+
+        // Changing dates or plan rebuilds the membership's bills — existing
+        // bills (including paid ones) are deleted first
+        const original = originalValuesRef.current;
+        const billingFieldsChanged =
+            !!original &&
+            (original.start !== globalStartDate ||
+                original.end !== globalEndDate ||
+                original.plan !== globalMembershipPlanId);
+        if (
+            billingFieldsChanged &&
+            globalMembershipPlanId &&
+            !window.confirm(
+                "Changing the start date, end date or plan will rebuild this membership's bills. " +
+                "Existing bills, including ones already marked paid, will be deleted. Continue?"
+            )
+        ) {
+            return;
+        }
+
         setSubmitting(true);
         try {
             const formData = new FormData();
@@ -544,9 +591,15 @@ const EditCMSClubMembers = () => {
                                     label="End Date (Applies to all)"
                                     value={globalEndDate}
                                     onChange={(e) => setGlobalEndDate(e.target.value)}
+                                    inputProps={{ min: globalStartDate || undefined }}
                                     InputLabelProps={{ shrink: true }}
                                     sx={fieldStyles}
                                 />
+                                {globalStartDate && globalStartDate < getTodayLocal() && (
+                                    <p className="md:col-span-full text-[12.5px] text-amber-700">
+                                        Start date is in the past. Bills for past periods will be created as overdue.
+                                    </p>
+                                )}
                                 <FormControl fullWidth sx={fieldStyles}>
                                     <InputLabel className="bg-white px-1">Membership Type</InputLabel>
                                     <Select

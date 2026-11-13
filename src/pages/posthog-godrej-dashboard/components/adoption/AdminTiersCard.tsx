@@ -62,7 +62,7 @@ export const AdminTiersCard: React.FC<AdminTiersCardProps> = ({ roles, isLoading
                 {towerRole ? towerRole.users.toLocaleString() : '—'}
               </div>
               <div className="u">
-                {towerRole ? `${Math.round((towerRole.active_share <= 1 ? towerRole.active_share * 100 : towerRole.active_share))}% active this period` : 'no matching role'}
+                {towerRole ? `${Math.round(towerRole.active_share)}% active this period` : 'no matching role'}
               </div>
             </div>
           )}
@@ -73,7 +73,7 @@ export const AdminTiersCard: React.FC<AdminTiersCardProps> = ({ roles, isLoading
                 {superRole ? superRole.users.toLocaleString() : '—'}
               </div>
               <div className="u">
-                {superRole ? `${Math.round((superRole.active_share <= 1 ? superRole.active_share * 100 : superRole.active_share))}% active this period` : 'no matching role'}
+                {superRole ? `${Math.round(superRole.active_share)}% active this period` : 'no matching role'}
               </div>
             </div>
           )}

@@ -1,5 +1,6 @@
 import type { ChartConfiguration, Plugin } from 'chart.js';
 import { PP_PALETTE, PP_AXIS, seriesColor } from './charts/chartPalette';
+import { renderDashboardTablePagination } from './components/shared/DashboardTablePagination';
 import {
   POST_POSSESSION_ENDPOINTS,
   type EndpointResult,
@@ -1879,9 +1880,15 @@ function bindHelpdesk(container: HTMLElement, state: PostPossessionApiState | un
   }
 
   const ageingResult = read(state, 'breachAndAgeing', [['tickets_ageing_matrix', 'priorities']]);
-  const ageingRows = arrayValue(ageingResult).map((row) => {
-    const buckets = isRecord(row.buckets) ? row.buckets : {};
-    return [row.priority, buckets['0-3'], buckets['4-7'], buckets['8-14'], buckets['15-30'], buckets['30+'], row.total];
+  const ageingRows = arrayValue(ageingResult).map((row, index) => {
+    const buckets = isRecord(row.buckets) ? row.buckets : row;
+    const values = ['0-3', '4-7', '8-14', '15-30', '30+'].map((key) => buckets[key]);
+    const total = row.total ?? values.reduce((sum, value) => sum + (numberValue(value) ?? 0), 0);
+    return {
+      priority: safeText(row.priority ?? row.priority_level ?? row.level ?? `P${index + 1}`),
+      values,
+      total,
+    };
   });
   const categoryResult = read(state, 'breachAndAgeing', [['response_breach_rate_by_category']]);
   const categoryRows = arrayValue(categoryResult);
@@ -1986,17 +1993,57 @@ function bindHelpdesk(container: HTMLElement, state: PostPossessionApiState | un
 
   const ageingHost = container.querySelector<HTMLElement>('#ageing');
   if (ageingHost && ageingResult.kind === 'value' && ageingRows.length) {
-    ageingHost.innerHTML = ageingRows
-      .map((row) => {
-        const [priority, ...values] = row;
-        const cells = values.slice(0, 5).map((value) => {
+    const ageingTable = ageingHost.closest<HTMLElement>('.tbox') ?? ageingHost;
+    let activeAgeingPage = 1;
+    const renderAgeingPage = (requestedPage: number) => {
+      const totalPages = Math.max(1, Math.ceil(ageingRows.length / 10));
+      activeAgeingPage = Math.min(Math.max(requestedPage, 1), totalPages);
+      const start = (activeAgeingPage - 1) * 10;
+      const renderedRows = ageingRows.slice(start, start + 10).map((row) => {
+        const rowElement = document.createElement('div');
+        rowElement.className = 'grid-row';
+        const priority = document.createElement('span');
+        priority.textContent = row.priority;
+        rowElement.append(priority);
+        row.values.forEach((value) => {
           const count = numberValue(value) ?? 0;
-          return `<span class="cell${count ? '' : ' z'}">${count ? escapeHtml(formatNumber(count)) : '—'}</span>`;
+          const cell = document.createElement('span');
+          cell.className = `cell${count ? '' : ' z'}`;
+          cell.textContent = count ? formatNumber(count) : '—';
+          if (count > 0) {
+            cell.dataset.drill = 'tickets_open';
+            cell.setAttribute('role', 'button');
+            cell.tabIndex = 0;
+          }
+          rowElement.append(cell);
         });
-        return `<div class="grid-row"><span>${escapeHtml(safeText(priority))}</span>${cells.join('')}<span class="tot">${escapeHtml(formatNumber(values[5]))}</span></div>`;
-      })
-      .join('');
+        const total = document.createElement('span');
+        total.className = 'tot';
+        total.textContent = formatNumber(row.total);
+        rowElement.append(total);
+        return rowElement;
+      });
+      const header = document.createElement('div');
+      header.className = 'grid-head';
+      ['Priority', '0–3 days', '4–7 days', '8–14 days', '15–30 days', '30+ days', 'Total'].forEach(
+        (label) => {
+          const cell = document.createElement('span');
+          cell.textContent = label;
+          header.append(cell);
+        }
+      );
+      ageingTable.replaceChildren(header, ...renderedRows);
+      renderDashboardTablePagination(
+        ageingTable,
+        ageingRows.length,
+        activeAgeingPage,
+        renderAgeingPage,
+        'ageing-pagination'
+      );
+    };
+    renderAgeingPage(1);
   } else if (ageingHost) {
+    container.querySelector('#ageing-pagination')?.remove();
     setContentMessage(ageingHost, ageingResult);
   }
 }
@@ -2213,7 +2260,7 @@ function bindSecurity(container: HTMLElement, state: PostPossessionApiState | un
     ?.closest<HTMLElement>('.card');
   if (flaggedCard) {
     // Replace the sample list with the API's denied/flagged visitors
-    flaggedCard.querySelectorAll('.evitem').forEach((item) => item.remove());
+    flaggedCard.querySelectorAll('.evitem, .ev-pager').forEach((item) => item.remove());
     const appendItem = (build: (item: HTMLElement) => void, drill?: string) => {
       const item = document.createElement('div');
       item.className = 'evitem';
@@ -2242,7 +2289,13 @@ function bindSecurity(container: HTMLElement, state: PostPossessionApiState | un
     } else if (flagged.length === 0) {
       appendMessage('No denied or flagged visitors in this period.');
     } else {
-      flagged.forEach((row) => {
+      const FLAGGED_PAGE_SIZE = 10;
+      const totalPages = Math.max(1, Math.ceil(flagged.length / FLAGGED_PAGE_SIZE));
+      const renderFlaggedPage = (requestedPage: number) => {
+      const page = Math.min(Math.max(1, requestedPage), totalPages);
+      flaggedCard.dataset.flaggedPage = String(page);
+      flaggedCard.querySelectorAll('.evitem, .ev-pager').forEach((el) => el.remove());
+      flagged.slice((page - 1) * FLAGGED_PAGE_SIZE, page * FLAGGED_PAGE_SIZE).forEach((row) => {
         appendItem((item) => {
           const dot = document.createElement('span');
           dot.className = 'ev-dot';
@@ -2274,6 +2327,36 @@ function bindSecurity(container: HTMLElement, state: PostPossessionApiState | un
           item.append(dot, body, tag);
         }, 'vis_rejected');
       });
+      if (flagged.length > FLAGGED_PAGE_SIZE) {
+        const pager = document.createElement('div');
+        pager.className = 'ev-pager';
+        const info = document.createElement('span');
+        const from = (page - 1) * FLAGGED_PAGE_SIZE + 1;
+        const to = Math.min(page * FLAGGED_PAGE_SIZE, flagged.length);
+        info.textContent = `${from}–${to} of ${flagged.length}`;
+        const makeButton = (label: string, target: number, disabled: boolean) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = label;
+          button.disabled = disabled;
+          button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            renderFlaggedPage(target);
+          });
+          return button;
+        };
+        const pageLabel = document.createElement('span');
+        pageLabel.textContent = `Page ${page} / ${totalPages}`;
+        pager.append(
+          info,
+          makeButton('Prev', page - 1, page <= 1),
+          pageLabel,
+          makeButton('Next', page + 1, page >= totalPages)
+        );
+        flaggedCard.append(pager);
+      }
+      };
+      renderFlaggedPage(Number(flaggedCard.dataset.flaggedPage) || 1);
     }
   }
 
@@ -2714,6 +2797,7 @@ function bindClub(container: HTMLElement, state: PostPossessionApiState | undefi
     expiringListContainer.style.removeProperty('max-height');
     expiringListContainer.style.removeProperty('overflow-y');
     expiringListContainer.removeAttribute('tabindex');
+    expiringListContainer.classList.remove('membership-expiring-list-scrollable');
 
     const appendMessage = (message: string) => {
       const item = document.createElement('div');
@@ -2772,14 +2856,7 @@ function bindClub(container: HTMLElement, state: PostPossessionApiState | undefi
 
     const expiringItems = Array.from(expiringListContainer.children);
     if (expiringItems.length > 10) {
-      const tenItemsHeight = expiringItems
-        .slice(0, 10)
-        .reduce(
-          (height, item) => height + item.getBoundingClientRect().height,
-          0
-        );
-      expiringListContainer.style.maxHeight = `${tenItemsHeight}px`;
-      expiringListContainer.style.overflowY = 'auto';
+      expiringListContainer.classList.add('membership-expiring-list-scrollable');
       expiringListContainer.tabIndex = 0;
     }
   }

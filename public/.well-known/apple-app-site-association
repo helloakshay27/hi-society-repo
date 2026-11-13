@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["2LPKRDF37L.com.Runwal.RunwalApp"],
+        "components": [{ "/": "/app/*" }]
+      }
+    ]
+  }
+}

@@ -83,12 +83,15 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
     fetchProjects();
   }, []);
 
+  const isTowerActive = (tower: any) =>
+    tower?.active === true || tower?.active === 1 || tower?.active === "1" || tower?.active === "true";
+
   const handleToggleTowerStatus = async (tower: any) => {
-    const newStatus = !tower.status;
+    const newStatus = !isTowerActive(tower);
 
     // Optimistic update
     setTowers((prev: any[]) =>
-      prev.map((t) => t.id === tower.id ? { ...t, status: newStatus } : t)
+      prev.map((t) => t.id === tower.id ? { ...t, active: newStatus } : t)
     );
 
     try {
@@ -96,7 +99,7 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
         society_block: {
           name: tower.name,
           description: tower.description,
-          status: newStatus ? 1 : 0,
+          active: newStatus ? 1 : 0,
         },
       }, {
         headers: {
@@ -110,7 +113,7 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
       console.log(error);
       // Revert on failure
       setTowers((prev: any[]) =>
-        prev.map((t) => t.id === tower.id ? { ...t, status: tower.status } : t)
+        prev.map((t) => t.id === tower.id ? { ...t, active: tower.active } : t)
       );
       toast.error("Failed to update tower status");
     }
@@ -175,7 +178,7 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
           estate_builder_id: builderId || null,
           name: editedTowerData.name,
           description: editedTowerData.abbreviation,
-          status: tower.status,
+          active: isTowerActive(tower) ? 1 : 0,
         },
       }, {
         headers: {
@@ -370,10 +373,10 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
                           title={tower.status ? "Active" : "Inactive"}
                         /> */}
                         <Checkbox
-                          checked={!!tower.status}
+                          checked={isTowerActive(tower)}
                           onCheckedChange={() => handleToggleTowerStatus(tower)}
                           className="data-[state=checked]:bg-[#C72030] data-[state=checked]:border-[#C72030]"
-                          title={tower.status ? "Active" : "Inactive"}
+                          title={isTowerActive(tower) ? "Active" : "Inactive"}
                         />
                       </td>
                       <td className="px-4 py-3 text-center">

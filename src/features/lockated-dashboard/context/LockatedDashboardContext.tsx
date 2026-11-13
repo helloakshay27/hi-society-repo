@@ -274,8 +274,10 @@ export function LockatedDashboardProvider({
   });
 
   const workflowQ = useQuery({
-    queryKey: ['lockated-workflow', filters, state.wf],
-    queryFn: () => fetchWorkflowUsage({ ...filters, module: state.wf }),
+    queryKey: ['lockated-workflow', filters],
+    // No module: Lockated's named workflows come back in `workflows` (config/workflows.yml lockated);
+    // a workflow key sent as ?module= is not a screen, so the API found no funnel for it.
+    queryFn: () => fetchWorkflowUsage({ ...filters }),
     staleTime: 5 * 60_000,
     retry: false,
     enabled: queryEnabled

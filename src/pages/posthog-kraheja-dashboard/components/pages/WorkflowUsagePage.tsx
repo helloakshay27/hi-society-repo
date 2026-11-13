@@ -31,15 +31,15 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({ filters, b
   const kpis = wfData?.kpis;
 
   const fAdopt = kpis?.f_adopt?.value;
-  const fAdoptDisplay = fAdopt != null ? `${Math.round(fAdopt <= 1 ? fAdopt * 100 : fAdopt)}%` : isWfLoading ? '...' : '—';
+  const fAdoptDisplay = fAdopt != null ? `${Math.round(fAdopt)}%` : isWfLoading ? '...' : '—';
   const fAdoptDelta = kpis?.f_adopt?.delta_pct;
 
   const fComp = kpis?.f_comp?.value;
-  const fCompDisplay = fComp != null ? `${Math.round(fComp <= 1 ? fComp * 100 : fComp)}%` : isWfLoading ? '...' : '—';
+  const fCompDisplay = fComp != null ? `${Math.round(fComp)}%` : isWfLoading ? '...' : '—';
   const fCompDelta = kpis?.f_comp?.delta_pct;
 
   const fStep = kpis?.f_step?.value;
-  const fStepDisplay = fStep != null ? `${Math.round(fStep <= 1 ? fStep * 100 : fStep)}%` : isWfLoading ? '...' : '—';
+  const fStepDisplay = fStep != null ? `${Math.round(fStep)}%` : isWfLoading ? '...' : '—';
 
   const fVol = kpis?.f_vol?.value;
   const fVolDisplay = fVol != null ? fVol.toLocaleString() : isWfLoading ? '...' : '—';
@@ -71,7 +71,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({ filters, b
           val={fAdoptDisplay}
           dir={fAdoptDelta && fAdoptDelta > 0 ? 'up' : fAdoptDelta && fAdoptDelta < 0 ? 'dn' : 'flat'}
           delta={fAdoptDelta != null ? `${fAdoptDelta > 0 ? '+' : ''}${fAdoptDelta.toFixed(1)}%` : null}
-          raw={fAdopt != null ? (fAdopt <= 1 ? fAdopt * 100 : fAdopt) : undefined}
+          raw={fAdopt != null ? fAdopt : undefined}
           unit="%"
           goodUp={true}
           // benchmark={benchmarks.wfAdoption}
@@ -86,7 +86,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({ filters, b
           val={fCompDisplay}
           dir={fCompDelta && fCompDelta > 0 ? 'up' : fCompDelta && fCompDelta < 0 ? 'dn' : 'flat'}
           delta={fCompDelta != null ? `${fCompDelta > 0 ? '+' : ''}${fCompDelta.toFixed(1)}%` : null}
-          raw={fComp != null ? (fComp <= 1 ? fComp * 100 : fComp) : undefined}
+          raw={fComp != null ? fComp : undefined}
           unit="%"
           goodUp={true}
           // benchmark={benchmarks.wfCompletion}
