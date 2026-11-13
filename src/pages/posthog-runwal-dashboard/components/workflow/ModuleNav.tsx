@@ -59,14 +59,6 @@ export const ModuleNav: React.FC<ModuleNavProps> = ({
     !!selectedSubModule &&
     !shownSubModules.some((subModule) => moduleValue(subModule) === selectedSubModule);
 
-  const shownModules = modules.slice(0, VISIBLE_ITEMS);
-  const restModules = modules.slice(VISIBLE_ITEMS);
-  const selectedModuleIsHidden = !!selectedModule && !shownModules.some((module) => module.name === selectedModule);
-  const shownSubModules = subModules.slice(0, VISIBLE_ITEMS);
-  const restSubModules = subModules.slice(VISIBLE_ITEMS);
-  const selectedSubModuleIsHidden =
-    !!selectedSubModule && !shownSubModules.some((subModule) => subModule.name === selectedSubModule);
-
   return (
     <div
       className="mnav"
