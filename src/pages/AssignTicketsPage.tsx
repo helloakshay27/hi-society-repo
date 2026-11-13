@@ -6,6 +6,10 @@ import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/utils/apiClient';
 import { API_CONFIG } from '@/config/apiConfig';
 import { getToken } from '@/utils/auth';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import MuiSelect from '@mui/material/Select';
 
 interface NextEscalation {
   minutes: number;
@@ -110,8 +114,17 @@ const AssignTicketsPage: React.FC = () => {
     const fetchFMUsers = async () => {
       setLoadingUsers(true);
       try {
-        const response = await apiClient.get('/pms/users/get_escalate_to_users.json');
-        setFmUsers(response.data.users || []);
+        // Same source as the Assigned To dropdown on the ticket details page
+        const response = await apiClient.get('/dropdown/service_engineers');
+        const engineers = Array.isArray(response.data?.helpdesk_users)
+          ? response.data.helpdesk_users
+          : [];
+        setFmUsers(
+          engineers.map((engineer: { id: number; full_name: string }) => ({
+            id: engineer.id,
+            full_name: engineer.full_name,
+          }))
+        );
       } catch (error) {
         console.error('Error fetching FM users:', error);
         toast({
@@ -372,52 +385,40 @@ const AssignTicketsPage: React.FC = () => {
           <h2 className="text-lg font-medium text-gray-900 mb-6">Update To</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Status</label>
-              <select
-                aria-label="Status"
+            <FormControl fullWidth size="small" disabled={loadingStatuses}>
+              <InputLabel>Status</InputLabel>
+              <MuiSelect
                 value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="h-10 w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer shadow-sm"
-                disabled={loadingStatuses}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 8px center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
-                }}
+                onChange={(e) => setSelectedStatus(e.target.value as string)}
+                label="Status"
               >
-                <option value="" className="text-gray-500">Select Status</option>
+                <MenuItem value="">
+                  <span className="text-gray-500">Select Status</span>
+                </MenuItem>
                 {complaintStatuses.map((status) => (
-                  <option key={status.id} value={status.id} className="text-gray-900 py-2">
+                  <MenuItem key={status.id} value={status.id.toString()}>
                     {status.name}
-                  </option>
+                  </MenuItem>
                 ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Assigned To</label>
-              <select
-                aria-label="Assigned To"
+              </MuiSelect>
+            </FormControl>
+            <FormControl fullWidth size="small" disabled={loadingUsers}>
+              <InputLabel>Assigned To</InputLabel>
+              <MuiSelect
                 value={selectedUser}
-                onChange={(e) => setSelectedUser(e.target.value)}
-                className="h-10 w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer shadow-sm"
-                disabled={loadingUsers}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 8px center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
-                }}
+                onChange={(e) => setSelectedUser(e.target.value as string)}
+                label="Assigned To"
               >
-                <option value="" className="text-gray-500">Select engineer</option>
+                <MenuItem value="">
+                  <span className="text-gray-500">Select engineer</span>
+                </MenuItem>
                 {fmUsers.map((user) => (
-                  <option key={user.id} value={user.id} className="text-gray-900 py-2">
+                  <MenuItem key={user.id} value={user.id.toString()}>
                     {user.full_name}
-                  </option>
+                  </MenuItem>
                 ))}
-              </select>
-            </div>
+              </MuiSelect>
+            </FormControl>
           </div>
 
           {/* Submit button */}
