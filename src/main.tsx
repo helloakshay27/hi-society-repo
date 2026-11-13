@@ -15,7 +15,7 @@ import { installNetworkMonitor } from "./utils/networkMonitor";
 
 // App-wide toasts for slow requests, timeouts and genuine offline/online —
 // see utils/networkMonitor.ts for why this patches fetch/XHR globally.
-installNetworkMonitor();
+// installNetworkMonitor();
 
 // import { registerServiceWorker } from "./utils/pwa.ts";
 
@@ -58,7 +58,6 @@ window.addEventListener("unhandledrejection", (event) => {
 });
 // ────────────────────────────────────────────────────────────────────────────
 
-
 import { initPostHogAutoCapture } from "./utils/posthogEvents";
 
 const posthogToken = import.meta.env.VITE_POSTHOG_PROJECT_TOKEN;
@@ -86,7 +85,7 @@ createRoot(document.getElementById("root")!).render(
       <Router>
         <PostHogPageView />
         <App />
-              </Router>
+      </Router>
     </Provider>
   </PostHogProvider>
 );
