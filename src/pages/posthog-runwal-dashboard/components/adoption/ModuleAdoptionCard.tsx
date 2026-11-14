@@ -19,7 +19,9 @@ export const ModuleAdoptionCard: React.FC<{ filters: DashboardFilters; enabled?:
   enabled = true,
 }) => {
   const { data, isLoading, isError, error, refetch } = useModuleTree(filters, enabled);
-  const rows = (data?.modules?.length ? data.modules : data?.tree ?? [])
+  // An app with a module list shows its modules; one without shows its screens, and says so.
+  const byModule = !!data?.modules?.length;
+  const rows = ((byModule ? data?.modules : data?.tree) ?? [])
     .filter((m) => m.share_pct != null)
     .slice(0, 12);
 
@@ -27,9 +29,9 @@ export const ModuleAdoptionCard: React.FC<{ filters: DashboardFilters; enabled?:
     <Card
       id="card-moduleAdoption"
       infoKey="chart.moduleAdoption"
-      eyebrow="Adoption by workflow bucket"
-      title="Which group of features is used most"
-      purpose="Users who used each module at least once, as a share of all active users."
+      eyebrow={byModule ? "Adoption by workflow bucket" : "Adoption by screen"}
+      title={byModule ? "Which group of features is used most" : "Which screens are used most"}
+      purpose={`Users who used each ${byModule ? "module" : "screen"} at least once, as a share of all active users.`}
     >
       {isError ? (
         <ErrorState title="Failed to load module adoption" error={error} onRetry={() => refetch()} />
