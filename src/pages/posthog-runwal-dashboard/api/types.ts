@@ -93,6 +93,8 @@ export interface AdoptionEngagementResponse {
     value: number | null;
     wau_now: number;
     wau_4wk_ago: number;
+    /** How many weeks the baseline average used (up to 8; weeks before the app went live are left out). */
+    baseline_weeks?: number | null;
   };
   activation: {
     value: number;

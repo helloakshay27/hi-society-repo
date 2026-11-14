@@ -2565,6 +2565,9 @@ const PosthogKRahejaDashboard = lazy(
 const PosthogLacircleDashboard = lazy(
   () => import("./pages/posthog-lacircle-dashboard/PosthogLacircleDashboard")
 );
+const PosthogKalpataruDashboard = lazy(
+  () => import("./pages/posthog-kalpataru-dashboard/PosthogKalpataruDashboard")
+);
 const ViewUserPage = lazy(() =>
   import("./pages/ViewUserPage").then((m) => ({ default: m.ViewUserPage }))
 );
@@ -3790,6 +3793,10 @@ function App() {
                             <PosthogLacircleDashboard />
                           </ProtectedRoute>
                         }
+                      />
+                      <Route
+                        path="/kalpataru-usage-dashboard"
+                        element={<PosthogKalpataruDashboard />}
                       />
                       <Route
                         path="/smartsecure-dashboard"
