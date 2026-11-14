@@ -172,7 +172,7 @@ const historyColumns: ColumnConfig[] = [
   { key: "exit_gate",         label: "Out Gate",        sortable: true,  hideable: true,  draggable: true  },
   { key: "marked_in_by",      label: "Marked In By",    sortable: true,  hideable: true,  draggable: true  },
   { key: "marked_out_by",     label: "Marked Out By",   sortable: true,  hideable: true,  draggable: true  },
-  { key: "created_by",        label: "Created By",      sortable: true,  hideable: true,  draggable: true  },
+  // { key: "created_by",        label: "Created By",      sortable: true,  hideable: true,  draggable: true  },
 ];
 
 // ─── Filter Dialog ────────────────────────────────────────────────────────────
