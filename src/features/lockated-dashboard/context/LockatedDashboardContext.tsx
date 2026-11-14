@@ -24,6 +24,7 @@ import {
 } from '../data/metrics';
 import type { DashboardState, ActivePage, Device, AdminScope } from '../data/types';
 import { RANGE_LABELS } from '../data/constants';
+import { liveRefetchInterval } from '../../../pages/posthog-runwal-dashboard/api/liveRefresh';
 
 const initialRange = dateRangeFor(30);
 
@@ -185,6 +186,7 @@ export function LockatedDashboardProvider({
     queryKey: ['lockated-traffic', filters],
     queryFn: () => fetchTrafficSession(filters),
     staleTime: 5 * 60_000,
+    refetchInterval: liveRefetchInterval,
     retry: false,
     enabled: queryEnabled
   });
@@ -193,6 +195,7 @@ export function LockatedDashboardProvider({
     queryKey: ['lockated-usage', filters],
     queryFn: () => fetchUsageAndDistribution(filters),
     staleTime: 5 * 60_000,
+    refetchInterval: liveRefetchInterval,
     retry: false,
     enabled: queryEnabled
   });
@@ -201,6 +204,7 @@ export function LockatedDashboardProvider({
     queryKey: ['lockated-engagement', filters],
     queryFn: () => fetchAdoptionEngagement(filters),
     staleTime: 5 * 60_000,
+    refetchInterval: liveRefetchInterval,
     retry: false,
     enabled: queryEnabled
   });
@@ -218,6 +222,7 @@ export function LockatedDashboardProvider({
         os: filters.os
       }),
     staleTime: 5 * 60_000,
+    refetchInterval: liveRefetchInterval,
     retry: false,
     enabled: queryEnabled
   });
@@ -236,6 +241,7 @@ export function LockatedDashboardProvider({
         os: filters.os
       }),
     staleTime: 5 * 60_000,
+    refetchInterval: liveRefetchInterval,
     retry: false,
     enabled: queryEnabled
   });
@@ -253,6 +259,7 @@ export function LockatedDashboardProvider({
         os: filters.os
       }),
     staleTime: 5 * 60_000,
+    refetchInterval: liveRefetchInterval,
     retry: false,
     enabled: queryEnabled
   });
@@ -261,6 +268,7 @@ export function LockatedDashboardProvider({
     queryKey: ['lockated-roles', filters],
     queryFn: () => fetchRoles(filters),
     staleTime: 5 * 60_000,
+    refetchInterval: liveRefetchInterval,
     retry: false,
     enabled: queryEnabled
   });
@@ -269,6 +277,7 @@ export function LockatedDashboardProvider({
     queryKey: ['lockated-modules', filters],
     queryFn: () => fetchModules(filters),
     staleTime: 5 * 60_000,
+    refetchInterval: liveRefetchInterval,
     retry: false,
     enabled: queryEnabled
   });
@@ -279,6 +288,7 @@ export function LockatedDashboardProvider({
     // a workflow key sent as ?module= is not a screen, so the API found no funnel for it.
     queryFn: () => fetchWorkflowUsage({ ...filters }),
     staleTime: 5 * 60_000,
+    refetchInterval: liveRefetchInterval,
     retry: false,
     enabled: queryEnabled
   });

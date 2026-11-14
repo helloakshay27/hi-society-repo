@@ -61,11 +61,13 @@ import {
   ApprovalQueueData,
   TopPendingRecordsData,
 } from '../api/types';
+import { liveRefetchInterval } from '../api/liveRefresh';
 
 export const CACHE_CONFIG = {
   staleTime: 5 * 60 * 1000, // 5 minutes
   gcTime: 30 * 60 * 1000, // 30 minutes
   refetchOnWindowFocus: false,
+  refetchInterval: liveRefetchInterval, // live numbers while the page is on screen (api/liveRefresh)
 };
 
 const commonKey = (f: DashboardFilters) => [

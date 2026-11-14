@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { DashboardFilters } from '../../api/types';
 import { activityUserLabel, downloadActiveUsersExport } from '../../api/api';
 import { useRecentActiveUsers } from '../../hooks/useDashboardAnalytics';
+import { ExportSpinner, ExportStatus, useExportDownload } from './ExportProgress';
 
 interface RecentActivitySidebarProps {
   filters: DashboardFilters;
@@ -31,20 +32,11 @@ export const RecentActivitySidebar: React.FC<RecentActivitySidebarProps> = ({
 }) => {
   // The 10 newest events (one row per thing a user did, logins and logouts included), live.
   const { data, isLoading } = useRecentActiveUsers(filters, sitesSettled, 10);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const exportJob = useExportDownload();
+  const isDownloading = exportJob.busy;
   const users = data?.users ?? [];
 
-  const handleDownload = async () => {
-    if (isDownloading) return;
-    setIsDownloading(true);
-    try {
-      await downloadActiveUsersExport(filters);
-    } catch (err) {
-      console.error('Failed to download user activity export', err);
-    } finally {
-      setIsDownloading(false);
-    }
-  };
+  const handleDownload = () => exportJob.run((onPhase) => downloadActiveUsersExport(filters, onPhase));
 
   return (
     <div className="recent-activity">
@@ -56,10 +48,11 @@ export const RecentActivitySidebar: React.FC<RecentActivitySidebarProps> = ({
           className="iconbtn recent-activity-download"
           onClick={handleDownload}
           disabled={isDownloading}
-          title="Download user activity (.xlsx)"
+          title={isDownloading ? 'Preparing the download…' : 'Download user activity (.xlsx)'}
           aria-label="Download user activity"
+          aria-busy={isDownloading}
         >
-          <svg
+          {isDownloading ? <ExportSpinner /> : <svg
             viewBox="0 0 20 20"
             fill="none"
             stroke="currentColor"
@@ -67,14 +60,14 @@ export const RecentActivitySidebar: React.FC<RecentActivitySidebarProps> = ({
             strokeLinecap="round"
             strokeLinejoin="round"
             aria-hidden="true"
-            style={isDownloading ? { opacity: 0.5 } : undefined}
           >
             <path d="M10 3v9.4" />
             <path d="M6.2 9.2 10 13l3.8-3.8" />
             <path d="M3.5 16.2h13" />
-          </svg>
+          </svg>}
         </button>
       </div>
+      <ExportStatus phase={exportJob.phase} startedAt={exportJob.startedAt} error={exportJob.error} />
 
       {isLoading ? (
         <div className="recent-activity-empty">Loading…</div>
