@@ -109,6 +109,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isUnauthorizedSociety =
     layoutMode === "hi-society" &&
     !isSocietyAdmin &&
+    localStorage.getItem("user_type") !== "rm_user" &&
+    localStorage.getItem("user_type") !== "cs_user" &&
     hostname !== "runwal-cp.lockated.com" &&
     hostname !== "ui-hisociety.lockated.com";
   console.log(isUnauthorizedSociety);
