@@ -188,7 +188,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Action sidebar/header orgs only apply in Hi-Society mode; switching to
   // FM Matrix falls through to the regular FM sidebar + dynamic header.
-  const isActionLayoutAccount = layoutMode === "hi-society";
+  const isActionLayoutAccount =
+    layoutMode === "hi-society" &&
+    localStorage.getItem("user_type") !== "rm_user" &&
+    localStorage.getItem("user_type") !== "cs_user";
   // &&
   // (userEmail === "dineshshinde6666@gmail.com" ||
   //   org_id === "109" ||
