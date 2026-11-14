@@ -14,7 +14,7 @@ import {
   Clock,
   UserX,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { CMSClubMembersFilterModal } from "@/components/CMSClubMembersFilterModal";
@@ -115,6 +115,26 @@ interface MemberFilters {
   expired?: string;
 }
 
+// Filter field → its key in the page URL (?tower=1&status=active...)
+const FILTER_URL_KEYS: Record<keyof MemberFilters, string> = {
+  towerId: "tower",
+  flatId: "flat",
+  residentType: "resident_type",
+  status: "status",
+  cardAllocated: "card_allocated",
+  expired: "expired",
+};
+const SEARCH_URL_KEY = "search";
+
+const readFiltersFromUrl = (params: URLSearchParams): MemberFilters => {
+  const filters: MemberFilters = {};
+  (Object.keys(FILTER_URL_KEYS) as (keyof MemberFilters)[]).forEach((field) => {
+    const value = params.get(FILTER_URL_KEYS[field]);
+    if (value) filters[field] = value;
+  });
+  return filters;
+};
+
 const CMSClubMembers = () => {
   const navigate = useNavigate();
   const { shouldShow } = useDynamicPermissions();
@@ -144,7 +164,6 @@ const CMSClubMembers = () => {
     items: string[];
   }>({ isOpen: false, title: "", items: [] });
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState<MemberFilters>({});
   const [summaryData, setSummaryData] = useState({
     total_members: 0,
     total_active: 0,
@@ -152,10 +171,26 @@ const CMSClubMembers = () => {
     total_pending: 0,
   });
 
+  // Filters and search live in the URL too, so refresh/back/shared links keep them
+  const filtersKey = (Object.values(FILTER_URL_KEYS) as string[])
+    .map((key) => searchParams.get(key) || "")
+    .join("|");
+  const appliedFilters = useMemo(
+    () => readFiltersFromUrl(searchParams),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filtersKey]
+  );
+
   // Toolbar search box → `member_search` (matches first/last name, email,
   // mobile or membership number). Kept apart from the modal filters so
   // applying the modal doesn't wipe the search.
-  const [memberSearch, setMemberSearch] = useState("");
+  const memberSearch = searchParams.get(SEARCH_URL_KEY) || "";
+  // What's typed in the search box (the URL only updates after the debounce)
+  const [searchInputText, setSearchInputText] = useState(memberSearch);
+  useEffect(() => {
+    // Back/forward navigation changed the search → show it in the box
+    setSearchInputText(memberSearch);
+  }, [memberSearch]);
 
   // Shared by the list and the export so both always apply the same filters
   const buildFilterParams = (filters: MemberFilters, search = memberSearch) => {
@@ -249,19 +284,52 @@ const CMSClubMembers = () => {
     );
   };
 
+  // Writes the filters to the URL (which triggers the fetch) and goes back to page 1
   const handleFilterApply = (filters: MemberFilters) => {
-    setAppliedFilters(filters);
-    // New filter → back to the first page
-    handlePageChange(1, true);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      (Object.keys(FILTER_URL_KEYS) as (keyof MemberFilters)[]).forEach((field) => {
+        const value = filters[field];
+        if (value) next.set(FILTER_URL_KEYS[field], value);
+        else next.delete(FILTER_URL_KEYS[field]);
+      });
+      next.delete("page");
+      return next;
+    });
   };
+
+  // Summary card click → filter the list by that membership status.
+  // "Total Members" (empty status) clears the status filter; other filters are kept.
+  const handleStatusCardClick = (status: "" | "active" | "inactive" | "pending") => {
+    if ((appliedFilters.status || "") === status) return;
+    handleFilterApply({ ...appliedFilters, status: status || undefined });
+  };
+
+  const activeStatus = appliedFilters.status || "";
 
   // Called by EnhancedTable after the user stops typing (debounced)
   const handleMemberSearch = (term: string) => {
-    const next = term.trim();
-    if (next === memberSearch) return;
-    setMemberSearch(next);
-    // New search → back to the first page
-    handlePageChange(1, true);
+    const nextSearch = term.trim();
+    if (nextSearch === memberSearch) return;
+    // New search → back to the first page. Replace (not push) so typing
+    // doesn't flood the browser history.
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (nextSearch) next.set(SEARCH_URL_KEY, nextSearch);
+        else next.delete(SEARCH_URL_KEY);
+        next.delete("page");
+        return next;
+      },
+      { replace: true }
+    );
+  };
+
+  const handleSearchInputChange = (value: string) => {
+    setSearchInputText(value);
+    // Clearing the box applies straight away (the table's debounce skips an
+    // empty value when the search came from the URL)
+    if (!value.trim()) handleMemberSearch("");
   };
 
   const renderPageLink = (page: number) => (
@@ -603,24 +671,32 @@ const CMSClubMembers = () => {
           value={summaryData.total_members.toString()}
           icon={<Users className="w-5 h-5 text-[#C72030]" />}
           downloadData={[]}
+          selected={activeStatus === ""}
+          onClick={() => handleStatusCardClick("")}
         />
         <StatsCard
-          title="Active"
+          title="Approved"
           value={summaryData.total_active.toString()}
           icon={<UserCheck className="w-5 h-5 text-[#C72030]" />}
           downloadData={[]}
+          selected={activeStatus === "active"}
+          onClick={() => handleStatusCardClick("active")}
         />
         <StatsCard
-          title="Inactive"
+          title="Expired"
           value={summaryData.total_inactive.toString()}
           icon={<UserX className="w-5 h-5 text-[#C72030]" />}
           downloadData={[]}
+          selected={activeStatus === "inactive"}
+          onClick={() => handleStatusCardClick("inactive")}
         />
         <StatsCard
           title="Pending"
           value={summaryData.total_pending.toString()}
           icon={<Clock className="w-5 h-5 text-[#C72030]" />}
           downloadData={[]}
+          selected={activeStatus === "pending"}
+          onClick={() => handleStatusCardClick("pending")}
         />
       </div>
 
@@ -636,6 +712,8 @@ const CMSClubMembers = () => {
         onFilterClick={() => setIsFilterModalOpen(true)}
         enableGlobalSearch={true}
         onGlobalSearch={handleMemberSearch}
+        searchValue={searchInputText}
+        onSearchChange={handleSearchInputChange}
         searchPlaceholder="Search name, email, mobile or membership no."
         enableExport={true}
         onExport={handleExport}
@@ -680,6 +758,7 @@ const CMSClubMembers = () => {
         open={isFilterModalOpen}
         onOpenChange={setIsFilterModalOpen}
         onApply={handleFilterApply}
+        appliedFilters={appliedFilters}
       />
     </div>
   );

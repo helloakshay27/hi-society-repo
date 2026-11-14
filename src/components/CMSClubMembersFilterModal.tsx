@@ -17,10 +17,14 @@ import { X } from 'lucide-react';
 import { Button } from './ui/button';
 import axios from 'axios';
 
+type FilterField = 'towerId' | 'flatId' | 'residentType' | 'status' | 'cardAllocated' | 'expired';
+
 interface CMSClubMembersFilterModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onApply: (filters: any) => void;
+    // Filters currently applied (from the URL / a summary card) — shown in the fields
+    appliedFilters?: Partial<Record<FilterField, string>>;
 }
 
 const muiTheme = createTheme({
@@ -89,6 +93,7 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
     open,
     onOpenChange,
     onApply,
+    appliedFilters,
 }) => {
     const baseUrl = localStorage.getItem("baseUrl");
     const token = localStorage.getItem("token");
@@ -111,6 +116,18 @@ export const CMSClubMembersFilterModal: React.FC<CMSClubMembersFilterModalProps>
             fetchTowers();
         }
     }, [open]);
+
+    // Keep the fields in sync with the applied filters (URL on load, summary cards, back/forward)
+    useEffect(() => {
+        setFilters({
+            towerId: appliedFilters?.towerId || '',
+            flatId: appliedFilters?.flatId || '',
+            residentType: appliedFilters?.residentType || '',
+            status: appliedFilters?.status || '',
+            cardAllocated: appliedFilters?.cardAllocated || '',
+            expired: appliedFilters?.expired || '',
+        });
+    }, [appliedFilters]);
 
     useEffect(() => {
         if (filters.towerId) {

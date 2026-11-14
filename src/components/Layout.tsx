@@ -101,8 +101,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, []);
 
   const isUnauthorizedSociety =
-    layoutMode === "hi-society" && !isSocietyAdmin && hostname !== "runwal-cp.lockated.com" && hostname !== "ui-hisociety.lockated.com";
-  console.log(isUnauthorizedSociety)
+    layoutMode === "hi-society" &&
+    !isSocietyAdmin &&
+    localStorage.getItem("user_type") !== "rm_user" &&
+    localStorage.getItem("user_type") !== "cs_user" &&
+    hostname !== "runwal-cp.lockated.com" &&
+    hostname !== "ui-hisociety.lockated.com";
+  console.log(isUnauthorizedSociety);
 
   // Detect Club Management routes
   const isClubManagementRoute =
@@ -175,6 +180,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     userEmail === "besis69240@azeriom.com" ||
     userEmail === "megipow156@aixind.com" ||
     userEmail === "jevosak839@cimario.com";
+
+  // Action sidebar/header orgs only apply in Hi-Society mode; switching to
+  // FM Matrix falls through to the regular FM sidebar + dynamic header.
+  const isActionLayoutAccount =
+    layoutMode === "hi-society" &&
+    localStorage.getItem("user_type") !== "rm_user" &&
+    localStorage.getItem("user_type") !== "cs_user";
+  // &&
+  // (userEmail === "dineshshinde6666@gmail.com" ||
+  //   org_id === "109" ||
+  //   org_id === "324" ||
+  //   org_id === "10" ||
+  //   org_id === "5" ||
+  //   org_id === "9"
+  // );
 
   // Layout behavior:
   // - Company ID 189 (Lockated HO): Default layout (Sidebar + DynamicHeader)

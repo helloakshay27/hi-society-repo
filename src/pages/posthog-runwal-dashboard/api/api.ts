@@ -68,6 +68,7 @@ export const ADOPTION_API = {
   godrej: 'residential/godrej',
   kraheja: 'residential/kraheja',
   lacircle: 'residential/lacircle',
+  kalpataru: 'residential/kalpataru',
   mypiramal: 'residential/mypiramal',
   artesia: 'residential/artesia',
   sunteck: 'residential/sunteck',

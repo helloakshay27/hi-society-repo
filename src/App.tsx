@@ -2565,6 +2565,9 @@ const PosthogKRahejaDashboard = lazy(
 const PosthogLacircleDashboard = lazy(
   () => import("./pages/posthog-lacircle-dashboard/PosthogLacircleDashboard")
 );
+const PosthogKalpataruDashboard = lazy(
+  () => import("./pages/posthog-kalpataru-dashboard/PosthogKalpataruDashboard")
+);
 const ViewUserPage = lazy(() =>
   import("./pages/ViewUserPage").then((m) => ({ default: m.ViewUserPage }))
 );
@@ -3719,16 +3722,28 @@ function App() {
                       {/* Standalone Posthog Runwal Dashboard (No HiSociety header/sidebar) */}
                       <Route
                         path="/runwal-usage-dashboard"
-                        element={<PosthogRunwalDashboard />}
+                        element={
+                          <ProtectedRoute>
+                            <PosthogRunwalDashboard />
+                          </ProtectedRoute>
+                        }
                       />
                       {/* Runwal Connect / Enterprise: the app is fixed by the route, so no app_id shows in the URL */}
                       <Route
                         path="/runwal-connect-usage-dashboard"
-                        element={<PosthogRunwalDashboard fixedAppId="12" />}
+                        element={
+                          <ProtectedRoute>
+                            <PosthogRunwalDashboard fixedAppId="12" />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/runwal-enterprise-usage-dashboard"
-                        element={<PosthogRunwalDashboard fixedAppId="35" />}
+                        element={
+                          <ProtectedRoute>
+                            <PosthogRunwalDashboard fixedAppId="35" />
+                          </ProtectedRoute>
+                        }
                       />
                       {/* Runwal CP variant — identical UI/data, scoped by project_code=RE-CP01 instead of app_id */}
                       <Route
@@ -3741,59 +3756,119 @@ function App() {
                       />
                       <Route
                         path="/my-piramal-usage-dashboard"
-                        element={<PosthogMyPiramalDashboard />}
+                        element={
+                          <ProtectedRoute>
+                            <PosthogMyPiramalDashboard />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/godrej-usage-dashboard"
-                        element={<PosthogGodrejDashboard />}
+                        element={
+                          <ProtectedRoute>
+                            <PosthogGodrejDashboard />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/accounting-dashboard"
-                        element={<PosthogAccountingDashboard />}
+                        element={
+                          <ProtectedRoute>
+                            <PosthogAccountingDashboard />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/kraheja-usage-dashboard"
-                        element={<PosthogKRahejaDashboard />}
+                        element={
+                          <ProtectedRoute>
+                            <PosthogKRahejaDashboard />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/lacircle-usage-dashboard"
-                        element={<PosthogLacircleDashboard />}
+                        element={
+                          <ProtectedRoute>
+                            <PosthogLacircleDashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/kalpataru-usage-dashboard"
+                        element={<PosthogKalpataruDashboard />}
                       />
                       <Route
                         path="/smartsecure-dashboard"
-                        element={<SmartSecureDashboardPage />}
+                        element={
+                          <ProtectedRoute>
+                            <SmartSecureDashboardPage />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/quickgate-dashboard"
-                        element={<QuickgateDashboardPage />}
+                        element={
+                          <ProtectedRoute>
+                            <QuickgateDashboardPage />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/hi-society-usage-dashboard"
-                        element={<HiSocietyUsageDashboard />}
+                        element={
+                          <ProtectedRoute>
+                            <HiSocietyUsageDashboard />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/artesia-usage-analytics"
-                        element={<UsageDashboardPage fixedSite="artesia" />}
+                        element={
+                          <ProtectedRoute>
+                            <UsageDashboardPage fixedSite="artesia" />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/sunteck-usage-analytics"
-                        element={<SunteckDashboardPage />}
+                        element={
+                          <ProtectedRoute>
+                            <SunteckDashboardPage />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/suncity-usage-analytics"
-                        element={<SuncityDashboardPage />}
+                        element={
+                          <ProtectedRoute>
+                            <SuncityDashboardPage />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/lockated-dashboard"
-                        element={<LockatedDashboardPage />}
+                        element={
+                          <ProtectedRoute>
+                            <LockatedDashboardPage />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/lockated-analytics"
-                        element={<LockatedDashboardPage />}
+                        element={
+                          <ProtectedRoute>
+                            <LockatedDashboardPage />
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/lockated-usage-analytics"
-                        element={<LockatedDashboardPage />}
+                        element={
+                          <ProtectedRoute>
+                            <LockatedDashboardPage />
+                          </ProtectedRoute>
+                        }
                       />
                       {/* Post Possession admin dashboard (standalone — own header/tabs) */}
                       <Route
