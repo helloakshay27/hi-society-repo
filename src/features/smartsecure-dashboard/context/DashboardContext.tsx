@@ -20,6 +20,7 @@ import type { ActivePage, DashboardState, Device, DateRangeDays } from '../data/
 import type { Site } from '../data/constants';
 import { useAllSites } from '../api/queries';
 import { getToken } from '@/utils/auth';
+import { liveRefetchInterval } from '../../../pages/posthog-runwal-dashboard/api/liveRefresh';
 
 const initialRange = dateRangeFor(30);
 
@@ -162,20 +163,21 @@ export function DashboardProvider({
     };
   }, [state.rangeFrom, state.rangeTo, state.dev, state.society, dynamicUrl, sitesSettled, effectiveAppId, effectiveProjectCode]);
 
-  const trafficQ    = useQuery({ queryKey: ['ss-traffic',    filters], queryFn: () => fetchTrafficSession(filters),                                                                                                           staleTime: 5 * 60_000 });
-  const usageQ      = useQuery({ queryKey: ['ss-usage',      filters], queryFn: () => fetchUsageAndDistribution(filters),                                                                                                      staleTime: 5 * 60_000 });
-  const engagementQ = useQuery({ queryKey: ['ss-engagement', filters], queryFn: () => fetchAdoptionEngagement({ ...filters }),                                                                                                staleTime: 5 * 60_000 });
-  const trendQ      = useQuery({ queryKey: ['ss-trend',      filters], queryFn: () => fetchAdoptionTrend({ to: filters.to, weeks: 8, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, projectCode: filters.projectCode, os: filters.os }), staleTime: 5 * 60_000 });
-  const growthQ     = useQuery({ queryKey: ['ss-growth',     filters], queryFn: () => fetchGrowth({ from: filters.from, to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, projectCode: filters.projectCode, os: filters.os }),        staleTime: 5 * 60_000 });
-  const retentionQ  = useQuery({ queryKey: ['ss-retention',  filters], queryFn: () => fetchRetention({ to: filters.to, weeks: 8, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, projectCode: filters.projectCode, os: filters.os }),     staleTime: 5 * 60_000 });
-  const rolesQ      = useQuery({ queryKey: ['ss-roles',      filters], queryFn: () => fetchRoles(filters),                                                                                                                     staleTime: 5 * 60_000 });
+  const trafficQ    = useQuery({ queryKey: ['ss-traffic',    filters], queryFn: () => fetchTrafficSession(filters),                                                                                                           staleTime: 5 * 60_000, refetchInterval: liveRefetchInterval });
+  const usageQ      = useQuery({ queryKey: ['ss-usage',      filters], queryFn: () => fetchUsageAndDistribution(filters),                                                                                                      staleTime: 5 * 60_000, refetchInterval: liveRefetchInterval });
+  const engagementQ = useQuery({ queryKey: ['ss-engagement', filters], queryFn: () => fetchAdoptionEngagement({ ...filters }),                                                                                                staleTime: 5 * 60_000, refetchInterval: liveRefetchInterval });
+  const trendQ      = useQuery({ queryKey: ['ss-trend',      filters], queryFn: () => fetchAdoptionTrend({ to: filters.to, weeks: 8, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, projectCode: filters.projectCode, os: filters.os }), staleTime: 5 * 60_000, refetchInterval: liveRefetchInterval });
+  const growthQ     = useQuery({ queryKey: ['ss-growth',     filters], queryFn: () => fetchGrowth({ from: filters.from, to: filters.to, weeks: 6, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, projectCode: filters.projectCode, os: filters.os }),        staleTime: 5 * 60_000, refetchInterval: liveRefetchInterval });
+  const retentionQ  = useQuery({ queryKey: ['ss-retention',  filters], queryFn: () => fetchRetention({ to: filters.to, weeks: 8, siteIds: filters.siteIds, devices: filters.devices, appId: filters.appId, projectCode: filters.projectCode, os: filters.os }),     staleTime: 5 * 60_000, refetchInterval: liveRefetchInterval });
+  const rolesQ      = useQuery({ queryKey: ['ss-roles',      filters], queryFn: () => fetchRoles(filters),                                                                                                                     staleTime: 5 * 60_000, refetchInterval: liveRefetchInterval });
   // Layer 3: modules list — fetch top-level module tree first
-  const modulesQ    = useQuery({ queryKey: ['ss-modules',    filters], queryFn: () => fetchModules(filters),                                                                                                                    staleTime: 5 * 60_000 });
+  const modulesQ    = useQuery({ queryKey: ['ss-modules',    filters], queryFn: () => fetchModules(filters),                                                                                                                    staleTime: 5 * 60_000, refetchInterval: liveRefetchInterval });
   // Layer 3: workflow_usage — gated on modulesQ settling; passes selectedModule name when set, or queries all modules when null
   const workflowQ   = useQuery({
     queryKey: ['ss-workflow', filters, selectedModule],
     queryFn: () => fetchWorkflowUsage({ ...filters, ...(selectedModule ? { module: selectedModule } : {}) }),
     staleTime: 5 * 60_000,
+    refetchInterval: liveRefetchInterval,
   });
 
   const queryClient = useQueryClient();

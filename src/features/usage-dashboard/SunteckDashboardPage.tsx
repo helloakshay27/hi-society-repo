@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import "./usage-dashboard.css";
 import { activityUserLabel, downloadActiveUsersExport, stripScopeFromUrl } from "../../pages/posthog-runwal-dashboard/api/api";
+import { ExportSpinner, ExportStatus, useExportDownload } from "../../pages/posthog-runwal-dashboard/components/common/ExportProgress";
 import {
   SITES,
   fetchRecentActiveUsers,
@@ -811,8 +812,8 @@ export default function SunteckDashboardPage({ fixedSite = "sunteck" }: { fixedS
   >([]);
   const [recentActivityLoading, setRecentActivityLoading] =
     useState<boolean>(false);
-  const [recentActivityExporting, setRecentActivityExporting] =
-    useState<boolean>(false);
+  const recentActivityExport = useExportDownload();
+  const recentActivityExporting = recentActivityExport.busy;
   const [liveWf, setLiveWf] = useState<Record<string, LiveWorkflow | null>>({});
   const [wfError, setWfError] = useState<string | null>(null);
   const [league, setLeague] = useState<LeagueRow[] | null>(null);
@@ -989,11 +990,50 @@ export default function SunteckDashboardPage({ fixedSite = "sunteck" }: { fixedS
     };
   }, [page, sig, adoptionSig, lockedSite, siteRef.appId, effRange.from, effRange.to, dev]);
 
+  // Live numbers: while the page is on screen and its range includes today, the open section is asked
+  // for again every minute. The API answers from its store at once and keeps that store up to date with
+  // the newest events, so the cards follow them without a reload. A part that fails keeps its last numbers.
+  const [liveTick, setLiveTick] = useState(0);
+  useEffect(() => {
+    if (effRange.to < todayISO) return undefined; // a range that has ended does not change
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== "hidden") setLiveTick((n) => n + 1);
+    }, 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, [effRange.to, todayISO]);
+  useEffect(() => {
+    if (liveTick === 0) return undefined;
+    const input = { appId: siteRef.appId, from: effRange.from, to: effRange.to, dev };
+    const section: Promise<object> | null =
+      page === "pgTraffic" && trafficSig === sig
+        ? fetchTrafficSection(input)
+        : page === "pgAdopt" && adoptionSig === sig
+          ? fetchAdoptionSection(input)
+          : null;
+    if (!section) return undefined;
+    let cancelled = false;
+    section
+      .then((part) => {
+        if (cancelled) return;
+        const arrived = Object.fromEntries(Object.entries(part).filter(([, v]) => v != null));
+        setLive((prev) => ({ ...(prev ?? EMPTY_DASHBOARD), ...arrived }));
+      })
+      .catch(() => {
+        /* keep the numbers already shown */
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Only the minute's tick starts this; the filters are read as they are at that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveTick]);
+
   // Per-layer readiness for the current signature.
   const trafficReady = trafficSig === sig && live?.tiles != null;
   const adoptionReady = adoptionSig === sig;
 
-  // Recent Activity is a live log: the 10 newest events (not distinct users), refreshed every 15 s.
+  // Recent Activity is a live log: the 10 newest events (not distinct users), refreshed every 15 s
+  // while the page is on screen.
   useEffect(() => {
     let cancelled = false;
     const load = (first: boolean) => {
@@ -1014,10 +1054,20 @@ export default function SunteckDashboardPage({ fixedSite = "sunteck" }: { fixedS
         });
     };
     load(true);
-    const timer = window.setInterval(() => load(false), 15 * 1000);
+    // Only while the tab is on screen: a tab left open in the background stops asking, and catches up
+    // as soon as it is shown again.
+    const visible = () => document.visibilityState !== "hidden";
+    const timer = window.setInterval(() => {
+      if (visible()) load(false);
+    }, 15 * 1000);
+    const onVisibility = () => {
+      if (visible()) load(false);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [siteRef.appId, effRange.from, effRange.to, retryKey]);
 
@@ -1310,21 +1360,17 @@ export default function SunteckDashboardPage({ fixedSite = "sunteck" }: { fixedS
   }, [liveWf, wfCacheKey]);
 
   // Download the full active-user export, independently of the sidebar's 10-row preview.
-  const downloadRecentActivity = async () => {
-    if (recentActivityExporting) return;
-    setRecentActivityExporting(true);
-    try {
-      await downloadActiveUsersExport({
-        apiPath: siteRef.apiPath,
-        from: effRange.from,
-        to: effRange.to,
-      });
-    } catch (error) {
-      console.error("Failed to download recent activity", error);
-    } finally {
-      setRecentActivityExporting(false);
-    }
-  };
+  const downloadRecentActivity = () =>
+    recentActivityExport.run((onPhase) =>
+      downloadActiveUsersExport(
+        {
+          apiPath: siteRef.apiPath,
+          from: effRange.from,
+          to: effRange.to,
+        },
+        onPhase,
+      ),
+    );
 
   // Helpers to render KPI Tiles with popovers
   const renderTile = (o: {
@@ -1549,26 +1595,36 @@ export default function SunteckDashboardPage({ fixedSite = "sunteck" }: { fixedS
               <button
                 className="iconbtn sidebar-recent-download"
                 aria-label="Download recent activity as Excel"
-                title="Download Recent Activity (.xlsx)"
+                title={recentActivityExporting ? "Preparing the download…" : "Download Recent Activity (.xlsx)"}
                 onClick={downloadRecentActivity}
                 disabled={recentActivityExporting}
+                aria-busy={recentActivityExporting}
               >
-                <svg
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                  width="15"
-                  height="15"
-                >
-                  <path d="M10 3v9M6.5 8.5 10 12l3.5-3.5" />
-                  <path d="M3.5 14.5h13" />
-                </svg>
+                {recentActivityExporting ? (
+                  <ExportSpinner size={15} />
+                ) : (
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    width="15"
+                    height="15"
+                  >
+                    <path d="M10 3v9M6.5 8.5 10 12l3.5-3.5" />
+                    <path d="M3.5 14.5h13" />
+                  </svg>
+                )}
               </button>
             </div>
+            <ExportStatus
+              phase={recentActivityExport.phase}
+              startedAt={recentActivityExport.startedAt}
+              error={recentActivityExport.error}
+            />
             {recentActivityLoading ? (
               <div className="sidebar-recent-empty">Loading activity…</div>
             ) : recentActivity.length === 0 ? (

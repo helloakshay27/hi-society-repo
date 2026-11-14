@@ -8,6 +8,7 @@
  */
 
 import { getBaseUrl, getToken, getUser } from '../../../utils/auth';
+import { fetchGet, runExportJob, type ExportPhase } from './exportJob';
 import {
   DashboardFilters,
   TrafficSessionResponse,
@@ -280,29 +281,26 @@ export const activityUserLabel = (u: { user_name?: string | null; email?: string
 /**
  * Downloads the `.xlsx` workbook of every event each user did, with the
  * dashboard's own filters and date range applied (uncapped), and saves it via
- * a throwaway anchor.
+ * a throwaway anchor. The server makes the file in the background
+ * (see ./exportJob): `onPhase` reports its progress for the loader.
  */
-export async function downloadActiveUsersExport(filters: AdoptionQueryFilters): Promise<void> {
+export async function downloadActiveUsersExport(
+  filters: AdoptionQueryFilters,
+  onPhase?: (phase: ExportPhase) => void,
+): Promise<void> {
   const url = adoptionUrl(filters, 'active_users_export', buildPosthogQuery(filters));
-
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: { Accept: '*/*' },
-    cache: 'no-store',
-  });
-  if (!response.ok) {
-    throw new Error(`Active users export failed (${response.status}): ${response.statusText || 'Failed to fetch'}`);
-  }
 
   // The server already builds the finished workbook (bold header, column widths),
   // so save it as-is. Re-reading it with SheetJS here multiplied a large export
   // roughly tenfold in browser memory.
-  const blob = await response.blob();
-  const disposition = response.headers.get('content-disposition') || '';
-  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
-  const filenameWithoutExtension = (match
-    ? decodeURIComponent(match[1])
-    : `user_activity_${filters.from || 'today'}_to_${filters.to || 'today'}`)
+  const { blob, filename: serverName } = await runExportJob({
+    exportUrl: url,
+    adoptionUrl: url.slice(0, url.indexOf('/active_users_export')),
+    get: fetchGet({ method: 'GET', headers: { Accept: '*/*' } }),
+    onPhase,
+  });
+  const filenameWithoutExtension = (serverName
+    || `user_activity_${filters.from || 'today'}_to_${filters.to || 'today'}`)
     .replace(/\.(?:csv|json|xls|xlsx)$/i, '');
   const filename = `${filenameWithoutExtension}.xlsx`;
 

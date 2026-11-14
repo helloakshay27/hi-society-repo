@@ -31,6 +31,7 @@ import {
   fetchWalletOverview,
   fetchWalletTransactions,
 } from './dashboardApi';
+import { liveRefetchInterval } from '../../../pages/posthog-runwal-dashboard/api/liveRefresh';
 
 /** All Layer-1/2/3 calls share these; one object keeps every query key in step. */
 export interface QueryFilters {
@@ -81,6 +82,7 @@ const CACHE = {
   staleTime: 5 * 60_000,
   gcTime: 30 * 60_000,
   refetchOnWindowFocus: false,
+  refetchInterval: liveRefetchInterval, // live numbers while the page is on screen (liveRefresh)
   refetchOnMount: false,
   retry: false,
 } as const;

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { axiosGet, runExportJob, type ExportPhase } from '../../../pages/posthog-runwal-dashboard/api/exportJob';
 
 /* ---------------------------------------------------------------------------
  * Hi Society Adoption Analytics API client (ported from FM Matrix).
@@ -163,13 +164,16 @@ export const fetchRecentActiveUsers = (f: RangeFilters) =>
     ['limit', 10],
   ], f.signal);
 
-export async function downloadRecentActiveUsers(f: RangeFilters): Promise<Blob> {
+/** The .xlsx of every event in the range, made in the background on the server (see exportJob). */
+export async function downloadRecentActiveUsers(f: RangeFilters, onPhase?: (phase: ExportPhase) => void): Promise<Blob> {
   const qs = buildQuery(rangeParams(f));
-  const response = await analyticsClient.get<Blob>(
-    `${RECENT_ACTIVE_USERS_EXPORT_ENDPOINT}${qs ? `?${qs}` : ''}`,
-    { responseType: 'blob' },
-  );
-  return response.data;
+  const { blob } = await runExportJob({
+    exportUrl: `${RECENT_ACTIVE_USERS_EXPORT_ENDPOINT}${qs ? `?${qs}` : ''}`,
+    adoptionUrl: HI_SOCIETY_ADOPTION_PATH,
+    get: axiosGet(analyticsClient),
+    onPhase,
+  });
+  return blob;
 }
 
 /* Shared param slices ---------------------------------------------------- */
