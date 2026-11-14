@@ -422,6 +422,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         response.user_type === "rm_user" ||
         response.user_type === "cs_user"
       ) {
+        localStorage.setItem("user_type", response.user_type);
         await fetchHiSocietyData(response.spree_api_key);
         redirectTo("/appointmentz/site-scheduling");
         return;

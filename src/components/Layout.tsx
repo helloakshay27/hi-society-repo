@@ -109,7 +109,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isUnauthorizedSociety =
     layoutMode === "hi-society" &&
     !isSocietyAdmin &&
-    hostname !== "runwal-cp.lockated.com";
+    localStorage.getItem("user_type") !== "rm_user" &&
+    localStorage.getItem("user_type") !== "cs_user" &&
+    hostname !== "runwal-cp.lockated.com" &&
+    hostname !== "ui-hisociety.lockated.com";
   console.log(isUnauthorizedSociety);
 
   // Detect Club Management routes
