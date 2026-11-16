@@ -4,12 +4,41 @@ import {
     DialogContent,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Play, FileText, ExternalLink } from "lucide-react";
+
+const getFileName = (url: string) => {
+    try {
+        return decodeURIComponent(new URL(url).pathname.split('/').pop() || '') || 'Document';
+    } catch {
+        return 'Document';
+    }
+};
+
+// Document slide. The file server blocks PDFs from being embedded or fetched by this
+// site, so instead of a preview show a card that opens the file in a new tab.
+const DocumentCard = ({ url, title }: { url: string; title?: string }) => (
+    <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex flex-col items-center gap-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 px-10 py-8 text-white text-center max-w-sm transition-colors"
+    >
+        <FileText size={56} />
+        {/* Inline style, not text-base + font-semibold: theme.css forces that class combo to the dark text color */}
+        <span style={{ color: '#ffffff', fontSize: 16, fontWeight: 600 }}>{title || 'Document'}</span>
+        <span className="text-xs !text-white/70 break-all line-clamp-2">{getFileName(url)}</span>
+        <span className="mt-2 flex items-center gap-2 text-sm font-medium rounded-full bg-white text-black px-4 py-2 group-hover:bg-white/90">
+            Click to view <ExternalLink size={14} />
+        </span>
+    </a>
+);
 
 interface Attachment {
     id: number;
     document_content_type: string;
     url: string;
+    /** Optional heading for document slides (e.g. the member the file belongs to) */
+    title?: string;
 }
 
 interface ImageCarouselModalProps {
@@ -17,6 +46,9 @@ interface ImageCarouselModalProps {
     onOpenChange: (open: boolean) => void;
     attachments: Attachment[];
     initialIndex?: number;
+    /** Also show non-image/video files: PDFs are previewed inline, others get an "Open file" link.
+     *  Off by default so callers that index into image/video-only lists keep working. */
+    includeDocuments?: boolean;
 }
 
 export const ImageCarouselModal = ({
@@ -24,6 +56,7 @@ export const ImageCarouselModal = ({
     onOpenChange,
     attachments,
     initialIndex = 0,
+    includeDocuments = false,
 }: ImageCarouselModalProps) => {
     const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
@@ -31,14 +64,15 @@ export const ImageCarouselModal = ({
         setCurrentIndex(initialIndex);
     }, [initialIndex]);
 
-    const media = attachments.filter(att =>
-        att.document_content_type.startsWith('image/') || att.document_content_type.startsWith('video/')
-    );
+    const isImage = (att: Attachment) => att.document_content_type.startsWith('image/');
+    const isVideo = (att: Attachment) => att.document_content_type.startsWith('video/');
+
+    const media = attachments.filter(att => includeDocuments || isImage(att) || isVideo(att));
 
     if (media.length === 0) return null;
 
-    const currentMedia = media[currentIndex];
-    const isCurrentVideo = currentMedia.document_content_type.startsWith('video/');
+    const currentMedia = media[Math.min(currentIndex, media.length - 1)];
+    const isCurrentVideo = isVideo(currentMedia);
 
     const handlePrevious = () => {
         setCurrentIndex((prev) =>
@@ -92,6 +126,8 @@ export const ImageCarouselModal = ({
                                 className="max-w-full max-h-full object-contain"
                                 key={currentMedia.id}
                             />
+                        ) : !isImage(currentMedia) ? (
+                            <DocumentCard url={currentMedia.url} title={currentMedia.title} />
                         ) : (
                             <img
                                 src={currentMedia.url}
@@ -160,7 +196,11 @@ export const ImageCarouselModal = ({
                                         : "border-white/30 opacity-60 hover:opacity-100"
                                         }`}
                                 >
-                                    {item.document_content_type.startsWith('video/') ? (
+                                    {!isImage(item) && !isVideo(item) ? (
+                                        <div className="w-full h-full flex items-center justify-center bg-white/10 text-white">
+                                            <FileText className="w-6 h-6" />
+                                        </div>
+                                    ) : isVideo(item) ? (
                                         <>
                                             <video
                                                 src={item.url}
