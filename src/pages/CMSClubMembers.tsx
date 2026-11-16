@@ -13,7 +13,10 @@ import {
   UserCheck,
   Clock,
   UserX,
+  FileText,
+  Play,
 } from "lucide-react";
+import { ImageCarouselModal } from "@/components/community/ImageCarouselModal";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -73,6 +76,25 @@ const columns: ColumnConfig[] = [
     sortable: true,
     draggable: true,
   },
+  // Attachment columns — shown only when the current page has such files (see visibleColumns)
+  {
+    key: "id_card",
+    label: "ID Card",
+    sortable: false,
+    draggable: true,
+  },
+  {
+    key: "resident_photo",
+    label: "Resident's Photo",
+    sortable: false,
+    draggable: true,
+  },
+  {
+    key: "attachments",
+    label: "Attachments",
+    sortable: false,
+    draggable: true,
+  },
   {
     key: "membership_plan",
     label: "Membership Plan",
@@ -105,6 +127,69 @@ const columns: ColumnConfig[] = [
     draggable: true,
   },
 ];
+
+// Shape of each file on a club member (same as GET /club_member_allocations/:id)
+interface MemberFile {
+  id: number;
+  url: string;
+  active?: number | null; // only 0 means switched off; null and 1 are live
+}
+
+type AttachmentColumnKey = "id_card" | "resident_photo" | "attachments";
+const ATTACHMENT_COLUMN_KEYS: AttachmentColumnKey[] = ["id_card", "resident_photo", "attachments"];
+
+// A file is live unless active is exactly 0
+const isLiveFile = (file?: MemberFile | null): file is MemberFile =>
+  !!file && !!file.url && file.active !== 0;
+
+// A file may come as a plain URL string or as { id, url, active }
+const toMemberFile = (file: any, fallbackId: number): MemberFile | null => {
+  if (!file) return null;
+  if (typeof file === "string") return { id: fallbackId, url: file };
+  return file;
+};
+
+const getMemberName = (m: any) =>
+  [m?.first_name, m?.last_name].filter(Boolean).join(" ").trim();
+
+// Files of every member in an allocation row, for one attachment column,
+// each tagged with the name of the member it belongs to
+const getRowFiles = (
+  item: any,
+  columnKey: AttachmentColumnKey
+): (MemberFile & { memberName: string })[] =>
+  (item?.club_members || []).flatMap((m: any, idx: number) => {
+    // Same mapping as the details page (CMSClubMembersDetails → Attachments tab):
+    // ID card = identification_image, photo = profile_image,
+    // attachments = other_documents + flat_attachment.
+    // Each may be a plain URL string or { id, url, active }.
+    let raw: any[];
+    if (columnKey === "id_card") raw = [m?.identification_image];
+    else if (columnKey === "resident_photo") raw = [m?.profile_image];
+    else
+      raw = [
+        ...(Array.isArray(m?.other_documents) ? m.other_documents : []),
+        m?.flat_attachment,
+      ];
+    const memberName = getMemberName(m);
+    const fallbackId = Number(m?.id ?? idx) * 100;
+    return raw
+      .map((f, i) => toMemberFile(f, fallbackId + i))
+      .filter(isLiveFile)
+      .map((f) => ({ ...f, memberName }));
+  });
+
+const VIDEO_EXT = /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i;
+const PDF_EXT = /\.pdf(\?|#|$)/i;
+const DOC_EXT = /\.(docx?|xlsx?|csv|txt|pptx?|zip)(\?|#|$)/i;
+
+// The API sends only a URL, so infer the type the carousel needs from the extension
+const getContentType = (url: string) => {
+  if (VIDEO_EXT.test(url)) return "video/mp4";
+  if (PDF_EXT.test(url)) return "application/pdf";
+  if (DOC_EXT.test(url)) return "application/octet-stream";
+  return "image/jpeg";
+};
 
 interface MemberFilters {
   towerId?: string;
@@ -164,6 +249,11 @@ const CMSClubMembers = () => {
     items: string[];
   }>({ isOpen: false, title: "", items: [] });
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [carousel, setCarousel] = useState<{
+    open: boolean;
+    attachments: { id: number; url: string; document_content_type: string; title?: string }[];
+    startIndex: number;
+  }>({ open: false, attachments: [], startIndex: 0 });
   const [summaryData, setSummaryData] = useState({
     total_members: 0,
     total_active: 0,
@@ -477,8 +567,81 @@ const CMSClubMembers = () => {
     </Button>
   );
 
+  // Attachment columns are visible only when some row on this page has that kind of file.
+  // All columns are always passed (the table fixes its column order on mount) — only
+  // `defaultVisible` changes, which the table re-applies whenever `columns` changes.
+  const attachmentPresenceKey = ATTACHMENT_COLUMN_KEYS.map((key) =>
+    members.some((item) => getRowFiles(item, key).length > 0) ? "1" : "0"
+  ).join("");
+  const visibleColumns = useMemo(
+    () =>
+      columns.map((col) => {
+        const idx = ATTACHMENT_COLUMN_KEYS.indexOf(col.key as AttachmentColumnKey);
+        return idx === -1 ? col : { ...col, defaultVisible: attachmentPresenceKey[idx] === "1" };
+      }),
+    [attachmentPresenceKey]
+  );
+
+  const renderFileCell = (item: any, columnKey: AttachmentColumnKey) => {
+    const files = getRowFiles(item, columnKey);
+    if (files.length === 0) return <span className="text-gray-400">-</span>;
+
+    // Images/videos first so the cell thumbnail is a picture when one exists
+    const isDoc = (type: string) => type.startsWith("application/");
+    const media = files
+      .map((f, idx) => ({
+        id: f.id ?? idx,
+        url: f.url,
+        document_content_type: getContentType(f.url),
+        title: f.memberName || undefined,
+      }))
+      .sort((a, b) => Number(isDoc(a.document_content_type)) - Number(isDoc(b.document_content_type)));
+    const first = media[0];
+
+    return (
+      <div className="flex items-center gap-2">
+        {first && (
+          <button
+            type="button"
+            className="relative w-10 h-10 rounded overflow-hidden border border-gray-200 flex-shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              setCarousel({ open: true, attachments: media, startIndex: 0 });
+            }}
+            title={media.length > 1 ? `View ${media.length} files` : "View file"}
+          >
+            {isDoc(first.document_content_type) ? (
+              <span className="w-full h-full flex items-center justify-center text-gray-600 hover:bg-gray-50">
+                <FileText className="w-4 h-4" />
+              </span>
+            ) : first.document_content_type.startsWith("video/") ? (
+              <>
+                <video src={first.url} className="w-full h-full object-cover" />
+                <span className="absolute inset-0 flex items-center justify-center bg-black/30">
+                  <Play className="w-4 h-4 text-white fill-white" />
+                </span>
+              </>
+            ) : (
+              <img src={first.url} alt="" className="w-full h-full object-cover" />
+            )}
+            {media.length > 1 && (
+              <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-xs font-semibold">
+                +{media.length - 1}
+              </span>
+            )}
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const renderCell = (item: any, columnKey: string) => {
     switch (columnKey) {
+      case "id_card":
+      case "resident_photo":
+      case "attachments":
+        return renderFileCell(item, columnKey);
+
       case "flat":
         return item?.flat?.flat_no || "-";
       case "tower":
@@ -704,7 +867,7 @@ const CMSClubMembers = () => {
         storageKey="cms-club-members-table"
         data={members}
         pagination={false}
-        columns={columns}
+        columns={visibleColumns}
         renderCell={renderCell}
         renderActions={renderActions}
         leftActions={leftActions}
@@ -752,6 +915,17 @@ const CMSClubMembers = () => {
             {pagination.total_count}
           </span>
         </div>
+      )}
+
+      {/* Mounted only while open so each opening starts fresh at startIndex */}
+      {carousel.open && (
+        <ImageCarouselModal
+          open={carousel.open}
+          onOpenChange={(open) => setCarousel((prev) => ({ ...prev, open }))}
+          attachments={carousel.attachments}
+          initialIndex={carousel.startIndex}
+          includeDocuments
+        />
       )}
 
       <CMSClubMembersFilterModal
