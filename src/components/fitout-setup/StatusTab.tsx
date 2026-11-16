@@ -43,7 +43,13 @@ interface Status {
 }
 
 // const FIXED_STATES = ['Pending', 'In Progress', 'Completed', 'On Hold', 'Rejected'];
-const FIXED_STATES = ['Closed', 'Need Modification'];
+const FIXED_STATES = [
+  'Closed',
+  'Need Modification',
+  'Send To Approval',
+  'Send Internal Approval',
+  'Refund Initiated',
+];
 const COLORS = [
   { value: '#FF0000', label: 'Red' },
   { value: '#FFA500', label: 'Orange' },
