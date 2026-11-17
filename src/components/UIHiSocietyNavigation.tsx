@@ -42,7 +42,7 @@ const navigationItems: NavigationItem[] = [
     id: "incidents",
     label: "Incidents",
     icon: <SettingsIcon className="w-4 h-4" />,
-    path: "/safety/incident",
+    path: "/incidents/incidents",
   },
   {
     id: "settings",

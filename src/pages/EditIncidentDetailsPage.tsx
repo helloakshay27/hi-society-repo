@@ -638,7 +638,7 @@
 //       toast.success('Incident updated successfully!');
 
 //       // Navigate back to the details page
-//       navigate(`${basePath}/incident/${id}`);
+//       navigate(`${incidentBase}/${id}`);
 //     } catch (err) {
 //       setError('Failed to update incident details');
 //       console.error('Error updating incident:', err);
@@ -649,7 +649,7 @@
 //   };
 
 //   const handleCancel = () => {
-//     navigate(`${basePath}/incident/${id}`);
+//     navigate(`${incidentBase}/${id}`);
 //   };
 
 
@@ -2237,8 +2237,8 @@ export const EditIncidentDetailsPage = () => {
   const [incident, setIncident] = useState<Incident | null>(null);
 
   // Determine if we're in Safety or Maintenance context
-  const isSafetyContext = location.pathname.startsWith('/safety');
-  const basePath = isSafetyContext ? '/safety' : '/maintenance';
+  const isSafetyContext = location.pathname.startsWith('/incidents/incidents');
+  const incidentBase = isSafetyContext ? '/incidents/incidents' : '/maintenance/incident';
 
   const [formData, setFormData] = useState({
     year: '',
@@ -2960,7 +2960,7 @@ export const EditIncidentDetailsPage = () => {
       toast.success('Incident updated successfully!');
 
       // Navigate to the new details page
-      navigate(`${basePath}/incident/new-details/${id}`);
+      navigate(`${incidentBase}/new-details/${id}`);
     } catch (err) {
       setError('Failed to update incident details');
       console.error('Error updating incident:', err);
@@ -2971,7 +2971,7 @@ export const EditIncidentDetailsPage = () => {
   };
 
   const handleCancel = () => {
-    navigate(`${basePath}/incident/${id}`);
+    navigate(`${incidentBase}/${id}`);
   };
 
 
@@ -3005,7 +3005,7 @@ export const EditIncidentDetailsPage = () => {
           </button>
 
           <span>{'>'}</span>
-          <button onClick={() => navigate(`${basePath}/incident/new-details/${id}`)} className="hover:text-[#C72030] hover:underline transition-colors">
+          <button onClick={() => navigate(`${incidentBase}/new-details/${id}`)} className="hover:text-[#C72030] hover:underline transition-colors">
             Incident
           </button>
           <span>{'>'}</span>

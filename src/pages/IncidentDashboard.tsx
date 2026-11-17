@@ -1147,8 +1147,8 @@ export const IncidentDashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() =>
-                  // navigate(`/safety/incident/new-details/${item.id}`)
-                  navigate(`/safety/incident/view-new/${item.id}`)
+                  // navigate(`/incidents/incidents/new-details/${item.id}`)
+                  navigate(`/incidents/incidents/view-new/${item.id}`)
 
                 }
               >
@@ -1164,7 +1164,7 @@ export const IncidentDashboard = () => {
             pagination={false}
             leftActions={
               <Button
-                onClick={() => navigate("/safety/incident/add")}
+                onClick={() => navigate("/incidents/incidents/add")}
                 className="bg-[#C72030] text-white"
               >
                 <Plus className="w-4 h-4 mr-2" /> Add Incident

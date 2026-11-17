@@ -4745,36 +4745,36 @@ function App() {
 
                         {/* Safety Routes */}
                         <Route
-                          path="/safety/incident"
+                          path="/incidents/incidents"
                           element={<IncidentDashboard />}
                         />
                         <Route
-                          path="/safety/incident/add"
+                          path="/incidents/incidents/add"
                           element={<AddIncidentPage />}
                         />
                         <Route
-                          path="/safety/incident/new-add"
+                          path="/incidents/incidents/new-add"
                           element={<NewAddIncidentPage />}
                         />
                         <Route
-                          path="/safety/incident/:id"
+                          path="/incidents/incidents/:id"
                           element={<IncidentDetailsPage />}
                         />
                         <Route
-                          path="/safety/incident/list"
+                          path="/incidents/incidents/list"
                           element={<NewIncidentListDashboard />}
                         />
 
                         <Route
-                          path="/safety/incident/view-new/:id"
+                          path="/incidents/incidents/view-new/:id"
                           element={<NewIncidentDetailsPage />}
                         />
                         <Route
-                          path="/safety/incident/new-details/:id"
+                          path="/incidents/incidents/new-details/:id"
                           element={<IncidentNewDetails />}
                         />
                         <Route
-                          path="/safety/incident/edit/:id"
+                          path="/incidents/incidents/edit/:id"
                           element={<EditIncidentDetailsPage />}
                         />
                         <Route
@@ -6418,27 +6418,27 @@ function App() {
 
                         {/* Safety Routes */}
                         <Route
-                          path="/safety/incident"
+                          path="/incidents/incidents"
                           element={<IncidentDashboard />}
                         />
                         <Route
-                          path="/safety/incident/add"
+                          path="/incidents/incidents/add"
                           element={<AddIncidentPage />}
                         />
                         <Route
-                          path="/safety/incident/:id"
+                          path="/incidents/incidents/:id"
                           element={<IncidentDetailsPage />}
                         />
                         <Route
-                          path="/safety/incident/new-details/:id"
+                          path="/incidents/incidents/new-details/:id"
                           element={<IncidentNewDetails />}
                         />
                         <Route
-                          path="/safety/incident/safety/edit/:id"
+                          path="/incidents/incidents/safety/edit/:id"
                           element={<EditIncidentPage />}
                         />
                         <Route
-                          path="/safety/incident/edit/:id"
+                          path="/incidents/incidents/edit/:id"
                           element={<EditIncidentDetailsPage />}
                         />
                         <Route

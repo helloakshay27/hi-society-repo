@@ -79,7 +79,7 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     },
     {
       section: "Safety",
-      prefixes: ["/safety"],
+      prefixes: ["/safety", "/incidents/incidents"],
     },
     {
       section: "CRM",

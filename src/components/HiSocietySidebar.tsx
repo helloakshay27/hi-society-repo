@@ -1029,7 +1029,7 @@ export const HiSocietySidebar: React.FC = () => {
           id: "incidents",
           label: "Incidents",
           icon: AlertTriangle,
-          path: "/safety/incident",
+          path: "/incidents/incidents",
         },
         {
           id: "design-inputs",

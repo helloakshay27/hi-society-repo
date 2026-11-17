@@ -22,8 +22,8 @@ export const IncidentListDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Determine if we're in Safety or Maintenance context
-  const isSafetyContext = location.pathname.startsWith('/safety');
-  const basePath = isSafetyContext ? '/safety' : '/maintenance';
+  const isSafetyContext = location.pathname.startsWith('/incidents/incidents');
+  const incidentBase = isSafetyContext ? '/incidents/incidents' : '/maintenance/incident';
 
   const incidents = [
     {
@@ -79,11 +79,11 @@ export const IncidentListDashboard = () => {
   };
 
   const handleAddIncident = () => {
-    navigate(`${basePath}/incident/add`);
+    navigate(`${incidentBase}/add`);
   };
 
   const handleViewIncident = (incidentId: string) => {
-    navigate(`${basePath}/incident/${incidentId.replace('#', '')}`);
+    navigate(`${incidentBase}/${incidentId.replace('#', '')}`);
   };
 
   return (
