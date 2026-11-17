@@ -311,6 +311,34 @@ const buildFilterParams = (filters: UserFilters, search: string) => {
   return filterParams;
 };
 
+interface ExportReportResponse {
+  status: string;
+  report_id?: number | string;
+  message?: string;
+  download_url?: string;
+}
+
+const isExportReportResponse = (
+  value: unknown
+): value is ExportReportResponse => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("status" in value) ||
+    typeof value.status !== "string"
+  ) {
+    return false;
+  }
+
+  return (
+    (!("report_id" in value) ||
+      typeof value.report_id === "string" ||
+      typeof value.report_id === "number") &&
+    (!("message" in value) || typeof value.message === "string") &&
+    (!("download_url" in value) || typeof value.download_url === "string")
+  );
+};
+
 const ManageUsersPage = () => {
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
@@ -330,6 +358,8 @@ const ManageUsersPage = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [importId, setImportId] = useState<number | null>(null);
   const importPollRef = useRef<number | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const isMountedRef = useRef(true);
   const [isDownloadingSample, setIsDownloadingSample] = useState(false);
   const [searchTerm, setSearchTerm] = useState(
     () => searchParams.get("search") || ""
@@ -524,7 +554,11 @@ const ManageUsersPage = () => {
   };
 
   useEffect(() => {
-    return () => clearImportStatusPolling();
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      clearImportStatusPolling();
+    };
   }, []);
 
   const clearImportStatusPolling = () => {
@@ -762,6 +796,12 @@ const ManageUsersPage = () => {
   };
 
   const handleExport = async () => {
+    if (isExporting) {
+      toast.info("Export is already in progress");
+      return;
+    }
+
+    setIsExporting(true);
     try {
       const queryParams = new URLSearchParams();
       Object.entries(
@@ -777,27 +817,98 @@ const ManageUsersPage = () => {
         }
       });
 
-      const response = await axios.get(
+      const response = await fetch(
         `https://${baseUrl}/crm/admin/user_societies.xlsx?${queryParams}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          responseType: "blob",
         }
       );
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "user_societies.xlsx");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const fileName = "user_societies.xlsx";
+      const contentType = response.headers.get("content-type") ?? "";
+
+      if (!contentType.includes("json")) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        toast.success("Users exported successfully!");
+        return;
+      }
+
+      const responseData: unknown = await response.json();
+      if (!isExportReportResponse(responseData)) {
+        throw new Error("Invalid report response");
+      }
+
+      let report = responseData;
+      if (report.status === "processing") {
+        const reportId = report.report_id;
+        if (reportId === undefined || reportId === "") {
+          throw new Error("Missing report ID in processing response");
+        }
+
+        toast.info(
+          report.message ??
+            "The report is still being generated, it will download automatically once it is ready."
+        );
+
+        do {
+          await new Promise((resolve) => window.setTimeout(resolve, 5000));
+          if (!isMountedRef.current) return;
+
+          const statusResponse = await fetch(
+            `https://${baseUrl}/crm/admin/user_societies_report_status?report_id=${encodeURIComponent(reportId)}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (!statusResponse.ok) {
+            throw new Error(`HTTP ${statusResponse.status}`);
+          }
+
+          const statusData: unknown = await statusResponse.json();
+          if (!isExportReportResponse(statusData)) {
+            throw new Error("Invalid report status response");
+          }
+
+          report = statusData;
+        } while (report.status === "processing");
+      }
+
+      if (report.status === "completed") {
+        if (!report.download_url) {
+          throw new Error("Missing download URL in completed response");
+        }
+
+        const link = document.createElement("a");
+        link.href = report.download_url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success(report.message ?? "Users exported successfully!");
+      } else if (report.status === "failed" || report.status === "not_started") {
+        toast.error(report.message ?? "Failed to export users. Please try again.");
+      } else {
+        throw new Error(`Unexpected report status: ${report.status}`);
+      }
     } catch (error) {
-      console.log(error);
-      toast.error("Failed to export users");
+      console.error("Export error:", error);
+      toast.error("Failed to export users. Please try again.");
+    } finally {
+      if (isMountedRef.current) setIsExporting(false);
     }
   };
 
