@@ -899,8 +899,13 @@ const ManageUsersPage = () => {
         link.click();
         document.body.removeChild(link);
         toast.success(report.message ?? "Users exported successfully!");
-      } else if (report.status === "failed" || report.status === "not_started") {
-        toast.error(report.message ?? "Failed to export users. Please try again.");
+      } else if (
+        report.status === "failed" ||
+        report.status === "not_started"
+      ) {
+        toast.error(
+          report.message ?? "Failed to export users. Please try again."
+        );
       } else {
         throw new Error(`Unexpected report status: ${report.status}`);
       }
@@ -1358,8 +1363,8 @@ const ManageUsersPage = () => {
             downloadData={[]}
             onDownload={() =>
               handleDownloadUsers(
-                "/crm/admin/user_societies.xlsx?app_download=no",
-                "not_downloaded.xlsx"
+                "/crm/admin/user_societies.xlsx?app_download=yes",
+                "total_no_of_flat_downlaods.xlsx"
               )
             }
           />
