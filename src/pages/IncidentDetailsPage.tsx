@@ -74,8 +74,8 @@ export const IncidentDetailsPage = () => {
   const [updateStatusExpanded, setUpdateStatusExpanded] = useState(true);
 
   // Determine if we're in Safety or Maintenance context
-  const isSafetyContext = location.pathname.startsWith('/safety');
-  const basePath = isSafetyContext ? '/safety' : '/maintenance';
+  const isSafetyContext = location.pathname.startsWith('/incidents/incidents');
+  const incidentBase = isSafetyContext ? '/incidents/incidents' : '/maintenance/incident';
 
 
   const severityMap = {
@@ -120,7 +120,7 @@ export const IncidentDetailsPage = () => {
   };
 
   const handleEditDetails = () => {
-    navigate(`${basePath}/incident/edit/${id}`);
+    navigate(`${incidentBase}/edit/${id}`);
   };
 
   const handleDownloadReport = async () => {
@@ -252,7 +252,7 @@ export const IncidentDetailsPage = () => {
             <p className="text-red-600 mb-4">{error || 'Incident not found'}</p>
             <Button
               variant="outline"
-              onClick={() => navigate(`${basePath}/incident`)}
+              onClick={() => navigate(`${incidentBase}`)}
             >
               Back to List
             </Button>
@@ -993,7 +993,7 @@ export const IncidentDetailsPage = () => {
       {/* <div className="flex gap-3 pt-6">
         <Button
           variant="outline"
-          onClick={() => navigate(`${basePath}/incident`)}
+          onClick={() => navigate(`${incidentBase}`)}
           className="px-8"
         >
           Back to List

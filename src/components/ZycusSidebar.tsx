@@ -192,7 +192,7 @@ const modulesByPackage = {
     },
   ],
   Safety: [
-    { name: "Incident", icon: AlertTriangle, href: "/safety/incident" },
+    { name: "Incident", icon: AlertTriangle, href: "/incidents/incidents" },
     {
       name: "Permit",
       icon: FileText,
@@ -823,7 +823,7 @@ export const ZycusSidebar = () => {
       setCurrentSection("Finance");
     } else if (path.startsWith("/maintenance")) {
       setCurrentSection("Maintenance");
-    } else if (path.startsWith("/safety")) {
+    } else if (path.startsWith("/safety") || path.startsWith("/incidents/incidents")) {
       setCurrentSection("Safety");
     } else if (path.startsWith("/crm")) {
       setCurrentSection("CRM");

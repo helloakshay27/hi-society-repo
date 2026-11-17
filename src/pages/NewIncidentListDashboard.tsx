@@ -449,7 +449,7 @@ export const NewIncidentListDashboard = () => {
                 </div>
 
                 <Button
-                    onClick={() => navigate("/safety/incident/new-add")}
+                    onClick={() => navigate("/incidents/incidents/new-add")}
                     className="!bg-[#C72030] hover:!bg-[#C72030]/90 !text-white"
                 >
                     <Plus className="w-4 h-4 mr-2" /> Add
@@ -464,7 +464,7 @@ export const NewIncidentListDashboard = () => {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(`/safety/incident/view-new/${item.id}`)}
+                        onClick={() => navigate(`/incidents/incidents/view-new/${item.id}`)}
                     >
                         <Eye className="w-4 h-4 text-[#C72030]" />
                     </Button>

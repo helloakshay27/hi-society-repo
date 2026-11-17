@@ -551,7 +551,6 @@ const RosterPage = lazy(() => import("@/pages/RosterPage"));
 
 // Incidents Pages
 const IncidentsSetup = lazy(() => import("@/pages/IncidentsSetup"));
-const IncidentsIncidents = lazy(() => import("@/pages/IncidentsIncidents"));
 const IncidentsDesignInputs = lazy(
   () => import("@/pages/IncidentsDesignInputs")
 );
@@ -1927,10 +1926,6 @@ export const setupMemberRoutes = (
 
     {/* Incidents Routes */}
     <Route path="/incidents/setup" Component={withSuspense(IncidentsSetup)} />
-    <Route
-      path="/incidents/incidents"
-      Component={withSuspense(IncidentsIncidents)}
-    />
     <Route
       path="/incidents/design-inputs"
       Component={withSuspense(IncidentsDesignInputs)}

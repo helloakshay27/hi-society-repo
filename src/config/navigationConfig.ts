@@ -378,7 +378,7 @@ export const modulesByPackage = {
     // { name: 'Design Insight Setup', icon: Target, href: '/settings/design-insights/setup' }
   ],
   Safety: [
-    { name: "Incident", icon: AlertTriangle, href: "/safety/incident" },
+    { name: "Incident", icon: AlertTriangle, href: "/incidents/incidents" },
     {
       name: "Permit",
       icon: FileText,

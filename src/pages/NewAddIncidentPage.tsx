@@ -511,7 +511,7 @@ export const NewAddIncidentPage = () => {
             }
 
             toast.success('Incident reported successfully!');
-            navigate('/safety/incident');
+            navigate('/incidents/incidents');
         } catch (err: any) {
             console.error('Incident POST failed:', err);
             toast.error('Failed to create incident');

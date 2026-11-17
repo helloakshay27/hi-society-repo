@@ -306,7 +306,7 @@ const ViSidebar: React.FC = () => {
 
   useEffect(() => {
     // Ensure section shows Safety for VI routes
-    if (location.pathname.startsWith("/safety")) {
+    if (location.pathname.startsWith("/safety") || location.pathname.startsWith("/incidents/incidents")) {
       setCurrentSection("Safety");
     }
   }, [location.pathname, setCurrentSection]);

@@ -1283,7 +1283,7 @@ export const IncidentNewDetails = () => {
                     toast.success('Final closure submitted successfully! Incident has been closed.');
 
                     // Navigate back to incidents list or dashboard
-                    navigate('/safety/incident');
+                    navigate('/incidents/incidents');
 
                 } catch (error) {
                     console.error('Error submitting final closure:', error);
@@ -1712,7 +1712,7 @@ export const IncidentNewDetails = () => {
     //             }
 
     //             toast.success('Final closure submitted!');
-    //             navigate('/safety/incident');
+    //             navigate('/incidents/incidents');
     //         }
 
     //     } catch (error: any) {
@@ -2390,7 +2390,7 @@ export const IncidentNewDetails = () => {
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/safety/incident/edit/${id}`)}
+                        onClick={() => navigate(`/incidents/incidents/edit/${id}`)}
                         className="flex items-center gap-2 border-[#BF213E] text-[#BF213E] hover:bg-[#F5E6D3]"
                     >
                         <Pencil className="w-4 h-4" />

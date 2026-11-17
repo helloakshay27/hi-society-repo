@@ -104,7 +104,7 @@ const ViSidebarWithToken: React.FC = () => {
 
     // Ensure section shows Safety for VI routes (must be before any returns to keep hook order stable)
     useEffect(() => {
-        if (location.pathname.startsWith('/safety')) {
+        if (location.pathname.startsWith('/safety') || location.pathname.startsWith('/incidents/incidents')) {
             setCurrentSection('Safety');
         }
     }, [location.pathname, setCurrentSection]);
