@@ -1347,7 +1347,7 @@ const ManageUsersPage = () => {
             downloadData={[]}
             onDownload={() =>
               handleDownloadUsers(
-                "/crm/admin/user_societies.xlsx?app_download=yes",
+                "/crm/admin/user_societies.xlsx?app_download=yes&flat_wise=1",
                 "app_downloaded.xlsx"
               )
             }
