@@ -1345,7 +1345,7 @@ const ManageUsersPage = () => {
             downloadData={[]}
             onDownload={() =>
               handleDownloadUsers(
-                "/crm/admin/user_societies.xlsx?app_download=yes&flat_wise=1",
+                "/crm/admin/user_societies.xlsx?app_download=yes",
                 "app_downloaded.xlsx"
               )
             }
@@ -1361,7 +1361,7 @@ const ManageUsersPage = () => {
             downloadData={[]}
             onDownload={() =>
               handleDownloadUsers(
-                "/crm/admin/user_societies.xlsx?app_download=yes",
+                "/crm/admin/user_societies.xlsx?app_download=yes&flat_wise=1",
                 "total_no_of_flat_downlaods.xlsx"
               )
             }
