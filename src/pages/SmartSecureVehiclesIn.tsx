@@ -28,21 +28,6 @@ const dummyVehicles: Vehicle[] = [
   { id: 7, vehicleNumber: "MH23T2353", name: "Varun / FM-Office", status: "G", phone: "8530312827" },
 ];
 
-interface HistoryRecord {
-  id: number;
-  vehicleNumber: string;
-  visitorName: string;
-  entryGate: string;
-  dateTime: string;
-}
-
-const dummyHistory: HistoryRecord[] = [
-  { id: 1, vehicleNumber: "MH07T0708", visitorName: "Rahul Sharma", entryGate: "Main Gate", dateTime: "25 Feb 2026, 10:30 AM" },
-  { id: 2, vehicleNumber: "sa1212", visitorName: "Priya Mehta", entryGate: "Gate 1", dateTime: "25 Feb 2026, 11:15 AM" },
-  { id: 3, vehicleNumber: "mh12aa1111", visitorName: "Amit Verma", entryGate: "Gate 2", dateTime: "24 Feb 2026, 04:45 PM" },
-  { id: 4, vehicleNumber: "626373hhehhe", visitorName: "Sneha Patil", entryGate: "Gate 3", dateTime: "24 Feb 2026, 02:00 PM" },
-];
-
 const entryGateOptions = ["Gate 1", "Gate 2", "Gate 3", "Gate 4", "Main Gate"];
 
 const vehicleColumns: ColumnConfig[] = [
@@ -53,15 +38,7 @@ const vehicleColumns: ColumnConfig[] = [
   { key: "action",        label: "Action",          sortable: false, hideable: false, draggable: false },
 ];
 
-const historyColumns: ColumnConfig[] = [
-  { key: "vehicleNumber", label: "Vehicle Number", sortable: true, hideable: true, draggable: true },
-  { key: "visitorName",   label: "Visitor Name",   sortable: true, hideable: true, draggable: true },
-  { key: "entryGate",     label: "Entry Gate",     sortable: true, hideable: true, draggable: true },
-  { key: "dateTime",      label: "Date & Time",    sortable: true, hideable: true, draggable: true },
-];
-
 const SmartSecureVehiclesIn: React.FC = () => {
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showInModal, setShowInModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [selectedGate, setSelectedGate] = useState("");
@@ -135,21 +112,6 @@ const SmartSecureVehiclesIn: React.FC = () => {
     }
   };
 
-  const renderHistoryCell = (item: HistoryRecord, columnKey: string) => {
-    switch (columnKey) {
-      case "vehicleNumber":
-        return <span className="font-semibold text-black-600">{item.vehicleNumber}</span>;
-      case "visitorName":
-        return <span className="text-sm text-gray-800">{item.visitorName}</span>;
-      case "entryGate":
-        return <span className="text-sm text-gray-600">{item.entryGate}</span>;
-      case "dateTime":
-        return <span className="text-sm text-gray-600">{item.dateTime}</span>;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="p-6">
       <EnhancedTable
@@ -160,14 +122,6 @@ const SmartSecureVehiclesIn: React.FC = () => {
         enableSearch={true}
         searchPlaceholder="Search by vehicle number, name..."
         emptyMessage="No vehicles waiting to enter"
-        leftActions={
-          <Button
-            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white h-9 px-4 text-sm font-medium"
-            onClick={() => setShowHistoryModal(true)}
-          >
-            History
-          </Button>
-        }
       />
 
       {/* Vehicle In Modal */}
@@ -213,32 +167,6 @@ const SmartSecureVehiclesIn: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* History Modal */}
-      <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
-        <DialogContent className="sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold">Vehicle In History</DialogTitle>
-          </DialogHeader>
-          <div className="max-h-[65vh] overflow-auto">
-            <EnhancedTable
-              data={dummyHistory}
-              columns={historyColumns}
-              renderCell={renderHistoryCell}
-              storageKey="vehicles-in-history-table"
-              enableSearch={true}
-              searchPlaceholder="Search by vehicle, visitor or gate..."
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
-              onClick={() => setShowHistoryModal(false)}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
