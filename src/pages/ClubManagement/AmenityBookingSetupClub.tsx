@@ -88,6 +88,7 @@ export const BookingSetupClubDashboard = () => {
     facilityType: '',
   });
 
+  const [searchQuery, setSearchQuery] = useState('');
   const [bookingSetupData, setBookingSetupData] = useState<BookingSetup[]>([]);
   const [loading, setLoading] = useState(true);
   const [showActionPanel, setShowActionPanel] = useState(false);
@@ -103,6 +104,13 @@ export const BookingSetupClubDashboard = () => {
     setAppliedFilters(filters);
     setPagination(prev => ({ ...prev, current_page: 1 }));
     fetchBookingSetupData(1, filters);
+  };
+
+  // Server-side search (EnhancedTable debounces input by 800ms before calling this)
+  const handleGlobalSearch = (term: string) => {
+    setSearchQuery(term);
+    setPagination(prev => ({ ...prev, current_page: 1 }));
+    fetchBookingSetupData(1, appliedFilters, term);
   };
 
   // Format dhm object to string like "0D • 0H • 4M"
@@ -128,8 +136,12 @@ export const BookingSetupClubDashboard = () => {
   };
 
   // q[...] filters shared by the list and the export, so both always match
-  const buildFilterParams = (currentFilters = appliedFilters) => {
+  const buildFilterParams = (currentFilters = appliedFilters, search = searchQuery) => {
     const params: Record<string, string> = {};
+
+    if (search.trim()) {
+      params["q[fac_name_cont]"] = search.trim();
+    }
 
     if (currentFilters.facilityType) {
       params["q[fac_type_eq]"] = currentFilters.facilityType;
@@ -173,13 +185,17 @@ export const BookingSetupClubDashboard = () => {
   };
 
   // Fetch booking setup data from API
-  const fetchBookingSetupData = async (page: number = 1, currentFilters = appliedFilters) => {
+  const fetchBookingSetupData = async (
+    page: number = 1,
+    currentFilters = appliedFilters,
+    search = searchQuery
+  ) => {
     try {
       setLoading(true);
       const params = {
         page,
         per_page: pageSize,
-        ...buildFilterParams(currentFilters),
+        ...buildFilterParams(currentFilters, search),
       };
 
       const response = await apiClient.get("/crm/admin/facility_setups.json", {
@@ -513,6 +529,9 @@ export const BookingSetupClubDashboard = () => {
           loading={loading}
           leftActions={leftActions}
           enableSearch={true}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleGlobalSearch}
+          searchPlaceholder="Search by facility name"
           onFilterClick={() => setIsFilterOpen(true)}
           enableSelection={false}
           enableExport={true}
