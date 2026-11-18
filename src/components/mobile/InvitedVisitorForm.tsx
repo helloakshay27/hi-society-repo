@@ -14,7 +14,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Camera, RotateCcw, CheckCircle2, DoorOpen } from "lucide-react";
+import {
+  Camera,
+  RotateCcw,
+  CheckCircle2,
+  DoorOpen,
+  Clock,
+  Link2Off,
+  Loader2,
+} from "lucide-react";
+
+// GET /short_urls/fetch/:id
+interface ShortUrlDetails {
+  id?: number;
+  url?: string;
+  short_url?: string;
+  valid_till?: string;
+  expired?: boolean;
+  visitors_count?: number;
+}
+
+// "checking" while GET /short_urls/fetch/:id is in flight; "valid" also
+// covers older links that have no short_url_id
+type InviteLinkStatus = "checking" | "valid" | "expired" | "invalid";
+
+const formatValidTill = (value?: string): string | null => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
 
 const DEFAULT_VISIT_PURPOSES = [
   // "Personal",
@@ -28,11 +64,60 @@ const DEFAULT_VISIT_PURPOSES = [
 
 interface InvitedVisitorFormProps {
   visitorPageId?: string;
+  /** `short_url_id` query param of a link generated with a validity */
+  shortUrlId?: string;
 }
 
 export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
   visitorPageId,
+  shortUrlId,
 }) => {
+  const [linkStatus, setLinkStatus] = useState<InviteLinkStatus>(
+    shortUrlId ? "checking" : "valid"
+  );
+  const [linkValidTill, setLinkValidTill] = useState<string | null>(null);
+
+  // Verify the invite link's validity before letting the guest fill the form
+  useEffect(() => {
+    if (!shortUrlId) {
+      setLinkStatus("valid");
+      return;
+    }
+
+    let cancelled = false;
+    setLinkStatus("checking");
+
+    const fetchShortUrl = async () => {
+      try {
+        const response = await baseClient.get(`short_urls/fetch/${shortUrlId}`);
+        if (cancelled) return;
+
+        // { code, message, short_url: { id, valid_till, expired, ... } }
+        const details: ShortUrlDetails | undefined = response.data?.short_url;
+        setLinkValidTill(details?.valid_till ?? null);
+
+        // Backend is the source of truth for expiry (not the guest's device clock)
+        setLinkStatus(details?.expired === true ? "expired" : "valid");
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Failed to verify invite link:", error);
+        const status = (error as { response?: { status?: number } })?.response
+          ?.status;
+        // 410 Gone = expired; any other 4xx = unknown/deleted link.
+        // Network/5xx errors don't lock the guest out.
+        if (status === 410) setLinkStatus("expired");
+        else if (status && status >= 400 && status < 500)
+          setLinkStatus("invalid");
+        else setLinkStatus("valid");
+      }
+    };
+
+    fetchShortUrl();
+    return () => {
+      cancelled = true;
+    };
+  }, [shortUrlId]);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -76,7 +161,10 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
           `crm/admin/user_societies/decrypted_user_society/${visitorPageId}`
         );
         const result = response.data?.result;
-        if (result?.user_society_id !== undefined && result?.user_society_id !== null) {
+        if (
+          result?.user_society_id !== undefined &&
+          result?.user_society_id !== null
+        ) {
           setResolvedSocietyId(String(result.user_society_id));
         }
         if (result?.society_building_name) {
@@ -112,9 +200,8 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
         const data = response.data?.data;
         if (data?.visit_purposes?.length) {
           setVisitPurposes(
-            data.visit_purposes.map(
-              (p: { purpose: string } | string) =>
-                typeof p === "string" ? p : p.purpose
+            data.visit_purposes.map((p: { purpose: string } | string) =>
+              typeof p === "string" ? p : p.purpose
             )
           );
         }
@@ -252,6 +339,9 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
         `${formData.expectedDate} ${formData.expectedTime}`
       );
       form.append("gatekeeper[visit_purpose]", formData.visitingPurpose);
+      if (shortUrlId) {
+        form.append("gatekeeper[short_url_id]", shortUrlId);
+      }
       form.append(
         "gatekeeper[image]",
         dataUrlToBlob(capturedPhoto),
@@ -267,6 +357,46 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  if (linkStatus === "checking") {
+    return (
+      <div className="min-h-screen bg-brand-bg flex items-center justify-center px-system-md py-system-lg">
+        <div className="flex flex-col items-center gap-system-sm text-brand-text-light">
+          <Loader2 className="h-8 w-8 animate-spin text-brand" />
+          <p className="text-brand-body-4">Verifying your invite link...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (linkStatus === "expired" || linkStatus === "invalid") {
+    const expired = linkStatus === "expired";
+    const validTillLabel = formatValidTill(linkValidTill ?? undefined);
+    return (
+      <div className="min-h-screen bg-brand-bg flex items-center justify-center px-system-md py-system-lg">
+        <div className="bg-brand-card rounded-lg shadow-brand-card w-full max-w-md p-system-xl text-center">
+          <div className="h-14 w-14 rounded-full bg-brand-light flex items-center justify-center mx-auto mb-system-md">
+            {expired ? (
+              <Clock className="h-7 w-7 text-brand" />
+            ) : (
+              <Link2Off className="h-7 w-7 text-brand" />
+            )}
+          </div>
+          <h1 className="text-brand-h2 font-semibold text-brand-text mb-system-sm">
+            {expired ? "This invite link has expired" : "Invalid invite link"}
+          </h1>
+          {expired && validTillLabel && (
+            <p className="text-brand-body-4 text-brand-text-light">
+              It was valid till {validTillLabel}.
+            </p>
+          )}
+          <p className="text-brand-body-4 text-brand-text-light mt-2">
+            Please ask your host to share a new link.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isSubmitted) {
     return (
@@ -302,9 +432,15 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
           <p className="text-brand-body-4 text-brand-text-light mt-1">
             {hostName && flatLabel ? (
               <>
-                You are visiting <strong className="font-semibold text-brand-text">{hostName}</strong>{" "}
-                at flat <strong className="font-semibold text-brand-text">{flatLabel}</strong>. Please
-                enter your details to continue.
+                You are visiting{" "}
+                <strong className="font-semibold text-brand-text">
+                  {hostName}
+                </strong>{" "}
+                at flat{" "}
+                <strong className="font-semibold text-brand-text">
+                  {flatLabel}
+                </strong>
+                . Please enter your details to continue.
               </>
             ) : (
               "Please fill the below details to enter the society and meet your host."
@@ -417,9 +553,7 @@ export const InvitedVisitorForm: React.FC<InvitedVisitorFormProps> = ({
             </label>
             <Select
               value={formData.visitingPurpose}
-              onValueChange={(value) =>
-                handleChange("visitingPurpose", value)
-              }
+              onValueChange={(value) => handleChange("visitingPurpose", value)}
             >
               <SelectTrigger className="border-0 border-b border-brand-card-border rounded-none px-0 focus:ring-0">
                 <SelectValue placeholder="Select Purpose" />

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Paper, Box, Avatar, Typography, Grid, Divider, Tabs, Tab } from "@mui/material";
-import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileText, Edit, Download, File, FileJson, Image, FileCode, Users, Files, X, Plus, Copy, Link as LinkIcon, Share2 } from "lucide-react";
+import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileText, Edit, Download, File, FileJson, Image, FileCode, Users, Files, X, Plus, Copy, Link as LinkIcon, Share2, Check, CheckCircle2, Clock } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddToAnotherFlatModal } from "@/components/AddToAnotherFlatModal";
@@ -75,6 +75,70 @@ const getFilenameFromUrl = (url: string): string => {
 const getInviteVisitorLink = (encryptedId: string): string =>
   `${window.location.origin}/invite-visitor/${encryptedId}`;
 
+// "YYYY-MM-DDTHH:mm" in local time, for datetime-local value/min
+const toDateTimeLocalValue = (date: Date): string => {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+// datetime-local "2026-11-20T18:00" -> API "2026-11-20 18:00"
+const toApiValidTill = (value: string): string => value.replace("T", " ");
+
+// "2026-11-19T17:26" -> "19 Nov 2026, 05:26 pm"
+const formatInviteValidTill = (value: string): string => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+// Quick validity choices shown under the date-time picker
+const INVITE_VALIDITY_PRESETS: { label: string; getDate: () => Date }[] = [
+  {
+    label: "2 hours",
+    getDate: () => new Date(Date.now() + 2 * 60 * 60 * 1000),
+  },
+  {
+    label: "End of day",
+    getDate: () => {
+      const d = new Date();
+      d.setHours(23, 59, 0, 0);
+      return d;
+    },
+  },
+  { label: "1 day", getDate: () => new Date(Date.now() + 24 * 60 * 60 * 1000) },
+  {
+    label: "7 days",
+    getDate: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  },
+];
+
+// POST /short_urls response shape isn't typed yet — accept the common keys
+// POST /short_urls response:
+// { code: 201, message, short_url: { id, url, short_url, valid_till, expired, ... } }
+interface CreateShortUrlResponse {
+  code?: number;
+  message?: string;
+  short_url?: {
+    id?: number;
+    url?: string;
+    short_url?: string;
+    valid_till?: string;
+    expired?: boolean;
+  };
+}
+
+const extractShortUrl = (data: CreateShortUrlResponse): string | null => {
+  const shortUrl = data?.short_url?.short_url;
+  return typeof shortUrl === "string" && shortUrl ? shortUrl : null;
+};
+
 const shareInviteVisitorLink = async (link: string): Promise<void> => {
   if (navigator.share) {
     try {
@@ -114,6 +178,11 @@ export const ViewUserPage = () => {
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
   const [isConfigureDetailsModalOpen, setIsConfigureDetailsModalOpen] = useState(false);
   const [inviteVisitorLinkOpen, setInviteVisitorLinkOpen] = useState(false);
+  // Invite link validity + the short URL returned by POST /short_urls
+  const [inviteValidTill, setInviteValidTill] = useState("");
+  const [generatedInviteLink, setGeneratedInviteLink] = useState("");
+  const [isGeneratingInviteLink, setIsGeneratingInviteLink] = useState(false);
+  const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
   const [clubFormData, setClubFormData] = useState({
     clubMembershipChecked: false,
     membershipNumber: "",
@@ -221,6 +290,85 @@ export const ViewUserPage = () => {
 
   const handleClubFormChange = (field: string, value: any) => {
     setClubFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // POST /short_urls with the invite link + validity; backend returns the
+  // shareable (short, expiring) URL that we show for copy/share
+  const resetInviteVisitorLink = () => {
+    setInviteValidTill("");
+    setGeneratedInviteLink("");
+    setInviteLinkCopied(false);
+  };
+
+  const handleInviteValidTillChange = (value: string) => {
+    setInviteValidTill(value);
+    // A new validity needs a new link
+    setGeneratedInviteLink("");
+    setInviteLinkCopied(false);
+  };
+
+  const handleCopyInviteLink = () => {
+    navigator.clipboard
+      .writeText(generatedInviteLink)
+      .then(() => {
+        setInviteLinkCopied(true);
+        toast.success("Link copied to clipboard");
+        window.setTimeout(() => setInviteLinkCopied(false), 2000);
+      })
+      .catch(() => toast.error("Failed to copy link"));
+  };
+
+  const handleGenerateInviteLink = async () => {
+    if (!user?.encrypted_id) return;
+    if (!inviteValidTill) {
+      toast.error("Please select the validity date and time");
+      return;
+    }
+    // if (new Date(inviteValidTill).getTime() <= Date.now()) {
+    //   toast.error("Validity must be a future date and time");
+    //   return;
+    // }
+    if (!baseUrl || !token) {
+      toast.error("Missing authentication details. Please login again.");
+      return;
+    }
+
+    setIsGeneratingInviteLink(true);
+    setGeneratedInviteLink("");
+    try {
+      const response = await axios.post<CreateShortUrlResponse>(
+        `https://${baseUrl}/short_urls.json`,
+        {
+          url: getInviteVisitorLink(user.encrypted_id),
+          valid_till: toApiValidTill(inviteValidTill),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const shortUrl = extractShortUrl(response.data);
+      if (!shortUrl) {
+        console.error("Unexpected /short_urls response:", response.data);
+        toast.error("Failed to generate link");
+        return;
+      }
+
+      setGeneratedInviteLink(shortUrl);
+      toast.success(response.data?.message || "Link generated");
+    } catch (error) {
+      console.error("Error generating invite link:", error);
+      const message =
+        (
+          error as {
+            response?: { data?: { message?: string; error?: string } };
+          }
+        )?.response?.data?.message ||
+        (error as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ||
+        "Failed to generate link";
+      toast.error(message);
+    } finally {
+      setIsGeneratingInviteLink(false);
+    }
   };
 
   const handleCreditWallet = async () => {
@@ -851,53 +999,146 @@ export const ViewUserPage = () => {
       />
 
       {/* Invite Visitor Link Modal */}
-      <Dialog modal={false} open={inviteVisitorLinkOpen} onOpenChange={setInviteVisitorLinkOpen}>
+      <Dialog
+        modal={false}
+        open={inviteVisitorLinkOpen}
+        onOpenChange={(open) => {
+          setInviteVisitorLinkOpen(open);
+          if (!open) resetInviteVisitorLink();
+        }}
+      >
         <DialogContent className="max-w-[480px] p-0 overflow-visible bg-white border-none shadow-2xl">
-          <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between">
-            <DialogTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
-              <LinkIcon className="w-4 h-4 text-[#da7756]" />
-              Invite Visitor Link
-            </DialogTitle>
-            <button onClick={() => setInviteVisitorLinkOpen(false)} className="text-gray-500 hover:text-gray-700">
+          <DialogHeader className="px-6 pt-5 pb-3 flex flex-row items-start justify-between space-y-0">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[rgba(218,119,86,0.15)] flex items-center justify-center shrink-0">
+                <LinkIcon className="w-4 h-4 text-[#da7756]" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-semibold text-[#1a1a18]">
+                  Invite Visitor Link
+                </DialogTitle>
+                <p className="text-xs text-[#888780] mt-0.5">
+                  Your guest fills their visitor details before arriving.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setInviteVisitorLinkOpen(false);
+                resetInviteVisitorLink();
+              }}
+              className="text-gray-400 hover:text-gray-700 transition-colors"
+              aria-label="Close"
+            >
               <X className="w-5 h-5" />
             </button>
           </DialogHeader>
-          <Box sx={{ px: 3, pb: 3 }}>
-            <Typography variant="body2" sx={{ color: "#666", fontSize: "13px", mb: 2 }}>
-              Share this link with your guest to let them fill their visitor details before arriving.
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <input
-                readOnly
-                value={user?.encrypted_id ? getInviteVisitorLink(user.encrypted_id) : ""}
-                onFocus={(e) => e.currentTarget.select()}
-                className="flex-1 min-w-0 border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 bg-gray-50 focus:outline-none"
+
+          <div className="px-6 pb-6 space-y-4">
+            {/* Step 1: validity */}
+            <div className="space-y-2">
+              <TextField
+                label="Link valid till"
+                type="datetime-local"
+                value={inviteValidTill}
+                onChange={(e) => handleInviteValidTillChange(e.target.value)}
+                fullWidth
+                size="small"
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                inputProps={{ min: toDateTimeLocalValue(new Date()) }}
+                InputProps={{ sx: fieldStyles }}
               />
-              <Button
-                className="px-4 border border-[#da7756] bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2 shrink-0"
-                onClick={() => {
-                  if (!user?.encrypted_id) return;
-                  navigator.clipboard
-                    .writeText(getInviteVisitorLink(user.encrypted_id))
-                    .then(() => toast.success("Link copied to clipboard"))
-                    .catch(() => toast.error("Failed to copy link"));
-                }}
-              >
-                <Copy className="w-4 h-4" />
-                Copy
-              </Button>
-              <Button
-                className="px-4 border border-[#da7756] bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2 shrink-0"
-                onClick={() => {
-                  if (!user?.encrypted_id) return;
-                  shareInviteVisitorLink(getInviteVisitorLink(user.encrypted_id));
-                }}
-              >
-                <Share2 className="w-4 h-4" />
-                Share
-              </Button>
-            </Box>
-          </Box>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs text-[#888780] mr-0.5">
+                  Quick pick:
+                </span>
+                {INVITE_VALIDITY_PRESETS.map((preset) => {
+                  const value = toDateTimeLocalValue(preset.getDate());
+                  const active = inviteValidTill === value;
+                  return (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => handleInviteValidTillChange(value)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                        active
+                          ? "border-[#da7756] bg-[rgba(218,119,86,0.15)] text-[#da7756]"
+                          : "border-[#e5e5e5] bg-white text-[#2c2c2c] hover:border-[#da7756] hover:text-[#da7756]"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              className="btn-primary w-full h-10 justify-center"
+              disabled={isGeneratingInviteLink || !inviteValidTill}
+              onClick={handleGenerateInviteLink}
+            >
+              {isGeneratingInviteLink ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <LinkIcon className="w-4 h-4" />
+              )}
+              {isGeneratingInviteLink
+                ? "Generating..."
+                : generatedInviteLink
+                  ? "Regenerate Link"
+                  : "Generate Link"}
+            </Button>
+
+            {/* Step 2: generated link */}
+            {generatedInviteLink && (
+              <div className="rounded-xl border border-[#e5e5e5] bg-[#f6f4ee] p-3 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#798c5e]">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Link ready to share
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-xs text-[#888780]">
+                    <Clock className="w-3.5 h-3.5" />
+                    Valid till {formatInviteValidTill(inviteValidTill)}
+                  </span>
+                </div>
+
+                <div
+                  className="rounded-lg bg-white border border-[#e5e5e5] px-3 py-2 text-xs text-[#2c2c2c] font-mono break-all select-all"
+                  title={generatedInviteLink}
+                >
+                  {generatedInviteLink}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    className="btn-cancel w-full h-9 justify-center"
+                    onClick={handleCopyInviteLink}
+                  >
+                    {inviteLinkCopied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                    {inviteLinkCopied ? "Copied" : "Copy Link"}
+                  </Button>
+                  <Button
+                    type="button"
+                    className="btn-cancel w-full h-9 justify-center"
+                    onClick={() => shareInviteVisitorLink(generatedInviteLink)}
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
