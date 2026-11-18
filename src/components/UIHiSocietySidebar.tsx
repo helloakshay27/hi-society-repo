@@ -825,10 +825,10 @@ export const UIHiSocietySidebar: React.FC = () => {
           icon: Car,
           subItems: [
             {
-              id: "vehicle-in",
-              label: "Vehicle In",
-              icon: LogIn,
-              path: "/smartsecure/vehicles/in",
+              id: "vehicle-history",
+              label: "Vehicle History",
+              icon: History,
+              path: "/smartsecure/vehicles/in-history",
             },
             {
               id: "vehicle-out",
