@@ -1336,7 +1336,7 @@ const ManageUsersPage = () => {
             downloading={downloadingFiles.includes("owners.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
-                "/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=owner",
+                "/crm/admin/user_societies.xlsx?app_download=yes&q[user_flat_ownership_not_eq]=tenant",
                 "owners.xlsx"
               )
             }
@@ -1349,7 +1349,7 @@ const ManageUsersPage = () => {
             downloading={downloadingFiles.includes("tenants.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
-                "/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=tenant",
+                "/crm/admin/user_societies.xlsx?app_download=yes&q[user_flat_ownership_eq]=tenant",
                 "tenants.xlsx"
               )
             }
@@ -1362,7 +1362,7 @@ const ManageUsersPage = () => {
             downloading={downloadingFiles.includes("pre_sales.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
-                "/crm/admin/user_societies.xlsx?q[display_view_eq]=Pre Sales",
+                "/crm/admin/user_societies.xlsx?app_download=yes&q[display_view_eq]=Pre Sales",
                 "pre_sales.xlsx"
               )
             }
@@ -1375,7 +1375,7 @@ const ManageUsersPage = () => {
             downloading={downloadingFiles.includes("post_sales.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
-                "/crm/admin/user_societies.xlsx?q[display_view_eq]=Post Sales",
+                "/crm/admin/user_societies.xlsx?app_download=yes&q[display_view_eq]=Post Sales",
                 "post_sales.xlsx"
               )
             }
