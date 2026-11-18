@@ -366,7 +366,7 @@
 .pp-dashboard-root .qchip.on.qc-po{background:var(--ink);color:#fff;font-weight:500}
 @keyframes sectionFlash{0%{box-shadow:0 0 0 0 rgba(218,119,86,.4)}60%{box-shadow:0 0 0 8px rgba(218,119,86,0)}100%{box-shadow:none}}
 .pp-dashboard-root .flash{animation:sectionFlash .7s ease-out}
-.pp-dashboard-root .pg{width:100%;max-width:1100px;margin:0 auto;padding:22px 28px 80px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px}
+.pp-dashboard-root .pg{width:100%;max-width:none;margin:0;padding:20px 24px 64px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px}
 .pp-dashboard-root .panel{display:none}
 .pp-dashboard-root .panel.on{display:block}
 .pp-dashboard-root .g{display:grid;gap:14px;width:100%}
