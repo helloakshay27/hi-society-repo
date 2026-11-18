@@ -54,6 +54,11 @@ import { toast } from "sonner";
 import axios from "axios";
 import { debounce } from "lodash";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
+import {
+  isExportReportResponse,
+  startUserReportDownload,
+  useActiveUserReportDownloads,
+} from "@/services/userReportDownloadManager";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
@@ -309,34 +314,6 @@ const buildFilterParams = (filters: UserFilters, search: string) => {
   return filterParams;
 };
 
-interface ExportReportResponse {
-  status: string;
-  report_id?: number | string;
-  message?: string;
-  download_url?: string;
-}
-
-const isExportReportResponse = (
-  value: unknown
-): value is ExportReportResponse => {
-  if (
-    typeof value !== "object" ||
-    value === null ||
-    !("status" in value) ||
-    typeof value.status !== "string"
-  ) {
-    return false;
-  }
-
-  return (
-    (!("report_id" in value) ||
-      typeof value.report_id === "string" ||
-      typeof value.report_id === "number") &&
-    (!("message" in value) || typeof value.message === "string") &&
-    (!("download_url" in value) || typeof value.download_url === "string")
-  );
-};
-
 const ManageUsersPage = () => {
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
@@ -357,6 +334,9 @@ const ManageUsersPage = () => {
   const [importId, setImportId] = useState<number | null>(null);
   const importPollRef = useRef<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  // File names of stat-card reports currently being generated/downloaded.
+  // Lives in a module-level store so it survives leaving and returning to this page.
+  const downloadingFiles = useActiveUserReportDownloads();
   const isMountedRef = useRef(true);
   const [isDownloadingSample, setIsDownloadingSample] = useState(false);
   const [searchTerm, setSearchTerm] = useState(
@@ -689,34 +669,10 @@ const ManageUsersPage = () => {
     }
   };
 
-  const handleDownloadUsers = async (endpoint: string, fileName: string) => {
-    try {
-      if (!baseUrl || !token) {
-        toast.error("Missing authentication details. Please login again.");
-        return;
-      }
-
-      const response = await axios.get(`https://${baseUrl}${endpoint}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        responseType: "blob",
-      });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      toast.success(`${fileName} downloaded successfully.`);
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      toast.error("Failed to download file. Please try again.");
-    }
+  // Polling runs in the download manager, not this component, so the report
+  // still downloads if the user navigates away while it is being generated.
+  const handleDownloadUsers = (endpoint: string, fileName: string) => {
+    void startUserReportDownload(endpoint, fileName);
   };
 
   const handleImportUsers = async () => {
@@ -1295,6 +1251,7 @@ const ManageUsersPage = () => {
             value={dashboardData.total_users.toString()}
             icon={<Users className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            downloading={downloadingFiles.includes("total_users.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
                 "/crm/admin/user_societies.xlsx",
@@ -1307,6 +1264,7 @@ const ManageUsersPage = () => {
             value={dashboardData.pending_users.toString()}
             icon={<Clock className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            downloading={downloadingFiles.includes("pending_users.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
                 "/crm/admin/user_societies.xlsx?q[approve_eq]=null",
@@ -1319,6 +1277,7 @@ const ManageUsersPage = () => {
             value={dashboardData.approved_users.toString()}
             icon={<UserCheck className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            downloading={downloadingFiles.includes("approved_users.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
                 "/crm/admin/user_societies.xlsx?q[approve_eq]=true",
@@ -1331,6 +1290,7 @@ const ManageUsersPage = () => {
             value={dashboardData.rejected_users.toString()}
             icon={<UserX className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            downloading={downloadingFiles.includes("rejected_users.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
                 "/crm/admin/user_societies.xlsx?q[approve_eq]=false",
@@ -1343,6 +1303,7 @@ const ManageUsersPage = () => {
             value={dashboardData.app_downloads.toString()}
             icon={<MonitorSmartphone className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            downloading={downloadingFiles.includes("app_downloaded.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
                 "/crm/admin/user_societies.xlsx?app_download=yes",
@@ -1359,6 +1320,7 @@ const ManageUsersPage = () => {
             value={dashboardData.total_flat_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            downloading={downloadingFiles.includes("total_no_of_flat_downlaods.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
                 "/crm/admin/user_societies.xlsx?app_download=yes&flat_wise=1",
@@ -1371,6 +1333,7 @@ const ManageUsersPage = () => {
             value={dashboardData.total_owner_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            downloading={downloadingFiles.includes("owners.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
                 "/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=owner",
@@ -1383,6 +1346,7 @@ const ManageUsersPage = () => {
             value={dashboardData.total_tenant_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            downloading={downloadingFiles.includes("tenants.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
                 "/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=tenant",
@@ -1395,6 +1359,7 @@ const ManageUsersPage = () => {
             value={dashboardData.post_sale_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            downloading={downloadingFiles.includes("pre_sales.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
                 "/crm/admin/user_societies.xlsx?q[display_view_eq]=Pre Sales",
@@ -1407,6 +1372,7 @@ const ManageUsersPage = () => {
             value={dashboardData.post_possession_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            downloading={downloadingFiles.includes("post_sales.xlsx")}
             onDownload={() =>
               handleDownloadUsers(
                 "/crm/admin/user_societies.xlsx?q[display_view_eq]=Post Sales",

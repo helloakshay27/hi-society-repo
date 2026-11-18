@@ -3228,6 +3228,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import { NewIncidentListDashboard } from "./pages/NewIncidentListDashboard";
 import EditIncidentPage from "./pages/EditIncidentPage";
 import PosthogMyPiramalDashboard from "./pages/posthog-my-piramal-dashboard";
+import { resumePendingUserReportDownloads } from "./services/userReportDownloadManager";
 const LockFees = lazy(() => import("./pages/LockFees"));
 // Same pages setupMemberRoutes.tsx mounts under /loyalty/encashment/*, also
 // reachable under /ops-console so AdminSidebar's Encashment links stay inside
@@ -3303,6 +3304,12 @@ function App() {
       }
     };
   }, []);
+
+  // Resume Manage Users report downloads that were still generating when the
+  // app was last reloaded/closed (polling otherwise only lives in memory)
+  useEffect(() => {
+    if (token) resumePendingUserReportDownloads();
+  }, [token]);
 
   // Check authentication and fetch currency when site is available
   const selectedSite = useAppSelector((s) => s.site.selectedSite);
