@@ -1,14 +1,62 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Paper, Box, Avatar, Typography, Grid, Divider, Tabs, Tab } from "@mui/material";
-import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileText, Edit, Download, File, FileJson, Image, FileCode, Users, Files, X, Plus, Copy, Link as LinkIcon, Share2, Check, CheckCircle2, Clock } from "lucide-react";
+import {
+  Paper,
+  Box,
+  Avatar,
+  Typography,
+  Grid,
+  Divider,
+  Tabs,
+  Tab,
+} from "@mui/material";
+import {
+  ArrowLeft,
+  User as UserIcon,
+  Mail,
+  Phone,
+  Home,
+  Calendar,
+  Info,
+  FileText,
+  Edit,
+  Download,
+  File,
+  FileJson,
+  Image,
+  FileCode,
+  Users,
+  Files,
+  X,
+  Plus,
+  Copy,
+  Link as LinkIcon,
+  Share2,
+  Check,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddToAnotherFlatModal } from "@/components/AddToAnotherFlatModal";
 import { SendEmailModal } from "@/components/SendEmailModal";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
-import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  FormControl as MuiFormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+  TextField,
+} from "@mui/material";
+import {
+  fieldStyles,
+  menuProps,
+} from "@/components/ticket-management/fieldStyles";
 import axios from "axios";
 import { toast } from "sonner";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
@@ -16,17 +64,32 @@ import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 // Helper component for displaying info fields
 const InfoField = ({ label, value }: { label: string; value: any }) => (
   <Box sx={{ mb: 1.5 }}>
-    <Typography variant="body2" sx={{ color: "#888", fontSize: "11px", mb: 0.3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "#888",
+        fontSize: "11px",
+        mb: 0.3,
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+      }}
+    >
       {label}
     </Typography>
-    <Typography variant="body2" sx={{ color: "#1A1A1A", fontWeight: 500, fontSize: "13px" }}>
+    <Typography
+      variant="body2"
+      sx={{ color: "#1A1A1A", fontWeight: 500, fontSize: "13px" }}
+    >
       {value || "-"}
     </Typography>
   </Box>
 );
 
 // Helper function to decode profile picture URL
-const getProfilePictureUrl = (profileUrl: string | undefined): string | null => {
+const getProfilePictureUrl = (
+  profileUrl: string | undefined
+): string | null => {
   if (!profileUrl) return null;
   try {
     // Decode URL if it's encoded
@@ -158,7 +221,9 @@ const shareInviteVisitorLink = async (link: string): Promise<void> => {
 
   try {
     await navigator.clipboard.writeText(link);
-    toast.success("Sharing isn't supported on this browser — link copied instead");
+    toast.success(
+      "Sharing isn't supported on this browser — link copied instead"
+    );
   } catch {
     toast.error("Failed to copy link");
   }
@@ -174,9 +239,11 @@ export const ViewUserPage = () => {
   const [user, setUser] = useState<any>(null);
   const [tabValue, setTabValue] = useState(0);
   const [members, setMembers] = useState<any[]>([]);
-  const [isAddToAnotherFlatModalOpen, setIsAddToAnotherFlatModalOpen] = useState(false);
+  const [isAddToAnotherFlatModalOpen, setIsAddToAnotherFlatModalOpen] =
+    useState(false);
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
-  const [isConfigureDetailsModalOpen, setIsConfigureDetailsModalOpen] = useState(false);
+  const [isConfigureDetailsModalOpen, setIsConfigureDetailsModalOpen] =
+    useState(false);
   const [inviteVisitorLinkOpen, setInviteVisitorLinkOpen] = useState(false);
   // Invite link validity + the short URL returned by POST /short_urls
   const [inviteValidTill, setInviteValidTill] = useState("");
@@ -212,7 +279,10 @@ export const ViewUserPage = () => {
       .then((response) => {
         setUser(response.data);
         // Extract other_members from the response
-        if (response.data?.other_members && Array.isArray(response.data.other_members)) {
+        if (
+          response.data?.other_members &&
+          Array.isArray(response.data.other_members)
+        ) {
           setMembers(response.data.other_members);
         }
         if (!response.data) {
@@ -221,7 +291,8 @@ export const ViewUserPage = () => {
       })
       .catch((err) => {
         console.error("Error fetching user details:", err);
-        const errorMessage = err.response?.data?.message || "Failed to load user details.";
+        const errorMessage =
+          err.response?.data?.message || "Failed to load user details.";
         setError(errorMessage);
         toast.error(errorMessage);
       })
@@ -241,12 +312,19 @@ export const ViewUserPage = () => {
 
   if (error || !user) {
     return (
-      <Box sx={{ p: 6, display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
+      <Box
+        sx={{
+          p: 6,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "40vh",
+        }}
+      >
         <Typography color="error">{error || "User not found."}</Typography>
       </Box>
     );
   }
-
 
   const handleDownloadDocument = async (documentUrl: string, index: number) => {
     if (!documentUrl) {
@@ -384,7 +462,9 @@ export const ViewUserPage = () => {
     setCreditLoading(true);
     try {
       const token = API_CONFIG.TOKEN || "";
-      const url = getFullUrl(`/loyalty/members/credit_wallet.json?token=${token}`);
+      const url = getFullUrl(
+        `/loyalty/members/credit_wallet.json?token=${token}`
+      );
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -443,7 +523,10 @@ export const ViewUserPage = () => {
       }
 
       // Validate form inputs
-      if (clubFormData.clubMembershipChecked && !clubFormData.membershipNumber.trim()) {
+      if (
+        clubFormData.clubMembershipChecked &&
+        !clubFormData.membershipNumber.trim()
+      ) {
         toast.error("Please enter Membership Number");
         return;
       }
@@ -474,9 +557,15 @@ export const ViewUserPage = () => {
 
       // Add club_member_allocation details
       formData.append("club_member_allocation[society_id]", societyId);
-      formData.append("club_member_allocation[society_flat_id]", user.society_flat_id || "");
+      formData.append(
+        "club_member_allocation[society_flat_id]",
+        user.society_flat_id || ""
+      );
       formData.append("club_member_allocation[status]", "active");
-      formData.append("club_member_allocation[start_date]", clubFormData.startDate);
+      formData.append(
+        "club_member_allocation[start_date]",
+        clubFormData.startDate
+      );
       formData.append("club_member_allocation[end_date]", clubFormData.endDate);
 
       // Add member (current user)
@@ -485,14 +574,20 @@ export const ViewUserPage = () => {
       formData.append("members[0][last_name]", user.lastname || "");
       formData.append("members[0][email]", user.email || "");
       formData.append("members[0][mobile]", user.mobile || "");
-      formData.append("members[0][resident_type]", user.resident_type || "owner");
+      formData.append(
+        "members[0][resident_type]",
+        user.resident_type || "owner"
+      );
 
       // Add club membership details
       formData.append(
         "members[0][club_member_check]",
         clubFormData.clubMembershipChecked ? "true" : "false"
       );
-      formData.append("members[0][membership_number]", clubFormData.membershipNumber);
+      formData.append(
+        "members[0][membership_number]",
+        clubFormData.membershipNumber
+      );
 
       // Add access card details
       formData.append(
@@ -518,7 +613,9 @@ export const ViewUserPage = () => {
       window.location.reload();
     } catch (error) {
       console.error("Error saving club details:", error);
-      const errorMessage = error.response?.data?.errors?.[0] || "Failed to save club details. Please try again.";
+      const errorMessage =
+        error.response?.data?.errors?.[0] ||
+        "Failed to save club details. Please try again.";
       toast.error(errorMessage);
     }
   };
@@ -537,7 +634,13 @@ export const ViewUserPage = () => {
       {/* Main Container Paper */}
       <Paper sx={{ borderRadius: 2, overflow: "hidden", boxShadow: 1 }}>
         {/* Header Section with Avatar and User Info */}
-        <Box sx={{ background: "linear-gradient(135deg, #da7756 0%, #da7756 100%)", p: 4, position: "relative" }}>
+        <Box
+          sx={{
+            background: "linear-gradient(135deg, #da7756 0%, #da7756 100%)",
+            p: 4,
+            position: "relative",
+          }}
+        >
           {/* Edit Button */}
           <Box sx={{ position: "absolute", top: 16, right: 16 }}>
             <Button
@@ -565,7 +668,7 @@ export const ViewUserPage = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                overflow: "hidden"
+                overflow: "hidden",
               }}
               onError={(e: any) => {
                 e.target.style.display = "none";
@@ -589,20 +692,23 @@ export const ViewUserPage = () => {
             </Avatar>
             <Box sx={{ flex: 1, color: "white" }}>
               <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                {user?.full_name || (user?.firstname && user?.lastname ? `${user.firstname} ${user.lastname}` : "User")}
+                {user?.full_name ||
+                  (user?.firstname && user?.lastname
+                    ? `${user.firstname} ${user.lastname}`
+                    : "User")}
               </Typography>
               <Box sx={{ display: "flex", gap: 3, mb: 1.5, flexWrap: "wrap" }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Home className="w-4 h-4" />
                   <Typography variant="body2">
-                    {user?.flat_no ? `${user.flat_no}, ${user?.block_no || ""}` : "No Flat"}
+                    {user?.flat_no
+                      ? `${user.flat_no}, ${user?.block_no || ""}`
+                      : "No Flat"}
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Calendar className="w-4 h-4" />
-                  <Typography variant="body2">
-                    {user?.phase || "-"}
-                  </Typography>
+                  <Typography variant="body2">{user?.phase || "-"}</Typography>
                 </Box>
               </Box>
               {/* Status Badge */}
@@ -615,21 +721,43 @@ export const ViewUserPage = () => {
                     px: 2,
                     py: 0.75,
                     borderRadius: "20px",
-                    backgroundColor: user?.approved ? "#10b981" : user?.approved === false ? "#ef4444" : "#f59e0b",
+                    backgroundColor: user?.approved
+                      ? "#10b981"
+                      : user?.approved === false
+                        ? "#ef4444"
+                        : "#f59e0b",
                     color: "white",
                     fontSize: "12px",
                     fontWeight: 600,
                   }}
                 >
-                  <Box sx={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.4)" }} />
-                  {user?.approved ? "Approved" : user?.approved === false ? "Rejected" : "Pending"}
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      backgroundColor: "rgba(255,255,255,0.4)",
+                    }}
+                  />
+                  {user?.approved
+                    ? "Approved"
+                    : user?.approved === false
+                      ? "Rejected"
+                      : "Pending"}
                 </Box>
               </Box>
             </Box>
           </Box>
 
           {/* Add to Another Flat Button */}
-          <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3, gap: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-start",
+              mt: 3,
+              gap: 2,
+            }}
+          >
             <Button
               className="px-8 border-0 bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2"
               onClick={() => setIsAddToAnotherFlatModalOpen(true)}
@@ -686,136 +814,280 @@ export const ViewUserPage = () => {
               },
             }}
           >
-            <Tab label="User Info" icon={<UserIcon className="w-4 h-4" />} iconPosition="start" />
-            <Tab label="Club Info" icon={<Info className="w-4 h-4" />} iconPosition="start" />
+            <Tab
+              label="User Info"
+              icon={<UserIcon className="w-4 h-4" />}
+              iconPosition="start"
+            />
+            <Tab
+              label="Club Info"
+              icon={<Info className="w-4 h-4" />}
+              iconPosition="start"
+            />
           </Tabs>
         </Box>
 
         {/* Tab Content - User Info */}
-        {
-          tabValue === 0 && (
-            <Box sx={{ p: 4, background: "#fafafa" }}>
-              {/* Contact Information Section */}
+        {tabValue === 0 && (
+          <Box sx={{ p: 4, background: "#fafafa" }}>
+            {/* Contact Information Section */}
+            <Box sx={{ mb: 4 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
+              >
+                <Mail
+                  className="w-5 h-5 text-C72030"
+                  style={{ color: "#C72030" }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}
+                >
+                  Contact Information
+                </Typography>
+              </Box>
+              <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 3,
+                  }}
+                >
+                  <InfoField label="Email" value={user?.email || "-"} />
+                  <InfoField
+                    label="Mobile Number"
+                    value={user?.mobile_number || "-"}
+                  />
+                  <InfoField
+                    label="Alternate Email 1"
+                    value={user?.alternate_email_1 || "-"}
+                  />
+                  <InfoField
+                    label="Alternate Email 2"
+                    value={user?.alternate_email_2 || "-"}
+                  />
+                  <InfoField
+                    label="Landline Number"
+                    value={user?.user_flat?.landline || "-"}
+                  />
+                  <InfoField
+                    label="Intercom Number"
+                    value={user?.intercom || "-"}
+                  />
+                </Box>
+              </Paper>
+            </Box>
+
+            {/* Personal Details Section */}
+            <Box sx={{ mb: 4 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
+              >
+                <UserIcon className="w-5 h-5" style={{ color: "#C72030" }} />
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}
+                >
+                  Personal Details
+                </Typography>
+              </Box>
+              <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 3,
+                  }}
+                >
+                  <InfoField
+                    label="Date of Birth"
+                    value={user?.birthday || "-"}
+                  />
+                  <InfoField
+                    label="Anniversary"
+                    value={user?.anniversary || "-"}
+                  />
+                  <InfoField
+                    label="Spouse Birthday"
+                    value={user?.spouse_birthday || "-"}
+                  />
+                  <InfoField
+                    label="Resident Type"
+                    value={user?.resident_type || "-"}
+                  />
+                  <InfoField
+                    label="Lives Here"
+                    value={user?.lives_here === "true" ? "Yes" : "No"}
+                  />
+                  <InfoField
+                    label="Membership Type"
+                    value={user?.is_primary ? "Primary" : "Secondary"}
+                  />
+                  <InfoField
+                    label="Move In Date"
+                    value={user?.movein_date || "-"}
+                  />
+                  <InfoField
+                    label="Agreement Expire Date"
+                    value={user?.user_flat?.agreement_expire_date || "-"}
+                  />
+                </Box>
+              </Paper>
+            </Box>
+
+            {/* Residential Details Section */}
+            <Box sx={{ mb: 4 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
+              >
+                <Home className="w-5 h-5" style={{ color: "#C72030" }} />
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}
+                >
+                  Residential Details
+                </Typography>
+              </Box>
+              <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 3,
+                  }}
+                >
+                  <InfoField label="Phase" value={user?.phase || "-"} />
+                  <InfoField
+                    label="Alternate Address"
+                    value={user?.alternate_address || "-"}
+                  />
+                  <InfoField
+                    label="Adults Residing"
+                    value={user?.adults || "-"}
+                  />
+                  <InfoField
+                    label="Children Residing"
+                    value={user?.children || "-"}
+                  />
+                  <InfoField label="Pets" value={user?.pets || "-"} />
+                  <InfoField
+                    label="EV Connection"
+                    value={user?.ev_connection ? "Yes" : "No"}
+                  />
+                </Box>
+              </Paper>
+            </Box>
+
+            {/* Official Details Section */}
+            <Box sx={{ mb: 4 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
+              >
+                <Info className="w-5 h-5" style={{ color: "#C72030" }} />
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}
+                >
+                  Official Details
+                </Typography>
+              </Box>
+              <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 3,
+                  }}
+                >
+                  <InfoField
+                    label="GST Number"
+                    value={user?.gst_number || "-"}
+                  />
+                  <InfoField
+                    label="PAN Number"
+                    value={user?.pan_number || "-"}
+                  />
+                  <InfoField
+                    label="Designation"
+                    value={user?.designation || "-"}
+                  />
+                  <InfoField
+                    label="Committee Member"
+                    value={user?.committee_member ? "Yes" : "No"}
+                  />
+                </Box>
+              </Paper>
+            </Box>
+
+            {/* Members List Section */}
+            {members.length > 0 && (
               <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                  <Mail className="w-5 h-5 text-C72030" style={{ color: "#C72030" }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
-                    Contact Information
+                <Box
+                  sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
+                >
+                  <Users className="w-5 h-5" style={{ color: "#C72030" }} />
+                  <Typography
+                    variant="h6"
+                    sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}
+                  >
+                    Members List ({members.length})
                   </Typography>
                 </Box>
                 <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
-                    <InfoField label="Email" value={user?.email || "-"} />
-                    <InfoField label="Mobile Number" value={user?.mobile_number || "-"} />
-                    <InfoField label="Alternate Email 1" value={user?.alternate_email_1 || "-"} />
-                    <InfoField label="Alternate Email 2" value={user?.alternate_email_2 || "-"} />
-                    <InfoField label="Landline Number" value={user?.user_flat?.landline || "-"} />
-                    <InfoField label="Intercom Number" value={user?.intercom || "-"} />
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
+                    {members.map((member, index) => (
+                      <Typography
+                        key={index}
+                        variant="body2"
+                        sx={{
+                          color: "#1A1A1A",
+                          py: 1,
+                          px: 1.5,
+                          borderRadius: "4px",
+                        }}
+                      >
+                        • {member}
+                      </Typography>
+                    ))}
                   </Box>
                 </Paper>
               </Box>
+            )}
 
-              {/* Personal Details Section */}
-              <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                  <UserIcon className="w-5 h-5" style={{ color: "#C72030" }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
-                    Personal Details
-                  </Typography>
-                </Box>
-                <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
-                    <InfoField label="Date of Birth" value={user?.birthday || "-"} />
-                    <InfoField label="Anniversary" value={user?.anniversary || "-"} />
-                    <InfoField label="Spouse Birthday" value={user?.spouse_birthday || "-"} />
-                    <InfoField label="Resident Type" value={user?.resident_type || "-"} />
-                    <InfoField label="Lives Here" value={user?.lives_here === "true" ? "Yes" : "No"} />
-                    <InfoField label="Membership Type" value={user?.is_primary ? "Primary" : "Secondary"} />
-                    <InfoField label="Move In Date" value={user?.movein_date || "-"} />
-                    <InfoField label="Agreement Expire Date" value={user?.user_flat?.agreement_expire_date || "-"} />
-                  </Box>
-                </Paper>
-              </Box>
-
-              {/* Residential Details Section */}
-              <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                  <Home className="w-5 h-5" style={{ color: "#C72030" }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
-                    Residential Details
-                  </Typography>
-                </Box>
-                <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
-                    <InfoField label="Phase" value={user?.phase || "-"} />
-                    <InfoField label="Alternate Address" value={user?.alternate_address || "-"} />
-                    <InfoField label="Adults Residing" value={user?.adults || "-"} />
-                    <InfoField label="Children Residing" value={user?.children || "-"} />
-                    <InfoField label="Pets" value={user?.pets || "-"} />
-                    <InfoField label="EV Connection" value={user?.ev_connection ? "Yes" : "No"} />
-
-                  </Box>
-                </Paper>
-              </Box>
-
-              {/* Official Details Section */}
-              <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                  <Info className="w-5 h-5" style={{ color: "#C72030" }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
-                    Official Details
-                  </Typography>
-                </Box>
-                <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
-                    <InfoField label="GST Number" value={user?.gst_number || "-"} />
-                    <InfoField label="PAN Number" value={user?.pan_number || "-"} />
-                    <InfoField label="Designation" value={user?.designation || "-"} />
-                    <InfoField label="Committee Member" value={user?.committee_member ? "Yes" : "No"} />
-                  </Box>
-                </Paper>
-              </Box>
-
-              {/* Members List Section */}
-              {members.length > 0 && (
+            {/* Documents Section */}
+            {user?.user_flat_documents &&
+              user?.user_flat_documents.length > 0 && (
                 <Box sx={{ mb: 4 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                    <Users className="w-5 h-5" style={{ color: "#C72030" }} />
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
-                      Members List ({members.length})
-                    </Typography>
-                  </Box>
-                  <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                      {members.map((member, index) => (
-                        <Typography
-                          key={index}
-                          variant="body2"
-                          sx={{
-                            color: "#1A1A1A",
-                            py: 1,
-                            px: 1.5,
-                            borderRadius: "4px",
-                          }}
-                        >
-                          • {member}
-                        </Typography>
-                      ))}
-                    </Box>
-                  </Paper>
-                </Box>
-              )}
-
-              {/* Documents Section */}
-              {user?.user_flat_documents && user?.user_flat_documents.length > 0 && (
-                <Box sx={{ mb: 4 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      mb: 3,
+                    }}
+                  >
                     <Files className="w-5 h-5" style={{ color: "#C72030" }} />
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}
+                    >
                       Attachments ({user.user_flat_documents.length})
                     </Typography>
                   </Box>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)", md: "repeat(4, 1fr)" }, gap: 2 }}>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "repeat(2, 1fr)",
+                        sm: "repeat(3, 1fr)",
+                        md: "repeat(4, 1fr)",
+                      },
+                      gap: 2,
+                    }}
+                  >
                     {user.user_flat_documents.map((doc: any, index: number) => {
                       const fileType = getFileType(doc.document_url);
                       const filename = getFilenameFromUrl(doc.document_url);
@@ -862,20 +1134,31 @@ export const ViewUserPage = () => {
                                   objectFit: "cover",
                                 }}
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = "none";
-                                  const parent = (e.target as HTMLImageElement).parentElement;
+                                  (e.target as HTMLImageElement).style.display =
+                                    "none";
+                                  const parent = (e.target as HTMLImageElement)
+                                    .parentElement;
                                   if (parent) {
-                                    const fallbackBox = document.createElement("div");
+                                    const fallbackBox =
+                                      document.createElement("div");
                                     fallbackBox.style.display = "flex";
                                     fallbackBox.style.alignItems = "center";
                                     fallbackBox.style.justifyContent = "center";
-                                    fallbackBox.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C72030" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>';
+                                    fallbackBox.innerHTML =
+                                      '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C72030" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>';
                                     parent.appendChild(fallbackBox);
                                   }
                                 }}
                               />
                             ) : (
-                              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
                                 {getFileIcon(fileType, 40)}
                               </Box>
                             )}
@@ -917,59 +1200,74 @@ export const ViewUserPage = () => {
                   </Box>
                 </Box>
               )}
-            </Box>
-          )
-        }
+          </Box>
+        )}
 
         {/* Tab Content - Club Info */}
-        {
-          tabValue === 1 && (
-            <Box sx={{ p: 3 }}>
-              {!user?.club_member ? (
-                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                  <Typography variant="body1" sx={{ color: "#666" }}>
-                    No club membership details configured
-                  </Typography>
-                  <Button
-                    onClick={() => setIsConfigureDetailsModalOpen(true)}
-                    className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
-                  >
-                    Configure Details
-                  </Button>
-                </Box>
-              ) : (
-                <Box>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <InfoField label="Membership Number" value={user?.club_member?.membership_number || "-"} />
-                    </div>
-                    <div>
-                      <InfoField label="Start Date" value={formatDateFromAPI(user?.club_member?.startdate)} />
-                    </div>
-                    <div>
-                      <InfoField label="End Date" value={formatDateFromAPI(user?.club_member?.enddate)} />
-                    </div>
-                    <div>
-                      <InfoField label="Access Card ID" value={user?.club_member?.access_card_id || "-"} />
-                    </div>
-                    {user?.club_member?.club_member_check && (
-                      <div>
-                        <InfoField label="Club Membership" value="Active" />
-                      </div>
-                    )}
-                    {user?.club_member?.access_card_check && (
-                      <div>
-                        <InfoField label="Access Card" value="Allocated" />
-                      </div>
-                    )}
+        {tabValue === 1 && (
+          <Box sx={{ p: 3 }}>
+            {!user?.club_member ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
+                <Typography variant="body1" sx={{ color: "#666" }}>
+                  No club membership details configured
+                </Typography>
+                <Button
+                  onClick={() => setIsConfigureDetailsModalOpen(true)}
+                  className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
+                >
+                  Configure Details
+                </Button>
+              </Box>
+            ) : (
+              <Box>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <InfoField
+                      label="Membership Number"
+                      value={user?.club_member?.membership_number || "-"}
+                    />
                   </div>
-
-                </Box>
-              )}
-            </Box>
-          )
-        }
-      </Paper >
+                  <div>
+                    <InfoField
+                      label="Start Date"
+                      value={formatDateFromAPI(user?.club_member?.startdate)}
+                    />
+                  </div>
+                  <div>
+                    <InfoField
+                      label="End Date"
+                      value={formatDateFromAPI(user?.club_member?.enddate)}
+                    />
+                  </div>
+                  <div>
+                    <InfoField
+                      label="Access Card ID"
+                      value={user?.club_member?.access_card_id || "-"}
+                    />
+                  </div>
+                  {user?.club_member?.club_member_check && (
+                    <div>
+                      <InfoField label="Club Membership" value="Active" />
+                    </div>
+                  )}
+                  {user?.club_member?.access_card_check && (
+                    <div>
+                      <InfoField label="Access Card" value="Allocated" />
+                    </div>
+                  )}
+                </div>
+              </Box>
+            )}
+          </Box>
+        )}
+      </Paper>
 
       {/* Add to Another Flat Modal */}
       <AddToAnotherFlatModal
@@ -1077,7 +1375,7 @@ export const ViewUserPage = () => {
 
             <Button
               type="button"
-              className="btn-primary w-full h-10 justify-center"
+              className="px-8 w-full border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
               disabled={isGeneratingInviteLink || !inviteValidTill}
               onClick={handleGenerateInviteLink}
             >
@@ -1117,7 +1415,7 @@ export const ViewUserPage = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     type="button"
-                    className="btn-cancel w-full h-9 justify-center"
+                    className="px-8 w-full border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                     onClick={handleCopyInviteLink}
                   >
                     {inviteLinkCopied ? (
@@ -1129,7 +1427,7 @@ export const ViewUserPage = () => {
                   </Button>
                   <Button
                     type="button"
-                    className="btn-cancel w-full h-9 justify-center"
+                    className="px-8 w-full border-0 bg-[#C72030] hover:bg-[#A01828] !text-white flex items-center gap-2"
                     onClick={() => shareInviteVisitorLink(generatedInviteLink)}
                   >
                     <Share2 className="w-4 h-4" />
@@ -1143,10 +1441,16 @@ export const ViewUserPage = () => {
       </Dialog>
 
       {/* Configure Club Details Modal */}
-      <Dialog modal={false} open={isConfigureDetailsModalOpen} onOpenChange={setIsConfigureDetailsModalOpen}>
+      <Dialog
+        modal={false}
+        open={isConfigureDetailsModalOpen}
+        onOpenChange={setIsConfigureDetailsModalOpen}
+      >
         <DialogContent className="max-w-[500px] p-0 overflow-hidden bg-white border-none shadow-2xl max-h-[90vh] flex flex-col">
           <DialogHeader className="bg-[#EAEAEA] py-3 px-6 flex flex-row items-center justify-between shrink-0">
-            <DialogTitle className="text-base font-bold text-gray-800 text-center w-full">Configure Details</DialogTitle>
+            <DialogTitle className="text-base font-bold text-gray-800 text-center w-full">
+              Configure Details
+            </DialogTitle>
             <button
               onClick={() => setIsConfigureDetailsModalOpen(false)}
               className="text-red-500 hover:text-red-700 transition-colors absolute right-4"
@@ -1164,7 +1468,10 @@ export const ViewUserPage = () => {
                   id="clubMembership"
                   checked={clubFormData.clubMembershipChecked}
                   onChange={(e) =>
-                    handleClubFormChange("clubMembershipChecked", e.target.checked)
+                    handleClubFormChange(
+                      "clubMembershipChecked",
+                      e.target.checked
+                    )
                   }
                   className="w-4 h-4 cursor-pointer"
                 />
@@ -1275,10 +1582,16 @@ export const ViewUserPage = () => {
       </Dialog>
 
       {/* Credit Wallet Dialog */}
-      <Dialog modal={false} open={creditDialogOpen} onOpenChange={setCreditDialogOpen}>
+      <Dialog
+        modal={false}
+        open={creditDialogOpen}
+        onOpenChange={setCreditDialogOpen}
+      >
         <DialogContent className="max-w-[480px] p-0 overflow-visible bg-white border-none shadow-2xl">
           <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between">
-            <DialogTitle className="text-base font-bold text-gray-800">Credit Wallet</DialogTitle>
+            <DialogTitle className="text-base font-bold text-gray-800">
+              Credit Wallet
+            </DialogTitle>
             <button
               onClick={() => setCreditDialogOpen(false)}
               className="text-red-500 hover:text-red-700 transition-colors"
@@ -1299,7 +1612,11 @@ export const ViewUserPage = () => {
               InputProps={{ sx: fieldStyles }}
             />
             <TextField
-              label={<>Amount <span style={{ color: 'red' }}>*</span></>}
+              label={
+                <>
+                  Amount <span style={{ color: "red" }}>*</span>
+                </>
+              }
               type="number"
               value={creditAmount}
               onChange={(e) => setCreditAmount(e.target.value)}
@@ -1311,7 +1628,9 @@ export const ViewUserPage = () => {
               InputProps={{ sx: fieldStyles }}
             />
             <MuiFormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Payment Mode <span style={{ color: 'red' }}>*</span></InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Payment Mode <span style={{ color: "red" }}>*</span>
+              </InputLabel>
               <MuiSelect
                 value={creditPaymentMode}
                 onChange={(e) => setCreditPaymentMode(e.target.value)}
@@ -1326,7 +1645,11 @@ export const ViewUserPage = () => {
               </MuiSelect>
             </MuiFormControl>
             <TextField
-              label={<>Remarks <span style={{ color: 'red' }}>*</span></>}
+              label={
+                <>
+                  Remarks <span style={{ color: "red" }}>*</span>
+                </>
+              }
               value={creditRemarks}
               onChange={(e) => setCreditRemarks(e.target.value)}
               placeholder="Enter remarks"
@@ -1363,7 +1686,7 @@ export const ViewUserPage = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </Box >
+    </Box>
   );
 };
 
