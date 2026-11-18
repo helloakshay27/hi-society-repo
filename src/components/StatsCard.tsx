@@ -21,7 +21,7 @@
 // };
 
 import React, { useState } from "react";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 
 interface StatsCardProps {
   title: string;
@@ -34,6 +34,7 @@ interface StatsCardProps {
   downloadData?: any[]; // <-- optional data for CSV export
   iconRounded?: boolean; // <-- add prop for rounded icon background
   valueColor?: string; // <-- add prop for value text color
+  downloading?: boolean; // <-- shows a spinner and disables the download button
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
@@ -47,6 +48,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   downloadData,
   iconRounded = false,
   valueColor,
+  downloading = false,
 }) => {
   return (
     <div
@@ -59,12 +61,18 @@ export const StatsCard: React.FC<StatsCardProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
+            if (downloading) return;
             onDownload();
           }}
-          className="absolute top-3 right-3"
-          title="Download"
+          disabled={downloading}
+          className={`absolute top-3 right-3 ${downloading ? "cursor-wait" : ""}`}
+          title={downloading ? "Generating report..." : "Download"}
         >
-          <Download className="w-3 h-3 text-gray-600" />
+          {downloading ? (
+            <Loader2 className="w-3 h-3 text-gray-600 animate-spin" />
+          ) : (
+            <Download className="w-3 h-3 text-gray-600" />
+          )}
         </button>
       )}
 
