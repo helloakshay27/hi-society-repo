@@ -1,16 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Calendar, MapPin, Building2, Clock, Users, Edit } from 'lucide-react';
-import { toast } from 'sonner';
-import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
-import { RootState } from '@/store/store';
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ArrowLeft,
+  Calendar,
+  MapPin,
+  Building2,
+  Clock,
+  Users,
+  Edit,
+} from "lucide-react";
+import { toast } from "sonner";
+import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { RootState } from "@/store/store";
 
 // Section card matching the Visitor Details page
-const Section: React.FC<{ title: string; icon: React.ElementType; children: React.ReactNode }> = ({ title, icon: Icon, children }) => (
+const Section: React.FC<{
+  title: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+}> = ({ title, icon: Icon, children }) => (
   <Card className="w-full rounded-2xl border border-[rgba(26,26,24,.09)] bg-white px-6 py-5 shadow-none">
     <CardHeader className="px-0 pb-4 pt-0">
       <CardTitle className="flex items-center gap-3 text-[14px] font-semibold text-[#1A1A18]">
@@ -24,8 +36,8 @@ const Section: React.FC<{ title: string; icon: React.ElementType; children: Reac
   </Card>
 );
 
-const LABEL = 'text-[11px] font-medium text-[rgba(26,26,24,.48)] block mb-1';
-const VALUE = 'text-[13.5px] font-medium text-[#1A1A18]';
+const LABEL = "text-[11px] font-medium text-[rgba(26,26,24,.48)] block mb-1";
+const VALUE = "text-[13.5px] font-medium text-[#1A1A18]";
 
 // Types
 interface FMUser {
@@ -50,7 +62,7 @@ interface RosterTemplate {
   name: string;
   no_of_days: any[];
   allocation_type: string;
-  roaster_type: 'Weekdays' | 'Weekends' | 'Recurring';
+  roaster_type: "Weekdays" | "Weekends" | "Recurring";
   start_date: string;
   end_date: string;
   created_by_id: number;
@@ -84,15 +96,17 @@ export const RosterDetailPage: React.FC = () => {
   const { selectedSite } = useSelector((state: RootState) => state.site);
 
   // Set document title
-  useEffect(() => { 
-    document.title = 'Roster Template Details'; 
+  useEffect(() => {
+    document.title = "Roster Template Details";
   }, []);
 
   // Data states
-  const [rosterTemplate, setRosterTemplate] = useState<RosterTemplate | null>(null);
+  const [rosterTemplate, setRosterTemplate] = useState<RosterTemplate | null>(
+    null
+  );
   const [fmUsers, setFMUsers] = useState<FMUser[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
-  const [currentLocation, setCurrentLocation] = useState<string>('');
+  const [currentLocation, setCurrentLocation] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   // Fetch data on component mount
@@ -112,15 +126,15 @@ export const RosterDetailPage: React.FC = () => {
       const apiUrl = getFullUrl(
         isSmartSecureRoster
           ? `/spree/manage/user_roasters/${id}.json`
-          : `/pms/admin/user_roasters/${id}.json`
+          : `/crm/admin/user_roasters/${id}.json`
       );
       const response = await fetch(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': getAuthHeader()
-        }
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
       });
 
       if (!response.ok) {
@@ -128,14 +142,14 @@ export const RosterDetailPage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log('📝 Roster Template API Response:', data);
+      console.log("📝 Roster Template API Response:", data);
       setRosterTemplate({
         ...data,
         active: data.active !== undefined ? data.active : true,
       });
     } catch (error) {
-      console.error('Error fetching roster template:', error);
-      toast.error('Failed to load roster template details');
+      console.error("Error fetching roster template:", error);
+      toast.error("Failed to load roster template details");
     } finally {
       setLoading(false);
     }
@@ -146,12 +160,12 @@ export const RosterDetailPage: React.FC = () => {
     try {
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.FM_USERS);
       const response = await fetch(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': getAuthHeader()
-        }
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
       });
 
       if (!response.ok) {
@@ -159,17 +173,24 @@ export const RosterDetailPage: React.FC = () => {
       }
 
       const data = await response.json();
-      
+
       // Adapt the response to our expected format
       const users = data.fm_users || data.users || data.employees || data || [];
-      setFMUsers(users.map((user: any) => ({
-        id: user.id,
-        name: user.name || user.full_name || `${user.firstname || ''} ${user.lastname || ''}`.trim(),
-        email: user.email,
-        department: user.department ? (user.department.department_name || user.department.name) : undefined
-      })));
+      setFMUsers(
+        users.map((user: any) => ({
+          id: user.id,
+          name:
+            user.name ||
+            user.full_name ||
+            `${user.firstname || ""} ${user.lastname || ""}`.trim(),
+          email: user.email,
+          department: user.department
+            ? user.department.department_name || user.department.name
+            : undefined,
+        }))
+      );
     } catch (error) {
-      console.error('Error fetching FM Users:', error);
+      console.error("Error fetching FM Users:", error);
       setFMUsers([]);
     }
   };
@@ -177,14 +198,14 @@ export const RosterDetailPage: React.FC = () => {
   // Fetch Shifts from the API
   const fetchShifts = async () => {
     try {
-      const apiUrl = getFullUrl('/pms/admin/user_shifts.json');
+      const apiUrl = getFullUrl("/pms/admin/user_shifts.json");
       const response = await fetch(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': getAuthHeader()
-        }
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
       });
 
       if (!response.ok) {
@@ -192,22 +213,24 @@ export const RosterDetailPage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log('Shifts API Response:', data);
+      console.log("Shifts API Response:", data);
 
       // Adapt the response to our expected format
       const shiftsData = data.user_shifts || data.shifts || data || [];
-      setShifts(shiftsData.map((shift: any) => ({
-        id: shift.id,
-        start_hour: shift.start_hour,
-        start_min: shift.start_min,
-        end_hour: shift.end_hour,
-        end_min: shift.end_min,
-        timings: shift.timings,
-        total_hour: shift.total_hour
-      })));
+      setShifts(
+        shiftsData.map((shift: any) => ({
+          id: shift.id,
+          start_hour: shift.start_hour,
+          start_min: shift.start_min,
+          end_hour: shift.end_hour,
+          end_min: shift.end_min,
+          timings: shift.timings,
+          total_hour: shift.total_hour,
+        }))
+      );
     } catch (error) {
-      console.error('Error fetching shifts:', error);
-      toast.error('Failed to load shifts');
+      console.error("Error fetching shifts:", error);
+      toast.error("Failed to load shifts");
       setShifts([]);
     }
   };
@@ -222,36 +245,39 @@ export const RosterDetailPage: React.FC = () => {
       }
 
       // Fallback to localStorage
-      const siteId = localStorage.getItem('selectedSiteId');
-      const siteName = localStorage.getItem('selectedSiteName');
-      const companyName = localStorage.getItem('selectedCompanyName');
+      const siteId = localStorage.getItem("selectedSiteId");
+      const siteName = localStorage.getItem("selectedSiteName");
+      const companyName = localStorage.getItem("selectedCompanyName");
 
-      let locationName = 'Current Site';
+      let locationName = "Current Site";
 
-      if (siteName && siteName !== 'null' && siteName !== '') {
+      if (siteName && siteName !== "null" && siteName !== "") {
         locationName = siteName;
-      } else if (companyName && companyName !== 'null' && companyName !== '') {
+      } else if (companyName && companyName !== "null" && companyName !== "") {
         locationName = companyName;
       }
 
       // Try to get from DOM if localStorage doesn't have it
-      if (locationName === 'Current Site') {
-        const headerSiteElement = document.querySelector('[data-site-name]');
+      if (locationName === "Current Site") {
+        const headerSiteElement = document.querySelector("[data-site-name]");
         if (headerSiteElement) {
-          locationName = headerSiteElement.textContent?.trim() || 'Current Site';
+          locationName =
+            headerSiteElement.textContent?.trim() || "Current Site";
         }
       }
 
       setCurrentLocation(locationName);
     } catch (error) {
-      console.error('Error fetching current location:', error);
-      setCurrentLocation('Current Site');
+      console.error("Error fetching current location:", error);
+      setCurrentLocation("Current Site");
     }
   };
 
   // Handle delete
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this roster template?')) {
+    if (
+      !window.confirm("Are you sure you want to delete this roster template?")
+    ) {
       return;
     }
 
@@ -259,25 +285,25 @@ export const RosterDetailPage: React.FC = () => {
       const apiUrl = getFullUrl(
         isSmartSecureRoster
           ? `/spree/manage/user_roasters/${id}.json`
-          : `/pms/admin/user_roasters/${id}.json`
+          : `/crm/admin/user_roasters/${id}.json`
       );
       const response = await fetch(apiUrl, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': getAuthHeader()
-        }
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
+        },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete roster template');
+        throw new Error("Failed to delete roster template");
       }
 
-      toast.success('Roster template deleted successfully!');
+      toast.success("Roster template deleted successfully!");
       navigate(rosterBasePath);
     } catch (error) {
-      console.error('Error deleting roster template:', error);
-      toast.error('Failed to delete roster template');
+      console.error("Error deleting roster template:", error);
+      toast.error("Failed to delete roster template");
     }
   };
 
@@ -288,26 +314,28 @@ export const RosterDetailPage: React.FC = () => {
 
   // Handle export
   const handleExport = () => {
-    toast.success('Export functionality coming soon!');
+    toast.success("Export functionality coming soon!");
   };
 
   // Helper functions
   const getSelectedEmployees = () => {
     if (!rosterTemplate) return [];
-    
+
     // First try to get from new API response structure
     if (rosterTemplate.employees && Array.isArray(rosterTemplate.employees)) {
-      return rosterTemplate.employees.map(emp => ({
+      return rosterTemplate.employees.map((emp) => ({
         id: emp.id,
         name: emp.name,
         email: emp.email,
-        department: undefined // Department info not included in employee object
+        department: undefined, // Department info not included in employee object
       }));
     }
-    
+
     // Fallback to old structure
     if (!rosterTemplate.resource_id) return [];
-    const employee = fmUsers.find(user => user.id === rosterTemplate.resource_id);
+    const employee = fmUsers.find(
+      (user) => user.id === rosterTemplate.resource_id
+    );
     return employee ? [employee] : [];
   };
 
@@ -318,48 +346,57 @@ export const RosterDetailPage: React.FC = () => {
 
   const getSelectedShift = () => {
     if (!rosterTemplate || !rosterTemplate.user_shift_id) return null;
-    return shifts.find(shift => shift.id === rosterTemplate.user_shift_id);
+    return shifts.find((shift) => shift.id === rosterTemplate.user_shift_id);
   };
 
   const formatWorkingDays = () => {
-    if (!rosterTemplate) return '';
-    
-    if (rosterTemplate.roaster_type === 'Weekdays') {
-      return 'Monday - Friday';
-    } else if (rosterTemplate.roaster_type === 'Weekends') {
-      return 'Saturday - Sunday';
-    } else if (rosterTemplate.roaster_type === 'Recurring') {
+    if (!rosterTemplate) return "";
+
+    if (rosterTemplate.roaster_type === "Weekdays") {
+      return "Monday - Friday";
+    } else if (rosterTemplate.roaster_type === "Weekends") {
+      return "Saturday - Sunday";
+    } else if (rosterTemplate.roaster_type === "Recurring") {
       // Parse recurring data from no_of_days
-      if (rosterTemplate.no_of_days && Array.isArray(rosterTemplate.no_of_days) && rosterTemplate.no_of_days.length > 0) {
+      if (
+        rosterTemplate.no_of_days &&
+        Array.isArray(rosterTemplate.no_of_days) &&
+        rosterTemplate.no_of_days.length > 0
+      ) {
         const recurringData = rosterTemplate.no_of_days[0];
         const totalDays = Object.keys(recurringData).reduce((acc, weekNum) => {
           return acc + recurringData[weekNum].length;
         }, 0);
         return `${totalDays} custom days across ${Object.keys(recurringData).length} weeks`;
       }
-      return 'Custom recurring pattern';
+      return "Custom recurring pattern";
     }
-    return 'Not specified';
+    return "Not specified";
   };
 
   const getWeekSelectionDisplay = () => {
     if (!rosterTemplate || !rosterTemplate.no_of_days) return [];
-    
-    if (rosterTemplate.roaster_type === 'Recurring') {
-      if (Array.isArray(rosterTemplate.no_of_days) && rosterTemplate.no_of_days.length > 0) {
+
+    if (rosterTemplate.roaster_type === "Recurring") {
+      if (
+        Array.isArray(rosterTemplate.no_of_days) &&
+        rosterTemplate.no_of_days.length > 0
+      ) {
         const recurringData = rosterTemplate.no_of_days[0];
-        return Object.keys(recurringData).map(weekNum => `Week ${weekNum}`);
+        return Object.keys(recurringData).map((weekNum) => `Week ${weekNum}`);
       }
-    } else if (rosterTemplate.roaster_type === 'Weekdays') {
+    } else if (rosterTemplate.roaster_type === "Weekdays") {
       if (Array.isArray(rosterTemplate.no_of_days)) {
-        return rosterTemplate.no_of_days.map((weekNum: string) => 
-          `${weekNum}${weekNum === '1' ? 'st' : weekNum === '2' ? 'nd' : weekNum === '3' ? 'rd' : 'th'} Week`
+        return rosterTemplate.no_of_days.map(
+          (weekNum: string) =>
+            `${weekNum}${weekNum === "1" ? "st" : weekNum === "2" ? "nd" : weekNum === "3" ? "rd" : "th"} Week`
         );
       }
-    } else if (rosterTemplate.roaster_type === 'Weekends') {
+    } else if (rosterTemplate.roaster_type === "Weekends") {
       if (Array.isArray(rosterTemplate.no_of_days)) {
-        return rosterTemplate.no_of_days.map((weekendNum: string) => 
-          `${weekendNum}${weekendNum === '1' ? 'st' : weekendNum === '2' ? 'nd' : weekendNum === '3' ? 'rd' : 'th'} Weekend`
+        return rosterTemplate.no_of_days.map(
+          (weekendNum: string) =>
+            `${weekendNum}${weekendNum === "1" ? "st" : weekendNum === "2" ? "nd" : weekendNum === "3" ? "rd" : "th"} Weekend`
         );
       }
     }
@@ -367,14 +404,22 @@ export const RosterDetailPage: React.FC = () => {
   };
 
   const getCustomWorkingDays = () => {
-    if (!rosterTemplate || rosterTemplate.roaster_type !== 'Recurring' || !rosterTemplate.no_of_days) return [];
-    
-    if (Array.isArray(rosterTemplate.no_of_days) && rosterTemplate.no_of_days.length > 0) {
+    if (
+      !rosterTemplate ||
+      rosterTemplate.roaster_type !== "Recurring" ||
+      !rosterTemplate.no_of_days
+    )
+      return [];
+
+    if (
+      Array.isArray(rosterTemplate.no_of_days) &&
+      rosterTemplate.no_of_days.length > 0
+    ) {
       const recurringData = rosterTemplate.no_of_days[0];
-      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       const customDays: string[] = [];
-      
-      Object.keys(recurringData).forEach(weekNum => {
+
+      Object.keys(recurringData).forEach((weekNum) => {
         const dayNumbers = recurringData[weekNum];
         dayNumbers.forEach((dayNum: string) => {
           const dayName = dayNames[parseInt(dayNum) - 1];
@@ -383,7 +428,7 @@ export const RosterDetailPage: React.FC = () => {
           }
         });
       });
-      
+
       return customDays;
     }
     return [];
@@ -427,18 +472,37 @@ export const RosterDetailPage: React.FC = () => {
 
         <div className="my-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="mb-2 text-[22px] font-semibold text-[#1A1A18]" style={{ letterSpacing: '-0.015em', lineHeight: 1.2 }}>Roster Template Details</h1>
+            <h1
+              className="mb-2 text-[22px] font-semibold text-[#1A1A18]"
+              style={{ letterSpacing: "-0.015em", lineHeight: 1.2 }}
+            >
+              Roster Template Details
+            </h1>
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-[rgba(26,26,24,.48)]">Template Name:</span>
-                <span className="font-semibold text-[#1A1A18]">{rosterTemplate.name || '--'}</span>
+                <span className="font-medium text-[rgba(26,26,24,.48)]">
+                  Template Name:
+                </span>
+                <span className="font-semibold text-[#1A1A18]">
+                  {rosterTemplate.name || "--"}
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-medium text-[rgba(26,26,24,.48)]">Location:</span>
-                <span className="font-semibold text-[#1A1A18]">{rosterTemplate.location || currentLocation}</span>
+                <span className="font-medium text-[rgba(26,26,24,.48)]">
+                  Location:
+                </span>
+                <span className="font-semibold text-[#1A1A18]">
+                  {rosterTemplate.location || currentLocation}
+                </span>
               </div>
-              <Badge className={rosterTemplate.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                {rosterTemplate.active ? 'ACTIVE' : 'INACTIVE'}
+              <Badge
+                className={
+                  rosterTemplate.active
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }
+              >
+                {rosterTemplate.active ? "ACTIVE" : "INACTIVE"}
               </Badge>
             </div>
           </div>
@@ -447,10 +511,10 @@ export const RosterDetailPage: React.FC = () => {
             <Button
               onClick={handleEdit}
               className="min-h-[42px] rounded-lg !bg-[#1A1A18] px-[22px] text-[13px] font-semibold !text-white hover:!bg-[#12100E]"
-              style={{ backgroundColor: '#1A1A18', color: '#FFFFFF' }}
+              style={{ backgroundColor: "#1A1A18", color: "#FFFFFF" }}
             >
-              <Edit className="w-4 h-4 mr-2" style={{ color: '#FFFFFF' }} />
-              <span style={{ color: '#FFFFFF' }}>Edit</span>
+              <Edit className="w-4 h-4 mr-2" style={{ color: "#FFFFFF" }} />
+              <span style={{ color: "#FFFFFF" }}>Edit</span>
             </Button>
           </div>
         </div>
@@ -471,8 +535,14 @@ export const RosterDetailPage: React.FC = () => {
             </div>
             <div>
               <label className={LABEL}>Status</label>
-              <Badge className={rosterTemplate.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                {rosterTemplate.active ? 'ACTIVE' : 'INACTIVE'}
+              <Badge
+                className={
+                  rosterTemplate.active
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }
+              >
+                {rosterTemplate.active ? "ACTIVE" : "INACTIVE"}
               </Badge>
             </div>
           </div>
@@ -487,7 +557,9 @@ export const RosterDetailPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-3 h-3 rounded-full bg-[#da7756]"></span>
                   <span className={VALUE}>{rosterTemplate.roaster_type}</span>
-                  <span className="text-sm text-gray-500">({formatWorkingDays()})</span>
+                  <span className="text-sm text-gray-500">
+                    ({formatWorkingDays()})
+                  </span>
                 </div>
               </div>
               <div>
@@ -505,21 +577,22 @@ export const RosterDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {rosterTemplate.roaster_type === 'Recurring' && getCustomWorkingDays().length > 0 && (
-              <div>
-                <label className={LABEL}>Custom Days Selected</label>
-                <div className="flex flex-wrap gap-2">
-                  {getCustomWorkingDays().map((day, index) => (
-                    <span
-                      key={index}
-                      className="inline-block px-2 py-1 bg-[#F5F4F0] text-[#1A1A18] text-xs rounded-md border border-[rgba(26,26,24,.09)]"
-                    >
-                      {day}
-                    </span>
-                  ))}
+            {rosterTemplate.roaster_type === "Recurring" &&
+              getCustomWorkingDays().length > 0 && (
+                <div>
+                  <label className={LABEL}>Custom Days Selected</label>
+                  <div className="flex flex-wrap gap-2">
+                    {getCustomWorkingDays().map((day, index) => (
+                      <span
+                        key={index}
+                        className="inline-block px-2 py-1 bg-[#F5F4F0] text-[#1A1A18] text-xs rounded-md border border-[rgba(26,26,24,.09)]"
+                      >
+                        {day}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </Section>
 
@@ -530,7 +603,9 @@ export const RosterDetailPage: React.FC = () => {
               <label className={LABEL}>Location</label>
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-gray-400" />
-                <span className={VALUE}>{rosterTemplate.location || currentLocation}</span>
+                <span className={VALUE}>
+                  {rosterTemplate.location || currentLocation}
+                </span>
               </div>
             </div>
           </div>
@@ -566,11 +641,18 @@ export const RosterDetailPage: React.FC = () => {
               {getSelectedEmployees().length > 0 ? (
                 <div className="space-y-2">
                   {getSelectedEmployees().map((employee, index) => (
-                    <div key={employee.id || index} className="flex items-center gap-3 p-3 bg-white border border-[rgba(26,26,24,.09)] rounded-lg">
+                    <div
+                      key={employee.id || index}
+                      className="flex items-center gap-3 p-3 bg-white border border-[rgba(26,26,24,.09)] rounded-lg"
+                    >
                       <Users className="w-4 h-4 text-gray-400" />
                       <div className="flex-1">
-                        <div className="text-[13.5px] font-medium text-[#1A1A18]">{employee.name || 'No name available'}</div>
-                        <div className="text-sm text-gray-600">{employee.email}</div>
+                        <div className="text-[13.5px] font-medium text-[#1A1A18]">
+                          {employee.name || "No name available"}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {employee.email}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -587,16 +669,18 @@ export const RosterDetailPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className={LABEL}>Start Date</label>
-              <p className={VALUE}>{new Date(rosterTemplate.start_date).toLocaleDateString()}</p>
+              <p className={VALUE}>
+                {new Date(rosterTemplate.start_date).toLocaleDateString()}
+              </p>
             </div>
             <div>
               <label className={LABEL}>End Date</label>
-              <p className={VALUE}>{new Date(rosterTemplate.end_date).toLocaleDateString()}</p>
+              <p className={VALUE}>
+                {new Date(rosterTemplate.end_date).toLocaleDateString()}
+              </p>
             </div>
           </div>
         </Section>
-
-    
       </div>
     </div>
   );

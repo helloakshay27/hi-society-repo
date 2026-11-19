@@ -95,7 +95,7 @@ const TaskForm = ({
   setIsTagModalOpen,
   isConversion,
   attachments,
-  setAttachments
+  setAttachments,
 }) => {
   const { data: userAvailabilityData } = useAppSelector(
     (state) => state.fetchUserAvailability
@@ -106,37 +106,86 @@ const TaskForm = ({
 
   // Helper function to get file type icon and color
   const getFileTypeInfo = useCallback((fileName: string) => {
-    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    const ext = fileName.split(".").pop()?.toLowerCase() || "";
 
-    if (['pdf'].includes(ext)) {
-      return { icon: PictureAsPdfIcon, color: '#DC2626', bgColor: '#FEE2E2', type: 'PDF' };
+    if (["pdf"].includes(ext)) {
+      return {
+        icon: PictureAsPdfIcon,
+        color: "#DC2626",
+        bgColor: "#FEE2E2",
+        type: "PDF",
+      };
     }
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-      return { icon: ImageIcon, color: '#2563EB', bgColor: '#DBEAFE', type: 'Image' };
+    if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext)) {
+      return {
+        icon: ImageIcon,
+        color: "#2563EB",
+        bgColor: "#DBEAFE",
+        type: "Image",
+      };
     }
-    if (['mp3', 'wav', 'aac', 'flac', 'm4a'].includes(ext)) {
-      return { icon: AudioFileIcon, color: '#9333EA', bgColor: '#F3E8FF', type: 'Audio' };
+    if (["mp3", "wav", "aac", "flac", "m4a"].includes(ext)) {
+      return {
+        icon: AudioFileIcon,
+        color: "#9333EA",
+        bgColor: "#F3E8FF",
+        type: "Audio",
+      };
     }
-    if (['mp4', 'avi', 'mov', 'mkv', 'webm'].includes(ext)) {
-      return { icon: VideoLibraryIcon, color: '#EA580C', bgColor: '#FFEDD5', type: 'Video' };
+    if (["mp4", "avi", "mov", "mkv", "webm"].includes(ext)) {
+      return {
+        icon: VideoLibraryIcon,
+        color: "#EA580C",
+        bgColor: "#FFEDD5",
+        type: "Video",
+      };
     }
-    if (['doc', 'docx', 'txt', 'rtf', 'xlsx', 'xls', 'csv', 'ppt', 'pptx'].includes(ext)) {
-      return { icon: DescriptionIcon, color: '#16A34A', bgColor: '#DCFCE7', type: 'Document' };
+    if (
+      [
+        "doc",
+        "docx",
+        "txt",
+        "rtf",
+        "xlsx",
+        "xls",
+        "csv",
+        "ppt",
+        "pptx",
+      ].includes(ext)
+    ) {
+      return {
+        icon: DescriptionIcon,
+        color: "#16A34A",
+        bgColor: "#DCFCE7",
+        type: "Document",
+      };
     }
-    return { icon: AttachFileIcon, color: '#6B7280', bgColor: '#F3F4F6', type: 'File' };
+    return {
+      icon: AttachFileIcon,
+      color: "#6B7280",
+      bgColor: "#F3F4F6",
+      type: "File",
+    };
   }, []);
 
   // Helper function to format file size
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
   const baseUrl = localStorage.getItem("baseUrl");
 
-  const { isListening, activeId, transcript, supported, startListening, stopListening } = useSpeechToText();
+  const {
+    isListening,
+    activeId,
+    transcript,
+    supported,
+    startListening,
+    stopListening,
+  } = useSpeechToText();
   const [baseValue, setBaseValue] = useState("");
   const quillRef = useRef<HTMLDivElement>(null);
   const quillEditorRef = useRef<Quill | null>(null);
@@ -151,7 +200,8 @@ const TaskForm = ({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showDatePickerInterface, setShowDatePickerInterface] = useState(false);
-  const [showStartDatePickerInterface, setShowStartDatePickerInterface] = useState(false);
+  const [showStartDatePickerInterface, setShowStartDatePickerInterface] =
+    useState(false);
   const [startDateTasks, setStartDateTasks] = useState([]);
   const [targetDateTasks, setTargetDateTasks] = useState([]);
   const [showCalender, setShowCalender] = useState(false);
@@ -218,7 +268,7 @@ const TaskForm = ({
     setLoadingRoster(true);
     try {
       const response = await axios.get(
-        `https://${baseUrl}/pms/admin/user_roasters/${userId}.json`,
+        `https://${baseUrl}/crm/admin/user_roasters/${userId}.json`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -227,7 +277,7 @@ const TaskForm = ({
       );
       setRosterData(response.data);
     } catch (error) {
-      console.log('Error fetching roster:', error);
+      console.log("Error fetching roster:", error);
       // If roster not found, set to null to use default Monday-Friday
       setRosterData(null);
     } finally {
@@ -269,9 +319,9 @@ const TaskForm = ({
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+    if (e.type === "dragenter" || e.type === "dragover") {
       setIsDragActive(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setIsDragActive(false);
     }
   };
@@ -297,7 +347,11 @@ const TaskForm = ({
     const rosterDay = dayOfWeek === 0 ? 7 : dayOfWeek;
 
     // Default: Monday-Saturday if no roster data
-    if (!rosterData || !rosterData.no_of_days || rosterData.no_of_days.length === 0) {
+    if (
+      !rosterData ||
+      !rosterData.no_of_days ||
+      rosterData.no_of_days.length === 0
+    ) {
       // Disable only Sunday (Sunday = 0)
       return dayOfWeek === 0;
     }
@@ -318,9 +372,11 @@ const TaskForm = ({
     if (isListening && transcript && activeId === "task-description") {
       const newValue = baseValue ? `${baseValue} ${transcript}` : transcript;
       if (quillEditorRef.current) {
-        const formattedValue = newValue.startsWith("<") ? newValue : `<p>${newValue}</p>`;
+        const formattedValue = newValue.startsWith("<")
+          ? newValue
+          : `<p>${newValue}</p>`;
         quillEditorRef.current.root.innerHTML = formattedValue;
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           description: formattedValue,
         }));
@@ -554,11 +610,11 @@ const TaskForm = ({
         />
       )}
       {project &&
-        milestone &&
-        !Array.isArray(project) &&
-        !Array.isArray(milestone) &&
-        project.title &&
-        milestone.title ? (
+      milestone &&
+      !Array.isArray(project) &&
+      !Array.isArray(milestone) &&
+      project.title &&
+      milestone.title ? (
         <div className="flex items-center justify-between gap-3 mb-4 mt-4">
           <div className="w-full">
             <TextField
@@ -672,12 +728,23 @@ const TaskForm = ({
                   const currentText = quillEditorRef.current
                     ? quillEditorRef.current.root.innerHTML
                     : formData.description;
-                  setBaseValue(currentText === "<p><br></p>" ? "" : currentText);
+                  setBaseValue(
+                    currentText === "<p><br></p>" ? "" : currentText
+                  );
                   startListening("task-description");
                 }
               }}
-              color={isListening && activeId === "task-description" ? "secondary" : "default"}
-              sx={{ color: isListening && activeId === "task-description" ? "#C72030" : "inherit" }}
+              color={
+                isListening && activeId === "task-description"
+                  ? "secondary"
+                  : "default"
+              }
+              sx={{
+                color:
+                  isListening && activeId === "task-description"
+                    ? "#C72030"
+                    : "inherit",
+              }}
               disabled={isReadOnly}
             >
               {isListening && activeId === "task-description" ? (
@@ -760,9 +827,11 @@ const TaskForm = ({
             value={
               users?.find(
                 (user: any) => user?.id === formData.responsiblePerson
-              )?.role || users?.find(
+              )?.role ||
+              users?.find(
                 (user: any) => user?.id === formData.responsiblePerson
-              )?.role_name || ""
+              )?.role_name ||
+              ""
             }
             InputProps={{ readOnly: true }}
             variant="outlined"
@@ -924,7 +993,7 @@ const TaskForm = ({
           startDate && (
             <TasksOfDate
               selectedDate={startDate}
-              onClose={() => { }}
+              onClose={() => {}}
               tasks={startDateTasks}
               selectedUser={formData.responsiblePerson}
               userAvailability={userAvailability}
@@ -973,7 +1042,7 @@ const TaskForm = ({
           endDate && (
             <TasksOfDate
               selectedDate={endDate}
-              onClose={() => { }}
+              onClose={() => {}}
               tasks={targetDateTasks}
               selectedUser={formData.responsiblePerson}
               userAvailability={userAvailability}
@@ -1090,25 +1159,29 @@ const TaskForm = ({
           onDragOver={handleDrag}
           onDrop={handleDrop}
           onClick={() => !isReadOnly && fileInputRef.current?.click()}
-          className={`relative p-6 rounded-lg border-2 border-dashed transition-all cursor-pointer ${isDragActive
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
-            } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`relative p-6 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
+            isDragActive
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100"
+          } ${isReadOnly ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           <div className="flex flex-col items-center justify-center space-y-2">
             <CloudUploadIcon
               sx={{
                 fontSize: 40,
-                color: isDragActive ? '#3B82F6' : '#9CA3AF',
-                transition: 'all 0.3s ease',
+                color: isDragActive ? "#3B82F6" : "#9CA3AF",
+                transition: "all 0.3s ease",
               }}
             />
             <div className="text-center">
               <p className="text-sm font-semibold text-gray-700">
-                {isDragActive ? 'Drop files here' : 'Drag files here or click to browse'}
+                {isDragActive
+                  ? "Drop files here"
+                  : "Drag files here or click to browse"}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                Support: PDF, Images, Videos, Audio, Documents (Max size per file: 10MB)
+                Support: PDF, Images, Videos, Audio, Documents (Max size per
+                file: 10MB)
               </p>
             </div>
           </div>
@@ -1148,7 +1221,9 @@ const TaskForm = ({
                         className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0"
                         style={{ backgroundColor: fileInfo.bgColor }}
                       >
-                        <IconComponent sx={{ fontSize: 20, color: fileInfo.color }} />
+                        <IconComponent
+                          sx={{ fontSize: 20, color: fileInfo.color }}
+                        />
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -1188,10 +1263,14 @@ const TaskForm = ({
             {/* Summary */}
             <div className="mt-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
               <p className="text-sm text-blue-800">
-                <span className="font-semibold">{attachments.length}</span> file(s) ready to upload
-                {' '}
+                <span className="font-semibold">{attachments.length}</span>{" "}
+                file(s) ready to upload{" "}
                 <span className="text-blue-600">
-                  ({formatFileSize(attachments.reduce((sum, f) => sum + f.size, 0))})
+                  (
+                  {formatFileSize(
+                    attachments.reduce((sum, f) => sum + f.size, 0)
+                  )}
+                  )
                 </span>
               </p>
             </div>
@@ -1286,7 +1365,7 @@ const ProjectTaskCreateModal = ({
     priority: "",
     observer: [],
     tags: selectedTags || [],
-    isRecurring: false
+    isRecurring: false,
   });
 
   const [prevTags, setPrevTags] = useState([]);
@@ -1294,7 +1373,9 @@ const ProjectTaskCreateModal = ({
 
   const getTags = async () => {
     try {
-      const response = await dispatch(fetchProjectsTags({ active: true })).unwrap();
+      const response = await dispatch(
+        fetchProjectsTags({ active: true })
+      ).unwrap();
       setTags(response);
     } catch (error) {
       console.log(error);
@@ -1410,36 +1491,47 @@ const ProjectTaskCreateModal = ({
   }, [isEdit, task, id, mid, getTagName]);
 
   const createTaskPayload = (data) => {
-    const formatedEndDate = `${endDate?.year}-${endDate?.month + 1}-${endDate?.date
-      }`;
-    const formatedStartDate = `${startDate?.year}-${startDate?.month + 1}-${startDate?.date
-      }`;
+    const formatedEndDate = `${endDate?.year}-${endDate?.month + 1}-${
+      endDate?.date
+    }`;
+    const formatedStartDate = `${startDate?.year}-${startDate?.month + 1}-${
+      startDate?.date
+    }`;
 
     const formDatatoSend = new FormData();
 
     formDatatoSend.append("task_management[title]", data.taskTitle);
     formDatatoSend.append("task_management[description]", data.description);
-    formDatatoSend.append("task_management[responsible_person_id]", data.responsiblePerson);
+    formDatatoSend.append(
+      "task_management[responsible_person_id]",
+      data.responsiblePerson
+    );
     formDatatoSend.append("task_management[priority]", data.priority);
     data.observer.forEach((observer) => {
-      formDatatoSend.append(
-        "task_management[observer_ids][]",
-        observer.value
-      );
+      formDatatoSend.append("task_management[observer_ids][]", observer.value);
     });
     data.tags.forEach((tag) => {
-      formDatatoSend.append(
-        "task_management[task_tag_ids][]",
-        tag.value
-      );
+      formDatatoSend.append("task_management[task_tag_ids][]", tag.value);
     });
-    formDatatoSend.append("task_management[expected_start_date]", formatedStartDate);
+    formDatatoSend.append(
+      "task_management[expected_start_date]",
+      formatedStartDate
+    );
     formDatatoSend.append("task_management[target_date]", formatedEndDate);
     formDatatoSend.append("task_management[allocation_date]", formatedEndDate);
-    formDatatoSend.append("task_management[project_management_id]", id || formData.project);
-    formDatatoSend.append("task_management[milestone_id]", mid || formData.milestone);
+    formDatatoSend.append(
+      "task_management[project_management_id]",
+      id || formData.project
+    );
+    formDatatoSend.append(
+      "task_management[milestone_id]",
+      mid || formData.milestone
+    );
     formDatatoSend.append("task_management[active]", "true");
-    formDatatoSend.append("task_management[estimated_hour]", totalWorkingHours.toString());
+    formDatatoSend.append(
+      "task_management[estimated_hour]",
+      totalWorkingHours.toString()
+    );
 
     // Build task allocation times attributes with proper structure
     let taskAllocationTimesAttributes: any[] = [];
@@ -1456,12 +1548,27 @@ const ProjectTaskCreateModal = ({
     // Append allocation times
     taskAllocationTimesAttributes.forEach((item, index) => {
       if (item.id) {
-        formDatatoSend.append(`task_management[task_allocation_times_attributes][${index}][id]`, item.id);
+        formDatatoSend.append(
+          `task_management[task_allocation_times_attributes][${index}][id]`,
+          item.id
+        );
       }
-      formDatatoSend.append(`task_management[task_allocation_times_attributes][${index}][date]`, item.date);
-      formDatatoSend.append(`task_management[task_allocation_times_attributes][${index}][hours]`, item.hours);
-      formDatatoSend.append(`task_management[task_allocation_times_attributes][${index}][minutes]`, item.minutes);
-      formDatatoSend.append(`task_management[task_allocation_times_attributes][${index}][_destroy]`, item._destroy);
+      formDatatoSend.append(
+        `task_management[task_allocation_times_attributes][${index}][date]`,
+        item.date
+      );
+      formDatatoSend.append(
+        `task_management[task_allocation_times_attributes][${index}][hours]`,
+        item.hours
+      );
+      formDatatoSend.append(
+        `task_management[task_allocation_times_attributes][${index}][minutes]`,
+        item.minutes
+      );
+      formDatatoSend.append(
+        `task_management[task_allocation_times_attributes][${index}][_destroy]`,
+        item._destroy
+      );
     });
 
     if (opportunityId) {
@@ -1471,7 +1578,10 @@ const ProjectTaskCreateModal = ({
       formDatatoSend.append("task_management[is_recurring]", data.isRecurring);
     }
     if (data.isRecurring && data.cronExpression) {
-      formDatatoSend.append("task_management[cron_expression]", data.cronExpression);
+      formDatatoSend.append(
+        "task_management[cron_expression]",
+        data.cronExpression
+      );
     }
 
     // Add attachments if any
@@ -1644,10 +1754,10 @@ const ProjectTaskCreateModal = ({
   const handleSave = (data) => {
     setRecurringData(data);
     // Store cron expression in formData and keep recurring task checked
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       isRecurring: true,
-      cronExpression: data.cronExpression
+      cronExpression: data.cronExpression,
     }));
     // Close the modal (checkbox remains checked)
     setIsModalOpen(false);
@@ -1663,7 +1773,7 @@ const ProjectTaskCreateModal = ({
           <TaskForm
             key={task.id}
             formData={task.formData}
-            setFormData={() => { }}
+            setFormData={() => {}}
             isReadOnly={true}
             project={project}
             milestone={milestone}
@@ -1693,7 +1803,7 @@ const ProjectTaskCreateModal = ({
             setIsTagModalOpen={setIsTagModalOpen}
             isConversion={isConversion}
             attachments={[]}
-            setAttachments={() => { }}
+            setAttachments={() => {}}
           />
         ))}
 
