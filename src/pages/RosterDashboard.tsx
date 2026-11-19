@@ -1,15 +1,29 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plus, Download, Filter, Upload, Printer, QrCode, Eye, Edit, Trash2, Users, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { BulkUploadModal } from '@/components/BulkUploadModal';
-import { ExportModal } from '@/components/ExportModal';
-import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
-import { ColumnConfig } from '@/hooks/useEnhancedTable';
-import { TicketPagination } from '@/components/TicketPagination';
-import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
-import { toast } from 'sonner';
-import { useDebounce } from '@/hooks/useDebounce';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import {
+  Plus,
+  Download,
+  Filter,
+  Upload,
+  Printer,
+  QrCode,
+  Eye,
+  Edit,
+  Trash2,
+  Users,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { BulkUploadModal } from "@/components/BulkUploadModal";
+import { ExportModal } from "@/components/ExportModal";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { TicketPagination } from "@/components/TicketPagination";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { toast } from "sonner";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 // Type definitions for the roster data
@@ -66,47 +80,47 @@ interface RosterApiItem {
 // Column configuration for the enhanced table
 const columns: ColumnConfig[] = [
   {
-    key: 'actions',
-    label: 'Actions',
+    key: "actions",
+    label: "Actions",
     sortable: false,
     hideable: false,
-    draggable: false
+    draggable: false,
   },
   {
-    key: 'template',
-    label: 'Template',
+    key: "template",
+    label: "Template",
     sortable: true,
     hideable: true,
-    draggable: true
+    draggable: true,
   },
   {
-    key: 'location',
-    label: 'Location',
+    key: "location",
+    label: "Location",
     sortable: true,
     hideable: true,
-    draggable: true
+    draggable: true,
   },
   {
-    key: 'shift',
-    label: 'Shift',
+    key: "shift",
+    label: "Shift",
     sortable: true,
     hideable: true,
-    draggable: true
+    draggable: true,
   },
   {
-    key: 'rosterType',
-    label: 'Roster Type',
+    key: "rosterType",
+    label: "Roster Type",
     sortable: true,
     hideable: true,
-    draggable: true
+    draggable: true,
   },
   {
-    key: 'createdOn',
-    label: 'Created On',
+    key: "createdOn",
+    label: "Created On",
     sortable: true,
     hideable: true,
-    draggable: true
-  }
+    draggable: true,
+  },
   // {
   //   key: 'createdBy',
   //   label: 'Created By',
@@ -137,17 +151,19 @@ const getSmartSecureSocietyId = () => {
 const getRosterItems = (data: unknown): RosterApiItem[] => {
   if (Array.isArray(data)) return data;
 
-  if (!data || typeof data !== 'object') return [];
+  if (!data || typeof data !== "object") return [];
 
   const rosterData = data as {
     user_roasters?: RosterApiItem[];
     roasters?: RosterApiItem[];
     rosters?: RosterApiItem[];
-    data?: {
-      user_roasters?: RosterApiItem[];
-      roasters?: RosterApiItem[];
-      rosters?: RosterApiItem[];
-    } | RosterApiItem[];
+    data?:
+      | {
+          user_roasters?: RosterApiItem[];
+          roasters?: RosterApiItem[];
+          rosters?: RosterApiItem[];
+        }
+      | RosterApiItem[];
   };
 
   const candidates = [
@@ -155,23 +171,29 @@ const getRosterItems = (data: unknown): RosterApiItem[] => {
     rosterData.roasters,
     rosterData.rosters,
     rosterData.data,
-    Array.isArray(rosterData.data) ? rosterData.data : rosterData.data?.user_roasters,
-    Array.isArray(rosterData.data) ? rosterData.data : rosterData.data?.roasters,
+    Array.isArray(rosterData.data)
+      ? rosterData.data
+      : rosterData.data?.user_roasters,
+    Array.isArray(rosterData.data)
+      ? rosterData.data
+      : rosterData.data?.roasters,
     Array.isArray(rosterData.data) ? rosterData.data : rosterData.data?.rosters,
   ];
 
-  const firstMatch = candidates.find((candidate): candidate is RosterApiItem[] => Array.isArray(candidate));
+  const firstMatch = candidates.find(
+    (candidate): candidate is RosterApiItem[] => Array.isArray(candidate)
+  );
   return firstMatch || [];
 };
 
 const formatRosterDate = (value: unknown) => {
-  if (typeof value !== 'string' || !value.trim()) {
-    return 'Not available';
+  if (typeof value !== "string" || !value.trim()) {
+    return "Not available";
   }
 
   const parsedDate = new Date(value);
   if (!Number.isNaN(parsedDate.getTime())) {
-    return parsedDate.toLocaleDateString('en-GB');
+    return parsedDate.toLocaleDateString("en-GB");
   }
 
   return value;
@@ -196,7 +218,7 @@ export const RosterDashboard = ({
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15; // Changed to constant like BuildingPage
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchQuery = useDebounce(searchTerm, 1000);
   const [rosterData, setRosterData] = useState<RosterItem[]>([]);
   const [allRosterData, setAllRosterData] = useState<RosterItem[]>([]); // Store all data
@@ -212,15 +234,15 @@ export const RosterDashboard = ({
             `/spree/manage/user_roasters.json?page=1&per_page=${itemsPerPage}&society_id=${societyId}`
           )
         : getFullUrl(
-            `/pms/admin/user_roasters.json?page=1&per_page=${itemsPerPage}`
+            `/crm/admin/user_roasters.json?page=1&per_page=${itemsPerPage}`
           );
       const response = await fetch(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': getAuthHeader()
-        }
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
       });
 
       if (!response.ok) {
@@ -237,14 +259,14 @@ export const RosterDashboard = ({
           item.timings ||
           item.user_shift?.timings ||
           item.user_shift?.shift ||
-          'Not specified';
+          "Not specified";
 
         const locationInfo =
           item.location ||
           item.site_name ||
           item.resource_name ||
           item.building_name ||
-          'Not specified';
+          "Not specified";
 
         const createdDate = formatRosterDate(
           item.created_on || item.created_at || item.createdAt
@@ -255,28 +277,28 @@ export const RosterDashboard = ({
           item.created_by_name ||
           item.creator_name ||
           item.user_name ||
-          'System';
+          "System";
 
         return {
           id: item.id,
-          template: item.name || item.template || 'Unnamed Template',
+          template: item.name || item.template || "Unnamed Template",
           location: locationInfo,
           shift: shiftInfo,
-          rosterType: item.roaster_type || item.allocation_type || 'User',
+          rosterType: item.roaster_type || item.allocation_type || "User",
           createdOn: createdDate,
           createdBy: createdByInfo,
-          active: item.active !== undefined ? item.active : true
+          active: item.active !== undefined ? item.active : true,
         };
       });
 
       setAllRosterData(transformedData);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error fetching roster data:', error);
+      const message = error instanceof Error ? error.message : "Unknown error";
+      console.error("Error fetching roster data:", error);
       toast.error(`Failed to load roster data: ${message}`, {
         duration: 5000,
       });
-      
+
       setAllRosterData([]);
     } finally {
       setLoading(false);
@@ -301,10 +323,10 @@ export const RosterDashboard = ({
   // Filter and paginate data
   const filteredRosterData = useMemo(() => {
     if (!allRosterData || !Array.isArray(allRosterData)) return [];
-    
-    return allRosterData.filter(item => {
+
+    return allRosterData.filter((item) => {
       if (!debouncedSearchQuery.trim()) return true;
-      
+
       const searchLower = debouncedSearchQuery.toLowerCase();
       return (
         item.template.toLowerCase().includes(searchLower) ||
@@ -350,18 +372,18 @@ export const RosterDashboard = ({
     actions: (
       <div className="flex items-center gap-2">
         {shouldShow("Roster", "show") && (
-          <button 
-            onClick={() => handleView(roster.id)} 
-            className="p-1 text-black hover:bg-gray-100 rounded" 
+          <button
+            onClick={() => handleView(roster.id)}
+            className="p-1 text-black hover:bg-gray-100 rounded"
             title="View"
           >
             <Eye className="w-4 h-4" />
           </button>
         )}
         {shouldShow("Roster", "update") && (
-          <button 
-            onClick={() => handleEdit(roster.id)} 
-            className="p-1 text-black hover:bg-gray-100 rounded" 
+          <button
+            onClick={() => handleEdit(roster.id)}
+            className="p-1 text-black hover:bg-gray-100 rounded"
             title="Edit"
           >
             <Edit className="w-4 h-4" />
@@ -370,15 +392,18 @@ export const RosterDashboard = ({
       </div>
     ),
     template: (
-      <div className="font-medium text-gray-900 max-w-xs truncate" title={roster.template}>
+      <div
+        className="font-medium text-gray-900 max-w-xs truncate"
+        title={roster.template}
+      >
         {roster.template}
       </div>
     ),
-    location: (
-      <span className="text-sm text-gray-600">{roster.location}</span>
-    ),
+    location: <span className="text-sm text-gray-600">{roster.location}</span>,
     shift: (
-      <span className="text-sm text-gray-600 whitespace-nowrap">{roster.shift}</span>
+      <span className="text-sm text-gray-600 whitespace-nowrap">
+        {roster.shift}
+      </span>
     ),
     rosterType: (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -389,8 +414,8 @@ export const RosterDashboard = ({
       <span className="text-sm text-gray-600">{roster.createdOn}</span>
     ),
     createdBy: (
-      <span className="text-sm text-gray-600">{roster.createdBy || '-'}</span>
-    )
+      <span className="text-sm text-gray-600">{roster.createdBy || "-"}</span>
+    ),
   });
 
   const handleView = (id: number) => {
@@ -422,144 +447,153 @@ export const RosterDashboard = ({
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-xl font-bold tracking-wide uppercase">Roster Management</h1>
-            <p className="text-gray-600">Manage roster templates and schedules</p>
+            <h1 className="text-xl font-bold tracking-wide uppercase">
+              Roster Management
+            </h1>
+            <p className="text-gray-600">
+              Manage roster templates and schedules
+            </p>
           </div>
         </div>
       </header>
 
       <div className=" ">
-          <EnhancedTable
-            data={currentRosterData}
-            columns={columns}
-            renderRow={renderRow}
-            storageKey={tableStorageKey}
-            enableSearch={true}
-            searchTerm={searchTerm}
-            searchValue={searchTerm}
-            searchPlaceholder="Search rosters..."
-            onSearchChange={handleSearch}
-            disableClientSearch={true}
-            enableExport={false}
-            exportFileName="roster-data"
-            leftActions={
-              <div className="flex gap-2">
-                {shouldShow("Roster", "create") && (
-                  <Button 
-                    onClick={handleAdd} 
-variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"                   >
-                    <Plus className="w-4 h-4" />
-                    Add
-                  </Button>
-                )}
-              </div>
-            }
-            pagination={false} // Disable built-in pagination since we're adding custom
-            loading={loading}
-            emptyMessage="No rosters found. Create your first roster to get started."
-          />
+        <EnhancedTable
+          data={currentRosterData}
+          columns={columns}
+          renderRow={renderRow}
+          storageKey={tableStorageKey}
+          enableSearch={true}
+          searchTerm={searchTerm}
+          searchValue={searchTerm}
+          searchPlaceholder="Search rosters..."
+          onSearchChange={handleSearch}
+          disableClientSearch={true}
+          enableExport={false}
+          exportFileName="roster-data"
+          leftActions={
+            <div className="flex gap-2">
+              {shouldShow("Roster", "create") && (
+                <Button
+                  onClick={handleAdd}
+                  variant="ghost"
+                  className="btn-primary h-9 px-4 text-sm font-medium"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add
+                </Button>
+              )}
+            </div>
+          }
+          pagination={false} // Disable built-in pagination since we're adding custom
+          loading={loading}
+          emptyMessage="No rosters found. Create your first roster to get started."
+        />
 
-          {/* Pagination Controls - matching BuildingPage style */}
-          {allRosterData.length > 0 && (
-            <div className="flex items-center justify-between mt-4">
-              {/* <div className="text-sm text-muted-foreground">
+        {/* Pagination Controls - matching BuildingPage style */}
+        {allRosterData.length > 0 && (
+          <div className="flex items-center justify-between mt-4">
+            {/* <div className="text-sm text-muted-foreground">
                 Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} rosters
               </div> */}
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToPrevious}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPrevious}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
 
-                <div className="flex items-center space-x-1">
-                  {/* Show first page */}
-                  {currentPage > 3 && (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => goToPage(1)}
-                        className="w-8 h-8 p-0"
-                      >
-                        1
-                      </Button>
-                      {currentPage > 4 && <span className="px-2">...</span>}
-                    </>
-                  )}
+              <div className="flex items-center space-x-1">
+                {/* Show first page */}
+                {currentPage > 3 && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(1)}
+                      className="w-8 h-8 p-0"
+                    >
+                      1
+                    </Button>
+                    {currentPage > 4 && <span className="px-2">...</span>}
+                  </>
+                )}
 
-                  {/* Show pages around current page */}
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(page => page >= currentPage - 2 && page <= currentPage + 2)
-                    .map((page) => (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => goToPage(page)}
-                        className={
-                          currentPage === page
-                            ? "w-8 h-8 p-0 !bg-[#da7756] hover:!bg-[#da7756]"
-                            : "w-8 h-8 p-0"
-                        }
-                      >
-                        {currentPage === page ? (
-                          <span style={{ color: '#fff' }}>{page}</span>
-                        ) : (
-                          page
-                        )}
-                      </Button>
-                    ))}
+                {/* Show pages around current page */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(
+                    (page) => page >= currentPage - 2 && page <= currentPage + 2
+                  )
+                  .map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => goToPage(page)}
+                      className={
+                        currentPage === page
+                          ? "w-8 h-8 p-0 !bg-[#da7756] hover:!bg-[#da7756]"
+                          : "w-8 h-8 p-0"
+                      }
+                    >
+                      {currentPage === page ? (
+                        <span style={{ color: "#fff" }}>{page}</span>
+                      ) : (
+                        page
+                      )}
+                    </Button>
+                  ))}
 
-                  {/* Show last page */}
-                  {currentPage < totalPages - 2 && (
-                    <>
-                      {currentPage < totalPages - 3 && <span className="px-2">...</span>}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => goToPage(totalPages)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {totalPages}
-                      </Button>
-                    </>
-                  )}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToNext}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                {/* Show last page */}
+                {currentPage < totalPages - 2 && (
+                  <>
+                    {currentPage < totalPages - 3 && (
+                      <span className="px-2">...</span>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(totalPages)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {totalPages}
+                    </Button>
+                  </>
+                )}
               </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNext}
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-          )}
           </div>
-
-        {/* Modals */}
-        {isBulkUploadOpen && (
-          <BulkUploadModal
-            isOpen={isBulkUploadOpen}
-            onClose={() => setIsBulkUploadOpen(false)}
-          />
-        )}
-
-        {isExportOpen && (
-          <ExportModal
-            isOpen={isExportOpen}
-            onClose={() => setIsExportOpen(false)}
-          />
         )}
       </div>
-    );
-  };
+
+      {/* Modals */}
+      {isBulkUploadOpen && (
+        <BulkUploadModal
+          isOpen={isBulkUploadOpen}
+          onClose={() => setIsBulkUploadOpen(false)}
+        />
+      )}
+
+      {isExportOpen && (
+        <ExportModal
+          isOpen={isExportOpen}
+          onClose={() => setIsExportOpen(false)}
+        />
+      )}
+    </div>
+  );
+};

@@ -55,12 +55,19 @@ const resolveCurrentLocation = (selectedSiteName?: string): string => {
   }
 
   try {
-    const hiSocietyApprovedSocietiesStr = localStorage.getItem("hiSocietyApprovedSocieties");
+    const hiSocietyApprovedSocietiesStr = localStorage.getItem(
+      "hiSocietyApprovedSocieties"
+    );
     const selectedUserSocietyId = localStorage.getItem("selectedUserSociety");
 
     if (hiSocietyApprovedSocietiesStr && selectedUserSocietyId) {
-      const societies = JSON.parse(hiSocietyApprovedSocietiesStr) as Array<{ id: number | string; society?: { building_name?: string } }>;
-      const selected = societies.find((s) => s.id.toString() === selectedUserSocietyId);
+      const societies = JSON.parse(hiSocietyApprovedSocietiesStr) as Array<{
+        id: number | string;
+        society?: { building_name?: string };
+      }>;
+      const selected = societies.find(
+        (s) => s.id.toString() === selectedUserSocietyId
+      );
       if (selected?.society?.building_name) {
         return selected.society.building_name;
       }
@@ -129,7 +136,9 @@ interface RosterCreateResponse {
 export const RosterCreatePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isSmartSecureRoster = location.pathname.startsWith("/smartsecure/roster");
+  const isSmartSecureRoster = location.pathname.startsWith(
+    "/smartsecure/roster"
+  );
   const rosterBasePath = isSmartSecureRoster
     ? "/smartsecure/roster"
     : "/settings/account/roster";
@@ -170,7 +179,8 @@ export const RosterCreatePage: React.FC = () => {
   // Data states
   const [fmUsers, setFMUsers] = useState<FMUser[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
-  const [currentLocation, setCurrentLocation] = useState<string>(initialLocation);
+  const [currentLocation, setCurrentLocation] =
+    useState<string>(initialLocation);
 
   // Error states
   const [errors, setErrors] = useState({
@@ -279,8 +289,13 @@ export const RosterCreatePage: React.FC = () => {
   const fetchShifts = async () => {
     setLoadingShifts(true);
     try {
-      const societyId = localStorage.getItem("selectedSocietyId") || localStorage.getItem("society_id") || "";
-      const apiUrl = getFullUrl(`/spree/manage/user_shifts.json?society_id=${societyId}`);
+      const societyId =
+        localStorage.getItem("selectedSocietyId") ||
+        localStorage.getItem("society_id") ||
+        "";
+      const apiUrl = getFullUrl(
+        `/spree/manage/user_shifts.json?society_id=${societyId}`
+      );
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -299,16 +314,27 @@ export const RosterCreatePage: React.FC = () => {
       // Adapt the response to our expected format
       const shiftsData = data.user_shifts || data.shifts || data || [];
       setShifts(
-        shiftsData.map((shift: { id: number; start_hour: number; start_min: number; end_hour: number; end_min: number; timings: string; total_hour: number; created_by?: { name?: string } }) => ({
-          id: shift.id,
-          start_hour: shift.start_hour,
-          start_min: shift.start_min,
-          end_hour: shift.end_hour,
-          end_min: shift.end_min,
-          timings: shift.timings,
-          total_hour: shift.total_hour,
-          vendor_name: shift.created_by?.name || "",
-        }))
+        shiftsData.map(
+          (shift: {
+            id: number;
+            start_hour: number;
+            start_min: number;
+            end_hour: number;
+            end_min: number;
+            timings: string;
+            total_hour: number;
+            created_by?: { name?: string };
+          }) => ({
+            id: shift.id,
+            start_hour: shift.start_hour,
+            start_min: shift.start_min,
+            end_hour: shift.end_hour,
+            end_min: shift.end_min,
+            timings: shift.timings,
+            total_hour: shift.total_hour,
+            vendor_name: shift.created_by?.name || "",
+          })
+        )
       );
     } catch (error) {
       console.error("Error fetching shifts:", error);
@@ -512,7 +538,10 @@ export const RosterCreatePage: React.FC = () => {
             },
           }}
         />
-        <ListItemText primary={user.name || "No name available"} secondary={user.email} />
+        <ListItemText
+          primary={user.name || "No name available"}
+          secondary={user.email}
+        />
       </MenuItem>
     ));
   }, [fmUsers, loadingFMUsers, selectedEmployeeSet]);
@@ -679,7 +708,7 @@ export const RosterCreatePage: React.FC = () => {
       const apiUrl = getFullUrl(
         isSmartSecureRoster
           ? "/spree/manage/user_roasters.json"
-          : "/pms/admin/user_roasters.json"
+          : "/crm/admin/user_roasters.json"
       );
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -696,14 +725,17 @@ export const RosterCreatePage: React.FC = () => {
         .catch(() => ({}));
 
       if (!response.ok) {
-        let errorMessage = result.message || result.error || "Failed to create roster template";
+        let errorMessage =
+          result.message || result.error || "Failed to create roster template";
         if (result.errors) errorMessage = JSON.stringify(result.errors);
         throw new Error(errorMessage);
       }
 
       if (result.error || result.errors) {
         throw new Error(
-          result.error || JSON.stringify(result.errors) || "Failed to create roster template"
+          result.error ||
+            JSON.stringify(result.errors) ||
+            "Failed to create roster template"
         );
       }
 
@@ -1117,10 +1149,7 @@ export const RosterCreatePage: React.FC = () => {
         </Section>
 
         {/* Location Section */}
-        <Section
-          title="Location"
-          icon={<MapPin className="w-4 h-4" />}
-        >
+        <Section title="Location" icon={<MapPin className="w-4 h-4" />}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <TextField
@@ -1373,7 +1402,9 @@ export const RosterCreatePage: React.FC = () => {
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Creating..." : (
+          {isSubmitting ? (
+            "Creating..."
+          ) : (
             <>
               <Save className="w-4 h-4 mr-2" />
               Create Template

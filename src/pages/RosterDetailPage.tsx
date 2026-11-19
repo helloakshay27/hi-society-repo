@@ -1,14 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, MapPin, Building2, Clock, Users, Edit, Download, Trash2, Eye } from 'lucide-react';
-import { toast } from 'sonner';
-import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
-import { RootState } from '@/store/store';
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Button } from "@/components/ui/button";
+import {
+  ArrowLeft,
+  Calendar,
+  MapPin,
+  Building2,
+  Clock,
+  Users,
+  Edit,
+  Download,
+  Trash2,
+  Eye,
+} from "lucide-react";
+import { toast } from "sonner";
+import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { RootState } from "@/store/store";
 
 // Section component for consistent layout matching TaskDetailsPage
-const Section: React.FC<{ title: string; icon: React.ElementType; children: React.ReactNode }> = ({ title, icon: Icon, children }) => (
+const Section: React.FC<{
+  title: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+}> = ({ title, icon: Icon, children }) => (
   <section className="bg-transparent border-none shadow-none rounded-lg">
     <div className="figma-card-header">
       <div className="flex items-center gap-3">
@@ -45,7 +60,7 @@ interface RosterTemplate {
   name: string;
   no_of_days: any[];
   allocation_type: string;
-  roaster_type: 'Weekdays' | 'Weekends' | 'Recurring';
+  roaster_type: "Weekdays" | "Weekends" | "Recurring";
   start_date: string;
   end_date: string;
   created_by_id: number;
@@ -79,15 +94,17 @@ export const RosterDetailPage: React.FC = () => {
   const { selectedSite } = useSelector((state: RootState) => state.site);
 
   // Set document title
-  useEffect(() => { 
-    document.title = 'Roster Template Details'; 
+  useEffect(() => {
+    document.title = "Roster Template Details";
   }, []);
 
   // Data states
-  const [rosterTemplate, setRosterTemplate] = useState<RosterTemplate | null>(null);
+  const [rosterTemplate, setRosterTemplate] = useState<RosterTemplate | null>(
+    null
+  );
   const [fmUsers, setFMUsers] = useState<FMUser[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
-  const [currentLocation, setCurrentLocation] = useState<string>('');
+  const [currentLocation, setCurrentLocation] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   // Fetch data on component mount
@@ -107,15 +124,15 @@ export const RosterDetailPage: React.FC = () => {
       const apiUrl = getFullUrl(
         isSmartSecureRoster
           ? `/spree/manage/user_roasters/${id}.json`
-          : `/pms/admin/user_roasters/${id}.json`
+          : `/crm/admin/user_roasters/${id}.json`
       );
       const response = await fetch(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': getAuthHeader()
-        }
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
       });
 
       if (!response.ok) {
@@ -123,14 +140,14 @@ export const RosterDetailPage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log('📝 Roster Template API Response:', data);
+      console.log("📝 Roster Template API Response:", data);
       setRosterTemplate({
         ...data,
         active: data.active !== undefined ? data.active : true,
       });
     } catch (error) {
-      console.error('Error fetching roster template:', error);
-      toast.error('Failed to load roster template details');
+      console.error("Error fetching roster template:", error);
+      toast.error("Failed to load roster template details");
     } finally {
       setLoading(false);
     }
@@ -141,12 +158,12 @@ export const RosterDetailPage: React.FC = () => {
     try {
       const apiUrl = getFullUrl(API_CONFIG.ENDPOINTS.FM_USERS);
       const response = await fetch(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': getAuthHeader()
-        }
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
       });
 
       if (!response.ok) {
@@ -154,17 +171,24 @@ export const RosterDetailPage: React.FC = () => {
       }
 
       const data = await response.json();
-      
+
       // Adapt the response to our expected format
       const users = data.fm_users || data.users || data.employees || data || [];
-      setFMUsers(users.map((user: any) => ({
-        id: user.id,
-        name: user.name || user.full_name || `${user.firstname || ''} ${user.lastname || ''}`.trim(),
-        email: user.email,
-        department: user.department ? (user.department.department_name || user.department.name) : undefined
-      })));
+      setFMUsers(
+        users.map((user: any) => ({
+          id: user.id,
+          name:
+            user.name ||
+            user.full_name ||
+            `${user.firstname || ""} ${user.lastname || ""}`.trim(),
+          email: user.email,
+          department: user.department
+            ? user.department.department_name || user.department.name
+            : undefined,
+        }))
+      );
     } catch (error) {
-      console.error('Error fetching FM Users:', error);
+      console.error("Error fetching FM Users:", error);
       setFMUsers([]);
     }
   };
@@ -172,14 +196,14 @@ export const RosterDetailPage: React.FC = () => {
   // Fetch Shifts from the API
   const fetchShifts = async () => {
     try {
-      const apiUrl = getFullUrl('/pms/admin/user_shifts.json');
+      const apiUrl = getFullUrl("/pms/admin/user_shifts.json");
       const response = await fetch(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': getAuthHeader()
-        }
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
       });
 
       if (!response.ok) {
@@ -187,22 +211,24 @@ export const RosterDetailPage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log('Shifts API Response:', data);
+      console.log("Shifts API Response:", data);
 
       // Adapt the response to our expected format
       const shiftsData = data.user_shifts || data.shifts || data || [];
-      setShifts(shiftsData.map((shift: any) => ({
-        id: shift.id,
-        start_hour: shift.start_hour,
-        start_min: shift.start_min,
-        end_hour: shift.end_hour,
-        end_min: shift.end_min,
-        timings: shift.timings,
-        total_hour: shift.total_hour
-      })));
+      setShifts(
+        shiftsData.map((shift: any) => ({
+          id: shift.id,
+          start_hour: shift.start_hour,
+          start_min: shift.start_min,
+          end_hour: shift.end_hour,
+          end_min: shift.end_min,
+          timings: shift.timings,
+          total_hour: shift.total_hour,
+        }))
+      );
     } catch (error) {
-      console.error('Error fetching shifts:', error);
-      toast.error('Failed to load shifts');
+      console.error("Error fetching shifts:", error);
+      toast.error("Failed to load shifts");
       setShifts([]);
     }
   };
@@ -217,36 +243,39 @@ export const RosterDetailPage: React.FC = () => {
       }
 
       // Fallback to localStorage
-      const siteId = localStorage.getItem('selectedSiteId');
-      const siteName = localStorage.getItem('selectedSiteName');
-      const companyName = localStorage.getItem('selectedCompanyName');
+      const siteId = localStorage.getItem("selectedSiteId");
+      const siteName = localStorage.getItem("selectedSiteName");
+      const companyName = localStorage.getItem("selectedCompanyName");
 
-      let locationName = 'Current Site';
+      let locationName = "Current Site";
 
-      if (siteName && siteName !== 'null' && siteName !== '') {
+      if (siteName && siteName !== "null" && siteName !== "") {
         locationName = siteName;
-      } else if (companyName && companyName !== 'null' && companyName !== '') {
+      } else if (companyName && companyName !== "null" && companyName !== "") {
         locationName = companyName;
       }
 
       // Try to get from DOM if localStorage doesn't have it
-      if (locationName === 'Current Site') {
-        const headerSiteElement = document.querySelector('[data-site-name]');
+      if (locationName === "Current Site") {
+        const headerSiteElement = document.querySelector("[data-site-name]");
         if (headerSiteElement) {
-          locationName = headerSiteElement.textContent?.trim() || 'Current Site';
+          locationName =
+            headerSiteElement.textContent?.trim() || "Current Site";
         }
       }
 
       setCurrentLocation(locationName);
     } catch (error) {
-      console.error('Error fetching current location:', error);
-      setCurrentLocation('Current Site');
+      console.error("Error fetching current location:", error);
+      setCurrentLocation("Current Site");
     }
   };
 
   // Handle delete
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this roster template?')) {
+    if (
+      !window.confirm("Are you sure you want to delete this roster template?")
+    ) {
       return;
     }
 
@@ -254,25 +283,25 @@ export const RosterDetailPage: React.FC = () => {
       const apiUrl = getFullUrl(
         isSmartSecureRoster
           ? `/spree/manage/user_roasters/${id}.json`
-          : `/pms/admin/user_roasters/${id}.json`
+          : `/crm/admin/user_roasters/${id}.json`
       );
       const response = await fetch(apiUrl, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': getAuthHeader()
-        }
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
+        },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete roster template');
+        throw new Error("Failed to delete roster template");
       }
 
-      toast.success('Roster template deleted successfully!');
+      toast.success("Roster template deleted successfully!");
       navigate(rosterBasePath);
     } catch (error) {
-      console.error('Error deleting roster template:', error);
-      toast.error('Failed to delete roster template');
+      console.error("Error deleting roster template:", error);
+      toast.error("Failed to delete roster template");
     }
   };
 
@@ -283,26 +312,28 @@ export const RosterDetailPage: React.FC = () => {
 
   // Handle export
   const handleExport = () => {
-    toast.success('Export functionality coming soon!');
+    toast.success("Export functionality coming soon!");
   };
 
   // Helper functions
   const getSelectedEmployees = () => {
     if (!rosterTemplate) return [];
-    
+
     // First try to get from new API response structure
     if (rosterTemplate.employees && Array.isArray(rosterTemplate.employees)) {
-      return rosterTemplate.employees.map(emp => ({
+      return rosterTemplate.employees.map((emp) => ({
         id: emp.id,
         name: emp.name,
         email: emp.email,
-        department: undefined // Department info not included in employee object
+        department: undefined, // Department info not included in employee object
       }));
     }
-    
+
     // Fallback to old structure
     if (!rosterTemplate.resource_id) return [];
-    const employee = fmUsers.find(user => user.id === rosterTemplate.resource_id);
+    const employee = fmUsers.find(
+      (user) => user.id === rosterTemplate.resource_id
+    );
     return employee ? [employee] : [];
   };
 
@@ -313,48 +344,57 @@ export const RosterDetailPage: React.FC = () => {
 
   const getSelectedShift = () => {
     if (!rosterTemplate || !rosterTemplate.user_shift_id) return null;
-    return shifts.find(shift => shift.id === rosterTemplate.user_shift_id);
+    return shifts.find((shift) => shift.id === rosterTemplate.user_shift_id);
   };
 
   const formatWorkingDays = () => {
-    if (!rosterTemplate) return '';
-    
-    if (rosterTemplate.roaster_type === 'Weekdays') {
-      return 'Monday - Friday';
-    } else if (rosterTemplate.roaster_type === 'Weekends') {
-      return 'Saturday - Sunday';
-    } else if (rosterTemplate.roaster_type === 'Recurring') {
+    if (!rosterTemplate) return "";
+
+    if (rosterTemplate.roaster_type === "Weekdays") {
+      return "Monday - Friday";
+    } else if (rosterTemplate.roaster_type === "Weekends") {
+      return "Saturday - Sunday";
+    } else if (rosterTemplate.roaster_type === "Recurring") {
       // Parse recurring data from no_of_days
-      if (rosterTemplate.no_of_days && Array.isArray(rosterTemplate.no_of_days) && rosterTemplate.no_of_days.length > 0) {
+      if (
+        rosterTemplate.no_of_days &&
+        Array.isArray(rosterTemplate.no_of_days) &&
+        rosterTemplate.no_of_days.length > 0
+      ) {
         const recurringData = rosterTemplate.no_of_days[0];
         const totalDays = Object.keys(recurringData).reduce((acc, weekNum) => {
           return acc + recurringData[weekNum].length;
         }, 0);
         return `${totalDays} custom days across ${Object.keys(recurringData).length} weeks`;
       }
-      return 'Custom recurring pattern';
+      return "Custom recurring pattern";
     }
-    return 'Not specified';
+    return "Not specified";
   };
 
   const getWeekSelectionDisplay = () => {
     if (!rosterTemplate || !rosterTemplate.no_of_days) return [];
-    
-    if (rosterTemplate.roaster_type === 'Recurring') {
-      if (Array.isArray(rosterTemplate.no_of_days) && rosterTemplate.no_of_days.length > 0) {
+
+    if (rosterTemplate.roaster_type === "Recurring") {
+      if (
+        Array.isArray(rosterTemplate.no_of_days) &&
+        rosterTemplate.no_of_days.length > 0
+      ) {
         const recurringData = rosterTemplate.no_of_days[0];
-        return Object.keys(recurringData).map(weekNum => `Week ${weekNum}`);
+        return Object.keys(recurringData).map((weekNum) => `Week ${weekNum}`);
       }
-    } else if (rosterTemplate.roaster_type === 'Weekdays') {
+    } else if (rosterTemplate.roaster_type === "Weekdays") {
       if (Array.isArray(rosterTemplate.no_of_days)) {
-        return rosterTemplate.no_of_days.map((weekNum: string) => 
-          `${weekNum}${weekNum === '1' ? 'st' : weekNum === '2' ? 'nd' : weekNum === '3' ? 'rd' : 'th'} Week`
+        return rosterTemplate.no_of_days.map(
+          (weekNum: string) =>
+            `${weekNum}${weekNum === "1" ? "st" : weekNum === "2" ? "nd" : weekNum === "3" ? "rd" : "th"} Week`
         );
       }
-    } else if (rosterTemplate.roaster_type === 'Weekends') {
+    } else if (rosterTemplate.roaster_type === "Weekends") {
       if (Array.isArray(rosterTemplate.no_of_days)) {
-        return rosterTemplate.no_of_days.map((weekendNum: string) => 
-          `${weekendNum}${weekendNum === '1' ? 'st' : weekendNum === '2' ? 'nd' : weekendNum === '3' ? 'rd' : 'th'} Weekend`
+        return rosterTemplate.no_of_days.map(
+          (weekendNum: string) =>
+            `${weekendNum}${weekendNum === "1" ? "st" : weekendNum === "2" ? "nd" : weekendNum === "3" ? "rd" : "th"} Weekend`
         );
       }
     }
@@ -362,14 +402,22 @@ export const RosterDetailPage: React.FC = () => {
   };
 
   const getCustomWorkingDays = () => {
-    if (!rosterTemplate || rosterTemplate.roaster_type !== 'Recurring' || !rosterTemplate.no_of_days) return [];
-    
-    if (Array.isArray(rosterTemplate.no_of_days) && rosterTemplate.no_of_days.length > 0) {
+    if (
+      !rosterTemplate ||
+      rosterTemplate.roaster_type !== "Recurring" ||
+      !rosterTemplate.no_of_days
+    )
+      return [];
+
+    if (
+      Array.isArray(rosterTemplate.no_of_days) &&
+      rosterTemplate.no_of_days.length > 0
+    ) {
       const recurringData = rosterTemplate.no_of_days[0];
-      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       const customDays: string[] = [];
-      
-      Object.keys(recurringData).forEach(weekNum => {
+
+      Object.keys(recurringData).forEach((weekNum) => {
         const dayNumbers = recurringData[weekNum];
         dayNumbers.forEach((dayNum: string) => {
           const dayName = dayNames[parseInt(dayNum) - 1];
@@ -378,7 +426,7 @@ export const RosterDetailPage: React.FC = () => {
           }
         });
       });
-      
+
       return customDays;
     }
     return [];
@@ -422,16 +470,20 @@ export const RosterDetailPage: React.FC = () => {
           </button>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#C72030]/10 text-[#C72030] flex items-center justify-center">
-              <Eye className="w-5 h-5" style={{ color: '#fff' }} />
+              <Eye className="w-5 h-5" style={{ color: "#fff" }} />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-wide uppercase">Roster Template Details</h1>
+              <h1 className="text-xl font-bold tracking-wide uppercase">
+                Roster Template Details
+              </h1>
               <div className="flex items-center gap-2 mt-1">
                 <Building2 className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">{currentLocation}</span>
                 <span className="text-sm text-gray-400">•</span>
-                <span className={`text-sm px-2 py-1 rounded-full ${rosterTemplate.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                  {rosterTemplate.active ? 'Active' : 'Inactive'}
+                <span
+                  className={`text-sm px-2 py-1 rounded-full ${rosterTemplate.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                >
+                  {rosterTemplate.active ? "Active" : "Inactive"}
                 </span>
               </div>
             </div>
@@ -439,9 +491,8 @@ export const RosterDetailPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-         
           <Button onClick={handleEdit} variant="outline" size="sm">
-            <Edit className="w-4 h-4 mr-2" style={{ color: '#da7756' }} />
+            <Edit className="w-4 h-4 mr-2" style={{ color: "#da7756" }} />
             Edit
           </Button>
           {/* <Button onClick={handleDelete} variant="destructive" size="sm">
@@ -457,17 +508,25 @@ export const RosterDetailPage: React.FC = () => {
         <Section title="Basic Information" icon={Calendar}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Template Name</label>
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Template Name
+              </label>
               <p className="text-gray-900 font-medium">{rosterTemplate.name}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Roster Type</label>
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Roster Type
+              </label>
               <p className="text-gray-900">{rosterTemplate.allocation_type}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Status</label>
-              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${rosterTemplate.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                {rosterTemplate.active ? 'Active' : 'Inactive'}
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Status
+              </label>
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${rosterTemplate.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+              >
+                {rosterTemplate.active ? "Active" : "Inactive"}
               </span>
             </div>
           </div>
@@ -478,15 +537,23 @@ export const RosterDetailPage: React.FC = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">Day Type</label>
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  Day Type
+                </label>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-3 h-3 rounded-full bg-[#C72030]"></span>
-                  <span className="font-medium text-gray-900">{rosterTemplate.roaster_type}</span>
-                  <span className="text-sm text-gray-500">({formatWorkingDays()})</span>
+                  <span className="font-medium text-gray-900">
+                    {rosterTemplate.roaster_type}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    ({formatWorkingDays()})
+                  </span>
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">Frequency</label>
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  Frequency
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {getWeekSelectionDisplay().map((week, index) => (
                     <span
@@ -500,21 +567,24 @@ export const RosterDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {rosterTemplate.roaster_type === 'Recurring' && getCustomWorkingDays().length > 0 && (
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">Custom Days Selected</label>
-                <div className="flex flex-wrap gap-2">
-                  {getCustomWorkingDays().map((day, index) => (
-                    <span
-                      key={index}
-                      className="inline-block px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-md border"
-                    >
-                      {day}
-                    </span>
-                  ))}
+            {rosterTemplate.roaster_type === "Recurring" &&
+              getCustomWorkingDays().length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">
+                    Custom Days Selected
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {getCustomWorkingDays().map((day, index) => (
+                      <span
+                        key={index}
+                        className="inline-block px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-md border"
+                      >
+                        {day}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </Section>
 
@@ -522,10 +592,14 @@ export const RosterDetailPage: React.FC = () => {
         <Section title="Location" icon={MapPin}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Location</label>
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Location
+              </label>
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-900">{rosterTemplate.location || currentLocation}</span>
+                <span className="text-gray-900">
+                  {rosterTemplate.location || currentLocation}
+                </span>
               </div>
             </div>
           </div>
@@ -535,7 +609,9 @@ export const RosterDetailPage: React.FC = () => {
         <Section title="Shift & Employees" icon={Clock}>
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Assigned Shift</label>
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Assigned Shift
+              </label>
               {(rosterTemplate.shift || getSelectedShift()) && (
                 <div className="flex items-center gap-2 p-3 bg-[#f6f4ee] border border-[#D5DbDB] rounded-lg">
                   <Clock className="w-4 h-4 text-[#C72030]" />
@@ -561,11 +637,18 @@ export const RosterDetailPage: React.FC = () => {
               {getSelectedEmployees().length > 0 ? (
                 <div className="space-y-2">
                   {getSelectedEmployees().map((employee, index) => (
-                    <div key={employee.id || index} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div
+                      key={employee.id || index}
+                      className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
                       <Users className="w-4 h-4 text-gray-400" />
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">{employee.name || 'No name available'}</div>
-                        <div className="text-sm text-gray-600">{employee.email}</div>
+                        <div className="font-medium text-gray-900">
+                          {employee.name || "No name available"}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {employee.email}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -581,26 +664,39 @@ export const RosterDetailPage: React.FC = () => {
         <Section title="Date Range" icon={Calendar}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Start Date</label>
-              <p className="text-gray-900">{new Date(rosterTemplate.start_date).toLocaleDateString()}</p>
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Start Date
+              </label>
+              <p className="text-gray-900">
+                {new Date(rosterTemplate.start_date).toLocaleDateString()}
+              </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">End Date</label>
-              <p className="text-gray-900">{new Date(rosterTemplate.end_date).toLocaleDateString()}</p>
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                End Date
+              </label>
+              <p className="text-gray-900">
+                {new Date(rosterTemplate.end_date).toLocaleDateString()}
+              </p>
             </div>
           </div>
         </Section>
-
-    
       </div>
 
       {/* Footer Actions */}
       <div className="flex items-center gap-3 justify-center pt-2 border-t border-gray-200">
-        <Button onClick={handleEdit} className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2">
+        <Button
+          onClick={handleEdit}
+          className="px-8 border-0 bg-[#C72030] hover:bg-[#A01828] !text-white  flex items-center gap-2"
+        >
           <Edit className="w-4 h-4 mr-2" />
           Edit Template
         </Button>
-        <Button onClick={() => navigate(rosterBasePath)} variant="outline" className="px-8">
+        <Button
+          onClick={() => navigate(rosterBasePath)}
+          variant="outline"
+          className="px-8"
+        >
           Back to Roster List
         </Button>
       </div>
