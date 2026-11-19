@@ -58,6 +58,7 @@ import { Button as MuiButton } from "@mui/material";
 import { API_CONFIG, getAuthHeader, getFullUrl } from "@/config/apiConfig";
 import { AttachmentPreviewModal } from "@/components/AttachmentPreviewModal";
 import { TicketJobSheetModal } from "@/components/TicketJobSheetModal";
+import { UserDetailsModal } from "@/components/UserDetailsModal";
 import Select, { components } from "react-select";
 import { min } from "lodash";
 
@@ -728,6 +729,8 @@ export const TicketDetailsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [ticketData, setTicketData] = useState(null);
+  const [isCreatedByUserModalOpen, setIsCreatedByUserModalOpen] =
+    useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showImagePreview, setShowImagePreview] = useState(false);
@@ -5877,7 +5880,19 @@ export const TicketDetailsPage = () => {
 
             <div className="text-sm text-gray-600">
               Ticket #{ticketData.ticket_number || "-"} • Created by{" "}
-              {ticketData.created_by_name || "Unknown"} •{" "}
+              {ticketData.user_society_id && ticketData.created_by_name ? (
+                <button
+                  type="button"
+                  onClick={() => setIsCreatedByUserModalOpen(true)}
+                  className="text-[#da7756] font-medium hover:underline"
+                  title="View user details"
+                >
+                  {ticketData.created_by_name}
+                </button>
+              ) : (
+                ticketData.created_by_name || "Unknown"
+              )}{" "}
+              •{" "}
               {hasData(ticketData.flat_number || ticketData.unit_name) && (
                 <>
                   Flat{" "}
@@ -7110,7 +7125,22 @@ export const TicketDetailsPage = () => {
                       [
                         {
                           label: "Created By",
-                          value: ticketData.created_by_name || "-",
+                          value:
+                            ticketData.user_society_id &&
+                            ticketData.created_by_name ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setIsCreatedByUserModalOpen(true)
+                                }
+                                className="text-[#da7756] text-left hover:underline"
+                                title="View user details"
+                              >
+                                {ticketData.created_by_name}
+                              </button>
+                            ) : (
+                              ticketData.created_by_name || "-"
+                            ),
                         },
                         {
                           label: "Created By Mobile",
@@ -11516,6 +11546,13 @@ export const TicketDetailsPage = () => {
         setIsModalOpen={setShowImagePreview}
         selectedDoc={selectedDoc}
         setSelectedDoc={setSelectedDoc}
+      />
+
+      {/* Created-by user details (same data as Manage Users > View User) */}
+      <UserDetailsModal
+        open={isCreatedByUserModalOpen}
+        onOpenChange={setIsCreatedByUserModalOpen}
+        userSocietyId={ticketData?.user_society_id}
       />
 
       {/* Cancel Cost Approval Confirmation Modal */}

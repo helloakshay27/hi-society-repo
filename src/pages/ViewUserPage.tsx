@@ -929,6 +929,10 @@ export const ViewUserPage = () => {
                     value={user?.movein_date || "-"}
                   />
                   <InfoField
+                    label="Date of Possession"
+                    value={formatDateFromAPI(user?.date_of_possession)}
+                  />
+                  <InfoField
                     label="Agreement Expire Date"
                     value={user?.user_flat?.agreement_expire_date || "-"}
                   />
