@@ -1280,7 +1280,7 @@ export const CMSClubMembersDetails = () => {
                                         )}
                                         <TabsTrigger
                                             value="attachments"
-                                            className="ref-tab"
+                                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-2 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
                                         >
                                             Attachments
                                         </TabsTrigger>
@@ -1496,7 +1496,7 @@ export const CMSClubMembersDetails = () => {
                                                         )}
                                                     </div>
 
-                                                    <div>
+                                                    {/* <div>
                                                         <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-4 flex items-center gap-2.5">
                                                             <FileText className="w-4 h-4 text-[#1A1A18]" />
                                                             Attachments
@@ -1508,7 +1508,7 @@ export const CMSClubMembersDetails = () => {
                                                         ) : (
                                                             <p className="text-sm text-gray-500">No attachments uploaded</p>
                                                         )}
-                                                    </div>
+                                                    </div> */}
                                                 </div>
                                             );
                                         })()}

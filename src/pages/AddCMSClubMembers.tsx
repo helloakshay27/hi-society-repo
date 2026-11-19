@@ -482,6 +482,13 @@ const AddCMSClubMembers = () => {
                         photoBase64
                     );
                 }
+
+                if (member.residentPhoto) {
+                    formData.append(
+                        `members[${idx}][profile_image_attributes][]`,
+                        member.residentPhoto
+                    );
+                }
             }
 
             await axios.post(
