@@ -37,6 +37,7 @@ import {
   ApprovalQueueData,
   TopPendingRecordsData,
 } from './types';
+import { analyticsAuthHeaders } from './analyticsAuth';
 
 // ==========================================
 // 1. PostHog Adoption API Client
@@ -215,6 +216,7 @@ async function getPosthog<T>(filters: DashboardFilters, endpoint: string, queryS
     method: 'GET',
     headers: {
       Accept: 'application/json',
+      ...analyticsAuthHeaders(),
     },
   });
 
@@ -296,7 +298,7 @@ export async function downloadActiveUsersExport(
   const { blob, filename: serverName } = await runExportJob({
     exportUrl: url,
     adoptionUrl: url.slice(0, url.indexOf('/active_users_export')),
-    get: fetchGet({ method: 'GET', headers: { Accept: '*/*' } }),
+    get: fetchGet({ method: 'GET', headers: { Accept: '*/*', ...analyticsAuthHeaders() } }),
     onPhase,
   });
   const filenameWithoutExtension = (serverName
@@ -391,7 +393,7 @@ async function getFm<T>(
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', ...analyticsAuthHeaders() },
   });
 
   if (!response.ok) {
