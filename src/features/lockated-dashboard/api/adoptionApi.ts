@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { analyticsToken } from '../../../pages/posthog-runwal-dashboard/api/analyticsAuth';
 
 /**
  * Dynamically resolves the PostHog Adoption Analytics API host.
@@ -42,6 +43,9 @@ client.interceptors.request.use((config) => {
   if (!config.baseURL) {
     config.baseURL = getApiBaseUrl();
   }
+  // The login token (JWT): the analytics API checks it on every request.
+  const token = analyticsToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
