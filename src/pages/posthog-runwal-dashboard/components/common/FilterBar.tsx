@@ -37,6 +37,13 @@ interface FilterBarProps {
   showAdminScope?: boolean;
   adminScope?: "all" | "tower" | "super";
   onSelectAdminScope?: (scope: "all" | "tower" | "super") => void;
+  // Society dropdown (Runwal Connect / Realty only): the user's Hi Society societies, as in the
+  // Hi Society header. "all" = every society. Hidden unless showSocietyFilter.
+  showSocietyFilter?: boolean;
+  societies?: SiteLookupItem[];
+  selectedSocietyId?: string;
+  onSelectSociety?: (societyId: string) => void;
+  isSocietiesLoading?: boolean;
   // Manual refresh — re-fetches live data for whichever page is on screen.
   showRefresh?: boolean;
   onRefresh?: () => void;
@@ -54,6 +61,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   selectedSiteId,
   onSelectSite,
   isSitesLoading,
+  showSocietyFilter = false,
+  societies = [],
+  selectedSocietyId = "all",
+  onSelectSociety,
+  isSocietiesLoading = false,
   dev,
   onSelectDev,
   prev,
@@ -192,6 +204,28 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </div>
         )}
       </div>
+
+      {showSocietyFilter && (
+        <label className="ctrl" title="Society">
+          <span className="ic">🏢</span>
+          <select
+            aria-label="Society"
+            value={selectedSocietyId}
+            onChange={(e) => onSelectSociety?.(e.target.value)}
+            disabled={isSocietiesLoading}
+          >
+            <option value="all">
+              {isSocietiesLoading ? "Loading societies…" : "All Societies"}
+            </option>
+            {societies.map((society) => (
+              <option key={society.id} value={society.id}>
+                {society.name}
+              </option>
+            ))}
+          </select>
+          <span className="chev">▾</span>
+        </label>
+      )}
 
       {/* Society / Project dropdown — commented out for now.
       <label className="ctrl" title="Society / Project">

@@ -247,6 +247,57 @@ export const INFO: Record<string, InfoEntry> = {
     f: 'Count of users seen before who have had no activity for 14 or more days.',
     d: 'Target population for re-engagement campaigns and push notification lifecycle triggers.',
   },
+  // Sign-ups (Runwal Connect / Realty), from Hi Society's Manage Users
+  'su.registered': {
+    t: 'Registered Customers',
+    f: "Accounts in Hi Society's Manage Users created up to the end of the selected dates, for the society and phase chosen (pending, approved and rejected, as Manage Users counts them). With iOS or Android chosen: the accounts with the app on that platform.",
+    d: 'Everyone who has an account, whether or not they have used the app. Click to see them.',
+  },
+  'su.new': {
+    t: 'New Registrations',
+    f: 'Accounts created within the selected dates (the created date Manage Users shows).',
+    d: 'Fresh accounts. For Runwal Connect most are created by Runwal when the customer books. Click to see who.',
+  },
+  'su.never': {
+    t: 'Registered, Never Logged In',
+    f: "Registered Customers with no phone registered for the app in Manage Users (a phone is registered at the person's first login). They have no platform, so this shows under All platforms only.",
+    d: 'People who have an account but have never opened the app: the easiest group to re-engage. Click for the named list.',
+  },
+  'su.rate': {
+    t: 'Logged-in Rate',
+    f: "Registered Customers who have logged in ÷ every registered customer (accounts up to the end of the selected dates). Logged in = a phone registered for the app in Manage Users. With iOS or Android chosen: logged in on that platform.",
+    d: 'How much of the customer base has actually started using the app. Click to see who has.',
+  },
+  'chart.suTrend': {
+    t: 'Registrations over time',
+    f: 'Accounts created per day, week or month (by the created date Manage Users shows), for the societies, phase and platform chosen. The dashed line is the period just before.',
+    d: 'Grouped by day, the points inside the selected dates add up to the New Registrations tile. Click a point to see who registered then.',
+  },
+  'chart.suFunnel': {
+    t: 'From registration to first login',
+    f: 'Of the accounts created within the selected dates: how many have logged in at least once (a phone registered for the app). With iOS or Android chosen: logged in on that platform.',
+    d: 'How many new accounts turn into app users. Click a step to see its people.',
+  },
+  'chart.suStore': {
+    t: 'Logged-in customers by store',
+    f: 'Of the accounts created within the selected dates, how many have the app on an iPhone (App Store) and on an Android phone (Google Play), from the phones Manage Users records. Someone with both counts on each.',
+    d: 'Where new customers use the app. These are customers with the app, not store installs. Click a store to see who.',
+  },
+  'chart.suGap': {
+    t: 'Registered, but not logged in',
+    f: 'Accounts that have never logged in, per day, week or month of registration. The figure above counts those registered within the selected dates.',
+    d: 'Who to follow up, by when they registered. Click a bar to see who. Installs where nobody signed in cannot be counted from Manage Users.',
+  },
+  'chart.suProject': {
+    t: 'Registered customers by project',
+    f: "Registered customers per project, with how many have logged in. In Hi Society each Runwal project is a society: one row per society chosen in the society picker (all of them for All Societies). Same filters as the tiles above.",
+    d: 'Which projects are using the app and which need a push. Click a project to see its customers.',
+  },
+  'chart.suNever': {
+    t: 'Needs a nudge',
+    f: 'Registered customers who have never logged in, longest waiting first. Waiting = days since the account was created.',
+    d: 'A named list for the team to follow up. View all opens every one of them, with search and a CSV.',
+  },
   'chart.sitewise': {
     t: 'Project / Site-Wise Engagement',
     f: 'Comparative table of Active Users, Sessions, Avg Duration, and Bounce Rate across individual residential projects.',

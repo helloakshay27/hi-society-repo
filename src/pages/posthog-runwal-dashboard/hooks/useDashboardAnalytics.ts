@@ -4,7 +4,7 @@
  * Implements cached data fetching with automatic cache retention
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   fetchTrafficSession,
   fetchUsageAndDistribution,
@@ -17,6 +17,10 @@ import {
   fetchWorkflowUsage,
   fetchRecentActiveUsers,
   fetchAllowedSites,
+  fetchUserSocieties,
+  fetchUserJourneys,
+  fetchUserJourneySessions,
+  fetchUserJourneySteps,
   fetchUserAccountSiteId,
   fetchLeaseOverview,
   fetchEventsOverview,
@@ -32,6 +36,7 @@ import {
   fetchOverdueInvoices,
   fetchApprovalQueue,
   fetchTopPendingRecords,
+  fetchAccountsBySociety,
 } from '../api/api';
 import {
   DashboardFilters,
@@ -60,6 +65,12 @@ import {
   OverdueInvoicesData,
   ApprovalQueueData,
   TopPendingRecordsData,
+  UserJourneyListParams,
+  UserJourneysResponse,
+  UserJourneySessionsResponse,
+  UserJourneyStepsResponse,
+  SocietyAccountsQuery,
+  SocietyAccountsBySociety,
 } from '../api/types';
 
 export const CACHE_CONFIG = {
@@ -81,11 +92,23 @@ const commonKey = (f: DashboardFilters) => [
   f.appId || '',
   f.deviceType || '',
   f.includeAnonymous ? 'anon' : '',
+  (f.societyIds || []).join(','),
 ];
 
 // ==========================================
 // Sites Hook
 // ==========================================
+
+/** The logged-in user's societies for the society dropdown (Runwal Connect / Realty). */
+export function useUserSocieties(enabled = true) {
+  return useQuery<SiteLookupItem[]>({
+    queryKey: ['hi-society-user-societies'],
+    queryFn: fetchUserSocieties,
+    enabled,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+}
 
 export function useDashboardSites() {
   const query = useQuery<SiteLookupItem[]>({
@@ -412,5 +435,58 @@ export function useTopPendingRecords(filters: DashboardFilters, enabled: boolean
     queryFn: () => fetchTopPendingRecords(filters.token),
     enabled: isEnabled,
     ...CACHE_CONFIG,
+  });
+}
+
+// ==========================================
+// User journeys (Workflow Usage, Runwal Connect / Realty)
+// ==========================================
+
+const JOURNEY_CACHE = { staleTime: 60 * 1000, gcTime: 10 * 60 * 1000, refetchOnWindowFocus: false } as const;
+
+export function useUserJourneys(filters: DashboardFilters, params: UserJourneyListParams, enabled = true) {
+  return useQuery<UserJourneysResponse>({
+    queryKey: ['fm-adoption', 'user_journeys', ...commonKey(filters), params.q || '', params.sort || '', params.dir || '', params.page || 1],
+    queryFn: () => fetchUserJourneys(filters, params),
+    enabled,
+    placeholderData: keepPreviousData,
+    ...JOURNEY_CACHE,
+  });
+}
+
+export function useUserJourneySessions(filters: DashboardFilters, user: string | null, enabled = true) {
+  return useQuery<UserJourneySessionsResponse>({
+    queryKey: ['fm-adoption', 'user_journey_sessions', ...commonKey(filters), user || ''],
+    queryFn: () => fetchUserJourneySessions(filters, user as string),
+    enabled: enabled && !!user,
+    ...JOURNEY_CACHE,
+  });
+}
+
+export function useUserJourneySteps(filters: DashboardFilters, user: string | null, session: string | null, enabled = true) {
+  return useQuery<UserJourneyStepsResponse>({
+    queryKey: ['fm-adoption', 'user_journey_steps', ...commonKey(filters), user || '', session || ''],
+    queryFn: () => fetchUserJourneySteps(filters, user as string, session as string),
+    enabled: enabled && !!user && !!session,
+    ...JOURNEY_CACHE,
+  });
+}
+
+// Downloads & sign-ups (Adoption & Engagement, Runwal Connect / Realty): each chosen society's Manage Users
+// accounts. Reading several societies means selecting each in Hi Society in turn, so it is kept for 5 minutes.
+export function useAccountsBySociety(
+  q: SocietyAccountsQuery,
+  enabled = true,
+  onProgress?: (done: number, total: number) => void
+) {
+  return useQuery<SocietyAccountsBySociety>({
+    queryKey: ['hi-society-accounts', q.societyIds.join(','), q.from || '', q.to, q.displayView || ''],
+    queryFn: ({ signal }) => fetchAccountsBySociety(q, { signal, onProgress }),
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: false,
   });
 }

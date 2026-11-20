@@ -466,6 +466,9 @@ export interface DashboardFilters {
   projectCode?: string;
   deviceType?: string;
   includeAnonymous?: boolean;
+  // Hi Society society ids chosen in the society dropdown (Runwal Connect / Realty only), sent as
+  // society_id=<id>[,<id>…]. Empty or missing = every society, as before.
+  societyIds?: string[];
   // This dashboard's own adoption API (ADOPTION_API in ./api.ts), e.g. 'residential/runwal/cp'. The
   // server fixes which app it reads, so appId / projectCode are no longer sent to it.
   apiPath?: AdoptionApiPath;
@@ -476,4 +479,154 @@ export interface SiteLookupItem {
   name: string;
   organization_id?: number | string;
   company_id?: number | string;
+}
+
+// ==========================================
+// User journeys (Workflow Usage, Runwal Connect / Realty)
+// ==========================================
+
+export interface UserJourneyMeta {
+  metric: string;
+  page: number;
+  per_page: number;
+  total: number;
+  pages: number;
+  generated_at: string;
+}
+
+/** One signed-in user active in the range. */
+export interface UserJourneyPerson {
+  user_key: string;
+  user_id: string | null;
+  first_name: string;
+  last_name: string;
+  email: string;
+  society_id: string | null;
+  /** Post Sales / Post Possession (the person's latest display_view), when the app sends it. */
+  phase: string | null;
+  sessions: number;
+  events: number;
+  last_seen: string;
+  minutes_ago: number;
+}
+
+export interface UserJourneysResponse {
+  meta: UserJourneyMeta;
+  people: UserJourneyPerson[];
+}
+
+/** How a session ended: logged out, still active, app closed / backgrounded, or 30 minutes of no activity. */
+export type UserJourneyEnding = 'logout' | 'active' | 'closed' | 'timeout';
+
+export interface UserJourneySession {
+  id: string;
+  started_at: string;
+  ended_at: string;
+  duration_s: number;
+  events: number;
+  screens: number;
+  taps: number;
+  problems: number;
+  first_screen: string | null;
+  last_event: string;
+  ended_by: UserJourneyEnding;
+  /** The logout / app-exit event that ended it (logout and closed only). */
+  end_event?: string | null;
+}
+
+export interface UserJourneySessionsResponse {
+  meta: UserJourneyMeta & { truncated: boolean };
+  person: UserJourneyPerson | null;
+  /** The person's totals over all their sessions in the range. */
+  summary: { sessions: number; screens: number; taps: number; problems: number; avg_duration_s: number };
+  /** Every session of the person in the range (up to 2,000), newest first. */
+  sessions: UserJourneySession[];
+}
+
+export type UserJourneyStepKind = 'screen' | 'tap' | 'result' | 'problem' | 'system' | 'event';
+
+export interface UserJourneyStep {
+  at: string;
+  offset_s: number;
+  event: string;
+  kind: UserJourneyStepKind;
+  screen: string;
+}
+
+export interface UserJourneyStepsResponse {
+  meta: UserJourneyMeta & { truncated: boolean };
+  session: {
+    id: string;
+    started_at: string | null;
+    ended_at: string | null;
+    duration_s: number;
+    ended_by: UserJourneyEnding | null;
+    end_event?: string | null;
+    counts: Partial<Record<UserJourneyStepKind, number>>;
+  };
+  steps: UserJourneyStep[];
+}
+
+export interface UserJourneyListParams {
+  q?: string;
+  sort?: 'first_name' | 'last_name' | 'email' | 'society_id' | 'sessions' | 'events' | 'last_active';
+  dir?: 'asc' | 'desc';
+  page?: number;
+  perPage?: number | 'all';
+}
+
+// ==========================================
+// Sign-ups (Adoption & Engagement, Runwal Connect / Realty): Hi Society's Manage Users accounts
+// ==========================================
+
+/** One account from Hi Society's Manage Users (GET /crm/admin/user_societies.json). */
+export interface HiSocietyAccount {
+  id: number;
+  id_user: number | string | null;
+  id_society: number | string | null;
+  created_at: string | null;
+  /** true = approved, false = rejected, null = pending. */
+  approve: boolean | null;
+  /** Hi Society's own names: 'Pre Sales' = Post Sales, 'Post Sales' = Post Possession. */
+  display_view: string | null;
+  full_name: string | null;
+  email: string | null;
+  mobile: string | null;
+  block_no: string | null;
+  flat_no: string | null;
+  /** owner / tenant */
+  resident_type: string | null;
+  /** A phone registered for the society's app, which happens after the person's first login. */
+  app_downloaded?: { any_app_downloaded?: boolean; ios?: boolean; android?: boolean } | null;
+}
+
+/** What to ask Manage Users for: the dashboard's societies, dates and phase. */
+export interface SocietyAccountsQuery {
+  /** Every society chosen in the dashboard (all of the user's societies for "All Societies"). */
+  societyIds: string[];
+  /** YYYY-MM-DD: accounts created from this day (omit for every account up to `to`). */
+  from?: string;
+  /** YYYY-MM-DD: accounts created up to the end of this day. */
+  to: string;
+  /** Hi Society's display_view to match ('Pre Sales' = Post Sales, 'Post Sales' = Post Possession); omit for both. */
+  displayView?: 'Pre Sales' | 'Post Sales';
+}
+
+export interface SocietyAccountsResult {
+  accounts: HiSocietyAccount[];
+  /** pagination.total_count of the first page: how many accounts match. */
+  total: number;
+}
+
+/** Each chosen society's accounts (fetchAccountsBySociety). */
+export interface SocietyAccountsBySociety {
+  societies: {
+    societyId: string;
+    /** Accounts created up to the end date. */
+    upTo: HiSocietyAccount[];
+    /** Accounts created within the dates. */
+    inRange: HiSocietyAccount[];
+    /** Why this society could not be read; null when it was. */
+    error: string | null;
+  }[];
 }

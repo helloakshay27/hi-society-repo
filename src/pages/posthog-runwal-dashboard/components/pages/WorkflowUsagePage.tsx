@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { DashboardFilters } from '../../api/types';
+import { DashboardFilters, SiteLookupItem } from '../../api/types';
 import { KpiTile } from '../common/KpiTile';
 import { Card } from '../common/Card';
 import { ModuleNav, formatModuleName } from '../workflow/ModuleNav';
 import { WorkflowFunnel } from '../workflow/WorkflowFunnel';
 import { AllScreensTable, EntryScreensTable } from '../workflow/ScreensTable';
 import { ErrorState } from '../common/DashboardStates';
+import { UserJourneysCard } from '../workflow/UserJourneysCard';
 import { FunnelSkeleton, TableSkeleton } from '../common/Skeleton';
 import {
   useModuleTree,
@@ -19,6 +20,11 @@ interface WorkflowUsagePageProps {
   onBenchmarkChange: (id: string, value: number | null) => void;
   sitesSettled?: boolean;
   isRefreshing?: boolean;
+  /** The User journeys card at the bottom (Runwal Connect / Realty only), with the society names to show. */
+  showUserJourneys?: boolean;
+  societies?: SiteLookupItem[];
+  /** The page's date range label ("Last 30 days"), shown in the journeys card. */
+  rangeLabel?: string;
 }
 
 export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
@@ -27,6 +33,9 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   onBenchmarkChange,
   sitesSettled = true,
   isRefreshing = false,
+  showUserJourneys = false,
+  societies = [],
+  rangeLabel,
 }) => {
 
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
@@ -270,6 +279,8 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           <EntryScreensTable entryScreens={entryScreensList} />
         )}
       </Card>
+
+      {showUserJourneys && <UserJourneysCard filters={filters} societies={societies} rangeLabel={rangeLabel} enabled={sitesSettled} />}
     </section>
   );
 };
