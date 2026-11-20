@@ -64,6 +64,20 @@ const columns: ColumnConfig[] = [
     draggable: true,
   },
   {
+    key: "organization_name",
+    label: "Organization",
+    sortable: true,
+    hideable: true,
+    draggable: true,
+  },
+  {
+    key: "company_name",
+    label: "Company",
+    sortable: true,
+    hideable: true,
+    draggable: true,
+  },
+  {
     key: "area",
     label: "Area",
     sortable: true,
@@ -242,7 +256,7 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
 
       // Add search parameter if provided
       if (search.trim()) {
-        apiUrl += `&q[building_name_cont]=${encodeURIComponent(search.trim())}`;
+        apiUrl += `&q[building_name_or_company_name_or_organization_name_cont]=${encodeURIComponent(search.trim())}`;
       }
 
       console.log(
@@ -524,6 +538,16 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       </div>
     ),
     area: <span className="text-sm text-gray-600">{society.area || "-"}</span>,
+    organization_name: (
+      <span className="text-sm text-gray-600">
+        {society.organization_name || "-"}
+      </span>
+    ),
+    company_name: (
+      <span className="text-sm text-gray-600">
+        {society.company_name || "-"}
+      </span>
+    ),
     city: <span className="text-sm text-gray-600">{society.city || "-"}</span>,
     state: (
       <span className="text-sm text-gray-600">{society.state || "-"}</span>
