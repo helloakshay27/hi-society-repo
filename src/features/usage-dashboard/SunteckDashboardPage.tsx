@@ -990,44 +990,6 @@ export default function SunteckDashboardPage({ fixedSite = "sunteck" }: { fixedS
     };
   }, [page, sig, adoptionSig, lockedSite, siteRef.appId, effRange.from, effRange.to, dev]);
 
-  // Live numbers: while the page is on screen and its range includes today, the open section is asked
-  // for again every minute. The API answers from its store at once and keeps that store up to date with
-  // the newest events, so the cards follow them without a reload. A part that fails keeps its last numbers.
-  const [liveTick, setLiveTick] = useState(0);
-  useEffect(() => {
-    if (effRange.to < todayISO) return undefined; // a range that has ended does not change
-    const timer = window.setInterval(() => {
-      if (document.visibilityState !== "hidden") setLiveTick((n) => n + 1);
-    }, 60 * 1000);
-    return () => window.clearInterval(timer);
-  }, [effRange.to, todayISO]);
-  useEffect(() => {
-    if (liveTick === 0) return undefined;
-    const input = { appId: siteRef.appId, from: effRange.from, to: effRange.to, dev };
-    const section: Promise<object> | null =
-      page === "pgTraffic" && trafficSig === sig
-        ? fetchTrafficSection(input)
-        : page === "pgAdopt" && adoptionSig === sig
-          ? fetchAdoptionSection(input)
-          : null;
-    if (!section) return undefined;
-    let cancelled = false;
-    section
-      .then((part) => {
-        if (cancelled) return;
-        const arrived = Object.fromEntries(Object.entries(part).filter(([, v]) => v != null));
-        setLive((prev) => ({ ...(prev ?? EMPTY_DASHBOARD), ...arrived }));
-      })
-      .catch(() => {
-        /* keep the numbers already shown */
-      });
-    return () => {
-      cancelled = true;
-    };
-    // Only the minute's tick starts this; the filters are read as they are at that moment.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [liveTick]);
-
   // Per-layer readiness for the current signature.
   const trafficReady = trafficSig === sig && live?.tiles != null;
   const adoptionReady = adoptionSig === sig;
