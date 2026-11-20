@@ -21,6 +21,7 @@ import type {
   WorkflowUsageResponse,
 } from '../../pages/posthog-runwal-dashboard/api/types';
 import { ADOPTION_API, type AdoptionApiPath } from '../../pages/posthog-runwal-dashboard/api/api';
+import { analyticsAuthHeaders } from '../../pages/posthog-runwal-dashboard/api/analyticsAuth';
 
 export type SiteKey = 'artesia' | 'sunteck' | 'suncity';
 export type DeviceKey = 'all' | 'ios' | 'android';
@@ -134,7 +135,7 @@ async function getFrom<T>(base: string, apiPath: AdoptionApiPath, endpoint: stri
   const clean = base.endsWith('/') ? base.slice(0, -1) : base;
   const res = await fetch(`${clean}/${apiPath}/adoption/${endpoint}?${query}`, {
     method: 'GET',
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', ...analyticsAuthHeaders() },
   });
   if (!res.ok) throw new Error(`PostHog API ${endpoint} failed (${res.status})`);
   return (await res.json()) as T;
