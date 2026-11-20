@@ -14,6 +14,10 @@ interface LineChartProps {
   faintColor?: string;
   curLabel?: string;
   prevLabel?: string;
+  /** Makes the points clickable: called with the index of the point under the pointer. */
+  onPointClick?: (index: number) => void;
+  /** Tooltip hint under the values when points are clickable. */
+  clickHint?: string;
 }
 
 export const LineChart: React.FC<LineChartProps> = ({
@@ -29,6 +33,8 @@ export const LineChart: React.FC<LineChartProps> = ({
   faintColor = 'var(--faint)',
   curLabel = 'Current',
   prevLabel = 'Previous',
+  onPointClick,
+  clickHint,
 }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
@@ -241,7 +247,8 @@ export const LineChart: React.FC<LineChartProps> = ({
       : 0;
     const neededWidth = Math.max(titleWidth, curRowWidth, prevRowWidth);
     const cardW = Math.max(hasPrev ? 174 : 144, Math.min(neededWidth, W - 20));
-    const cardH = hasPrev ? 76 : 52;
+    const hintH = clickHint ? 16 : 0;
+    const cardH = (hasPrev ? 76 : 52) + hintH;
     let cardX = hx + 12;
     if (cardX + cardW > W - 10) {
       cardX = hx - cardW - 12;
@@ -342,6 +349,17 @@ export const LineChart: React.FC<LineChartProps> = ({
             )}
           </>
         )}
+        {clickHint && (
+          <text
+            x={(cardX + 10).toFixed(1)}
+            y={(cardY + cardH - 9).toFixed(1)}
+            fontSize="10"
+            fill="var(--faint, #a3a29b)"
+            fontFamily="Inter, -apple-system, Segoe UI, sans-serif"
+          >
+            {clickHint}
+          </text>
+        )}
       </g>
     );
   }
@@ -354,7 +372,13 @@ export const LineChart: React.FC<LineChartProps> = ({
       preserveAspectRatio="xMidYMid meet"
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
-      style={{ cursor: 'crosshair', userSelect: 'none' }}
+      onClick={onPointClick ? (e) => {
+        if (!svgRef.current || n <= 0) return;
+        const rect = svgRef.current.getBoundingClientRect();
+        const idx = Math.max(0, Math.min(n - 1, Math.round((((e.clientX - rect.left) / rect.width) * W - pl) / xw)));
+        onPointClick(idx);
+      } : undefined}
+      style={{ cursor: onPointClick ? 'pointer' : 'crosshair', userSelect: 'none' }}
     >
       {gridLines}
       {yLabels}
