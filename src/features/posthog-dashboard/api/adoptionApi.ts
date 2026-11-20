@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { axiosGet, runExportJob, type ExportPhase } from '../../../pages/posthog-runwal-dashboard/api/exportJob';
+import { analyticsToken } from '../../../pages/posthog-runwal-dashboard/api/analyticsAuth';
 
 /* ---------------------------------------------------------------------------
  * Hi Society Adoption Analytics API client (ported from FM Matrix).
@@ -29,10 +31,8 @@ const analyticsClient = axios.create({
    the same keys the app's other clients use (see src/utils/auth.ts and the
    sign-in flow). */
 analyticsClient.interceptors.request.use((config) => {
-  const token =
-    localStorage.getItem('access_token') ||
-    sessionStorage.getItem('access_token') ||
-    '';
+  // The login token (JWT): the analytics API checks it on every request.
+  const token = analyticsToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -154,11 +154,11 @@ export const fetchRecentActiveUsers = (f: RangeFilters) =>
   get<RecentActiveUsersResponse>('recent_active_users', [
     ...(f.appId != null
       ? ([
-          ['app_id', f.appId],
-          ['device_type', f.recentDeviceType],
-          ['from', f.from],
-          ['to', f.to],
-        ] as QueryPairs)
+        ['app_id', f.appId],
+        ['device_type', f.recentDeviceType],
+        ['from', f.from],
+        ['to', f.to],
+      ] as QueryPairs)
       : rangeParams(f)),
     ['limit', 10],
   ], f.signal);
