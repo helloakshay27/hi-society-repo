@@ -32,6 +32,7 @@ interface MemberForm {
   accessCardId: string;
   idCard: File | null;
   residentPhoto: File | null;
+  attachments: File[];
 }
 
 const fieldStyles = {
@@ -119,6 +120,7 @@ const AddCMSClubMembers = () => {
       accessCardId: "",
       idCard: null,
       residentPhoto: null,
+      attachments: [],
     },
   ]);
 
@@ -268,8 +270,36 @@ const AddCMSClubMembers = () => {
         accessCardId: "",
         idCard: null,
         residentPhoto: null,
+        attachments: [],
       },
     ]);
+  };
+
+  const addAttachments = (id: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const newFiles = Array.from(files);
+    setMembers((prev) =>
+      prev.map((member) =>
+        member.id === id
+          ? { ...member, attachments: [...member.attachments, ...newFiles] }
+          : member
+      )
+    );
+  };
+
+  const removeAttachment = (id: string, fileIndex: number) => {
+    setMembers((prev) =>
+      prev.map((member) =>
+        member.id === id
+          ? {
+              ...member,
+              attachments: member.attachments.filter(
+                (_, i) => i !== fileIndex
+              ),
+            }
+          : member
+      )
+    );
   };
 
   const removeMember = (id: string) => {
@@ -520,9 +550,12 @@ const AddCMSClubMembers = () => {
           );
         }
 
-        if (member.residentPhoto) {
-          const photoBase64 = await fileToBase64(member.residentPhoto);
-          formData.append(`members[${idx}][flat_attachments][]`, photoBase64);
+        for (const attachment of member.attachments) {
+          const attachmentBase64 = await fileToBase64(attachment);
+          formData.append(
+            `members[${idx}][flat_attachments][]`,
+            attachmentBase64
+          );
         }
 
         if (member.residentPhoto) {
@@ -1228,6 +1261,68 @@ const AddCMSClubMembers = () => {
                         )}
                       </div>
                     </div>
+                  </div>
+
+                  {/* Attachments */}
+                  <div className="space-y-2">
+                    <label className="text-[12px] font-semibold text-[rgba(26,26,24,0.68)]">
+                      Attachments
+                    </label>
+                    <div className="ref-dropzone p-6 flex flex-col items-center justify-center text-center cursor-pointer relative group">
+                      <input
+                        type="file"
+                        multiple
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        onChange={(e) => {
+                          addAttachments(member.id, e.target.files);
+                          e.target.value = "";
+                        }}
+                      />
+                      <div className="w-8 h-8 mb-2">
+                        <Upload className="w-full h-full" />
+                      </div>
+                      <span className="text-[13px] font-medium text-[rgba(26,26,24,0.55)]">
+                        Click to upload (multiple files allowed)
+                      </span>
+                    </div>
+                    {member.attachments.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-2">
+                        {member.attachments.map((file, fileIdx) => (
+                          <div
+                            key={`${file.name}-${fileIdx}`}
+                            className="relative border border-[#e5e5e5] rounded-lg p-2 bg-white flex flex-col items-center"
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                removeAttachment(member.id, fileIdx)
+                              }
+                              className="absolute top-1 right-1 w-5 h-5 inline-flex items-center justify-center rounded-full bg-white border border-[#e5e5e5] text-[rgba(26,26,24,0.6)] hover:text-red-500"
+                              aria-label="Remove attachment"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                            {file.type.startsWith("image/") ? (
+                              <img
+                                src={URL.createObjectURL(file)}
+                                alt={file.name}
+                                className="w-full h-20 object-contain rounded"
+                              />
+                            ) : (
+                              <div className="w-full h-20 flex items-center justify-center text-[11px] font-semibold uppercase text-[rgba(26,26,24,0.55)]">
+                                {file.name.split(".").pop()}
+                              </div>
+                            )}
+                            <span
+                              className="mt-1 w-full truncate text-[11px] text-[rgba(26,26,24,0.68)]"
+                              title={file.name}
+                            >
+                              {file.name}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
