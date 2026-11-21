@@ -11,6 +11,8 @@ export interface FacilityBookingResponse {
   id: number;
   created_by_name: string;
   booked_by_name?: string;
+  booked_for?: string;
+  book_for?: string;
   tower?: string;
   flat?: string;
   facility_name: string;
@@ -96,7 +98,7 @@ const transformBookingData = (apiData: FacilityBookingResponse): BookingData => 
     bookedBy: safeValue(apiData.booked_by_name),
     tower: safeValue(apiData.tower),
     flat: safeValue(apiData.flat),
-    bookedFor: safeValue(apiData.booked_by_name),
+    bookedFor: safeValue(apiData.booked_for || apiData.book_for),
     facility: safeValue(apiData.facility_name),
     subFacilityName: safeValue(apiData.sub_facility_name),
     facilityType: safeValue(apiData.fac_type),
