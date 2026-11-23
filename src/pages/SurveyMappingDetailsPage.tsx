@@ -134,6 +134,7 @@ export const SurveyMappingDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("survey-information");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isExportingLocations, setIsExportingLocations] = useState(false);
 
   const fetchSurveyMappingDetails = useCallback(async () => {
     try {
@@ -309,6 +310,44 @@ export const SurveyMappingDetailsPage = () => {
 
   const handleDownload = () => {
     // Download logic not implemented
+  };
+
+  // Exports all location QRs of this survey to Excel
+  const handleExportLocations = async () => {
+    // `mapping` is the survey itself (its id is the survey id); mappings[] rows also carry survey_id
+    const surveyId = mapping?.mappings?.[0]?.survey_id ?? mapping?.id ?? (id ? Number(id) : undefined);
+    if (!surveyId) {
+      toast.error("Survey details are not loaded yet");
+      return;
+    }
+    setIsExportingLocations(true);
+    try {
+      const response = await fetch(
+        getFullUrl(`/survey_mappings/export_survey_qrs.xlsx?survey_id=${surveyId}`),
+        {
+          method: "GET",
+          headers: { Authorization: getAuthHeader() },
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `survey_${surveyId}_qrs.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Location details exported successfully");
+    } catch (error) {
+      console.error("Error exporting location details:", error);
+      toast.error("Failed to export location details. Please try again.");
+    } finally {
+      setIsExportingLocations(false);
+    }
   };
 
   const handleDispose = () => {
@@ -1510,6 +1549,18 @@ export const SurveyMappingDetailsPage = () => {
                   hideTableExport={false}
                   hideTableSearch={false}
                   pagination={true}
+                  rightActions={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportLocations}
+                      disabled={isExportingLocations}
+                      className="flex items-center gap-2 rounded-lg w-9"
+                      title="Export"
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  }
                 />
               </CardContent>
             </Card>

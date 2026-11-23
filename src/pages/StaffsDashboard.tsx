@@ -40,6 +40,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 // Column configuration for the enhanced table
 const columns: ColumnConfig[] = [
   { key: 'actions', label: 'Action', sortable: false, hideable: false, draggable: false, width: '90px', excludeFromExport: true },
+  { key: 'srNo', label: 'Sr No', sortable: false, hideable: true, draggable: true, width: '70px' },
   { key: 'image', label: 'Image', sortable: false, hideable: true, draggable: true, width: '70px', excludeFromExport: true },
   { key: 'id', label: 'ID', sortable: true, hideable: true, draggable: true, width: '80px' },
   { key: 'name', label: 'Name', sortable: true, hideable: true, draggable: true },
@@ -94,6 +95,8 @@ export const StaffsDashboard = () => {
     total_pages: 1
   });
   const [currentPage, setCurrentPage] = useState(1);
+  // Records per page, used to keep Sr No continuous across pages
+  const [pageSize, setPageSize] = useState(0);
   const [resourceId, setResourceId] = useState<string>(''); // Resource ID for print all QR codes
   const [printingAll, setPrintingAll] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
@@ -181,6 +184,10 @@ export const StaffsDashboard = () => {
       const staffsList = response.data || response.society_staffs || [];
 
       setApiStaffsData(staffsList as NewSocietyStaff[]);
+
+      const reportedPerPage = Number(response.pagination.per_page);
+      if (reportedPerPage > 0) setPageSize(reportedPerPage);
+      else if (currentPage === 1) setPageSize(staffsList.length);
 
       // Normalize pagination data
       setPagination({
@@ -471,13 +478,15 @@ export const StaffsDashboard = () => {
 
   // Transform API data to match table format
   const transformedApiData = () => {
-    return apiStaffsData.map(staff => {
+    const srOffset = (currentPage - 1) * (pageSize || apiStaffsData.length);
+    return apiStaffsData.map((staff, index) => {
       // Format associated flats
       const flats = Array.isArray(staff.associated_flats) && staff.associated_flats.length > 0
         ? staff.associated_flats.map((flat: any) => flat.display || flat.label || flat.name || flat).join(', ')
         : '--';
 
       return {
+        srNo: srOffset + index + 1,
         id: staff.id.toString(),
         name: staff.name || '--',
         email: staff.email || '--',
@@ -574,6 +583,7 @@ export const StaffsDashboard = () => {
         </button>
       </div>
     ),
+    srNo: <span className="text-sm text-gray-500 font-medium">{staff.srNo}</span>,
     id: <span className="font-medium">{staff.id}</span>,
     name: staff.name,
     associatedFlats: staff.associatedFlats,
