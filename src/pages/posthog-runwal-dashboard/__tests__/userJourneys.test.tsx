@@ -90,6 +90,20 @@ describe("User journeys card", () => {
     fireEvent.change(screen.getByLabelText("Search people"), { target: { value: "asha" } });
     await waitFor(() => expect(calls("user_journeys").some((u) => u.searchParams.get("q") === "asha")).toBe(true), { timeout: 2000 });
   });
+
+  it("on Runwal CP (no societies) calls the CP API and leaves out the Site ID and Society columns", async () => {
+    const cpFilters: DashboardFilters = { ...filters, apiPath: ADOPTION_API.runwalCp, displayView: undefined, societyIds: [] };
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <UserJourneysCard filters={cpFilters} showSociety={false} />
+      </QueryClientProvider>
+    );
+    await screen.findByText("Asha");
+    expect(calls("user_journeys")[0].pathname).toContain("/residential/runwal/cp/adoption/user_journeys");
+    expect(screen.queryByText("Site ID")).toBeNull();
+    expect(screen.queryByText("Society")).toBeNull();
+    expect(screen.getByLabelText("Search people").getAttribute("placeholder")).toBe("Search name or email…");
+  });
 });
 
 describe("helpers", () => {

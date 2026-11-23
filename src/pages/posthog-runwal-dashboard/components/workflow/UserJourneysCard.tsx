@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card } from '../common/Card';
+import '../../styles/userJourneys.css';
 import { ErrorState } from '../common/DashboardStates';
 import { TableSkeleton } from '../common/Skeleton';
 import { fetchUserJourneys } from '../../api/api';
@@ -19,10 +20,11 @@ import {
 } from '../../hooks/useDashboardAnalytics';
 
 /**
- * User journeys (bottom of Workflow Usage, Runwal Connect / Realty), laid out as in the Runwal Connect
- * wireframe: people -> one person's sessions -> every step of one session. Live data from the analytics
- * API; every page filter applies (dates, platform, Post Sales / Post Possession, society), the module
- * chosen above does not.
+ * User journeys (bottom of Workflow Usage on the residential dashboards), laid out as in the Runwal Connect
+ * wireframe: people -> one person's sessions -> every step of one session. Live data from the analytics API;
+ * every page filter applies (dates, platform, Post Sales / Post Possession, society), the module chosen above
+ * does not. showSociety={false} (Runwal CP, My Piramal, Kalpataru: apps that stamp no society) drops the
+ * Site ID and Society columns.
  */
 
 const PER = 20;
@@ -145,9 +147,11 @@ interface UserJourneysCardProps {
   /** The page's date range label, e.g. "Last 30 days". */
   rangeLabel?: string;
   enabled?: boolean;
+  /** Site ID and Society columns; false on a dashboard whose app stamps no society (Runwal CP). */
+  showSociety?: boolean;
 }
 
-export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, societies = [], rangeLabel, enabled = true }) => {
+export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, societies = [], rangeLabel, enabled = true, showSociety = true }) => {
   const [view, setView] = useState<'users' | 'sessions' | 'timeline'>('users');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
@@ -165,6 +169,9 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
   const societyNames = useMemo(() => new Map(societies.map((s) => [s.id, s.name])), [societies]);
   const societyName = (id?: string | null) => (id ? societyNames.get(id) || null : null);
   const range = rangeLabel || `${filters.from} – ${filters.to}`;
+  // The page filters this card follows, for the note under the people table.
+  const pageFilters = ['platform', filters.displayView ? 'Post Sales / Post Possession' : null, showSociety ? 'society' : null]
+    .filter(Boolean).join(', ');
 
   // Any page filter change starts again from the people list.
   const filterKey = [filters.apiPath, filters.from, filters.to, filters.devPlatform, filters.displayView,
@@ -260,10 +267,12 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
     try {
       if (view === 'users') {
         const all = await fetchUserJourneys(filters, { q: search, sort: sortK, dir: sortDir, perPage: 'all' });
-        downloadCsv(`user_journey_people_${filters.from}_to_${filters.to}.csv`, toCsv(
-          ['First name', 'Last name', 'Email', 'Site ID', 'Society', 'Sessions', 'Last active'],
-          (all.people || []).map((r) => [r.first_name, r.last_name, r.email, r.society_id, societyName(r.society_id), r.sessions, ago(r.last_seen)])
-        ));
+        const people = all.people || [];
+        downloadCsv(`user_journey_people_${filters.from}_to_${filters.to}.csv`, showSociety
+          ? toCsv(['First name', 'Last name', 'Email', 'Site ID', 'Society', 'Sessions', 'Last active'],
+                  people.map((r) => [r.first_name, r.last_name, r.email, r.society_id, societyName(r.society_id), r.sessions, ago(r.last_seen)]))
+          : toCsv(['First name', 'Last name', 'Email', 'Sessions', 'Last active'],
+                  people.map((r) => [r.first_name, r.last_name, r.email, r.sessions, ago(r.last_seen)])));
       } else if (view === 'sessions' && person) {
         downloadCsv(`sessions_${slug(name(person))}.csv`, toCsv(
           ['Session ID', 'Started', 'Duration (s)', 'Screens', 'Taps', 'First screen', 'How it ended', 'Problems'],
@@ -310,7 +319,7 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
         <div className="uj-bar">
           <input
             type="search"
-            placeholder="Search name, email, site ID or society…"
+            placeholder={showSociety ? 'Search name, email, site ID or society…' : 'Search name or email…'}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             aria-label="Search people"
@@ -325,7 +334,7 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
         {peopleQ.isError ? (
           <ErrorState error={peopleQ.error as Error} onRetry={() => peopleQ.refetch()} />
         ) : peopleQ.isLoading ? (
-          <div className="uj-scroll"><TableSkeleton rows={8} cols={7} /></div>
+          <div className="uj-scroll"><TableSkeleton rows={8} cols={showSociety ? 7 : 5} /></div>
         ) : !rows.length ? (
           <div className="uj-empty">{search ? 'No people match this search.' : 'No signed-in people in this range and filters.'}</div>
         ) : (
@@ -337,8 +346,8 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
                     {th('First name', sortK === 'first_name', sortDir === 'asc', () => sortPeople('first_name'))}
                     {th('Last name', sortK === 'last_name', sortDir === 'asc', () => sortPeople('last_name'))}
                     {th('Email', sortK === 'email', sortDir === 'asc', () => sortPeople('email'))}
-                    {th('Site ID', sortK === 'society_id', sortDir === 'asc', () => sortPeople('society_id'))}
-                    <th className="analytics-header">Society</th>
+                    {showSociety && th('Site ID', sortK === 'society_id', sortDir === 'asc', () => sortPeople('society_id'))}
+                    {showSociety && <th className="analytics-header">Society</th>}
                     {th('Sessions', sortK === 'sessions', sortDir === 'asc', () => sortPeople('sessions'), true)}
                     {th('Last active', sortK === 'last_active', sortDir === 'asc', () => sortPeople('last_active'), true)}
                     <th className="analytics-header uj-go" aria-hidden="true" />
@@ -350,8 +359,8 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
                       <td className="uj-name">{r.first_name || '—'}</td>
                       <td className="uj-name">{r.last_name || '—'}</td>
                       <td className="uj-mail">{r.email || <span className="uj-nil">—</span>}</td>
-                      <td><IdCell v={r.society_id} /></td>
-                      <td>{societyName(r.society_id) || <span className="uj-nil">—</span>}</td>
+                      {showSociety && <td><IdCell v={r.society_id} /></td>}
+                      {showSociety && <td>{societyName(r.society_id) || <span className="uj-nil">—</span>}</td>}
                       <td className="num">{fmtN(r.sessions)}</td>
                       <td className="num">{ago(r.last_seen)}</td>
                       <td className="uj-go">›</td>
@@ -365,7 +374,7 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
         )}
         <div className="uj-note">
           <b>Live data.</b> Every signed-in person active in {range.toLowerCase().startsWith('last') ? `the ${range.toLowerCase()}` : range} with the
-          filters above (platform, Post Sales / Post Possession, society). A person is their user ID; their name and email are the
+          filters above ({pageFilters}). A person is their user ID; their name and email are the
           latest the app sent. Sessions are grouped by the app&rsquo;s session ID. Click a person to see their sessions.
         </div>
       </>

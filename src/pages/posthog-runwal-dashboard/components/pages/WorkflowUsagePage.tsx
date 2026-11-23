@@ -20,11 +20,13 @@ interface WorkflowUsagePageProps {
   onBenchmarkChange: (id: string, value: number | null) => void;
   sitesSettled?: boolean;
   isRefreshing?: boolean;
-  /** The User journeys card at the bottom (Runwal Connect / Realty only), with the society names to show. */
+  /** The User journeys card at the bottom (the residential dashboards), with the society names to show. */
   showUserJourneys?: boolean;
   societies?: SiteLookupItem[];
   /** The page's date range label ("Last 30 days"), shown in the journeys card. */
   rangeLabel?: string;
+  /** The journeys card's Site ID and Society columns; false where the app stamps no society (Runwal CP, My Piramal, Kalpataru). */
+  journeySocieties?: boolean;
 }
 
 export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
@@ -36,6 +38,7 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   showUserJourneys = false,
   societies = [],
   rangeLabel,
+  journeySocieties = true,
 }) => {
 
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
@@ -280,7 +283,10 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
         )}
       </Card>
 
-      {showUserJourneys && <UserJourneysCard filters={filters} societies={societies} rangeLabel={rangeLabel} enabled={sitesSettled} />}
+      {showUserJourneys && (
+        <UserJourneysCard filters={filters} societies={societies} rangeLabel={rangeLabel} enabled={sitesSettled}
+                          showSociety={journeySocieties} />
+      )}
     </section>
   );
 };
