@@ -2039,11 +2039,11 @@ export const PatrollingDetailPage: React.FC = () => {
                                 onSelect={(checked) => handleCheckpointSelect(String(item.id), checked)}
                               >
                                 <TableCell className="p-3 align-top">{renderCheckpointCell(item, "order_sequence")}</TableCell>
-                                <TableCell className="p-3 align-top">{renderCheckpointCell(item, "name")}</TableCell>
-                                <TableCell className="p-3 align-top text-sm text-gray-600 break-words">{renderCheckpointCell(item, "description")}</TableCell>
-                                <TableCell className="p-3 align-top text-sm text-gray-600">{renderCheckpointCell(item, "building_name")}</TableCell>
-                                <TableCell className="p-3 align-top text-sm text-gray-600">{renderCheckpointCell(item, "floor_name")}</TableCell>
-                                <TableCell className="p-3 align-top text-sm text-gray-600">{renderCheckpointCell(item, "room_name")}</TableCell>
+                                <TableCell className="p-3 align-top whitespace-normal break-words [overflow-wrap:anywhere]">{renderCheckpointCell(item, "name")}</TableCell>
+                                <TableCell className="p-3 align-top text-sm text-gray-600 whitespace-normal break-words [overflow-wrap:anywhere]">{renderCheckpointCell(item, "description")}</TableCell>
+                                <TableCell className="p-3 align-top text-sm text-gray-600 whitespace-normal break-words [overflow-wrap:anywhere]">{renderCheckpointCell(item, "building_name")}</TableCell>
+                                <TableCell className="p-3 align-top text-sm text-gray-600 whitespace-normal break-words [overflow-wrap:anywhere]">{renderCheckpointCell(item, "floor_name")}</TableCell>
+                                <TableCell className="p-3 align-top text-sm text-gray-600 whitespace-normal break-words [overflow-wrap:anywhere]">{renderCheckpointCell(item, "room_name")}</TableCell>
                                 <TableCell className="p-3 align-top">{renderCheckpointCell(item, "qr_code_url")}</TableCell>
                                 <TableCell className="p-3 align-top">{renderCheckpointCell(item, "created_at")}</TableCell>
                               </SortableCheckpointRow>
