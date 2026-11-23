@@ -37,8 +37,9 @@ interface FilterBarProps {
   showAdminScope?: boolean;
   adminScope?: "all" | "tower" | "super";
   onSelectAdminScope?: (scope: "all" | "tower" | "super") => void;
-  // Society dropdown (Runwal Connect / Realty only): the user's Hi Society societies, as in the
-  // Hi Society header. "all" = every society. Hidden unless showSocietyFilter.
+  // Society dropdown (the residential dashboards whose app stamps the society: Runwal Connect / Realty,
+  // Godrej, K Raheja, La Circle): the user's Hi Society societies, as in the Hi Society header.
+  // "all" = every society. Hidden unless showSocietyFilter.
   showSocietyFilter?: boolean;
   societies?: SiteLookupItem[];
   selectedSocietyId?: string;
