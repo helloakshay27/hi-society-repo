@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import { Printer } from "lucide-react";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
@@ -11,6 +12,7 @@ const HiSocNoticeDetails = () => {
   
   const [broadcastData, setBroadcastData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   useEffect(() => {
     const fetchBroadcastDetails = async () => {
@@ -48,6 +50,37 @@ const HiSocNoticeDetails = () => {
 
     fetchBroadcastDetails();
   }, [id]);
+
+  const handlePrint = async () => {
+    if (!id) return;
+    setIsPrinting(true);
+    try {
+      const response = await axios.get(
+        getFullUrl(`/crm/admin/noticeboards/${id}/print_notice`),
+        {
+          headers: { Authorization: getAuthHeader() },
+          responseType: "blob",
+        }
+      );
+
+      const contentType = response.headers["content-type"] || "application/pdf";
+      const blob = new Blob([response.data], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `notice-${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error printing notice:", error);
+      toast.error("Failed to print notice");
+    } finally {
+      setIsPrinting(false);
+    }
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -136,6 +169,17 @@ const HiSocNoticeDetails = () => {
         <span>Notice</span>
         <span>{">"}  </span>
         <span className="text-gray-900 font-medium">Notice Details</span>
+        <div className="ml-auto">
+          <button
+            type="button"
+            onClick={handlePrint}
+            disabled={isPrinting}
+            className="btn-primary h-9 px-4 text-sm font-medium inline-flex items-center gap-2 shrink-0 disabled:opacity-60"
+          >
+            <Printer className="w-4 h-4" />
+            {isPrinting ? "Printing..." : "Print"}
+          </button>
+        </div>
       </div>
       
       <style>

@@ -83,6 +83,7 @@ interface ClubMember {
     created_by_id?: number;
     current_age?: number | null;
     gender?: string | null;
+    relation_with_owner?: string | null;
     snag_answers?: any[];
     user: {
         id: number;
@@ -964,6 +965,11 @@ export const CMSClubMembersDetails = () => {
                                                         <Phone className="w-3 h-3 inline mr-1" />
                                                         {member.mobile}
                                                     </p>
+                                                    <p className="text-sm text-gray-600">
+                                                        <User className="w-3 h-3 inline mr-1" />
+                                                        Relation with Owner:{" "}
+                                                        {member.relation_with_owner || "-"}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -1311,6 +1317,11 @@ export const CMSClubMembersDetails = () => {
                                                 <span className="text-gray-500 min-w-[140px]">Mobile</span>
                                                 <span className="text-gray-500 mx-2">:</span>
                                                 <span className="text-gray-900 font-medium">{selectedMember.mobile}</span>
+                                            </div>
+                                            <div className="flex items-start">
+                                                <span className="text-gray-500 min-w-[140px]">Relation with Owner</span>
+                                                <span className="text-gray-500 mx-2">:</span>
+                                                <span className="text-gray-900 font-medium">{selectedMember.relation_with_owner || "-"}</span>
                                             </div>
                                             <div className="flex items-start">
                                                 <span className="text-gray-500 min-w-[140px]">Face Added</span>
