@@ -14,7 +14,7 @@ interface Project {
   id: number;
   project_name: string;
   property_type: string;
-  SFDC_Project_Id: string;
+  SFDC_Project_Id: string | number;
   status: string;
   configurations: Array<{ name: string }>;
   project_tag: string;
@@ -42,7 +42,13 @@ const ProjectDetailsList = () => {
     setIsSearching(!!search);
     setError(null);
     try {
-      const response = await fetch(getFullUrl('/get_projects_all.json'), {
+      // Server-side pagination (default 20, max 100 per page) and search
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('per_page', '20');
+      if (search.trim()) params.set('q[Project_Name_cont]', search.trim());
+
+      const response = await fetch(getFullUrl(`/projects.json?${params.toString()}`), {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),
@@ -55,34 +61,13 @@ const ProjectDetailsList = () => {
       }
 
       const data = await response.json();
-      const projectsData = data?.projects || [];
-      
-      // Client-side search filtering
-      let filteredProjects = projectsData;
-      if (search) {
-        const searchLower = search.toLowerCase();
-        filteredProjects = projectsData.filter((project: Project) =>
-          project.project_name?.toLowerCase().includes(searchLower) ||
-          project.property_type?.toLowerCase().includes(searchLower) ||
-          project.SFDC_Project_Id?.toLowerCase().includes(searchLower) ||
-          project.status?.toLowerCase().includes(searchLower) ||
-          project.project_tag?.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      // Client-side pagination
-      const itemsPerPage = 10;
-      const startIndex = (page - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const paginatedProjects = filteredProjects.slice(startIndex, endIndex);
-      
-      setProjects(paginatedProjects);
-      setCurrentPage(page);
-      setTotalPages(Math.ceil(filteredProjects.length / itemsPerPage));
-      setTotalCount(filteredProjects.length);
-      
-      // Cache all projects
-      sessionStorage.setItem('cached_projects', JSON.stringify(projectsData));
+      const projectsData: Project[] = data?.projects || [];
+      const pagination = data?.pagination;
+
+      setProjects(projectsData);
+      setCurrentPage(pagination?.current_page ?? page);
+      setTotalPages(pagination?.total_pages ?? 1);
+      setTotalCount(pagination?.total_count ?? projectsData.length);
     } catch (err) {
       setError('Failed to fetch projects.');
       toast.error('Failed to fetch projects.');
