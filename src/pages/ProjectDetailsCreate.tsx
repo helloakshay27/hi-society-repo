@@ -10,6 +10,7 @@ import { ImageCropper } from "../components/reusable/ImageCropper";
 import { ImageUploadingButton } from "../components/reusable/ImageUploadingButton";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
+import ProjectPlansEditor from "../components/project/ProjectPlansEditor";
 import { getFullUrl, getAuthHeader } from "../config/apiConfig";
 import {
   TextField,
@@ -240,19 +241,21 @@ const ProjectDetailsCreate = () => {
       country: "",
     },
     brochure: [],
-    two_d_images: [],
-    videos: [],
+    brochure_title: "",
+    // Overview / key stats / connectivity / RERA card fields
+    lifts_per_tower: "",
+    green_rating: "",
+    overview_subtitle: "",
+    highlights: [],
+    connectivity_title: "",
+    area_label: "",
+    area_image_url: "",
+    rera_registered_on: "",
+    rera_authority: "",
+    rera_verify_url: "",
+    licence_no: "",
+    licence_date: "",
     gallery_image: [],
-    project_ppt: [],
-    //project_creatives: [],
-    project_creatives: [],
-    project_creative_generics: [],
-    project_creative_offers: [],
-    project_interiors: [],
-    project_exteriors: [],
-    project_emailer_templetes: [],
-    KnwYrApt_Technical: [],
-    project_layout: [],
     project_sales_type: "",
     order_no: null,
     video_preview_image_url: [],
@@ -261,7 +264,6 @@ const ProjectDetailsCreate = () => {
     isDay: true,
     disclaimer: "",
     project_qrcode_image: [],
-    cover_images: [],
     is_sold: false,
     plans: [],
     show_on_home: false,
@@ -284,7 +286,6 @@ const ProjectDetailsCreate = () => {
   const [selectedType, setSelectedType] = useState(null);
   const [filteredAmenities, setFilteredAmenities] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [projectCreatives, setProjectCreatives] = useState([]);
   const [categoryTypes, setCategoryTypes] = useState([]);
   const [selectedCreativeType, setSelectedCreativeType] = useState("");
   const [showTooltip, setShowTooltip] = useState(false);
@@ -298,6 +299,7 @@ const ProjectDetailsCreate = () => {
   const [coverImageUpload, setCoverImageUpload] = useState([]);
   const [galleryImageUpload, setGalleryImageUpload] = useState([]);
   const [floorPlanImageUpload, setFloorPlanImageUpload] = useState([]);
+  const [galleryCategory, setGalleryCategory] = useState("Exterior");
   const [planName, setPlanName] = useState("");
   const [planImages, setPlanImages] = useState([]);
   const [plans, setPlans] = useState([]);
@@ -321,16 +323,6 @@ const ProjectDetailsCreate = () => {
   const [showTooltipFloor, setShowTooltipFloor] = useState(false);
   const [showTooltipPlans, setShowTooltipPlans] = useState(false);
   const [showTooltipBrochure, setShowTooltipBrochure] = useState(false);
-  const [showTooltipPPT, setShowTooltipPPT] = useState(false);
-  const [showTooltipLayout, setShowTooltipLayout] = useState(false);
-  const [showTooltipCreatives, setShowTooltipCreatives] = useState(false);
-  const [showTooltipCreativeGenerics, setShowTooltipCreativeGenerics] = useState(false);
-  const [showTooltipCreativeOffers, setShowTooltipCreativeOffers] = useState(false);
-  const [showTooltipInteriors, setShowTooltipInteriors] = useState(false);
-  const [showTooltipExteriors, setShowTooltipExteriors] = useState(false);
-  const [showTooltipEmailer, setShowTooltipEmailer] = useState(false);
-  const [showTooltipKYA, setShowTooltipKYA] = useState(false);
-  const [showTooltipVideos, setShowTooltipVideos] = useState(false);
   const [connectivityTypes, setConnectivityTypes] = useState([]);
   const [visibility, setVisibility] = useState({
     showOnHomePage: false,
@@ -522,7 +514,7 @@ const ProjectDetailsCreate = () => {
         const key = `${prefix}_${formattedRatio}`
           .replace(/\s+/g, "_")
           .toLowerCase();
-        updateFormData(key, [video]);
+        updateFormData(key, [type === "gallery" ? { ...video, category: galleryCategory } : video]);
       });
 
       closeModal(type);
@@ -563,7 +555,7 @@ const ProjectDetailsCreate = () => {
       const key = `${prefix}_${formattedRatio}`
         .replace(/\s+/g, "_")
         .toLowerCase();
-      updateFormData(key, [img]);
+      updateFormData(key, [type === "gallery" ? { ...img, category: galleryCategory } : img]);
     });
 
     closeModal(type);
@@ -1041,48 +1033,6 @@ const ProjectDetailsCreate = () => {
     }
   };
 
-  const handleProjectCreativesUpload = (files) => {
-    if (!files || files.length === 0) return;
-
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "application/pdf",
-      "application/vnd.ms-powerpoint",
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      "video/mp4",
-      "video/mov",
-    ];
-
-    const MAX_SIZE = 50 * 1024 * 1024; // 50MB max per file
-
-    const newFiles = Array.from(files) as File[];
-    const validFiles: { file: File; type: string }[] = [];
-
-    newFiles.forEach((file) => {
-      if (!allowedTypes.includes(file.type)) {
-        toast.error(`Invalid file type: ${file.name}`);
-        return;
-      }
-
-      if (file.size > MAX_SIZE) {
-        toast.error(`File too large: ${file.name}. Max size is 50MB.`);
-        return;
-      }
-
-      validFiles.push({ file, type: "" }); // Default type empty, user will select
-    });
-
-    if (validFiles.length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        project_creatives: [...prev.project_creatives, ...validFiles],
-      }));
-    }
-  };
-
   // Modify the handleFileUpload function to handle gallery_images
   const handleFileUpload = (name, files) => {
     const MAX_SIZES = {
@@ -1092,16 +1042,9 @@ const ProjectDetailsCreate = () => {
       image: MAX_IMAGE_SIZE,
       video_preview_image_url: MAX_IMAGE_SIZE,
       gallery_image: MAX_IMAGE_SIZE,
-      project_ppt: MAX_PPT_SIZE, // ✅ Ensure project_ppt is included
-      project_creatives: MAX_IMAGE_SIZE, // Add creatives support
       cover_images: MAX_IMAGE_SIZE,
-      project_creative_generics: MAX_IMAGE_SIZE,
-      project_creative_offers: MAX_IMAGE_SIZE,
       project_interiors: MAX_IMAGE_SIZE,
       project_exteriors: MAX_IMAGE_SIZE,
-      project_emailer_templetes: MAX_BROCHURE_SIZE,
-      KnwYrApt_Technical: MAX_BROCHURE_SIZE,
-      project_layout: MAX_IMAGE_SIZE,
       project_qrcode_image: MAX_IMAGE_SIZE,
       plans: MAX_IMAGE_SIZE, // 3MB
     };
@@ -1179,278 +1122,8 @@ const ProjectDetailsCreate = () => {
 
     if (!files || !files.length) return;
 
-    if (name === "project_layout") {
-      const MAX_SIZE = 10 * 1024 * 1024; // 10MB limit
-
-      const newFiles = Array.from(files) as File[];
-      const validFiles: File[] = [];
-
-      newFiles.forEach((file) => {
-        if (file.size > MAX_SIZE) {
-          toast.error("File size must be less than 10MB.");
-          return;
-        }
-
-        validFiles.push(file);
-      });
-
-      if (validFiles.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          project_layout: [...(prev.project_layout || []), ...validFiles],
-        }));
-      }
-    } else {
-      // toast.error("⚠️ Invalid upload category.");
-    }
-
-    // Plans are handled separately through the plan name and images interface
-    // This section is not used in the current implementation
-
-    if (name === "project_emailer_templetes") {
-      // Handle multiple brochure files
-      const newFiles = Array.from(files) as File[];
-      const validFiles: File[] = [];
-
-      newFiles.forEach((file) => {
-        if (!allowedTypes.project_emailer_templetes.includes(file.type)) {
-          toast.error(
-            "Only PDF and DOCX files are allowed for project emailer templetes."
-          );
-          return;
-        }
-
-        if (!validateFile(file, MAX_SIZES[name])) return;
-        validFiles.push(file);
-      });
-
-      if (validFiles.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          project_emailer_templetes: [
-            ...prev.project_emailer_templetes,
-            ...validFiles,
-          ],
-        }));
-      }
-    }
-
-    if (name === "KnwYrApt_Technical") {
-      // Handle multiple technical files
-      const newFiles = Array.from(files) as File[];
-      const validFiles: File[] = [];
-
-      newFiles.forEach((file) => {
-        if (!allowedTypes.KnwYrApt_Technical.includes(file.type)) {
-          toast.error(
-            "Only PDF and DOCX files are allowed for project technical files."
-          );
-          return;
-        }
-
-        if (!validateFile(file, MAX_SIZES[name])) return;
-        validFiles.push(file);
-      });
-
-      if (validFiles.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          KnwYrApt_Technical: [...prev.KnwYrApt_Technical, ...validFiles],
-        }));
-      }
-    }
-
-    if (name === "project_exteriors") {
-      const newFiles = Array.from(files) as File[];
-      const validFiles: File[] = [];
-
-      newFiles.forEach((file) => {
-        if (!allowedTypes.project_exteriors.includes(file.type)) {
-          toast.error("Only JPG, PNG, GIF, and WebP images are allowed.");
-          return;
-        }
-
-        if (file.size > MAX_SIZES.project_exteriors) {
-          toast.error("Image size must be less than 3MB.");
-          return;
-        }
-
-        validFiles.push(file);
-      });
-
-      if (validFiles.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          project_exteriors: [...(prev.project_exteriors || []), ...validFiles],
-        }));
-      }
-    }
-
-    if (name === "project_interiors") {
-      const newFiles = Array.from(files) as File[];
-      const validFiles: File[] = [];
-
-      newFiles.forEach((file) => {
-        if (!allowedTypes.project_interiors.includes(file.type)) {
-          toast.error("Only JPG, PNG, GIF, and WebP images are allowed.");
-          return;
-        }
-
-        if (file.size > MAX_SIZES.project_interiors) {
-          toast.error("Image size must be less than 3MB.");
-          return;
-        }
-
-        validFiles.push(file);
-      });
-
-      if (validFiles.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          project_interiors: [...(prev.project_interiors || []), ...validFiles],
-        }));
-      }
-    }
-
-    if (name === "project_creative_offers") {
-      const newFiles = Array.from(files) as File[];
-      const validFiles: File[] = [];
-
-      newFiles.forEach((file) => {
-        if (!allowedTypes.project_creative_offers.includes(file.type)) {
-          toast.error("Only PDF files are allowed for project offers.");
-          return;
-        }
-
-        if (file.size > MAX_SIZES.project_creative_offers) {
-          toast.error("PDF size must be less than 3MB.");
-          return;
-        }
-
-        validFiles.push(file);
-      });
-
-      if (validFiles.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          project_creative_offers: [
-            ...(prev.project_creative_offers || []),
-            ...validFiles,
-          ],
-        }));
-      }
-    }
-
-    if (name === "project_creative_generics") {
-      const newFiles = Array.from(files) as File[];
-      const validFiles: File[] = [];
-
-      newFiles.forEach((file) => {
-        if (!allowedTypes.project_creative_generics.includes(file.type)) {
-          toast.error("Only JPG, PNG, GIF, and WebP images are allowed.");
-          return;
-        }
-
-        if (file.size > MAX_SIZES.project_creative_generics) {
-          toast.error("Image size must be less than 3MB.");
-          return;
-        }
-
-        validFiles.push(file);
-      });
-
-      if (validFiles.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          project_creative_generics: [
-            ...(prev.project_creative_generics || []),
-            ...validFiles,
-          ],
-        }));
-      }
-    }
-
-    if (name === "project_creatives") {
-      const newFiles = Array.from(files) as File[];
-      const validFiles: File[] = [];
-
-      newFiles.forEach((file) => {
-        if (!allowedTypes.project_creatives.includes(file.type)) {
-          toast.error("Only JPG, PNG, GIF, and WebP images are allowed.");
-          return;
-        }
-
-        if (file.size > MAX_SIZES.project_creatives) {
-          toast.error("Image size must be less than 3MB.");
-          return;
-        }
-
-        validFiles.push(file);
-      });
-
-      if (validFiles.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          project_creatives: [...(prev.project_creatives || []), ...validFiles],
-        }));
-      }
-    }
-
-    if (name === "cover_images") {
-      const newFiles = Array.from(files) as File[];
-      const validFiles: File[] = [];
-
-      newFiles.forEach((file) => {
-        if (!allowedTypes.cover_images.includes(file.type)) {
-          toast.error("Only JPG, PNG, GIF, and WebP images are allowed.");
-          return;
-        }
-
-        if (file.size > MAX_SIZES.cover_images) {
-          toast.error("Image size must be less than 3MB.");
-          return;
-        }
-
-        validFiles.push(file);
-      });
-
-      if (validFiles.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          cover_images: [...(prev.cover_images || []), ...validFiles],
-        }));
-      }
-    }
-
-    if (name === "project_ppt") {
-      // Handle multiple PPT files
-      const newFiles = Array.from(files) as File[];
-      const validFiles: File[] = [];
-
-      newFiles.forEach((file) => {
-        if (!allowedTypes.project_ppt.includes(file.type)) {
-          toast.error("Only PPT and PPTX files are allowed for Project PPT.");
-          return;
-        }
-
-        if (file.size > MAX_SIZES.project_ppt) {
-          toast.error(`File too large: ${file.name}. Max size is 10MB.`);
-          return;
-        }
-
-        validFiles.push(file);
-      });
-
-      if (validFiles.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          project_ppt: [...prev.project_ppt, ...validFiles],
-        }));
-      }
-    }
-
     if (name === "brochure") {
-      // Handle multiple brochure files
+      // The API keeps a single brochure; a new upload replaces the old one
       const newFiles = Array.from(files) as File[];
       const validFiles: File[] = [];
 
@@ -1466,7 +1139,7 @@ const ProjectDetailsCreate = () => {
       if (validFiles.length > 0) {
         setFormData((prev) => ({
           ...prev,
-          brochure: [...prev.brochure, ...validFiles],
+          brochure: validFiles.slice(0, 1),
         }));
       }
     } else if (
@@ -1595,50 +1268,6 @@ const ProjectDetailsCreate = () => {
         // Clear all brochures if no index specified
         setFormData({ ...formData, brochure: [] });
       }
-    } else if (fileType === "two_d_images") {
-      const updatedFiles = [...formData.two_d_images];
-      updatedFiles.splice(index, 1);
-      setFormData({ ...formData, two_d_images: updatedFiles });
-    } else if (fileType === "project_creatives") {
-      const updatedFiles = [...formData.project_creatives];
-      updatedFiles.splice(index, 1);
-      setFormData({ ...formData, project_creatives: updatedFiles });
-    } else if (fileType === "cover_images") {
-      const updatedFiles = [...formData.cover_images];
-      updatedFiles.splice(index, 1);
-      setFormData({ ...formData, cover_images: updatedFiles });
-    } else if (fileType === "project_creative_generics") {
-      const updatedFiles = [...formData.project_creative_generics];
-      updatedFiles.splice(index, 1);
-      setFormData({ ...formData, project_creative_generics: updatedFiles });
-    } else if (fileType === "project_creative_offers") {
-      const updatedFiles = [...formData.project_creative_offers];
-      updatedFiles.splice(index, 1);
-      setFormData({ ...formData, project_creative_offers: updatedFiles });
-    } else if (fileType === "project_interiors") {
-      const updatedFiles = [...formData.project_interiors];
-      updatedFiles.splice(index, 1);
-      setFormData({ ...formData, project_interiors: updatedFiles });
-    } else if (fileType === "project_exteriors") {
-      const updatedFiles = [...formData.project_exteriors];
-      updatedFiles.splice(index, 1);
-      setFormData({ ...formData, project_exteriors: updatedFiles });
-    } else if (fileType === "project_emailer_templetes") {
-      const updatedFiles = [...formData.project_emailer_templetes];
-      updatedFiles.splice(index, 1);
-      setFormData({ ...formData, project_emailer_templetes: updatedFiles });
-    } else if (fileType === "KnwYrApt_Technical") {
-      const updatedFiles = [...formData.KnwYrApt_Technical];
-      updatedFiles.splice(index, 1);
-      setFormData({ ...formData, KnwYrApt_Technical: updatedFiles });
-    } else if (fileType === "project_layout") {
-      const updatedFiles = [...formData.project_layout];
-      updatedFiles.splice(index, 1);
-      setFormData({ ...formData, project_layout: updatedFiles });
-    } else if (fileType === "videos") {
-      const updatedVideos = [...formData.videos];
-      updatedVideos.splice(index, 1);
-      setFormData({ ...formData, videos: updatedVideos });
     } else if (fileType === "gallery_image") {
       const updatedGallery = [...formData.gallery_image];
       updatedGallery.splice(index, 1);
@@ -1674,15 +1303,6 @@ const ProjectDetailsCreate = () => {
     } catch (error) {
       console.error("Error deleting plan:", error);
       toast.error("Failed to delete plan. Please try again.");
-    }
-  };
-
-  const handleDiscardPpt = (fileType: string, index: number) => {
-    if (fileType === "project_ppt") {
-      const updatedFiles = [...formData.project_ppt];
-      updatedFiles.splice(index, 1);
-      setFormData({ ...formData, project_ppt: updatedFiles });
-      toast.success("PPT file removed");
     }
   };
 
@@ -1899,6 +1519,10 @@ const ProjectDetailsCreate = () => {
       if (key === "plans" && Array.isArray(value)) {
         value.forEach((plan, index) => {
           data.append(`project[plans][${index}][name]`, plan.name);
+          if (plan.id) data.append(`project[plans][${index}][id]`, plan.id);
+          ["plan_type", "tower", "area_sqft", "facing"].forEach((field) => {
+            if (plan[field]) data.append(`project[plans][${index}][${field}]`, plan[field]);
+          });
           if (Array.isArray(plan.images)) {
             plan.images.forEach((img) => {
               data.append(`project[plans][${index}][images][]`, img);
@@ -1913,51 +1537,27 @@ const ProjectDetailsCreate = () => {
           }
         }
       } else if (key === "brochure" && Array.isArray(value)) {
-        value.forEach((file) => {
-          if (file instanceof File) {
-            data.append("project[ProjectBrochure][]", file);
-          }
-        });
-      } else if (key === "project_emailer_templetes" && Array.isArray(value)) {
-        value.forEach((file) => {
-          if (file instanceof File) {
-            data.append("project[ProjectEmailerTempletes][]", file);
-          }
-        });
-      } else if (key === "KnwYrApt_Technical" && Array.isArray(value)) {
-        value.forEach((file) => {
-          if (file instanceof File) {
-            data.append("project[KnwYrApt_Technical][]", file);
-          }
-        });
-      } else if (key === "two_d_images" && Array.isArray(value)) {
-        value.forEach((file) => data.append("project[Project2DImage][]", file));
-      } else if (key === "project_creatives" && Array.isArray(value)) {
-        value.forEach((file) =>
-          data.append("project[ProjectCreatives][]", file)
-        );
-      } else if (key === "cover_images" && Array.isArray(value)) {
-        value.forEach((file) => data.append("project[cover_images][]", file));
-      } else if (key === "project_creative_generics" && Array.isArray(value)) {
-        value.forEach((file) =>
-          data.append("project[ProjectCreativeGenerics][]", file)
-        );
-      } else if (key === "project_creative_offers" && Array.isArray(value)) {
-        value.forEach((file) =>
-          data.append("project[ProjectCreativeOffers][]", file)
-        );
-      } else if (key === "project_interiors" && Array.isArray(value)) {
-        value.forEach((file) =>
-          data.append("project[ProjectInteriors][]", file)
-        );
-      } else if (key === "project_exteriors" && Array.isArray(value)) {
-        value.forEach((file) =>
-          data.append("project[ProjectExteriors][]", file)
-        );
-      } else if (key === "project_layout" && Array.isArray(value)) {
-        value.forEach((file) => data.append("project[ProjectLayout][]", file));
-      } else if (key === "videos" && Array.isArray(value)) {
-        value.forEach((file) => data.append("project[ProjectVideo][]", file));
+        // The API keeps a single brochure; a new upload replaces the old one
+        const brochureFile = value.find((file) => file instanceof File);
+        if (brochureFile) {
+          data.append("project[brochure]", brochureFile);
+        }
+      } else if (key === "highlights" && Array.isArray(value)) {
+        value
+          .map((h) => (typeof h === "string" ? h.trim() : ""))
+          .filter(Boolean)
+          .forEach((h) => data.append("project[highlights][]", h));
+
+
+
+
+
+
+
+
+
+
+
       } else if (key === "gallery_image" && Array.isArray(value)) {
         value.forEach((fileObj, index) => {
           if (fileObj.gallery_image instanceof File) {
@@ -2091,12 +1691,7 @@ const ProjectDetailsCreate = () => {
       } else if (key === "Configuration_Type" && value && typeof value === "string" && value.trim() !== "") {
         // Handle legacy string format for backward compatibility
         data.append("project[Configuration_Type]", value);
-      } else if (key === "project_ppt" && Array.isArray(value)) {
-        value.forEach((file) => {
-          if (file instanceof File) {
-            data.append("project[ProjectPPT]", file);
-          }
-        });
+
       } else if (key === "project_sales_type" && Array.isArray(value)) {
         value.forEach((type) =>
           data.append("project[project_sales_type][]", type)
@@ -2125,6 +1720,9 @@ const ProjectDetailsCreate = () => {
               `project[${key}][][file_name]`,
               img.file_name || img.file.name
             );
+            if (img.category) {
+              data.append(`project[${key}][][category]`, img.category);
+            }
           }
         });
       } else if (key.startsWith("floor_plans_") && Array.isArray(value)) {
@@ -2168,17 +1766,7 @@ const ProjectDetailsCreate = () => {
         key !== "plans" &&
         key !== "Address" &&
         key !== "brochure" &&
-        key !== "project_emailer_templetes" &&
-        key !== "KnwYrApt_Technical" &&
-        key !== "two_d_images" &&
-        key !== "project_creatives" &&
-        key !== "cover_images" &&
-        key !== "project_creative_generics" &&
-        key !== "project_creative_offers" &&
-        key !== "project_interiors" &&
-        key !== "project_exteriors" &&
-        key !== "project_layout" &&
-        key !== "videos" &&
+        key !== "highlights" &&
         key !== "gallery_image" &&
         key !== "image" &&
         key !== "video_preview_image_url" &&
@@ -2186,7 +1774,6 @@ const ProjectDetailsCreate = () => {
         key !== "virtual_tour_url_multiple" &&
         key !== "Rera_Number_multiple" &&
         key !== "connectivities" &&
-        key !== "project_ppt" &&
         key !== "project_sales_type" &&
         !key.startsWith("image") &&
         !key.startsWith("cover_images_") &&
@@ -3095,6 +2682,110 @@ const ProjectDetailsCreate = () => {
                     shrink: true,
                   },
                 }}
+              />
+
+              {/* Overview / key stats */}
+              <TextField
+                label="Lifts Per Tower"
+                placeholder="e.g. 9 per tower"
+                value={formData.lifts_per_tower}
+                onChange={(e) => setFormData((prev) => ({ ...prev, lifts_per_tower: e.target.value }))}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label="Green Rating"
+                placeholder="e.g. IGBC Platinum pre-certified"
+                value={formData.green_rating}
+                onChange={(e) => setFormData((prev) => ({ ...prev, green_rating: e.target.value }))}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label="Overview Subtitle"
+                placeholder="Enter overview subtitle"
+                value={formData.overview_subtitle}
+                onChange={(e) => setFormData((prev) => ({ ...prev, overview_subtitle: e.target.value }))}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label="Highlights"
+                placeholder="One highlight per line"
+                value={(formData.highlights || []).join("\n")}
+                onChange={(e) => setFormData((prev) => ({ ...prev, highlights: e.target.value.split("\n") }))}
+                multiline
+                minRows={2}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+
+              {/* Connectivity */}
+              <TextField
+                label="Connectivity Title"
+                placeholder="e.g. In the heart of Faridabad"
+                value={formData.connectivity_title}
+                onChange={(e) => setFormData((prev) => ({ ...prev, connectivity_title: e.target.value }))}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label="Area Label"
+                placeholder="e.g. Sector 80"
+                value={formData.area_label}
+                onChange={(e) => setFormData((prev) => ({ ...prev, area_label: e.target.value }))}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label="Area Image URL"
+                placeholder="Enter area image URL"
+                value={formData.area_image_url}
+                onChange={(e) => setFormData((prev) => ({ ...prev, area_image_url: e.target.value }))}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+
+              {/* RERA card */}
+              <TextField
+                label="RERA Registered On"
+                type="date"
+                value={formData.rera_registered_on}
+                onChange={(e) => setFormData((prev) => ({ ...prev, rera_registered_on: e.target.value }))}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label="RERA Authority"
+                placeholder="e.g. HRERA Panchkula"
+                value={formData.rera_authority}
+                onChange={(e) => setFormData((prev) => ({ ...prev, rera_authority: e.target.value }))}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label="RERA Verify URL"
+                placeholder="Enter RERA verify URL"
+                value={formData.rera_verify_url}
+                onChange={(e) => setFormData((prev) => ({ ...prev, rera_verify_url: e.target.value }))}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label="Licence No"
+                placeholder="Enter licence number"
+                value={formData.licence_no}
+                onChange={(e) => setFormData((prev) => ({ ...prev, licence_no: e.target.value }))}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label="Licence Date"
+                type="date"
+                value={formData.licence_date}
+                onChange={(e) => setFormData((prev) => ({ ...prev, licence_date: e.target.value }))}
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
               />
 
               {/* Enable Enquiry Toggle */}
@@ -4273,6 +3964,22 @@ const ProjectDetailsCreate = () => {
               </div>
             </div>
           </div> */}
+        <ProjectPlansEditor
+          plans={formData.plans}
+          onAdd={(plan) =>
+            setFormData((prev) => ({
+              ...prev,
+              plans: [...(prev.plans || []), plan],
+            }))
+          }
+          onRemove={(_plan, index) =>
+            setFormData((prev) => ({
+              ...prev,
+              plans: (prev.plans || []).filter((_, i) => i !== index),
+            }))
+          }
+        />
+
        
          <div className="pdc-card bg-white overflow-hidden">
           <div className="px-6 py-3">
@@ -4617,6 +4324,17 @@ const ProjectDetailsCreate = () => {
                     </span>
                   </h5>
 
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={galleryCategory}
+                      onChange={(e) => setGalleryCategory(e.target.value)}
+                      className="h-9 rounded-md border border-gray-300 bg-white px-2 text-sm"
+                      title="Category applied to newly added gallery images"
+                    >
+                      {["Exterior", "Amenities", "Interiors", "Construction"].map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
                   <button
                     variant="ghost"
            className="btn-primary h-9 px-4 text-sm font-medium" 
@@ -4634,6 +4352,7 @@ const ProjectDetailsCreate = () => {
                     </svg> */}
                     <span>Add</span>
                   </button>
+                  </div>
                 </div>
 
                 {/* Upload Modal */}
@@ -4969,7 +4688,6 @@ variant="ghost"
                     name="brochure"
                     accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
                     onChange={(e) => handleFileUpload("brochure", e.target.files)}
-                    multiple
                     style={{ display: "none" }}
                   />
                 </div>
@@ -5003,758 +4721,21 @@ variant="ghost"
                     </tbody>
                   </table>
                 </div>
+                <div className="mt-4">
+                  <TextField
+                    label="Brochure Title"
+                    placeholder="Enter brochure title"
+                    value={formData.brochure_title}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, brochure_title: e.target.value }))
+                    }
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{ inputLabel: { shrink: true } }}
+                  />
+                </div>
               </div>
               
-                  <>
-                    {/* <div className="mb-6">
-                      
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Project PPT{" "}
-                          <span
-                            className="relative inline-flex items-center cursor-pointer"
-                            onMouseEnter={() => setShowTooltipPPT(true)}
-                            onMouseLeave={() => setShowTooltipPPT(false)}
-                          >
-                            <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipPPT && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 5 MB
-                              </span>
-                            )}
-                          </span>
-                        </h5>
-
-                        <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                          onClick={() => document.getElementById("project_ppt").click()}
-                        >
-                         
-                          <span>Add</span>
-                        </button>
-                      </div>
-                      <input
-                        id="project_ppt"
-                        className="form-control"
-                        type="file"
-                        name="project_ppt"
-                        accept=".ppt, .pptx"
-                        onChange={(e) =>
-                          handleFileUpload("project_ppt", e.target.files)
-                        }
-                        multiple
-                        style={{ display: "none" }}
-                      />
-                     
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.project_ppt.map((file, index) => (
-                              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                <td className="py-3 px-4 font-medium">{file.name}</td>
-                                <td className="py-3 px-4">
-                                  <button
-                                    type="button"
-                                    
-                                    onClick={() => handleDiscardPpt("project_ppt", index)}
-                                  >
-                                    <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div> */}
-                    <div className="mb-6">
-                      
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Layouts & Floor Plans{" "}
-                          <span
-                            className="relative inline-flex items-center cursor-pointer"
-                            onMouseEnter={() => setShowTooltipLayout(true)}
-                            onMouseLeave={() => setShowTooltipLayout(false)}
-                          >
-                            <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipLayout && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 3 MB
-                              </span>
-                            )}
-                          </span>
-                        </h5>
-
-                        <button
-                          type="button"
-                 variant="ghost"
-              className="btn-primary h-9 px-4 text-sm font-medium"                           onClick={() => document.getElementById("project_layout").click()}
-                        >
-                         
-                          <span>Add</span>
-                        </button>
-                      </div>
-                      <input
-                        id="project_layout"
-                        className="form-control"
-                        type="file"
-                        name="project_layout"
-                        accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
-                        onChange={(e) =>
-                          handleFileUpload("project_layout", e.target.files)
-                        }
-                        style={{ display: "none" }}
-                      />
-                     
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.project_layout.map((file, index) => (
-                              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                <td className="py-3 px-4 font-medium">{file.name}</td>
-                                <td className="py-3 px-4">
-                                  <img
-                                    style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                    className="rounded border border-gray-200"
-                                    src={file.type?.startsWith("image") ? URL.createObjectURL(file) : undefined}
-                                    alt={file.name}
-                                  />
-                                </td>
-                                <td className="py-3 px-4">
-                                  <button
-                                    type="button"
-                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                    onClick={() => handleDiscardFile("project_layout", index)}
-                                  >
-                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    {/* <div className="mb-6">
-                     
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Creatives{" "}
-                          <span
-                            className="relative inline-flex items-center cursor-pointer"
-                            onMouseEnter={() => setShowTooltipCreatives(true)}
-                            onMouseLeave={() => setShowTooltipCreatives(false)}
-                          >
-                            <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipCreatives && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 3 MB
-                              </span>
-                            )}
-                          </span>
-                        </h5>
-
-                        <button
-                          type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                          onClick={() => document.getElementById("project_creatives").click()}
-                        >
-                         
-                          <span>Add</span>
-                        </button>
-                      </div>
-                      <input
-                        id="project_creatives"
-                        className="form-control"
-                        type="file"
-                        name="project_creatives"
-                        accept="image/*"
-                        onChange={(e) =>
-                          handleFileUpload("project_creatives", e.target.files)
-                        }
-                        multiple
-                        style={{ display: "none" }}
-                      />
-                     
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.project_creatives.map((file, index) => (
-                              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                <td className="py-3 px-4 font-medium">{file.name}</td>
-                                <td className="py-3 px-4">
-                                  <img
-                                    style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                    className="rounded border border-gray-200"
-                                    src={file.type?.startsWith("image") ? URL.createObjectURL(file) : undefined}
-                                    alt={file.name}
-                                  />
-                                </td>
-                                <td className="py-3 px-4">
-                                  <button
-                                    type="button"
-                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                    onClick={() => handleDiscardFile("project_creatives", index)}
-                                  >
-                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div> */}
-                    {/* <div className="mb-6">
-                    
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Creative Generics{" "}
-                          <span
-                            className="relative inline-flex items-center cursor-pointer"
-                            onMouseEnter={() => setShowTooltipCreativeGenerics(true)}
-                            onMouseLeave={() => setShowTooltipCreativeGenerics(false)}
-                          >
-                           <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipCreativeGenerics && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 3 MB
-                              </span>
-                            )}
-                          </span>
-                        </h5>
-                        <button
-                          type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                          onClick={() => document.getElementById("project_creative_generics").click()}
-                        >
-                        
-                          <span>Add</span>
-                        </button>
-                        <input
-                          id="project_creative_generics"
-                          className="form-control"
-                          type="file"
-                          name="project_creative_generics"
-                          accept="image/*"
-                          onChange={(e) => handleFileUpload("project_creative_generics", e.target.files)}
-                          multiple
-                          style={{ display: "none" }}
-                        />
-                      </div>
-                    
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.project_creative_generics.map((file, index) => (
-                              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                <td className="py-3 px-4 font-medium">{file.name}</td>
-                                <td className="py-3 px-4">
-                                  <img
-                                    style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                    className="rounded border border-gray-200"
-                                    src={file.type?.startsWith("image") ? URL.createObjectURL(file) : undefined}
-                                    alt={file.name}
-                                  />
-                                </td>
-                                <td className="py-3 px-4">
-                                  <button
-                                    type="button"
-                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                    onClick={() => handleDiscardFile("project_creative_generics", index)}
-                                  >
-                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div> */}
-                    <div className="mb-6">
-                      {/* Header */}
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Offers{" "}
-                          <span
-                            className="relative inline-flex items-center cursor-pointer"
-                            onMouseEnter={() => setShowTooltipCreativeOffers(true)}
-                            onMouseLeave={() => setShowTooltipCreativeOffers(false)}
-                          >
-                            <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipCreativeOffers && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 3 MB
-                              </span>
-                            )}
-                          </span>
-                        </h5>
-                        <button
-                          type="button"
-// variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"                           onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            document.getElementById("project_creative_offers").click();
-                          }}
-                        >
-                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
-                          <span>Add</span>
-                        </button>
-                        <input
-                          id="project_creative_offers"
-                          className="form-control"
-                          type="file"
-                          name="project_creative_offers"
-                          accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
-                          onChange={(e) => handleFileUpload("project_creative_offers", e.target.files)}
-                          multiple
-                          style={{ display: "none" }}
-                        />
-                      </div>
-                      {/* Table */}
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.project_creative_offers.map((file, index) => (
-                              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                <td className="py-3 px-4 font-medium">{file.name}</td>
-                                <td className="py-3 px-4">
-                                  <img
-                                    style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                    className="rounded border border-gray-200"
-                                    src={file.type?.startsWith("image") ? URL.createObjectURL(file) : undefined}
-                                    alt={file.name}
-                                  />
-                                </td>
-                                <td className="py-3 px-4">
-                                  <button
-                                    type="button"
-                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                    onClick={() => handleDiscardFile("project_creative_offers", index)}
-                                  >
-                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    {/* <div className="mb-6">
-                      
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Interiors{" "}
-                          <span
-                            className="relative inline-flex items-center cursor-pointer"
-                            onMouseEnter={() => setShowTooltipInteriors(true)}
-                            onMouseLeave={() => setShowTooltipInteriors(false)}
-                          >
-                            <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipInteriors && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 3 MB
-                              </span>
-                            )}
-                          </span>
-                        </h5>
-                        <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                          onClick={() => document.getElementById("project_interiors").click()}
-                        >
-                         
-                          <span>Add</span>
-                        </button>
-                        <input
-                          id="project_interiors"
-                          className="form-control"
-                          type="file"
-                          name="project_interiors"
-                          accept="image/*"
-                          onChange={(e) => handleFileUpload("project_interiors", e.target.files)}
-                          multiple
-                          style={{ display: "none" }}
-                        />
-                      </div>
-                     
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.project_interiors.map((file, index) => (
-                              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                <td className="py-3 px-4 font-medium">{file.name}</td>
-                                <td className="py-3 px-4">
-                                  <img
-                                    style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                    className="rounded border border-gray-200"
-                                    src={file.type?.startsWith("image") ? URL.createObjectURL(file) : undefined}
-                                    alt={file.name}
-                                  />
-                                </td>
-                                <td className="py-3 px-4">
-                                  <button
-                                    type="button"
-                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                    onClick={() => handleDiscardFile("project_interiors", index)}
-                                  >
-                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div> */}
-                    {/* <div className="mb-6">
-
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Exteriors{" "}
-                          <span
-                            className="relative inline-flex items-center cursor-pointer"
-                            onMouseEnter={() => setShowTooltipExteriors(true)}
-                            onMouseLeave={() => setShowTooltipExteriors(false)}
-                          >
-                            <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipExteriors && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 3 MB
-                              </span>
-                            )}
-                          </span>
-                        </h5>
-                        <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                          onClick={() => document.getElementById("project_exteriors").click()}
-                        >
-                          
-                          <span>Add</span>
-                        </button>
-                        <input
-                          id="project_exteriors"
-                          className="form-control"
-                          type="file"
-                          name="project_exteriors"
-                          accept="image/*"
-                          onChange={(e) => handleFileUpload("project_exteriors", e.target.files)}
-                          multiple
-                          style={{ display: "none" }}
-                        />
-                      </div>
-                     
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.project_exteriors.map((file, index) => (
-                              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                <td className="py-3 px-4 font-medium">{file.name}</td>
-                                <td className="py-3 px-4">
-                                  <img
-                                    style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                    className="rounded border border-gray-200"
-                                    src={file.type?.startsWith("image") ? URL.createObjectURL(file) : undefined}
-                                    alt={file.name}
-                                  />
-                                </td>
-                                <td className="py-3 px-4">
-                                  <button
-                                    type="button"
-                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                    onClick={() => handleDiscardFile("project_exteriors", index)}
-                                  >
-                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div> */}
-                    {/* <div className="mb-6">
-                     
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Emailer Template{" "}
-                          <span
-                            className="relative inline-flex items-center cursor-pointer"
-                            onMouseEnter={() => setShowTooltipEmailer(true)}
-                            onMouseLeave={() => setShowTooltipEmailer(false)}
-                          >
-                            <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipEmailer && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 5 MB
-                              </span>
-                            )}
-                          </span>
-                        </h5>
-                        <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                          onClick={() => document.getElementById("project_emailer_templetes").click()}
-                        >
-                         
-                          <span>Add</span>
-                        </button>
-                        <input
-                          id="project_emailer_templetes"
-                          className="form-control"
-                          type="file"
-                          name="project_emailer_templetes"
-                          accept=".pdf,.docx"
-                          onChange={(e) => handleFileUpload("project_emailer_templetes", e.target.files)}
-                          multiple
-                          style={{ display: "none" }}
-                        />
-                      </div>
-                     
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.project_emailer_templetes.length > 0 && formData.project_emailer_templetes.map((brochure, index) => (
-                              <tr key={`brochure-${index}`} className="hover:bg-gray-50 transition-colors">
-                                <td className="py-3 px-4 font-medium">{brochure.name}</td>
-                                <td className="py-3 px-4">
-                                  <button
-                                    type="button"
-                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                    onClick={() => handleDiscardFile("project_emailer_templetes", index)}
-                                  >
-                                    <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div> */}
-                    {/* <div className="mb-6">
-                     
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Know Your Apartment Files{" "}
-                          <span
-                            className="relative inline-block cursor-pointer"
-                            onMouseEnter={() => setShowTooltipKYA(true)}
-                            onMouseLeave={() => setShowTooltipKYA(false)}
-                          >
-                           <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipKYA && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 20 MB
-                              </span>
-                            )}
-                          </span>
-                        </h5>
-                        <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                          onClick={() => document.getElementById("KnwYrApt_Technical").click()}
-                        >
-                        
-                          <span>Add</span>
-                        </button>
-                        <input
-                          id="KnwYrApt_Technical"
-                          className="form-control"
-                          type="file"
-                          name="KnwYrApt_Technical"
-                          accept=".pdf,.docx"
-                          onChange={(e) => handleFileUpload("KnwYrApt_Technical", e.target.files)}
-                          multiple
-                          style={{ display: "none" }}
-                        />
-                      </div>
-                     
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.KnwYrApt_Technical.length > 0 && formData.KnwYrApt_Technical.map((technicalFile, index) => (
-                              <tr key={`technical-${index}`} className="hover:bg-gray-50 transition-colors">
-                                <td className="py-3 px-4 font-medium">{technicalFile.name}</td>
-                                <td className="py-3 px-4">
-                                  <button
-                                    type="button"
-                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                    onClick={() => handleDiscardFile("KnwYrApt_Technical", index)}
-                                  >
-                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div> */}
-                    <div className="mb-6">
-                      {/* Header */}
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Videos{" "}
-                          <span
-                            className="relative inline-block cursor-pointer"
-                            onMouseEnter={() => setShowTooltipVideos(true)}
-                            onMouseLeave={() => setShowTooltipVideos(false)}
-                          >
-                            <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipVideos && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 10 MB
-                              </span>
-                            )}
-                          </span>
-                        </h5>
-                        <button
-                          type="button"
-// variant="ghost"
-           className="btn-primary h-9 px-4 text-sm font-medium"                           onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            document.getElementById("videos").click();
-                          }}
-                        >
-                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
-                          <span>Add</span>
-                        </button>
-                        <input
-                          id="videos"
-                          className="form-control"
-                          type="file"
-                          name="videos"
-                          accept="video/*"
-                          onChange={(e) => handleFileUpload("videos", e.target.files)}
-                          multiple
-                          style={{ display: "none" }}
-                        />
-                      </div>
-                      {/* Table */}
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.videos.map((file, index) => (
-                              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                <td className="py-3 px-4 font-medium">{file.name}</td>
-                                <td className="py-3 px-4">
-                                  <video
-                                    style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                    className="rounded border border-gray-200"
-                                    autoPlay
-                                    muted
-                                    src={URL.createObjectURL(file)}
-                                  />
-                                </td>
-                                <td className="py-3 px-4">
-                                  <button
-                                    type="button"
-                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                    onClick={() => handleDiscardFile("videos", index)}
-                                  >
-                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      {/* <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-12">
-                        <TextField
-                          label="Video Preview Image URL"
-                          placeholder="Enter Video URL"
-                          name="video_preview_image_url"
-                          value={formData.video_preview_image_url}
-                          onChange={handleChange}
-                          fullWidth
-                          variant="outlined"
-                          slotProps={{
-                            inputLabel: {
-                              shrink: true,
-                            },
-                          }}
-                          InputProps={{
-                            sx: fieldStyles,
-                          }}
-                        />
-                      </div> */}
-                    </div>
-                  </>
                 
             </div>
           </div>

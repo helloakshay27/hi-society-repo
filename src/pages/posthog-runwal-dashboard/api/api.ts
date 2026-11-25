@@ -36,7 +36,16 @@ import {
   OverdueInvoicesData,
   ApprovalQueueData,
   TopPendingRecordsData,
+  UserJourneyListParams,
+  UserJourneysResponse,
+  UserJourneySessionsResponse,
+  UserJourneyStepsResponse,
+  HiSocietyAccount,
+  SocietyAccountsQuery,
+  SocietyAccountsResult,
+  SocietyAccountsBySociety,
 } from './types';
+import { analyticsAuthHeaders } from './analyticsAuth';
 
 // ==========================================
 // 1. PostHog Adoption API Client
@@ -172,7 +181,7 @@ function getDeviceParams(dev?: DashboardFilters['devPlatform']): Record<string, 
 
 /** What an adoption request reads off the filters. The download is also called with just these. */
 type AdoptionQueryFilters = Pick<DashboardFilters, 'apiPath' | 'from' | 'to'> &
-  Partial<Pick<DashboardFilters, 'devPlatform' | 'deviceType' | 'includeAnonymous' | 'displayView'>>;
+  Partial<Pick<DashboardFilters, 'devPlatform' | 'deviceType' | 'includeAnonymous' | 'displayView' | 'societyIds'>>;
 
 function buildPosthogQuery(filters: AdoptionQueryFilters, extra: Record<string, any> = {}): string {
   const parts: string[] = [];
@@ -199,6 +208,10 @@ function buildPosthogQuery(filters: AdoptionQueryFilters, extra: Record<string, 
   // always a plain digit or comma-separated digits, e.g. "0,1".
   if (filters.displayView) parts.push(`display_view=${filters.displayView}`);
 
+  // The society dropdown (Runwal Connect / Realty): one or many Hi Society society ids, comma-separated.
+  const societyIds = (filters.societyIds || []).filter(Boolean);
+  if (societyIds.length) parts.push(`society_id=${societyIds.map(encodeURIComponent).join(',')}`);
+
   for (const [k, v] of Object.entries(extra)) {
     if (v !== undefined && v !== null && v !== '') {
       parts.push(`${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`);
@@ -215,6 +228,7 @@ async function getPosthog<T>(filters: DashboardFilters, endpoint: string, queryS
     method: 'GET',
     headers: {
       Accept: 'application/json',
+      ...analyticsAuthHeaders(),
     },
   });
 
@@ -267,7 +281,186 @@ export const fetchWorkflowUsage = (
     })
   );
 
+// ==========================================
+// User journeys (Workflow Usage, Runwal Connect / Realty): person -> sessions -> steps.
+// Every request carries the page's filters (dates, platform, Post Sales / Post Possession, society).
+// ==========================================
+
+export const fetchUserJourneys = (filters: DashboardFilters, p: UserJourneyListParams = {}) =>
+  getPosthog<UserJourneysResponse>(
+    filters, 'user_journeys',
+    buildPosthogQuery(filters, { q: p.q || undefined, sort: p.sort, dir: p.dir, page: p.page, per_page: p.perPage })
+  );
+
+export const fetchUserJourneySessions = (filters: DashboardFilters, user: string) =>
+  getPosthog<UserJourneySessionsResponse>(
+    filters, 'user_journey_sessions', buildPosthogQuery(filters, { user })
+  );
+
+export const fetchUserJourneySteps = (filters: DashboardFilters, user: string, session: string) =>
+  getPosthog<UserJourneyStepsResponse>(
+    filters, 'user_journey_steps', buildPosthogQuery(filters, { user, session })
+  );
+
 /** The live activity log: one row per event, newest first. No `from`/`to` = today. */
+// ==========================================
+// Sign-ups (Adoption & Engagement, Runwal Connect / Realty): Hi Society's Manage Users
+// ==========================================
+
+const ACCOUNTS_PER_PAGE = 1000;
+const ACCOUNTS_MAX_PAGES = 50;
+/** IST, as the dashboard's dates are. */
+const istDayStart = (d: string) => `${d}T00:00:00+05:30`;
+const istDayEnd = (d: string) => `${d}T23:59:59+05:30`;
+
+/**
+ * The query string for Manage Users' account list. The API reads only these forms: ransack's q[...] (its
+ * from_date / to_date are ignored), q[id_society_in][] once per society, and display_view by Hi Society's
+ * own names.
+ */
+export function societyAccountsParams(q: SocietyAccountsQuery, page: number, perPage = ACCOUNTS_PER_PAGE): URLSearchParams {
+  const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+  q.societyIds.forEach((id) => params.append('q[id_society_in][]', id));
+  if (q.from) params.set('q[created_at_gteq]', istDayStart(q.from));
+  params.set('q[created_at_lteq]', istDayEnd(q.to));
+  if (q.displayView) params.set('q[display_view_eq]', q.displayView);
+  return params;
+}
+
+/**
+ * Every account matching the query, from Hi Society's Manage Users (GET /crm/admin/user_societies.json,
+ * the call its Manage Users page makes), read 1,000 a page. Hi Society answers only for the society
+ * selected in its own header: the society ids narrow within it, they cannot reach another society.
+ */
+export async function fetchSocietyAccounts(q: SocietyAccountsQuery): Promise<SocietyAccountsResult> {
+  const base = (getBaseUrl() || '').replace(/\/+$/, '');
+  const token = getToken() || localStorage.getItem('token') || '';
+  if (!base || !token) throw new Error('Not signed in to Hi Society');
+  const accounts: HiSocietyAccount[] = [];
+  let total = 0;
+  for (let page = 1; page <= ACCOUNTS_MAX_PAGES; page++) {
+    const res = await fetch(`${base}/crm/admin/user_societies.json?${societyAccountsParams(q, page).toString()}`, {
+      headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error(`Manage Users error (${res.status}): ${res.statusText || 'Failed to fetch'}`);
+    const data = await res.json();
+    const rows: HiSocietyAccount[] = Array.isArray(data?.user_societies) ? data.user_societies : [];
+    if (page === 1) total = Number(data?.pagination?.total_count) || rows.length;
+    accounts.push(...rows);
+    const pages = Number(data?.pagination?.total_pages) || 1;
+    if (page >= pages || rows.length === 0) break;
+  }
+  return { accounts, total };
+}
+
+/** The user's user-society id in a society: from the society list, else the list Hi Society's header saved. */
+export function userSocietyIdFor(societyId: string): string | null {
+  const known = userSocietyIds.get(societyId);
+  if (known) return known;
+  try {
+    const list = JSON.parse(localStorage.getItem('hiSocietyApprovedSocieties') || '[]');
+    const hit = Array.isArray(list)
+      ? list.find((s: any) => String(s?.id_society ?? s?.society?.id ?? '') === societyId)
+      : null;
+    return hit?.id != null ? String(hit.id) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The society selected in Hi Society (the one Manage Users answers for), from what its header saved: the
+ * user-society id it chose, looked up in the user's societies. null if unknown.
+ */
+export function headerSocietyId(): string | null {
+  try {
+    const chosen = localStorage.getItem('selectedUserSociety') || sessionStorage.getItem('selectedUserSociety');
+    if (!chosen) return null;
+    const list = JSON.parse(localStorage.getItem('hiSocietyApprovedSocieties') || '[]');
+    const hit = Array.isArray(list) ? list.find((s: any) => String(s?.id) === chosen) : null;
+    const id = hit ? hit.id_society ?? hit.society?.id : null;
+    if (id != null) return String(id);
+    for (const [society, userSociety] of userSocietyIds) if (userSociety === chosen) return society;
+    return localStorage.getItem('selectedSocietyId') || sessionStorage.getItem('selectedSocietyId') || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Hi Society keeps one selected society per user on its server, and Manage Users answers for that one. So
+ * every switch and every read that depends on it runs one at a time, through this queue: two at once could
+ * read one society's accounts while the other has switched away.
+ */
+let hiSocietyQueue: Promise<unknown> = Promise.resolve();
+function hiSocietyExclusive<T>(task: () => Promise<T>): Promise<T> {
+  const run = hiSocietyQueue.then(task, task);
+  hiSocietyQueue = run.catch(() => undefined);
+  return run;
+}
+
+async function switchSocietyNow(societyId: string): Promise<void> {
+  const userSocietyId = userSocietyIdFor(societyId);
+  if (!userSocietyId) throw new Error('You are not a member of this society in Hi Society');
+  const base = (getBaseUrl() || '').replace(/\/+$/, '');
+  const token = getUser()?.spree_api_key || getToken() || localStorage.getItem('token') || '';
+  if (!base || !token) throw new Error('Not signed in to Hi Society');
+  const query = new URLSearchParams({ token, user_society_id: userSocietyId });
+  const res = await fetch(`${base}/change_user_society.json?${query.toString()}`, { headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`Hi Society did not switch society (${res.status})`);
+  for (const store of [localStorage, sessionStorage]) {
+    store.setItem('selectedUserSociety', userSocietyId);
+    store.setItem('selectedSocietyId', societyId);
+  }
+}
+
+/**
+ * Makes `societyId` the society selected in Hi Society, exactly as Hi Society's header does when the user
+ * switches society: GET /change_user_society.json?token=&user_society_id=, then the same saved choice in
+ * local and session storage. Manage Users answers for that society from then on, on every Hi Society page.
+ */
+export const switchHiSocietySociety = (societyId: string): Promise<void> =>
+  hiSocietyExclusive(() => switchSocietyNow(societyId));
+
+/**
+ * The accounts of each chosen society, from Manage Users. It answers only for the society selected in Hi
+ * Society, so this selects each society in turn (as Hi Society's header does) and reads it:
+ *   one society   - it stays selected in Hi Society afterwards, as if picked in the header;
+ *   several / all - one after another, then Hi Society is put back on the society it was on before.
+ * Each society is read twice, with the dates sent both ways: accounts up to `to`, and accounts from `from`
+ * to `to`. A society that cannot be read (not a member, an error) is reported, the others still are.
+ */
+export function fetchAccountsBySociety(
+  q: SocietyAccountsQuery,
+  opts: { signal?: AbortSignal; onProgress?: (done: number, total: number) => void } = {}
+): Promise<SocietyAccountsBySociety> {
+  return hiSocietyExclusive(async () => {
+    const before = headerSocietyId();
+    const several = q.societyIds.length > 1;
+    const societies: SocietyAccountsBySociety['societies'] = [];
+    try {
+      for (const [i, id] of q.societyIds.entries()) {
+        if (opts.signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
+        opts.onProgress?.(i, q.societyIds.length);
+        try {
+          if (headerSocietyId() !== id) await switchSocietyNow(id);
+          const upTo = await fetchSocietyAccounts({ ...q, societyIds: [id], from: undefined });
+          const inRange = await fetchSocietyAccounts({ ...q, societyIds: [id] });
+          societies.push({ societyId: id, upTo: upTo.accounts, inRange: inRange.accounts, error: null });
+        } catch (e) {
+          if (!several) throw e;
+          societies.push({ societyId: id, upTo: [], inRange: [], error: e instanceof Error ? e.message : String(e) });
+        }
+      }
+      opts.onProgress?.(q.societyIds.length, q.societyIds.length);
+    } finally {
+      // Several societies: leave Hi Society where it was.
+      if (several && before && headerSocietyId() !== before) await switchSocietyNow(before).catch(() => undefined);
+    }
+    return { societies };
+  });
+}
+
 export const fetchRecentActiveUsers = (filters: DashboardFilters, limit = 10) =>
   getPosthog<RecentActiveUsersResponse>(
     filters, 'recent_active_users',
@@ -296,7 +489,7 @@ export async function downloadActiveUsersExport(
   const { blob, filename: serverName } = await runExportJob({
     exportUrl: url,
     adoptionUrl: url.slice(0, url.indexOf('/active_users_export')),
-    get: fetchGet({ method: 'GET', headers: { Accept: '*/*' } }),
+    get: fetchGet({ method: 'GET', headers: { Accept: '*/*', ...analyticsAuthHeaders() } }),
     onPhase,
   });
   const filenameWithoutExtension = (serverName
@@ -391,7 +584,7 @@ async function getFm<T>(
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', ...analyticsAuthHeaders() },
   });
 
   if (!response.ok) {
@@ -458,6 +651,54 @@ const DEFAULT_RUNWAL_SITES: SiteLookupItem[] = [
   { id: '6', name: 'Runwal 25 Hour Life' },
   { id: '7', name: 'Runwal Avenue' },
 ];
+
+/**
+ * The logged-in user's societies, from the same API the Hi Society header's society dropdown uses
+ * (`/user_approved_societies.json`), one entry per society (a user with two flats in one society is listed
+ * once). `id` is the society id (id_society), which the analytics API filters on as society_id.
+ * Falls back to the list the header saved (hiSocietyApprovedSocieties) when the call fails.
+ */
+/** Society id -> the user's own user-society id in it (what /change_user_society takes), from the society list. */
+const userSocietyIds = new Map<string, string>();
+
+export async function fetchUserSocieties(): Promise<SiteLookupItem[]> {
+  const toItems = (raw: any[]): SiteLookupItem[] => {
+    const seen = new Map<string, SiteLookupItem>();
+    for (const s of raw) {
+      const id = String(s?.id_society ?? s?.society?.id ?? '');
+      if (!id || seen.has(id)) continue;
+      seen.set(id, { id, name: s?.society?.building_name || s?.building_name || `Society ${id}` });
+      if (s?.id != null) userSocietyIds.set(id, String(s.id));
+    }
+    return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+  };
+  const cached = (): SiteLookupItem[] => {
+    try {
+      const raw = JSON.parse(localStorage.getItem('hiSocietyApprovedSocieties') || '[]');
+      return Array.isArray(raw) ? toItems(raw) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const base = (getBaseUrl() || '').replace(/\/+$/, '');
+  const token = getToken() || localStorage.getItem('token') || '';
+  if (!base || !token) return cached();
+  const query = new URLSearchParams({ token });
+  const orgId = localStorage.getItem('org_id');
+  if (orgId) query.set('organization_id', orgId);
+  try {
+    const res = await fetch(`${base}/user_approved_societies.json?${query.toString()}`, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) return cached();
+    const data = await res.json();
+    const items = toItems(data?.user_societies || []);
+    return items.length ? items : cached();
+  } catch {
+    return cached();
+  }
+}
 
 export async function fetchAllowedSites(): Promise<SiteLookupItem[]> {
   const user = getUser();

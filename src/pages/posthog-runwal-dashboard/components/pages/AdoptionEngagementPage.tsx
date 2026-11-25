@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ModuleAdoptionCard } from "../adoption/ModuleAdoptionCard";
-import { DashboardFilters } from "../../api/types";
+import { SignupsSection } from "../adoption/SignupsSection";
+import { DashboardFilters, SiteLookupItem } from "../../api/types";
 import { QuestionBox } from "../common/QuestionBox";
 import { KpiTile } from "../common/KpiTile";
 import { Card } from "../common/Card";
@@ -40,6 +41,8 @@ interface AdoptionEngagementPageProps {
   subtitle?: string;
   questions?: string[];
   isRefreshing?: boolean;
+  /** Runwal Connect / Realty: the Sign-ups group at the bottom, from Hi Society's Manage Users (not on CP). */
+  signups?: { societies: SiteLookupItem[]; selectedSocietyId: string; societiesLoading?: boolean; rangeLabel: string; appName: string; showPhase: boolean };
 }
 
 function formatDelta(d: number | null | undefined): {
@@ -131,6 +134,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   subtitle,
   questions,
   isRefreshing = false,
+  signups,
 }) => {
   const [opsTab, setOpsTab] = useState<"crm" | "finance">("crm");
 
@@ -642,6 +646,20 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           )}
         </Card>
       </div>
+
+      {signups && (
+        <SignupsSection
+          filters={filters}
+          societies={signups.societies}
+          selectedSocietyId={signups.selectedSocietyId}
+          societiesLoading={signups.societiesLoading}
+          rangeLabel={signups.rangeLabel}
+          appName={signups.appName}
+          showPhase={signups.showPhase}
+          showPrev={showPrev}
+          enabled={sitesSettled}
+        />
+      )}
 
       {/* FM Matrix CRM & Operations Card Section */}
       {/* <div style={{ marginTop: '24px', marginBottom: '8px' }}>

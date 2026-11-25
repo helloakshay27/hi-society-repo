@@ -3228,6 +3228,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import { NewIncidentListDashboard } from "./pages/NewIncidentListDashboard";
 import EditIncidentPage from "./pages/EditIncidentPage";
 import PosthogMyPiramalDashboard from "./pages/posthog-my-piramal-dashboard";
+import { resumePendingUserReportDownloads } from "./services/userReportDownloadManager";
 const LockFees = lazy(() => import("./pages/LockFees"));
 // Same pages setupMemberRoutes.tsx mounts under /loyalty/encashment/*, also
 // reachable under /ops-console so AdminSidebar's Encashment links stay inside
@@ -3303,6 +3304,12 @@ function App() {
       }
     };
   }, []);
+
+  // Resume Manage Users report downloads that were still generating when the
+  // app was last reloaded/closed (polling otherwise only lives in memory)
+  useEffect(() => {
+    if (token) resumePendingUserReportDownloads();
+  }, [token]);
 
   // Check authentication and fetch currency when site is available
   const selectedSite = useAppSelector((s) => s.site.selectedSite);
@@ -4745,36 +4752,36 @@ function App() {
 
                         {/* Safety Routes */}
                         <Route
-                          path="/safety/incident"
+                          path="/incidents/incidents"
                           element={<IncidentDashboard />}
                         />
                         <Route
-                          path="/safety/incident/add"
+                          path="/incidents/incidents/add"
                           element={<AddIncidentPage />}
                         />
                         <Route
-                          path="/safety/incident/new-add"
+                          path="/incidents/incidents/new-add"
                           element={<NewAddIncidentPage />}
                         />
                         <Route
-                          path="/safety/incident/:id"
+                          path="/incidents/incidents/:id"
                           element={<IncidentDetailsPage />}
                         />
                         <Route
-                          path="/safety/incident/list"
+                          path="/incidents/incidents/list"
                           element={<NewIncidentListDashboard />}
                         />
 
                         <Route
-                          path="/safety/incident/view-new/:id"
+                          path="/incidents/incidents/view-new/:id"
                           element={<NewIncidentDetailsPage />}
                         />
                         <Route
-                          path="/safety/incident/new-details/:id"
+                          path="/incidents/incidents/new-details/:id"
                           element={<IncidentNewDetails />}
                         />
                         <Route
-                          path="/safety/incident/edit/:id"
+                          path="/incidents/incidents/edit/:id"
                           element={<EditIncidentDetailsPage />}
                         />
                         <Route
@@ -6418,27 +6425,27 @@ function App() {
 
                         {/* Safety Routes */}
                         <Route
-                          path="/safety/incident"
+                          path="/incidents/incidents"
                           element={<IncidentDashboard />}
                         />
                         <Route
-                          path="/safety/incident/add"
+                          path="/incidents/incidents/add"
                           element={<AddIncidentPage />}
                         />
                         <Route
-                          path="/safety/incident/:id"
+                          path="/incidents/incidents/:id"
                           element={<IncidentDetailsPage />}
                         />
                         <Route
-                          path="/safety/incident/new-details/:id"
+                          path="/incidents/incidents/new-details/:id"
                           element={<IncidentNewDetails />}
                         />
                         <Route
-                          path="/safety/incident/safety/edit/:id"
+                          path="/incidents/incidents/safety/edit/:id"
                           element={<EditIncidentPage />}
                         />
                         <Route
-                          path="/safety/incident/edit/:id"
+                          path="/incidents/incidents/edit/:id"
                           element={<EditIncidentDetailsPage />}
                         />
                         <Route

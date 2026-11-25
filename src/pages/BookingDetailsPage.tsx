@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch } from "@/store/hooks";
 import {
@@ -6,7 +6,7 @@ import {
   fetchBookingDetails,
   getLogs,
 } from "@/store/slices/facilityBookingsSlice";
-import { ArrowLeft, Logs, Pencil, Download, Loader } from "lucide-react";
+import { ArrowLeft, Logs, Pencil, Download, Loader, CreditCard } from "lucide-react";
 import { CustomTabs } from "@/components/CustomTabs";
 import { FACILITY_BOOKING_STYLES, PILL_BASE, PILL_DANGER, PILL_SUCCESS, PILL_WARNING } from "@/pages/facilityBookingStyles";
 import { LogsTimeline } from "@/components/LogTimeline";
@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { isEasebuzzEnabledHost } from "@/utils/easebuzz";
 import {
   Dialog,
   DialogTitle,
@@ -133,6 +134,91 @@ const BookingDetailsPage = () => {
     fetchDetails();
     fetchLogs();
   }, []);
+
+  // ── Easebuzz "Pay Now" ────────────────────────────────────────────────
+  // Payment happens on Easebuzz's page in a new tab; Easebuzz then calls the
+  // backend callback directly. We only need to notice the booking became paid:
+  // poll the detail API every 3s (stop after 10 min), re-check immediately when
+  // the user returns to this tab, and also accept an EASEBUZZ_PAYMENT_DONE
+  // postMessage from our own origin if the backend redirects to such a page.
+  const PAYMENT_POLL_INTERVAL_MS = 3000;
+  const PAYMENT_POLL_TIMEOUT_MS = 10 * 60 * 1000;
+  const [awaitingPayment, setAwaitingPayment] = useState(false);
+  const paymentCheckInFlight = useRef(false);
+
+  const isPaidState = (state?: string) =>
+    ["success", "paid"].includes((state || "").toLowerCase());
+
+  const handlePaymentConfirmed = (updated: FacilityBookingDetails) => {
+    setAwaitingPayment(false);
+    setBookings(updated);
+    fetchLogs();
+    toast.success("Payment successful!");
+  };
+
+  const checkPaymentStatus = async () => {
+    if (paymentCheckInFlight.current) return;
+    paymentCheckInFlight.current = true;
+    try {
+      const updated = await dispatch(
+        fetchBookingDetails({ baseUrl, token, id })
+      ).unwrap();
+      if (isPaidState(updated?.pg_state)) {
+        handlePaymentConfirmed(updated);
+      }
+    } catch {
+      // Ignore transient errors while polling — next tick will retry.
+    } finally {
+      paymentCheckInFlight.current = false;
+    }
+  };
+
+  useEffect(() => {
+    if (!awaitingPayment) return;
+
+    const interval = setInterval(checkPaymentStatus, PAYMENT_POLL_INTERVAL_MS);
+    const timeout = setTimeout(() => {
+      setAwaitingPayment(false);
+      toast.info("Stopped checking payment status. Refresh the page if you completed the payment.");
+    }, PAYMENT_POLL_TIMEOUT_MS);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") checkPaymentStatus();
+    };
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === "EASEBUZZ_PAYMENT_DONE") checkPaymentStatus();
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    window.addEventListener("message", onMessage);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+      window.removeEventListener("message", onMessage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingPayment]);
+
+  const handlePayNow = () => {
+    const paymentUrl = bookings?.easebuzz_payment_url;
+    if (!paymentUrl) return;
+    const paymentWindow = window.open(paymentUrl, "_blank");
+    if (!paymentWindow) {
+      toast.error("Please allow pop-ups to open the payment page");
+      return;
+    }
+    setAwaitingPayment(true);
+  };
+
+  const showPayNow =
+    isEasebuzzEnabledHost() &&
+    !!bookings?.easebuzz_payment_url &&
+    !isPaidState(bookings?.pg_state);
 
   const handleStatusChange = async (newStatus: string) => {
     setStatusUpdating(Number(id));
@@ -397,6 +483,24 @@ const BookingDetailsPage = () => {
               {bookings?.facility_name}
             </h2>
             <div className="flex items-center gap-2">
+              {showPayNow && (
+                <Button
+                  onClick={handlePayNow}
+                  className="btn-primary h-9 px-4 text-sm font-medium flex items-center gap-2"
+                  title={
+                    awaitingPayment
+                      ? "Waiting for payment confirmation — click to reopen the payment page"
+                      : undefined
+                  }
+                >
+                  {awaitingPayment ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CreditCard className="w-4 h-4" />
+                  )}
+                  {awaitingPayment ? "Awaiting Payment…" : "Pay Now"}
+                </Button>
+              )}
               {(bookings?.pg_state === "Pending" || bookings?.pg_state === "NA") && (
                 <Button
                   onClick={() => setIsCaptureDialogOpen(true)}

@@ -910,7 +910,7 @@ export const HiSocietySidebar: React.FC = () => {
               id: "vehicle-history",
               label: "Vehicle History",
               icon: History,
-              path: "/smartsecure/vehicles/history",
+              path: "/smartsecure/vehicles/in-history",
             },
           ],
         },
@@ -1029,7 +1029,7 @@ export const HiSocietySidebar: React.FC = () => {
           id: "incidents",
           label: "Incidents",
           icon: AlertTriangle,
-          path: "/safety/incident",
+          path: "/incidents/incidents",
         },
         {
           id: "design-inputs",

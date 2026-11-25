@@ -658,7 +658,7 @@ export const EditIncidentPage = () => {
             }
 
             toast.success('Incident updated successfully!');
-            navigate(`/safety/incident/view-new/${id}`);
+            navigate(`/incidents/incidents/view-new/${id}`);
         } catch (err: any) {
             console.error('Incident PUT failed:', err);
             toast.error('Failed to update incident');

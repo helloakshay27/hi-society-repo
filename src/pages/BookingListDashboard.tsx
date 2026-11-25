@@ -47,6 +47,7 @@ import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 const enhancedTableColumns: ColumnConfig[] = [
   { key: "id", label: "ID", sortable: true, draggable: true },
   { key: "bookedBy", label: "Booked By", sortable: true, draggable: true },
+  { key: "bookedFor", label: "Booked For", sortable: true, draggable: true },
   { key: "tower", label: "Tower", sortable: true, draggable: true },
   { key: "flat", label: "Flat", sortable: true, draggable: true },
   { key: "facility", label: "Facility Name", sortable: true, draggable: true },
@@ -283,7 +284,7 @@ const toBookingRow = (item: any) => ({
   bookedBy: safeValue(item.booked_by_name || item.book_by),
   tower: safeValue(item.tower),
   flat: safeValue(item.flat),
-  bookedFor: safeValue(item.booked_by_name || item.book_for),
+  bookedFor: safeValue(item.booked_for || item.book_for),
   companyName: safeValue(item.company_name),
   facility: safeValue(item.facility_name),
   subFacilityName: safeValue(item.sub_facility_name),

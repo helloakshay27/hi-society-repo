@@ -490,6 +490,9 @@ function PosthogRunwalCpDashboardContent() {
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
               isRefreshing={isRefreshing}
+              showUserJourneys
+              journeySocieties={false}
+              rangeLabel={rangeLabel}
             />
           )}
 

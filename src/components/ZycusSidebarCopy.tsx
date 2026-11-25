@@ -509,7 +509,7 @@ export const ZycusSidebarCopy = () => {
             setCurrentSection("Finance");
         } else if (path.startsWith("/maintenance")) {
             setCurrentSection("Maintenance");
-        } else if (path.startsWith("/safety")) {
+        } else if (path.startsWith("/safety") || path.startsWith("/incidents/incidents")) {
             setCurrentSection("Safety");
         } else if (path.startsWith("/crm")) {
             setCurrentSection("CRM");

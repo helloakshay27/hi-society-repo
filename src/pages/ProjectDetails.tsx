@@ -75,27 +75,24 @@ const ProjectDetails = () => {
       country: "",
     },
     brochure: null, // file input for brochure
-    two_d_images: [], // array of file inputs for 2D images
-    videos: [],
     gallery_image: [],
     fetched_gallery_image: [],
-    Project_PPT: [],
-    fetched_Project_PPT: [],
-    ProjectPPT: [],
-    project_creatives: [],
-    project_creative_generics: [],
-    project_creative_offers: [],
-    project_interiors: [],
-    project_exteriors: [],
-    project_emailer_templetes: [],
-    project_layout: [],
     project_sales_type: "",
+    // Overview / connectivity / RERA card
+    lifts_per_tower: "",
+    green_rating: "",
+    overview_subtitle: "",
+    highlights: [],
+    connectivity: {},
+    rera: {},
+    rera_registered_on_raw: "",
+    licence_date_raw: "",
+    brochure_title: "",
     order_no: null,
     video_preview_image_url: [],
     enable_enquiry: false,
     rera_url: "",
     isDay: true,
-    video_url: "",
     // Visibility
     show_on_home: false,
     show_on_project_detail_page: false,
@@ -198,27 +195,23 @@ const ProjectDetails = () => {
               country: "",
             },
             brochure: project.brochure || null,
-            two_d_images: project.two_d_images || [],
-            videos: project.videos || [],
             gallery_image: project.gallery_image || [],
             fetched_gallery_image: project.fetched_gallery_image || [],
-            Project_PPT: project.project_ppt || project.Project_PPT || [],
-            fetched_Project_PPT: project.fetched_Project_PPT || [],
-            ProjectPPT: project.ProjectPPT || [],
-            project_creatives: project.project_creatives || [],
-            project_creative_generics: project.project_creative_generics || [],
-            project_creative_offers: project.project_creative_offers || [],
-            project_interiors: project.project_interiors || [],
-            project_exteriors: project.project_exteriors || [],
-            project_emailer_templetes: project.project_emailer_templetes || [],
-            project_layout: project.project_layout || [],
             project_sales_type: project.project_sales_type || "",
+            lifts_per_tower: project.lifts_per_tower || "",
+            green_rating: project.green_rating || "",
+            overview_subtitle: project.overview_subtitle || "",
+            highlights: Array.isArray(project.highlights) ? project.highlights : [],
+            connectivity: project.connectivity || {},
+            rera: project.rera || {},
+            rera_registered_on_raw: project.rera_registered_on_raw || "",
+            licence_date_raw: project.licence_date_raw || "",
+            brochure_title: project.brochure?.title || "",
             order_no: project.order_no || null,
             video_preview_image_url: project.video_preview_image_url || [],
             enable_enquiry: project.enable_enquiry || false,
             rera_url: project.rera_url || "",
             isDay: project.isDay !== undefined ? project.isDay : true,
-            video_url: project.video_url || "",
             // Visibility
             show_on_home: project.show_on_home || false,
             show_on_project_detail_page: project.show_on_project_detail_page || false,
@@ -235,10 +228,10 @@ const ProjectDetails = () => {
             cover_images_3_by_2: project.cover_images_3_by_2 || [],
             cover_images_16_by_9: project.cover_images_16_by_9 || [],
             // Gallery Images (ratio-based)
-            gallery_image_1_by_1: project.gallery_image?.[0]?.gallery_image_1_by_1 || [],
-            gallery_image_9_by_16: project.gallery_image?.[0]?.gallery_image_9_by_16 || [],
-            gallery_image_3_by_2: project.gallery_image?.[0]?.gallery_image_3_by_2 || [],
-            gallery_image_16_by_9: project.gallery_image?.[0]?.gallery_image_16_by_9 || [],
+            gallery_image_1_by_1: (project.gallery_image || []).flatMap((g) => g?.gallery_image_1_by_1 || []),
+            gallery_image_9_by_16: (project.gallery_image || []).flatMap((g) => g?.gallery_image_9_by_16 || []),
+            gallery_image_3_by_2: (project.gallery_image || []).flatMap((g) => g?.gallery_image_3_by_2 || []),
+            gallery_image_16_by_9: (project.gallery_image || []).flatMap((g) => g?.gallery_image_16_by_9 || []),
             // Floor Plan / 2D Images (ratio-based)
             project_2d_image_1_by_1: project.project_2d_image_1_by_1 || [],
             project_2d_image_9_by_16: project.project_2d_image_9_by_16 || [],
@@ -1315,74 +1308,6 @@ const ProjectDetails = () => {
                   </Table>
                 </div>
               </div>
-              <div className="col-md-12 mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Layouts & Floor Plans</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Preview / Download</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.project_layout && formData.project_layout.length > 0 ? (
-                        formData.project_layout.map((file, index) => {
-                          const isPdf = file.document_content_type === "application/pdf";
-                          const isImage = file.document_content_type?.startsWith("image/");
-                          return (
-                            <TableRow key={`layout-${index}`} className="hover:bg-gray-50">
-                              <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name || "—"}</TableCell>
-                              <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type || "—"}</TableCell>
-                              <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
-                              <TableCell className="py-3 px-4">
-                                {isPdf ? (
-                                  <a
-                                    href={file.document_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-[#C72030] hover:underline font-medium text-sm"
-                                  >
-                                    <svg width="16" height="16" viewBox="0 0 22 23" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <path d="M20.8468 22.9744H1.1545C0.662189 22.9744 0.333984 22.6462 0.333984 22.1538V15.5897C0.333984 15.0974 0.662189 14.7692 1.1545 14.7692C1.6468 14.7692 1.97501 15.0974 1.97501 15.5897V21.3333H20.0263V15.5897C20.0263 15.0974 20.3545 14.7692 20.8468 14.7692C21.3391 14.7692 21.6673 15.0974 21.6673 15.5897V22.1538C21.6673 22.6462 21.3391 22.9744 20.8468 22.9744ZM11.0007 18.0513C10.9186 18.0513 10.7545 18.0513 10.6724 17.9692C10.5904 17.9692 10.5083 17.8872 10.4263 17.8051L3.86219 11.241C3.53398 10.9128 3.53398 10.4205 3.86219 10.0923C4.19039 9.7641 4.6827 9.7641 5.01091 10.0923L10.1801 15.2615V0.820513C10.1801 0.328205 10.5083 0 11.0007 0C11.493 0 11.8212 0.328205 11.8212 0.820513V15.2615L16.9904 10.0923C17.3186 9.7641 17.8109 9.7641 18.1391 10.0923C18.4673 10.4205 18.4673 10.9128 18.1391 11.241L11.575 17.8051C11.493 17.8872 11.4109 17.9692 11.3289 17.9692C11.2468 18.0513 11.0827 18.0513 11.0007 18.0513Z" fill="#c72030"/>
-                                    </svg>
-                                    Download
-                                  </a>
-                                ) : isImage ? (
-                                  <a href={file.document_url} target="_blank" rel="noopener noreferrer">
-                                    <img
-                                      src={file.document_url}
-                                      alt={`Layout ${index + 1}`}
-                                      className="w-20 h-20 object-cover rounded border border-gray-200"
-                                    />
-                                  </a>
-                                ) : (
-                                  <a
-                                    href={file.document_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-[#C72030] hover:underline text-sm"
-                                  >
-                                    View
-                                  </a>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Layouts & Floor Plans Available
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
               <div className="mt-4">
                 <h4 className="text-base font-semibold text-gray-900 mb-3">Project Brochure</h4>
                 <div className="overflow-x-auto">
@@ -1417,364 +1342,14 @@ const ProjectDetails = () => {
                 </div>
               </div>
 
-              {/* <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Project PPT</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Download</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.ProjectPPT && formData.ProjectPPT.document_url ? (
-                        <TableRow className="hover:bg-gray-50">
-                          <TableCell className="text-gray-900 py-3 px-4">{formData.ProjectPPT?.document_file_name}</TableCell>
-                          <TableCell className="text-gray-900 py-3 px-4">{formData.ProjectPPT?.document_content_type}</TableCell>
-                          <TableCell className="text-gray-900 py-3 px-4">{formData.ProjectPPT?.document_updated_at}</TableCell>
-                          <TableCell className="py-3 px-4">
-                            <a href={formData.ProjectPPT?.document_url} className="text-black-600 hover:underline">Download</a>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Project PPT Available
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div> */}
 
-              {/* <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Layouts & Floor Plans</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.two_d_images.length > 0 ? (
-                        formData.two_d_images.map((file, index) => (
-                          <TableRow key={`two-d-${index}`} className="hover:bg-gray-50">
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <img src={file.document_url} alt={`Floor Plan ${index}`} className="w-20 h-20 object-cover rounded" />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Floor Plan Images
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div> */}
 
-              <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Project Offers</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.project_creative_offers.length > 0 ? (
-                        formData.project_creative_offers.map((file, index) => (
-                          <TableRow key={`offers-${index}`} className="hover:bg-gray-50">
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <img src={file.document_url} alt={`Offer ${index}`} className="w-20 h-20 object-cover rounded" />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Project Creatives Offers
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-              <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Videos</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.videos.length > 0 ? (
-                        formData.videos.map((file, index) => (
-                          <TableRow key={`video-${index}`} className="hover:bg-gray-50">
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <img src={file.document_url} alt={`Video ${index}`} className="w-20 h-20 object-cover rounded" />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Videos
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
 
-              {/* <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Project Layout</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.project_layout.length > 0 ? (
-                        formData.project_layout.map((file, index) => (
-                          <TableRow key={`layout-${index}`} className="hover:bg-gray-50">
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <img src={file.document_url} alt={`Layout ${index}`} className="w-20 h-20 object-cover rounded" />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Project Layout Images
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Project Creatives</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.project_creatives.length > 0 ? (
-                        formData.project_creatives.map((file, index) => (
-                          <TableRow key={`creatives-${index}`} className="hover:bg-gray-50">
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <img src={file.document_url} alt={`Creative ${index}`} className="w-20 h-20 object-cover rounded" />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Project Creatives
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Project Creatives Generics</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.project_creative_generics.length > 0 ? (
-                        formData.project_creative_generics.map((file, index) => (
-                          <TableRow key={`generics-${index}`} className="hover:bg-gray-50">
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <img src={file.document_url} alt={`Generic ${index}`} className="w-20 h-20 object-cover rounded" />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Project Creatives Generics
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
 
               
 
-              <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Project Interiors</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.project_interiors.length > 0 ? (
-                        formData.project_interiors.map((file, index) => (
-                          <TableRow key={`interiors-${index}`} className="hover:bg-gray-50">
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <img src={file.document_url} alt={`Interior ${index}`} className="w-20 h-20 object-cover rounded" />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Project Interiors
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
 
-              <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Project Exteriors</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.project_exteriors.length > 0 ? (
-                        formData.project_exteriors.map((file, index) => (
-                          <TableRow key={`exteriors-${index}`} className="hover:bg-gray-50">
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <img src={file.document_url} alt={`Exterior ${index}`} className="w-20 h-20 object-cover rounded" />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Project Exteriors
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
 
-              <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Project Emailer Template</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Download</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.project_emailer_templetes && formData.project_emailer_templetes.length > 0 ? (
-                        formData.project_emailer_templetes.map((doc, index) => (
-                          <TableRow key={`emailer-${index}`} className="hover:bg-gray-50">
-                            <TableCell className="text-gray-900 py-3 px-4">{doc.document_file_name}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{doc.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{doc.document_updated_at}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <a href={doc.document_url} target="_blank" rel="noopener noreferrer" className="text-black-600 hover:underline">Download</a>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Emailer Templates
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
 
               
               {/* <div className="col-md-12 mt-2">
@@ -1795,6 +1370,50 @@ const ProjectDetails = () => {
                   </a>
                 </h5>
               </div> */}
+            </div>
+          </div>
+        </div>
+
+        {/* Overview, Connectivity & RERA details */}
+        <div className="w-full bg-white rounded-2xl border border-[#E5E5E5] mt-4 overflow-hidden">
+          <div className="px-6 py-3">
+            <h3 className="text-sm font-semibold text-gray-900">
+              Overview, Connectivity &amp; RERA
+            </h3>
+          </div>
+          <div className="bg-white px-5 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mx-6 text-[14px]">
+              {[
+                ["Lifts Per Tower", formData.lifts_per_tower],
+                ["Green Rating", formData.green_rating],
+                ["Overview Subtitle", formData.overview_subtitle],
+                ["Connectivity Title", formData.connectivity?.title],
+                ["Area Label", formData.connectivity?.area_label],
+                ["Area Image URL", formData.connectivity?.area_image_url],
+                ["RERA Registered On", formData.rera_registered_on_raw],
+                ["RERA Authority", formData.rera?.rera_authority],
+                ["RERA Verify URL", formData.rera?.rera_verify_url],
+                ["Licence No", formData.rera?.licence_no],
+                ["Licence Date", formData.licence_date_raw],
+                ["Brochure Title", formData.brochure_title],
+              ].map(([label, value]) => (
+                <div key={label as string}>
+                  <span className="text-gray-500">{label}: </span>
+                  <span className="text-gray-900 font-medium break-words">{(value as string) || "-"}</span>
+                </div>
+              ))}
+              <div className="md:col-span-2">
+                <span className="text-gray-500">Highlights: </span>
+                {Array.isArray(formData.highlights) && formData.highlights.length > 0 ? (
+                  <ul className="list-disc ml-6 mt-1 text-gray-900">
+                    {formData.highlights.map((h, i) => (
+                      <li key={i}>{h}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="text-gray-900 font-medium">-</span>
+                )}
+              </div>
             </div>
           </div>
         </div>

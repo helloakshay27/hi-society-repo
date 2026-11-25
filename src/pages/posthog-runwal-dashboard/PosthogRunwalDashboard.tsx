@@ -12,6 +12,7 @@ import { AdoptionEngagementPage } from "./components/pages/AdoptionEngagementPag
 import { WorkflowUsagePage } from "./components/pages/WorkflowUsagePage";
 import {
   useDashboardSites,
+  useUserSocieties,
   useTrafficSession,
   useUserAccountSiteId,
 } from "./hooks/useDashboardAnalytics";
@@ -72,6 +73,11 @@ function PosthogRunwalDashboardContent({
     isLoading: isSitesLoading,
   } = useDashboardSites();
   const [selectedSiteId, setSelectedSiteId] = useState<string>("all");
+
+  // Society dropdown (Runwal Connect and Realty): the logged-in user's Hi Society societies, the same list
+  // as the Hi Society header's dropdown. "all" sends no society, so the numbers cover every society.
+  const { data: societies = [], isLoading: isSocietiesLoading } = useUserSocieties();
+  const [selectedSocietyId, setSelectedSocietyId] = useState<string>("all");
 
   // Dynamic site scope: fetched from the logged-in user's own account
   // (site_id on /api/users/account.json) rather than a manual picker, since
@@ -182,6 +188,7 @@ function PosthogRunwalDashboardContent({
       subModule: null,
       url: dynamicTenantUrl,
       displayView,
+      societyIds: selectedSocietyId === "all" ? [] : [selectedSocietyId],
       appId: appId || undefined,
       // ?app_id=35 is Runwal Enterprise, anything else Runwal Connect: each has its own API.
       apiPath: runwalApiPath(appId),
@@ -194,6 +201,7 @@ function PosthogRunwalDashboardContent({
     dynamicTenantUrl,
     showResidentSegment,
     residentSegment,
+    selectedSocietyId,
     appId,
   ]);
 
@@ -444,6 +452,11 @@ function PosthogRunwalDashboardContent({
             selectedSiteId={selectedSiteId}
             onSelectSite={setSelectedSiteId}
             isSitesLoading={isSitesLoading}
+            showSocietyFilter
+            societies={societies}
+            selectedSocietyId={selectedSocietyId}
+            onSelectSociety={setSelectedSocietyId}
+            isSocietiesLoading={isSocietiesLoading}
             dev={devPlatform}
             onSelectDev={setDevPlatform}
             showResidentSegment={showResidentSegment}
@@ -478,6 +491,14 @@ function PosthogRunwalDashboardContent({
               sitesSettled={sitesSettled}
               showPrev={showPrev}
               isRefreshing={isRefreshing}
+              signups={{
+                societies,
+                selectedSocietyId,
+                societiesLoading: isSocietiesLoading,
+                rangeLabel,
+                appName: appId === "35" ? "Runwal Realty" : "Runwal Connect",
+                showPhase: showResidentSegment,
+              }}
             />
           )}
 
@@ -488,6 +509,9 @@ function PosthogRunwalDashboardContent({
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
               isRefreshing={isRefreshing}
+              showUserJourneys
+              societies={societies}
+              rangeLabel={rangeLabel}
             />
           )}
 

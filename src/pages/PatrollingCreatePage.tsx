@@ -1251,7 +1251,11 @@ export const PatrollingCreatePage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <TextField
-              label="Name"
+              label={
+                <>
+                  Name<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span>
+                </>
+              }
               placeholder="Enter Patrol Name"
               value={patrolName}
               onChange={(e) => handlePatrolNameChange(e.target.value)}
@@ -1423,14 +1427,14 @@ export const PatrollingCreatePage: React.FC = () => {
           {/* Checklist Dropdown */}
           <div className="mb-4">
             <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-              <InputLabel shrink>Checklist</InputLabel>
+              <InputLabel shrink>Checklist<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
               <MuiSelect
                 value={selectedChecklist?.id || ''}
                 onChange={e => {
                   const selected = checklistOptions.find(opt => opt.id === e.target.value);
                   setSelectedChecklist(selected || null);
                 }}
-                label="Checklist"
+                label={<>Checklist<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></>}
                 notched
                 displayEmpty
                 disabled={isSubmitting || isChecklistLoading}

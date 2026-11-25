@@ -1,980 +1,1042 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Edit, Download, User, Mail, Phone, Calendar, CreditCard, Building2, FileText, Image as ImageIcon, RefreshCw, X, Logs } from 'lucide-react';
-import { toast } from 'sonner';
-import { API_CONFIG } from '@/config/apiConfig';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogsTimeline } from '@/components/LogTimeline';
-import { CLUB_MEMBER_STYLES } from '@/pages/clubMemberStyles';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-
-    TextField,
-    Box,
-    Typography,
-    IconButton,
-    FormControl,
-    Select as MuiSelect,
-    MenuItem,
-    TextareaAutosize,
+  ArrowLeft,
+  Edit,
+  Download,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  CreditCard,
+  Building2,
+  FileText,
+  Image as ImageIcon,
+  RefreshCw,
+  X,
+  Logs,
+} from "lucide-react";
+import { toast } from "sonner";
+import { API_CONFIG } from "@/config/apiConfig";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LogsTimeline } from "@/components/LogTimeline";
+import { CLUB_MEMBER_STYLES } from "@/pages/clubMemberStyles";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Box,
+  Typography,
+  IconButton,
+  FormControl,
+  Select as MuiSelect,
+  MenuItem,
+  TextareaAutosize,
 } from "@mui/material";
 import axios from "axios";
-import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
+import { useDynamicPermissions } from "@/hooks/useDynamicPermissions";
 
 interface Attachment {
-    id: number;
-    relation: string;
-    relation_id: number;
-    document: string;
+  id: number;
+  relation: string;
+  relation_id: number;
+  document: string;
 }
 
 // Shape of each file on a member in GET /club_member_allocations/:id
 interface MemberFile {
-    id: number;
-    url: string;
-    active: number | null; // only 0 means switched off; null and 1 are live
+  id: number;
+  url: string;
+  active: number | null; // only 0 means switched off; null and 1 are live
 }
 
 interface Address {
-    id: number;
-    address: string | null;
-    address_line_two?: string | null;
-    city: string | null;
-    state: string | null;
-    country: string | null;
-    pin_code: string | null;
-    address_type?: string | null;
-    active: boolean | null;
-    resource_id: number;
-    resource_type: string;
+  id: number;
+  address: string | null;
+  address_line_two?: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  pin_code: string | null;
+  address_type?: string | null;
+  active: boolean | null;
+  resource_id: number;
+  resource_type: string;
 }
 
 interface ClubMember {
+  id: number;
+  user_id: number;
+  pms_site_id: number;
+  club_member_check: boolean;
+  membership_number: string;
+  access_card_check: boolean;
+  access_card_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  preferred_start_date?: string | null;
+  created_at: string;
+  updated_at: string;
+  user_name: string;
+  site_name: string;
+  email: string;
+  mobile: string;
+  attachments: Attachment[];
+  identification_image: MemberFile | null;
+  profile_image?: MemberFile | null;
+  other_documents?: MemberFile[];
+  flat_attachment?: MemberFile | null;
+  avatar: string;
+  emergency_contact_name?: string;
+  referred_by?: string;
+  active?: boolean;
+  face_added?: boolean;
+  created_by_id?: number;
+  current_age?: number | null;
+  gender?: string | null;
+  relation_with_owner?: string | null;
+  snag_answers?: any[];
+  user: {
     id: number;
-    user_id: number;
-    pms_site_id: number;
-    club_member_check: boolean;
-    membership_number: string;
-    access_card_check: boolean;
-    access_card_id: string | null;
-    start_date: string | null;
-    end_date: string | null;
-    preferred_start_date?: string | null;
-    created_at: string;
-    updated_at: string;
-    user_name: string;
-    site_name: string;
     email: string;
+    firstname: string;
+    lastname: string;
     mobile: string;
-    attachments: Attachment[];
-    identification_image: MemberFile | null;
-    profile_image?: MemberFile | null;
-    other_documents?: MemberFile[];
-    flat_attachment?: MemberFile | null;
-    avatar: string;
-    emergency_contact_name?: string;
-    referred_by?: string;
-    active?: boolean;
-    face_added?: boolean;
-    created_by_id?: number;
-    current_age?: number | null;
-    gender?: string | null;
-    snag_answers?: any[];
-    user: {
-        id: number;
-        email: string;
-        firstname: string;
-        lastname: string;
-        mobile: string;
-        birth_date: string | null;
-        gender: string | null;
-        user_type: string;
-        addresses: Address[];
-        full_name?: string;
-        country_code?: string;
-        company_id?: number;
-        site_id?: number;
-    };
+    birth_date: string | null;
+    gender: string | null;
+    user_type: string;
+    addresses: Address[];
+    full_name?: string;
+    country_code?: string;
+    company_id?: number;
+    site_id?: number;
+  };
 }
 
 interface Bill {
-    id: number;
-    bill_number: string;
-    total_amount: number;
-    due_date: string;
-    status: string;
-    invoice_file: string | null;
+  id: number;
+  bill_number: string;
+  total_amount: number;
+  due_date: string;
+  status: string;
+  invoice_file: string | null;
 }
 
 interface Log {
-    id: number;
-    log_of: string;
-    log_of_id: number;
-    changed_attr?: string | null;
-    changed_by: number;
-    about?: string;
-    about_id?: number;
-    log_type: string;
-    question_id?: number | null;
-    room_type_id?: number | null;
-    user_name?: string;
-    created_at?: string;
-    details?: Array<{
-        type: string;
-        payload: { [key: string]: any };
-    }>;
+  id: number;
+  log_of: string;
+  log_of_id: number;
+  changed_attr?: string | null;
+  changed_by: number;
+  about?: string;
+  about_id?: number;
+  log_type: string;
+  question_id?: number | null;
+  room_type_id?: number | null;
+  user_name?: string;
+  created_at?: string;
+  details?: Array<{
+    type: string;
+    payload: { [key: string]: any };
+  }>;
 }
 
 interface RenewalLog {
-    id: number;
-    updated_by: string;
-    updated_at: string;
-    date: string;
-    time: string;
-    start_date: {
-        from: string;
-        to: string;
-    };
-    end_date: {
-        from: string;
-        to: string;
-    };
+  id: number;
+  updated_by: string;
+  updated_at: string;
+  date: string;
+  time: string;
+  start_date: {
+    from: string;
+    to: string;
+  };
+  end_date: {
+    from: string;
+    to: string;
+  };
 }
 
 interface GroupMembershipDetail {
+  id: number;
+  membership_plan_id: number;
+  pms_site_id: number;
+  start_date: string | null;
+  end_date: string | null;
+  preferred_start_date?: string | null;
+  referred_by?: string;
+  created_by?: string;
+  club_members: ClubMember[];
+  bills?: Bill[];
+  logs?: Log[];
+  renewal_logs?: RenewalLog[];
+  allocation_payment_detail?: {
     id: number;
-    membership_plan_id: number;
-    pms_site_id: number;
-    start_date: string | null;
-    end_date: string | null;
-    preferred_start_date?: string | null;
-    referred_by?: string;
-    created_by?: string;
-    club_members: ClubMember[];
-    bills?: Bill[];
-    logs?: Log[];
-    renewal_logs?: RenewalLog[];
-    allocation_payment_detail?: {
-        id: number;
-        club_member_allocation_id: number;
-        base_amount: string;
-        discount: string;
-        cgst: string;
-        sgst: string;
-        cgst_per?: number;
-        sgst_per?: number;
-        total_tax: string;
-        total_amount: string;
-        landed_amount: string;
+    club_member_allocation_id: number;
+    base_amount: string;
+    discount: string;
+    cgst: string;
+    sgst: string;
+    cgst_per?: number;
+    sgst_per?: number;
+    total_tax: string;
+    total_amount: string;
+    landed_amount: string;
+    payment_mode: string;
+    payment_status: string;
+    created_at: string;
+    updated_at: string;
+    paid_bills?: Array<{
+      id: number;
+      bill_number: string;
+      total_amount: number;
+      due_date: string;
+      status: string;
+      invoice_file: string | null;
+      lock_payment?: {
+        transaction_id: string;
+        paid_amount: string;
         payment_mode: string;
-        payment_status: string;
-        created_at: string;
-        updated_at: string;
-        paid_bills?: Array<{
-            id: number;
-            bill_number: string;
-            total_amount: number;
-            due_date: string;
-            status: string;
-            invoice_file: string | null;
-            lock_payment?: {
-                transaction_id: string;
-                paid_amount: string;
-                payment_mode: string;
-                notes: string;
-                paid_date: string;
-            };
-        }>;
-    } | null;
+        notes: string;
+        paid_date: string;
+      };
+    }>;
+  } | null;
 }
 
 // Update MembershipPlan interface
 interface MembershipPlan {
-    id: number;
-    name: string;
-    advance_booking_in_days: number | null;
-    usage_limits: string;
-    price?: string;
-    renewal_terms?: string;
-    user_limit?: number;
+  id: number;
+  name: string;
+  advance_booking_in_days: number | null;
+  usage_limits: string;
+  price?: string;
+  renewal_terms?: string;
+  user_limit?: number;
 }
 
 // Add BillDetail interface after other interfaces
 interface BillDetail {
+  id: number;
+  lock_account_id: number | null;
+  society_id: number;
+  society_flat_id: number | null;
+  ledger_id: number | null;
+  bill_number: string;
+  due_date: string;
+  total_amount: number;
+  note: string | null;
+  bill_cycle_id: number;
+  status: string;
+  publish: boolean | null;
+  mail_sent: boolean | null;
+  published_by: number | null;
+  published_on: string | null;
+  billed_to_type: string;
+  billed_to: number;
+  bill_frequency_id: number;
+  billing_date: string | null;
+  charged_amount: number | null;
+  balance_amount: number | null;
+  irn_no: string | null;
+  ack_no: string | null;
+  ack_date: string | null;
+  roundoff_diff: number | null;
+  after_roundoff_amount: number | null;
+  lock_account_bill_charges: Array<{
     id: number;
-    lock_account_id: number | null;
-    society_id: number;
-    society_flat_id: number | null;
-    ledger_id: number | null;
-    bill_number: string;
-    due_date: string;
+    name: string;
+    amount: number;
+    gst_rate: number;
+    gst_amount: number;
     total_amount: number;
-    note: string | null;
-    bill_cycle_id: number;
-    status: string;
-    publish: boolean | null;
-    mail_sent: boolean | null;
-    published_by: number | null;
-    published_on: string | null;
-    billed_to_type: string;
-    billed_to: number;
-    bill_frequency_id: number;
-    billing_date: string | null;
-    charged_amount: number | null;
-    balance_amount: number | null;
-    irn_no: string | null;
-    ack_no: string | null;
-    ack_date: string | null;
-    roundoff_diff: number | null;
-    after_roundoff_amount: number | null;
-    lock_account_bill_charges: Array<{
-        id: number;
-        name: string;
-        amount: number;
-        gst_rate: number;
-        gst_amount: number;
-        total_amount: number;
-        igst_amount: number | null;
-        cgst_amount: number | null;
-        sgst_amount: number | null;
-        quantity: number | null;
-        rate: number | null;
-    }>;
+    igst_amount: number | null;
+    cgst_amount: number | null;
+    sgst_amount: number | null;
+    quantity: number | null;
+    rate: number | null;
+  }>;
 }
 
 const QUESTION_MAP: { [key: string]: string } = {
-    '1': 'Do you have any existing injuries or medical conditions?',
-    '2': 'Do you have any physical restrictions or movement limitations?',
-    '3': 'Are you currently under medication?',
-    '4': 'Have you practiced Pilates before?',
-    '5': 'Primary Fitness Goals',
-    '6': 'Which sessions are you interested in?',
-    '7': 'How did you first hear about The Recess Club?',
-    '8': 'What motivates you to join a wellness club?',
-    '9': 'What type of updates would you like to receive?',
-    '10': 'Preferred Communication Channel',
-    '11': 'Profession / Industry',
-    '12': 'Company Name',
-    '13': 'Are you interested in corporate/group plans for your workplace?'
+  "1": "Do you have any existing injuries or medical conditions?",
+  "2": "Do you have any physical restrictions or movement limitations?",
+  "3": "Are you currently under medication?",
+  "4": "Have you practiced Pilates before?",
+  "5": "Primary Fitness Goals",
+  "6": "Which sessions are you interested in?",
+  "7": "How did you first hear about The Recess Club?",
+  "8": "What motivates you to join a wellness club?",
+  "9": "What type of updates would you like to receive?",
+  "10": "Preferred Communication Channel",
+  "11": "Profession / Industry",
+  "12": "Company Name",
+  "13": "Are you interested in corporate/group plans for your workplace?",
 };
 
 // Add section categorization
-const QUESTION_SECTIONS: { [key: string]: { title: string; questionIds: string[] } } = {
-    'health': {
-        title: 'Health & Wellness Information',
-        questionIds: ['1', '2', '3']
-    },
-    'activity': {
-        title: 'Activity Interests',
-        questionIds: ['4', '5', '6']
-    },
-    'lifestyle': {
-        title: 'Lifestyle & Communication Insights',
-        questionIds: ['7', '8', '9', '10']
-    },
-    'occupation': {
-        title: 'Occupation & Demographics',
-        questionIds: ['11', '12', '13']
-    }
+const QUESTION_SECTIONS: {
+  [key: string]: { title: string; questionIds: string[] };
+} = {
+  health: {
+    title: "Health & Wellness Information",
+    questionIds: ["1", "2", "3"],
+  },
+  activity: {
+    title: "Activity Interests",
+    questionIds: ["4", "5", "6"],
+  },
+  lifestyle: {
+    title: "Lifestyle & Communication Insights",
+    questionIds: ["7", "8", "9", "10"],
+  },
+  occupation: {
+    title: "Occupation & Demographics",
+    questionIds: ["11", "12", "13"],
+  },
 };
 
 export const CMSClubMembersDetails = () => {
-    const { id } = useParams<{ id: string }>();
-    const { shouldShow } = useDynamicPermissions();
-    const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const { shouldShow } = useDynamicPermissions();
+  const navigate = useNavigate();
 
-    const [membershipData, setMembershipData] = useState<GroupMembershipDetail | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState("overview");
-    const [selectedMemberIndex, setSelectedMemberIndex] = useState(0);
-    const [membershipPlanName, setMembershipPlanName] = useState<string>('');
-    const [membershipPlanUserLimit, setMembershipPlanUserLimit] = useState<number | null>(null);
-    const [loadingPlanName, setLoadingPlanName] = useState(false);
-    const [billDetails, setBillDetails] = useState<BillDetail[]>([]);
-    const [selectedBillIndex, setSelectedBillIndex] = useState(0);
-    const [loadingBill, setLoadingBill] = useState(false);
-    const [downloadingPDF, setDownloadingPDF] = useState(false);
-    const [isRenewDialogOpen, setIsRenewDialogOpen] = useState(false);
-    const [renewStartDate, setRenewStartDate] = useState("");
-    const [renewEndDate, setRenewEndDate] = useState("");
-    const [renewing, setRenewing] = useState(false);
+  const [membershipData, setMembershipData] =
+    useState<GroupMembershipDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [selectedMemberIndex, setSelectedMemberIndex] = useState(0);
+  const [membershipPlanName, setMembershipPlanName] = useState<string>("");
+  const [membershipPlanUserLimit, setMembershipPlanUserLimit] = useState<
+    number | null
+  >(null);
+  const [loadingPlanName, setLoadingPlanName] = useState(false);
+  const [billDetails, setBillDetails] = useState<BillDetail[]>([]);
+  const [selectedBillIndex, setSelectedBillIndex] = useState(0);
+  const [loadingBill, setLoadingBill] = useState(false);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
+  const [isRenewDialogOpen, setIsRenewDialogOpen] = useState(false);
+  const [renewStartDate, setRenewStartDate] = useState("");
+  const [renewEndDate, setRenewEndDate] = useState("");
+  const [renewing, setRenewing] = useState(false);
 
-    // Capture Payment State
-    const [isCaptureDialogOpen, setIsCaptureDialogOpen] = useState(false);
-    const [captureFormData, setCaptureFormData] = useState({
-        bill_id: "",
-        total_payable: "",
-        payment_mode: "",
-        transaction_number: "",
-        notes: "",
-    });
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  // Capture Payment State
+  const [isCaptureDialogOpen, setIsCaptureDialogOpen] = useState(false);
+  const [captureFormData, setCaptureFormData] = useState({
+    bill_id: "",
+    total_payable: "",
+    payment_mode: "",
+    transaction_number: "",
+    notes: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Fetch membership details
-    useEffect(() => {
-        if (id) {
-            fetchMembershipDetails();
-        }
-    }, [id]);
+  // Fetch membership details
+  useEffect(() => {
+    if (id) {
+      fetchMembershipDetails();
+    }
+  }, [id]);
 
-    useEffect(() => {
-        if (membershipData) {
-            setRenewStartDate(membershipData.start_date ? membershipData.start_date.split("T")[0] : "");
-            setRenewEndDate(membershipData.end_date ? membershipData.end_date.split("T")[0] : "");
+  useEffect(() => {
+    if (membershipData) {
+      setRenewStartDate(
+        membershipData.start_date ? membershipData.start_date.split("T")[0] : ""
+      );
+      setRenewEndDate(
+        membershipData.end_date ? membershipData.end_date.split("T")[0] : ""
+      );
 
-            // Populate capture form data if payment details exist
-            // if (membershipData.allocation_payment_detail) {
-            //     setCaptureFormData(prev => ({
-            //         ...prev,
-            //         total_payable: membershipData.allocation_payment_detail?.total_amount || "",
-            //     }));
-            // }
-        }
-    }, [membershipData]);
+      // Populate capture form data if payment details exist
+      // if (membershipData.allocation_payment_detail) {
+      //     setCaptureFormData(prev => ({
+      //         ...prev,
+      //         total_payable: membershipData.allocation_payment_detail?.total_amount || "",
+      //     }));
+      // }
+    }
+  }, [membershipData]);
 
-    // Fetch membership plan name when membership data is loaded
-    useEffect(() => {
-        if (membershipData?.membership_plan_id) {
-            fetchMembershipPlanName(membershipData.membership_plan_id);
-        }
-    }, [membershipData?.membership_plan_id]);
+  // Fetch membership plan name when membership data is loaded
+  useEffect(() => {
+    if (membershipData?.membership_plan_id) {
+      fetchMembershipPlanName(membershipData.membership_plan_id);
+    }
+  }, [membershipData?.membership_plan_id]);
 
-    // Fetch bill details when membership data is loaded
-    // useEffect(() => {
-    //     if (id) {
-    //         fetchBillDetails(Number(id));
-    //     }
-    // }, [id]);
+  // Fetch bill details when membership data is loaded
+  // useEffect(() => {
+  //     if (id) {
+  //         fetchBillDetails(Number(id));
+  //     }
+  // }, [id]);
 
-    const fetchMembershipPlanName = async (planId: number) => {
-        setLoadingPlanName(true);
-        try {
-            const baseUrl = localStorage.getItem("baseUrl");
-            const token = localStorage.getItem("token");
+  const fetchMembershipPlanName = async (planId: number) => {
+    setLoadingPlanName(true);
+    try {
+      const baseUrl = localStorage.getItem("baseUrl");
+      const token = localStorage.getItem("token");
 
-            const url = new URL(`https://${baseUrl}/membership_plans.json`);
-            url.searchParams.append('access_token', token || '');
+      const url = new URL(`https://${baseUrl}/membership_plans.json`);
+      url.searchParams.append("access_token", token || "");
 
-            const response = await fetch(url.toString(), {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch membership plans');
-            }
+      if (!response.ok) {
+        throw new Error("Failed to fetch membership plans");
+      }
 
-            const data = await response.json();
-            const plan = data.plans?.find((p: MembershipPlan) => p.id === planId);
+      const data = await response.json();
+      const plan = data.plans?.find((p: MembershipPlan) => p.id === planId);
 
-            if (plan) {
-                setMembershipPlanName(plan.name);
-                setMembershipPlanUserLimit(plan.user_limit || null);
-            } else {
-                setMembershipPlanName(`Plan #${planId}`);
-                setMembershipPlanUserLimit(null);
-            }
-        } catch (error) {
-            console.error('Error fetching membership plan name:', error);
-            setMembershipPlanName(`Plan #${planId}`);
-            setMembershipPlanUserLimit(null);
-        } finally {
-            setLoadingPlanName(false);
-        }
+      if (plan) {
+        setMembershipPlanName(plan.name);
+        setMembershipPlanUserLimit(plan.user_limit || null);
+      } else {
+        setMembershipPlanName(`Plan #${planId}`);
+        setMembershipPlanUserLimit(null);
+      }
+    } catch (error) {
+      console.error("Error fetching membership plan name:", error);
+      setMembershipPlanName(`Plan #${planId}`);
+      setMembershipPlanUserLimit(null);
+    } finally {
+      setLoadingPlanName(false);
+    }
+  };
+
+  const fetchMembershipDetails = async () => {
+    setLoading(true);
+    try {
+      const baseUrl = localStorage.getItem("baseUrl");
+      const token = localStorage.getItem("token");
+
+      // baseUrl already includes protocol (https://)
+      const url = new URL(
+        `https://${baseUrl}/club_member_allocations/${id}.json`
+      );
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch membership details");
+      }
+
+      const data = await response.json();
+      setMembershipData(data);
+    } catch (error) {
+      console.error("Error fetching membership details:", error);
+      toast.error("Failed to fetch membership details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBillDetails = async (allocationId: number) => {
+    setLoadingBill(true);
+    try {
+      const baseUrl = localStorage.getItem("baseUrl");
+      const token = localStorage.getItem("token");
+
+      const url = new URL(
+        `https://${baseUrl}/club_member_allocations/${allocationId}/get_bill_by_allocation`
+      );
+      url.searchParams.append("access_token", token || "");
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch bill details");
+      }
+
+      const data = await response.json();
+      // Store all bills as an array
+      const billsArray = Array.isArray(data) ? data : [data];
+      setBillDetails(billsArray);
+      setSelectedBillIndex(0); // Reset to first bill
+    } catch (error) {
+      console.error("Error fetching bill details:", error);
+      toast.error("Failed to fetch bill details");
+    } finally {
+      setLoadingBill(false);
+    }
+  };
+
+  const handleBackToList = () => {
+    navigate(-1);
+  };
+
+  const handleEdit = () => {
+    navigate(`/cms/club-members/edit/${id}`);
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("en-GB");
+  };
+
+  const formatDateTime = (dateString: string) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return `${day}/${month}/${year}, ${hours}:${minutes} ${ampm}`;
+  };
+
+  const formatLogDateTime = (dateString: string | undefined) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
     };
+    return date.toLocaleDateString("en-US", options);
+  };
 
-    const fetchMembershipDetails = async () => {
-        setLoading(true);
-        try {
-            const baseUrl = localStorage.getItem("baseUrl");
-            const token = localStorage.getItem("token");
+  const renderStatusBadge = () => {
+    if (!membershipData) return null;
 
-            // baseUrl already includes protocol (https://)
-            const url = new URL(`https://${baseUrl}/club_member_allocations/${id}.json`);
+    const { start_date, end_date } = membershipData;
 
-            const response = await fetch(url.toString(), {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch membership details');
-            }
-
-            const data = await response.json();
-            setMembershipData(data);
-
-        } catch (error) {
-            console.error('Error fetching membership details:', error);
-            toast.error('Failed to fetch membership details');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchBillDetails = async (allocationId: number) => {
-        setLoadingBill(true);
-        try {
-            const baseUrl = localStorage.getItem("baseUrl");
-            const token = localStorage.getItem("token");
-
-            const url = new URL(`https://${baseUrl}/club_member_allocations/${allocationId}/get_bill_by_allocation`);
-            url.searchParams.append('access_token', token || '');
-
-            const response = await fetch(url.toString(), {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch bill details');
-            }
-
-            const data = await response.json();
-            // Store all bills as an array
-            const billsArray = Array.isArray(data) ? data : [data];
-            setBillDetails(billsArray);
-            setSelectedBillIndex(0); // Reset to first bill
-        } catch (error) {
-            console.error('Error fetching bill details:', error);
-            toast.error('Failed to fetch bill details');
-        } finally {
-            setLoadingBill(false);
-        }
-    };
-
-    const handleBackToList = () => {
-        navigate(-1);
-    };
-
-    const handleEdit = () => {
-        navigate(`/cms/club-members/edit/${id}`);
-    };
-
-    const formatDate = (dateString: string | null) => {
-        if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString('en-GB');
-    };
-
-    const formatDateTime = (dateString: string) => {
-        if (!dateString) return '-';
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        let hours = date.getHours();
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
-        return `${day}/${month}/${year}, ${hours}:${minutes} ${ampm}`;
-    };
-
-    const formatLogDateTime = (dateString: string | undefined) => {
-        if (!dateString) return '-';
-        const date = new Date(dateString);
-        const options: Intl.DateTimeFormatOptions = {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-        };
-        return date.toLocaleDateString('en-US', options);
-    };
-
-    const renderStatusBadge = () => {
-        if (!membershipData) return null;
-
-        const { start_date, end_date } = membershipData;
-
-        if (!start_date && !end_date) {
-            return (
-                <Badge className="bg-red-100 text-red-800 border-0">
-                    Pending Dates
-                </Badge>
-            );
-        }
-
-        if (!end_date && start_date) {
-            return (
-                <Badge className="bg-red-100 text-red-800 border-0">
-                    Pending EndDate
-                </Badge>
-            );
-        }
-
-        return (
-            <Badge className="bg-green-100 text-green-800 border-0">
-                Approved
-            </Badge>
-        );
-    };
-
-    const getAvatarUrl = (avatar: string) => {
-        if (!avatar) return null;
-        if (avatar.startsWith('%2F')) {
-            return `https://fm-uat-api.lockated.com${decodeURIComponent(avatar)}`;
-        }
-        return avatar;
-    };
-
-    // A file is live unless active is exactly 0 (null and 1 both mean live)
-    const isLiveFile = (file?: MemberFile | null): file is MemberFile =>
-        !!file && !!file.url && file.active !== 0;
-
-    const isImageUrl = (url: string) =>
-        /\.(jpe?g|png|gif|webp|bmp|svg)(\?|#|$)/i.test(url);
-
-    const getFileName = (url: string) => {
-        try {
-            return decodeURIComponent(new URL(url).pathname.split('/').pop() || 'File');
-        } catch {
-            return url.split('/').pop() || 'File';
-        }
-    };
-
-    // url is already a full https:// address — use it as is
-    const renderMemberFile = (file: MemberFile, alt: string) =>
-        isImageUrl(file.url) ? (
-            <button
-                key={file.id}
-                type="button"
-                onClick={() => setSelectedImage(file.url)}
-                className="w-32 h-32 rounded-xl border border-[rgba(26,26,24,0.1)] overflow-hidden bg-[#FAF9F7] hover:opacity-90"
-                title="Click to preview"
-            >
-                <img src={file.url} alt={alt} className="w-full h-full object-cover" />
-            </button>
-        ) : (
-            <a
-                key={file.id}
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-32 h-32 rounded-xl border border-[rgba(26,26,24,0.1)] bg-[#FAF9F7] flex flex-col items-center justify-center gap-2 p-2 text-center hover:bg-[#F5F4F0]"
-                title={getFileName(file.url)}
-            >
-                <FileText className="w-8 h-8 text-[#1A1A18]" />
-                <span className="text-[11px] text-gray-700 break-all line-clamp-2">{getFileName(file.url)}</span>
-            </a>
-        );
-
-    // Helper function to parse answers from snag_answers format
-    const parseAnswers = (snagAnswers: any[]) => {
-        if (!snagAnswers || snagAnswers.length === 0) return null;
-
-        const groupedAnswers: { [key: string]: Array<{ answer: string; comments?: string }> } = {};
-
-        snagAnswers.forEach((item) => {
-            const questionId = String(item.question_id);
-            if (!groupedAnswers[questionId]) {
-                groupedAnswers[questionId] = [];
-            }
-            groupedAnswers[questionId].push({
-                answer: item.ans_descr || '',
-                comments: item.comments || ''
-            });
-        });
-
-        return groupedAnswers;
-    };
-
-    // Helper function to render answer value
-    const renderAnswerValue = (questionId: string, answers: Array<{ answer: string; comments?: string }>) => {
-        if (!answers || answers.length === 0) return '-';
-
-        // For questions with comments (like question 1)
-        if (questionId === '1' && answers.length > 0) {
-            const hasYes = answers.some(a => a.answer?.toLowerCase() === 'yes');
-            const comments = answers.find(a => a.comments)?.comments;
-            return (
-                <div>
-                    <span className="text-gray-900 font-medium">{hasYes ? 'Yes' : 'No'}</span>
-                    {comments && (
-                        <p className="text-sm text-gray-600 mt-1 italic">Comments: {comments}</p>
-                    )}
-                </div>
-            );
-        }
-
-        // For multiple choice questions
-        if (answers.length > 1) {
-            return (
-                <div className="flex flex-wrap gap-2">
-                    {answers.map((ans, idx) => (
-                        <span key={idx} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {ans.answer}
-                            {ans.comments && <span className="ml-1 text-gray-600">({ans.comments})</span>}
-                        </span>
-                    ))}
-                </div>
-            );
-        }
-
-        // For single answer questions
-        return (
-            <span className="text-gray-900 font-medium">
-                {answers[0].answer}
-                {answers[0].comments && <span className="text-sm text-gray-600 ml-2">({answers[0].comments})</span>}
-            </span>
-        );
-    };
-
-    const handleDownloadPDF = async () => {
-        const billDetail = billDetails[selectedBillIndex];
-        if (!billDetail?.id) {
-            toast.error('Bill ID not found');
-            return;
-        }
-
-        setDownloadingPDF(true);
-        try {
-            const baseUrl = API_CONFIG.BASE_URL;
-            const token = API_CONFIG.TOKEN;
-
-            const url = new URL(`${baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`}/club_member_allocations/show_pdf`);
-            url.searchParams.append('lock_account_bill_id', billDetail.id.toString());
-
-            const response = await fetch(url.toString(), {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to download PDF');
-            }
-
-            // Get the blob from response
-            const blob = await response.blob();
-
-            // Create a download link
-            const downloadUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.download = `Bill_${billDetail.bill_number || billDetail.id}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(downloadUrl);
-
-            toast.success('PDF downloaded successfully');
-        } catch (error) {
-            console.error('Error downloading PDF:', error);
-            toast.error('Failed to download PDF');
-        } finally {
-            setDownloadingPDF(false);
-        }
-    };
-
-    const handleRenew = async () => {
-        if (!renewStartDate || !renewEndDate) {
-            toast.error("Please select both start and end dates");
-            return;
-        }
-
-        setRenewing(true);
-        try {
-            const baseUrl = localStorage.getItem("baseUrl");
-            const token = localStorage.getItem("token");
-            const societyId = localStorage.getItem("selectedUserSociety");
-
-            const formData = new FormData();
-            formData.append("club_member_allocation[society_id]", societyId!);
-            formData.append("club_member_allocation[start_date]", renewStartDate);
-            formData.append("club_member_allocation[end_date]", renewEndDate);
-
-            await axios.patch(`https://${baseUrl}/club_member_allocations/${id}.json`, formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data',
-                }
-            });
-
-            toast.success("Membership renewed successfully!");
-            setIsRenewDialogOpen(false);
-            fetchMembershipDetails(); // Refresh data
-        } catch (error) {
-            console.error("Error renewing membership:", error);
-            toast.error("Failed to renew membership");
-        } finally {
-            setRenewing(false);
-        }
-    };
-
-    const handleCaptureChange = (e: any) => {
-        const { name, value } = e.target;
-        setCaptureFormData((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleCaptureSubmit = async () => {
-        setIsSubmitting(true);
-        try {
-            const baseUrl = localStorage.getItem("baseUrl");
-            const token = localStorage.getItem("token");
-
-            await axios.post(
-                `https://${baseUrl}/club_member_allocations/${id}/payment.json`,
-                {
-                    lock_payment: {
-                        bill_id: captureFormData.bill_id,
-                        paid_amount: captureFormData.total_payable,
-                        payment_method: captureFormData.payment_mode,
-                        pg_transaction_id: captureFormData.transaction_number,
-                        notes: captureFormData.notes,
-                        payment_status: "SUCCESS",
-                    },
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-            toast.success("Payment captured successfully");
-            setIsCaptureDialogOpen(false);
-            fetchMembershipDetails();
-        } catch (error) {
-            console.error("Error capturing payment:", error);
-            toast.error("Failed to capture payment");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="p-4 sm:p-6 min-h-screen flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3">
-                    <div className="animate-spin rounded-full h-10 w-10 border-2 border-[rgba(26,26,24,0.12)] border-t-[#1A1A18]"></div>
-                    <p className="text-gray-600">Loading membership data...</p>
-                </div>
-            </div>
-        );
+    if (!start_date && !end_date) {
+      return (
+        <Badge className="bg-red-100 text-red-800 border-0">
+          Pending Dates
+        </Badge>
+      );
     }
 
-    if (!membershipData) {
-        return (
-            <div className="p-4 sm:p-6 min-h-screen">
-                <div className="text-center py-12">
-                    <p className="text-gray-600">Membership not found</p>
-                    <Button onClick={handleBackToList} className="mt-4">
-                        Back to List
-                    </Button>
-                </div>
-            </div>
-        );
+    if (!end_date && start_date) {
+      return (
+        <Badge className="bg-red-100 text-red-800 border-0">
+          Pending EndDate
+        </Badge>
+      );
     }
-
-    const selectedMember = membershipData.club_members?.[selectedMemberIndex];
-    const avatarUrl = selectedMember ? getAvatarUrl(selectedMember.avatar) : null;
-    const selectedBill = billDetails[selectedBillIndex];
 
     return (
-        <div className="p-4 sm:p-6 min-h-screen club-member-page">
-            <style>{CLUB_MEMBER_STYLES}</style>
-            {/* Header */}
-            <div className="mb-6">
-                <button
-                    type="button"
-                    onClick={handleBackToList}
-                    className="ref-back"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Club Members
-                </button>
+      <Badge className="bg-green-100 text-green-800 border-0">Approved</Badge>
+    );
+  };
 
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-4">
-                            <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
-                                Membership #{membershipData.id}
-                            </h1>
-                            {/* {renderStatusBadge()} */}
-                        </div>
-                        <div className="text-[13px] text-[rgba(26,26,24,0.55)]">
-                            {membershipData.club_members?.length || 0} Members • Start: {formatDate(membershipData.start_date)} - End: {formatDate(membershipData.end_date)}
-                        </div>
-                    </div>
+  const getAvatarUrl = (avatar: string) => {
+    if (!avatar) return null;
+    if (avatar.startsWith("%2F")) {
+      return `https://fm-uat-api.lockated.com${decodeURIComponent(avatar)}`;
+    }
+    return avatar;
+  };
 
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={() => setIsRenewDialogOpen(true)}
-                            variant="outline"
-                            className="ref-edit-btn"
-                        >
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            Renew Membership
-                        </Button>
-                        {
-                            shouldShow("Club Members", "update") && (
-                                <Button
-                                    onClick={handleEdit}
-                                    variant="outline"
-                                    className="ref-edit-btn"
-                                >
-                                    <Edit className="w-4 h-4 mr-2" />
-                                    Edit
-                                </Button>
-                            )
-                        }
-                    </div>
-                </div>
+  // A file is live unless active is exactly 0 (null and 1 both mean live)
+  const isLiveFile = (file?: MemberFile | null): file is MemberFile =>
+    !!file && !!file.url && file.active !== 0;
+
+  const isImageUrl = (url: string) =>
+    /\.(jpe?g|png|gif|webp|bmp|svg)(\?|#|$)/i.test(url);
+
+  const getFileName = (url: string) => {
+    try {
+      return decodeURIComponent(
+        new URL(url).pathname.split("/").pop() || "File"
+      );
+    } catch {
+      return url.split("/").pop() || "File";
+    }
+  };
+
+  // url is already a full https:// address — use it as is
+  const renderMemberFile = (file: MemberFile, alt: string) =>
+    isImageUrl(file.url) ? (
+      <button
+        key={file.id}
+        type="button"
+        onClick={() => setSelectedImage(file.url)}
+        className="w-32 h-32 rounded-xl border border-[rgba(26,26,24,0.1)] overflow-hidden bg-[#FAF9F7] hover:opacity-90"
+        title="Click to preview"
+      >
+        <img src={file.url} alt={alt} className="w-full h-full object-cover" />
+      </button>
+    ) : (
+      <a
+        key={file.id}
+        href={file.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-32 h-32 rounded-xl border border-[rgba(26,26,24,0.1)] bg-[#FAF9F7] flex flex-col items-center justify-center gap-2 p-2 text-center hover:bg-[#F5F4F0]"
+        title={getFileName(file.url)}
+      >
+        <FileText className="w-8 h-8 text-[#1A1A18]" />
+        <span className="text-[11px] text-gray-700 break-all line-clamp-2">
+          {getFileName(file.url)}
+        </span>
+      </a>
+    );
+
+  // Helper function to parse answers from snag_answers format
+  const parseAnswers = (snagAnswers: any[]) => {
+    if (!snagAnswers || snagAnswers.length === 0) return null;
+
+    const groupedAnswers: {
+      [key: string]: Array<{ answer: string; comments?: string }>;
+    } = {};
+
+    snagAnswers.forEach((item) => {
+      const questionId = String(item.question_id);
+      if (!groupedAnswers[questionId]) {
+        groupedAnswers[questionId] = [];
+      }
+      groupedAnswers[questionId].push({
+        answer: item.ans_descr || "",
+        comments: item.comments || "",
+      });
+    });
+
+    return groupedAnswers;
+  };
+
+  // Helper function to render answer value
+  const renderAnswerValue = (
+    questionId: string,
+    answers: Array<{ answer: string; comments?: string }>
+  ) => {
+    if (!answers || answers.length === 0) return "-";
+
+    // For questions with comments (like question 1)
+    if (questionId === "1" && answers.length > 0) {
+      const hasYes = answers.some((a) => a.answer?.toLowerCase() === "yes");
+      const comments = answers.find((a) => a.comments)?.comments;
+      return (
+        <div>
+          <span className="text-gray-900 font-medium">
+            {hasYes ? "Yes" : "No"}
+          </span>
+          {comments && (
+            <p className="text-sm text-gray-600 mt-1 italic">
+              Comments: {comments}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    // For multiple choice questions
+    if (answers.length > 1) {
+      return (
+        <div className="flex flex-wrap gap-2">
+          {answers.map((ans, idx) => (
+            <span
+              key={idx}
+              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+            >
+              {ans.answer}
+              {ans.comments && (
+                <span className="ml-1 text-gray-600">({ans.comments})</span>
+              )}
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    // For single answer questions
+    return (
+      <span className="text-gray-900 font-medium">
+        {answers[0].answer}
+        {answers[0].comments && (
+          <span className="text-sm text-gray-600 ml-2">
+            ({answers[0].comments})
+          </span>
+        )}
+      </span>
+    );
+  };
+
+  const handleDownloadPDF = async () => {
+    const billDetail = billDetails[selectedBillIndex];
+    if (!billDetail?.id) {
+      toast.error("Bill ID not found");
+      return;
+    }
+
+    setDownloadingPDF(true);
+    try {
+      const baseUrl = API_CONFIG.BASE_URL;
+      const token = API_CONFIG.TOKEN;
+
+      const url = new URL(
+        `${baseUrl.startsWith("http") ? baseUrl : `https://${baseUrl}`}/club_member_allocations/show_pdf`
+      );
+      url.searchParams.append("lock_account_bill_id", billDetail.id.toString());
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to download PDF");
+      }
+
+      // Get the blob from response
+      const blob = await response.blob();
+
+      // Create a download link
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `Bill_${billDetail.bill_number || billDetail.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      toast.success("PDF downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      toast.error("Failed to download PDF");
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
+
+  const handleRenew = async () => {
+    if (!renewStartDate || !renewEndDate) {
+      toast.error("Please select both start and end dates");
+      return;
+    }
+
+    setRenewing(true);
+    try {
+      const baseUrl = localStorage.getItem("baseUrl");
+      const token = localStorage.getItem("token");
+      const societyId = localStorage.getItem("selectedUserSociety");
+
+      const formData = new FormData();
+      formData.append("club_member_allocation[society_id]", societyId!);
+      formData.append("club_member_allocation[start_date]", renewStartDate);
+      formData.append("club_member_allocation[end_date]", renewEndDate);
+
+      await axios.patch(
+        `https://${baseUrl}/club_member_allocations/${id}.json`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      toast.success("Membership renewed successfully!");
+      setIsRenewDialogOpen(false);
+      fetchMembershipDetails(); // Refresh data
+    } catch (error) {
+      console.error("Error renewing membership:", error);
+      toast.error("Failed to renew membership");
+    } finally {
+      setRenewing(false);
+    }
+  };
+
+  const handleCaptureChange = (e: any) => {
+    const { name, value } = e.target;
+    setCaptureFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCaptureSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const baseUrl = localStorage.getItem("baseUrl");
+      const token = localStorage.getItem("token");
+
+      await axios.post(
+        `https://${baseUrl}/club_member_allocations/${id}/payment.json`,
+        {
+          lock_payment: {
+            bill_id: captureFormData.bill_id,
+            paid_amount: captureFormData.total_payable,
+            payment_method: captureFormData.payment_mode,
+            pg_transaction_id: captureFormData.transaction_number,
+            notes: captureFormData.notes,
+            payment_status: "SUCCESS",
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success("Payment captured successfully");
+      setIsCaptureDialogOpen(false);
+      fetchMembershipDetails();
+    } catch (error) {
+      console.error("Error capturing payment:", error);
+      toast.error("Failed to capture payment");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-4 sm:p-6 min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-[rgba(26,26,24,0.12)] border-t-[#1A1A18]"></div>
+          <p className="text-gray-600">Loading membership data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!membershipData) {
+    return (
+      <div className="p-4 sm:p-6 min-h-screen">
+        <div className="text-center py-12">
+          <p className="text-gray-600">Membership not found</p>
+          <Button onClick={handleBackToList} className="mt-4">
+            Back to List
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const selectedMember = membershipData.club_members?.[selectedMemberIndex];
+  const avatarUrl = selectedMember ? getAvatarUrl(selectedMember.avatar) : null;
+  const selectedBill = billDetails[selectedBillIndex];
+
+  return (
+    <div className="p-4 sm:p-6 min-h-screen club-member-page">
+      <style>{CLUB_MEMBER_STYLES}</style>
+      {/* Header */}
+      <div className="mb-6">
+        <button type="button" onClick={handleBackToList} className="ref-back">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Club Members
+        </button>
+
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-4">
+              <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-[#1A1A18]">
+                Membership #{membershipData.id}
+              </h1>
+              {/* {renderStatusBadge()} */}
             </div>
+            <div className="text-[13px] text-[rgba(26,26,24,0.55)]">
+              {membershipData.club_members?.length || 0} Members • Start:{" "}
+              {formatDate(membershipData.start_date)} - End:{" "}
+              {formatDate(membershipData.end_date)}
+            </div>
+          </div>
 
-            {/* Main Content - Tabs */}
-            <div className="ref-tabs-card">
-                <Tabs defaultValue="overview" className="w-full" onValueChange={setActiveTab}>
-                    <TabsList className="ref-tabs">
-                        <TabsTrigger
-                            value="overview"
-                            className="ref-tab"
-                        >
-                            Group Overview
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="members"
-                            className="ref-tab"
-                        >
-                            Members ({membershipData.club_members?.length || 0})
-                        </TabsTrigger>
-                        {membershipData.allocation_payment_detail && (
-                            <TabsTrigger
-                                value="payment"
-                                className="ref-tab"
-                            >
-                                Payment Details
-                            </TabsTrigger>
-                        )}
-                        <TabsTrigger
-                            value="bill"
-                            className="ref-tab"
-                        >
-                            Bill Details
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="member-details"
-                            className="ref-tab"
-                        >
-                            Member Details
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="logs"
-                            className="ref-tab"
-                        >
-                            Logs
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="renewal-logs"
-                            className="ref-tab"
-                        >
-                            Renewal Logs
-                        </TabsTrigger>
-                    </TabsList>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setIsRenewDialogOpen(true)}
+              variant="outline"
+              className="ref-edit-btn"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Renew Membership
+            </Button>
+            {shouldShow("Club Members", "update") && (
+              <Button
+                onClick={handleEdit}
+                variant="outline"
+                className="ref-edit-btn"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
 
-                    <TabsContent value="overview" className="p-4 sm:p-6">
-                        <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
-                            <User className="w-4 h-4 text-[#1A1A18]" />
-                            Group Membership Information
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                            <div className="flex items-start">
-                                <span className="text-gray-500 min-w-[140px]">Group ID</span>
-                                <span className="text-gray-500 mx-2">:</span>
-                                <span className="text-gray-500 font-medium">{membershipData.id}</span>
-                            </div>
-                            <div className="flex items-start">
-                                <span className="text-gray-500 min-w-[140px]">Membership Plan</span>
-                                <span className="text-gray-500 mx-2">:</span>
-                                <span className="text-gray-500 font-medium">
-                                    {loadingPlanName ? (
-                                        <span className="inline-flex items-center gap-2">
-                                            <span className="animate-spin rounded-full h-3 w-3 border-b border-gray-600"></span>
-                                            Loading...
-                                        </span>
-                                    ) : (
-                                        membershipPlanName || (membershipData.membership_plan_id ? `Plan #${membershipData.membership_plan_id}` : '-')
-                                    )}
-                                </span>
-                            </div>
-                            {membershipPlanUserLimit && (
-                                <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[140px]">Plan Member Limit</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-500 font-medium">
-                                        {membershipPlanUserLimit} {membershipPlanUserLimit === 1 ? 'Member' : 'Members'}
-                                    </span>
-                                </div>
-                            )}
-                            <div className="flex items-start">
-                                <span className="text-gray-500 min-w-[140px]">Start Date</span>
-                                <span className="text-gray-500 mx-2">:</span>
-                                <span className="text-gray-500 font-medium">{formatDate(membershipData.start_date)}</span>
-                            </div>
-                            <div className="flex items-start">
-                                <span className="text-gray-500 min-w-[140px]">End Date</span>
-                                <span className="text-gray-500 mx-2">:</span>
-                                <span className="text-gray-500 font-medium">{formatDate(membershipData.end_date)}</span>
-                            </div>
-                            <div className="flex items-start">
-                                <span className="text-gray-500 min-w-[140px]">Total Members</span>
-                                <span className="text-gray-500 mx-2">:</span>
-                                <span className="text-gray-500 font-medium">
-                                    {membershipData.club_members?.length || 0}
-                                    {membershipPlanUserLimit && ` / ${membershipPlanUserLimit}`}
-                                </span>
-                            </div>
+      {/* Main Content - Tabs */}
+      <div className="ref-tabs-card">
+        <Tabs
+          defaultValue="overview"
+          className="w-full"
+          onValueChange={setActiveTab}
+        >
+          <TabsList className="ref-tabs">
+            <TabsTrigger value="overview" className="ref-tab">
+              Group Overview
+            </TabsTrigger>
+            <TabsTrigger value="members" className="ref-tab">
+              Members ({membershipData.club_members?.length || 0})
+            </TabsTrigger>
+            {membershipData.allocation_payment_detail && (
+              <TabsTrigger value="payment" className="ref-tab">
+                Payment Details
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="bill" className="ref-tab">
+              Bill Details
+            </TabsTrigger>
+            <TabsTrigger value="member-details" className="ref-tab">
+              Member Details
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="ref-tab">
+              Logs
+            </TabsTrigger>
+            <TabsTrigger value="renewal-logs" className="ref-tab">
+              Renewal Logs
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="p-4 sm:p-6">
+            <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+              <User className="w-4 h-4 text-[#1A1A18]" />
+              Group Membership Information
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+              <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">Group ID</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-500 font-medium">
+                  {membershipData.id}
+                </span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">
+                  Membership Plan
+                </span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-500 font-medium">
+                  {loadingPlanName ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="animate-spin rounded-full h-3 w-3 border-b border-gray-600"></span>
+                      Loading...
+                    </span>
+                  ) : (
+                    membershipPlanName ||
+                    (membershipData.membership_plan_id
+                      ? `Plan #${membershipData.membership_plan_id}`
+                      : "-")
+                  )}
+                </span>
+              </div>
+              {membershipPlanUserLimit && (
+                <div className="flex items-start">
+                  <span className="text-gray-500 min-w-[140px]">
+                    Plan Member Limit
+                  </span>
+                  <span className="text-gray-500 mx-2">:</span>
+                  <span className="text-gray-500 font-medium">
+                    {membershipPlanUserLimit}{" "}
+                    {membershipPlanUserLimit === 1 ? "Member" : "Members"}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">Start Date</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-500 font-medium">
+                  {formatDate(membershipData.start_date)}
+                </span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">End Date</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-500 font-medium">
+                  {formatDate(membershipData.end_date)}
+                </span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">
+                  Total Members
+                </span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-500 font-medium">
+                  {membershipData.club_members?.length || 0}
+                  {membershipPlanUserLimit && ` / ${membershipPlanUserLimit}`}
+                </span>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="members" className="p-4 sm:p-6">
+            <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+              <User className="w-4 h-4 text-[#1A1A18]" />
+              Group Members List
+            </h2>
+            <div className="space-y-3">
+              {membershipData.club_members?.map((member, index) => (
+                <div
+                  key={member.id}
+                  className="border border-[rgba(26,26,24,0.09)] rounded-xl p-4 hover:border-[rgba(26,26,24,0.24)] transition-colors"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-[#F5F4F0] text-[#1A1A18] rounded-full w-10 h-10 flex items-center justify-center text-sm font-semibold">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          {member.user_name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {member.membership_number}
+                        </p>
+                        <div className="mt-2 space-y-1">
+                          <p className="text-sm text-gray-600">
+                            <Mail className="w-3 h-3 inline mr-1" />
+                            {member.email}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            <Phone className="w-3 h-3 inline mr-1" />
+                            {member.mobile}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            <User className="w-3 h-3 inline mr-1" />
+                            Relation with Owner:{" "}
+                            {member.relation_with_owner || "-"}
+                          </p>
                         </div>
-                    </TabsContent>
-
-                    <TabsContent value="members" className="p-4 sm:p-6">
-                        <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
-                            <User className="w-4 h-4 text-[#1A1A18]" />
-                            Group Members List
-                        </h2>
-                        <div className="space-y-3">
-                            {membershipData.club_members?.map((member, index) => (
-                                <div key={member.id} className="border border-[rgba(26,26,24,0.09)] rounded-xl p-4 hover:border-[rgba(26,26,24,0.24)] transition-colors">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-start gap-3">
-                                            <div className="bg-[#F5F4F0] text-[#1A1A18] rounded-full w-10 h-10 flex items-center justify-center text-sm font-semibold">
-                                                {index + 1}
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-gray-900">{member.user_name}</h3>
-                                                <p className="text-sm text-gray-500">{member.membership_number}</p>
-                                                <div className="mt-2 space-y-1">
-                                                    <p className="text-sm text-gray-600">
-                                                        <Mail className="w-3 h-3 inline mr-1" />
-                                                        {member.email}
-                                                    </p>
-                                                    <p className="text-sm text-gray-600">
-                                                        <Phone className="w-3 h-3 inline mr-1" />
-                                                        {member.mobile}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col gap-2 items-end">
-                                            <Badge className={`ref-pill ${member.club_member_check ? "is-success" : "is-neutral"}`}>
-                                                {member.club_member_check ? 'Active' : 'Inactive'}
-                                            </Badge>
-                                            {/* <Button
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 items-end">
+                      <Badge
+                        className={`ref-pill ${member.club_member_check ? "is-success" : "is-neutral"}`}
+                      >
+                        {member.club_member_check ? "Active" : "Inactive"}
+                      </Badge>
+                      {/* <Button
                         size="sm"
                         variant="outline"
                         onClick={() => {
@@ -984,912 +1046,1164 @@ export const CMSClubMembersDetails = () => {
                       >
                         View Details
                       </Button> */}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </TabsContent>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
 
-                    {membershipData.allocation_payment_detail && (
-                        <TabsContent value="payment" className="p-4 sm:p-6">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
-                                    <CreditCard className="w-4 h-4 text-[#1A1A18]" />
-                                    Payment Information
-                                </h2>
+          {membershipData.allocation_payment_detail && (
+            <TabsContent value="payment" className="p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                  <CreditCard className="w-4 h-4 text-[#1A1A18]" />
+                  Payment Information
+                </h2>
 
-                                {(!membershipData.allocation_payment_detail.payment_status ||
-                                    membershipData.allocation_payment_detail.payment_status.toLowerCase() === 'pending') && (
-                                        <Button
-                                            onClick={() => setIsCaptureDialogOpen(true)}
-                                            className="btn-primary h-9 px-4 text-sm font-medium flex items-center gap-2"
-                                        >
-                                            Capture Payment
-                                        </Button>
-                                    )}
-                            </div>
+                {(!membershipData.allocation_payment_detail.payment_status ||
+                  membershipData.allocation_payment_detail.payment_status.toLowerCase() ===
+                    "pending") && (
+                  <Button
+                    onClick={() => setIsCaptureDialogOpen(true)}
+                    className="btn-primary h-9 px-4 text-sm font-medium flex items-center gap-2"
+                  >
+                    Capture Payment
+                  </Button>
+                )}
+              </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                                <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[140px]">Payment ID</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">{membershipData.allocation_payment_detail.id}</span>
-                                </div>
-                                <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[140px]">Base Amount</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">₹ {membershipData.allocation_payment_detail.base_amount}</span>
-                                </div>
-                                {membershipData.allocation_payment_detail.discount && membershipData.allocation_payment_detail.discount !== '0' && membershipData.allocation_payment_detail.discount !== '0.0' && (
-                                    <div className="flex items-start">
-                                        <span className="text-gray-500 min-w-[140px]">Discount</span>
-                                        <span className="text-gray-500 mx-2">:</span>
-                                        <span className="text-gray-900 font-medium">₹ {membershipData.allocation_payment_detail.discount}</span>
-                                    </div>
-                                )}
-                                <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[140px]">CGST</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">₹ {membershipData.allocation_payment_detail.cgst}</span>
-                                </div>
-                                <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[140px]">SGST</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">₹ {membershipData.allocation_payment_detail.sgst}</span>
-                                </div>
-                                <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[140px]">Total Tax</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">₹ {membershipData.allocation_payment_detail.total_tax}</span>
-                                </div>
-                                <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[140px]">Total Amount</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">₹ {membershipData.allocation_payment_detail.total_amount}</span>
-                                </div>
-                                <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[140px]">Landed Amount</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">₹ {membershipData.allocation_payment_detail.landed_amount}</span>
-                                </div>
-                                {membershipData.allocation_payment_detail.payment_mode && <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[140px]">Payment Mode</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium capitalize">{membershipData.allocation_payment_detail.payment_mode}</span>
-                                </div>}
-                                <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[140px]">Payment Status</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <div className="flex items-center gap-2">
-                                        <Badge className={`ref-pill capitalize ${membershipData.allocation_payment_detail.payment_status === 'success' ? "is-success" : "is-warning"}`}>
-                                            {membershipData.allocation_payment_detail.payment_status ?? "Pending"}
-                                        </Badge>
-                                    </div>
-                                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div className="flex items-start">
+                  <span className="text-gray-500 min-w-[140px]">
+                    Payment ID
+                  </span>
+                  <span className="text-gray-500 mx-2">:</span>
+                  <span className="text-gray-900 font-medium">
+                    {membershipData.allocation_payment_detail.id}
+                  </span>
+                </div>
+                <div className="flex items-start">
+                  <span className="text-gray-500 min-w-[140px]">
+                    Base Amount
+                  </span>
+                  <span className="text-gray-500 mx-2">:</span>
+                  <span className="text-gray-900 font-medium">
+                    ₹ {membershipData.allocation_payment_detail.base_amount}
+                  </span>
+                </div>
+                {membershipData.allocation_payment_detail.discount &&
+                  membershipData.allocation_payment_detail.discount !== "0" &&
+                  membershipData.allocation_payment_detail.discount !==
+                    "0.0" && (
+                    <div className="flex items-start">
+                      <span className="text-gray-500 min-w-[140px]">
+                        Discount
+                      </span>
+                      <span className="text-gray-500 mx-2">:</span>
+                      <span className="text-gray-900 font-medium">
+                        ₹ {membershipData.allocation_payment_detail.discount}
+                      </span>
+                    </div>
+                  )}
+                <div className="flex items-start">
+                  <span className="text-gray-500 min-w-[140px]">CGST</span>
+                  <span className="text-gray-500 mx-2">:</span>
+                  <span className="text-gray-900 font-medium">
+                    ₹ {membershipData.allocation_payment_detail.cgst}
+                  </span>
+                </div>
+                <div className="flex items-start">
+                  <span className="text-gray-500 min-w-[140px]">SGST</span>
+                  <span className="text-gray-500 mx-2">:</span>
+                  <span className="text-gray-900 font-medium">
+                    ₹ {membershipData.allocation_payment_detail.sgst}
+                  </span>
+                </div>
+                <div className="flex items-start">
+                  <span className="text-gray-500 min-w-[140px]">Total Tax</span>
+                  <span className="text-gray-500 mx-2">:</span>
+                  <span className="text-gray-900 font-medium">
+                    ₹ {membershipData.allocation_payment_detail.total_tax}
+                  </span>
+                </div>
+                <div className="flex items-start">
+                  <span className="text-gray-500 min-w-[140px]">
+                    Total Amount
+                  </span>
+                  <span className="text-gray-500 mx-2">:</span>
+                  <span className="text-gray-900 font-medium">
+                    ₹ {membershipData.allocation_payment_detail.total_amount}
+                  </span>
+                </div>
+                <div className="flex items-start">
+                  <span className="text-gray-500 min-w-[140px]">
+                    Landed Amount
+                  </span>
+                  <span className="text-gray-500 mx-2">:</span>
+                  <span className="text-gray-900 font-medium">
+                    ₹ {membershipData.allocation_payment_detail.landed_amount}
+                  </span>
+                </div>
+                {membershipData.allocation_payment_detail.payment_mode && (
+                  <div className="flex items-start">
+                    <span className="text-gray-500 min-w-[140px]">
+                      Payment Mode
+                    </span>
+                    <span className="text-gray-500 mx-2">:</span>
+                    <span className="text-gray-900 font-medium capitalize">
+                      {membershipData.allocation_payment_detail.payment_mode}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-start">
+                  <span className="text-gray-500 min-w-[140px]">
+                    Payment Status
+                  </span>
+                  <span className="text-gray-500 mx-2">:</span>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      className={`ref-pill capitalize ${membershipData.allocation_payment_detail.payment_status === "success" ? "is-success" : "is-warning"}`}
+                    >
+                      {membershipData.allocation_payment_detail
+                        .payment_status ?? "Pending"}
+                    </Badge>
+                  </div>
+                </div>
 
-                                <div className="flex items-start">
-                                    <span className="text-gray-500 min-w-[140px]">Payment Created</span>
-                                    <span className="text-gray-500 mx-2">:</span>
-                                    <span className="text-gray-900 font-medium">{formatDateTime(membershipData.allocation_payment_detail.created_at)}</span>
-                                </div>
-                            </div>
-
-                            {membershipData.allocation_payment_detail.paid_bills && membershipData.allocation_payment_detail.paid_bills.length > 0 && (
-                                <div className="mt-6">
-                                    <h3 className="text-[14px] font-semibold text-[#1A1A18] mb-3 flex items-center gap-2">
-                                        <CreditCard className="w-4 h-4 text-[#1A1A18]" />
-                                        Paid Bills
-                                    </h3>
-                                    <div className="overflow-x-auto rounded-xl border border-[rgba(26,26,24,0.09)]">
-                                        <table className="w-full text-sm">
-                                            <thead className="bg-gray-50 border-b border-gray-200">
-                                                <tr>
-                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Bill #</th>
-                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Amount</th>
-                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Due Date</th>
-                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Transaction ID</th>
-                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Paid Amount</th>
-                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Payment Mode</th>
-                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Notes</th>
-                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Paid Date</th>
-                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Status</th>
-                                                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Invoice</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-100">
-                                                {membershipData.allocation_payment_detail.paid_bills.map((bill) => (
-                                                    <tr key={bill.id} className="hover:bg-gray-50">
-                                                        <td className="px-4 py-3 font-medium text-gray-900">#{bill.bill_number}</td>
-                                                        <td className="px-4 py-3 text-gray-900">
-                                                            ₹{bill?.total_amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-gray-700">{formatDate(bill.due_date)}</td>
-                                                        <td className="px-4 py-3 text-gray-700">{bill.lock_payment?.transaction_id || '-'}</td>
-                                                        <td className="px-4 py-3 text-gray-900">
-                                                            {bill.lock_payment?.paid_amount
-                                                                ? `₹${Number(bill?.lock_payment.paid_amount)?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                                                : '-'}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-gray-700 capitalize">{bill.lock_payment?.payment_mode || '-'}</td>
-                                                        <td className="px-4 py-3 text-gray-700">{bill.lock_payment?.notes || '-'}</td>
-                                                        <td className="px-4 py-3 text-gray-700">
-                                                            {bill.lock_payment?.paid_date ? formatDateTime(bill?.lock_payment?.paid_date) : '-'}
-                                                        </td>
-                                                        <td className="px-4 py-3">
-                                                            <Badge className="bg-[rgba(121,140,94,0.18)] text-[#56683F] hover:bg-[rgba(121,140,94,0.18)] border-0 capitalize">
-                                                                {bill?.status}
-                                                            </Badge>
-                                                        </td>
-                                                        <td className="px-4 py-3">
-                                                            {bill?.invoice_file ? (
-                                                                <button
-                                                                    onClick={() => window.open(bill?.invoice_file!, '_blank')}
-                                                                    className="text-[#1A1A18] underline-offset-2 hover:underline flex items-center gap-1 text-xs font-medium"
-                                                                >
-                                                                    <Download className="w-3 h-3" />
-                                                                    Download
-                                                                </button>
-                                                            ) : (
-                                                                <span className="text-gray-400 text-xs">N/A</span>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            )}
-                        </TabsContent>
+                <div className="flex items-start">
+                  <span className="text-gray-500 min-w-[140px]">
+                    Payment Created
+                  </span>
+                  <span className="text-gray-500 mx-2">:</span>
+                  <span className="text-gray-900 font-medium">
+                    {formatDateTime(
+                      membershipData.allocation_payment_detail.created_at
                     )}
+                  </span>
+                </div>
+              </div>
 
-
-                    <TabsContent value="bill" className="p-4 sm:p-6">
-                        <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
-                            <FileText className="w-4 h-4 text-[#1A1A18]" />
-                            Billing Details
-                        </h2>
-
-                        {membershipData.bills && membershipData.bills.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {membershipData.bills.map((bill) => {
-                                    const getStatusColor = (status: string) => {
-                                        const statusLower = status.toLowerCase();
-                                        if (statusLower === 'paid') return 'bg-[rgba(121,140,94,0.18)] text-[#56683F] border-transparent hover:bg-[rgba(121,140,94,0.18)]';
-                                        if (statusLower === 'pending') return 'bg-[rgba(237,196,136,0.3)] text-[#85621F] border-transparent hover:bg-[rgba(237,196,136,0.3)]';
-                                        if (statusLower === 'overdue') return 'bg-[rgba(231,132,142,0.18)] text-[#A63D49] border-transparent hover:bg-[rgba(231,132,142,0.18)]';
-                                        return 'bg-[#F5F4F0] text-[#1A1A18] border-transparent hover:bg-[#F5F4F0]';
-                                    };
-
-                                    return (
-                                        <div
-                                            key={bill.id}
-                                            className="bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl p-5 hover:border-[rgba(26,26,24,0.22)] transition-colors"
-                                        >
-                                            {/* Header with Bill Number and Status */}
-                                            <div className="flex items-start justify-between mb-4">
-                                                <div>
-                                                    <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                                                        Bill #{bill.bill_number}
-                                                    </h3>
-                                                    <p className="text-xs text-gray-500">ID: {bill.id}</p>
-                                                </div>
-                                                <Badge className={`${getStatusColor(bill.status)} border capitalize`}>
-                                                    {bill.status}
-                                                </Badge>
-                                            </div>
-
-                                            {/* Bill Details */}
-                                            <div className="space-y-3 mb-4">
-                                                <div className="flex items-center justify-between text-sm">
-                                                    <span className="text-gray-600">Total Amount</span>
-                                                    <span className="text-lg font-semibold text-[#1A1A18]">
-                                                        ₹{bill.total_amount?.toLocaleString('en-IN', {
-                                                            minimumFractionDigits: 2,
-                                                            maximumFractionDigits: 2
-                                                        })}
-                                                    </span>
-                                                </div>
-
-                                                <div className="flex items-center justify-between text-sm pt-3 border-t border-gray-100">
-                                                    <span className="text-gray-600">Due Date</span>
-                                                    <span className="text-gray-900 font-medium">
-                                                        {formatDate(bill.due_date)}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {/* Download Invoice Button */}
-                                            {bill.invoice_file && (
-                                                <Button
-                                                    onClick={() => {
-                                                        window.open(bill.invoice_file!, '_blank');
-                                                    }}
-                                                    className="w-full btn-primary h-9 px-4 text-sm font-medium flex items-center justify-center gap-2"
-                                                >
-                                                    <Download className="w-3 h-3" />
-                                                    Download Invoice
-                                                </Button>
-                                            )}
-                                            {!bill.invoice_file && (
-                                                <div className="text-center text-xs text-gray-400 py-2">
-                                                    No invoice available
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <div className="text-center py-12 bg-[#FAF9F7] rounded-2xl border border-dashed border-[rgba(26,26,24,0.12)]">
-                                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                                <p className="text-gray-600 font-medium">No bills available</p>
-                                <p className="text-sm text-gray-500 mt-1">Bills will appear here once generated</p>
-                            </div>
-                        )}
-                    </TabsContent>
-
-                    <TabsContent value="member-details" className="p-4 sm:p-6">
-                        {selectedMember && (
-                            <>
-                                {/* Member Selector */}
-                                <div className="mb-6">
-                                    <label className="text-[12px] font-semibold text-[rgba(26,26,24,0.68)] mb-2 block">Select Member</label>
-                                    <select
-                                        value={selectedMemberIndex}
-                                        onChange={(e) => setSelectedMemberIndex(Number(e.target.value))}
-                                        className="w-full max-w-md h-11 px-3 rounded-xl border border-[rgba(26,26,24,0.1)] bg-white text-[13.5px] font-medium text-[#1A1A18] focus:outline-none focus:border-[#1A1A18] focus:ring-4 focus:ring-[rgba(26,26,24,0.1)]"
+              {membershipData.allocation_payment_detail.paid_bills &&
+                membershipData.allocation_payment_detail.paid_bills.length >
+                  0 && (
+                  <div className="mt-6">
+                    <h3 className="text-[14px] font-semibold text-[#1A1A18] mb-3 flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-[#1A1A18]" />
+                      Paid Bills
+                    </h3>
+                    <div className="overflow-x-auto rounded-xl border border-[rgba(26,26,24,0.09)]">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            <th className="text-left px-4 py-3 text-gray-500 font-medium">
+                              Bill #
+                            </th>
+                            <th className="text-left px-4 py-3 text-gray-500 font-medium">
+                              Amount
+                            </th>
+                            <th className="text-left px-4 py-3 text-gray-500 font-medium">
+                              Due Date
+                            </th>
+                            <th className="text-left px-4 py-3 text-gray-500 font-medium">
+                              Transaction ID
+                            </th>
+                            <th className="text-left px-4 py-3 text-gray-500 font-medium">
+                              Paid Amount
+                            </th>
+                            <th className="text-left px-4 py-3 text-gray-500 font-medium">
+                              Payment Mode
+                            </th>
+                            <th className="text-left px-4 py-3 text-gray-500 font-medium">
+                              Notes
+                            </th>
+                            <th className="text-left px-4 py-3 text-gray-500 font-medium">
+                              Paid Date
+                            </th>
+                            <th className="text-left px-4 py-3 text-gray-500 font-medium">
+                              Status
+                            </th>
+                            <th className="text-left px-4 py-3 text-gray-500 font-medium">
+                              Invoice
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {membershipData.allocation_payment_detail.paid_bills.map(
+                            (bill) => (
+                              <tr key={bill.id} className="hover:bg-gray-50">
+                                <td className="px-4 py-3 font-medium text-gray-900">
+                                  #{bill.bill_number}
+                                </td>
+                                <td className="px-4 py-3 text-gray-900">
+                                  ₹
+                                  {bill?.total_amount?.toLocaleString("en-IN", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                </td>
+                                <td className="px-4 py-3 text-gray-700">
+                                  {formatDate(bill.due_date)}
+                                </td>
+                                <td className="px-4 py-3 text-gray-700">
+                                  {bill.lock_payment?.transaction_id || "-"}
+                                </td>
+                                <td className="px-4 py-3 text-gray-900">
+                                  {bill.lock_payment?.paid_amount
+                                    ? `₹${Number(bill?.lock_payment.paid_amount)?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    : "-"}
+                                </td>
+                                <td className="px-4 py-3 text-gray-700 capitalize">
+                                  {bill.lock_payment?.payment_mode || "-"}
+                                </td>
+                                <td className="px-4 py-3 text-gray-700">
+                                  {bill.lock_payment?.notes || "-"}
+                                </td>
+                                <td className="px-4 py-3 text-gray-700">
+                                  {bill.lock_payment?.paid_date
+                                    ? formatDateTime(
+                                        bill?.lock_payment?.paid_date
+                                      )
+                                    : "-"}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <Badge className="bg-[rgba(121,140,94,0.18)] text-[#56683F] hover:bg-[rgba(121,140,94,0.18)] border-0 capitalize">
+                                    {bill?.status}
+                                  </Badge>
+                                </td>
+                                <td className="px-4 py-3">
+                                  {bill?.invoice_file ? (
+                                    <button
+                                      onClick={() =>
+                                        window.open(
+                                          bill?.invoice_file!,
+                                          "_blank"
+                                        )
+                                      }
+                                      className="text-[#1A1A18] underline-offset-2 hover:underline flex items-center gap-1 text-xs font-medium"
                                     >
-                                        {membershipData.club_members?.map((member, index) => (
-                                            <option key={member.id} value={index}>
-                                                {index + 1}. {member.user_name} - {member.membership_number}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                      <Download className="w-3 h-3" />
+                                      Download
+                                    </button>
+                                  ) : (
+                                    <span className="text-gray-400 text-xs">
+                                      N/A
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            )
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+            </TabsContent>
+          )}
 
-                                {/* Nested Tabs for Member Details */}
-                                <Tabs defaultValue="personal" className="w-full">
-                                    <TabsList className="ref-tabs ref-tabs-sub">
-                                        <TabsTrigger
-                                            value="personal"
-                                            className="ref-tab"
-                                        >
-                                            Personal Info
-                                        </TabsTrigger>
-                                        <TabsTrigger
-                                            value="membership"
-                                            className="ref-tab"
-                                        >
-                                            Membership
-                                        </TabsTrigger>
-                                        <TabsTrigger
-                                            value="address"
-                                            className="ref-tab"
-                                        >
-                                            Address
-                                        </TabsTrigger>
-                                        {selectedMember.snag_answers && selectedMember.snag_answers.length > 0 && (
-                                            <TabsTrigger
-                                                value="questionnaires"
-                                                className="ref-tab"
-                                            >
-                                                Questionnaires
-                                            </TabsTrigger>
-                                        )}
-                                        <TabsTrigger
-                                            value="attachments"
-                                            className="ref-tab"
-                                        >
-                                            Attachments
-                                        </TabsTrigger>
-                                        <TabsTrigger
-                                            value="system"
-                                            className="ref-tab"
-                                        >
-                                            System Info
-                                        </TabsTrigger>
-                                    </TabsList>
+          <TabsContent value="bill" className="p-4 sm:p-6">
+            <h2 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+              <FileText className="w-4 h-4 text-[#1A1A18]" />
+              Billing Details
+            </h2>
 
-                                    {/* Personal Information Tab */}
-                                    <TabsContent value="personal" className="mt-0">
-                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
-                                            <User className="w-4 h-4 text-[#1A1A18]" />
-                                            Personal Information
-                                        </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Full Name</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <span className="text-gray-900 font-medium">{selectedMember.user_name}</span>
-                                            </div>
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Email</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <span className="text-gray-900 font-medium">{selectedMember.email}</span>
-                                            </div>
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Mobile</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <span className="text-gray-900 font-medium">{selectedMember.mobile}</span>
-                                            </div>
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Face Added</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <Badge className={`ref-pill ${selectedMember.face_added ? "is-success" : "is-neutral"}`}>
-                                                    {selectedMember.access_card_check ? 'Yes' : 'No'}
-                                                </Badge>
-                                            </div>
-                                            {/* <div className="flex items-start">
+            {membershipData.bills && membershipData.bills.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {membershipData.bills.map((bill) => {
+                  const getStatusColor = (status: string) => {
+                    const statusLower = status.toLowerCase();
+                    if (statusLower === "paid")
+                      return "bg-[rgba(121,140,94,0.18)] text-[#56683F] border-transparent hover:bg-[rgba(121,140,94,0.18)]";
+                    if (statusLower === "pending")
+                      return "bg-[rgba(237,196,136,0.3)] text-[#85621F] border-transparent hover:bg-[rgba(237,196,136,0.3)]";
+                    if (statusLower === "overdue")
+                      return "bg-[rgba(231,132,142,0.18)] text-[#A63D49] border-transparent hover:bg-[rgba(231,132,142,0.18)]";
+                    return "bg-[#F5F4F0] text-[#1A1A18] border-transparent hover:bg-[#F5F4F0]";
+                  };
+
+                  return (
+                    <div
+                      key={bill.id}
+                      className="bg-white border border-[rgba(26,26,24,0.09)] rounded-2xl p-5 hover:border-[rgba(26,26,24,0.22)] transition-colors"
+                    >
+                      {/* Header with Bill Number and Status */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                            Bill #{bill.bill_number}
+                          </h3>
+                          <p className="text-xs text-gray-500">ID: {bill.id}</p>
+                        </div>
+                        <Badge
+                          className={`${getStatusColor(bill.status)} border capitalize`}
+                        >
+                          {bill.status}
+                        </Badge>
+                      </div>
+
+                      {/* Bill Details */}
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Total Amount</span>
+                          <span className="text-lg font-semibold text-[#1A1A18]">
+                            ₹
+                            {bill.total_amount?.toLocaleString("en-IN", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm pt-3 border-t border-gray-100">
+                          <span className="text-gray-600">Due Date</span>
+                          <span className="text-gray-900 font-medium">
+                            {formatDate(bill.due_date)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Download Invoice Button */}
+                      {bill.invoice_file && (
+                        <Button
+                          onClick={() => {
+                            window.open(bill.invoice_file!, "_blank");
+                          }}
+                          className="w-full btn-primary h-9 px-4 text-sm font-medium flex items-center justify-center gap-2"
+                        >
+                          <Download className="w-3 h-3" />
+                          Download Invoice
+                        </Button>
+                      )}
+                      {!bill.invoice_file && (
+                        <div className="text-center text-xs text-gray-400 py-2">
+                          No invoice available
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-[#FAF9F7] rounded-2xl border border-dashed border-[rgba(26,26,24,0.12)]">
+                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600 font-medium">No bills available</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Bills will appear here once generated
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="member-details" className="p-4 sm:p-6">
+            {selectedMember && (
+              <>
+                {/* Member Selector */}
+                <div className="mb-6">
+                  <label className="text-[12px] font-semibold text-[rgba(26,26,24,0.68)] mb-2 block">
+                    Select Member
+                  </label>
+                  <select
+                    value={selectedMemberIndex}
+                    onChange={(e) =>
+                      setSelectedMemberIndex(Number(e.target.value))
+                    }
+                    className="w-full max-w-md h-11 px-3 rounded-xl border border-[rgba(26,26,24,0.1)] bg-white text-[13.5px] font-medium text-[#1A1A18] focus:outline-none focus:border-[#1A1A18] focus:ring-4 focus:ring-[rgba(26,26,24,0.1)]"
+                  >
+                    {membershipData.club_members?.map((member, index) => (
+                      <option key={member.id} value={index}>
+                        {index + 1}. {member.user_name} -{" "}
+                        {member.membership_number}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Nested Tabs for Member Details */}
+                <Tabs defaultValue="personal" className="w-full">
+                  <TabsList className="ref-tabs ref-tabs-sub">
+                    <TabsTrigger value="personal" className="ref-tab">
+                      Personal Info
+                    </TabsTrigger>
+                    <TabsTrigger value="membership" className="ref-tab">
+                      Membership
+                    </TabsTrigger>
+                    <TabsTrigger value="address" className="ref-tab">
+                      Address
+                    </TabsTrigger>
+                    {selectedMember.snag_answers &&
+                      selectedMember.snag_answers.length > 0 && (
+                        <TabsTrigger value="questionnaires" className="ref-tab">
+                          Questionnaires
+                        </TabsTrigger>
+                      )}
+                    <TabsTrigger
+                      value="attachments"
+                      className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-2 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                    >
+                      Attachments
+                    </TabsTrigger>
+                    <TabsTrigger value="system" className="ref-tab">
+                      System Info
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Personal Information Tab */}
+                  <TabsContent value="personal" className="mt-0">
+                    <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                      <User className="w-4 h-4 text-[#1A1A18]" />
+                      Personal Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Full Name
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">
+                          {selectedMember.user_name}
+                        </span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Email
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">
+                          {selectedMember.email}
+                        </span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Mobile
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">
+                          {selectedMember.mobile}
+                        </span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Relation with Owner
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">
+                          {selectedMember.relation_with_owner || "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Face Added
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <Badge
+                          className={`ref-pill ${selectedMember.face_added ? "is-success" : "is-neutral"}`}
+                        >
+                          {selectedMember.access_card_check ? "Yes" : "No"}
+                        </Badge>
+                      </div>
+                      {/* <div className="flex items-start">
                         <span className="text-gray-500 min-w-[140px]">House</span>
                         <span className="text-gray-500 mx-2">:</span>
                         <span className="text-gray-900 font-medium">{selectedMember.user?.flat_no || '-'}</span>
                       </div> */}
+                    </div>
+                  </TabsContent>
+
+                  {/* Membership Details Tab */}
+                  <TabsContent value="membership" className="mt-0">
+                    <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                      <CreditCard className="w-4 h-4 text-[#1A1A18]" />
+                      Membership Details
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Membership Number
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">
+                          {selectedMember.membership_number}
+                        </span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Club Member
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <Badge
+                          className={`ref-pill ${selectedMember.club_member_check ? "is-success" : "is-neutral"}`}
+                        >
+                          {selectedMember.club_member_check
+                            ? "Enabled"
+                            : "Disabled"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Access Card
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <Badge
+                          className={`ref-pill ${selectedMember.access_card_check ? "is-success" : "is-neutral"}`}
+                        >
+                          {selectedMember.access_card_check
+                            ? "Enabled"
+                            : "Disabled"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Access Card ID
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">
+                          {selectedMember.access_card_id || "-"}
+                        </span>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Address Information Tab */}
+                  <TabsContent value="address" className="mt-0">
+                    <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                      <Building2 className="w-4 h-4 text-[#1A1A18]" />
+                      Address Information
+                    </h3>
+                    {selectedMember.user?.addresses &&
+                    selectedMember.user.addresses.length > 0 ? (
+                      selectedMember.user.addresses.map((addr, index) => (
+                        <div
+                          key={addr.id}
+                          className={`${index > 0 ? "mt-6 pt-6 border-t border-gray-200" : ""}`}
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">
+                                Address
+                              </span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">
+                                {addr.address || "-"}
+                              </span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">
+                                Address Line 2
+                              </span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">
+                                {addr.address_line_two || "-"}
+                              </span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">
+                                City
+                              </span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">
+                                {addr.city || "-"}
+                              </span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">
+                                State
+                              </span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">
+                                {addr.state || "-"}
+                              </span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">
+                                Country
+                              </span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">
+                                {addr.country || "-"}
+                              </span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">
+                                PIN Code
+                              </span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">
+                                {addr.pin_code || "-"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">
+                        No address information available
+                      </p>
+                    )}
+                  </TabsContent>
+
+                  {/* Questionnaires Tab */}
+                  {selectedMember.snag_answers &&
+                    selectedMember.snag_answers.length > 0 && (
+                      <TabsContent value="questionnaires" className="mt-0">
+                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                          <FileText className="w-4 h-4 text-[#1A1A18]" />
+                          Member Questionnaires
+                        </h3>
+                        <div className="space-y-8">
+                          {(() => {
+                            const parsedAnswers = parseAnswers(
+                              selectedMember.snag_answers
+                            );
+                            if (!parsedAnswers) return null;
+
+                            return Object.entries(QUESTION_SECTIONS).map(
+                              ([sectionKey, section]) => {
+                                // Filter questions that exist in answers
+                                const sectionQuestions =
+                                  section.questionIds.filter(
+                                    (qId) => parsedAnswers[qId]
+                                  );
+
+                                if (sectionQuestions.length === 0) return null;
+
+                                return (
+                                  <div
+                                    key={sectionKey}
+                                    className="border border-[rgba(26,26,24,0.09)] rounded-2xl p-6 bg-white"
+                                  >
+                                    <h4 className="text-[14px] font-semibold text-[#1A1A18] mb-4 pb-3 border-b border-[rgba(26,26,24,0.08)] flex items-center gap-2">
+                                      {section.title}
+                                    </h4>
+                                    <div className="space-y-4">
+                                      {sectionQuestions.map((questionId) => (
+                                        <div
+                                          key={questionId}
+                                          className="bg-[#FAF9F7] rounded-xl p-4"
+                                        >
+                                          <div className="mb-2">
+                                            <span className="text-sm font-medium text-gray-700">
+                                              {QUESTION_MAP[questionId]}
+                                            </span>
+                                          </div>
+                                          <div className="pl-4 border-l-2 border-[rgba(26,26,24,0.2)]">
+                                            {renderAnswerValue(
+                                              questionId,
+                                              parsedAnswers[questionId]
+                                            )}
+                                          </div>
                                         </div>
-                                    </TabsContent>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            );
+                          })()}
+                        </div>
+                      </TabsContent>
+                    )}
 
-                                    {/* Membership Details Tab */}
-                                    <TabsContent value="membership" className="mt-0">
-                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
-                                            <CreditCard className="w-4 h-4 text-[#1A1A18]" />
-                                            Membership Details
-                                        </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Membership Number</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <span className="text-gray-900 font-medium">{selectedMember.membership_number}</span>
-                                            </div>
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Club Member</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <Badge className={`ref-pill ${selectedMember.club_member_check ? "is-success" : "is-neutral"}`}>
-                                                    {selectedMember.club_member_check ? 'Enabled' : 'Disabled'}
-                                                </Badge>
-                                            </div>
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Access Card</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <Badge className={`ref-pill ${selectedMember.access_card_check ? "is-success" : "is-neutral"}`}>
-                                                    {selectedMember.access_card_check ? 'Enabled' : 'Disabled'}
-                                                </Badge>
-                                            </div>
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Access Card ID</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <span className="text-gray-900 font-medium">{selectedMember.access_card_id || '-'}</span>
-                                            </div>
-                                        </div>
-                                    </TabsContent>
+                  {/* Attachments Tab — files belong to the selected member */}
+                  <TabsContent value="attachments" className="mt-0">
+                    {(() => {
+                      const idCard = isLiveFile(
+                        selectedMember.identification_image
+                      )
+                        ? selectedMember.identification_image
+                        : null;
+                      const photo = isLiveFile(selectedMember.profile_image)
+                        ? selectedMember.profile_image
+                        : null;
+                      const otherFiles = [
+                        ...(Array.isArray(selectedMember.other_documents)
+                          ? selectedMember.other_documents
+                          : []),
+                        ...(selectedMember.flat_attachment
+                          ? [selectedMember.flat_attachment]
+                          : []),
+                      ].filter(isLiveFile);
 
-                                    {/* Address Information Tab */}
-                                    <TabsContent value="address" className="mt-0">
-                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
-                                            <Building2 className="w-4 h-4 text-[#1A1A18]" />
-                                            Address Information
-                                        </h3>
-                                        {selectedMember.user?.addresses && selectedMember.user.addresses.length > 0 ? (
-                                            selectedMember.user.addresses.map((addr, index) => (
-                                                <div key={addr.id} className={`${index > 0 ? 'mt-6 pt-6 border-t border-gray-200' : ''}`}>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                                                        <div className="flex items-start">
-                                                            <span className="text-gray-500 min-w-[140px]">Address</span>
-                                                            <span className="text-gray-500 mx-2">:</span>
-                                                            <span className="text-gray-900 font-medium">{addr.address || '-'}</span>
-                                                        </div>
-                                                        <div className="flex items-start">
-                                                            <span className="text-gray-500 min-w-[140px]">Address Line 2</span>
-                                                            <span className="text-gray-500 mx-2">:</span>
-                                                            <span className="text-gray-900 font-medium">{addr.address_line_two || '-'}</span>
-                                                        </div>
-                                                        <div className="flex items-start">
-                                                            <span className="text-gray-500 min-w-[140px]">City</span>
-                                                            <span className="text-gray-500 mx-2">:</span>
-                                                            <span className="text-gray-900 font-medium">{addr.city || '-'}</span>
-                                                        </div>
-                                                        <div className="flex items-start">
-                                                            <span className="text-gray-500 min-w-[140px]">State</span>
-                                                            <span className="text-gray-500 mx-2">:</span>
-                                                            <span className="text-gray-900 font-medium">{addr.state || '-'}</span>
-                                                        </div>
-                                                        <div className="flex items-start">
-                                                            <span className="text-gray-500 min-w-[140px]">Country</span>
-                                                            <span className="text-gray-500 mx-2">:</span>
-                                                            <span className="text-gray-900 font-medium">{addr.country || '-'}</span>
-                                                        </div>
-                                                        <div className="flex items-start">
-                                                            <span className="text-gray-500 min-w-[140px]">PIN Code</span>
-                                                            <span className="text-gray-500 mx-2">:</span>
-                                                            <span className="text-gray-900 font-medium">{addr.pin_code || '-'}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-gray-500 text-center py-8">No address information available</p>
-                                        )}
-                                    </TabsContent>
+                      return (
+                        <div className="space-y-8">
+                          <div>
+                            <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-4 flex items-center gap-2.5">
+                              <CreditCard className="w-4 h-4 text-[#1A1A18]" />
+                              ID Card
+                            </h3>
+                            {idCard ? (
+                              <div className="flex flex-wrap gap-4">
+                                {renderMemberFile(idCard, "ID card")}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">
+                                No ID card uploaded
+                              </p>
+                            )}
+                          </div>
 
-                                    {/* Questionnaires Tab */}
-                                    {selectedMember.snag_answers && selectedMember.snag_answers.length > 0 && (
-                                        <TabsContent value="questionnaires" className="mt-0">
-                                            <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
-                                                <FileText className="w-4 h-4 text-[#1A1A18]" />
-                                                Member Questionnaires
-                                            </h3>
-                                            <div className="space-y-8">
-                                                {(() => {
-                                                    const parsedAnswers = parseAnswers(selectedMember.snag_answers);
-                                                    if (!parsedAnswers) return null;
+                          <div>
+                            <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-4 flex items-center gap-2.5">
+                              <ImageIcon className="w-4 h-4 text-[#1A1A18]" />
+                              Resident's Photo
+                            </h3>
+                            {photo ? (
+                              <div className="flex flex-wrap gap-4">
+                                {renderMemberFile(photo, "Resident's photo")}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">
+                                No resident's photo uploaded
+                              </p>
+                            )}
+                          </div>
 
-                                                    return Object.entries(QUESTION_SECTIONS).map(([sectionKey, section]) => {
-                                                        // Filter questions that exist in answers
-                                                        const sectionQuestions = section.questionIds.filter(qId => parsedAnswers[qId]);
+                          <div>
+                            <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-4 flex items-center gap-2.5">
+                              <FileText className="w-4 h-4 text-[#1A1A18]" />
+                              Attachments
+                            </h3>
+                            {otherFiles.length > 0 ? (
+                              <div className="flex flex-wrap gap-4">
+                                {otherFiles.map((file) =>
+                                  renderMemberFile(file, "Attachment")
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">
+                                No attachments uploaded
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </TabsContent>
 
-                                                        if (sectionQuestions.length === 0) return null;
-
-                                                        return (
-                                                            <div key={sectionKey} className="border border-[rgba(26,26,24,0.09)] rounded-2xl p-6 bg-white">
-                                                                <h4 className="text-[14px] font-semibold text-[#1A1A18] mb-4 pb-3 border-b border-[rgba(26,26,24,0.08)] flex items-center gap-2">
-                                                                    {section.title}
-                                                                </h4>
-                                                                <div className="space-y-4">
-                                                                    {sectionQuestions.map((questionId) => (
-                                                                        <div key={questionId} className="bg-[#FAF9F7] rounded-xl p-4">
-                                                                            <div className="mb-2">
-                                                                                <span className="text-sm font-medium text-gray-700">
-                                                                                    {QUESTION_MAP[questionId]}
-                                                                                </span>
-                                                                            </div>
-                                                                            <div className="pl-4 border-l-2 border-[rgba(26,26,24,0.2)]">
-                                                                                {renderAnswerValue(questionId, parsedAnswers[questionId])}
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    });
-                                                })()}
-                                            </div>
-                                        </TabsContent>
-                                    )}
-
-                                    {/* Attachments Tab — files belong to the selected member */}
-                                    <TabsContent value="attachments" className="mt-0">
-                                        {(() => {
-                                            const idCard = isLiveFile(selectedMember.identification_image)
-                                                ? selectedMember.identification_image
-                                                : null;
-                                            const photo = isLiveFile(selectedMember.profile_image)
-                                                ? selectedMember.profile_image
-                                                : null;
-                                            const otherFiles = [
-                                                ...(Array.isArray(selectedMember.other_documents) ? selectedMember.other_documents : []),
-                                                ...(selectedMember.flat_attachment ? [selectedMember.flat_attachment] : []),
-                                            ].filter(isLiveFile);
-
-                                            return (
-                                                <div className="space-y-8">
-                                                    <div>
-                                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-4 flex items-center gap-2.5">
-                                                            <CreditCard className="w-4 h-4 text-[#1A1A18]" />
-                                                            ID Card
-                                                        </h3>
-                                                        {idCard ? (
-                                                            <div className="flex flex-wrap gap-4">{renderMemberFile(idCard, 'ID card')}</div>
-                                                        ) : (
-                                                            <p className="text-sm text-gray-500">No ID card uploaded</p>
-                                                        )}
-                                                    </div>
-
-                                                    <div>
-                                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-4 flex items-center gap-2.5">
-                                                            <ImageIcon className="w-4 h-4 text-[#1A1A18]" />
-                                                            Resident's Photo
-                                                        </h3>
-                                                        {photo ? (
-                                                            <div className="flex flex-wrap gap-4">{renderMemberFile(photo, "Resident's photo")}</div>
-                                                        ) : (
-                                                            <p className="text-sm text-gray-500">No resident's photo uploaded</p>
-                                                        )}
-                                                    </div>
-
-                                                    <div>
-                                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-4 flex items-center gap-2.5">
-                                                            <FileText className="w-4 h-4 text-[#1A1A18]" />
-                                                            Attachments
-                                                        </h3>
-                                                        {otherFiles.length > 0 ? (
-                                                            <div className="flex flex-wrap gap-4">
-                                                                {otherFiles.map((file) => renderMemberFile(file, 'Attachment'))}
-                                                            </div>
-                                                        ) : (
-                                                            <p className="text-sm text-gray-500">No attachments uploaded</p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })()}
-                                    </TabsContent>
-
-                                    {/* System Information Tab */}
-                                    <TabsContent value="system" className="mt-0">
-                                        <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
-                                            <FileText className="w-4 h-4 text-[#1A1A18]" />
-                                            System Information
-                                        </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Member ID</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <span className="text-gray-900 font-medium">{selectedMember.id}</span>
-                                            </div>
-                                            {/* <div className="flex items-start">
+                  {/* System Information Tab */}
+                  <TabsContent value="system" className="mt-0">
+                    <h3 className="text-[15px] font-semibold text-[#1A1A18] mb-5 flex items-center gap-2.5">
+                      <FileText className="w-4 h-4 text-[#1A1A18]" />
+                      System Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Member ID
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">
+                          {selectedMember.id}
+                        </span>
+                      </div>
+                      {/* <div className="flex items-start">
                                                 <span className="text-gray-500 min-w-[140px]">User ID</span>
                                                 <span className="text-gray-500 mx-2">:</span>
                                                 <span className="text-gray-900 font-medium">{selectedMember.user_id}</span>
                                             </div> */}
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Created By</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <span className="text-gray-900 font-medium">{membershipData.created_by || '-'}</span>
-                                            </div>
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Created At</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <span className="text-gray-900 font-medium">{formatDateTime(selectedMember.created_at)}</span>
-                                            </div>
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Updated At</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <span className="text-gray-900 font-medium">{formatDateTime(selectedMember.updated_at)}</span>
-                                            </div>
-                                            <div className="flex items-start">
-                                                <span className="text-gray-500 min-w-[140px]">Active</span>
-                                                <span className="text-gray-500 mx-2">:</span>
-                                                <Badge className={`ref-pill ${selectedMember.active ? "is-success" : "is-neutral"}`}>
-                                                    {selectedMember.active ? 'Yes' : 'No'}
-                                                </Badge>
-                                            </div>
-                                        </div>
-                                    </TabsContent>
-                                </Tabs>
-                            </>
-                        )}
-                    </TabsContent>
-
-                    <TabsContent value="logs" className="p-4 sm:p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] text-[#1A1A18]">
-                                <Logs className="w-4 h-4" />
-                            </div>
-                            <h2 className="text-[15px] font-semibold text-[#1A1A18]">
-                                Activity Logs
-                            </h2>
-                        </div>
-                        {membershipData.logs && membershipData.logs.length > 0 ? (
-                            <div className="overflow-x-auto px-3">
-                                <LogsTimeline
-                                    logs={membershipData.logs.map((log) => {
-                                        let description = `${log.log_type}`;
-
-                                        // Add payload details if available
-                                        if (log.details && log.details.length > 0) {
-                                            const detail = log.details[0];
-                                            if (detail.type === 'meta' && detail.payload) {
-                                                const changes = Object.entries(detail.payload)
-                                                    .map(([fieldName, values]: any) => {
-                                                        const oldValue = Array.isArray(values) ? values[0] : values;
-                                                        const newValue = Array.isArray(values) ? values[1] : values;
-                                                        const displayOld = oldValue === 'nil' ? 'null' : String(oldValue).substring(0, 30);
-                                                        const displayNew = newValue === 'nil' ? 'null' : String(newValue).substring(0, 30);
-                                                        return `${fieldName.replace(/_/g, ' ')}: ${displayOld} → ${displayNew}`;
-                                                    })
-                                                    .join(' | ');
-
-                                                description += `\n${changes}`;
-                                            }
-                                        }
-
-                                        return {
-                                            id: log.id.toString(),
-                                            description: description,
-                                            timestamp: `${log.user_name} • ${formatLogDateTime(log.created_at)}`,
-                                        };
-                                    })}
-                                />
-                            </div>
-                        ) : (
-                            <div className="text-center py-12 bg-[#FAF9F7] rounded-2xl border border-dashed border-[rgba(26,26,24,0.12)]">
-                                <Logs className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                                <p className="text-gray-600 font-medium">No logs available</p>
-                                <p className="text-sm text-gray-500 mt-1">Activity logs will appear here</p>
-                            </div>
-                        )}
-                    </TabsContent>
-
-                    <TabsContent value="renewal-logs" className="p-4 sm:p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] text-[#1A1A18]">
-                                <RefreshCw className="w-4 h-4" />
-                            </div>
-                            <h2 className="text-[15px] font-semibold text-[#1A1A18]">
-                                Renewal Logs
-                            </h2>
-                        </div>
-                        {membershipData.renewal_logs && membershipData.renewal_logs.length > 0 ? (
-                            <div className="overflow-x-auto px-3">
-                                <LogsTimeline
-                                    logs={membershipData.renewal_logs.map((log) => {
-                                        const formatRenewalDate = (date: string) => {
-                                            if (!date || date === 'nil') return 'null';
-
-                                            // Handle complex format: "Fri, 01 May 2026 00:00:00.000000000 IST +05:30"
-                                            if (date.includes('.') && date.includes('IST')) {
-                                                const parts = date.split('.');
-                                                if (parts[0]) return formatDate(parts[0]);
-                                            }
-
-                                            return formatDate(date);
-                                        };
-
-                                        const startDateChange = `Start Date: ${formatRenewalDate(log?.start_date?.from)} → ${formatRenewalDate(log?.start_date?.to)}`;
-                                        const endDateChange = `End Date: ${formatRenewalDate(log?.end_date?.from)} → ${formatRenewalDate(log?.end_date?.to)}`;
-                                        const description = `Membership Renewed\n${startDateChange} | ${endDateChange}`;
-
-                                        return {
-                                            id: log.id.toString(),
-                                            description: description,
-                                            timestamp: `${log.updated_by} • ${log.date} ${log.time}`,
-                                        };
-                                    })}
-                                />
-                            </div>
-                        ) : (
-                            <div className="text-center py-12 bg-[#FAF9F7] rounded-2xl border border-dashed border-[rgba(26,26,24,0.12)]">
-                                <RefreshCw className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                                <p className="text-gray-600 font-medium">No renewal logs available</p>
-                                <p className="text-sm text-gray-500 mt-1">Renewal history will appear here</p>
-                            </div>
-                        )}
-                    </TabsContent>
-                </Tabs >
-            </div >
-
-            {/* Image Modal */}
-            {
-                selectedImage && (
-                    <div
-                        className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4"
-                        onClick={() => setSelectedImage(null)}
-                    >
-                        <div className="relative max-w-4xl max-h-full">
-                            <img
-                                src={selectedImage}
-                                alt="Preview"
-                                className="max-w-full max-h-screen object-contain"
-                            />
-                            <button
-                                onClick={() => setSelectedImage(null)}
-                                className="absolute top-4 right-4 bg-white rounded-full p-2 hover:bg-gray-100"
-                            >
-                                <ArrowLeft className="w-6 h-6" />
-                            </button>
-                        </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Created By
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">
+                          {membershipData.created_by || "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Created At
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">
+                          {formatDateTime(selectedMember.created_at)}
+                        </span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Updated At
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">
+                          {formatDateTime(selectedMember.updated_at)}
+                        </span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">
+                          Active
+                        </span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <Badge
+                          className={`ref-pill ${selectedMember.active ? "is-success" : "is-neutral"}`}
+                        >
+                          {selectedMember.active ? "Yes" : "No"}
+                        </Badge>
+                      </div>
                     </div>
-                )
-            }
+                  </TabsContent>
+                </Tabs>
+              </>
+            )}
+          </TabsContent>
 
-            {/* Renew Membership Dialog */}
-            <Dialog open={isRenewDialogOpen} onClose={() => !renewing && setIsRenewDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle className="text-[#1A1A18] font-semibold">Renew Membership</DialogTitle>
-                <DialogContent>
-                    <div className="grid grid-cols-1 gap-6 pt-4 pb-2">
-                        <TextField
-                            label="Start Date"
-                            type="date"
-                            fullWidth
-                            value={renewStartDate}
-                            onChange={(e) => setRenewStartDate(e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            disabled={renewing}
-                        />
-                        <TextField
-                            label="End Date"
-                            type="date"
-                            fullWidth
-                            value={renewEndDate}
-                            onChange={(e) => setRenewEndDate(e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            disabled={renewing}
-                        />
-                    </div>
-                </DialogContent>
-                <div className='flex justify-center gap-4 py-4'>
-                    <Button
-                        variant="outline"
-                        onClick={() => setIsRenewDialogOpen(false)}
-                        disabled={renewing}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        className="btn-primary h-9 px-4 text-sm font-medium"
-                        onClick={handleRenew}
-                        disabled={renewing}
-                    >
-                        {renewing ? (
-                            <>
-                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                                Renewing...
-                            </>
-                        ) : (
-                            "Renew Membership"
-                        )}
-                    </Button>
-                </div>
-            </Dialog>
+          <TabsContent value="logs" className="p-4 sm:p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] text-[#1A1A18]">
+                <Logs className="w-4 h-4" />
+              </div>
+              <h2 className="text-[15px] font-semibold text-[#1A1A18]">
+                Activity Logs
+              </h2>
+            </div>
+            {membershipData.logs && membershipData.logs.length > 0 ? (
+              <div className="overflow-x-auto px-3">
+                <LogsTimeline
+                  logs={membershipData.logs.map((log) => {
+                    let description = `${log.log_type}`;
 
-            {/* Capture Payment Dialog */}
-            <Dialog
-                open={isCaptureDialogOpen}
-                onClose={() => setIsCaptureDialogOpen(false)}
-                maxWidth="xs"
-                fullWidth
-                PaperProps={{
-                    style: {
-                        borderRadius: "8px",
-                    },
-                }}
+                    // Add payload details if available
+                    if (log.details && log.details.length > 0) {
+                      const detail = log.details[0];
+                      if (detail.type === "meta" && detail.payload) {
+                        const changes = Object.entries(detail.payload)
+                          .map(([fieldName, values]: any) => {
+                            const oldValue = Array.isArray(values)
+                              ? values[0]
+                              : values;
+                            const newValue = Array.isArray(values)
+                              ? values[1]
+                              : values;
+                            const displayOld =
+                              oldValue === "nil"
+                                ? "null"
+                                : String(oldValue).substring(0, 30);
+                            const displayNew =
+                              newValue === "nil"
+                                ? "null"
+                                : String(newValue).substring(0, 30);
+                            return `${fieldName.replace(/_/g, " ")}: ${displayOld} → ${displayNew}`;
+                          })
+                          .join(" | ");
+
+                        description += `\n${changes}`;
+                      }
+                    }
+
+                    return {
+                      id: log.id.toString(),
+                      description: description,
+                      timestamp: `${log.user_name} • ${formatLogDateTime(log.created_at)}`,
+                    };
+                  })}
+                />
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-[#FAF9F7] rounded-2xl border border-dashed border-[rgba(26,26,24,0.12)]">
+                <Logs className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600 font-medium">No logs available</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Activity logs will appear here
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="renewal-logs" className="p-4 sm:p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] text-[#1A1A18]">
+                <RefreshCw className="w-4 h-4" />
+              </div>
+              <h2 className="text-[15px] font-semibold text-[#1A1A18]">
+                Renewal Logs
+              </h2>
+            </div>
+            {membershipData.renewal_logs &&
+            membershipData.renewal_logs.length > 0 ? (
+              <div className="overflow-x-auto px-3">
+                <LogsTimeline
+                  logs={membershipData.renewal_logs.map((log) => {
+                    const formatRenewalDate = (date: string) => {
+                      if (!date || date === "nil") return "null";
+
+                      // Handle complex format: "Fri, 01 May 2026 00:00:00.000000000 IST +05:30"
+                      if (date.includes(".") && date.includes("IST")) {
+                        const parts = date.split(".");
+                        if (parts[0]) return formatDate(parts[0]);
+                      }
+
+                      return formatDate(date);
+                    };
+
+                    const startDateChange = `Start Date: ${formatRenewalDate(log?.start_date?.from)} → ${formatRenewalDate(log?.start_date?.to)}`;
+                    const endDateChange = `End Date: ${formatRenewalDate(log?.end_date?.from)} → ${formatRenewalDate(log?.end_date?.to)}`;
+                    const description = `Membership Renewed\n${startDateChange} | ${endDateChange}`;
+
+                    return {
+                      id: log.id.toString(),
+                      description: description,
+                      timestamp: `${log.updated_by} • ${log.date} ${log.time}`,
+                    };
+                  })}
+                />
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-[#FAF9F7] rounded-2xl border border-dashed border-[rgba(26,26,24,0.12)]">
+                <RefreshCw className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600 font-medium">
+                  No renewal logs available
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Renewal history will appear here
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-full">
+            <img
+              src={selectedImage}
+              alt="Preview"
+              className="max-w-full max-h-screen object-contain"
+            />
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 bg-white rounded-full p-2 hover:bg-gray-100"
             >
-                <DialogTitle
-                    sx={{
-                        m: 0,
-                        p: 2,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        bgcolor: "#f5f5f5",
-                        position: "relative",
-                    }}
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Renew Membership Dialog */}
+      <Dialog
+        open={isRenewDialogOpen}
+        onClose={() => !renewing && setIsRenewDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle className="text-[#1A1A18] font-semibold">
+          Renew Membership
+        </DialogTitle>
+        <DialogContent>
+          <div className="grid grid-cols-1 gap-6 pt-4 pb-2">
+            <TextField
+              label="Start Date"
+              type="date"
+              fullWidth
+              value={renewStartDate}
+              onChange={(e) => setRenewStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              disabled={renewing}
+            />
+            <TextField
+              label="End Date"
+              type="date"
+              fullWidth
+              value={renewEndDate}
+              onChange={(e) => setRenewEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              disabled={renewing}
+            />
+          </div>
+        </DialogContent>
+        <div className="flex justify-center gap-4 py-4">
+          <Button
+            variant="outline"
+            onClick={() => setIsRenewDialogOpen(false)}
+            disabled={renewing}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="btn-primary h-9 px-4 text-sm font-medium"
+            onClick={handleRenew}
+            disabled={renewing}
+          >
+            {renewing ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Renewing...
+              </>
+            ) : (
+              "Renew Membership"
+            )}
+          </Button>
+        </div>
+      </Dialog>
+
+      {/* Capture Payment Dialog */}
+      <Dialog
+        open={isCaptureDialogOpen}
+        onClose={() => setIsCaptureDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          style: {
+            borderRadius: "8px",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            m: 0,
+            p: 2,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            bgcolor: "#f5f5f5",
+            position: "relative",
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold">
+            Capture Payment
+          </Typography>
+          <IconButton
+            aria-label="close"
+            onClick={() => setIsCaptureDialogOpen(false)}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              color: "red",
+            }}
+          >
+            <X size={20} />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          <Box className="space-y-4 pt-2">
+            <div>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Select Bill
+              </Typography>
+              <FormControl fullWidth size="small">
+                <MuiSelect
+                  name="bill_id"
+                  value={captureFormData.bill_id}
+                  onChange={(e) => {
+                    const billId = e.target.value;
+                    const selectedBill = membershipData?.bills?.find(
+                      (b) => b.id === Number(billId)
+                    );
+                    setCaptureFormData((prev) => ({
+                      ...prev,
+                      bill_id: billId as string,
+                      total_payable: selectedBill
+                        ? selectedBill.total_amount.toString()
+                        : "",
+                    }));
+                  }}
+                  displayEmpty
                 >
-                    <Typography variant="h6" fontWeight="bold">
-                        Capture Payment
-                    </Typography>
-                    <IconButton
-                        aria-label="close"
-                        onClick={() => setIsCaptureDialogOpen(false)}
-                        sx={{
-                            position: "absolute",
-                            right: 8,
-                            top: 8,
-                            color: "red",
-                        }}
-                    >
-                        <X size={20} />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent sx={{ p: 3 }}>
-                    <Box className="space-y-4 pt-2">
-                        <div>
-                            <Typography variant="body2" color="textSecondary" gutterBottom>
-                                Select Bill
-                            </Typography>
-                            <FormControl fullWidth size="small">
-                                <MuiSelect
-                                    name="bill_id"
-                                    value={captureFormData.bill_id}
-                                    onChange={(e) => {
-                                        const billId = e.target.value;
-                                        const selectedBill = membershipData?.bills?.find(b => b.id === Number(billId));
-                                        setCaptureFormData(prev => ({
-                                            ...prev,
-                                            bill_id: billId as string,
-                                            total_payable: selectedBill ? selectedBill.total_amount.toString() : ""
-                                        }));
-                                    }}
-                                    displayEmpty
-                                >
-                                    <MenuItem value="" disabled>
-                                        Select Bill
-                                    </MenuItem>
-                                    {membershipData?.bills?.filter(b => b.status !== "PAID").map((bill) => (
-                                        <MenuItem key={bill.id} value={bill.id.toString()}>
-                                            Bill #{bill.bill_number} - ₹{bill.total_amount}
-                                        </MenuItem>
-                                    ))}
-                                </MuiSelect>
-                            </FormControl>
-                        </div>
-                        <div>
-                            <Typography variant="body2" color="textSecondary" gutterBottom>
-                                Total Payable Amount
-                            </Typography>
-                            <TextField
-                                fullWidth
-                                name="total_payable"
-                                value={captureFormData.total_payable}
-                                onChange={handleCaptureChange}
-                                variant="outlined"
-                                size="small"
-                                disabled
-                            />
-                        </div>
-                        <div>
-                            <Typography variant="body2" color="textSecondary" gutterBottom>
-                                Payment Mode
-                            </Typography>
-                            <FormControl fullWidth size="small">
-                                <MuiSelect
-                                    name="payment_mode"
-                                    value={captureFormData.payment_mode}
-                                    onChange={handleCaptureChange}
-                                    displayEmpty
-                                >
-                                    <MenuItem value="" disabled>
-                                        Select Payment Mode
-                                    </MenuItem>
-                                    <MenuItem value="UPI">UPI</MenuItem>
-                                    <MenuItem value="cash">Cash</MenuItem>
-                                    <MenuItem value="cheque">Cheque</MenuItem>
-                                    <MenuItem value="NEFT">NEFT</MenuItem>
-                                    <MenuItem value="RTGS">RTGS</MenuItem>
-                                    <MenuItem value="credit card">Credit Card</MenuItem>
-                                    <MenuItem value="debit card">Debit Card</MenuItem>
-                                    <MenuItem value="net banking">Net Banking</MenuItem>
-                                </MuiSelect>
-                            </FormControl>
-                        </div>
-                        <div>
-                            <Typography variant="body2" color="textSecondary" gutterBottom>
-                                Transaction Number
-                            </Typography>
-                            <TextField
-                                fullWidth
-                                name="transaction_number"
-                                value={captureFormData.transaction_number}
-                                onChange={handleCaptureChange}
-                                variant="outlined"
-                                size="small"
-                                placeholder="Enter Transaction ID"
-                            />
-                        </div>
-                        <div>
-                            <Typography variant="body2" color="textSecondary" gutterBottom>
-                                Notes
-                            </Typography>
-                            <TextareaAutosize
-                                minRows={3}
-                                name="notes"
-                                value={captureFormData.notes}
-                                onChange={handleCaptureChange}
-                                placeholder="Write note"
-                                style={{
-                                    width: "100%",
-                                    padding: "8px",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ccc",
-                                    fontFamily: "inherit",
-                                    fontSize: "14px",
-                                }}
-                            />
-                        </div>
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{ p: 2, display: "flex", justifyContent: "center" }}>
-                    <Button
-                        onClick={handleCaptureSubmit}
-                        disabled={isSubmitting}
-                        className="bg-[#16B364] hover:bg-[#129a55] text-white w-full"
-                    >
-                        {isSubmitting ? "Processing..." : "Submit Payment"}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </div >
-    );
+                  <MenuItem value="" disabled>
+                    Select Bill
+                  </MenuItem>
+                  {membershipData?.bills
+                    ?.filter((b) => b.status !== "PAID")
+                    .map((bill) => (
+                      <MenuItem key={bill.id} value={bill.id.toString()}>
+                        Bill #{bill.bill_number} - ₹{bill.total_amount}
+                      </MenuItem>
+                    ))}
+                </MuiSelect>
+              </FormControl>
+            </div>
+            <div>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Total Payable Amount
+              </Typography>
+              <TextField
+                fullWidth
+                name="total_payable"
+                value={captureFormData.total_payable}
+                onChange={handleCaptureChange}
+                variant="outlined"
+                size="small"
+                disabled
+              />
+            </div>
+            <div>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Payment Mode
+              </Typography>
+              <FormControl fullWidth size="small">
+                <MuiSelect
+                  name="payment_mode"
+                  value={captureFormData.payment_mode}
+                  onChange={handleCaptureChange}
+                  displayEmpty
+                >
+                  <MenuItem value="" disabled>
+                    Select Payment Mode
+                  </MenuItem>
+                  <MenuItem value="UPI">UPI</MenuItem>
+                  <MenuItem value="cash">Cash</MenuItem>
+                  <MenuItem value="cheque">Cheque</MenuItem>
+                  <MenuItem value="NEFT">NEFT</MenuItem>
+                  <MenuItem value="RTGS">RTGS</MenuItem>
+                  <MenuItem value="credit card">Credit Card</MenuItem>
+                  <MenuItem value="debit card">Debit Card</MenuItem>
+                  <MenuItem value="net banking">Net Banking</MenuItem>
+                </MuiSelect>
+              </FormControl>
+            </div>
+            <div>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Transaction Number
+              </Typography>
+              <TextField
+                fullWidth
+                name="transaction_number"
+                value={captureFormData.transaction_number}
+                onChange={handleCaptureChange}
+                variant="outlined"
+                size="small"
+                placeholder="Enter Transaction ID"
+              />
+            </div>
+            <div>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Notes
+              </Typography>
+              <TextareaAutosize
+                minRows={3}
+                name="notes"
+                value={captureFormData.notes}
+                onChange={handleCaptureChange}
+                placeholder="Write note"
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  fontFamily: "inherit",
+                  fontSize: "14px",
+                }}
+              />
+            </div>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, display: "flex", justifyContent: "center" }}>
+          <Button
+            onClick={handleCaptureSubmit}
+            disabled={isSubmitting}
+            className="bg-[#16B364] hover:bg-[#129a55] text-white w-full"
+          >
+            {isSubmitting ? "Processing..." : "Submit Payment"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
 };
 
 export default CMSClubMembersDetails;

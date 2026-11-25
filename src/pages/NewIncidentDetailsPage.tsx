@@ -286,7 +286,7 @@
 
 //     const handleEditDetails = () => {
 //         if (id) {
-//             navigate(`/safety/incident/edit/${id}`);
+//             navigate(`/incidents/incidents/edit/${id}`);
 //         }
 //     };
 
@@ -1145,8 +1145,8 @@ export const NewIncidentDetailsPage = () => {
 
     const handleEditDetails = () => {
         if (id) {
-            // navigate(`/safety/incident/edit/${id}`);
-            navigate(`/safety/incident/safety/edit/${id}`);
+            // navigate(`/incidents/incidents/edit/${id}`);
+            navigate(`/incidents/incidents/safety/edit/${id}`);
 
         }
     };

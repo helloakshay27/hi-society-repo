@@ -504,6 +504,9 @@ const SmartSecureVehiclesOut = lazy(
 const SmartSecureVehiclesIn = lazy(
   () => import("@/pages/SmartSecureVehiclesIn")
 );
+const SmartSecureVehicleInHistory = lazy(
+  () => import("@/pages/SmartSecureVehicleInHistory")
+);
 const SmartSecureVehiclesHistory = lazy(
   () => import("@/pages/SmartSecureVehiclesHistory")
 );
@@ -553,7 +556,6 @@ const RosterPage = lazy(() => import("@/pages/RosterPage"));
 
 // Incidents Pages
 const IncidentsSetup = lazy(() => import("@/pages/IncidentsSetup"));
-const IncidentsIncidents = lazy(() => import("@/pages/IncidentsIncidents"));
 const IncidentsDesignInputs = lazy(
   () => import("@/pages/IncidentsDesignInputs")
 );
@@ -1853,6 +1855,10 @@ export const setupMemberRoutes = (
       Component={withSuspense(SmartSecureVehiclesHistory)}
     />
     <Route
+      path="/smartsecure/vehicles/in-history"
+      Component={withSuspense(SmartSecureVehicleInHistory)}
+    />
+    <Route
       path="/smartsecure/reports/visitors"
       Component={withSuspense(SmartSecureReportsVisitors)}
     />
@@ -1941,10 +1947,6 @@ export const setupMemberRoutes = (
 
     {/* Incidents Routes */}
     <Route path="/incidents/setup" Component={withSuspense(IncidentsSetup)} />
-    <Route
-      path="/incidents/incidents"
-      Component={withSuspense(IncidentsIncidents)}
-    />
     <Route
       path="/incidents/design-inputs"
       Component={withSuspense(IncidentsDesignInputs)}

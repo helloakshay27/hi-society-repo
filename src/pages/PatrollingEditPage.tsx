@@ -1678,7 +1678,7 @@ export const PatrollingEditPage: React.FC = () => {
               <MuiSelect
                 value={graceType}
                 onChange={(e) => setGraceType(e.target.value as 'minutes' | 'hours')}
-                label="Grace Type"
+                label={<>Grace Type<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></>}
                 notched
                 disabled={isSubmitting}
               >
@@ -1717,14 +1717,14 @@ export const PatrollingEditPage: React.FC = () => {
           {/* Checklist Dropdown */}
           <div className="mb-4">
             <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-              <InputLabel shrink>Checklist</InputLabel>
+              <InputLabel shrink>Checklist<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></InputLabel>
               <MuiSelect
                 value={selectedChecklist?.id || ''}
                 onChange={e => {
                   const selected = checklistOptions.find(opt => opt.id === e.target.value);
                   setSelectedChecklist(selected || null);
                 }}
-                label="Checklist"
+                label={<>Checklist<span style={{ color: 'var(--color-primary, #da7756)' }}>*</span></>}
                 notched
                 displayEmpty
                 disabled={isSubmitting || isChecklistLoading}

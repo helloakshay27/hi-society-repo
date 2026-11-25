@@ -1,14 +1,62 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Paper, Box, Avatar, Typography, Grid, Divider, Tabs, Tab } from "@mui/material";
-import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileText, Edit, Download, File, FileJson, Image, FileCode, Users, Files, X, Plus, Copy, Link as LinkIcon, Share2 } from "lucide-react";
+import {
+  Paper,
+  Box,
+  Avatar,
+  Typography,
+  Grid,
+  Divider,
+  Tabs,
+  Tab,
+} from "@mui/material";
+import {
+  ArrowLeft,
+  User as UserIcon,
+  Mail,
+  Phone,
+  Home,
+  Calendar,
+  Info,
+  FileText,
+  Edit,
+  Download,
+  File,
+  FileJson,
+  Image,
+  FileCode,
+  Users,
+  Files,
+  X,
+  Plus,
+  Copy,
+  Link as LinkIcon,
+  Share2,
+  Check,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddToAnotherFlatModal } from "@/components/AddToAnotherFlatModal";
 import { SendEmailModal } from "@/components/SendEmailModal";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from "@mui/material";
-import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  FormControl as MuiFormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+  TextField,
+} from "@mui/material";
+import {
+  fieldStyles,
+  menuProps,
+} from "@/components/ticket-management/fieldStyles";
 import axios from "axios";
 import { toast } from "sonner";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
@@ -16,17 +64,30 @@ import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 // Helper component for displaying info fields
 const InfoField = ({ label, value }: { label: string; value: any }) => (
   <Box>
-    <Typography variant="body2" sx={{ color: "rgba(26, 26, 24, 0.48)", fontSize: "11px", mb: 0.5, fontWeight: 500 }}>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "rgba(26, 26, 24, 0.48)",
+        fontSize: "11px",
+        mb: 0.5,
+        fontWeight: 500,
+      }}
+    >
       {label}
     </Typography>
-    <Typography variant="body2" sx={{ color: "#1A1A18", fontWeight: 500, fontSize: "13.5px" }}>
+    <Typography
+      variant="body2"
+      sx={{ color: "#1A1A18", fontWeight: 500, fontSize: "13.5px" }}
+    >
       {value || "-"}
     </Typography>
   </Box>
 );
 
 // Helper function to decode profile picture URL
-const getProfilePictureUrl = (profileUrl: string | undefined): string | null => {
+const getProfilePictureUrl = (
+  profileUrl: string | undefined
+): string | null => {
   if (!profileUrl) return null;
   try {
     // Decode URL if it's encoded
@@ -75,6 +136,70 @@ const getFilenameFromUrl = (url: string): string => {
 const getInviteVisitorLink = (encryptedId: string): string =>
   `${window.location.origin}/invite-visitor/${encryptedId}`;
 
+// "YYYY-MM-DDTHH:mm" in local time, for datetime-local value/min
+const toDateTimeLocalValue = (date: Date): string => {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+// datetime-local "2026-11-20T18:00" -> API "2026-11-20 18:00"
+const toApiValidTill = (value: string): string => value.replace("T", " ");
+
+// "2026-11-19T17:26" -> "19 Nov 2026, 05:26 pm"
+const formatInviteValidTill = (value: string): string => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+// Quick validity choices shown under the date-time picker
+const INVITE_VALIDITY_PRESETS: { label: string; getDate: () => Date }[] = [
+  {
+    label: "2 hours",
+    getDate: () => new Date(Date.now() + 2 * 60 * 60 * 1000),
+  },
+  {
+    label: "End of day",
+    getDate: () => {
+      const d = new Date();
+      d.setHours(23, 59, 0, 0);
+      return d;
+    },
+  },
+  { label: "1 day", getDate: () => new Date(Date.now() + 24 * 60 * 60 * 1000) },
+  {
+    label: "7 days",
+    getDate: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  },
+];
+
+// POST /short_urls response shape isn't typed yet — accept the common keys
+// POST /short_urls response:
+// { code: 201, message, short_url: { id, url, short_url, valid_till, expired, ... } }
+interface CreateShortUrlResponse {
+  code?: number;
+  message?: string;
+  short_url?: {
+    id?: number;
+    url?: string;
+    short_url?: string;
+    valid_till?: string;
+    expired?: boolean;
+  };
+}
+
+const extractShortUrl = (data: CreateShortUrlResponse): string | null => {
+  const shortUrl = data?.short_url?.short_url;
+  return typeof shortUrl === "string" && shortUrl ? shortUrl : null;
+};
+
 const shareInviteVisitorLink = async (link: string): Promise<void> => {
   if (navigator.share) {
     try {
@@ -94,7 +219,9 @@ const shareInviteVisitorLink = async (link: string): Promise<void> => {
 
   try {
     await navigator.clipboard.writeText(link);
-    toast.success("Sharing isn't supported on this browser — link copied instead");
+    toast.success(
+      "Sharing isn't supported on this browser — link copied instead"
+    );
   } catch {
     toast.error("Failed to copy link");
   }
@@ -110,10 +237,17 @@ export const ViewUserPage = () => {
   const [user, setUser] = useState<any>(null);
   const [tabValue, setTabValue] = useState(0);
   const [members, setMembers] = useState<any[]>([]);
-  const [isAddToAnotherFlatModalOpen, setIsAddToAnotherFlatModalOpen] = useState(false);
+  const [isAddToAnotherFlatModalOpen, setIsAddToAnotherFlatModalOpen] =
+    useState(false);
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
-  const [isConfigureDetailsModalOpen, setIsConfigureDetailsModalOpen] = useState(false);
+  const [isConfigureDetailsModalOpen, setIsConfigureDetailsModalOpen] =
+    useState(false);
   const [inviteVisitorLinkOpen, setInviteVisitorLinkOpen] = useState(false);
+  // Invite link validity + the short URL returned by POST /short_urls
+  const [inviteValidTill, setInviteValidTill] = useState("");
+  const [generatedInviteLink, setGeneratedInviteLink] = useState("");
+  const [isGeneratingInviteLink, setIsGeneratingInviteLink] = useState(false);
+  const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
   const [clubFormData, setClubFormData] = useState({
     clubMembershipChecked: false,
     membershipNumber: "",
@@ -143,7 +277,10 @@ export const ViewUserPage = () => {
       .then((response) => {
         setUser(response.data);
         // Extract other_members from the response
-        if (response.data?.other_members && Array.isArray(response.data.other_members)) {
+        if (
+          response.data?.other_members &&
+          Array.isArray(response.data.other_members)
+        ) {
           setMembers(response.data.other_members);
         }
         if (!response.data) {
@@ -152,7 +289,8 @@ export const ViewUserPage = () => {
       })
       .catch((err) => {
         console.error("Error fetching user details:", err);
-        const errorMessage = err.response?.data?.message || "Failed to load user details.";
+        const errorMessage =
+          err.response?.data?.message || "Failed to load user details.";
         setError(errorMessage);
         toast.error(errorMessage);
       })
@@ -172,12 +310,19 @@ export const ViewUserPage = () => {
 
   if (error || !user) {
     return (
-      <Box sx={{ p: 6, display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
+      <Box
+        sx={{
+          p: 6,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "40vh",
+        }}
+      >
         <Typography color="error">{error || "User not found."}</Typography>
       </Box>
     );
   }
-
 
   const handleDownloadDocument = async (documentUrl: string, index: number) => {
     if (!documentUrl) {
@@ -223,6 +368,85 @@ export const ViewUserPage = () => {
     setClubFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // POST /short_urls with the invite link + validity; backend returns the
+  // shareable (short, expiring) URL that we show for copy/share
+  const resetInviteVisitorLink = () => {
+    setInviteValidTill("");
+    setGeneratedInviteLink("");
+    setInviteLinkCopied(false);
+  };
+
+  const handleInviteValidTillChange = (value: string) => {
+    setInviteValidTill(value);
+    // A new validity needs a new link
+    setGeneratedInviteLink("");
+    setInviteLinkCopied(false);
+  };
+
+  const handleCopyInviteLink = () => {
+    navigator.clipboard
+      .writeText(generatedInviteLink)
+      .then(() => {
+        setInviteLinkCopied(true);
+        toast.success("Link copied to clipboard");
+        window.setTimeout(() => setInviteLinkCopied(false), 2000);
+      })
+      .catch(() => toast.error("Failed to copy link"));
+  };
+
+  const handleGenerateInviteLink = async () => {
+    if (!user?.encrypted_id) return;
+    if (!inviteValidTill) {
+      toast.error("Please select the validity date and time");
+      return;
+    }
+    // if (new Date(inviteValidTill).getTime() <= Date.now()) {
+    //   toast.error("Validity must be a future date and time");
+    //   return;
+    // }
+    if (!baseUrl || !token) {
+      toast.error("Missing authentication details. Please login again.");
+      return;
+    }
+
+    setIsGeneratingInviteLink(true);
+    setGeneratedInviteLink("");
+    try {
+      const response = await axios.post<CreateShortUrlResponse>(
+        `https://${baseUrl}/short_urls.json`,
+        {
+          url: getInviteVisitorLink(user.encrypted_id),
+          valid_till: toApiValidTill(inviteValidTill),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const shortUrl = extractShortUrl(response.data);
+      if (!shortUrl) {
+        console.error("Unexpected /short_urls response:", response.data);
+        toast.error("Failed to generate link");
+        return;
+      }
+
+      setGeneratedInviteLink(shortUrl);
+      toast.success(response.data?.message || "Link generated");
+    } catch (error) {
+      console.error("Error generating invite link:", error);
+      const message =
+        (
+          error as {
+            response?: { data?: { message?: string; error?: string } };
+          }
+        )?.response?.data?.message ||
+        (error as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ||
+        "Failed to generate link";
+      toast.error(message);
+    } finally {
+      setIsGeneratingInviteLink(false);
+    }
+  };
+
   const handleCreditWallet = async () => {
     if (!creditAmount || parseFloat(creditAmount) <= 0) {
       toast.error("Please enter a valid amount");
@@ -236,7 +460,9 @@ export const ViewUserPage = () => {
     setCreditLoading(true);
     try {
       const token = API_CONFIG.TOKEN || "";
-      const url = getFullUrl(`/loyalty/members/credit_wallet.json?token=${token}`);
+      const url = getFullUrl(
+        `/loyalty/members/credit_wallet.json?token=${token}`
+      );
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -295,7 +521,10 @@ export const ViewUserPage = () => {
       }
 
       // Validate form inputs
-      if (clubFormData.clubMembershipChecked && !clubFormData.membershipNumber.trim()) {
+      if (
+        clubFormData.clubMembershipChecked &&
+        !clubFormData.membershipNumber.trim()
+      ) {
         toast.error("Please enter Membership Number");
         return;
       }
@@ -326,9 +555,15 @@ export const ViewUserPage = () => {
 
       // Add club_member_allocation details
       formData.append("club_member_allocation[society_id]", societyId);
-      formData.append("club_member_allocation[society_flat_id]", user.society_flat_id || "");
+      formData.append(
+        "club_member_allocation[society_flat_id]",
+        user.society_flat_id || ""
+      );
       formData.append("club_member_allocation[status]", "active");
-      formData.append("club_member_allocation[start_date]", clubFormData.startDate);
+      formData.append(
+        "club_member_allocation[start_date]",
+        clubFormData.startDate
+      );
       formData.append("club_member_allocation[end_date]", clubFormData.endDate);
 
       // Add member (current user)
@@ -337,14 +572,20 @@ export const ViewUserPage = () => {
       formData.append("members[0][last_name]", user.lastname || "");
       formData.append("members[0][email]", user.email || "");
       formData.append("members[0][mobile]", user.mobile || "");
-      formData.append("members[0][resident_type]", user.resident_type || "owner");
+      formData.append(
+        "members[0][resident_type]",
+        user.resident_type || "owner"
+      );
 
       // Add club membership details
       formData.append(
         "members[0][club_member_check]",
         clubFormData.clubMembershipChecked ? "true" : "false"
       );
-      formData.append("members[0][membership_number]", clubFormData.membershipNumber);
+      formData.append(
+        "members[0][membership_number]",
+        clubFormData.membershipNumber
+      );
 
       // Add access card details
       formData.append(
@@ -370,13 +611,17 @@ export const ViewUserPage = () => {
       window.location.reload();
     } catch (error) {
       console.error("Error saving club details:", error);
-      const errorMessage = error.response?.data?.errors?.[0] || "Failed to save club details. Please try again.";
+      const errorMessage =
+        error.response?.data?.errors?.[0] ||
+        "Failed to save club details. Please try again.";
       toast.error(errorMessage);
     }
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, background: "#FDFDFB", minHeight: "100vh" }}>
+    <Box
+      sx={{ p: { xs: 2, md: 3 }, background: "#FDFDFB", minHeight: "100vh" }}
+    >
       {/* Back Button */}
       <button
         type="button"
@@ -388,9 +633,25 @@ export const ViewUserPage = () => {
       </button>
 
       {/* Main Container */}
-      <Paper elevation={0} sx={{ borderRadius: 0, overflow: "visible", boxShadow: "none", background: "transparent" }}>
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 0,
+          overflow: "visible",
+          boxShadow: "none",
+          background: "transparent",
+        }}
+      >
         {/* Header Section with Avatar and User Info */}
-        <Box sx={{ background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px", position: "relative" }}>
+        <Box
+          sx={{
+            background: "#FFFFFF",
+            border: "1px solid rgba(26, 26, 24, 0.09)",
+            borderRadius: "16px",
+            p: "22px 24px",
+            position: "relative",
+          }}
+        >
           {/* Edit Button */}
           <Box sx={{ position: "absolute", top: 16, right: 16 }}>
             <Button
@@ -418,7 +679,7 @@ export const ViewUserPage = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                overflow: "hidden"
+                overflow: "hidden",
               }}
               onError={(e: any) => {
                 e.target.style.display = "none";
@@ -441,21 +702,33 @@ export const ViewUserPage = () => {
               )}
             </Avatar>
             <Box sx={{ flex: 1, color: "rgba(26, 26, 24, 0.48)" }}>
-              <Typography sx={{ fontSize: "22px", fontWeight: 600, lineHeight: 1.2, letterSpacing: "-0.015em", color: "#1A1A18", mb: 1 }}>
-                {user?.full_name || (user?.firstname && user?.lastname ? `${user.firstname} ${user.lastname}` : "User")}
+              <Typography
+                sx={{
+                  fontSize: "22px",
+                  fontWeight: 600,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.015em",
+                  color: "#1A1A18",
+                  mb: 1,
+                }}
+              >
+                {user?.full_name ||
+                  (user?.firstname && user?.lastname
+                    ? `${user.firstname} ${user.lastname}`
+                    : "User")}
               </Typography>
               <Box sx={{ display: "flex", gap: 3, mb: 1.5, flexWrap: "wrap" }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Home className="w-4 h-4" />
                   <Typography variant="body2">
-                    {user?.flat_no ? `${user.flat_no}, ${user?.block_no || ""}` : "No Flat"}
+                    {user?.flat_no
+                      ? `${user.flat_no}, ${user?.block_no || ""}`
+                      : "No Flat"}
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Calendar className="w-4 h-4" />
-                  <Typography variant="body2">
-                    {user?.phase || "-"}
-                  </Typography>
+                  <Typography variant="body2">{user?.phase || "-"}</Typography>
                 </Box>
               </Box>
               {/* Status Badge */}
@@ -468,21 +741,47 @@ export const ViewUserPage = () => {
                     px: 1.25,
                     py: 0.375,
                     borderRadius: "999px",
-                    backgroundColor: user?.approved ? "rgba(18, 161, 80, 0.12)" : user?.approved === false ? "rgba(229, 72, 77, 0.12)" : "rgba(242, 163, 18, 0.3)",
-                    color: user?.approved ? "#0E7F3F" : user?.approved === false ? "#A32126" : "#8A5B00",
+                    backgroundColor: user?.approved
+                      ? "rgba(18, 161, 80, 0.12)"
+                      : user?.approved === false
+                        ? "rgba(229, 72, 77, 0.12)"
+                        : "rgba(242, 163, 18, 0.3)",
+                    color: user?.approved
+                      ? "#0E7F3F"
+                      : user?.approved === false
+                        ? "#A32126"
+                        : "#8A5B00",
                     fontSize: "11px",
                     fontWeight: 600,
                   }}
                 >
-                  <Box sx={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "currentColor" }} />
-                  {user?.approved ? "Approved" : user?.approved === false ? "Rejected" : "Pending"}
+                  <Box
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      backgroundColor: "currentColor",
+                    }}
+                  />
+                  {user?.approved
+                    ? "Approved"
+                    : user?.approved === false
+                      ? "Rejected"
+                      : "Pending"}
                 </Box>
               </Box>
             </Box>
           </Box>
 
           {/* Add to Another Flat Button */}
-          <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3, gap: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-start",
+              mt: 3,
+              gap: 2,
+            }}
+          >
             <Button
               className="btn-cancel h-9 px-4 text-sm font-medium inline-flex items-center gap-1.5"
               onClick={() => setIsAddToAnotherFlatModalOpen(true)}
@@ -539,146 +838,302 @@ export const ViewUserPage = () => {
               // theme.css styles [role="tablist"] tabs as a segmented control but only
               // highlights Radix tabs (data-state="active"); MUI marks the selected tab
               // with .Mui-selected, so highlight it here with a selector strong enough to win.
-              "& .MuiTabs-flexContainer[role='tablist'] .MuiTab-root.Mui-selected.Mui-selected.Mui-selected": {
-                color: "#1A1A18 !important",
-                backgroundColor: "#FFFFFF !important",
-                boxShadow: "0 1px 2px rgba(26, 26, 24, 0.1), 0 0 0 1px rgba(26, 26, 24, 0.05) !important",
-              },
+              "& .MuiTabs-flexContainer[role='tablist'] .MuiTab-root.Mui-selected.Mui-selected.Mui-selected":
+                {
+                  color: "#1A1A18 !important",
+                  backgroundColor: "#FFFFFF !important",
+                  boxShadow:
+                    "0 1px 2px rgba(26, 26, 24, 0.1), 0 0 0 1px rgba(26, 26, 24, 0.05) !important",
+                },
               "& .MuiTabs-indicator": {
                 display: "none",
               },
             }}
           >
-            <Tab label="User Info" icon={<UserIcon className="w-4 h-4" />} iconPosition="start" />
-            <Tab label="Club Info" icon={<Info className="w-4 h-4" />} iconPosition="start" />
+            <Tab
+              label="User Info"
+              icon={<UserIcon className="w-4 h-4" />}
+              iconPosition="start"
+            />
+            <Tab
+              label="Club Info"
+              icon={<Info className="w-4 h-4" />}
+              iconPosition="start"
+            />
           </Tabs>
         </Box>
 
         {/* Tab Content - User Info */}
-        {
-          tabValue === 0 && (
-            <Box sx={{ p: 0, background: "transparent" }}>
-              {/* Contact Information Section */}
-              <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                  <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><Mail className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
-                  <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
-                    Contact Information
-                  </Typography>
-                </Box>
-                <Paper elevation={0} sx={{ p: 0, background: "transparent", borderRadius: 0, boxShadow: "none" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: "18px 24px" }}>
-                    <InfoField label="Email" value={user?.email || "-"} />
-                    <InfoField label="Mobile Number" value={user?.mobile_number || "-"} />
-                    <InfoField label="Alternate Email 1" value={user?.alternate_email_1 || "-"} />
-                    <InfoField label="Alternate Email 2" value={user?.alternate_email_2 || "-"} />
-                    <InfoField label="Landline Number" value={user?.user_flat?.landline || "-"} />
-                    <InfoField label="Intercom Number" value={user?.intercom || "-"} />
-                  </Box>
-                </Paper>
-              </Box>
-
-              {/* Personal Details Section */}
-              <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                  <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><UserIcon className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
-                  <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
-                    Personal Details
-                  </Typography>
-                </Box>
-                <Paper elevation={0} sx={{ p: 0, background: "transparent", borderRadius: 0, boxShadow: "none" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: "18px 24px" }}>
-                    <InfoField label="Date of Birth" value={user?.birthday || "-"} />
-                    <InfoField label="Anniversary" value={user?.anniversary || "-"} />
-                    <InfoField label="Spouse Birthday" value={user?.spouse_birthday || "-"} />
-                    <InfoField label="Resident Type" value={user?.resident_type || "-"} />
-                    <InfoField label="Lives Here" value={user?.lives_here === "true" ? "Yes" : "No"} />
-                    <InfoField label="Membership Type" value={user?.is_primary ? "Primary" : "Secondary"} />
-                    <InfoField label="Move In Date" value={user?.movein_date || "-"} />
-                    <InfoField label="Agreement Expire Date" value={user?.user_flat?.agreement_expire_date || "-"} />
-                  </Box>
-                </Paper>
-              </Box>
-
-              {/* Residential Details Section */}
-              <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                  <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><Home className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
-                  <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
-                    Residential Details
-                  </Typography>
-                </Box>
-                <Paper elevation={0} sx={{ p: 0, background: "transparent", borderRadius: 0, boxShadow: "none" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: "18px 24px" }}>
-                    <InfoField label="Phase" value={user?.phase || "-"} />
-                    <InfoField label="Alternate Address" value={user?.alternate_address || "-"} />
-                    <InfoField label="Adults Residing" value={user?.adults || "-"} />
-                    <InfoField label="Children Residing" value={user?.children || "-"} />
-                    <InfoField label="Pets" value={user?.pets || "-"} />
-                    <InfoField label="EV Connection" value={user?.ev_connection ? "Yes" : "No"} />
-
-                  </Box>
-                </Paper>
-              </Box>
-
-              {/* Official Details Section */}
-              <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                  <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><Info className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
-                  <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
-                    Official Details
-                  </Typography>
-                </Box>
-                <Paper elevation={0} sx={{ p: 0, background: "transparent", borderRadius: 0, boxShadow: "none" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: "18px 24px" }}>
-                    <InfoField label="GST Number" value={user?.gst_number || "-"} />
-                    <InfoField label="PAN Number" value={user?.pan_number || "-"} />
-                    <InfoField label="Designation" value={user?.designation || "-"} />
-                    <InfoField label="Committee Member" value={user?.committee_member ? "Yes" : "No"} />
-                  </Box>
-                </Paper>
-              </Box>
-
-              {/* Members List Section */}
-              {members.length > 0 && (
-                <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                    <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><Users className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
-                    <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
-                      Members List ({members.length})
+        {tabValue === 0 && (
+          <Box sx={{ p: 0, background: "transparent" }}>
+            {[
+              {
+                title: "Booking Details",
+                icon: Home,
+                fields: [
+                  {
+                    label: "Flat / Block",
+                    value: user?.flat_no
+                      ? `${user.flat_no}${user?.block_no ? `, ${user.block_no}` : ""}`
+                      : "-",
+                  },
+                  { label: "Phase", value: user?.phase || "-" },
+                  {
+                    label: "Resident Type",
+                    value: user?.resident_type || "-",
+                  },
+                  {
+                    label: "Membership Type",
+                    value: user?.is_primary ? "Primary" : "Secondary",
+                  },
+                  {
+                    label: "Lives Here",
+                    value: user?.lives_here === "true" ? "Yes" : "No",
+                  },
+                  { label: "Move In Date", value: user?.movein_date || "-" },
+                  {
+                    label: "Date of Possession",
+                    value: formatDateFromAPI(user?.date_of_possession),
+                  },
+                  {
+                    label: "Agreement Expire Date",
+                    value: user?.user_flat?.agreement_expire_date || "-",
+                  },
+                  {
+                    label: "Landline Number",
+                    value: user?.user_flat?.landline || "-",
+                  },
+                  { label: "Intercom Number", value: user?.intercom || "-" },
+                ],
+              },
+              {
+                title: "Applicant Details",
+                icon: UserIcon,
+                fields: [
+                  { label: "Email", value: user?.email || "-" },
+                  {
+                    label: "Mobile Number",
+                    value: user?.mobile_number || "-",
+                  },
+                  {
+                    label: "Alternate Email 1",
+                    value: user?.alternate_email_1 || "-",
+                  },
+                  {
+                    label: "Alternate Email 2",
+                    value: user?.alternate_email_2 || "-",
+                  },
+                  { label: "Date of Birth", value: user?.birthday || "-" },
+                  { label: "PAN Number", value: user?.pan_number || "-" },
+                  { label: "GST Number", value: user?.gst_number || "-" },
+                  { label: "Designation", value: user?.designation || "-" },
+                ],
+              },
+              {
+                title: "Additional Details",
+                icon: Info,
+                fields: [
+                  { label: "Anniversary", value: user?.anniversary || "-" },
+                  {
+                    label: "Spouse Birthday",
+                    value: user?.spouse_birthday || "-",
+                  },
+                  {
+                    label: "Alternate Address",
+                    value: user?.alternate_address || "-",
+                  },
+                  { label: "Adults Residing", value: user?.adults || "-" },
+                  { label: "Children Residing", value: user?.children || "-" },
+                  { label: "Pets", value: user?.pets || "-" },
+                  {
+                    label: "EV Connection",
+                    value: user?.ev_connection ? "Yes" : "No",
+                  },
+                  {
+                    label: "Committee Member",
+                    value: user?.committee_member ? "Yes" : "No",
+                  },
+                ],
+              },
+            ].map((section) => {
+              const SectionIcon = section.icon;
+              return (
+                <Box
+                  key={section.title}
+                  sx={{
+                    mb: 2.5,
+                    background: "#FFFFFF",
+                    border: "1px solid rgba(26, 26, 24, 0.09)",
+                    borderRadius: "16px",
+                    p: "22px 24px",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1.5,
+                      mb: 2,
+                    }}
+                  >
+                    <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none">
+                      <SectionIcon
+                        className="w-[14px] h-[14px]"
+                        style={{ color: "#1A1A18" }}
+                      />
+                    </span>
+                    <Typography
+                      sx={{
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        lineHeight: 1.4,
+                        color: "#1A1A18",
+                        m: 0,
+                      }}
+                    >
+                      {section.title}
                     </Typography>
                   </Box>
-                  <Paper elevation={0} sx={{ p: 0, background: "transparent", borderRadius: 0, boxShadow: "none" }}>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                      {members.map((member, index) => (
-                        <Typography
-                          key={index}
-                          variant="body2"
-                          sx={{
-                            color: "#1A1A1A",
-                            py: 1,
-                            px: 1.5,
-                            borderRadius: "4px",
-                          }}
-                        >
-                          • {member}
-                        </Typography>
-                      ))}
-                    </Box>
-                  </Paper>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "1fr",
+                        sm: "1fr 1fr",
+                        lg: "repeat(4, 1fr)",
+                      },
+                      gap: "18px 24px",
+                    }}
+                  >
+                    {section.fields.map((field) => (
+                      <InfoField
+                        key={field.label}
+                        label={field.label}
+                        value={field.value}
+                      />
+                    ))}
+                  </Box>
                 </Box>
-              )}
+              );
+            })}
 
-              {/* Documents Section */}
-              {user?.user_flat_documents && user?.user_flat_documents.length > 0 && (
-                <Box sx={{ mb: 2.5, background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                    <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none"><Files className="w-[14px] h-[14px]" style={{ color: "#1A1A18" }} /></span>
-                    <Typography sx={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "#1A1A18", m: 0 }}>
+            {/* Members List Section */}
+            {members.length > 0 && (
+              <Box
+                sx={{
+                  mb: 2.5,
+                  background: "#FFFFFF",
+                  border: "1px solid rgba(26, 26, 24, 0.09)",
+                  borderRadius: "16px",
+                  p: "22px 24px",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    mb: 2,
+                  }}
+                >
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none">
+                    <Users
+                      className="w-[14px] h-[14px]"
+                      style={{ color: "#1A1A18" }}
+                    />
+                  </span>
+                  <Typography
+                    sx={{
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      lineHeight: 1.4,
+                      color: "#1A1A18",
+                      m: 0,
+                    }}
+                  >
+                    Members List ({members.length})
+                  </Typography>
+                </Box>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 0,
+                    background: "transparent",
+                    borderRadius: 0,
+                    boxShadow: "none",
+                  }}
+                >
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
+                    {members.map((member, index) => (
+                      <Typography
+                        key={index}
+                        variant="body2"
+                        sx={{
+                          color: "#1A1A1A",
+                          py: 1,
+                          px: 1.5,
+                          borderRadius: "4px",
+                        }}
+                      >
+                        • {member}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Paper>
+              </Box>
+            )}
+
+            {/* Documents Section */}
+            {user?.user_flat_documents &&
+              user?.user_flat_documents.length > 0 && (
+                <Box
+                  sx={{
+                    mb: 2.5,
+                    background: "#FFFFFF",
+                    border: "1px solid rgba(26, 26, 24, 0.09)",
+                    borderRadius: "16px",
+                    p: "22px 24px",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1.5,
+                      mb: 2,
+                    }}
+                  >
+                    <span className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F5F4F0] flex-none">
+                      <Files
+                        className="w-[14px] h-[14px]"
+                        style={{ color: "#1A1A18" }}
+                      />
+                    </span>
+                    <Typography
+                      sx={{
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        lineHeight: 1.4,
+                        color: "#1A1A18",
+                        m: 0,
+                      }}
+                    >
                       Attachments ({user.user_flat_documents.length})
                     </Typography>
                   </Box>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)", md: "repeat(4, 1fr)" }, gap: 2 }}>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "repeat(2, 1fr)",
+                        sm: "repeat(3, 1fr)",
+                        md: "repeat(4, 1fr)",
+                      },
+                      gap: 2,
+                    }}
+                  >
                     {user.user_flat_documents.map((doc: any, index: number) => {
                       const fileType = getFileType(doc.document_url);
                       const filename = getFilenameFromUrl(doc.document_url);
@@ -725,20 +1180,31 @@ export const ViewUserPage = () => {
                                   objectFit: "cover",
                                 }}
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = "none";
-                                  const parent = (e.target as HTMLImageElement).parentElement;
+                                  (e.target as HTMLImageElement).style.display =
+                                    "none";
+                                  const parent = (e.target as HTMLImageElement)
+                                    .parentElement;
                                   if (parent) {
-                                    const fallbackBox = document.createElement("div");
+                                    const fallbackBox =
+                                      document.createElement("div");
                                     fallbackBox.style.display = "flex";
                                     fallbackBox.style.alignItems = "center";
                                     fallbackBox.style.justifyContent = "center";
-                                    fallbackBox.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C72030" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>';
+                                    fallbackBox.innerHTML =
+                                      '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C72030" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>';
                                     parent.appendChild(fallbackBox);
                                   }
                                 }}
                               />
                             ) : (
-                              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
                                 {getFileIcon(fileType, 40)}
                               </Box>
                             )}
@@ -780,59 +1246,81 @@ export const ViewUserPage = () => {
                   </Box>
                 </Box>
               )}
-            </Box>
-          )
-        }
+          </Box>
+        )}
 
         {/* Tab Content - Club Info */}
-        {
-          tabValue === 1 && (
-            <Box sx={{ background: "#FFFFFF", border: "1px solid rgba(26, 26, 24, 0.09)", borderRadius: "16px", p: "22px 24px" }}>
-              {!user?.club_member ? (
-                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                  <Typography variant="body1" sx={{ color: "#666" }}>
-                    No club membership details configured
-                  </Typography>
-                  <Button
-                    onClick={() => setIsConfigureDetailsModalOpen(true)}
-                    className="btn-primary h-9 px-4 text-sm font-medium inline-flex items-center gap-1.5"
-                  >
-                    Configure Details
-                  </Button>
-                </Box>
-              ) : (
-                <Box>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <InfoField label="Membership Number" value={user?.club_member?.membership_number || "-"} />
-                    </div>
-                    <div>
-                      <InfoField label="Start Date" value={formatDateFromAPI(user?.club_member?.startdate)} />
-                    </div>
-                    <div>
-                      <InfoField label="End Date" value={formatDateFromAPI(user?.club_member?.enddate)} />
-                    </div>
-                    <div>
-                      <InfoField label="Access Card ID" value={user?.club_member?.access_card_id || "-"} />
-                    </div>
-                    {user?.club_member?.club_member_check && (
-                      <div>
-                        <InfoField label="Club Membership" value="Active" />
-                      </div>
-                    )}
-                    {user?.club_member?.access_card_check && (
-                      <div>
-                        <InfoField label="Access Card" value="Allocated" />
-                      </div>
-                    )}
+        {tabValue === 1 && (
+          <Box
+            sx={{
+              background: "#FFFFFF",
+              border: "1px solid rgba(26, 26, 24, 0.09)",
+              borderRadius: "16px",
+              p: "22px 24px",
+            }}
+          >
+            {!user?.club_member ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
+                <Typography variant="body1" sx={{ color: "#666" }}>
+                  No club membership details configured
+                </Typography>
+                <Button
+                  onClick={() => setIsConfigureDetailsModalOpen(true)}
+                  className="btn-primary h-9 px-4 text-sm font-medium inline-flex items-center gap-1.5"
+                >
+                  Configure Details
+                </Button>
+              </Box>
+            ) : (
+              <Box>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <InfoField
+                      label="Membership Number"
+                      value={user?.club_member?.membership_number || "-"}
+                    />
                   </div>
-
-                </Box>
-              )}
-            </Box>
-          )
-        }
-      </Paper >
+                  <div>
+                    <InfoField
+                      label="Start Date"
+                      value={formatDateFromAPI(user?.club_member?.startdate)}
+                    />
+                  </div>
+                  <div>
+                    <InfoField
+                      label="End Date"
+                      value={formatDateFromAPI(user?.club_member?.enddate)}
+                    />
+                  </div>
+                  <div>
+                    <InfoField
+                      label="Access Card ID"
+                      value={user?.club_member?.access_card_id || "-"}
+                    />
+                  </div>
+                  {user?.club_member?.club_member_check && (
+                    <div>
+                      <InfoField label="Club Membership" value="Active" />
+                    </div>
+                  )}
+                  {user?.club_member?.access_card_check && (
+                    <div>
+                      <InfoField label="Access Card" value="Allocated" />
+                    </div>
+                  )}
+                </div>
+              </Box>
+            )}
+          </Box>
+        )}
+      </Paper>
 
       {/* Add to Another Flat Modal */}
       <AddToAnotherFlatModal
@@ -862,61 +1350,160 @@ export const ViewUserPage = () => {
       />
 
       {/* Invite Visitor Link Modal */}
-      <Dialog modal={false} open={inviteVisitorLinkOpen} onOpenChange={setInviteVisitorLinkOpen}>
+      <Dialog
+        modal={false}
+        open={inviteVisitorLinkOpen}
+        onOpenChange={(open) => {
+          setInviteVisitorLinkOpen(open);
+          if (!open) resetInviteVisitorLink();
+        }}
+      >
         <DialogContent className="max-w-[480px] p-0 overflow-visible bg-white border-none shadow-2xl">
-          <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between">
-            <DialogTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
-              <LinkIcon className="w-4 h-4 text-[#da7756]" />
-              Invite Visitor Link
-            </DialogTitle>
-            <button onClick={() => setInviteVisitorLinkOpen(false)} className="text-gray-500 hover:text-gray-700">
+          <DialogHeader className="px-6 pt-5 pb-3 flex flex-row items-start justify-between space-y-0">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[rgba(218,119,86,0.15)] flex items-center justify-center shrink-0">
+                <LinkIcon className="w-4 h-4 text-[#da7756]" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-semibold text-[#1a1a18]">
+                  Invite Visitor Link
+                </DialogTitle>
+                <p className="text-xs text-[#888780] mt-0.5">
+                  Your guest fills their visitor details before arriving.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setInviteVisitorLinkOpen(false);
+                resetInviteVisitorLink();
+              }}
+              className="text-gray-400 hover:text-gray-700 transition-colors"
+              aria-label="Close"
+            >
               <X className="w-5 h-5" />
             </button>
           </DialogHeader>
-          <Box sx={{ px: 3, pb: 3 }}>
-            <Typography variant="body2" sx={{ color: "#666", fontSize: "13px", mb: 2 }}>
-              Share this link with your guest to let them fill their visitor details before arriving.
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <input
-                readOnly
-                value={user?.encrypted_id ? getInviteVisitorLink(user.encrypted_id) : ""}
-                onFocus={(e) => e.currentTarget.select()}
-                className="flex-1 min-w-0 border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 bg-gray-50 focus:outline-none"
+
+          <div className="px-6 pb-6 space-y-4">
+            {/* Step 1: validity */}
+            <div className="space-y-2">
+              <TextField
+                label="Link valid till"
+                type="datetime-local"
+                value={inviteValidTill}
+                onChange={(e) => handleInviteValidTillChange(e.target.value)}
+                fullWidth
+                size="small"
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                inputProps={{ min: toDateTimeLocalValue(new Date()) }}
+                InputProps={{ sx: fieldStyles }}
               />
-              <Button
-                className="px-4 border border-[#da7756] bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2 shrink-0"
-                onClick={() => {
-                  if (!user?.encrypted_id) return;
-                  navigator.clipboard
-                    .writeText(getInviteVisitorLink(user.encrypted_id))
-                    .then(() => toast.success("Link copied to clipboard"))
-                    .catch(() => toast.error("Failed to copy link"));
-                }}
-              >
-                <Copy className="w-4 h-4" />
-                Copy
-              </Button>
-              <Button
-                className="px-4 border border-[#da7756] bg-white hover:bg-[#f6f4ee] !text-[#da7756] [&_svg]:!text-[#da7756] shadow-sm font-medium flex items-center gap-2 shrink-0"
-                onClick={() => {
-                  if (!user?.encrypted_id) return;
-                  shareInviteVisitorLink(getInviteVisitorLink(user.encrypted_id));
-                }}
-              >
-                <Share2 className="w-4 h-4" />
-                Share
-              </Button>
-            </Box>
-          </Box>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs text-[#888780] mr-0.5">
+                  Quick pick:
+                </span>
+                {INVITE_VALIDITY_PRESETS.map((preset) => {
+                  const value = toDateTimeLocalValue(preset.getDate());
+                  const active = inviteValidTill === value;
+                  return (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => handleInviteValidTillChange(value)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                        active
+                          ? "border-[#da7756] bg-[rgba(218,119,86,0.15)] text-[#da7756]"
+                          : "border-[#e5e5e5] bg-white text-[#2c2c2c] hover:border-[#da7756] hover:text-[#da7756]"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              className="btn-primary w-full h-10 justify-center"
+              disabled={isGeneratingInviteLink || !inviteValidTill}
+              onClick={handleGenerateInviteLink}
+            >
+              {isGeneratingInviteLink ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <LinkIcon className="w-4 h-4" />
+              )}
+              {isGeneratingInviteLink
+                ? "Generating..."
+                : generatedInviteLink
+                  ? "Regenerate Link"
+                  : "Generate Link"}
+            </Button>
+
+            {/* Step 2: generated link */}
+            {generatedInviteLink && (
+              <div className="rounded-xl border border-[#e5e5e5] bg-[#f6f4ee] p-3 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#798c5e]">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Link ready to share
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-xs text-[#888780]">
+                    <Clock className="w-3.5 h-3.5" />
+                    Valid till {formatInviteValidTill(inviteValidTill)}
+                  </span>
+                </div>
+
+                <div
+                  className="rounded-lg bg-white border border-[#e5e5e5] px-3 py-2 text-xs text-[#2c2c2c] font-mono break-all select-all"
+                  title={generatedInviteLink}
+                >
+                  {generatedInviteLink}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    className="btn-cancel w-full h-9 justify-center"
+                    onClick={handleCopyInviteLink}
+                  >
+                    {inviteLinkCopied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                    {inviteLinkCopied ? "Copied" : "Copy Link"}
+                  </Button>
+                  <Button
+                    type="button"
+                    className="btn-cancel w-full h-9 justify-center"
+                    onClick={() => shareInviteVisitorLink(generatedInviteLink)}
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Configure Club Details Modal */}
-      <Dialog modal={false} open={isConfigureDetailsModalOpen} onOpenChange={setIsConfigureDetailsModalOpen}>
+      <Dialog
+        modal={false}
+        open={isConfigureDetailsModalOpen}
+        onOpenChange={setIsConfigureDetailsModalOpen}
+      >
         <DialogContent className="max-w-[500px] p-0 overflow-hidden bg-white border-none shadow-2xl max-h-[90vh] flex flex-col">
           <DialogHeader className="bg-[#EAEAEA] py-3 px-6 flex flex-row items-center justify-between shrink-0">
-            <DialogTitle className="text-base font-bold text-gray-800 text-center w-full">Configure Details</DialogTitle>
+            <DialogTitle className="text-base font-bold text-gray-800 text-center w-full">
+              Configure Details
+            </DialogTitle>
             <button
               onClick={() => setIsConfigureDetailsModalOpen(false)}
               className="text-red-500 hover:text-red-700 transition-colors absolute right-4"
@@ -934,7 +1521,10 @@ export const ViewUserPage = () => {
                   id="clubMembership"
                   checked={clubFormData.clubMembershipChecked}
                   onChange={(e) =>
-                    handleClubFormChange("clubMembershipChecked", e.target.checked)
+                    handleClubFormChange(
+                      "clubMembershipChecked",
+                      e.target.checked
+                    )
                   }
                   className="w-4 h-4 cursor-pointer"
                 />
@@ -1045,10 +1635,16 @@ export const ViewUserPage = () => {
       </Dialog>
 
       {/* Credit Wallet Dialog */}
-      <Dialog modal={false} open={creditDialogOpen} onOpenChange={setCreditDialogOpen}>
+      <Dialog
+        modal={false}
+        open={creditDialogOpen}
+        onOpenChange={setCreditDialogOpen}
+      >
         <DialogContent className="max-w-[480px] p-0 overflow-visible bg-white border-none shadow-2xl">
           <DialogHeader className="py-3 px-6 flex flex-row items-center justify-between">
-            <DialogTitle className="text-base font-bold text-gray-800">Credit Wallet</DialogTitle>
+            <DialogTitle className="text-base font-bold text-gray-800">
+              Credit Wallet
+            </DialogTitle>
             <button
               onClick={() => setCreditDialogOpen(false)}
               className="text-red-500 hover:text-red-700 transition-colors"
@@ -1069,7 +1665,11 @@ export const ViewUserPage = () => {
               InputProps={{ sx: fieldStyles }}
             />
             <TextField
-              label={<>Amount <span style={{ color: 'red' }}>*</span></>}
+              label={
+                <>
+                  Amount <span style={{ color: "red" }}>*</span>
+                </>
+              }
               type="number"
               value={creditAmount}
               onChange={(e) => setCreditAmount(e.target.value)}
@@ -1081,7 +1681,9 @@ export const ViewUserPage = () => {
               InputProps={{ sx: fieldStyles }}
             />
             <MuiFormControl fullWidth variant="outlined">
-              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Payment Mode <span style={{ color: 'red' }}>*</span></InputLabel>
+              <InputLabel shrink sx={{ backgroundColor: "white", px: 1 }}>
+                Payment Mode <span style={{ color: "red" }}>*</span>
+              </InputLabel>
               <MuiSelect
                 value={creditPaymentMode}
                 onChange={(e) => setCreditPaymentMode(e.target.value)}
@@ -1096,7 +1698,11 @@ export const ViewUserPage = () => {
               </MuiSelect>
             </MuiFormControl>
             <TextField
-              label={<>Remarks <span style={{ color: 'red' }}>*</span></>}
+              label={
+                <>
+                  Remarks <span style={{ color: "red" }}>*</span>
+                </>
+              }
               value={creditRemarks}
               onChange={(e) => setCreditRemarks(e.target.value)}
               placeholder="Enter remarks"
@@ -1133,7 +1739,7 @@ export const ViewUserPage = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </Box >
+    </Box>
   );
 };
 

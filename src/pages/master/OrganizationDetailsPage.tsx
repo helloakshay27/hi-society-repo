@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useApiConfig } from "@/hooks/useApiConfig";
+import { EasebuzzConfigCard } from "./EasebuzzConfigCard";
+import { isEasebuzzEnabledHost } from "@/utils/easebuzz";
 
 interface OrganizationProduct {
   id: number;
@@ -410,6 +412,11 @@ export const OrganizationDetailsPage: React.FC = () => {
                 <p className="text-sm text-gray-500">No dashboards configured</p>
               )}
             </div>
+
+            {/* Easebuzz Payment Gateway Config */}
+            {isEasebuzzEnabledHost() && (
+              <EasebuzzConfigCard organizationId={organization.id} />
+            )}
 
             {/* Logos Card */}
             {(organization.attachfile ||

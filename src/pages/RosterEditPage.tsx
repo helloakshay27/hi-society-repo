@@ -146,7 +146,9 @@ export const RosterEditPage: React.FC = () => {
     borderRadius: "4px",
     "& .MuiOutlinedInput-notchedOutline": { borderColor: "#ddd" },
     "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
-    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#C72030" },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#C72030",
+    },
   };
 
   // Fetch data on component mount
@@ -166,7 +168,7 @@ export const RosterEditPage: React.FC = () => {
       const apiUrl = getFullUrl(
         isSmartSecureRoster
           ? `/spree/manage/user_roasters/${id}.json`
-          : `/pms/admin/user_roasters/${id}.json`
+          : `/crm/admin/user_roasters/${id}.json`
       );
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -404,7 +406,6 @@ export const RosterEditPage: React.FC = () => {
       setFormData((prev) => ({ ...prev, location: "Current Site" }));
     }
   };
-
 
   // Handle day type selection
   const handleDayTypeChange = (type: "Weekdays" | "Weekends" | "Recurring") => {
@@ -688,7 +689,7 @@ export const RosterEditPage: React.FC = () => {
       const updateApiUrl = getFullUrl(
         isSmartSecureRoster
           ? `/spree/manage/user_roasters/${id}.json`
-          : `/pms/admin/user_roasters/${id}.json`
+          : `/crm/admin/user_roasters/${id}.json`
       );
       const response = await fetch(updateApiUrl, {
         method: "PATCH",
@@ -750,7 +751,9 @@ export const RosterEditPage: React.FC = () => {
           </button>
           <span>Roster</span>
           <span>{">"}</span>
-          <span className="text-gray-900 font-medium">Edit Roster Template</span>
+          <span className="text-gray-900 font-medium">
+            Edit Roster Template
+          </span>
           {(selectedSite?.name || currentLocation !== "Current Site") && (
             <span className="flex items-center gap-1 ml-3 text-gray-500">
               <Building2 className="w-3.5 h-3.5" />
@@ -1098,10 +1101,7 @@ export const RosterEditPage: React.FC = () => {
         </Section>
 
         {/* Location Section */}
-        <Section
-          title="Location"
-          icon={<MapPin className="w-3.5 h-3.5" />}
-        >
+        <Section title="Location" icon={<MapPin className="w-3.5 h-3.5" />}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <TextField
@@ -1128,7 +1128,10 @@ export const RosterEditPage: React.FC = () => {
         </Section>
 
         {/* Shift & Employees Section */}
-        <Section title="Shift & Employees" icon={<Clock className="w-3.5 h-3.5" />}>
+        <Section
+          title="Shift & Employees"
+          icon={<Clock className="w-3.5 h-3.5" />}
+        >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="relative">
               <FormControl
@@ -1199,7 +1202,9 @@ export const RosterEditPage: React.FC = () => {
                     const selectedArray = selected as number[];
                     if (selectedArray.length === 0) return "";
                     if (selectedArray.length === 1) {
-                      const user = fmUsers.find((u) => u.id === selectedArray[0]);
+                      const user = fmUsers.find(
+                        (u) => u.id === selectedArray[0]
+                      );
                       return user?.name || `User ${selectedArray[0]}`;
                     }
                     if (selectedArray.length <= 3) {
@@ -1228,7 +1233,9 @@ export const RosterEditPage: React.FC = () => {
                     fmUsers.map((user) => (
                       <MenuItem key={user.id} value={user.id}>
                         <Checkbox
-                          checked={formData.selectedEmployees.indexOf(user.id) > -1}
+                          checked={
+                            formData.selectedEmployees.indexOf(user.id) > -1
+                          }
                           sx={{
                             color: "#D5DbDB",
                             "&.Mui-checked": {
@@ -1266,7 +1273,10 @@ export const RosterEditPage: React.FC = () => {
           </div>
         </Section>
 
-        <Section title="Select Period" icon={<Calendar className="w-3.5 h-3.5" />}>
+        <Section
+          title="Select Period"
+          icon={<Calendar className="w-3.5 h-3.5" />}
+        >
           <div className="space-y-6">
             <div>
               <Label className="text-sm font-medium text-[rgba(26,26,24,.68)] mb-4 block">
