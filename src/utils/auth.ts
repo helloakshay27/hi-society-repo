@@ -425,11 +425,21 @@ const OPS_CONSOLE_ALLOWED_EMAILS = [
   "runwalcpadmin@gmail.com",
 ].map((email) => email.toLowerCase());
 
+// Additional ops-console users allowed only on ui-hisociety.lockated.com
+const UI_HISOCIETY_OPS_CONSOLE_ALLOWED_EMAILS = [
+  "artesia@lockated.com",
+].map((email) => email.toLowerCase());
+
 export const isOpsConsoleAllowedUser = (
   user: User | null | undefined
 ): boolean => {
   if (!user?.email) return false;
-  return OPS_CONSOLE_ALLOWED_EMAILS.includes(user.email.trim().toLowerCase());
+  const email = user.email.trim().toLowerCase();
+  if (OPS_CONSOLE_ALLOWED_EMAILS.includes(email)) return true;
+  return (
+    isHiSocietyUatUiSite &&
+    UI_HISOCIETY_OPS_CONSOLE_ALLOWED_EMAILS.includes(email)
+  );
 };
 
 export const loginUser = async (
