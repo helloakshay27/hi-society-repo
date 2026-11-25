@@ -37,6 +37,9 @@ export interface FacilityBookingDetails {
   booked_members?: any[];
   return_percentage?: number | null;
   returned_amount?: number | null;
+  // Easebuzz checkout link. Null when amount is 0, booking is already paid,
+  // or Easebuzz isn't configured/enabled for the organisation.
+  easebuzz_payment_url?: string | null;
   lock_payment?: {
     id?: string;
     pg_transaction_id?: string;
