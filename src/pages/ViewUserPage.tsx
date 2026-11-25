@@ -830,199 +830,142 @@ export const ViewUserPage = () => {
         {/* Tab Content - User Info */}
         {tabValue === 0 && (
           <Box sx={{ p: 4, background: "#fafafa" }}>
-            {/* Contact Information Section */}
-            <Box sx={{ mb: 4 }}>
-              <Box
-                sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
-              >
-                <Mail
-                  className="w-5 h-5 text-C72030"
-                  style={{ color: "#C72030" }}
-                />
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}
-                >
-                  Contact Information
-                </Typography>
-              </Box>
-              <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                    gap: 3,
-                  }}
-                >
-                  <InfoField label="Email" value={user?.email || "-"} />
-                  <InfoField
-                    label="Mobile Number"
-                    value={user?.mobile_number || "-"}
-                  />
-                  <InfoField
-                    label="Alternate Email 1"
-                    value={user?.alternate_email_1 || "-"}
-                  />
-                  <InfoField
-                    label="Alternate Email 2"
-                    value={user?.alternate_email_2 || "-"}
-                  />
-                  <InfoField
-                    label="Landline Number"
-                    value={user?.user_flat?.landline || "-"}
-                  />
-                  <InfoField
-                    label="Intercom Number"
-                    value={user?.intercom || "-"}
-                  />
+            {[
+              {
+                title: "Booking Details",
+                icon: Home,
+                fields: [
+                  {
+                    label: "Flat / Block",
+                    value: user?.flat_no
+                      ? `${user.flat_no}${user?.block_no ? `, ${user.block_no}` : ""}`
+                      : "-",
+                  },
+                  { label: "Phase", value: user?.phase || "-" },
+                  {
+                    label: "Resident Type",
+                    value: user?.resident_type || "-",
+                  },
+                  {
+                    label: "Membership Type",
+                    value: user?.is_primary ? "Primary" : "Secondary",
+                  },
+                  {
+                    label: "Lives Here",
+                    value: user?.lives_here === "true" ? "Yes" : "No",
+                  },
+                  { label: "Move In Date", value: user?.movein_date || "-" },
+                  {
+                    label: "Date of Possession",
+                    value: formatDateFromAPI(user?.date_of_possession),
+                  },
+                  {
+                    label: "Agreement Expire Date",
+                    value: user?.user_flat?.agreement_expire_date || "-",
+                  },
+                  {
+                    label: "Landline Number",
+                    value: user?.user_flat?.landline || "-",
+                  },
+                  { label: "Intercom Number", value: user?.intercom || "-" },
+                ],
+              },
+              {
+                title: "Applicant Details",
+                icon: UserIcon,
+                fields: [
+                  { label: "Email", value: user?.email || "-" },
+                  {
+                    label: "Mobile Number",
+                    value: user?.mobile_number || "-",
+                  },
+                  {
+                    label: "Alternate Email 1",
+                    value: user?.alternate_email_1 || "-",
+                  },
+                  {
+                    label: "Alternate Email 2",
+                    value: user?.alternate_email_2 || "-",
+                  },
+                  { label: "Date of Birth", value: user?.birthday || "-" },
+                  { label: "PAN Number", value: user?.pan_number || "-" },
+                  { label: "GST Number", value: user?.gst_number || "-" },
+                  { label: "Designation", value: user?.designation || "-" },
+                ],
+              },
+              {
+                title: "Additional Details",
+                icon: Info,
+                fields: [
+                  { label: "Anniversary", value: user?.anniversary || "-" },
+                  {
+                    label: "Spouse Birthday",
+                    value: user?.spouse_birthday || "-",
+                  },
+                  {
+                    label: "Alternate Address",
+                    value: user?.alternate_address || "-",
+                  },
+                  { label: "Adults Residing", value: user?.adults || "-" },
+                  { label: "Children Residing", value: user?.children || "-" },
+                  { label: "Pets", value: user?.pets || "-" },
+                  {
+                    label: "EV Connection",
+                    value: user?.ev_connection ? "Yes" : "No",
+                  },
+                  {
+                    label: "Committee Member",
+                    value: user?.committee_member ? "Yes" : "No",
+                  },
+                ],
+              },
+            ].map((section) => {
+              const SectionIcon = section.icon;
+              return (
+                <Box key={section.title} sx={{ mb: 4 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      mb: 3,
+                    }}
+                  >
+                    <SectionIcon
+                      className="w-5 h-5"
+                      style={{ color: "#C72030" }}
+                    />
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}
+                    >
+                      {section.title}
+                    </Typography>
+                  </Box>
+                  <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: {
+                          xs: "1fr",
+                          sm: "1fr 1fr",
+                          lg: "repeat(4, 1fr)",
+                        },
+                        gap: 3,
+                      }}
+                    >
+                      {section.fields.map((field) => (
+                        <InfoField
+                          key={field.label}
+                          label={field.label}
+                          value={field.value}
+                        />
+                      ))}
+                    </Box>
+                  </Paper>
                 </Box>
-              </Paper>
-            </Box>
-
-            {/* Personal Details Section */}
-            <Box sx={{ mb: 4 }}>
-              <Box
-                sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
-              >
-                <UserIcon className="w-5 h-5" style={{ color: "#C72030" }} />
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}
-                >
-                  Personal Details
-                </Typography>
-              </Box>
-              <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                    gap: 3,
-                  }}
-                >
-                  <InfoField
-                    label="Date of Birth"
-                    value={user?.birthday || "-"}
-                  />
-                  <InfoField
-                    label="Anniversary"
-                    value={user?.anniversary || "-"}
-                  />
-                  <InfoField
-                    label="Spouse Birthday"
-                    value={user?.spouse_birthday || "-"}
-                  />
-                  <InfoField
-                    label="Resident Type"
-                    value={user?.resident_type || "-"}
-                  />
-                  <InfoField
-                    label="Lives Here"
-                    value={user?.lives_here === "true" ? "Yes" : "No"}
-                  />
-                  <InfoField
-                    label="Membership Type"
-                    value={user?.is_primary ? "Primary" : "Secondary"}
-                  />
-                  <InfoField
-                    label="Move In Date"
-                    value={user?.movein_date || "-"}
-                  />
-                  <InfoField
-                    label="Date of Possession"
-                    value={formatDateFromAPI(user?.date_of_possession)}
-                  />
-                  <InfoField
-                    label="Agreement Expire Date"
-                    value={user?.user_flat?.agreement_expire_date || "-"}
-                  />
-                </Box>
-              </Paper>
-            </Box>
-
-            {/* Residential Details Section */}
-            <Box sx={{ mb: 4 }}>
-              <Box
-                sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
-              >
-                <Home className="w-5 h-5" style={{ color: "#C72030" }} />
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}
-                >
-                  Residential Details
-                </Typography>
-              </Box>
-              <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                    gap: 3,
-                  }}
-                >
-                  <InfoField label="Phase" value={user?.phase || "-"} />
-                  <InfoField
-                    label="Alternate Address"
-                    value={user?.alternate_address || "-"}
-                  />
-                  <InfoField
-                    label="Adults Residing"
-                    value={user?.adults || "-"}
-                  />
-                  <InfoField
-                    label="Children Residing"
-                    value={user?.children || "-"}
-                  />
-                  <InfoField label="Pets" value={user?.pets || "-"} />
-                  <InfoField
-                    label="EV Connection"
-                    value={user?.ev_connection ? "Yes" : "No"}
-                  />
-                </Box>
-              </Paper>
-            </Box>
-
-            {/* Official Details Section */}
-            <Box sx={{ mb: 4 }}>
-              <Box
-                sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
-              >
-                <Info className="w-5 h-5" style={{ color: "#C72030" }} />
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: 700, color: "#1A1A1A", m: 0 }}
-                >
-                  Official Details
-                </Typography>
-              </Box>
-              <Paper sx={{ p: 3, background: "#fff", borderRadius: "8px" }}>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                    gap: 3,
-                  }}
-                >
-                  <InfoField
-                    label="GST Number"
-                    value={user?.gst_number || "-"}
-                  />
-                  <InfoField
-                    label="PAN Number"
-                    value={user?.pan_number || "-"}
-                  />
-                  <InfoField
-                    label="Designation"
-                    value={user?.designation || "-"}
-                  />
-                  <InfoField
-                    label="Committee Member"
-                    value={user?.committee_member ? "Yes" : "No"}
-                  />
-                </Box>
-              </Paper>
-            </Box>
+              );
+            })}
 
             {/* Members List Section */}
             {members.length > 0 && (
