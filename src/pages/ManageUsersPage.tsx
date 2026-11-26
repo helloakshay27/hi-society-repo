@@ -234,6 +234,27 @@ const URL_SCALAR_KEYS: [keyof UserFilters, string][] = [
 const splitList = (value: string | null) =>
   value ? value.split(",").filter(Boolean) : [];
 
+// Builds the API query string. URLSearchParams.toString() writes spaces as "+"
+// and brackets as %5B/%5D (e.g. q%5Bdate_range%5D=2026-11-01+-+2026-11-26);
+// this encodes spaces as %20 and keeps q[...] keys readable instead.
+const encodeApiParam = (value: string) =>
+  encodeURIComponent(value)
+    .replace(/%5B/gi, "[")
+    .replace(/%5D/gi, "]")
+    .replace(/%2F/gi, "/");
+
+const buildApiQuery = (params: Record<string, unknown>) => {
+  const parts: string[] = [];
+  Object.entries(params).forEach(([key, value]) => {
+    const values = Array.isArray(value) ? value : [value];
+    values.forEach((v) => {
+      if (v === undefined || v === null) return;
+      parts.push(`${encodeApiParam(key)}=${encodeApiParam(String(v))}`);
+    });
+  });
+  return parts.join("&");
+};
+
 const filtersFromUrl = (params: URLSearchParams): UserFilters => {
   const filters: UserFilters = { ...EMPTY_FILTERS };
   URL_SCALAR_KEYS.forEach(([field, key]) => {
@@ -304,7 +325,7 @@ const buildFilterParams = (filters: UserFilters, search: string) => {
   if (filters.membershipType)
     filterParams["q[is_primary_eq]"] = filters.membershipType;
   if (filters.startDate && filters.endDate) {
-    filterParams["q[date_range]"] = `${filters.startDate} - ${filters.endDate}`;
+    filterParams["q[date_range]"] = `${filters.startDate.replace(/-/g, "/")}-${filters.endDate.replace(/-/g, "/")}`;
   }
   if (search) {
     filterParams[
@@ -458,16 +479,7 @@ const ManageUsersPage = () => {
   const fetchUsers = async (page = 1, filterParams = {}) => {
     try {
       setLoading(true);
-      const queryParams = new URLSearchParams();
-      queryParams.append("page", page.toString());
-
-      Object.entries(filterParams).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach((v) => queryParams.append(key, v));
-        } else if (value !== undefined && value !== null) {
-          queryParams.append(key, value as string);
-        }
-      });
+      const queryParams = buildApiQuery({ page, ...filterParams });
 
       const response = await axios.get(
         `https://${baseUrl}/crm/admin/user_societies.json?${queryParams}`,
@@ -757,19 +769,12 @@ const ManageUsersPage = () => {
 
     setIsExporting(true);
     try {
-      const queryParams = new URLSearchParams();
-      Object.entries(
+      const queryParams = buildApiQuery(
         buildFilterParams(
           appliedFiltersRef.current,
           searchParams.get("search") || ""
         )
-      ).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach((v) => queryParams.append(key, v));
-        } else if (value !== undefined && value !== null) {
-          queryParams.append(key, value as string);
-        }
-      });
+      );
 
       const response = await fetch(
         `https://${baseUrl}/crm/admin/user_societies.xlsx?${queryParams}`,
