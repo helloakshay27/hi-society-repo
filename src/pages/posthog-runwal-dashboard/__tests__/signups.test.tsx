@@ -50,6 +50,15 @@ const BY_SOCIETY: Record<string, HiSocietyAccount[]> = { "3685": GARDENS, "3710"
 const USER_SOCIETY: Record<string, string> = { "92": "3685", "91": "3710" };
 
 let selected = "3685"; // the society selected in the stand-in Hi Society
+const person = (n: number, os: "ios" | "android") => ({
+  user_key: `u${n}`, user_id: String(1000 + n), first_name: `Active ${n}`, last_name: "", email: `a${n}@example.com`,
+  society_id: "3685", phase: "Post Possession", sessions: n, events: 3 * n, last_seen: `2026-11-1${n}T10:00:00+05:30`, minutes_ago: 60, os,
+});
+const ACTIVE = [person(1, "ios"), person(2, "ios"), person(3, "android"), person(4, "android"), person(5, "android")];
+const activeFor = (u: URL) => {
+  const os = (u.searchParams.get("os") || "").toLowerCase();
+  return ACTIVE.filter((a) => !os || a.os === os);
+};
 let fetchMock: ReturnType<typeof vi.fn>;
 beforeEach(() => {
   localStorage.clear();
@@ -65,7 +74,14 @@ beforeEach(() => {
     { id: 92, id_society: 3685, society: { building_name: "Runwal Gardens" } },
   ]));
   fetchMock = vi.fn().mockImplementation(async (url: string) => {
-    const u = new URL(url);
+    const u = new URL(url, "http://localhost");
+    // The usage API (Traffic & Session's Active Users, and the people behind it): 5 active, 2 on iOS, 3 on Android.
+    if (u.pathname.endsWith("/adoption/traffic_session")) {
+      return { ok: true, json: async () => ({ meta: { metric: "traffic_session" }, tiles: { active_users: activeFor(u).length }, previous: {}, delta_pct: {} }) };
+    }
+    if (u.pathname.endsWith("/adoption/user_journeys")) {
+      return { ok: true, json: async () => ({ meta: { total: activeFor(u).length }, people: activeFor(u) }) };
+    }
     if (u.pathname === "/change_user_society.json") {
       selected = USER_SOCIETY[u.searchParams.get("user_society_id") || ""];
       return { ok: true, json: async () => ({}) };
@@ -81,9 +97,10 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
-const calls = () => fetchMock.mock.calls.map((c) => new URL(String(c[0])));
+const calls = () => fetchMock.mock.calls.map((c) => new URL(String(c[0]), "http://localhost"));
+const hiSocietyCalls = () => calls().filter((u) => u.pathname === "/change_user_society.json" || u.pathname.endsWith("/user_societies.json"));
 /** "switch 3710", "read 3710 upTo", "read 3710 range", ... */
-const trail = () => calls().map((u) =>
+const trail = () => hiSocietyCalls().map((u) =>
   u.pathname === "/change_user_society.json"
     ? `switch ${USER_SOCIETY[u.searchParams.get("user_society_id") || ""]}`
     : `read ${u.searchParams.getAll("q[id_society_in][]").join(",")} ${u.searchParams.has("q[created_at_gteq]") ? "range" : "upTo"}`);
@@ -134,14 +151,48 @@ describe("the query sent to Manage Users", () => {
   });
 });
 
+describe("when Hi Society does not answer (a big society past its time limit)", () => {
+  const page = (rows: HiSocietyAccount[], total: number, pages: number) =>
+    ({ ok: true, json: async () => ({ user_societies: rows, pagination: { total_pages: pages, total_count: total } }) });
+
+  it("asks for the same accounts again in smaller pages, from where it got to", async () => {
+    fetchMock.mockReset();
+    const many = Array.from({ length: 1300 }, (_, i) => acc(100 + i, "2026-11-01T10:00:00+05:30"));
+    fetchMock
+      .mockResolvedValueOnce(page(many.slice(0, 1000), 1300, 2))           // page 1 of 1,000: fine
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))              // page 2 of 1,000: no answer
+      .mockResolvedValueOnce({ ok: false, status: 504, statusText: "Gateway Time-out" }) // page 3 of 500: time-out
+      .mockResolvedValueOnce(page(many.slice(1000, 1250), 1300, 6))         // page 5 of 250
+      .mockResolvedValueOnce(page(many.slice(1250), 1300, 6));             // page 6 of 250
+    const r = await fetchSocietyAccounts({ societyIds: ["3685"], to: "2026-11-20" });
+    expect(r.accounts.map((a) => a.id)).toEqual(many.map((a) => a.id));
+    expect(calls().map((u) => `${u.searchParams.get("page")}×${u.searchParams.get("per_page")}`))
+      .toEqual(["1×1000", "2×1000", "3×500", "5×250", "6×250"]);
+  });
+
+  it("says what failed and how long it waited, instead of 'Failed to fetch'", async () => {
+    fetchMock.mockReset();
+    fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
+    const r = await fetchAccountsBySociety({ societyIds: ["3710", "3685"], from: "2026-10-22", to: "2026-11-20" });
+    expect(r.societies.map((s) => s.error)).toEqual([
+      "Hi Society gave no answer to the society switch (0 s, network error)",
+      "Hi Society gave no answer to the accounts list (page 1, 250 a page) (0 s, network error)",
+    ]);
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue({ ok: false, status: 401, statusText: "Unauthorized" });
+    await expect(fetchSocietyAccounts({ societyIds: ["3685"], to: "2026-11-20" })).rejects.toThrow(
+      "Hi Society answered 401 to the accounts list (page 1, 1000 a page) after 0 s"
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1); // a 4xx is not asked again
+  });
+});
+
 describe("reading the chosen societies", () => {
   const q = (societyIds: string[]) => ({ societyIds, from: "2026-10-22", to: "2026-11-20" });
 
-  it("All Societies: selects each society in turn, reads it with the dates both ways, then puts Hi Society back", async () => {
+  it("All Societies: selects each society in turn, reads it once (the range is taken from that list), then puts Hi Society back", async () => {
     const r = await fetchAccountsBySociety(q(["3710", "3685"]));
-    expect(trail()).toEqual([
-      "switch 3710", "read 3710 upTo", "read 3710 range", "switch 3685", "read 3685 upTo", "read 3685 range",
-    ]);
+    expect(trail()).toEqual(["switch 3710", "read 3710 upTo", "switch 3685", "read 3685 upTo"]);
     expect(r.societies.map((s) => [s.societyId, s.upTo.length, s.inRange.length, s.error])).toEqual([
       ["3710", 2, 1, null], ["3685", 5, 3, null],
     ]);
@@ -156,7 +207,7 @@ describe("reading the chosen societies", () => {
 
   it("one society stays selected afterwards, as if picked in Hi Society's header", async () => {
     await fetchAccountsBySociety(q(["3710"]));
-    expect(trail()).toEqual(["switch 3710", "read 3710 upTo", "read 3710 range"]);
+    expect(trail()).toEqual(["switch 3710", "read 3710 upTo"]);
     expect([selected, headerSocietyId(), localStorage.getItem("selectedUserSociety")]).toEqual(["3710", "3710", "91"]);
   });
 
@@ -169,9 +220,7 @@ describe("reading the chosen societies", () => {
 
   it("a switch asked for meanwhile waits for the reading to finish", async () => {
     await Promise.all([fetchAccountsBySociety(q(["3710", "3685"])), switchHiSocietySociety("3710")]);
-    expect(trail()).toEqual([
-      "switch 3710", "read 3710 upTo", "read 3710 range", "switch 3685", "read 3685 upTo", "read 3685 range", "switch 3710",
-    ]);
+    expect(trail()).toEqual(["switch 3710", "read 3710 upTo", "switch 3685", "read 3685 upTo", "switch 3710"]);
   });
 
   it("switching uses the user's own user-society id there, and refuses a society the user is not in", async () => {
@@ -214,15 +263,23 @@ describe("the section", () => {
     renderSection();
     await waitFor(() => expect(val("Registered Customers")).toBe("7"));
     expect(screen.getByRole("heading", { name: "Downloads & sign-ups" })).toBeTruthy();
-    expect([val("New Registrations"), val("Registered, Never Logged In")]).toEqual(["4", "3"]);
+    expect(val("New Registrations")).toBe("4");
     expect(tile("Registered Customers").textContent).toContain("Post Sales 3 · Post Possession 4");
     expect(projectRows()).toEqual([
-      ["Runwal Gardens", "Both", "5", "3", "2", "60%"],
-      ["Runwal Avenue", "Both", "2", "1", "1", "50%"],
+      ["Runwal Gardens", "Both", "5", "3", "60.00%"],
+      ["Runwal Avenue", "Both", "2", "1", "50.00%"],
     ]);
     expect(selected).toBe("3685");
-    const list = screen.getByText("Needs a nudge · named list").closest(".card") as HTMLElement;
-    expect([...list.querySelectorAll("tbody tr")].map((tr) => tr.querySelector("td")?.textContent)).toEqual(["Person 12", "Person 2", "Person 4"]);
+  });
+
+  it("has no never-logged-in tile, by-store card, download-gap bars or nudge list (taken off on 27 Nov 2026)", async () => {
+    renderSection();
+    await waitFor(() => expect(val("Registered Customers")).toBe("7"));
+    expect([...document.querySelectorAll("#su-root .tile .lbl")].map((e) => e.textContent)).toEqual([
+      "Registered Customers", "New Registrations", "Logged-in Rate",
+    ]);
+    for (const id of ["card-suStore", "card-suGap", "card-suNever"]) expect(document.getElementById(id)).toBeNull();
+    expect(screen.queryByText(/Needs a nudge|Logged-in customers by store|Download gap/)).toBeNull();
   });
 
   it("a click on a project or a number opens the people behind it", async () => {
@@ -240,11 +297,37 @@ describe("the section", () => {
     expect(within(panel).getAllByRole("row")).toHaveLength(5); // header + 4
   });
 
+  it("changing the dates shows the loader, not the previous dates' numbers, until the new ones are read", async () => {
+    let release: () => void = () => {};
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = (to: string) => (
+      <QueryClientProvider client={client}>
+        <DashboardProvider>
+          <SignupsSection filters={filters({ to })} societies={societies} selectedSocietyId="3685"
+                          rangeLabel="Last 30 days" appName="Runwal Connect" showPhase />
+        </DashboardProvider>
+      </QueryClientProvider>
+    );
+    const { rerender } = render(view("2026-11-20"));
+    await waitFor(() => expect(val("Registered Customers")).toBe("5"));
+    const answer = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation(async (url: string) => {
+      if (new URL(url).pathname !== "/change_user_society.json") await new Promise<void>((r) => { release = r; });
+      return answer(url);
+    });
+    rerender(view("2026-11-05"));
+    await waitFor(() => expect(screen.getByRole("status").textContent).toMatch(/Loading accounts/));
+    expect(val("Registered Customers")).toBe("…"); // not the old 5
+    release();
+    await waitFor(() => expect(val("Registered Customers")).toBe("3"));
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
   it("one society: selects it in Hi Society, reads only it, and leaves it selected", async () => {
     renderSection({}, "3710");
     await waitFor(() => expect(val("Registered Customers")).toBe("2"));
-    expect(trail()).toEqual(["switch 3710", "read 3710 upTo", "read 3710 range"]);
-    expect(projectRows()).toEqual([["Runwal Avenue", "Both", "2", "1", "1", "50%"]]);
+    expect(trail()).toEqual(["switch 3710", "read 3710 upTo"]);
+    expect(projectRows()).toEqual([["Runwal Avenue", "Both", "2", "1", "50.00%"]]);
     expect(selected).toBe("3710");
   });
 
@@ -256,22 +339,20 @@ describe("the section", () => {
     expect(tile("Registered Customers").querySelector(".su-split")).toBeNull();
   });
 
-  it("iOS: tiles and projects count accounts with the app on an iPhone; never logged in has no platform", async () => {
+  it("iOS: tiles and projects count accounts with the app on an iPhone", async () => {
     renderSection({ devPlatform: "ios" });
     await waitFor(() => expect(val("Registered Customers")).toBe("2"));
-    expect([val("New Registrations"), val("Registered, Never Logged In")]).toEqual(["2", "—"]);
-    expect(tile("Registered, Never Logged In").textContent).toContain("no phone yet, so not on iOS: 3 under All platforms");
-    const nudge = screen.getByText("Needs a nudge · named list").closest(".card") as HTMLElement;
-    expect(nudge.textContent).toContain("they are on neither iOS nor Android");
+    expect(val("New Registrations")).toBe("2");
     expect(projectRows()).toEqual([
-      ["Runwal Avenue", "Post Possession", "1", "1", "—", "—"],
-      ["Runwal Gardens", "Post Possession", "1", "1", "—", "—"],
+      ["Runwal Avenue", "Post Possession", "1", "1", "—"],
+      ["Runwal Gardens", "Post Possession", "1", "1", "—"],
     ]);
-    calls().forEach((u) => expect([...u.searchParams.keys()].some((k) => /os|platform|device/i.test(k))).toBe(false));
+    // Manage Users has no platform filter: none is sent to it (the usage API does get os=ios).
+    hiSocietyCalls().forEach((u) => expect([...u.searchParams.keys()].some((k) => /os|platform|device/i.test(k))).toBe(false));
   });
 });
 
-describe("over time, funnel, by store and the gap", () => {
+describe("over time, registered vs active users, the logged-in rate", () => {
   const card = (id: string) => document.getElementById(id) as HTMLElement;
 
   it("buckets end on the last day; by day the points inside the dates add up to New Registrations", () => {
@@ -284,44 +365,52 @@ describe("over time, funnel, by store and the gap", () => {
     expect(days.reduce((n, b) => n + rowsIn(rows, b).length, 0)).toBe(4);
   });
 
-  it("all platforms: logged-in rate, the funnel, both stores and the never-logged-in bars, each opening its people", async () => {
+  const bars = () => [...card("card-suActive").querySelectorAll(".dl-fr")];
+  const barValues = () => bars().map((r) => r.querySelector(".dl-fv")?.textContent);
+
+  it("registered users (Hi Society) vs active users (Traffic & Session's Active Users), each opening its people", async () => {
     renderSection();
     await waitFor(() => expect(val("Registered Customers")).toBe("7"));
-    expect(val("Logged-in Rate")).toBe("57.1%");
-    expect(tile("Logged-in Rate").textContent).toContain("4 of 7 registered have logged in");
-    const funnel = card("card-suFunnel");
-    expect([...funnel.querySelectorAll(".dl-fr")].map((r) => r.textContent)).toEqual([
-      "Registered4100%", "Logged in at least once375%",
-    ]);
-    expect(funnel.textContent).toContain("25% drop-off");
-    const stores = card("card-suStore");
-    expect([...stores.querySelectorAll(".role")].map((r) => r.textContent)).toEqual(["App Store (iOS)2", "Google Play (Android)2"]);
-    const gap = card("card-suGap");
-    expect(gap.querySelector(".kv2")?.textContent).toBe("1");
-    const bars = gap.querySelectorAll("rect.dl-seg");
-    expect(bars).toHaveLength(1);
-    fireEvent.click(bars[0]);
+    await waitFor(() => expect(barValues()).toEqual(["7", "571.42% of registered"])); // 5 ÷ 7 = 71.428…%
+    expect(bars().map((r) => r.querySelector(".dl-fl")?.firstChild?.textContent)).toEqual(["Registered users", "Active users"]);
+    expect(document.getElementById("card-suFunnel")).toBeNull();
+
+    fireEvent.click(bars()[1]);
     let panel = await screen.findByRole("dialog");
-    expect(within(panel).getAllByRole("row")).toHaveLength(2); // header + Person 4
+    expect(within(panel).getAllByRole("row")).toHaveLength(6); // header + the 5 active users
+    expect(within(panel).getByText("Active 5")).toBeTruthy();
+    const people = calls().filter((u) => u.pathname.endsWith("/adoption/user_journeys")).at(-1)!;
+    expect(Object.fromEntries(people.searchParams.entries())).toMatchObject({
+      from: "2026-10-22", to: "2026-11-20", per_page: "all", device_type: "Mobile", exact: "1",
+    });
     fireEvent.click(within(panel).getByLabelText("Close"));
-    fireEvent.click(funnel.querySelectorAll(".dl-fr")[1]);
+
+    fireEvent.click(bars()[0]);
     panel = await screen.findByRole("dialog");
-    expect(within(panel).getAllByRole("row")).toHaveLength(4); // header + 3
+    expect(within(panel).getAllByRole("row")).toHaveLength(8); // header + the 7 registered
     fireEvent.click(within(panel).getByLabelText("Close"));
+
+    expect(val("Logged-in Rate")).toBe("57.14%"); // 4 ÷ 7 = 57.142…%, cut to two decimals
     fireEvent.click(tile("Logged-in Rate"));
     panel = await screen.findByRole("dialog");
     expect(within(panel).getAllByRole("row")).toHaveLength(5); // header + 4
   });
 
-  it("iOS: logged in on an iPhone, only the App Store, and no never-logged-in bars", async () => {
+  it("iOS: registered with the app on an iPhone vs active on iOS", async () => {
     renderSection({ devPlatform: "ios" });
     await waitFor(() => expect(val("Registered Customers")).toBe("2"));
-    expect(val("Logged-in Rate")).toBe("28.6%");
-    expect([...card("card-suFunnel").querySelectorAll(".dl-fr")].map((r) => r.textContent)).toEqual([
-      "Registered4100%", "Logged in on iOS250%",
-    ]);
-    expect([...card("card-suStore").querySelectorAll(".role")].map((r) => r.textContent)).toEqual(["App Store (iOS)2"]);
-    expect(card("card-suGap").querySelector("rect.dl-seg")).toBeNull();
-    expect(card("card-suGap").textContent).toContain("Choose All platforms");
+    await waitFor(() => expect(barValues()).toEqual(["2", "2100.00% of registered"]));
+    expect(calls().some((u) => u.pathname.endsWith("/adoption/traffic_session") && u.searchParams.get("os") === "ios")).toBe(true);
+    expect(val("Logged-in Rate")).toBe("28.57%"); // 2 ÷ 7 = 28.571…%
+  });
+
+  it("says nothing about never logging in: not in the tables, the lists or the notes", async () => {
+    renderSection();
+    await waitFor(() => expect(val("Registered Customers")).toBe("7"));
+    await waitFor(() => expect(barValues()[1]).toMatch(/^5/));
+    expect(document.getElementById("su-root")!.textContent).not.toMatch(/never logged|not logged in|waiting/i);
+    fireEvent.click(tile("Registered Customers"));
+    const panel = await screen.findByRole("dialog");
+    expect(panel.textContent).not.toMatch(/never logged|status/i);
   });
 });

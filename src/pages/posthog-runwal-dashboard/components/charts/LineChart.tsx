@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { fmtC } from '../../data/constants';
+import { fmtC, pct2 } from '../../data/constants';
 
 interface LineChartProps {
   cur: number[];
@@ -71,7 +71,7 @@ export const LineChart: React.FC<LineChartProps> = ({
   const X = (i: number) => pl + i * xw;
   const Y = (v: number) => pt + (H - pt - pb) * (1 - (v - mn) / span);
   const base = H - pb;
-  const vfmt = pctScale ? (v: number) => v.toFixed(1) + '%' : (v: number) => (v >= 1000 ? v.toLocaleString() : fmtC(v));
+  const vfmt = pctScale ? (v: number) => pct2(v) : (v: number) => (v >= 1000 ? v.toLocaleString() : fmtC(v));
 
   const path = (arr: number[]) => {
     let d = '';
@@ -188,7 +188,7 @@ export const LineChart: React.FC<LineChartProps> = ({
     let deltaColor = 'var(--muted)';
     if (prevVal != null && prevVal > 0) {
       const deltaPct = ((curVal - prevVal) / prevVal) * 100;
-      deltaStr = `${deltaPct > 0 ? '+' : ''}${deltaPct.toFixed(1)}%`;
+      deltaStr = pct2(deltaPct, true);
       deltaColor = deltaPct > 0 ? 'var(--pos, #0f8a3d)' : deltaPct < 0 ? 'var(--neg, #b3402c)' : 'var(--muted)';
     }
 

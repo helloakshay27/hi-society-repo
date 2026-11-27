@@ -2,11 +2,14 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageId, DevicePlatform } from "./types";
 import { BM_DEFAULTS } from "./data/constants";
+import { loadView, presetRange, saveView } from "./data/savedView";
 import { DashboardProvider } from "./context/DashboardContext";
 import { InfoPopover } from "./components/common/InfoPopover";
 import { TopBar } from "./components/common/TopBar";
 import { SideBar } from "./components/common/SideBar";
 import { FilterBar } from "./components/common/FilterBar";
+import { PreviousPeriodNote } from "./components/common/PreviousPeriodNote";
+import { previousCoverage } from "./data/previousPeriod";
 import { TrafficSessionPage } from "./components/pages/TrafficSessionPage";
 import { AdoptionEngagementPage } from "./components/pages/AdoptionEngagementPage";
 import { WorkflowUsagePage } from "./components/pages/WorkflowUsagePage";
@@ -29,14 +32,6 @@ import "./styles/dashboard.css";
  */
 const RUNWAL_CP_PROJECT_CODE = "RE-CP01";
 
-function dateRangeFor(days: number) {
-  const to = new Date();
-  const from = new Date(to);
-  from.setDate(to.getDate() - (days - 1));
-  const ymd = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  return { from: ymd(from), to: ymd(to) };
-}
 
 function PosthogRunwalCpDashboardContent() {
   const queryClient = useQueryClient();
@@ -63,6 +58,10 @@ function PosthogRunwalCpDashboardContent() {
     }
   });
 
+  // The view picked before a page refresh (date range, platform, page).
+  const viewKey = "cp";
+  const [savedView] = useState(() => loadView(viewKey));
+
   // Load user/org accessible sites
   const {
     sites,
@@ -84,15 +83,24 @@ function PosthogRunwalCpDashboardContent() {
     "all" | "pre" | "post"
   >("all");
 
-  const initialRange = useMemo(() => dateRangeFor(30), []);
-
-  const [activePage, setActivePage] = useState<PageId>("pgTraffic");
-  const [devPlatform, setDevPlatform] = useState<DevicePlatform>("all");
+  const [activePage, setActivePage] = useState<PageId>(savedView.page);
+  const [devPlatform, setDevPlatform] = useState<DevicePlatform>(savedView.dev);
   const [showPrev, setShowPrev] = useState<boolean>(true);
-  const [rangeDays, setRangeDays] = useState<number>(30);
-  const [rangeLabel, setRangeLabel] = useState<string>("Last 30 days");
-  const [rangeFrom, setRangeFrom] = useState<string>(initialRange.from);
-  const [rangeTo, setRangeTo] = useState<string>(initialRange.to);
+  const [rangeDays, setRangeDays] = useState<number>(savedView.range.days);
+  const [rangeLabel, setRangeLabel] = useState<string>(savedView.range.label);
+  const [rangeFrom, setRangeFrom] = useState<string>(savedView.range.from);
+  const [rangeTo, setRangeTo] = useState<string>(savedView.range.to);
+  const [rangeIsCustom, setRangeIsCustom] = useState<boolean>(savedView.range.custom);
+
+  useEffect(() => {
+    saveView(viewKey, {
+      range: { days: rangeDays, label: rangeLabel, from: rangeFrom, to: rangeTo, custom: rangeIsCustom },
+      dev: devPlatform,
+      societyId: "all",
+      segment: "all",
+      page: activePage,
+    });
+  }, [rangeDays, rangeLabel, rangeFrom, rangeTo, rangeIsCustom, devPlatform, activePage]);
 
   const [benchmarks, setBenchmarks] = useState<Record<string, number | null>>({
     ...BM_DEFAULTS,
@@ -263,11 +271,12 @@ function PosthogRunwalCpDashboardContent() {
   };
 
   const handleSetRange = (days: number, label: string) => {
-    const r = dateRangeFor(days);
+    const r = presetRange(days);
     setRangeDays(days);
     setRangeLabel(label);
     setRangeFrom(r.from);
     setRangeTo(r.to);
+    setRangeIsCustom(false);
   };
 
   const handleSetCustomRange = (
@@ -280,6 +289,7 @@ function PosthogRunwalCpDashboardContent() {
     setRangeLabel(label);
     setRangeFrom(from);
     setRangeTo(to);
+    setRangeIsCustom(true);
   };
 
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -437,6 +447,7 @@ function PosthogRunwalCpDashboardContent() {
 
           <FilterBar
             range={rangeDays}
+            rangeIsCustom={rangeIsCustom}
             rangeLabel={rangeLabel}
             rangeFrom={rangeFrom}
             rangeTo={rangeTo}
@@ -460,6 +471,8 @@ function PosthogRunwalCpDashboardContent() {
             isError={isTrafficError}
             generatedAt={generatedAt}
           />
+
+          <PreviousPeriodNote coverage={previousCoverage(trafficData)} />
 
           {activePage === "pgTraffic" && (
             <TrafficSessionPage

@@ -204,6 +204,9 @@ function buildPosthogQuery(filters: AdoptionQueryFilters, extra: Record<string, 
     parts.push('include_anonymous=1');
   }
 
+  // Percentages unrounded: the dashboards show them cut to two decimals (pct2), never rounded.
+  parts.push('exact=1');
+
   // Sent unescaped (matches the site_id convention below) — the value is
   // always a plain digit or comma-separated digits, e.g. "0,1".
   if (filters.displayView) parts.push(`display_view=${filters.displayView}`);
@@ -327,10 +330,48 @@ export function societyAccountsParams(q: SocietyAccountsQuery, page: number, per
   return params;
 }
 
+/** Page sizes to fall back to when Hi Society does not answer a page (each divides the one before). */
+const ACCOUNTS_PAGE_SIZES = [ACCOUNTS_PER_PAGE, 500, 250];
+
+/**
+ * A Hi Society request that failed. The browser says only "Failed to fetch" when no answer can be read: the
+ * server, or the gateway in front of it, gave up on a slow request (a gateway's time-out page carries no
+ * CORS headers, so the page cannot read it), or the connection dropped. `seconds` says how long it waited.
+ */
+export class HiSocietyRequestError extends Error {
+  constructor(public what: string, public status: number | null, public seconds: number) {
+    super(
+      status != null
+        ? `Hi Society answered ${status} to ${what} after ${seconds} s`
+        : `Hi Society gave no answer to ${what} (${seconds} s${seconds >= 25 ? ', most likely its time limit' : ', network error'})`
+    );
+  }
+}
+
+/** fetch() that turns a failure into a HiSocietyRequestError (5xx and no answer can be tried again). */
+async function hiSocietyFetch(url: string, init: RequestInit, what: string): Promise<Response> {
+  const t0 = Date.now();
+  const secs = () => Math.round((Date.now() - t0) / 1000);
+  let res: Response;
+  try {
+    res = await fetch(url, init);
+  } catch (e) {
+    if ((e as Error)?.name === 'AbortError') throw e;
+    throw new HiSocietyRequestError(what, null, secs());
+  }
+  if (!res.ok) throw new HiSocietyRequestError(what, res.status, secs());
+  return res;
+}
+const retryable = (e: unknown) => e instanceof HiSocietyRequestError && (e.status == null || e.status >= 500);
+
 /**
  * Every account matching the query, from Hi Society's Manage Users (GET /crm/admin/user_societies.json,
  * the call its Manage Users page makes), read 1,000 a page. Hi Society answers only for the society
  * selected in its own header: the society ids narrow within it, they cannot reach another society.
+ *
+ * A big society can take a page past Hi Society's time limit (each page also works out its Manage Users
+ * dashboard counts). A page that gets no answer, or a 5xx, is asked for again in smaller pages (500, then
+ * 250), from the same account on; only when the smallest page fails too does the read fail.
  */
 export async function fetchSocietyAccounts(q: SocietyAccountsQuery): Promise<SocietyAccountsResult> {
   const base = (getBaseUrl() || '').replace(/\/+$/, '');
@@ -338,17 +379,33 @@ export async function fetchSocietyAccounts(q: SocietyAccountsQuery): Promise<Soc
   if (!base || !token) throw new Error('Not signed in to Hi Society');
   const accounts: HiSocietyAccount[] = [];
   let total = 0;
-  for (let page = 1; page <= ACCOUNTS_MAX_PAGES; page++) {
-    const res = await fetch(`${base}/crm/admin/user_societies.json?${societyAccountsParams(q, page).toString()}`, {
-      headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) throw new Error(`Manage Users error (${res.status}): ${res.statusText || 'Failed to fetch'}`);
-    const data = await res.json();
+  let size = 0; // index into ACCOUNTS_PAGE_SIZES
+  let page = 1;
+  for (let request = 0; request < ACCOUNTS_MAX_PAGES * 4; request++) {
+    const perPage = ACCOUNTS_PAGE_SIZES[size];
+    let data: any;
+    try {
+      const res = await hiSocietyFetch(
+        `${base}/crm/admin/user_societies.json?${societyAccountsParams(q, page, perPage).toString()}`,
+        { headers: { Accept: 'application/json', Authorization: `Bearer ${token}` } },
+        `the accounts list (page ${page}, ${perPage} a page)`
+      );
+      data = await res.json();
+    } catch (e) {
+      if (retryable(e) && size < ACCOUNTS_PAGE_SIZES.length - 1) {
+        // The pages before this one were full, so the same accounts start at this page of the smaller size.
+        size += 1;
+        page = ((page - 1) * perPage) / ACCOUNTS_PAGE_SIZES[size] + 1;
+        continue;
+      }
+      throw e;
+    }
     const rows: HiSocietyAccount[] = Array.isArray(data?.user_societies) ? data.user_societies : [];
-    if (page === 1) total = Number(data?.pagination?.total_count) || rows.length;
+    if (accounts.length === 0) total = Number(data?.pagination?.total_count) || rows.length;
     accounts.push(...rows);
     const pages = Number(data?.pagination?.total_pages) || 1;
     if (page >= pages || rows.length === 0) break;
+    page += 1;
   }
   return { accounts, total };
 }
@@ -406,8 +463,13 @@ async function switchSocietyNow(societyId: string): Promise<void> {
   const token = getUser()?.spree_api_key || getToken() || localStorage.getItem('token') || '';
   if (!base || !token) throw new Error('Not signed in to Hi Society');
   const query = new URLSearchParams({ token, user_society_id: userSocietyId });
-  const res = await fetch(`${base}/change_user_society.json?${query.toString()}`, { headers: { Accept: 'application/json' } });
-  if (!res.ok) throw new Error(`Hi Society did not switch society (${res.status})`);
+  const url = `${base}/change_user_society.json?${query.toString()}`;
+  const init = { headers: { Accept: 'application/json' } };
+  // Asked once more when Hi Society gives no answer or a 5xx: the switch is quick and safe to repeat.
+  await hiSocietyFetch(url, init, 'the society switch').catch((e) => {
+    if (!retryable(e)) throw e;
+    return hiSocietyFetch(url, init, 'the society switch');
+  });
   for (const store of [localStorage, sessionStorage]) {
     store.setItem('selectedUserSociety', userSocietyId);
     store.setItem('selectedSocietyId', societyId);
@@ -427,8 +489,9 @@ export const switchHiSocietySociety = (societyId: string): Promise<void> =>
  * Society, so this selects each society in turn (as Hi Society's header does) and reads it:
  *   one society   - it stays selected in Hi Society afterwards, as if picked in the header;
  *   several / all - one after another, then Hi Society is put back on the society it was on before.
- * Each society is read twice, with the dates sent both ways: accounts up to `to`, and accounts from `from`
- * to `to`. A society that cannot be read (not a member, an error) is reported, the others still are.
+ * Each society is read once, every account up to `to`; the accounts from `from` are those of them created
+ * on or after `from` (the same list Manage Users gives with created_at_gteq, without a second read). A
+ * society that cannot be read (not a member, an error) is reported, the others still are.
  */
 export function fetchAccountsBySociety(
   q: SocietyAccountsQuery,
@@ -445,8 +508,9 @@ export function fetchAccountsBySociety(
         try {
           if (headerSocietyId() !== id) await switchSocietyNow(id);
           const upTo = await fetchSocietyAccounts({ ...q, societyIds: [id], from: undefined });
-          const inRange = await fetchSocietyAccounts({ ...q, societyIds: [id] });
-          societies.push({ societyId: id, upTo: upTo.accounts, inRange: inRange.accounts, error: null });
+          const fromMs = q.from ? Date.parse(istDayStart(q.from)) : -Infinity;
+          const inRange = upTo.accounts.filter((a) => a.created_at != null && Date.parse(a.created_at) >= fromMs);
+          societies.push({ societyId: id, upTo: upTo.accounts, inRange, error: null });
         } catch (e) {
           if (!several) throw e;
           societies.push({ societyId: id, upTo: [], inRange: [], error: e instanceof Error ? e.message : String(e) });

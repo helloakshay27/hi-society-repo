@@ -86,6 +86,13 @@ export interface QueryInput {
   from: string;
   to: string;
   dev: DeviceKey;
+  /** Hi Society society ids from the society dropdown, sent as society_id=<id>[,<id>…]; none = every society. */
+  societyIds?: string[];
+}
+
+function societyParam(societyIds?: string[]): string | null {
+  const ids = (societyIds || []).filter(Boolean);
+  return ids.length ? `society_id=${ids.map(encodeURIComponent).join(',')}` : null;
 }
 
 function deviceParams(dev: DeviceKey): Record<string, string> {
@@ -101,6 +108,8 @@ function buildQuery(input: QueryInput, extra: Record<string, any> = {}): string 
   for (const [k, v] of Object.entries(deviceParams(input.dev))) {
     parts.push(`${k}=${encodeURIComponent(v)}`);
   }
+  const society = societyParam(input.societyIds);
+  if (society) parts.push(society);
   for (const [k, v] of Object.entries(extra)) {
     if (v !== undefined && v !== null && v !== '') {
       parts.push(`${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`);
@@ -112,7 +121,7 @@ function buildQuery(input: QueryInput, extra: Record<string, any> = {}): string 
 const DEFAULT_POSTHOG_API = 'https://posthog-api.lockated.com';
 
 export async function fetchRecentActiveUsers(
-  input: Pick<QueryInput, 'appId' | 'from' | 'to'>,
+  input: Pick<QueryInput, 'appId' | 'from' | 'to' | 'societyIds'>,
   limit = 10,
 ): Promise<RecentActiveUsersResponse> {
   const params = new URLSearchParams({
@@ -121,7 +130,9 @@ export async function fetchRecentActiveUsers(
     to: input.to,
     limit: String(limit),
   });
-  return getPosthog<RecentActiveUsersResponse>(input.appId, 'recent_active_users', params.toString());
+  const society = societyParam(input.societyIds);
+  const query = society ? `${params.toString()}&${society}` : params.toString();
+  return getPosthog<RecentActiveUsersResponse>(input.appId, 'recent_active_users', query);
 }
 
 /** The site's own adoption API, by its app_id. */
@@ -307,8 +318,9 @@ export async function fetchTrafficSection(input: QueryInput): Promise<TrafficSli
     settled(getPosthog<UsageDistributionResponse>(input.appId, 'usage_and_distribution', q())),
   ]);
 
-  // --- platform shares: the API's platform_usage (users on iOS / Android ÷ all active users; a user on
-  // both counts in both, as the backend defines it). Older responses: from os_breakdown. ---
+  // --- platform shares: the API's platform_usage (users on iOS / Android ÷ all active users; each user
+  // counts once, on the platform they used last, so the shares add up to 100). Older responses: from
+  // os_breakdown. ---
   let deviceShares: LiveDashboard['deviceShares'] = null;
   const platforms = (usage as any)?.platform_usage?.platforms as Array<{ platform: string; user_share: number }> | undefined;
   const devs = usage?.device_split?.devices;

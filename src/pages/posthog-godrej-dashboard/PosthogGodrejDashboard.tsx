@@ -21,6 +21,7 @@ import { WorkflowUsagePage } from "../posthog-runwal-dashboard/components/pages/
 import {
   useDashboardSites,
   useTrafficSession,
+  useUserSocieties,
 } from "../posthog-runwal-dashboard/hooks/useDashboardAnalytics";
 import { useEnsureAppId } from "../posthog-runwal-dashboard/hooks/useEnsureAppId";
 import { DashboardFilters } from "../posthog-runwal-dashboard/api/types";
@@ -77,6 +78,12 @@ function PosthogGodrejDashboardContent() {
   } = useDashboardSites();
   const [selectedSiteId, setSelectedSiteId] = useState<string>("all");
 
+  // Society dropdown: the logged-in user's Hi Society societies, the same list as the Hi Society
+  // header's dropdown. "all" sends no society, so the numbers cover every society; one society sends
+  // society_id=<id> and every card (and User journeys) counts only that society's events.
+  const { data: societies = [], isLoading: isSocietiesLoading } = useUserSocieties();
+  const [selectedSocietyId, setSelectedSocietyId] = useState<string>("all");
+
   const initialRange = useMemo(() => dateRangeFor(30), []);
 
   const [activePage, setActivePage] = useState<PageId>("pgTraffic");
@@ -110,9 +117,10 @@ function PosthogGodrejDashboardContent() {
       licensedSeats: null,
       module: null,
       subModule: null,
+      societyIds: selectedSocietyId === "all" ? [] : [selectedSocietyId],
       apiPath: ADOPTION_API.godrej,
     };
-  }, [selectedSiteId, devPlatform, rangeFrom, rangeTo]);
+  }, [selectedSiteId, selectedSocietyId, devPlatform, rangeFrom, rangeTo]);
 
   // Traffic Session query for global live counter & badge
   const {
@@ -366,6 +374,11 @@ function PosthogGodrejDashboardContent() {
             selectedSiteId={selectedSiteId}
             onSelectSite={setSelectedSiteId}
             isSitesLoading={isSitesLoading}
+            showSocietyFilter
+            societies={societies}
+            selectedSocietyId={selectedSocietyId}
+            onSelectSociety={setSelectedSocietyId}
+            isSocietiesLoading={isSocietiesLoading}
             showAdminScope
             adminScope={adminScope}
             onSelectAdminScope={setAdminScope}
@@ -409,6 +422,9 @@ function PosthogGodrejDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              showUserJourneys
+              societies={societies}
+              rangeLabel={rangeLabel}
             />
           )}
 

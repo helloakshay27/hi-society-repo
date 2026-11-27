@@ -10,6 +10,48 @@ import { CreateLockFunctionDialog } from './CreateLockFunctionDialog';
 import { CreateFunctionDialog } from './CreateFunctionDialog';
 import { lockFunctionService, LockFunction as ApiLockFunctionItem } from '@/services/lockFunctionService';
 
+// Single toast id for the background import so it updates in place
+const IMPORT_TOAST_ID = 'lock-function-import';
+
+// Pending background import, persisted so it survives navigation/reload
+const PENDING_IMPORT_KEY = 'pendingLockFunctionImport';
+// Imports older than this are assumed abandoned and not resumed
+const MAX_IMPORT_AGE_MS = 6 * 60 * 60 * 1000;
+
+const readPendingImportId = (): number | string | null => {
+  try {
+    const raw = localStorage.getItem(PENDING_IMPORT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { id?: number | string; startedAt?: number };
+    if (
+      parsed?.id === undefined ||
+      !parsed.startedAt ||
+      Date.now() - parsed.startedAt > MAX_IMPORT_AGE_MS
+    ) {
+      localStorage.removeItem(PENDING_IMPORT_KEY);
+      return null;
+    }
+    return parsed.id;
+  } catch {
+    return null;
+  }
+};
+
+const writePendingImportId = (id: number | string | null) => {
+  try {
+    if (id === null) {
+      localStorage.removeItem(PENDING_IMPORT_KEY);
+    } else {
+      localStorage.setItem(
+        PENDING_IMPORT_KEY,
+        JSON.stringify({ id, startedAt: Date.now() })
+      );
+    }
+  } catch {
+    // Storage unavailable: polling still works while on the page
+  }
+};
+
 // Type definitions for the lock function data
 interface LockFunctionItem {
   id: number;
@@ -161,8 +203,43 @@ export const LockFunctionList = () => {
   const debouncedSearchQuery = useDebounce(searchTerm, 1000);
   const [allLockFunctionData, setAllLockFunctionData] = useState<LockFunctionItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [importing, setImporting] = useState(false);
+  // Id of a background import still being processed. Mirrored to localStorage
+  // so leaving and returning to this page (or reloading) resumes polling.
+  const [importId, setImportIdState] = useState<number | string | null>(readPendingImportId);
+  const [importing, setImporting] = useState(() => readPendingImportId() !== null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importPollRef = useRef<number | null>(null);
+
+  const setImportId = (id: number | string | null) => {
+    setImportIdState(id);
+    writePendingImportId(id);
+  };
+
+  const clearImportStatusPolling = () => {
+    if (importPollRef.current) {
+      window.clearInterval(importPollRef.current);
+      importPollRef.current = null;
+    }
+  };
+
+  // Resume an import that was still processing when the user left the page
+  useEffect(() => {
+    if (importId !== null) {
+      toast.loading('Import is still processing...', {
+        id: IMPORT_TOAST_ID,
+        duration: Infinity,
+      });
+      checkImportStatus(importId);
+      startImportStatusPolling(importId);
+    }
+    // Stop polling and remove the processing toast when leaving the page;
+    // the stored id lets the next visit pick it back up.
+    return () => {
+      clearImportStatusPolling();
+      toast.dismiss(IMPORT_TOAST_ID);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // API call to fetch lock function data
   const fetchLockFunctionData = async () => {
@@ -339,9 +416,71 @@ export const LockFunctionList = () => {
     setIsCreateDialogOpen(true);
   };
 
+  const checkImportStatus = async (id: number | string) => {
+    try {
+      const { API_CONFIG, getAuthHeader } = await import('@/config/apiConfig');
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/lock_modules/import_status.json?import_id=${encodeURIComponent(id)}`,
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: getAuthHeader(),
+          },
+        }
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = await response.json();
+      const importData = data?.import || data;
+      const statusInfo = {
+        status: importData?.status,
+        filename: importData?.filename,
+        total_rows: importData?.total_rows,
+        success_count: importData?.success_count,
+        error_count: importData?.error_count,
+      };
+
+      if (statusInfo.status === 'completed') {
+        clearImportStatusPolling();
+        // Same id: replaces the processing toast
+        toast.success(
+          `Import completed: ${statusInfo.filename} — ${statusInfo.success_count}/${statusInfo.total_rows} succeeded, ${statusInfo.error_count} failed`,
+          { id: IMPORT_TOAST_ID, duration: 5000 }
+        );
+        setImporting(false);
+        setImportId(null);
+        await fetchLockFunctionData();
+      } else if (statusInfo.status === 'failed') {
+        clearImportStatusPolling();
+        toast.error(`Import failed: ${statusInfo.filename || ''}`, {
+          id: IMPORT_TOAST_ID,
+          duration: 5000,
+        });
+        setImporting(false);
+        setImportId(null);
+      } else {
+        // Update the single processing toast in place
+        toast.loading(
+          `Processing import: ${statusInfo.filename ?? ''} — ${statusInfo.success_count ?? 0}/${statusInfo.total_rows ?? '?'} processed`,
+          { id: IMPORT_TOAST_ID, duration: Infinity }
+        );
+      }
+    } catch (error) {
+      console.error('Error checking import status:', error);
+    }
+  };
+
+  const startImportStatusPolling = (id: number | string) => {
+    clearImportStatusPolling();
+    importPollRef.current = window.setInterval(() => {
+      checkImportStatus(id);
+    }, 5000);
+  };
+
   // Handle Excel file import
   const handleImportExcel = async (file: File) => {
     setImporting(true);
+    let queued = false;
     try {
       const formData = new FormData();
       formData.append('excel_file', file);
@@ -366,7 +505,21 @@ export const LockFunctionList = () => {
       }
 
       const result = await response.json();
-      
+
+      // Large files are processed in the background: poll until completed/failed
+      if (result?.status === 'queued' && result?.import_id) {
+        // Persistent processing toast, kept until completed/failed or page leave
+        toast.loading(result?.message || 'Import queued. Processing...', {
+          id: IMPORT_TOAST_ID,
+          duration: Infinity,
+        });
+        queued = true;
+        setImportId(result.import_id);
+        startImportStatusPolling(result.import_id);
+        // importing stays true until the polled status is completed/failed
+        return;
+      }
+
       toast.success('Excel file imported successfully!', {
         description: `Imported ${result.count || 'data'} from Excel file`,
         duration: 4000,
@@ -382,7 +535,7 @@ export const LockFunctionList = () => {
         duration: 5000,
       });
     } finally {
-      setImporting(false);
+      if (!queued) setImporting(false);
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { RetentionCohort } from '../../api/types';
-import { fmtDateShort } from '../../data/constants';
+import { fmtDateShort, pct2 } from '../../data/constants';
 
 interface RetentionCohortTableProps {
   cohorts?: RetentionCohort[];
@@ -68,14 +68,13 @@ export const RetentionCohortTable: React.FC<RetentionCohortTableProps> = ({ coho
                     );
                   }
 
-                  const pctVal = Math.round(num);
-                  const t = Math.min(1, Math.max(0, pctVal / 100));
+                  const t = Math.min(1, Math.max(0, num / 100));
                   const bg = `rgba(var(--heat-rgb), ${(0.09 + t * 0.78).toFixed(2)})`;
                   const col = t > 0.55 ? 'var(--on-heat)' : 'var(--ink)';
 
                   return (
                     <td key={w} style={{ background: bg, color: col, textAlign: 'center', fontWeight: 500 }}>
-                      {pctVal}%
+                      {pct2(num)}
                     </td>
                   );
                 })}

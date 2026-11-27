@@ -1,5 +1,6 @@
 import React from 'react';
 import { FlowItem, EntryScreenItem } from '../../api/types';
+import { pct2 } from '../../data/constants';
 
 // "app_permissions_requested" -> "App Permissions Requested"
 // "main_home6" -> "Main Home 6" (space inserted before a number glued onto a word)
@@ -77,7 +78,7 @@ export const EntryScreensTable: React.FC<EntryScreensTableProps> = ({ entryScree
         <thead>
           <tr>
             <th>Entry Screen</th>
-            <th className="num">Visitors</th>
+            <th className="num">Active Users</th>
             <th className="num">Views</th>
             <th className="num">Bounce Rate</th>
           </tr>
@@ -90,7 +91,7 @@ export const EntryScreensTable: React.FC<EntryScreensTableProps> = ({ entryScree
               <td className="num">{r.views != null ? r.views.toLocaleString() : '—'}</td>
               <td className="num">
                 {r.bounce != null
-                  ? `${Math.round(r.bounce)}%`
+                  ? pct2(r.bounce)
                   : '—'}
               </td>
             </tr>

@@ -12,6 +12,25 @@ export function pct(x: number, d?: number): string {
   return x.toFixed(d == null ? 0 : d) + '%';
 }
 
+/**
+ * A number cut (not rounded) to two decimals: 178.55555 -> "178.55", -13.499 -> "-13.49", 14 -> "14.00".
+ * It first clears floating-point noise (14.099999999999998 is 14.1), then drops every digit after the
+ * second decimal, so the figure is never shown higher than it is.
+ */
+export function trunc2(x: number | null | undefined): string {
+  if (x == null || !Number.isFinite(x)) return '—';
+  const [int, frac = ''] = Math.abs(x).toFixed(9).split('.');
+  const out = `${int}.${(frac + '00').slice(0, 2)}`;
+  return x < 0 && out !== '0.00' ? `-${out}` : out;
+}
+
+/** A percentage to two decimals, cut not rounded: 178.5555 -> "178.55%". `signed` adds + to a rise. */
+export function pct2(x: number | null | undefined, signed = false): string {
+  if (x == null || !Number.isFinite(x)) return '—';
+  const s = trunc2(x);
+  return `${signed && x > 0 && s !== '0.00' ? '+' : ''}${s}%`;
+}
+
 // "2026-07-12" → "7/12" (matches the Usage-over-time chart's axis label format).
 // Non-ISO-date strings (e.g. already-short labels) are returned unchanged.
 export function fmtDateShort(value: string | null | undefined): string {
@@ -134,7 +153,7 @@ export interface InfoEntry {
 export const INFO: Record<string, InfoEntry> = {
   U1: {
     t: 'Active Users (U1)',
-    f: 'Count of different people (each user_id once) who did at least one thing during the selected period.',
+    f: 'Count of different people (each user_id once) who did at least one thing during the selected period. Each person is on one platform, the one they used last, so Active Users = iOS + Android. vs prev = (this period − previous period of the same length) ÷ previous × 100.',
     d: 'Each person is counted only once no matter how many times they log in. Shows your net audience reach.',
   },
   U2: {
@@ -154,12 +173,12 @@ export const INFO: Record<string, InfoEntry> = {
   },
   U5: {
     t: 'Bounce Rate (U5)',
-    f: 'Sessions that only saw the launch or home screen (splash, login, home) ÷ all sessions × 100.',
+    f: 'Sessions that only saw the launch or home screen (splash, login, home) ÷ all sessions × 100. vs prev = (this rate − previous rate) ÷ previous rate × 100, the previous rate (in brackets) being the same days just before the range.',
     d: 'Lower is better. High bounce rate indicates onboarding confusion or premature exits.',
   },
   U6: {
     t: 'Recently Online (U6)',
-    f: 'Distinct customers with at least one telemetry event recorded in the last 30 minutes.',
+    f: 'Distinct customers with at least one event in the last 30 minutes. It does not follow the date range; it follows every other filter (society, segment, platform).',
     d: 'Provides a live pulse of real-time active users currently inside the application.',
   },
   A1: {
@@ -209,12 +228,12 @@ export const INFO: Record<string, InfoEntry> = {
   },
   'chart.usage': {
     t: 'Usage Over Time',
-    f: 'Plots daily or weekly aggregated trends for Visitors, Screen Views, and Sessions alongside previous period baseline.',
+    f: 'Plots daily or weekly aggregated trends for Active Users, Screen Views, and Sessions alongside previous period baseline.',
     d: 'Allows tracking period-over-period growth, weekend vs weekday patterns, and campaign spikes.',
   },
   'chart.devices': {
     t: 'Device / Platform Breakdown',
-    f: 'Users on each platform (iOS, Android, Desktop Web) ÷ all active users × 100.',
+    f: 'Active users on each platform (iOS, Android, Desktop Web) ÷ all active users × 100. Each person counts once, on the platform they used last in the period, so the platforms add up to Active Users.',
     d: 'Guides mobile vs desktop feature parity and OS-specific testing priorities.',
   },
   'chart.adoptionTrend': {
@@ -258,11 +277,6 @@ export const INFO: Record<string, InfoEntry> = {
     f: 'Accounts created within the selected dates (the created date Manage Users shows).',
     d: 'Fresh accounts. For Runwal Connect most are created by Runwal when the customer books. Click to see who.',
   },
-  'su.never': {
-    t: 'Registered, Never Logged In',
-    f: "Registered Customers with no phone registered for the app in Manage Users (a phone is registered at the person's first login). They have no platform, so this shows under All platforms only.",
-    d: 'People who have an account but have never opened the app: the easiest group to re-engage. Click for the named list.',
-  },
   'su.rate': {
     t: 'Logged-in Rate',
     f: "Registered Customers who have logged in ÷ every registered customer (accounts up to the end of the selected dates). Logged in = a phone registered for the app in Manage Users. With iOS or Android chosen: logged in on that platform.",
@@ -273,30 +287,15 @@ export const INFO: Record<string, InfoEntry> = {
     f: 'Accounts created per day, week or month (by the created date Manage Users shows), for the societies, phase and platform chosen. The dashed line is the period just before.',
     d: 'Grouped by day, the points inside the selected dates add up to the New Registrations tile. Click a point to see who registered then.',
   },
-  'chart.suFunnel': {
-    t: 'From registration to first login',
-    f: 'Of the accounts created within the selected dates: how many have logged in at least once (a phone registered for the app). With iOS or Android chosen: logged in on that platform.',
-    d: 'How many new accounts turn into app users. Click a step to see its people.',
-  },
-  'chart.suStore': {
-    t: 'Logged-in customers by store',
-    f: 'Of the accounts created within the selected dates, how many have the app on an iPhone (App Store) and on an Android phone (Google Play), from the phones Manage Users records. Someone with both counts on each.',
-    d: 'Where new customers use the app. These are customers with the app, not store installs. Click a store to see who.',
-  },
-  'chart.suGap': {
-    t: 'Registered, but not logged in',
-    f: 'Accounts that have never logged in, per day, week or month of registration. The figure above counts those registered within the selected dates.',
-    d: 'Who to follow up, by when they registered. Click a bar to see who. Installs where nobody signed in cannot be counted from Manage Users.',
+  'chart.suActive': {
+    t: 'Registered users vs active users',
+    f: "Registered users: Hi Society Manage Users accounts created up to the end of the selected dates (the Registered Customers tile). Active users: people who used the app within the selected dates, from the app's usage data (the Active Users tile on Traffic & Session). Both follow the society, phase and platform chosen. Active ÷ registered × 100 is shown under Active users.",
+    d: 'How much of the registered customer base actually uses the app. Click either bar to see the people.',
   },
   'chart.suProject': {
     t: 'Registered customers by project',
     f: "Registered customers per project, with how many have logged in. In Hi Society each Runwal project is a society: one row per society chosen in the society picker (all of them for All Societies). Same filters as the tiles above.",
     d: 'Which projects are using the app and which need a push. Click a project to see its customers.',
-  },
-  'chart.suNever': {
-    t: 'Needs a nudge',
-    f: 'Registered customers who have never logged in, longest waiting first. Waiting = days since the account was created.',
-    d: 'A named list for the team to follow up. View all opens every one of them, with search and a CSV.',
   },
   'chart.sitewise': {
     t: 'Project / Site-Wise Engagement',
@@ -380,12 +379,12 @@ export const INFO: Record<string, InfoEntry> = {
   },
   U7: {
     t: 'Usage Over Time',
-    f: 'Plots daily or weekly aggregated trends for Visitors, Screen Views, and Sessions alongside previous period baseline.',
+    f: 'Plots daily or weekly aggregated trends for Active Users, Screen Views, and Sessions alongside previous period baseline.',
     d: 'Allows tracking period-over-period growth, weekend vs weekday patterns, and campaign spikes.',
   },
   U8: {
     t: 'Device / Platform Breakdown',
-    f: 'Users on each platform (iOS, Android, Desktop Web) ÷ all active users × 100.',
+    f: 'Active users on each platform (iOS, Android, Desktop Web) ÷ all active users × 100. Each person counts once, on the platform they used last in the period, so the platforms add up to Active Users.',
     d: 'Guides mobile vs desktop feature parity and OS-specific testing priorities.',
   },
   A6: {
