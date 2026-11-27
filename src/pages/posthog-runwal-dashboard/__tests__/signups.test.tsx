@@ -276,10 +276,12 @@ describe("the section", () => {
   it("has no never-logged-in tile, by-store card, download-gap bars or nudge list (taken off on 27 Nov 2026)", async () => {
     renderSection();
     await waitFor(() => expect(val("Registered Customers")).toBe("4"));
-    // New Registrations would now equal Registered Customers (both are the accounts created in the range).
     expect([...document.querySelectorAll("#su-root .tile .lbl")].map((e) => e.textContent)).toEqual([
-      "Registered Customers", "Logged-in Rate",
+      "Registered Customers", "New Registrations", "Logged-in Rate",
     ]);
+    // New Registrations: created on a date within 22 Oct – 20 Nov (3, 4, 5 and 11).
+    expect(val("New Registrations")).toBe("4");
+    expect(tile("New Registrations").textContent).toContain("created on Oct 22, 2026 – Nov 20, 2026");
     for (const id of ["card-suStore", "card-suGap", "card-suNever"]) expect(document.getElementById(id)).toBeNull();
     expect(screen.queryByText(/Needs a nudge|Logged-in customers by store|Download gap/)).toBeNull();
   });
