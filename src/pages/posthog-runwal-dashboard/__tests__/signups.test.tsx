@@ -261,22 +261,24 @@ describe("the numbers", () => {
 describe("the section", () => {
   it("All Societies: tiles add up every society, one project row each, Hi Society back where it was", async () => {
     renderSection();
-    await waitFor(() => expect(val("Registered Customers")).toBe("7"));
+    // Accounts created 22 Oct – 20 Nov only: Gardens 3, 4, 5 and Avenue 11 (1, 2 and 12 are older, 13 is later).
+    await waitFor(() => expect(val("Registered Customers")).toBe("4"));
     expect(screen.getByRole("heading", { name: "Downloads & sign-ups" })).toBeTruthy();
-    expect(val("New Registrations")).toBe("4");
-    expect(tile("Registered Customers").textContent).toContain("Post Sales 3 · Post Possession 4");
+    expect(tile("Registered Customers").textContent).toContain("accounts created Oct 22, 2026 – Nov 20, 2026");
+    expect(tile("Registered Customers").textContent).toContain("Post Sales 1 · Post Possession 3");
     expect(projectRows()).toEqual([
-      ["Runwal Gardens", "Both", "5", "3", "60.00%"],
-      ["Runwal Avenue", "Both", "2", "1", "50.00%"],
+      ["Runwal Gardens", "Both", "3", "2", "66.66%"],
+      ["Runwal Avenue", "Post Possession", "1", "1", "100.00%"],
     ]);
     expect(selected).toBe("3685");
   });
 
   it("has no never-logged-in tile, by-store card, download-gap bars or nudge list (taken off on 27 Nov 2026)", async () => {
     renderSection();
-    await waitFor(() => expect(val("Registered Customers")).toBe("7"));
+    await waitFor(() => expect(val("Registered Customers")).toBe("4"));
+    // New Registrations would now equal Registered Customers (both are the accounts created in the range).
     expect([...document.querySelectorAll("#su-root .tile .lbl")].map((e) => e.textContent)).toEqual([
-      "Registered Customers", "New Registrations", "Logged-in Rate",
+      "Registered Customers", "Logged-in Rate",
     ]);
     for (const id of ["card-suStore", "card-suGap", "card-suNever"]) expect(document.getElementById(id)).toBeNull();
     expect(screen.queryByText(/Needs a nudge|Logged-in customers by store|Download gap/)).toBeNull();
@@ -284,17 +286,17 @@ describe("the section", () => {
 
   it("a click on a project or a number opens the people behind it", async () => {
     renderSection();
-    await waitFor(() => expect(val("Registered Customers")).toBe("7"));
+    await waitFor(() => expect(val("Registered Customers")).toBe("4"));
     const card = screen.getByText("By project").closest(".card") as HTMLElement;
     fireEvent.click(card.querySelectorAll("tbody tr")[1] as HTMLElement);
     let panel = await screen.findByRole("dialog");
     expect(within(panel).getByRole("heading", { name: "Runwal Avenue" })).toBeTruthy();
-    expect(within(panel).getAllByRole("row")).toHaveLength(3); // header + 2
+    expect(within(panel).getAllByRole("row")).toHaveLength(2); // header + 11 (12 is older than the range)
     fireEvent.click(within(panel).getByLabelText("Close"));
-    fireEvent.click(tile("New Registrations"));
+    fireEvent.click(tile("Registered Customers"));
     panel = await screen.findByRole("dialog");
-    expect(within(panel).getByText("New registrations")).toBeTruthy();
-    expect(within(panel).getAllByRole("row")).toHaveLength(5); // header + 4
+    expect(within(panel).getByText("Registered customers")).toBeTruthy();
+    expect(within(panel).getAllByRole("row")).toHaveLength(5); // header + the 4 created in the range
   });
 
   it("changing the dates shows the loader, not the previous dates' numbers, until the new ones are read", async () => {
@@ -309,31 +311,31 @@ describe("the section", () => {
       </QueryClientProvider>
     );
     const { rerender } = render(view("2026-11-20"));
-    await waitFor(() => expect(val("Registered Customers")).toBe("5"));
+    await waitFor(() => expect(val("Registered Customers")).toBe("3")); // Gardens 3, 4, 5
     const answer = fetchMock.getMockImplementation()!;
     fetchMock.mockImplementation(async (url: string) => {
-      if (new URL(url).pathname !== "/change_user_society.json") await new Promise<void>((r) => { release = r; });
+      if (new URL(url, "http://localhost").pathname.endsWith("/user_societies.json")) await new Promise<void>((r) => { release = r; });
       return answer(url);
     });
     rerender(view("2026-11-05"));
     await waitFor(() => expect(screen.getByRole("status").textContent).toMatch(/Loading accounts/));
-    expect(val("Registered Customers")).toBe("…"); // not the old 5
+    expect(val("Registered Customers")).toBe("…"); // not the old 3
     release();
-    await waitFor(() => expect(val("Registered Customers")).toBe("3"));
+    await waitFor(() => expect(val("Registered Customers")).toBe("1")); // 22 Oct – 5 Nov: Gardens 3 only
     expect(screen.queryByRole("status")).toBeNull();
   });
 
   it("one society: selects it in Hi Society, reads only it, and leaves it selected", async () => {
     renderSection({}, "3710");
-    await waitFor(() => expect(val("Registered Customers")).toBe("2"));
+    await waitFor(() => expect(val("Registered Customers")).toBe("1"));
     expect(trail()).toEqual(["switch 3710", "read 3710 upTo"]);
-    expect(projectRows()).toEqual([["Runwal Avenue", "Both", "2", "1", "50.00%"]]);
+    expect(projectRows()).toEqual([["Runwal Avenue", "Post Possession", "1", "1", "100.00%"]]);
     expect(selected).toBe("3710");
   });
 
   it("Post Sales sends display_view 'Pre Sales' and drops the split", async () => {
     renderSection({ displayView: "0" }, "3685");
-    await waitFor(() => expect(val("Registered Customers")).toBe("2"));
+    await waitFor(() => expect(val("Registered Customers")).toBe("1")); // 5: Post Sales and created in the range
     calls().filter((u) => u.pathname.endsWith("user_societies.json"))
       .forEach((u) => expect(u.searchParams.get("q[display_view_eq]")).toBe("Pre Sales"));
     expect(tile("Registered Customers").querySelector(".su-split")).toBeNull();
@@ -341,8 +343,7 @@ describe("the section", () => {
 
   it("iOS: tiles and projects count accounts with the app on an iPhone", async () => {
     renderSection({ devPlatform: "ios" });
-    await waitFor(() => expect(val("Registered Customers")).toBe("2"));
-    expect(val("New Registrations")).toBe("2");
+    await waitFor(() => expect(val("Registered Customers")).toBe("2")); // 3 and 11
     expect(projectRows()).toEqual([
       ["Runwal Avenue", "Post Possession", "1", "1", "—"],
       ["Runwal Gardens", "Post Possession", "1", "1", "—"],
@@ -370,8 +371,8 @@ describe("over time, registered vs active users, the logged-in rate", () => {
 
   it("registered users (Hi Society) vs active users (Traffic & Session's Active Users), each opening its people", async () => {
     renderSection();
-    await waitFor(() => expect(val("Registered Customers")).toBe("7"));
-    await waitFor(() => expect(barValues()).toEqual(["7", "571.42% of registered"])); // 5 ÷ 7 = 71.428…%
+    await waitFor(() => expect(val("Registered Customers")).toBe("4"));
+    await waitFor(() => expect(barValues()).toEqual(["4", "5125.00% of registered"])); // 5 ÷ 4
     expect(bars().map((r) => r.querySelector(".dl-fl")?.firstChild?.textContent)).toEqual(["Registered users", "Active users"]);
     expect(document.getElementById("card-suFunnel")).toBeNull();
 
@@ -387,13 +388,13 @@ describe("over time, registered vs active users, the logged-in rate", () => {
 
     fireEvent.click(bars()[0]);
     panel = await screen.findByRole("dialog");
-    expect(within(panel).getAllByRole("row")).toHaveLength(8); // header + the 7 registered
+    expect(within(panel).getAllByRole("row")).toHaveLength(5); // header + the 4 registered in the range
     fireEvent.click(within(panel).getByLabelText("Close"));
 
-    expect(val("Logged-in Rate")).toBe("57.14%"); // 4 ÷ 7 = 57.142…%, cut to two decimals
+    expect(val("Logged-in Rate")).toBe("75.00%"); // 3 of the 4 created in the range (4 has no phone)
     fireEvent.click(tile("Logged-in Rate"));
     panel = await screen.findByRole("dialog");
-    expect(within(panel).getAllByRole("row")).toHaveLength(5); // header + 4
+    expect(within(panel).getAllByRole("row")).toHaveLength(4); // header + 3
   });
 
   it("iOS: registered with the app on an iPhone vs active on iOS", async () => {
@@ -401,12 +402,12 @@ describe("over time, registered vs active users, the logged-in rate", () => {
     await waitFor(() => expect(val("Registered Customers")).toBe("2"));
     await waitFor(() => expect(barValues()).toEqual(["2", "2100.00% of registered"]));
     expect(calls().some((u) => u.pathname.endsWith("/adoption/traffic_session") && u.searchParams.get("os") === "ios")).toBe(true);
-    expect(val("Logged-in Rate")).toBe("28.57%"); // 2 ÷ 7 = 28.571…%
+    expect(val("Logged-in Rate")).toBe("50.00%"); // 3 and 11 of the 4 created in the range
   });
 
   it("says nothing about never logging in: not in the tables, the lists or the notes", async () => {
     renderSection();
-    await waitFor(() => expect(val("Registered Customers")).toBe("7"));
+    await waitFor(() => expect(val("Registered Customers")).toBe("4"));
     await waitFor(() => expect(barValues()[1]).toMatch(/^5/));
     expect(document.getElementById("su-root")!.textContent).not.toMatch(/never logged|not logged in|waiting/i);
     fireEvent.click(tile("Registered Customers"));
