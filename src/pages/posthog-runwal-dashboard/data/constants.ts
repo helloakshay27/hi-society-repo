@@ -272,6 +272,11 @@ export const INFO: Record<string, InfoEntry> = {
     f: "Accounts in Hi Society's Manage Users created within the selected dates (from the start date to the end date), for the society and phase chosen (pending, approved and rejected, as Manage Users counts them). With iOS or Android chosen: the accounts with the app on that platform.",
     d: 'Everyone who has an account, whether or not they have used the app. Click to see them.',
   },
+  'su.new': {
+    t: 'New Registrations',
+    f: "Accounts whose created date (the Created On date in Hi Society's Manage Users) falls within the selected dates, for the society, phase and platform chosen.",
+    d: 'Fresh accounts. For Runwal Connect most are created by Runwal when the customer books. Click to see who.',
+  },
   'su.rate': {
     t: 'Logged-in Rate',
     f: "Accounts created within the selected dates that have logged in ÷ every account created within the selected dates. Logged in = a phone registered for the app in Manage Users. With iOS or Android chosen: logged in on that platform.",

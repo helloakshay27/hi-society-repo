@@ -368,6 +368,23 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
                   : undefined
               }
             />
+            {/* New Registrations: accounts whose created date (Manage Users' "Created On", the account's created_at)
+                falls within the selected dates. Hi Society keeps one created date per account, so with every number
+                following the date range this equals Registered Customers. */}
+            <SuTile
+              label="New Registrations"
+              infoKey="su.new"
+              val={val(registered.length)}
+              sub={`created on ${dates}${onApp}`}
+              split={split(registered)}
+              loading={isLoading}
+              onClick={
+                answered
+                  ? () =>
+                      open('New registrations', `Accounts of ${where} created on ${dates} (Manage Users' Created On date).`, registered, <><b>Check:</b> the number of people listed equals the New Registrations tile ({fmtN(registered.length)}).</>)
+                  : undefined
+              }
+            />
             <SuTile
               label="Logged-in Rate"
               infoKey="su.rate"
