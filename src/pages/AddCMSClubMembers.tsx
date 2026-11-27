@@ -291,9 +291,7 @@ const AddCMSClubMembers = () => {
         member.id === id
           ? {
               ...member,
-              attachments: member.attachments.filter(
-                (_, i) => i !== fileIndex
-              ),
+              attachments: member.attachments.filter((_, i) => i !== fileIndex),
             }
           : member
       )
@@ -549,11 +547,7 @@ const AddCMSClubMembers = () => {
         }
 
         for (const attachment of member.attachments) {
-          const attachmentBase64 = await fileToBase64(attachment);
-          formData.append(
-            `members[${idx}][flat_attachments][]`,
-            attachmentBase64
-          );
+          formData.append(`members[${idx}][flat_attachments][]`, attachment);
         }
 
         if (member.residentPhoto) {
