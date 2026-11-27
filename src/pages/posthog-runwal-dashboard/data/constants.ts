@@ -269,17 +269,12 @@ export const INFO: Record<string, InfoEntry> = {
   // Sign-ups (Runwal Connect / Realty), from Hi Society's Manage Users
   'su.registered': {
     t: 'Registered Customers',
-    f: "Accounts in Hi Society's Manage Users created up to the end of the selected dates, for the society and phase chosen (pending, approved and rejected, as Manage Users counts them). With iOS or Android chosen: the accounts with the app on that platform.",
+    f: "Accounts in Hi Society's Manage Users created within the selected dates (from the start date to the end date), for the society and phase chosen (pending, approved and rejected, as Manage Users counts them). With iOS or Android chosen: the accounts with the app on that platform.",
     d: 'Everyone who has an account, whether or not they have used the app. Click to see them.',
-  },
-  'su.new': {
-    t: 'New Registrations',
-    f: 'Accounts created within the selected dates (the created date Manage Users shows).',
-    d: 'Fresh accounts. For Runwal Connect most are created by Runwal when the customer books. Click to see who.',
   },
   'su.rate': {
     t: 'Logged-in Rate',
-    f: "Registered Customers who have logged in ÷ every registered customer (accounts up to the end of the selected dates). Logged in = a phone registered for the app in Manage Users. With iOS or Android chosen: logged in on that platform.",
+    f: "Accounts created within the selected dates that have logged in ÷ every account created within the selected dates. Logged in = a phone registered for the app in Manage Users. With iOS or Android chosen: logged in on that platform.",
     d: 'How much of the customer base has actually started using the app. Click to see who has.',
   },
   'chart.suTrend': {
@@ -289,12 +284,12 @@ export const INFO: Record<string, InfoEntry> = {
   },
   'chart.suActive': {
     t: 'Registered users vs active users',
-    f: "Registered users: Hi Society Manage Users accounts created up to the end of the selected dates (the Registered Customers tile). Active users: people who used the app within the selected dates, from the app's usage data (the Active Users tile on Traffic & Session). Both follow the society, phase and platform chosen. Active ÷ registered × 100 is shown under Active users.",
+    f: "Registered users: Hi Society Manage Users accounts created within the selected dates (the Registered Customers tile). Active users: people who used the app within the selected dates, from the app's usage data (the Active Users tile on Traffic & Session). Both follow the society, phase and platform chosen. Active ÷ registered × 100 is shown under Active users.",
     d: 'How much of the registered customer base actually uses the app. Click either bar to see the people.',
   },
   'chart.suProject': {
     t: 'Registered customers by project',
-    f: "Registered customers per project, with how many have logged in. In Hi Society each Runwal project is a society: one row per society chosen in the society picker (all of them for All Societies). Same filters as the tiles above.",
+    f: "Accounts created within the selected dates, per project, with how many have logged in. In Hi Society each Runwal project is a society: one row per society chosen in the society picker (all of them for All Societies). Same filters as the tiles above.",
     d: 'Which projects are using the app and which need a push. Click a project to see its customers.',
   },
   'chart.sitewise': {

@@ -147,16 +147,21 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
   const platform: Platform = filters.devPlatform === 'ios' || filters.devPlatform === 'android' ? filters.devPlatform : 'all';
   const platformName = platform === 'ios' ? 'iOS' : platform === 'android' ? 'Android' : null;
   const read = q.data?.societies || [];
-  const accounts = useMemo(() => toRows(read.flatMap((s) => s.upTo), societies), [read, societies]);
-  const all = useMemo(() => onPlatform(accounts, platform), [accounts, platform]);
-  const fresh = useMemo(() => onPlatform(toRows(read.flatMap((s) => s.inRange), societies), platform), [read, societies, platform]);
+  // Every number, list and table follows the whole date range: accounts created from the start to the end
+  // date (27 Nov 2026, the product owner's call). Only Registrations over time also uses the earlier accounts,
+  // for its previous-period line and its week / month groups.
+  const history = useMemo(() => onPlatform(toRows(read.flatMap((s) => s.upTo), societies), platform), [read, societies, platform]);
+  // Accounts created within the dates, every platform (the base of the Logged-in Rate) ...
+  const accounts = useMemo(() => toRows(read.flatMap((s) => s.inRange), societies), [read, societies]);
+  // ... and with the app on the chosen platform: Registered Customers, its list, By project, Registered users.
+  const registered = useMemo(() => onPlatform(accounts, platform), [accounts, platform]);
   const projects = useMemo(
     () =>
       byProject(
-        all,
+        registered,
         societyIds.map((id) => ({ id, name: names.get(id) || `Society ${id}`, error: read.find((s) => s.societyId === id)?.error ?? null }))
       ),
-    [all, societyIds, names, read]
+    [registered, societyIds, names, read]
   );
   const failed = read.filter((s) => s.error);
 
@@ -181,6 +186,7 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
   const where = `${scopeName}${phaseName ? ` (${phaseName})` : ''}${platformName ? ` with the app on ${platformName}` : ''}`;
   const onApp = platformName ? ` with the app on ${platformName}` : '';
   const rl = rangeLabel.toLowerCase();
+  const dates = `${fmtYmd(filters.from)} – ${fmtYmd(filters.to)}`;
 
   const split = (rows: AccountRow[]) => {
     if (!splitShown || !answered) return undefined;
@@ -222,7 +228,7 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
   const openLogged = () =>
     open(
       `Logged in${platformName ? ` on ${platformName}` : ''}`,
-      `Customers of ${scopeName}${phaseName ? ` (${phaseName})` : ''} with an account created up to ${fmtYmd(filters.to)} who have logged in${platformName ? ` on ${platform === 'ios' ? 'an iPhone' : 'an Android phone'}` : ''}.`,
+      `Customers of ${scopeName}${phaseName ? ` (${phaseName})` : ''} with an account created ${dates} who have logged in${platformName ? ` on ${platform === 'ios' ? 'an iPhone' : 'an Android phone'}` : ''}.`,
       loggedAll,
       <><b>Check:</b> the number of people listed equals the logged-in figure under the Logged-in Rate tile ({fmtN(loggedAll.length)}).</>
     );
@@ -271,7 +277,7 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
   const openProject = (p: ProjectRow) =>
     open(
       p.project,
-      `Registered customers of ${p.project}${phaseName ? ` (${phaseName})` : ''}${onApp}, accounts up to ${fmtYmd(filters.to)}.`,
+      `Registered customers of ${p.project}${phaseName ? ` (${phaseName})` : ''}${onApp}, accounts created ${dates}.`,
       p.rows,
       <><b>Check:</b> the number of people listed equals the project&rsquo;s Registered figure ({fmtN(p.registered)}).</>
     );
@@ -351,38 +357,24 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
             <SuTile
               label="Registered Customers"
               infoKey="su.registered"
-              val={val(all.length)}
-              sub={`accounts up to ${fmtYmd(filters.to)}${onApp}`}
-              split={split(all)}
+              val={val(registered.length)}
+              sub={`accounts created ${dates}${onApp}`}
+              split={split(registered)}
               loading={isLoading}
               onClick={
                 answered
                   ? () =>
-                      open('Registered customers', `Every account of ${where} created up to ${fmtYmd(filters.to)}.`, all, <><b>Check:</b> the number of people listed equals the Registered Customers tile ({fmtN(all.length)}).</>)
-                  : undefined
-              }
-            />
-            <SuTile
-              label="New Registrations"
-              infoKey="su.new"
-              val={val(fresh.length)}
-              sub={`registered in ${rl}${onApp}`}
-              split={split(fresh)}
-              loading={isLoading}
-              onClick={
-                answered
-                  ? () =>
-                      open('New registrations', `Accounts of ${where} created in ${rl} (${fmtYmd(filters.from)} – ${fmtYmd(filters.to)}).`, fresh, <><b>Check:</b> the number of people listed equals the New Registrations tile ({fmtN(fresh.length)}).</>)
+                      open('Registered customers', `Every account of ${where} created ${dates}.`, registered, <><b>Check:</b> the number of people listed equals the Registered Customers tile ({fmtN(registered.length)}).</>)
                   : undefined
               }
             />
             <SuTile
               label="Logged-in Rate"
               infoKey="su.rate"
-              val={answered ? pct2(pctOf(loggedAll.length, accounts.length)) : '—'}
+              val={answered && accounts.length ? pct2(pctOf(loggedAll.length, accounts.length)) : '—'}
               sub={
                 answered
-                  ? `${fmtN(loggedAll.length)} of ${fmtN(accounts.length)} registered have logged in${platformName ? ` on ${platformName}` : ''}`
+                  ? `${fmtN(loggedAll.length)} of ${fmtN(accounts.length)} registered ${dates} have logged in${platformName ? ` on ${platformName}` : ''}`
                   : 'of registered customers'
               }
               loading={isLoading}
@@ -403,8 +395,8 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
             ) : (
               <>
                 <LineChart
-                  cur={trendCur.map((b) => rowsIn(all, b).length)}
-                  prev={showPrev ? trendPrev.map((b) => rowsIn(all, b).length) : []}
+                  cur={trendCur.map((b) => rowsIn(history, b).length)}
+                  prev={showPrev ? trendPrev.map((b) => rowsIn(history, b).length) : []}
                   showPrev={showPrev}
                   labels={trendCur.map((b) => b.label)}
                   color="var(--green)"
@@ -414,7 +406,7 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
                   clickHint="Click to see who registered"
                   onPointClick={(i) => {
                     const b = trendCur[i];
-                    const list = rowsIn(all, b);
+                    const list = rowsIn(history, b);
                     open(`Registered · ${b.span}`, `Accounts of ${where} created in this ${GROUP_WORD[trendGrp]}.`, list, <><b>Check:</b> the number of people listed equals the point you clicked ({fmtN(list.length)}).</>);
                   }}
                 />
@@ -436,18 +428,18 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
                 <>
                   <div className="dl-fun">
                     {(() => {
-                      const registered = all.length;
+                      const regN = registered.length;
                       const active = activeCount ?? null;
-                      const top = Math.max(1, registered, active ?? 0);
+                      const top = Math.max(1, regN, active ?? 0);
                       const bars: { key: string; label: string; n: number | null; sub: string; color: string; onOpen: () => void }[] = [
                         {
                           key: 'registered',
                           label: 'Registered users',
-                          n: registered,
-                          sub: `Hi Society accounts up to ${fmtYmd(filters.to)}${onApp}`,
+                          n: regN,
+                          sub: `Hi Society accounts created ${dates}${onApp}`,
                           color: 'var(--blue)',
                           onOpen: () =>
-                            open('Registered users', `Every account of ${where} created up to ${fmtYmd(filters.to)}.`, all, <><b>Check:</b> the number of people listed equals Registered users ({fmtN(registered)}).</>),
+                            open('Registered users', `Every account of ${where} created ${dates}.`, registered, <><b>Check:</b> the number of people listed equals Registered users ({fmtN(regN)}).</>),
                         },
                         {
                           key: 'active',
@@ -481,7 +473,7 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
                           <div className="dl-fb"><i style={{ width: `${b.n ? Math.max(2, Math.round((b.n / top) * 100)) : 0}%`, background: b.color }} /></div>
                           <div className="dl-fv">
                             {b.n == null ? '—' : fmtN(b.n)}
-                            {b.key === 'active' && b.n != null && registered > 0 ? <span>{pct2(pctOf(b.n, registered))} of registered</span> : null}
+                            {b.key === 'active' && b.n != null && regN > 0 ? <span>{pct2(pctOf(b.n, regN))} of registered</span> : null}
                           </div>
                         </div>
                       ));
