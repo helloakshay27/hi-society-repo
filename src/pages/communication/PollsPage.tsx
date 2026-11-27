@@ -181,17 +181,30 @@ const PollsPage = () => {
   //   }
   // };
 
-  const handleDownload = (pollId: number) => {
+  const handleDownload = async (pollId: number) => {
     try {
-      const url = `https://${baseUrl}/${pollId}/export_poll_users.xlsx?token=${token}`;
+      const response = await axios.get(
+        `https://${baseUrl}/crm/admin/polls/${pollId}/export_poll_users.xlsx`,
+        {
+          params: { token },
+          responseType: "blob",
+        }
+      );
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
 
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "");
+      link.setAttribute("download", `poll_${pollId}_users.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
 
+      toast.success("File downloaded successfully");
     } catch (error) {
       console.error("Download failed:", error);
       toast.error("Failed to download file");
