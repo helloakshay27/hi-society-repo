@@ -161,7 +161,8 @@ export function phaseSplit(rows: AccountRow[]): Record<Phase, number> {
   return out;
 }
 
-export const pctOf = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : 0);
+// Unrounded: shown cut to two decimals with pct2, never rounded.
+export const pctOf = (n: number, d: number) => (d > 0 ? (n / d) * 100 : 0);
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 /** "Nov 20, 2026" (IST). */

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FunnelStep } from '../../api/types';
+import { pct2 } from '../../data/constants';
 
 interface WorkflowFunnelProps {
   funnel?: FunnelStep[];
@@ -32,9 +33,9 @@ export const WorkflowFunnel: React.FC<WorkflowFunnelProps> = ({ funnel = [] }) =
   return (
     <div className="funnel" style={{ position: 'relative' }}>
       {funnel.map((s, i) => {
-        const pct2 = Math.round((s.reach / maxReach) * 100);
-        const overallConv = Math.round((s.reach / firstStepReach) * 100);
-        const width = Math.max(35, Math.min(100, 35 + (pct2 / 100) * 65));
+        const barPct = (s.reach / maxReach) * 100;
+        const overallConv = firstStepReach > 0 ? (s.reach / firstStepReach) * 100 : 0;
+        const width = Math.max(35, Math.min(100, 35 + (barPct / 100) * 65));
         const drop = s.drop_pct;
         const isHovered = hoverIdx === i;
 
@@ -53,7 +54,7 @@ export const WorkflowFunnel: React.FC<WorkflowFunnelProps> = ({ funnel = [] }) =
                   padding: '2px 4px',
                 }}
               >
-                <span>▼ {Math.round(Math.abs(drop))}% drop-off</span>
+                <span>▼ {pct2(Math.abs(drop))} drop-off</span>
                 {s.biggest && (
                   <span
                     style={{
@@ -107,7 +108,7 @@ export const WorkflowFunnel: React.FC<WorkflowFunnelProps> = ({ funnel = [] }) =
                 </span>
               </div>
               <span className="fsub" style={{ opacity: 0.9, marginTop: '3px', fontSize: '11px' }}>
-                {overallConv}% of initial users {i > 0 && drop != null && ` · ${Math.round(Math.abs(drop))}% drop from prior step`}
+                {pct2(overallConv)} of initial users {i > 0 && drop != null && ` · ${pct2(Math.abs(drop))} drop from prior step`}
               </span>
             </div>
           </React.Fragment>

@@ -29,8 +29,10 @@ import {
   usePendingRequisitionValue,
   usePrSrSplit,
   useOverdueInvoices,
+  useTrafficSession,
 } from "../../hooks/useDashboardAnalytics";
-import { pct, fmtDateShort } from "../../data/constants";
+import { pct, pct2, fmtDateShort } from "../../data/constants";
+import { deltaText, previousCoverage } from "../../data/previousPeriod";
 
 interface AdoptionEngagementPageProps {
   filters: DashboardFilters;
@@ -45,16 +47,6 @@ interface AdoptionEngagementPageProps {
   signups?: { societies: SiteLookupItem[]; selectedSocietyId: string; societiesLoading?: boolean; rangeLabel: string; appName: string; showPhase: boolean };
 }
 
-function formatDelta(d: number | null | undefined): {
-  text: string | null;
-  dir: "up" | "dn" | "flat";
-} {
-  if (d == null || isNaN(d)) return { text: null, dir: "flat" };
-  const abs = Math.abs(d).toFixed(1);
-  if (d > 0) return { text: `${abs}% vs prev`, dir: "up" };
-  if (d < 0) return { text: `${abs}% vs prev`, dir: "dn" };
-  return { text: "0% vs prev", dir: "flat" };
-}
 
 function renderScalarSummary(data: Record<string, any> | undefined | null) {
   if (!data || Object.keys(data).length === 0) {
@@ -251,15 +243,20 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
     refetch: refetchOverdue,
   } = useOverdueInvoices(filters, sitesSettled);
 
+  // What the changes vs prev compare against (the same query the filter bar's live count uses, so no
+  // extra request): "No data in previous period" instead of a blank, "*" when it is only partly covered.
+  const { data: trafficForCoverage } = useTrafficSession(filters, sitesSettled);
+  const coverage = previousCoverage(trafficForCoverage);
+
   // Stickiness
   const stickinessVal = adoptData?.stickiness?.value;
   const stickinessDisplay =
     stickinessVal != null
-      ? pct(stickinessVal)
+      ? pct2(stickinessVal)
       : isAdoptActiveLoading
         ? "..."
         : "—";
-  const stickinessDelta = formatDelta(adoptData?.stickiness?.delta_pct);
+  const stickinessDelta = deltaText(adoptData?.stickiness?.delta_pct, coverage);
 
   // Adoption Trend KPI
   // The tile compares against the prior 8 weeks, so it reads the API's 8-week average form.
@@ -269,7 +266,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       : (adoptData?.adoption_trend?.value ?? trendData?.trend_pct);
   const adoptTrendDisplay =
     adoptTrendVal != null
-      ? `${adoptTrendVal > 0 ? "+" : ""}${adoptTrendVal.toFixed(1)}%`
+      ? pct2(adoptTrendVal, true)
       : isAdoptActiveLoading || isTrendActiveLoading
         ? "..."
         : "—";
@@ -278,11 +275,11 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
   const activationVal = adoptData?.activation?.value;
   const activationDisplay =
     activationVal != null
-      ? `${Math.round(activationVal)}%`
+      ? pct2(activationVal)
       : isAdoptActiveLoading
         ? "..."
         : "—";
-  const activationDelta = formatDelta(adoptData?.activation?.delta_pct);
+  const activationDelta = deltaText(adoptData?.activation?.delta_pct, coverage);
 
   // Module Breadth
   const modInUse = adoptData?.module_breadth?.in_use;

@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import "./usage-dashboard.css";
 import { activityUserLabel, downloadActiveUsersExport, stripScopeFromUrl } from "../../pages/posthog-runwal-dashboard/api/api";
+import { ExportSpinner, ExportStatus, useExportDownload } from "../../pages/posthog-runwal-dashboard/components/common/ExportProgress";
+import { UserJourneysCard } from "../../pages/posthog-runwal-dashboard/components/workflow/UserJourneysCard";
+import { useUserSocieties } from "../../pages/posthog-runwal-dashboard/hooks/useDashboardAnalytics";
+import type { DashboardFilters } from "../../pages/posthog-runwal-dashboard/api/types";
 import {
   SITES,
   fetchRecentActiveUsers,
@@ -783,6 +787,11 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     if (fixedSite) setSite(fixedSite);
   }, [fixedSite]);
   const [dev, setDev] = useState<"all" | "ios" | "android">("all");
+  // Society dropdown: the logged-in user's Hi Society societies (the Hi Society header's list). "all"
+  // sends no society; one society sends society_id=<id>, so every card counts only that society's events.
+  const { data: societies = [], isLoading: isSocietiesLoading } = useUserSocieties();
+  const [societyId, setSocietyId] = useState<string>("all");
+  const societyIds = useMemo(() => (societyId === "all" ? [] : [societyId]), [societyId]);
   const [showPrev, setShowPrev] = useState<boolean>(true);
 
   // Live API state — fetched layer-wise: the open sidebar layer decides
@@ -904,7 +913,25 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
   }, [customApplied, dateFrom, dateTo, range, todayISO]);
 
   // Filter signature: identifies one unique dataset (refresh bumps retryKey).
-  const sig = `${siteRef.appId}|${effRange.from}|${effRange.to}|${dev}|${retryKey}`;
+  const sig = `${siteRef.appId}|${effRange.from}|${effRange.to}|${dev}|${societyId}|${retryKey}`;
+
+  // The User journeys card (bottom of Workflow Usage) reads the shared analytics hooks, which take the
+  // Runwal-family filter shape: same dates, platform and society as the rest of the page.
+  const journeyFilters: DashboardFilters = useMemo(
+    () => ({
+      siteIds: [],
+      from: effRange.from,
+      to: effRange.to,
+      token: "",
+      devPlatform: dev,
+      licensedSeats: null,
+      module: null,
+      subModule: null,
+      societyIds,
+      apiPath: siteRef.apiPath,
+    }),
+    [effRange.from, effRange.to, dev, societyIds, siteRef.apiPath]
+  );
 
   // Clear merged data when the signature changes so stale numbers never flash.
   useEffect(() => {
@@ -928,6 +955,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
       from: effRange.from,
       to: effRange.to,
       dev,
+      societyIds,
     })
       .then((part) => {
         if (cancelled) return;
@@ -940,7 +968,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     return () => {
       cancelled = true;
     };
-  }, [page, sig, trafficSig, siteRef.appId, effRange.from, effRange.to, dev]);
+  }, [page, sig, trafficSig, siteRef.appId, effRange.from, effRange.to, dev, societyIds]);
 
   // Adoption & Engagement layer (+ 3-site league) — fires only when opened.
   useEffect(() => {
@@ -953,6 +981,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
       from: effRange.from,
       to: effRange.to,
       dev,
+      societyIds,
     };
     fetchAdoptionSection(input)
       .then((part) => {
@@ -975,7 +1004,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     return () => {
       cancelled = true;
     };
-  }, [page, sig, adoptionSig, lockedSite, siteRef.appId, effRange.from, effRange.to, dev]);
+  }, [page, sig, adoptionSig, lockedSite, siteRef.appId, effRange.from, effRange.to, dev, societyIds]);
 
   // Per-layer readiness for the current signature.
   const trafficReady = trafficSig === sig && live?.tiles != null;
@@ -987,7 +1016,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     const load = (first: boolean) => {
       if (first) setRecentActivityLoading(true);
       fetchRecentActiveUsers(
-        { appId: siteRef.appId, from: effRange.from, to: effRange.to },
+        { appId: siteRef.appId, from: effRange.from, to: effRange.to, societyIds },
         10
       )
         .then((response) => {
@@ -1007,7 +1036,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [siteRef.appId, effRange.from, effRange.to, retryKey]);
+  }, [siteRef.appId, effRange.from, effRange.to, societyIds, retryKey]);
 
   const getBM = (id: string) => {
     if (id in benchmarks) return benchmarks[id];
@@ -1189,7 +1218,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
   useEffect(() => {
     if (page !== "pgFlows" || wfModules !== null) return;
     let cancelled = false;
-    fetchWorkflowModules({ appId: siteRef.appId, from: effRange.from, to: effRange.to, dev }).then(
+    fetchWorkflowModules({ appId: siteRef.appId, from: effRange.from, to: effRange.to, dev, societyIds }).then(
       (mods) => {
         if (!cancelled && mods) setWfModules(mods);
       }
@@ -1197,7 +1226,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     return () => {
       cancelled = true;
     };
-  }, [page, sig, wfModules, siteRef.appId, effRange.from, effRange.to, dev]);
+  }, [page, sig, wfModules, siteRef.appId, effRange.from, effRange.to, dev, societyIds]);
 
   // Funnel keys with a workflow_usage request in flight — dedupes re-runs.
   const wfInFlight = useRef<Set<string>>(new Set());
@@ -1213,7 +1242,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
     setWfLoading(true);
     setWfError(null);
     fetchLiveWorkflow(
-      { appId: siteRef.appId, from: effRange.from, to: effRange.to, dev },
+      { appId: siteRef.appId, from: effRange.from, to: effRange.to, dev, societyIds },
       activeWfKey,
       activeWfSub
     )
@@ -1230,7 +1259,7 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
         wfInFlight.current.delete(key);
         if (wfCacheKeyRef.current === key) setWfLoading(false);
       });
-  }, [page, wfCacheKey, activeWfKey, activeWfSub, liveWf, siteRef.appId, effRange.from, effRange.to, dev]);
+  }, [page, wfCacheKey, activeWfKey, activeWfSub, liveWf, siteRef.appId, effRange.from, effRange.to, dev, societyIds]);
 
   const activeLiveWf = liveWf[wfCacheKey] ?? null;
   const wfReady = activeLiveWf != null;
@@ -1298,21 +1327,18 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
   }, [liveWf, wfCacheKey]);
 
   // Download the full active-user export, independently of the sidebar's 10-row preview.
-  const downloadRecentActivity = async () => {
-    if (recentActivityExporting) return;
-    setRecentActivityExporting(true);
-    try {
-      await downloadActiveUsersExport({
-        apiPath: siteRef.apiPath,
-        from: effRange.from,
-        to: effRange.to,
-      });
-    } catch (error) {
-      console.error("Failed to download recent activity", error);
-    } finally {
-      setRecentActivityExporting(false);
-    }
-  };
+  const downloadRecentActivity = () =>
+    recentActivityExport.run((onPhase) =>
+      downloadActiveUsersExport(
+        {
+          apiPath: siteRef.apiPath,
+          from: effRange.from,
+          to: effRange.to,
+          societyIds,
+        },
+        onPhase,
+      ),
+    );
 
   // Helpers to render KPI Tiles with popovers
   const renderTile = (o: {
@@ -1706,6 +1732,28 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                 <span className="chev">&#9662;</span>
               </label>
             )}
+
+            {/* Society select: the user's Hi Society societies; "All Societies" sends no society */}
+            <label className="ctrl" title="Society">
+              <span className="ic">&#127968;</span>
+              <select
+                id="societySel"
+                aria-label="Society"
+                value={societyId}
+                onChange={(e) => setSocietyId(e.target.value)}
+                disabled={isSocietiesLoading}
+              >
+                <option value="all">
+                  {isSocietiesLoading ? "Loading societies…" : "All Societies"}
+                </option>
+                {societies.map((society) => (
+                  <option key={society.id} value={society.id}>
+                    {society.name}
+                  </option>
+                ))}
+              </select>
+              <span className="chev">&#9662;</span>
+            </label>
 
             {/* Platform toggle */}
             <div className="devtoggle" id="devToggle" title="Platform">
@@ -3047,6 +3095,9 @@ export default function UsageDashboardPage({ fixedSite }: { fixedSite?: SiteKey 
                   })()}
                 </div>
               </div>
+
+              {/* User journeys: person -> sessions -> every step, with this page's dates, platform and society */}
+              <UserJourneysCard filters={journeyFilters} societies={societies} rangeLabel={rangeLabel} />
             </section>
           ))}
 

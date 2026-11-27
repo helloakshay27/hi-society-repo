@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { fmtC, pct } from '../../data/constants';
+import { fmtC, pct2 } from '../../data/constants';
 
 interface HBarChartProps {
   labels: string[];
@@ -99,7 +99,7 @@ export const HBarChart: React.FC<HBarChartProps> = ({
               fontWeight={isHovered ? '600' : '500'}
             >
               {fmtC(val)}
-              {isHovered && ` (${pct(sharePct, 1)})`}
+              {isHovered && ` (${pct2(sharePct)})`}
             </text>
           </g>
         );

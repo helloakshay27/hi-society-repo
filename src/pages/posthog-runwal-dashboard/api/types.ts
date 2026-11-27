@@ -26,7 +26,18 @@ export interface AdoptionMeta {
 }
 
 export interface TrafficSessionResponse {
-  meta: AdoptionMeta;
+  meta: AdoptionMeta & {
+    /** Days in the range with any event. */
+    days_with_data?: number;
+    /** The period every change vs prev compares against: the same number of days just before the range. */
+    previous_period?: {
+      from: string;
+      to: string;
+      days: number;
+      days_with_data: number;
+      first_day_with_data: string | null;
+    };
+  };
   tiles: {
     active_users: number;
     screen_views: number;
@@ -72,7 +83,21 @@ export interface UsageDistributionResponse {
     total_sessions: number;
     devices: DeviceStat[];
   };
+  /** Each active user once, on the platform they used last: the platforms' users add up to total_users. */
+  platform_usage?: {
+    total_users: number;
+    total_sessions: number;
+    platforms: PlatformStat[];
+  };
   views_per_session: number;
+}
+
+export interface PlatformStat {
+  platform: string; // iOS | Android | Desktop Web | Other
+  users: number;
+  user_share: number | null; // users ÷ total_users × 100
+  sessions: number;
+  session_share: number | null;
 }
 
 export interface AdoptionEngagementResponse {

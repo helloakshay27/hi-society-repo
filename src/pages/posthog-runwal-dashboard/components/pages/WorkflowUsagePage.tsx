@@ -8,10 +8,13 @@ import { AllScreensTable, EntryScreensTable } from '../workflow/ScreensTable';
 import { ErrorState } from '../common/DashboardStates';
 import { UserJourneysCard } from '../workflow/UserJourneysCard';
 import { FunnelSkeleton, TableSkeleton } from '../common/Skeleton';
+import { pct2 } from '../../data/constants';
+import { deltaText, previousCoverage } from '../../data/previousPeriod';
 import {
   useModuleTree,
   useSubModuleTree,
   useWorkflowUsage,
+  useTrafficSession,
 } from '../../hooks/useDashboardAnalytics';
 
 interface WorkflowUsagePageProps {
@@ -88,32 +91,35 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
   const isWfActiveLoading = isWfLoading || isRefreshing;
   const isModulesActiveLoading = isModulesLoading || isRefreshing;
   const kpis = wfData?.kpis;
+  // What the changes vs prev compare against (the filter bar's own query, no extra request).
+  const { data: trafficForCoverage } = useTrafficSession(filters, sitesSettled);
+  const coverage = previousCoverage(trafficForCoverage);
 
   // Adoption KPI
   const fAdopt = kpis?.f_adopt?.value;
   const fAdoptDisplay =
     fAdopt != null
-      ? `${Math.round(fAdopt)}%`
+      ? pct2(fAdopt)
       : isWfActiveLoading
       ? '...'
       : '—';
-  const fAdoptDelta = kpis?.f_adopt?.delta_pct;
+  const fAdoptDelta = deltaText(kpis?.f_adopt?.delta_pct, coverage);
 
   // Completion KPI
   const fComp = kpis?.f_comp?.value;
   const fCompDisplay =
     fComp != null
-      ? `${Math.round(fComp)}%`
+      ? pct2(fComp)
       : isWfActiveLoading
       ? '...'
       : '—';
-  const fCompDelta = kpis?.f_comp?.delta_pct;
+  const fCompDelta = deltaText(kpis?.f_comp?.delta_pct, coverage);
 
   // Biggest Step Drop
   const fStep = kpis?.f_step?.value;
   const fStepDisplay =
     fStep != null
-      ? `${Math.round(fStep)}%`
+      ? pct2(fStep)
       : isWfActiveLoading
       ? '...'
       : '—';
@@ -168,8 +174,8 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           infoKey="F1"
           label="Workflow Adoption"
           val={fAdoptDisplay}
-          dir={fAdoptDelta && fAdoptDelta > 0 ? 'up' : fAdoptDelta && fAdoptDelta < 0 ? 'dn' : 'flat'}
-          delta={fAdoptDelta != null ? `${fAdoptDelta > 0 ? '+' : ''}${fAdoptDelta.toFixed(1)}%` : null}
+          dir={fAdoptDelta.dir}
+          delta={fAdoptDelta.text}
           raw={fAdopt != null ? (fAdopt) : undefined}
           unit="%"
           goodUp={true}
@@ -182,8 +188,8 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
           infoKey="F2"
           label="Completion Rate"
           val={fCompDisplay}
-          dir={fCompDelta && fCompDelta > 0 ? 'up' : fCompDelta && fCompDelta < 0 ? 'dn' : 'flat'}
-          delta={fCompDelta != null ? `${fCompDelta > 0 ? '+' : ''}${fCompDelta.toFixed(1)}%` : null}
+          dir={fCompDelta.dir}
+          delta={fCompDelta.text}
           raw={fComp != null ? (fComp) : undefined}
           unit="%"
           goodUp={true}
@@ -241,8 +247,8 @@ export const WorkflowUsagePage: React.FC<WorkflowUsagePageProps> = ({
                     <td className="strong">{f.name}</td>
                     <td className="num">{f.started.toLocaleString()}</td>
                     <td className="num">{f.completed.toLocaleString()}</td>
-                    <td className="num">{f.completion_pct == null ? "–" : `${Math.round(f.completion_pct)}%`}</td>
-                    <td className="num">{Math.round(f.biggest_drop_pct)}%</td>
+                    <td className="num">{f.completion_pct == null ? "–" : pct2(f.completion_pct)}</td>
+                    <td className="num">{pct2(f.biggest_drop_pct)}</td>
                   </tr>
                 ))}
               </tbody>

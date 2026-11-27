@@ -76,7 +76,7 @@ describe("Module adoption card", () => {
     show(<ModuleAdoptionCard filters={filters} />);
     expect(screen.getByText("Adoption by screen")).toBeTruthy();
     expect(screen.getByText("Which screens are used most")).toBeTruthy();
-    expect(screen.getByText("93%")).toBeTruthy();
+    expect(screen.getByText("93.40%")).toBeTruthy(); // the shared card: two decimals, cut not rounded
   });
 
   it("an app with a module list keeps the workflow-bucket wording", () => {

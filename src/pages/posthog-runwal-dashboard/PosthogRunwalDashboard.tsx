@@ -2,11 +2,14 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageId, DevicePlatform } from "./types";
 import { BM_DEFAULTS } from "./data/constants";
+import { loadView, presetRange, saveView } from "./data/savedView";
 import { DashboardProvider } from "./context/DashboardContext";
 import { InfoPopover } from "./components/common/InfoPopover";
 import { TopBar } from "./components/common/TopBar";
 import { SideBar } from "./components/common/SideBar";
 import { FilterBar } from "./components/common/FilterBar";
+import { PreviousPeriodNote } from "./components/common/PreviousPeriodNote";
+import { previousCoverage } from "./data/previousPeriod";
 import { TrafficSessionPage } from "./components/pages/TrafficSessionPage";
 import { AdoptionEngagementPage } from "./components/pages/AdoptionEngagementPage";
 import { WorkflowUsagePage } from "./components/pages/WorkflowUsagePage";
@@ -26,15 +29,6 @@ import {
 import { DashboardFilters } from "./api/types";
 import { getToken, getBaseUrlDomain } from "../../utils/auth";
 import "./styles/dashboard.css";
-
-function dateRangeFor(days: number) {
-  const to = new Date();
-  const from = new Date(to);
-  from.setDate(to.getDate() - (days - 1));
-  const ymd = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  return { from: ymd(from), to: ymd(to) };
-}
 
 function PosthogRunwalDashboardContent({
   fixedAppId,
@@ -65,25 +59,6 @@ function PosthogRunwalDashboardContent({
     }
   });
 
-  // Load user/org accessible sites
-  const {
-    sites,
-    sitesSettled,
-    allSiteIds,
-    isLoading: isSitesLoading,
-  } = useDashboardSites();
-  const [selectedSiteId, setSelectedSiteId] = useState<string>("all");
-
-  // Society dropdown (Runwal Connect and Realty): the logged-in user's Hi Society societies, the same list
-  // as the Hi Society header's dropdown. "all" sends no society, so the numbers cover every society.
-  const { data: societies = [], isLoading: isSocietiesLoading } = useUserSocieties();
-  const [selectedSocietyId, setSelectedSocietyId] = useState<string>("all");
-
-  // Dynamic site scope: fetched from the logged-in user's own account
-  // (site_id on /api/users/account.json) rather than a manual picker, since
-  // the site dropdown was removed from the filter bar.
-  const { data: accountSiteId } = useUserAccountSiteId();
-
   // Which Runwal app: fixed by the route (/runwal-connect-usage-dashboard = 12,
   // /runwal-enterprise-usage-dashboard = 35), or read once from an old
   // /runwal-usage-dashboard?app_id= link. It is pinned in memory and removed
@@ -98,20 +73,58 @@ function PosthogRunwalDashboardContent({
     stripScopeFromUrl();
     return () => clearDashboardScope();
   }, [appId]);
+
+  // The view picked before a page refresh (date range, platform, society, segment, page), per app.
+  const viewKey = `app-${appId}`;
+  const [savedView] = useState(() => loadView(viewKey));
+
+  // Load user/org accessible sites
+  const {
+    sites,
+    sitesSettled,
+    allSiteIds,
+    isLoading: isSitesLoading,
+  } = useDashboardSites();
+  const [selectedSiteId, setSelectedSiteId] = useState<string>("all");
+
+  // Society dropdown (Runwal Connect and Realty): the logged-in user's Hi Society societies, the same list
+  // as the Hi Society header's dropdown. "all" sends no society, so the numbers cover every society.
+  const { data: societies = [], isLoading: isSocietiesLoading } = useUserSocieties();
+  const [selectedSocietyId, setSelectedSocietyId] = useState<string>(savedView.societyId);
+  // A society saved before the refresh that is no longer in the user's list goes back to All Societies.
+  useEffect(() => {
+    if (isSocietiesLoading || selectedSocietyId === "all") return;
+    if (!societies.some((s) => s.id === selectedSocietyId)) setSelectedSocietyId("all");
+  }, [isSocietiesLoading, societies, selectedSocietyId]);
+
+  // Dynamic site scope: fetched from the logged-in user's own account
+  // (site_id on /api/users/account.json) rather than a manual picker, since
+  // the site dropdown was removed from the filter bar.
+  const { data: accountSiteId } = useUserAccountSiteId();
+
   const showResidentSegment = appId === "12";
   const [residentSegment, setResidentSegment] = useState<
     "all" | "pre" | "post"
-  >("all");
+  >(savedView.segment);
 
-  const initialRange = useMemo(() => dateRangeFor(30), []);
-
-  const [activePage, setActivePage] = useState<PageId>("pgTraffic");
-  const [devPlatform, setDevPlatform] = useState<DevicePlatform>("all");
+  const [activePage, setActivePage] = useState<PageId>(savedView.page);
+  const [devPlatform, setDevPlatform] = useState<DevicePlatform>(savedView.dev);
   const [showPrev, setShowPrev] = useState<boolean>(true);
-  const [rangeDays, setRangeDays] = useState<number>(30);
-  const [rangeLabel, setRangeLabel] = useState<string>("Last 30 days");
-  const [rangeFrom, setRangeFrom] = useState<string>(initialRange.from);
-  const [rangeTo, setRangeTo] = useState<string>(initialRange.to);
+  const [rangeDays, setRangeDays] = useState<number>(savedView.range.days);
+  const [rangeLabel, setRangeLabel] = useState<string>(savedView.range.label);
+  const [rangeFrom, setRangeFrom] = useState<string>(savedView.range.from);
+  const [rangeTo, setRangeTo] = useState<string>(savedView.range.to);
+  const [rangeIsCustom, setRangeIsCustom] = useState<boolean>(savedView.range.custom);
+
+  useEffect(() => {
+    saveView(viewKey, {
+      range: { days: rangeDays, label: rangeLabel, from: rangeFrom, to: rangeTo, custom: rangeIsCustom },
+      dev: devPlatform,
+      societyId: selectedSocietyId,
+      segment: residentSegment,
+      page: activePage,
+    });
+  }, [viewKey, rangeDays, rangeLabel, rangeFrom, rangeTo, rangeIsCustom, devPlatform, selectedSocietyId, residentSegment, activePage]);
 
   const [benchmarks, setBenchmarks] = useState<Record<string, number | null>>({
     ...BM_DEFAULTS,
@@ -281,11 +294,12 @@ function PosthogRunwalDashboardContent({
   };
 
   const handleSetRange = (days: number, label: string) => {
-    const r = dateRangeFor(days);
+    const r = presetRange(days);
     setRangeDays(days);
     setRangeLabel(label);
     setRangeFrom(r.from);
     setRangeTo(r.to);
+    setRangeIsCustom(false);
   };
 
   const handleSetCustomRange = (
@@ -298,6 +312,7 @@ function PosthogRunwalDashboardContent({
     setRangeLabel(label);
     setRangeFrom(from);
     setRangeTo(to);
+    setRangeIsCustom(true);
   };
 
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -443,6 +458,7 @@ function PosthogRunwalDashboardContent({
 
           <FilterBar
             range={rangeDays}
+            rangeIsCustom={rangeIsCustom}
             rangeLabel={rangeLabel}
             rangeFrom={rangeFrom}
             rangeTo={rangeTo}
@@ -471,6 +487,8 @@ function PosthogRunwalDashboardContent({
             isError={isTrafficError}
             generatedAt={generatedAt}
           />
+
+          <PreviousPeriodNote coverage={previousCoverage(trafficData)} />
 
           {activePage === "pgTraffic" && (
             <TrafficSessionPage
