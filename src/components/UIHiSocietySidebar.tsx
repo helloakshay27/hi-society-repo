@@ -46,8 +46,7 @@ import {
   DollarSign,
   Palette,
   Wrench,
-  Video,
-} from "lucide-react";
+  Video, PawPrint } from "lucide-react";
 
 interface MenuItem {
   id: string;
@@ -1032,6 +1031,12 @@ export const UIHiSocietySidebar: React.FC = () => {
               label: "Manage Users",
               icon: Users,
               path: "/settings/manage-users",
+            },
+            {
+              id: "pets",
+              label: "Pets",
+              icon: PawPrint,
+              path: "/settings/pets",
             },
             {
               id: "manage-flats",

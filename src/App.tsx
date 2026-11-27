@@ -2546,6 +2546,10 @@ const FitoutRequests = lazy(() => import("./pages/FitoutRequests"));
 const FitoutRequestAdd = lazy(() => import("./pages/FitoutRequestAdd"));
 
 import { setupMemberRoutes } from "./routes/setupMemberRoutes";
+const PetsRegisterPage = lazy(() => import("./features/pets/PetsRegisterPage"));
+const PetSettingsPage = lazy(() => import("./features/pets/PetSettingsPage"));
+const AddPetPage = lazy(() => import("./features/pets/AddPetPage"));
+const PetDetailsPage = lazy(() => import("./features/pets/PetDetailsPage"));
 const PosthogRunwalDashboard = lazy(
   () => import("./pages/posthog-runwal-dashboard/PosthogRunwalDashboard")
 );
@@ -4409,6 +4413,26 @@ function App() {
                         <Route
                           path="/settings/manage-users"
                           element={<ManageUsersPage />}
+                        />
+                        <Route
+                          path="/settings/pets"
+                          element={<PetsRegisterPage />}
+                        />
+                        <Route
+                          path="/settings/pets/settings"
+                          element={<PetSettingsPage />}
+                        />
+                        <Route
+                          path="/settings/pets/add"
+                          element={<AddPetPage />}
+                        />
+                        <Route
+                          path="/settings/pets/edit/:id"
+                          element={<AddPetPage />}
+                        />
+                        <Route
+                          path="/settings/pets/:id"
+                          element={<PetDetailsPage />}
                         />
                         <Route
                           path="/settings/template-list"

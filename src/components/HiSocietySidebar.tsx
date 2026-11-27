@@ -50,8 +50,7 @@ import {
   Trash2,
   Clock,
   MapPin,
-  Video,
-} from "lucide-react";
+  Video, PawPrint } from "lucide-react";
 
 interface MenuItem {
   id: string;
@@ -1146,6 +1145,12 @@ export const HiSocietySidebar: React.FC = () => {
               label: "Manage Users",
               icon: Users,
               path: "/settings/manage-users",
+            },
+            {
+              id: "pets",
+              label: "Pets",
+              icon: PawPrint,
+              path: "/settings/pets",
             },
             {
               id: "kyc-details",

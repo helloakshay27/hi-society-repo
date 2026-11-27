@@ -17,8 +17,7 @@ import {
   Gift,
   Calendar,
   HelpCircle,
-  Building,
-} from "lucide-react";
+  Building, PawPrint } from "lucide-react";
 
 interface MenuItem {
   id: string;
@@ -58,6 +57,12 @@ export const SettingsSidebar: React.FC = () => {
       label: "Manage Users",
       icon: Users,
       path: "/settings/manage-users",
+    },
+    {
+      id: "pets",
+      label: "Pets",
+      icon: PawPrint,
+      path: "/settings/pets",
     },
     {
       id: "kyc-details",
