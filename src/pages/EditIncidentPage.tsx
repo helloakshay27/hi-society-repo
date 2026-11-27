@@ -494,8 +494,8 @@ export const EditIncidentPage = () => {
 
     const handleInputChange = (field: string, value: string) => {
         // Character limit for description field
-        if (field === 'description' && value.length > 240) {
-            return; // Don't update state if exceeds 240 characters
+        if (field === 'description' && value.length > 2000) {
+            return; // Don't update state if exceeds 2000 characters
         }
         setIncidentData(prev => ({ ...prev, [field]: value }));
     };
@@ -1229,7 +1229,7 @@ export const EditIncidentPage = () => {
                         }}
                     />
                     <div className="mt-2 text-sm text-gray-600">
-                        {incidentData.description.length} / 240
+                        {incidentData.description.length} / 2000
                     </div>
                 </div>
             </SectionCard>

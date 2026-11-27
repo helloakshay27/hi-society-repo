@@ -30,6 +30,8 @@ interface MemberForm {
     residentType: string;
     isClubMembership: boolean;
     membershipNumber: string;
+    // Number saved on the server, restored if club membership is re-checked
+    originalMembershipNumber?: string;
     isAccessCardAllocated: boolean;
     accessCardId: string;
     idCard: File | null;
@@ -113,6 +115,7 @@ const EditCMSClubMembers = () => {
     const [sgstPercentage, setSgstPercentage] = useState<string>("0");
 
     const [members, setMembers] = useState<MemberForm[]>([]);
+    const [futureMembershipNumbers, setFutureMembershipNumbers] = useState<any>({});
 
     // Get selected plan details
     const selectedPlan: any = membershipPlans.find((plan: any) => plan.id === globalMembershipPlanId);
@@ -178,6 +181,21 @@ const EditCMSClubMembers = () => {
         }
     }
 
+    const fetchFutureMembershipNumbers = async () => {
+        try {
+            const response = await axios.get(
+                `https://${baseUrl}/club_member_allocations/future_membership_numbers.json?society_id=${societyId}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setFutureMembershipNumbers(response.data);
+            return response.data;
+        } catch (error) {
+            console.log(error);
+            toast.error("Failed to fetch membership numbers");
+            return {};
+        }
+    };
+
     const fetchAllocationDetails = async () => {
         if (!id) return;
         setLoading(true);
@@ -229,6 +247,7 @@ const EditCMSClubMembers = () => {
                     residentType: m.resident_type || "Owner",
                     isClubMembership: m.club_member_enabled ?? m.club_member_check ?? false,
                     membershipNumber: m.membership_number || "",
+                    originalMembershipNumber: m.membership_number || "",
                     isAccessCardAllocated: m.access_card_enabled ?? m.access_card_check ?? false,
                     accessCardId: m.access_card_id || "",
                     idCard: null,
@@ -237,14 +256,20 @@ const EditCMSClubMembers = () => {
                     // Details API returns { id, url, active } objects (or null)
                     idCardUrl: m.identification_image?.url,
                     residentPhotoUrl: m.profile_image?.url,
-                    // Existing attachments = other_documents + flat_attachment
-                    // (each may be a plain URL string or { id, url, active })
-                    existingAttachmentUrls: [
-                        ...(Array.isArray(m.other_documents) ? m.other_documents : []),
-                        m.flat_attachment,
-                    ]
-                        .map((f: any) => (typeof f === "string" ? f : f?.url))
-                        .filter((url: any): url is string => !!url),
+                    // Existing attachments = other_documents + flat_attachments (+ legacy flat_attachment)
+                    // (each may be a plain URL string or { id, url, active }; active 0 = removed)
+                    existingAttachmentUrls: Array.from(
+                        new Set(
+                            [
+                                ...(Array.isArray(m.other_documents) ? m.other_documents : []),
+                                ...(Array.isArray(m.flat_attachments) ? m.flat_attachments : []),
+                                m.flat_attachment,
+                            ]
+                                .filter((f: any) => !(f && typeof f === "object" && f.active === 0))
+                                .map((f: any) => (typeof f === "string" ? f : f?.url))
+                                .filter((url: any): url is string => !!url)
+                        )
+                    ),
                 }));
                 setMembers(mappedMembers);
             }
@@ -334,12 +359,51 @@ const EditCMSClubMembers = () => {
         }
     };
 
-    const updateMember = (id: string, field: keyof MemberForm, value: any) => {
-        setMembers(
-            members.map((member) =>
-                member.id === id ? { ...member, [field]: value } : member
-            )
-        );
+    const updateMember = async (id: string, field: keyof MemberForm, value: any) => {
+        if (field === "isClubMembership" && value === true) {
+            const current = members.find((member) => member.id === id);
+
+            // Member already had a number saved on the server: restore it
+            let membershipNumber = current?.originalMembershipNumber || "";
+
+            if (!membershipNumber) {
+                let numbers = futureMembershipNumbers;
+                if (!numbers?.membership_numbers || Object.keys(numbers.membership_numbers).length === 0) {
+                    numbers = await fetchFutureMembershipNumbers();
+                }
+
+                // Take the first future number not already used by another member in this form
+                const usedNumbers = new Set(
+                    members
+                        .filter((member) => member.id !== id && !member._destroy)
+                        .map((member) => member.membershipNumber)
+                        .filter(Boolean)
+                );
+                const available = Object.keys(numbers?.membership_numbers || {})
+                    .sort((a, b) => Number(a) - Number(b))
+                    .map((key) => numbers.membership_numbers[key])
+                    .find((num: string) => num && !usedNumbers.has(num));
+                membershipNumber = available || "";
+            }
+
+            setMembers((prev) =>
+                prev.map((member) =>
+                    member.id === id ? { ...member, isClubMembership: true, membershipNumber } : member
+                )
+            );
+        } else if (field === "isClubMembership" && value === false) {
+            setMembers((prev) =>
+                prev.map((member) =>
+                    member.id === id ? { ...member, isClubMembership: false, membershipNumber: "" } : member
+                )
+            );
+        } else {
+            setMembers((prev) =>
+                prev.map((member) =>
+                    member.id === id ? { ...member, [field]: value } : member
+                )
+            );
+        }
     };
 
     const handleSubmit = async () => {
@@ -466,11 +530,7 @@ const EditCMSClubMembers = () => {
                 }
 
                 for (const attachment of member.attachments) {
-                    const attachmentBase64 = await fileToBase64(attachment);
-                    formData.append(
-                        `members[${idx}][flat_attachments][]`,
-                        attachmentBase64
-                    );
+                    formData.append(`members[${idx}][flat_attachments][]`, attachment);
                 }
             }
 
@@ -901,6 +961,8 @@ const EditCMSClubMembers = () => {
                                                         value={member.membershipNumber}
                                                         onChange={(e) => updateMember(member.id, "membershipNumber", e.target.value)}
                                                         sx={fieldStyles}
+                                                        InputProps={{ readOnly: true }}
+                                                        helperText="Auto-assigned from system"
                                                     />
                                                 </div>
                                             )

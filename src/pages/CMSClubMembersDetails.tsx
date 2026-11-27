@@ -75,6 +75,7 @@ interface ClubMember {
     profile_image?: MemberFile | null;
     other_documents?: MemberFile[];
     flat_attachment?: MemberFile | null;
+    flat_attachments?: MemberFile[];
     avatar: string;
     emergency_contact_name?: string;
     referred_by?: string;
@@ -1476,8 +1477,12 @@ export const CMSClubMembersDetails = () => {
                                                 : null;
                                             const otherFiles = [
                                                 ...(Array.isArray(selectedMember.other_documents) ? selectedMember.other_documents : []),
+                                                ...(Array.isArray(selectedMember.flat_attachments) ? selectedMember.flat_attachments : []),
                                                 ...(selectedMember.flat_attachment ? [selectedMember.flat_attachment] : []),
-                                            ].filter(isLiveFile);
+                                            ]
+                                                .filter(isLiveFile)
+                                                // same file can come in both flat_attachment and flat_attachments
+                                                .filter((file, idx, arr) => arr.findIndex((f) => f.id === file.id) === idx);
 
                                             return (
                                                 <div className="space-y-8">
