@@ -44,7 +44,7 @@ describe("Kalpataru analytics requests", () => {
   it("traffic_session goes to Kalpataru's API with the date range and the app's platform only", async () => {
     await fetchTrafficSession(filters());
     expect(requested().pathname).toMatch(/\/residential\/kalpataru\/adoption\/traffic_session$/);
-    expect(params()).toEqual({ from: "2026-10-15", to: "2026-11-13", device_type: "Mobile" });
+    expect(params()).toEqual({ from: "2026-10-15", to: "2026-11-13", device_type: "Mobile", exact: "1" });
   });
 
   it("never sends an app id, project code, tenant url or site id (the API fixes the scope)", async () => {

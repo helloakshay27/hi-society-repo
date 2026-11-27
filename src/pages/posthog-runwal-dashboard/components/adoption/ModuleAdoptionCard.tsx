@@ -5,7 +5,7 @@ import { BarsSkeleton } from '../common/Skeleton';
 import { EmptyState, ErrorState } from '../common/DashboardStates';
 import { useModuleTree } from '../../hooks/useDashboardAnalytics';
 import { formatModuleName } from '../workflow/ModuleNav';
-import { pct } from '../../data/constants';
+import { pct2 } from '../../data/constants';
 
 const BAR_COLORS = ['#2f6fed', '#14a38b', '#e0a43a', '#8a63d2', '#d9534f', '#5bc0de'];
 
@@ -42,7 +42,7 @@ export const ModuleAdoptionCard: React.FC<{ filters: DashboardFilters; enabled?:
       ) : (
         <div className="hbars">
           {rows.map((m, idx) => {
-            const share = Math.round(m.share_pct ?? 0);
+            const share = m.share_pct ?? 0;
             return (
               <div className="role" key={m.key ?? m.name}>
                 <div className="rn" title={`${m.users.toLocaleString()} of ${(data?.active_users ?? 0).toLocaleString()} active users`}>
@@ -51,7 +51,7 @@ export const ModuleAdoptionCard: React.FC<{ filters: DashboardFilters; enabled?:
                 <div className="rbar">
                   <i style={{ width: `${Math.min(100, Math.max(0, share))}%`, background: BAR_COLORS[idx % BAR_COLORS.length] }} />
                 </div>
-                <div className="rv">{pct(share)}</div>
+                <div className="rv">{pct2(share)}</div>
               </div>
             );
           })}

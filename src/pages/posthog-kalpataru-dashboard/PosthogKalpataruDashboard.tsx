@@ -406,6 +406,9 @@ function PosthogKalpataruDashboardContent() {
               benchmarks={benchmarks}
               onBenchmarkChange={handleBenchmarkChange}
               sitesSettled={sitesSettled}
+              showUserJourneys
+              journeySocieties={false}
+              rangeLabel={rangeLabel}
             />
           )}
 

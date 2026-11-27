@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { DevicePlatform } from "../../types";
 import { SiteLookupItem } from "../../api/types";
+import { customRangeLabel, daysBetween } from "../../data/savedView";
 // import { LiveApiBadge } from './DashboardStates';
 
 interface FilterBarProps {
   range: number;
+  /** The applied range is a custom one (so no preset is highlighted), e.g. after a page refresh. */
+  rangeIsCustom?: boolean;
   rangeLabel: string;
   rangeFrom: string;
   rangeTo: string;
@@ -59,6 +62,7 @@ function todayYmd(): string {
 
 export const FilterBar: React.FC<FilterBarProps> = ({
   range,
+  rangeIsCustom = false,
   rangeLabel,
   rangeFrom,
   rangeTo,
@@ -94,7 +98,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const [isDateOpen, setIsDateOpen] = useState(false);
   const [customFrom, setCustomFrom] = useState(rangeFrom);
   const [customTo, setCustomTo] = useState(rangeTo);
-  const [isCustomApplied, setIsCustomApplied] = useState(false);
+  const [isCustomApplied, setIsCustomApplied] = useState(rangeIsCustom);
   const datePopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -115,28 +119,32 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Issue 5464: an end date before the chosen start date blanks the start date (and a start date after
+  // the chosen end date blanks the end date), so the range is picked again instead of silently
+  // keeping a start that no longer fits. Apply stays off until both dates are set.
+  const handleCustomFromChange = (value: string) => {
+    const from = value > todayYmd() ? todayYmd() : value;
+    setCustomFrom(from);
+    if (from && customTo && customTo < from) setCustomTo("");
+    setIsCustomApplied(false);
+  };
+  const handleCustomToChange = (value: string) => {
+    const to = value > todayYmd() ? todayYmd() : value;
+    setCustomTo(to);
+    if (to && customFrom && to < customFrom) setCustomFrom("");
+    setIsCustomApplied(false);
+  };
+
   const handleApplyCustom = () => {
-    if (!customFrom || !customTo) return;
+    if (!customFrom || !customTo || customFrom > customTo) return;
     // The dashboard has no data past today, so a range never ends after it.
     const today = todayYmd();
     const fromYmd = customFrom > today ? today : customFrom;
     const toYmd = customTo > today ? today : customTo;
     setCustomFrom(fromYmd);
     setCustomTo(toYmd);
-    const days = Math.max(
-      1,
-      Math.round(
-        (new Date(toYmd).getTime() - new Date(fromYmd).getTime()) /
-          86400000
-      ) + 1
-    );
-    const fmt = (d: string) => {
-      const dt = new Date(d);
-      return dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    };
-    const label = `${fmt(fromYmd)} – ${fmt(toYmd)}`;
     setIsCustomApplied(true);
-    onSetCustomRange(fromYmd, toYmd, days, label);
+    onSetCustomRange(fromYmd, toYmd, daysBetween(fromYmd, toYmd), customRangeLabel(fromYmd, toYmd));
     setIsDateOpen(false);
   };
 
@@ -153,7 +161,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           type="button"
           className="ctrl"
           id="dateRangeBtn"
-          onClick={() => setIsDateOpen(!isDateOpen)}
+          onClick={() => {
+            // Opening starts from the applied range, not from dates half-picked and left last time.
+            if (!isDateOpen) {
+              setCustomFrom(rangeFrom);
+              setCustomTo(rangeTo);
+            }
+            setIsDateOpen(!isDateOpen);
+          }}
         >
           <span className="ic">📅</span>
           <span id="dateRangeLabel">{rangeLabel}</span>
@@ -190,28 +205,25 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <div className="dr-custom-row">
                 <input
                   type="date"
+                  aria-label="Start date"
                   max={todayYmd()}
                   value={customFrom}
-                  onChange={(e) => {
-                    setCustomFrom(e.target.value > todayYmd() ? todayYmd() : e.target.value);
-                    setIsCustomApplied(false);
-                  }}
+                  onChange={(e) => handleCustomFromChange(e.target.value)}
                 />
                 <span className="dr-to">–</span>
                 <input
                   type="date"
+                  aria-label="End date"
                   max={todayYmd()}
                   value={customTo}
-                  onChange={(e) => {
-                    setCustomTo(e.target.value > todayYmd() ? todayYmd() : e.target.value);
-                    setIsCustomApplied(false);
-                  }}
+                  onChange={(e) => handleCustomToChange(e.target.value)}
                 />
               </div>
               <button
                 type="button"
                 className={`dr-apply ${isCustomApplied ? "applied" : ""}`}
                 onClick={handleApplyCustom}
+                disabled={!customFrom || !customTo}
               >
                 {isCustomApplied ? "Range applied ✓" : "Apply custom range"}
               </button>
@@ -395,7 +407,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         generatedAt={generatedAt}
       /> */}
 
-      <span className="pill">
+      <span
+        className="pill"
+        title="People active in the last 30 minutes. Follows the society, segment and platform filters, not the date range."
+      >
         <span className="dot"></span>
         <span id="liveCount">
           {recentlyOnlineCount > 0

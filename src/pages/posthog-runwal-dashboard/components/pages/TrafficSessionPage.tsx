@@ -10,8 +10,10 @@ import {
   useTrafficSession,
   useUsageAndDistribution,
 } from '../../hooks/useDashboardAnalytics';
-import { pct } from '../../data/constants';
+import { pct2 } from '../../data/constants';
+import { deltaText, previousCoverage } from '../../data/previousPeriod';
 import { previousPeriodFor } from '../../api/usageDateRange';
+import { platformRows } from './platformRows';
 
 interface TrafficSessionPageProps {
   filters: DashboardFilters;
@@ -30,13 +32,8 @@ function formatSeconds(sec: number | null | undefined): string {
   return `${m}m ${s.toString().padStart(2, '0')}s`;
 }
 
-function formatDelta(d: number | null | undefined): { text: string | null; dir: 'up' | 'dn' | 'flat' } {
-  if (d == null || isNaN(d)) return { text: null, dir: 'flat' };
-  const abs = Math.abs(d).toFixed(1);
-  if (d > 0) return { text: `+${abs}% vs prev`, dir: 'up' };
-  if (d < 0) return { text: `-${abs}% vs prev`, dir: 'dn' };
-  return { text: '0% vs prev', dir: 'flat' };
-}
+/** A rate as the Bounce Rate tile shows it: two decimals, cut not rounded (14.2833 -> "14.28%"). */
+export const formatRate = (x: number | null | undefined) => pct2(x);
 
 function densifyUsageData(
   fromStr: string,
@@ -123,12 +120,24 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
 
   const tiles = trafficData?.tiles;
   const deltas = trafficData?.delta_pct;
+  const prev = trafficData?.previous;
+  const count = (x: number | undefined) => (x == null ? null : x.toLocaleString());
+  // The change vs the previous period of the same length: (current − previous) ÷ previous × 100 from the
+  // API, two decimals cut, with the previous value beside it (issue 5466); "No data in previous period"
+  // when that period has none, and a "*" when it has fewer days of data than the range.
+  const coverage = previousCoverage(trafficData);
+  // No previous period line when that period has no data: a flat line at 0 would read as "no users then".
+  const drawPrev = showPrev && coverage.state !== 'none';
 
-  const activeUsersDelta = formatDelta(deltas?.active_users);
-  const screenViewsDelta = formatDelta(deltas?.screen_views);
-  const sessionsDelta = formatDelta(deltas?.sessions);
-  const avgSessionDelta = formatDelta(deltas?.avg_session_seconds);
-  const bounceDelta = formatDelta(deltas?.bounce_rate);
+  const activeUsersDelta = deltaText(deltas?.active_users, coverage, count(prev?.active_users));
+  const screenViewsDelta = deltaText(deltas?.screen_views, coverage, count(prev?.screen_views));
+  const sessionsDelta = deltaText(deltas?.sessions, coverage, count(prev?.sessions));
+  const avgSessionDelta = deltaText(
+    deltas?.avg_session_seconds,
+    coverage,
+    prev?.avg_session_seconds == null ? null : formatSeconds(prev.avg_session_seconds)
+  );
+  const bounceDelta = deltaText(deltas?.bounce_rate, coverage, prev?.bounce_rate == null ? null : formatRate(prev.bounce_rate));
 
   // Densify usage days so line charts display full continuous date curves
   const currentUsageDays = useMemo(() => {
@@ -164,54 +173,10 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
   const curSessions = getSeries(currentUsageDays, 'sessions');
   const prevSessions = getSeries(previousUsageDays, 'sessions');
 
-  // The card is titled "Device / Platform Split" — iOS, Android, and Desktop
-  // browsers as one combined breakdown — but `device_split.devices` only
-  // carries device_type (Mobile/Desktop/Tablet). Devices that report an
-  // `os_breakdown` (e.g. Mobile → Android/iOS) contribute their OS rows
-  // instead of a single "Mobile" row; devices without one (e.g. Desktop) are
-  // kept as-is. Rows are merged by name (in case more than one device_type
-  // reports the same OS) and re-shared against total_sessions so the whole
-  // list still sums to ~100%.
-  const totalSessions = usageData?.device_split?.total_sessions || 0;
-  const deviceList = useMemo(() => {
-    const rawDevices = usageData?.device_split?.devices || [];
-    const merged = new Map<string, { device: string; users: number; sessions: number }>();
-    let hasOsBreakdown = false;
-    rawDevices.forEach((d) => {
-      if (d.os_breakdown && d.os_breakdown.length > 0) {
-        hasOsBreakdown = true;
-        d.os_breakdown.forEach((o) => {
-          const existing = merged.get(o.os);
-          if (existing) {
-            existing.users += o.users;
-            existing.sessions += o.sessions;
-          } else {
-            merged.set(o.os, { device: o.os, users: o.users, sessions: o.sessions });
-          }
-        });
-      } else {
-        const existing = merged.get(d.device);
-        if (existing) {
-          existing.users += d.users;
-          existing.sessions += d.sessions;
-        } else {
-          merged.set(d.device, { device: d.device, users: d.users, sessions: d.sessions });
-        }
-      }
-    });
-    // Once any device reports an OS split, always show both Android and iOS
-    // — even at 0% — rather than silently dropping whichever had no sessions
-    // in the period (the API only includes OS entries that had activity).
-    if (hasOsBreakdown) {
-      ['Android', 'iOS'].forEach((os) => {
-        if (!merged.has(os)) merged.set(os, { device: os, users: 0, sessions: 0 });
-      });
-    }
-    return Array.from(merged.values()).map((d) => ({
-      ...d,
-      session_share: totalSessions > 0 ? (d.sessions / totalSessions) * 100 : 0,
-    }));
-  }, [usageData?.device_split, totalSessions]);
+  // Device / platform split (issues 5461 / 5462): each active user counted ONCE, on the platform they
+  // used last (the API's platform_usage), so Android + iOS = Active Users and each share is
+  // platform users ÷ active users × 100, the formula in the card's (i).
+  const platformSplit = useMemo(() => platformRows(usageData), [usageData]);
   const deviceColors: Record<string, string> = {
     Desktop: 'var(--chart-blue)',
     Mobile: 'var(--green)',
@@ -309,7 +274,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           id="bounceRate"
           infoKey="U5"
           label="Bounce Rate"
-          val={tiles ? `${Math.round(tiles.bounce_rate)}%` : isTrafficActiveLoading ? '...' : '0%'}
+          val={tiles ? formatRate(tiles.bounce_rate) : isTrafficActiveLoading ? '...' : '0%'}
           dir={bounceDelta.dir}
           delta={bounceDelta.text}
           sub="lower is better"
@@ -327,7 +292,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           val={tiles ? tiles.recently_online.toLocaleString() : isTrafficActiveLoading ? '...' : '0'}
           dir="flat"
           delta={null}
-          sub="active in last 30 min"
+          sub="active in the last 30 min · not tied to the date range"
           noTarget={true}
           isLoading={isTrafficActiveLoading}
         />
@@ -339,7 +304,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           infoKey="chart.usage"
           eyebrow="Usage over time · Live usage data"
           title="Usage over time"
-          purpose="Visitors, screen views, and sessions over time, with previous period comparison from the usage_and_distribution API."
+          purpose="Active users, screen views, and sessions over time, with previous period comparison from the usage_and_distribution API."
         >
           {isUsageError ? (
             <ErrorState
@@ -368,7 +333,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                   className={usageTab === 'visitors' ? 'on' : ''}
                   onClick={() => setUsageTab('visitors')}
                 >
-                  Visitors
+                  Active Users
                 </button>
                 <button
                   type="button"
@@ -391,21 +356,24 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                   <>
                     <LineChart
                       cur={curVisitors}
-                      prev={showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1 ? prevVisitors : null}
+                      prev={drawPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1 ? prevVisitors : null}
                       labels={chartLabels}
                       color="var(--chart-blue)"
                       fill="var(--chart-fill)"
-                      showPrev={showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1}
-                      curLabel="Visitors"
+                      showPrev={drawPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1}
+                      curLabel="Active Users"
                       prevLabel="Prev Period"
                     />
                     <div className="legend">
                       <span>
-                        <i style={{ background: 'var(--chart-blue)' }}></i> Current Visitors
+                        <i style={{ background: 'var(--chart-blue)' }}></i> Current Active Users
                       </span>
-                      {showPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1 && (
+                      {showPrev && coverage.state === 'none' && (
+                        <span>No data in previous period ({coverage.dates})</span>
+                      )}
+                      {drawPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1 && (
                         <span>
-                          <i className="dash"></i> Previous Period
+                          <i className="dash"></i> Previous Period{coverage.state === 'partial' ? ' *' : ''}
                         </span>
                       )}
                     </div>
@@ -416,11 +384,11 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                   <>
                     <LineChart
                       cur={curViews}
-                      prev={showPrev && prevViews.length === curViews.length && prevViews.length > 1 ? prevViews : null}
+                      prev={drawPrev && prevViews.length === curViews.length && prevViews.length > 1 ? prevViews : null}
                       labels={chartLabels}
                       color="var(--chart-violet)"
                       fill="var(--chart-violet-tint)"
-                      showPrev={showPrev && prevViews.length === curViews.length && prevViews.length > 1}
+                      showPrev={drawPrev && prevViews.length === curViews.length && prevViews.length > 1}
                       curLabel="Views"
                       prevLabel="Prev Period"
                     />
@@ -428,9 +396,12 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                       <span>
                         <i style={{ background: 'var(--chart-violet)' }}></i> Current Views
                       </span>
-                      {showPrev && prevViews.length === curViews.length && prevViews.length > 1 && (
+                      {showPrev && coverage.state === 'none' && (
+                        <span>No data in previous period ({coverage.dates})</span>
+                      )}
+                      {drawPrev && prevViews.length === curViews.length && prevViews.length > 1 && (
                         <span>
-                          <i className="dash"></i> Previous Period
+                          <i className="dash"></i> Previous Period{coverage.state === 'partial' ? ' *' : ''}
                         </span>
                       )}
                     </div>
@@ -441,11 +412,11 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                   <>
                     <LineChart
                       cur={curSessions}
-                      prev={showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1 ? prevSessions : null}
+                      prev={drawPrev && prevSessions.length === curSessions.length && prevSessions.length > 1 ? prevSessions : null}
                       labels={chartLabels}
                       color="var(--green)"
                       fill="var(--green-tint)"
-                      showPrev={showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1}
+                      showPrev={drawPrev && prevSessions.length === curSessions.length && prevSessions.length > 1}
                       curLabel="Sessions"
                       prevLabel="Prev Period"
                     />
@@ -453,9 +424,12 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                       <span>
                         <i style={{ background: 'var(--green)' }}></i> Current Sessions
                       </span>
-                      {showPrev && prevSessions.length === curSessions.length && prevSessions.length > 1 && (
+                      {showPrev && coverage.state === 'none' && (
+                        <span>No data in previous period ({coverage.dates})</span>
+                      )}
+                      {drawPrev && prevSessions.length === curSessions.length && prevSessions.length > 1 && (
                         <span>
-                          <i className="dash"></i> Previous Period
+                          <i className="dash"></i> Previous Period{coverage.state === 'partial' ? ' *' : ''}
                         </span>
                       )}
                     </div>
@@ -471,7 +445,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           infoKey="chart.devices"
           eyebrow="Device / platform split"
           title="Device platform distribution"
-          purpose="Share of sessions and active users by device_type from usage data."
+          purpose="Active users on each platform, each user counted once on the platform they used last, as a share of all active users."
         >
           {isUsageError ? (
             <ErrorState
@@ -481,32 +455,41 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
             />
           ) : isUsageActiveLoading ? (
             <BarsSkeleton count={3} />
-          ) : deviceList.length === 0 ? (
+          ) : platformSplit.rows.length === 0 ? (
             <EmptyState message="No device distribution data found" />
           ) : (
             <>
-              <div className="hbars">
-                {deviceList.map((d, idx) => {
-                  const sharePct = Math.round(d.session_share);
-                  const barColor = deviceColors[d.device] || 'var(--chart-blue)';
+              <div className="hbars platform-split">
+                {platformSplit.rows.map((d) => {
+                  const barColor = deviceColors[d.platform] || 'var(--chart-blue)';
                   return (
-                    <div className="role" key={idx}>
-                      <div className="rn">{d.device}</div>
+                    <div className="role" key={d.platform}>
+                      <div className="rn">{d.platform}</div>
                       <div className="rbar">
                         <i
                           style={{
-                            width: `${Math.min(100, Math.max(0, sharePct))}%`,
+                            width: `${Math.min(100, Math.max(0, d.share))}%`,
                             background: barColor,
                           }}
                         ></i>
                       </div>
-                      <div className="rv">{pct(sharePct)}</div>
+                      <div className="rv" title={`${d.users.toLocaleString()} of ${platformSplit.totalUsers.toLocaleString()} active users`}>
+                        {pct2(d.share)}
+                        <span className="rv-sub"> · {d.users.toLocaleString()}</span>
+                      </div>
                     </div>
                   );
                 })}
               </div>
 
               <div className="kv" style={{ marginTop: '14px' }}>
+                <div>
+                  <div className="k">Active users</div>
+                  <div className="v" style={{ fontSize: '18px' }}>
+                    {platformSplit.totalUsers.toLocaleString()}
+                  </div>
+                  <div className="u">{platformSplit.sumLabel}</div>
+                </div>
                 <div>
                   <div className="k">Views / session</div>
                   <div className="v" style={{ fontSize: '18px' }}>
