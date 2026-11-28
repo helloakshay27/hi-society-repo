@@ -16,6 +16,8 @@ interface TopBarProps {
   orgName?: string;
   siteName?: string;
   isFetching?: boolean;
+  /** Extra buttons at the top right, before the live badge (Recent activity). */
+  actions?: React.ReactNode;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -31,6 +33,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   orgName = 'Runwal Group',
   siteName,
   isFetching = false,
+  actions,
 }) => {
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -120,6 +123,8 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       <div className="spacer"></div>
+
+      {actions}
 
       <span
         className="badge-live"

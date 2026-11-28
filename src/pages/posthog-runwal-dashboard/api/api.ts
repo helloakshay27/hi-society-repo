@@ -46,6 +46,7 @@ import {
   SocietyAccountsBySociety,
 } from './types';
 import { analyticsAuthHeaders } from './analyticsAuth';
+import { maskContact, maskPerson } from '../data/mask';
 
 // ==========================================
 // 1. PostHog Adoption API Client
@@ -289,16 +290,17 @@ export const fetchWorkflowUsage = (
 // Every request carries the page's filters (dates, platform, Post Sales / Post Possession, society).
 // ==========================================
 
+// Emails come back masked (first 2 and last 2 characters shown): see ../data/mask.
 export const fetchUserJourneys = (filters: DashboardFilters, p: UserJourneyListParams = {}) =>
   getPosthog<UserJourneysResponse>(
     filters, 'user_journeys',
     buildPosthogQuery(filters, { q: p.q || undefined, sort: p.sort, dir: p.dir, page: p.page, per_page: p.perPage })
-  );
+  ).then((r) => (r && Array.isArray(r.people) ? { ...r, people: r.people.map(maskPerson) } : r));
 
 export const fetchUserJourneySessions = (filters: DashboardFilters, user: string) =>
   getPosthog<UserJourneySessionsResponse>(
     filters, 'user_journey_sessions', buildPosthogQuery(filters, { user })
-  );
+  ).then((r) => (r && r.person ? { ...r, person: maskPerson(r.person) } : r));
 
 export const fetchUserJourneySteps = (filters: DashboardFilters, user: string, session: string) =>
   getPosthog<UserJourneyStepsResponse>(
@@ -529,11 +531,13 @@ export const fetchRecentActiveUsers = (filters: DashboardFilters, limit = 10) =>
   getPosthog<RecentActiveUsersResponse>(
     filters, 'recent_active_users',
     buildPosthogQuery(filters, { limit })
-  );
+  ).then((r) => (r && Array.isArray(r.users) ? { ...r, users: r.users.map((u) => maskPerson(u as any)) } : r));
 
 /** What to call a user in an activity row: their name, else their email's local part, else their id. */
 export const activityUserLabel = (u: { user_name?: string | null; email?: string | null; user_id?: string | null }): string =>
-  u.user_name || u.email?.split('@')[0] || (u.user_id ? `user ${u.user_id}` : 'anonymous');
+  // An email that is already masked (fetchRecentActiveUsers masks it) is shown as it is.
+  u.user_name || (u.email ? (u.email.includes('@') ? maskContact(u.email.split('@')[0]) : u.email) : '') ||
+  (u.user_id ? `user ${u.user_id}` : 'anonymous');
 
 /**
  * Downloads the `.xlsx` workbook of every event each user did, with the

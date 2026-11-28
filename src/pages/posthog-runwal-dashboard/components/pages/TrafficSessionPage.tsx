@@ -14,6 +14,7 @@ import { pct2 } from '../../data/constants';
 import { deltaText, previousCoverage } from '../../data/previousPeriod';
 import { previousPeriodFor } from '../../api/usageDateRange';
 import { platformRows } from './platformRows';
+import { useActivePeople, todayYmd } from '../common/ActivePeople';
 
 interface TrafficSessionPageProps {
   filters: DashboardFilters;
@@ -23,6 +24,10 @@ interface TrafficSessionPageProps {
   sitesSettled?: boolean;
   isRefreshing?: boolean;
 }
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** "2026-11-20" -> "Nov 20". */
+const fmtYmdShort = (ymd: string) => `${MONTHS[Number(ymd.slice(5, 7)) - 1]} ${Number(ymd.slice(8, 10))}`;
 
 function formatSeconds(sec: number | null | undefined): string {
   if (sec == null || isNaN(sec) || sec <= 0) return '—';
@@ -153,6 +158,47 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
     return densifyUsageData(previousRange.from, previousRange.to, raw);
   }, [serverPreviousDays, previousUsageQuery.data?.usage_over_time?.current, previousUsageQuery.isSuccess, previousRange]);
 
+  // Every people number opens the people behind it (../common/ActivePeople).
+  const people = useActivePeople();
+  const platformWord = filters.devPlatform === 'ios' ? ' on iOS' : filters.devPlatform === 'android' ? ' on Android' : '';
+  const span = (from: string, to: string) => (from === to ? fmtYmdShort(from) : `${fmtYmdShort(from)} – ${fmtYmdShort(to)}`);
+  const openActive = () =>
+    people.open({
+      title: `Active users · ${span(filters.from, filters.to)}`,
+      sub: `People who used the app ${span(filters.from, filters.to)}${platformWord}, with the page's filters.`,
+      filters,
+      expected: tiles?.active_users ?? null,
+    });
+  const openOnline = () =>
+    people.open({
+      title: 'Recently online',
+      sub: `People whose last activity was in the last 30 minutes${platformWord}, with the page's filters (any date range).`,
+      filters: { ...filters, from: todayYmd(), to: todayYmd() },
+      newest: 100,
+      keep: (p) => p.minutes_ago != null && p.minutes_ago <= 30,
+      expected: tiles?.recently_online ?? null,
+    });
+  const openDay = (i: number, count?: number) => {
+    const day = currentUsageDays[i]?.day;
+    if (!day) return;
+    people.open({
+      title: `Active users · ${fmtYmdShort(day)}`,
+      sub: `People who used the app on ${fmtYmdShort(day)}${platformWord}, with the page's filters.`,
+      filters: { ...filters, from: day, to: day },
+      expected: count ?? null,
+    });
+  };
+  const openPlatform = (name: string, users: number) => {
+    const dev = name === 'iOS' ? 'ios' : name === 'Android' ? 'android' : null;
+    if (!dev) return;
+    people.open({
+      title: `Active users on ${name} · ${span(filters.from, filters.to)}`,
+      sub: `People whose phone is ${name === 'iOS' ? 'an iPhone' : 'an Android phone'} (the one they used last), active ${span(filters.from, filters.to)}.`,
+      filters: { ...filters, devPlatform: dev },
+      expected: users,
+    });
+  };
+
   const chartLabels = currentUsageDays.map((d) => {
     const parts = d.day.split('-');
     if (parts.length === 3) {
@@ -233,6 +279,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           benchmark={benchmarks.activeUsers}
           onBenchmarkChange={onBenchmarkChange}
           isLoading={isTrafficActiveLoading}
+          onClick={tiles ? openActive : undefined}
         />
         <KpiTile
           id="screenViews"
@@ -295,6 +342,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           sub="active in the last 30 min · not tied to the date range"
           noTarget={true}
           isLoading={isTrafficActiveLoading}
+          onClick={tiles ? openOnline : undefined}
         />
       </div>
 
@@ -363,6 +411,8 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                       showPrev={drawPrev && prevVisitors.length === curVisitors.length && prevVisitors.length > 1}
                       curLabel="Active Users"
                       prevLabel="Prev Period"
+                      clickHint="Click a day to see who was active"
+                      onPointClick={(i) => openDay(i, curVisitors[i])}
                     />
                     <div className="legend">
                       <span>
@@ -391,6 +441,8 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                       showPrev={drawPrev && prevViews.length === curViews.length && prevViews.length > 1}
                       curLabel="Views"
                       prevLabel="Prev Period"
+                      clickHint="Click a day to see who was active"
+                      onPointClick={(i) => openDay(i, curVisitors[i])}
                     />
                     <div className="legend">
                       <span>
@@ -419,6 +471,8 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                       showPrev={drawPrev && prevSessions.length === curSessions.length && prevSessions.length > 1}
                       curLabel="Sessions"
                       prevLabel="Prev Period"
+                      clickHint="Click a day to see who was active"
+                      onPointClick={(i) => openDay(i, curVisitors[i])}
                     />
                     <div className="legend">
                       <span>
@@ -463,7 +517,24 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
                 {platformSplit.rows.map((d) => {
                   const barColor = deviceColors[d.platform] || 'var(--chart-blue)';
                   return (
-                    <div className="role" key={d.platform}>
+                    <div
+                      className={`role${d.platform === 'iOS' || d.platform === 'Android' ? ' role-click' : ''}`}
+                      key={d.platform}
+                      {...(d.platform === 'iOS' || d.platform === 'Android'
+                        ? {
+                            role: 'button',
+                            tabIndex: 0,
+                            title: `See the ${d.users.toLocaleString()} people on ${d.platform}`,
+                            onClick: () => openPlatform(d.platform, d.users),
+                            onKeyDown: (e: React.KeyboardEvent) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                openPlatform(d.platform, d.users);
+                              }
+                            },
+                          }
+                        : {})}
+                    >
                       <div className="rn">{d.platform}</div>
                       <div className="rbar">
                         <i
@@ -502,6 +573,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
           )}
         </Card>
       </div>
+      {people.drawer}
     </section>
   );
 };
