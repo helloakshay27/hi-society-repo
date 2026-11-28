@@ -130,7 +130,7 @@ export function PeopleDrawer<T>({ spec, onClose }: { spec: DrawerSpec<T> | null;
         <div className="dr-bar">
           <input
             type="search"
-            placeholder="Search by name, email, mobile or flat…"
+            placeholder="Search by name, project or flat…"
             aria-label="Search"
             value={query}
             onChange={(e) => {
