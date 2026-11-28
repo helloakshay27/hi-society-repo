@@ -64,7 +64,6 @@
 //   },
 // };
 
-
 // // Helper function to get current date/time values as strings
 // const getCurrentDateTime = () => {
 //   const now = new Date();
@@ -116,7 +115,6 @@
 //     factsCorrect: false,
 //     attachments: null as File | null
 //   });
-
 
 //   // State for buildings
 //   const [buildings, setBuildings] = useState<{ id: number; name: string }[]>([]);
@@ -411,7 +409,6 @@
 //   //     return;
 //   //   }
 
-
 //   //   if (!incidentData.factsCorrect) {
 //   //     toast.error('Please confirm the disclaimer');
 //   //     return;
@@ -490,7 +487,6 @@
 //   //     toast.error('Failed to create incident');
 //   //   }
 //   // };
-
 
 //   const handleSubmit = async () => {
 //     // Time validation
@@ -611,7 +607,6 @@
 //       toast.error('Failed to create incident');
 //     }
 //   };
-
 
 //   return (
 //     <div className="p-6">
@@ -741,7 +736,6 @@
 //               </FormControl>
 //             </div>
 //           </div>
-
 
 //           {/* Building and Categories Grid */}
 //           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -1149,38 +1143,42 @@
 
 // export default AddIncidentPage;
 
-
-
-
-
-import React, { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Checkbox, FormControlLabel } from '@mui/material';
-import { Heading } from '@/components/ui/heading';
-import { ArrowLeft, CalendarDays, ShieldCheck, Paperclip } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+  Checkbox,
+  FormControlLabel,
+} from "@mui/material";
+import { Heading } from "@/components/ui/heading";
+import { ArrowLeft, CalendarDays, ShieldCheck, Paperclip } from "lucide-react";
 
 const fieldStyles = {
-  height: '45px',
-  backgroundColor: '#fff',
-  borderRadius: '4px',
-  '& .MuiOutlinedInput-root': {
-    height: '45px',
-    '& fieldset': {
-      borderColor: '#ddd',
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": {
+      borderColor: "#ddd",
     },
-    '&:hover fieldset': {
-      borderColor: '#C72030',
+    "&:hover fieldset": {
+      borderColor: "#C72030",
     },
-    '&.Mui-focused fieldset': {
-      borderColor: '#C72030',
+    "&.Mui-focused fieldset": {
+      borderColor: "#C72030",
     },
   },
-  '& .MuiInputLabel-root': {
-    '&.Mui-focused': {
-      color: '#C72030',
+  "& .MuiInputLabel-root": {
+    "&.Mui-focused": {
+      color: "#C72030",
     },
   },
 };
@@ -1190,8 +1188,9 @@ const menuProps = {
     style: {
       maxHeight: 300,
       zIndex: 9999,
-      backgroundColor: 'white',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      backgroundColor: "white",
+      boxShadow:
+        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
     },
   },
   MenuListProps: {
@@ -1200,22 +1199,31 @@ const menuProps = {
     },
   },
   anchorOrigin: {
-    vertical: 'bottom' as const,
-    horizontal: 'left' as const,
+    vertical: "bottom" as const,
+    horizontal: "left" as const,
   },
   transformOrigin: {
-    vertical: 'top' as const,
-    horizontal: 'left' as const,
+    vertical: "top" as const,
+    horizontal: "left" as const,
   },
 };
-
 
 // Helper function to get current date/time values as strings
 const getCurrentDateTime = () => {
   const now = new Date();
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   return {
@@ -1223,13 +1231,13 @@ const getCurrentDateTime = () => {
     month: monthNames[now.getMonth()],
     day: now.getDate().toString(),
     hour: now.getHours().toString(),
-    minute: now.getMinutes().toString()
+    minute: now.getMinutes().toString(),
   };
 };
 
 export const AddIncidentPage = () => {
   const navigate = useNavigate();
-  const handleGoBack = () => navigate('/safety/incident');
+  const handleGoBack = () => navigate(-1);
   const currentDateTime = getCurrentDateTime();
 
   const [incidentData, setIncidentData] = useState({
@@ -1238,72 +1246,93 @@ export const AddIncidentPage = () => {
     day: currentDateTime.day,
     hour: currentDateTime.hour,
     minute: currentDateTime.minute,
-    tower: '',
+    tower: "",
     // Primary hierarchy
-    primaryCategory: '',
-    subCategory: '',
-    subSubCategory: '',
-    subSubSubCategory: '',
+    primaryCategory: "",
+    subCategory: "",
+    subSubCategory: "",
+    subSubSubCategory: "",
     // Secondary hierarchy
-    secondaryCategory: '',
-    secondarySubCategory: '',
-    secondarySubSubCategory: '',
-    secondarySubSubSubCategory: '',
+    secondaryCategory: "",
+    secondarySubCategory: "",
+    secondarySubSubCategory: "",
+    secondarySubSubSubCategory: "",
     // Risk inputs
     // severity: '',
     // probability: '',
     // Computed/selected
-    incidentLevel: '',
+    incidentLevel: "",
     // Others
-    description: '',
+    description: "",
     supportRequired: false,
     factsCorrect: false,
     attachments: [] as File[],
     // Additional fields converted from ERB
-    workRelatedInjury: '',
-    propertyDamage: '',
-    propertyDamageId: '',
-    damageEvaluation: '',
-    damageCoveredInsurance: '',
-    damagedRecovered: '',
-    insuredBy: '',
-    rca: '',
-    rcaCategoryId: '',
-    correctiveAction: '',
-    preventiveAction: ''
+    workRelatedInjury: "",
+    propertyDamage: "",
+    propertyDamageId: "",
+    damageEvaluation: "",
+    damageCoveredInsurance: "",
+    damagedRecovered: "",
+    insuredBy: "",
+    rca: "",
+    rcaCategoryId: "",
+    correctiveAction: "",
+    preventiveAction: "",
   });
-
 
   // State for towers
   const [towers, setTowers] = useState<{ id: number; name: string }[]>([]);
   // Category hierarchy states
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>(
+    []
+  );
   const [subCategories, setSubCategories] = useState<any[]>([]);
   const [subSubCategories, setSubSubCategories] = useState<any[]>([]);
   const [subSubSubCategories, setSubSubSubCategories] = useState<any[]>([]);
   // Secondary hierarchy
-  const [secondaryCategories, setSecondaryCategories] = useState<{ id: number; name: string }[]>([]);
-  const [secondarySubCategories, setSecondarySubCategories] = useState<any[]>([]);
-  const [secondarySubSubCategories, setSecondarySubSubCategories] = useState<any[]>([]);
-  const [secondarySubSubSubCategories, setSecondarySubSubSubCategories] = useState<any[]>([]);
+  const [secondaryCategories, setSecondaryCategories] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [secondarySubCategories, setSecondarySubCategories] = useState<any[]>(
+    []
+  );
+  const [secondarySubSubCategories, setSecondarySubSubCategories] = useState<
+    any[]
+  >([]);
+  const [secondarySubSubSubCategories, setSecondarySubSubSubCategories] =
+    useState<any[]>([]);
   // Incident levels
-  const [incidentLevels, setIncidentLevels] = useState<{ id: number; name: string }[]>([]);
-  const [propertyDamageCategories, setPropertyDamageCategories] = useState<{ id: number; name: string }[]>([]);
-  const [rcaCategories, setRcaCategories] = useState<{ id: number; name: string }[]>([]);
+  const [incidentLevels, setIncidentLevels] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [propertyDamageCategories, setPropertyDamageCategories] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [rcaCategories, setRcaCategories] = useState<
+    { id: number; name: string }[]
+  >([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Get baseUrl and token from localStorage
   const getBaseUrl = () => {
-    let baseUrl = localStorage.getItem('baseUrl') || '';
-    const token = localStorage.getItem('token') || '';
-    if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-      baseUrl = 'https://' + baseUrl.replace(/^\/\/+/, '');
+    let baseUrl = localStorage.getItem("baseUrl") || "";
+    const token = localStorage.getItem("token") || "";
+    if (
+      baseUrl &&
+      !baseUrl.startsWith("http://") &&
+      !baseUrl.startsWith("https://")
+    ) {
+      baseUrl = "https://" + baseUrl.replace(/^\/\/+/, "");
     }
     return { baseUrl, token };
   };
 
   // Helper function to fetch data by tag type with optional parent_id filter
-  const fetchByTagType = async (tagType: string, parentId?: string | number) => {
+  const fetchByTagType = async (
+    tagType: string,
+    parentId?: string | number
+  ) => {
     const { baseUrl, token } = getBaseUrl();
     try {
       let url = `${baseUrl}/incidence_tags.json?q[tag_type_eq]=${tagType}`;
@@ -1311,7 +1340,7 @@ export const AddIncidentPage = () => {
         url += `&q[parent_id_eq]=${parentId}`;
       }
       const response = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error(`Failed to fetch ${tagType}`);
       const result = await response.json();
@@ -1325,99 +1354,178 @@ export const AddIncidentPage = () => {
   // Individual fetch functions
   const fetchCategories = async () => {
     try {
-      const data = await fetchByTagType('IncidenceCategory', null);
+      const data = await fetchByTagType("IncidenceCategory", null);
       const filtered = data.filter((item: any) => item.parent_id === null);
-      setCategories(filtered.map((item: any) => ({ id: item.id, name: item.name })));
-    } catch (e) { console.error(e); }
+      setCategories(
+        filtered.map((item: any) => ({ id: item.id, name: item.name }))
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchSubCategories = async (parentId: string | number) => {
     try {
-      const data = await fetchByTagType('IncidenceSubCategory', parentId);
-      setSubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
-    } catch (e) { console.error(e); }
+      const data = await fetchByTagType("IncidenceSubCategory", parentId);
+      setSubCategories(
+        data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          parent_id: item.parent_id,
+        }))
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchSubSubCategories = async (parentId: string | number) => {
     try {
-      const data = await fetchByTagType('IncidenceSubSubCategory', parentId);
-      setSubSubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
-    } catch (e) { console.error(e); }
+      const data = await fetchByTagType("IncidenceSubSubCategory", parentId);
+      setSubSubCategories(
+        data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          parent_id: item.parent_id,
+        }))
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchSubSubSubCategories = async (parentId: string | number) => {
     try {
-      const data = await fetchByTagType('IncidenceSubSubSubCategory', parentId);
-      setSubSubSubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
-    } catch (e) { console.error(e); }
+      const data = await fetchByTagType("IncidenceSubSubSubCategory", parentId);
+      setSubSubSubCategories(
+        data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          parent_id: item.parent_id,
+        }))
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchSecondaryCategories = async () => {
     try {
-      const data = await fetchByTagType('IncidenceSecondaryCategory', null);
+      const data = await fetchByTagType("IncidenceSecondaryCategory", null);
       const filtered = data.filter((item: any) => item.parent_id === null);
-      setSecondaryCategories(filtered.map((item: any) => ({ id: item.id, name: item.name })));
-    } catch (e) { console.error(e); }
+      setSecondaryCategories(
+        filtered.map((item: any) => ({ id: item.id, name: item.name }))
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchSecondarySubCategories = async (parentId: string | number) => {
     try {
-      const data = await fetchByTagType('IncidenceSecondarySubCategory', parentId);
-      setSecondarySubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
-    } catch (e) { console.error(e); }
+      const data = await fetchByTagType(
+        "IncidenceSecondarySubCategory",
+        parentId
+      );
+      setSecondarySubCategories(
+        data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          parent_id: item.parent_id,
+        }))
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchSecondarySubSubCategories = async (parentId: string | number) => {
     try {
-      const data = await fetchByTagType('IncidenceSecondarySubSubCategory', parentId);
-      setSecondarySubSubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
-    } catch (e) { console.error(e); }
+      const data = await fetchByTagType(
+        "IncidenceSecondarySubSubCategory",
+        parentId
+      );
+      setSecondarySubSubCategories(
+        data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          parent_id: item.parent_id,
+        }))
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const fetchSecondarySubSubSubCategories = async (parentId: string | number) => {
+  const fetchSecondarySubSubSubCategories = async (
+    parentId: string | number
+  ) => {
     try {
-      const data = await fetchByTagType('IncidenceSecondarySubSubSubCategory', parentId);
-      setSecondarySubSubSubCategories(data.map((item: any) => ({ id: item.id, name: item.name, parent_id: item.parent_id })));
-    } catch (e) { console.error(e); }
+      const data = await fetchByTagType(
+        "IncidenceSecondarySubSubSubCategory",
+        parentId
+      );
+      setSecondarySubSubSubCategories(
+        data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          parent_id: item.parent_id,
+        }))
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchIncidentLevels = async () => {
     try {
-      const data = await fetchByTagType('IncidenceLevel');
-      setIncidentLevels(data.map((item: any) => ({ id: item.id, name: item.name })));
-    } catch (e) { console.error(e); }
+      const data = await fetchByTagType("IncidenceLevel");
+      setIncidentLevels(
+        data.map((item: any) => ({ id: item.id, name: item.name }))
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchPropertyDamageCategories = async () => {
     try {
-      const data = await fetchByTagType('PropertyDamageCategory');
-      setPropertyDamageCategories(data.map((item: any) => ({ id: item.id, name: item.name })));
-    } catch (e) { console.error(e); }
+      const data = await fetchByTagType("PropertyDamageCategory");
+      setPropertyDamageCategories(
+        data.map((item: any) => ({ id: item.id, name: item.name }))
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchRcaCategories = async () => {
     try {
-      const data = await fetchByTagType('RCACategory');
-      setRcaCategories(data.map((item: any) => ({ id: item.id, name: item.name })));
-    } catch (e) { console.error(e); }
+      const data = await fetchByTagType("RCACategory");
+      setRcaCategories(
+        data.map((item: any) => ({ id: item.id, name: item.name }))
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchTowers = async () => {
     const { token } = getBaseUrl();
-    const societyId = localStorage.getItem('selectedSocietyId') || '';
+    const societyId = localStorage.getItem("selectedSocietyId") || "";
 
     try {
       const response = await fetch(
         `https://hi-society.lockated.com/get_society_blocks.json?society_id=${societyId}`,
         {
           headers: {
-            'Accept': 'application/json, text/plain, */*',
-            'Authorization': `Bearer ${token}`
-          }
+            Accept: "application/json, text/plain, */*",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      if (!response.ok) throw new Error('Failed to fetch towers');
+      if (!response.ok) throw new Error("Failed to fetch towers");
       const result = await response.json();
 
       const list =
@@ -1429,12 +1537,12 @@ export const AddIncidentPage = () => {
 
       const normalized = list.map((item: any) => ({
         id: item.id ?? item.block_id ?? item.tower_id,
-        name: item.name ?? item.block_name ?? item.tower_name ?? ''
+        name: item.name ?? item.block_name ?? item.tower_name ?? "",
       }));
 
       setTowers(normalized);
     } catch (e) {
-      console.error('Error fetching towers:', e);
+      console.error("Error fetching towers:", e);
       setTowers([]);
     }
   };
@@ -1577,10 +1685,10 @@ export const AddIncidentPage = () => {
 
   const handleInputChange = (field: string, value: string) => {
     // Character limit for description field
-    if (field === 'description' && value.length > 2000) {
+    if (field === "description" && value.length > 2000) {
       return; // Don't update state if exceeds 2000 characters
     }
-    setIncidentData(prev => ({ ...prev, [field]: value }));
+    setIncidentData((prev) => ({ ...prev, [field]: value }));
   };
 
   // Recalculate incident level whenever severity or probability changes
@@ -1594,72 +1702,82 @@ export const AddIncidentPage = () => {
     const files = event.target.files;
     if (files && files.length > 0) {
       const newFiles = Array.from(files);
-      setIncidentData(prev => ({
+      setIncidentData((prev) => ({
         ...prev,
-        attachments: [...prev.attachments, ...newFiles]
+        attachments: [...prev.attachments, ...newFiles],
       }));
       toast.success(`${newFiles.length} file(s) uploaded successfully`);
       // Reset the input so the same file can be selected again if removed and re-added
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
 
   const removeFile = (index: number) => {
-    setIncidentData(prev => ({
+    setIncidentData((prev) => ({
       ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index)
+      attachments: prev.attachments.filter((_, i) => i !== index),
     }));
-    toast.success('File removed');
+    toast.success("File removed");
   };
 
   const handleCheckboxChange = (field: string, checked: boolean) => {
-    setIncidentData(prev => ({
+    setIncidentData((prev) => ({
       ...prev,
-      [field]: checked
+      [field]: checked,
     }));
   };
 
   // Helper: convert month name to number (1-12)
   const monthNameToNumber = (name: string) => {
     const months = [
-      'january', 'february', 'march', 'april', 'may', 'june',
-      'july', 'august', 'september', 'october', 'november', 'december'
+      "january",
+      "february",
+      "march",
+      "april",
+      "may",
+      "june",
+      "july",
+      "august",
+      "september",
+      "october",
+      "november",
+      "december",
     ];
-    const idx = months.indexOf((name || '').toLowerCase());
-    return idx === -1 ? '' : String(idx + 1);
+    const idx = months.indexOf((name || "").toLowerCase());
+    return idx === -1 ? "" : String(idx + 1);
   };
 
   const handleSubmit = async () => {
     // Time validation
     if (!incidentData.year || !incidentData.month || !incidentData.day) {
-      toast.error('Please select complete date (day, month, year)');
+      toast.error("Please select complete date (day, month, year)");
       return;
     }
 
     if (!incidentData.hour || !incidentData.minute) {
-      toast.error('Please select both hour and minute');
+      toast.error("Please select both hour and minute");
       return;
     }
 
     // Tower validation
     if (!incidentData.tower) {
-      toast.error('Please select a tower');
+      toast.error("Please select a tower");
       return;
     }
 
     // Primary category hierarchy validation
     if (!incidentData.primaryCategory) {
-      toast.error('Please select primary category');
+      toast.error("Please select primary category");
       return;
     }
     if (!incidentData.subCategory) {
-      toast.error('Please select sub category');
+      toast.error("Please select sub category");
       return;
     }
     if (!incidentData.subSubCategory) {
-      toast.error('Please select sub sub category');
+      toast.error("Please select sub sub category");
       return;
     }
     // if (!incidentData.subSubSubCategory) {
@@ -1677,60 +1795,85 @@ export const AddIncidentPage = () => {
     //   return;
     // }
     if (!incidentData.incidentLevel) {
-      toast.error('Please select incident level');
+      toast.error("Please select incident level");
       return;
     }
 
     // Description validation
-    if (!incidentData.description || incidentData.description.trim() === '') {
-      toast.error('Please enter a description');
+    if (!incidentData.description || incidentData.description.trim() === "") {
+      toast.error("Please enter a description");
       return;
     }
 
     // Disclaimer validation
     if (!incidentData.factsCorrect) {
-      toast.error('Please confirm the disclaimer');
+      toast.error("Please confirm the disclaimer");
       return;
     }
 
     try {
       // Base URL and token
-      let baseUrl = localStorage.getItem('baseUrl') || '';
-      const token = localStorage.getItem('token') || '';
-      if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-        baseUrl = 'https://' + baseUrl.replace(/^\/\/+/, '');
+      let baseUrl = localStorage.getItem("baseUrl") || "";
+      const token = localStorage.getItem("token") || "";
+      if (
+        baseUrl &&
+        !baseUrl.startsWith("http://") &&
+        !baseUrl.startsWith("https://")
+      ) {
+        baseUrl = "https://" + baseUrl.replace(/^\/\/+/, "");
       }
 
       const form = new FormData();
 
       // Time fields
-      form.append('incident[inc_time(1i)]', incidentData.year);
-      form.append('incident[inc_time(2i)]', monthNameToNumber(incidentData.month));
-      form.append('incident[inc_time(3i)]', incidentData.day);
-      form.append('incident[inc_time(4i)]', incidentData.hour);
-      form.append('incident[inc_time(5i)]', incidentData.minute);
+      form.append("incident[inc_time(1i)]", incidentData.year);
+      form.append(
+        "incident[inc_time(2i)]",
+        monthNameToNumber(incidentData.month)
+      );
+      form.append("incident[inc_time(3i)]", incidentData.day);
+      form.append("incident[inc_time(4i)]", incidentData.hour);
+      form.append("incident[inc_time(5i)]", incidentData.minute);
 
       // Tower
-      form.append('incident[tower_id]', incidentData.tower);
+      form.append("incident[tower_id]", incidentData.tower);
 
       // Primary hierarchy
-      form.append('incident[inc_category_id]', incidentData.primaryCategory);
-      form.append('incident[inc_sub_category_id]', incidentData.subCategory);
-      form.append('incident[inc_sub_sub_category_id]', incidentData.subSubCategory);
-      form.append('incident[inc_sub_sub_sub_category_id]', incidentData.subSubSubCategory);
+      form.append("incident[inc_category_id]", incidentData.primaryCategory);
+      form.append("incident[inc_sub_category_id]", incidentData.subCategory);
+      form.append(
+        "incident[inc_sub_sub_category_id]",
+        incidentData.subSubCategory
+      );
+      form.append(
+        "incident[inc_sub_sub_sub_category_id]",
+        incidentData.subSubSubCategory
+      );
 
       // Secondary hierarchy (only append if values exist)
       if (incidentData.secondaryCategory) {
-        form.append('incident[inc_sec_category_id]', incidentData.secondaryCategory);
+        form.append(
+          "incident[inc_sec_category_id]",
+          incidentData.secondaryCategory
+        );
       }
       if (incidentData.secondarySubCategory) {
-        form.append('incident[inc_sec_sub_category_id]', incidentData.secondarySubCategory);
+        form.append(
+          "incident[inc_sec_sub_category_id]",
+          incidentData.secondarySubCategory
+        );
       }
       if (incidentData.secondarySubSubCategory) {
-        form.append('incident[inc_sec_sub_sub_category_id]', incidentData.secondarySubSubCategory);
+        form.append(
+          "incident[inc_sec_sub_sub_category_id]",
+          incidentData.secondarySubSubCategory
+        );
       }
       if (incidentData.secondarySubSubSubCategory) {
-        form.append('incident[inc_sec_sub_sub_sub_category_id]', incidentData.secondarySubSubSubCategory);
+        form.append(
+          "incident[inc_sec_sub_sub_sub_category_id]",
+          incidentData.secondarySubSubSubCategory
+        );
       }
 
       // Severity, Probability, Incident Level
@@ -1738,68 +1881,116 @@ export const AddIncidentPage = () => {
       // form.append('incident[probability]', incidentData.probability);
       // form.append('incident[severity]', incidentData.severity);
       // if (incidentData.incidentLevel) form.append('incident[inc_level_id]', incidentData.incidentLevel);
-      form.append('incident[inc_level_id]', incidentData.incidentLevel);
+      form.append("incident[inc_level_id]", incidentData.incidentLevel);
 
       // Description
-      form.append('incident[description]', incidentData.description);
+      form.append("incident[description]", incidentData.description);
 
       // Work related injury
-      if (incidentData.workRelatedInjury) form.append('incident[work_related_injury]', incidentData.workRelatedInjury);
+      if (incidentData.workRelatedInjury)
+        form.append(
+          "incident[work_related_injury]",
+          incidentData.workRelatedInjury
+        );
 
       // Property damage and related fields
-      if (incidentData.propertyDamage) form.append('incident[property_damage]', incidentData.propertyDamage);
-      if (incidentData.propertyDamageId) form.append('incident[property_damage_id]', incidentData.propertyDamageId);
-      if (incidentData.damageEvaluation) form.append('incident[damage_evaluation]', incidentData.damageEvaluation);
-      if (incidentData.damageCoveredInsurance) form.append('incident[damage_covered_insurance]', incidentData.damageCoveredInsurance);
-      if (incidentData.damagedRecovered) form.append('incident[damaged_recovered]', incidentData.damagedRecovered);
-      if (incidentData.insuredBy) form.append('incident[insured_by]', incidentData.insuredBy);
+      if (incidentData.propertyDamage)
+        form.append("incident[property_damage]", incidentData.propertyDamage);
+      if (incidentData.propertyDamageId)
+        form.append(
+          "incident[property_damage_id]",
+          incidentData.propertyDamageId
+        );
+      if (incidentData.damageEvaluation)
+        form.append(
+          "incident[damage_evaluation]",
+          incidentData.damageEvaluation
+        );
+      if (incidentData.damageCoveredInsurance)
+        form.append(
+          "incident[damage_covered_insurance]",
+          incidentData.damageCoveredInsurance
+        );
+      if (incidentData.damagedRecovered)
+        form.append(
+          "incident[damaged_recovered]",
+          incidentData.damagedRecovered
+        );
+      if (incidentData.insuredBy)
+        form.append("incident[insured_by]", incidentData.insuredBy);
 
       // RCA and actions
-      if (incidentData.rca) form.append('incident[rca]', incidentData.rca);
-      if (incidentData.rcaCategoryId) form.append('incident[rca_category_id]', incidentData.rcaCategoryId);
-      if (incidentData.correctiveAction) form.append('incident[corrective_action]', incidentData.correctiveAction);
-      if (incidentData.preventiveAction) form.append('incident[preventive_action]', incidentData.preventiveAction);
+      if (incidentData.rca) form.append("incident[rca]", incidentData.rca);
+      if (incidentData.rcaCategoryId)
+        form.append("incident[rca_category_id]", incidentData.rcaCategoryId);
+      if (incidentData.correctiveAction)
+        form.append(
+          "incident[corrective_action]",
+          incidentData.correctiveAction
+        );
+      if (incidentData.preventiveAction)
+        form.append(
+          "incident[preventive_action]",
+          incidentData.preventiveAction
+        );
 
       // Disclaimer and support required - passing true/false instead of 1/0
-      form.append('incident[support_required]', incidentData.supportRequired ? 'true' : 'false');
-      form.append('incident[disclaimer]', incidentData.factsCorrect ? 'true' : 'false');
+      form.append(
+        "incident[support_required]",
+        incidentData.supportRequired ? "true" : "false"
+      );
+      form.append(
+        "incident[disclaimer]",
+        incidentData.factsCorrect ? "true" : "false"
+      );
 
       // Attachments (optional) - append all files
       if (incidentData.attachments && incidentData.attachments.length > 0) {
-        incidentData.attachments.forEach(file => {
-          form.append('noticeboard[files_attached][]', file);
+        incidentData.attachments.forEach((file) => {
+          form.append("noticeboard[files_attached][]", file);
         });
       }
 
       const resp = await fetch(`${baseUrl}/incidents.json`, {
-        method: 'POST',
+        method: "POST",
         headers: { Authorization: `Bearer ${token}` },
-        body: form
+        body: form,
       });
 
       if (!resp.ok) {
         const errText = await resp.text();
-        throw new Error(errText || 'Failed to create incident');
+        throw new Error(errText || "Failed to create incident");
       }
 
-      toast.success('Incident reported successfully!');
-      navigate('/incidents/incidents');
+      toast.success("Incident reported successfully!");
+      navigate("/incidents/incidents");
     } catch (err: any) {
-      console.error('Incident POST failed:', err);
-      toast.error('Failed to create incident');
+      console.error("Incident POST failed:", err);
+      toast.error("Failed to create incident");
     }
   };
 
   // Derived names / UI visibility helpers
-  const primaryName = categories.find(c => String(c.id) === incidentData.primaryCategory)?.name;
-  const secondaryName = secondaryCategories.find(c => String(c.id) === incidentData.secondaryCategory)?.name;
-  const subName = subCategories.find(c => String(c.id) === incidentData.subCategory)?.name;
-  const secondarySubName = secondarySubCategories.find(c => String(c.id) === incidentData.secondarySubCategory)?.name;
+  const primaryName = categories.find(
+    (c) => String(c.id) === incidentData.primaryCategory
+  )?.name;
+  const secondaryName = secondaryCategories.find(
+    (c) => String(c.id) === incidentData.secondaryCategory
+  )?.name;
+  const subName = subCategories.find(
+    (c) => String(c.id) === incidentData.subCategory
+  )?.name;
+  const secondarySubName = secondarySubCategories.find(
+    (c) => String(c.id) === incidentData.secondarySubCategory
+  )?.name;
 
-  const showWorkRelated = (subName === 'Injury or Illness' || secondarySubName === 'Injury or Illness');
-  const isBuildingDamageCategory = (primaryName === 'Building structure and property damage' || secondaryName === 'Building structure and property damage');
-  const showPropertyDamageFields = isBuildingDamageCategory || incidentData.propertyDamage === 'true';
-
+  const showWorkRelated =
+    subName === "Injury or Illness" || secondarySubName === "Injury or Illness";
+  const isBuildingDamageCategory =
+    primaryName === "Building structure and property damage" ||
+    secondaryName === "Building structure and property damage";
+  const showPropertyDamageFields =
+    isBuildingDamageCategory || incidentData.propertyDamage === "true";
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -1823,7 +2014,10 @@ export const AddIncidentPage = () => {
       <Card className="mb-6 bg-white rounded-lg border border-gray-200 overflow-hidden">
         <CardHeader className="px-6 py-3 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900 flex items-center">
-            <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+              style={{ backgroundColor: "#E5E0D3" }}
+            >
               <CalendarDays size={16} color="#C72030" />
             </span>
             INCIDENT DETAILS
@@ -1832,41 +2026,54 @@ export const AddIncidentPage = () => {
         <CardContent className="p-6 space-y-6">
           {/* Time & Date Section */}
           <div className="mb-6">
-            <h3 className="text-sm font-medium mb-3">Time & Date <span style={{ color: '#C72030' }}>*</span></h3>
+            <h3 className="text-sm font-medium mb-3">
+              Time & Date <span style={{ color: "#C72030" }}>*</span>
+            </h3>
             <div className="grid grid-cols-5 gap-2">
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Year <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                <InputLabel shrink>
+                  Year <span style={{ color: "#C72030" }}>*</span>
+                </InputLabel>
                 <MuiSelect
                   label="Year *"
                   value={incidentData.year}
-                  onChange={e => handleInputChange('year', e.target.value)}
+                  onChange={(e) => handleInputChange("year", e.target.value)}
                   displayEmpty
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Year</em></MenuItem>
-                  {Array.from({ length: new Date().getFullYear() + 50 - 2010 + 1 }, (_, i) => {
-                    const year = new Date().getFullYear() + 50 - i; // From current year + 50 down to 2010
-                    return (
-                      <MenuItem key={year} value={String(year)}>
-                        {year}
-                      </MenuItem>
-                    );
-                  })}
+                  <MenuItem value="">
+                    <em>Select Year</em>
+                  </MenuItem>
+                  {Array.from(
+                    { length: new Date().getFullYear() + 50 - 2010 + 1 },
+                    (_, i) => {
+                      const year = new Date().getFullYear() + 50 - i; // From current year + 50 down to 2010
+                      return (
+                        <MenuItem key={year} value={String(year)}>
+                          {year}
+                        </MenuItem>
+                      );
+                    }
+                  )}
                 </MuiSelect>
               </FormControl>
 
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Month <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                <InputLabel shrink>
+                  Month <span style={{ color: "#C72030" }}>*</span>
+                </InputLabel>
                 <MuiSelect
                   label="Month *"
                   value={incidentData.month}
-                  onChange={e => handleInputChange('month', e.target.value)}
+                  onChange={(e) => handleInputChange("month", e.target.value)}
                   displayEmpty
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Month</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Month</em>
+                  </MenuItem>
                   <MenuItem value="January">January</MenuItem>
                   <MenuItem value="February">February</MenuItem>
                   <MenuItem value="March">March</MenuItem>
@@ -1883,75 +2090,98 @@ export const AddIncidentPage = () => {
               </FormControl>
 
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Day <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                <InputLabel shrink>
+                  Day <span style={{ color: "#C72030" }}>*</span>
+                </InputLabel>
                 <MuiSelect
                   label="Day *"
                   value={incidentData.day}
-                  onChange={e => handleInputChange('day', e.target.value)}
+                  onChange={(e) => handleInputChange("day", e.target.value)}
                   displayEmpty
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Day</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Day</em>
+                  </MenuItem>
                   {Array.from({ length: 31 }, (_, i) => (
-                    <MenuItem key={i + 1} value={String(i + 1)}>{i + 1}</MenuItem>
+                    <MenuItem key={i + 1} value={String(i + 1)}>
+                      {i + 1}
+                    </MenuItem>
                   ))}
                 </MuiSelect>
               </FormControl>
 
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Hour <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                <InputLabel shrink>
+                  Hour <span style={{ color: "#C72030" }}>*</span>
+                </InputLabel>
                 <MuiSelect
                   label="Hour *"
                   value={incidentData.hour}
-                  onChange={e => handleInputChange('hour', e.target.value)}
+                  onChange={(e) => handleInputChange("hour", e.target.value)}
                   displayEmpty
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Hour</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Hour</em>
+                  </MenuItem>
                   {Array.from({ length: 24 }, (_, i) => (
-                    <MenuItem key={i} value={String(i)}>{i}</MenuItem>
+                    <MenuItem key={i} value={String(i)}>
+                      {i}
+                    </MenuItem>
                   ))}
                 </MuiSelect>
               </FormControl>
 
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Minute <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                <InputLabel shrink>
+                  Minute <span style={{ color: "#C72030" }}>*</span>
+                </InputLabel>
                 <MuiSelect
                   label="Minute *"
                   value={incidentData.minute}
-                  onChange={e => handleInputChange('minute', e.target.value)}
+                  onChange={(e) => handleInputChange("minute", e.target.value)}
                   displayEmpty
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>Select Minute</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Minute</em>
+                  </MenuItem>
                   {Array.from({ length: 60 }, (_, i) => (
-                    <MenuItem key={i} value={String(i)}>{i}</MenuItem>
+                    <MenuItem key={i} value={String(i)}>
+                      {i}
+                    </MenuItem>
                   ))}
                 </MuiSelect>
               </FormControl>
             </div>
           </div>
 
-
           {/* Building and Categories Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {/* Tower Dropdown */}
             <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-              <InputLabel shrink>Tower <span style={{ color: '#C72030' }}>*</span></InputLabel>
+              <InputLabel shrink>
+                Tower <span style={{ color: "#C72030" }}>*</span>
+              </InputLabel>
               <MuiSelect
                 label="Tower *"
                 value={incidentData.tower}
-                onChange={e => handleInputChange('tower', e.target.value)}
+                onChange={(e) => handleInputChange("tower", e.target.value)}
                 displayEmpty
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Tower</em></MenuItem>
-                {towers.map(t => (
-                  <MenuItem key={t.id} value={String(t.id)}>{t.name}</MenuItem>
+                <MenuItem value="">
+                  <em>Select Tower</em>
+                </MenuItem>
+                {towers.map((t) => (
+                  <MenuItem key={t.id} value={String(t.id)}>
+                    {t.name}
+                  </MenuItem>
                 ))}
               </MuiSelect>
             </FormControl>
@@ -1959,73 +2189,134 @@ export const AddIncidentPage = () => {
             {/* PRIMARY CATEGORY HIERARCHY */}
             {/* Level 1: Primary Category */}
             <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-              <InputLabel shrink>Primary Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
+              <InputLabel shrink>
+                Primary Category <span style={{ color: "#C72030" }}>*</span>
+              </InputLabel>
               <MuiSelect
                 label="Primary Category *"
                 value={incidentData.primaryCategory}
-                onChange={e => handleInputChange('primaryCategory', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("primaryCategory", e.target.value)
+                }
                 displayEmpty
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Primary Category</em></MenuItem>
-                {categories.map(cat => (
-                  <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                <MenuItem value="">
+                  <em>Select Primary Category</em>
+                </MenuItem>
+                {categories.map((cat) => (
+                  <MenuItem key={cat.id} value={String(cat.id)}>
+                    {cat.name}
+                  </MenuItem>
                 ))}
               </MuiSelect>
             </FormControl>
 
             {/* Level 2: Sub Category */}
-            <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.primaryCategory}>
-              <InputLabel shrink>Sub Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
+            <FormControl
+              fullWidth
+              variant="outlined"
+              sx={{ mt: 1 }}
+              disabled={!incidentData.primaryCategory}
+            >
+              <InputLabel shrink>
+                Sub Category <span style={{ color: "#C72030" }}>*</span>
+              </InputLabel>
               <MuiSelect
                 label="Sub Category *"
                 value={incidentData.subCategory}
-                onChange={e => handleInputChange('subCategory', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("subCategory", e.target.value)
+                }
                 displayEmpty
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Sub Category</em></MenuItem>
-                {subCategories.filter(sub => String(sub.parent_id) === incidentData.primaryCategory).map(sub => (
-                  <MenuItem key={sub.id} value={String(sub.id)}>{sub.name}</MenuItem>
-                ))}
+                <MenuItem value="">
+                  <em>Select Sub Category</em>
+                </MenuItem>
+                {subCategories
+                  .filter(
+                    (sub) =>
+                      String(sub.parent_id) === incidentData.primaryCategory
+                  )
+                  .map((sub) => (
+                    <MenuItem key={sub.id} value={String(sub.id)}>
+                      {sub.name}
+                    </MenuItem>
+                  ))}
               </MuiSelect>
             </FormControl>
 
             {/* Level 3: Sub Sub Category */}
-            <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.subCategory}>
-              <InputLabel shrink>Sub Sub Category <span style={{ color: '#C72030' }}>*</span></InputLabel>
+            <FormControl
+              fullWidth
+              variant="outlined"
+              sx={{ mt: 1 }}
+              disabled={!incidentData.subCategory}
+            >
+              <InputLabel shrink>
+                Sub Sub Category <span style={{ color: "#C72030" }}>*</span>
+              </InputLabel>
               <MuiSelect
                 label="Sub Sub Category *"
                 value={incidentData.subSubCategory}
-                onChange={e => handleInputChange('subSubCategory', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("subSubCategory", e.target.value)
+                }
                 displayEmpty
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Sub Sub Category</em></MenuItem>
-                {subSubCategories.filter(subsub => String(subsub.parent_id) === incidentData.subCategory).map(subsub => (
-                  <MenuItem key={subsub.id} value={String(subsub.id)}>{subsub.name}</MenuItem>
-                ))}
+                <MenuItem value="">
+                  <em>Select Sub Sub Category</em>
+                </MenuItem>
+                {subSubCategories
+                  .filter(
+                    (subsub) =>
+                      String(subsub.parent_id) === incidentData.subCategory
+                  )
+                  .map((subsub) => (
+                    <MenuItem key={subsub.id} value={String(subsub.id)}>
+                      {subsub.name}
+                    </MenuItem>
+                  ))}
               </MuiSelect>
             </FormControl>
 
             {/* Level 4: Sub Sub Sub Category */}
-            <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.subSubCategory}>
+            <FormControl
+              fullWidth
+              variant="outlined"
+              sx={{ mt: 1 }}
+              disabled={!incidentData.subSubCategory}
+            >
               <InputLabel shrink>Sub Sub Sub Category </InputLabel>
               <MuiSelect
                 label="Sub Sub Sub Category "
                 value={incidentData.subSubSubCategory}
-                onChange={e => handleInputChange('subSubSubCategory', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("subSubSubCategory", e.target.value)
+                }
                 displayEmpty
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Sub Sub Sub Category</em></MenuItem>
-                {subSubSubCategories.filter(subsubsub => String(subsubsub.parent_id) === incidentData.subSubCategory).map(subsubsub => (
-                  <MenuItem key={subsubsub.id} value={String(subsubsub.id)}>{subsubsub.name}</MenuItem>
-                ))}
+                <MenuItem value="">
+                  <em>Select Sub Sub Sub Category</em>
+                </MenuItem>
+                {subSubSubCategories
+                  .filter(
+                    (subsubsub) =>
+                      String(subsubsub.parent_id) ===
+                      incidentData.subSubCategory
+                  )
+                  .map((subsubsub) => (
+                    <MenuItem key={subsubsub.id} value={String(subsubsub.id)}>
+                      {subsubsub.name}
+                    </MenuItem>
+                  ))}
               </MuiSelect>
             </FormControl>
 
@@ -2036,69 +2327,128 @@ export const AddIncidentPage = () => {
               <MuiSelect
                 label="Secondary Category *"
                 value={incidentData.secondaryCategory}
-                onChange={e => handleInputChange('secondaryCategory', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("secondaryCategory", e.target.value)
+                }
                 displayEmpty
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Secondary Category</em></MenuItem>
-                {secondaryCategories.map(cat => (
-                  <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                <MenuItem value="">
+                  <em>Select Secondary Category</em>
+                </MenuItem>
+                {secondaryCategories.map((cat) => (
+                  <MenuItem key={cat.id} value={String(cat.id)}>
+                    {cat.name}
+                  </MenuItem>
                 ))}
               </MuiSelect>
             </FormControl>
 
             {/* Level 2: Secondary Sub Category */}
-            <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondaryCategory}>
+            <FormControl
+              fullWidth
+              variant="outlined"
+              sx={{ mt: 1 }}
+              disabled={!incidentData.secondaryCategory}
+            >
               <InputLabel shrink>Secondary Sub Category</InputLabel>
               <MuiSelect
                 label="Secondary Sub Category *"
                 value={incidentData.secondarySubCategory}
-                onChange={e => handleInputChange('secondarySubCategory', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("secondarySubCategory", e.target.value)
+                }
                 displayEmpty
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Secondary Sub Category</em></MenuItem>
-                {secondarySubCategories.filter(sub => String(sub.parent_id) === incidentData.secondaryCategory).map(sub => (
-                  <MenuItem key={sub.id} value={String(sub.id)}>{sub.name}</MenuItem>
-                ))}
+                <MenuItem value="">
+                  <em>Select Secondary Sub Category</em>
+                </MenuItem>
+                {secondarySubCategories
+                  .filter(
+                    (sub) =>
+                      String(sub.parent_id) === incidentData.secondaryCategory
+                  )
+                  .map((sub) => (
+                    <MenuItem key={sub.id} value={String(sub.id)}>
+                      {sub.name}
+                    </MenuItem>
+                  ))}
               </MuiSelect>
             </FormControl>
 
             {/* Level 3: Secondary Sub Sub Category */}
-            <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondarySubCategory}>
+            <FormControl
+              fullWidth
+              variant="outlined"
+              sx={{ mt: 1 }}
+              disabled={!incidentData.secondarySubCategory}
+            >
               <InputLabel shrink>Secondary Sub Sub Category</InputLabel>
               <MuiSelect
                 label="Secondary Sub Sub Category *"
                 value={incidentData.secondarySubSubCategory}
-                onChange={e => handleInputChange('secondarySubSubCategory', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("secondarySubSubCategory", e.target.value)
+                }
                 displayEmpty
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Secondary Sub Sub Category</em></MenuItem>
-                {secondarySubSubCategories.filter(subsub => String(subsub.parent_id) === incidentData.secondarySubCategory).map(subsub => (
-                  <MenuItem key={subsub.id} value={String(subsub.id)}>{subsub.name}</MenuItem>
-                ))}
+                <MenuItem value="">
+                  <em>Select Secondary Sub Sub Category</em>
+                </MenuItem>
+                {secondarySubSubCategories
+                  .filter(
+                    (subsub) =>
+                      String(subsub.parent_id) ===
+                      incidentData.secondarySubCategory
+                  )
+                  .map((subsub) => (
+                    <MenuItem key={subsub.id} value={String(subsub.id)}>
+                      {subsub.name}
+                    </MenuItem>
+                  ))}
               </MuiSelect>
             </FormControl>
 
             {/* Level 4: Secondary Sub Sub Sub Category */}
-            <FormControl fullWidth variant="outlined" sx={{ mt: 1 }} disabled={!incidentData.secondarySubSubCategory}>
+            <FormControl
+              fullWidth
+              variant="outlined"
+              sx={{ mt: 1 }}
+              disabled={!incidentData.secondarySubSubCategory}
+            >
               <InputLabel shrink>Secondary Sub Sub Sub Category</InputLabel>
               <MuiSelect
                 label="Secondary Sub Sub Sub Category *"
                 value={incidentData.secondarySubSubSubCategory}
-                onChange={e => handleInputChange('secondarySubSubSubCategory', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange(
+                    "secondarySubSubSubCategory",
+                    e.target.value
+                  )
+                }
                 displayEmpty
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Secondary Sub Sub Sub Category</em></MenuItem>
-                {secondarySubSubSubCategories.filter(subsubsub => String(subsubsub.parent_id) === incidentData.secondarySubSubCategory).map(subsubsub => (
-                  <MenuItem key={subsubsub.id} value={String(subsubsub.id)}>{subsubsub.name}</MenuItem>
-                ))}
+                <MenuItem value="">
+                  <em>Select Secondary Sub Sub Sub Category</em>
+                </MenuItem>
+                {secondarySubSubSubCategories
+                  .filter(
+                    (subsubsub) =>
+                      String(subsubsub.parent_id) ===
+                      incidentData.secondarySubSubCategory
+                  )
+                  .map((subsubsub) => (
+                    <MenuItem key={subsubsub.id} value={String(subsubsub.id)}>
+                      {subsubsub.name}
+                    </MenuItem>
+                  ))}
               </MuiSelect>
             </FormControl>
 
@@ -2141,25 +2491,33 @@ export const AddIncidentPage = () => {
             </FormControl> */}
 
             <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-              <InputLabel shrink>Incident level <span style={{ color: '#C72030' }}>*</span></InputLabel>
+              <InputLabel shrink>
+                Incident level <span style={{ color: "#C72030" }}>*</span>
+              </InputLabel>
               <MuiSelect
                 label="Incident level *"
                 value={incidentData.incidentLevel}
-                onChange={e => handleInputChange('incidentLevel', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("incidentLevel", e.target.value)
+                }
                 displayEmpty
                 // disabled={!!(incidentData.severity && incidentData.probability)}
                 sx={{
                   ...fieldStyles,
-                  '& .MuiInputBase-input.Mui-disabled': {
-                    WebkitTextFillColor: '#000',
-                    backgroundColor: '#f5f5f5'
-                  }
+                  "& .MuiInputBase-input.Mui-disabled": {
+                    WebkitTextFillColor: "#000",
+                    backgroundColor: "#f5f5f5",
+                  },
                 }}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select Level</em></MenuItem>
-                {incidentLevels.map(level => (
-                  <MenuItem key={level.id} value={String(level.id)}>{level.name}</MenuItem>
+                <MenuItem value="">
+                  <em>Select Level</em>
+                </MenuItem>
+                {incidentLevels.map((level) => (
+                  <MenuItem key={level.id} value={String(level.id)}>
+                    {level.name}
+                  </MenuItem>
                 ))}
               </MuiSelect>
               {/* {incidentData.severity && incidentData.probability && (
@@ -2175,12 +2533,16 @@ export const AddIncidentPage = () => {
                 <MuiSelect
                   label="Work Related Injury"
                   value={incidentData.workRelatedInjury}
-                  onChange={e => handleInputChange('workRelatedInjury', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("workRelatedInjury", e.target.value)
+                  }
                   displayEmpty
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>select</em></MenuItem>
+                  <MenuItem value="">
+                    <em>select</em>
+                  </MenuItem>
                   <MenuItem value="false">No</MenuItem>
                   <MenuItem value="true">Yes</MenuItem>
                 </MuiSelect>
@@ -2190,16 +2552,23 @@ export const AddIncidentPage = () => {
             {/* Property damage selection */}
             {!isBuildingDamageCategory && (
               <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                <InputLabel shrink>Has Any Property Damage Happened In The Incident? <span style={{ color: '#C72030' }}>*</span></InputLabel>
+                <InputLabel shrink>
+                  Has Any Property Damage Happened In The Incident?{" "}
+                  <span style={{ color: "#C72030" }}>*</span>
+                </InputLabel>
                 <MuiSelect
                   label="Property Damage"
                   value={incidentData.propertyDamage}
-                  onChange={e => handleInputChange('propertyDamage', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("propertyDamage", e.target.value)
+                  }
                   displayEmpty
                   sx={fieldStyles}
                   MenuProps={menuProps}
                 >
-                  <MenuItem value=""><em>select</em></MenuItem>
+                  <MenuItem value="">
+                    <em>select</em>
+                  </MenuItem>
                   <MenuItem value="false">No</MenuItem>
                   <MenuItem value="true">Yes</MenuItem>
                 </MuiSelect>
@@ -2207,21 +2576,28 @@ export const AddIncidentPage = () => {
             )}
 
             {/* If primary/secondary indicate building damage, show damage inputs directly, otherwise show when propertyDamage is true */}
-            {(isBuildingDamageCategory || incidentData.propertyDamage === 'true') && (
+            {(isBuildingDamageCategory ||
+              incidentData.propertyDamage === "true") && (
               <>
                 <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
                   <InputLabel shrink>Property damage category</InputLabel>
                   <MuiSelect
                     label="Property damage category"
                     value={incidentData.propertyDamageId}
-                    onChange={e => handleInputChange('propertyDamageId', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("propertyDamageId", e.target.value)
+                    }
                     displayEmpty
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value=""><em>Select</em></MenuItem>
-                    {propertyDamageCategories.map(cat => (
-                      <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                    <MenuItem value="">
+                      <em>Select</em>
+                    </MenuItem>
+                    {propertyDamageCategories.map((cat) => (
+                      <MenuItem key={cat.id} value={String(cat.id)}>
+                        {cat.name}
+                      </MenuItem>
                     ))}
                   </MuiSelect>
                 </FormControl>
@@ -2229,7 +2605,9 @@ export const AddIncidentPage = () => {
                 <TextField
                   label="Damage Evaluation (INR)"
                   value={incidentData.damageEvaluation}
-                  onChange={e => handleInputChange('damageEvaluation', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("damageEvaluation", e.target.value)
+                  }
                   fullWidth
                   variant="outlined"
                   sx={{ mt: 1 }}
@@ -2240,12 +2618,19 @@ export const AddIncidentPage = () => {
                   <MuiSelect
                     label="Damage covered under insurance"
                     value={incidentData.damageCoveredInsurance}
-                    onChange={e => handleInputChange('damageCoveredInsurance', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "damageCoveredInsurance",
+                        e.target.value
+                      )
+                    }
                     displayEmpty
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value=""><em>select</em></MenuItem>
+                    <MenuItem value="">
+                      <em>select</em>
+                    </MenuItem>
                     <MenuItem value="false">No</MenuItem>
                     <MenuItem value="true">Yes</MenuItem>
                   </MuiSelect>
@@ -2253,37 +2638,55 @@ export const AddIncidentPage = () => {
 
                 {Number(incidentData.damageEvaluation) > 0 && (
                   <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                    <InputLabel shrink>Whether damaged was recovered</InputLabel>
+                    <InputLabel shrink>
+                      Whether damaged was recovered
+                    </InputLabel>
                     <MuiSelect
                       label="Whether damaged was recovered"
                       value={incidentData.damagedRecovered}
-                      onChange={e => handleInputChange('damagedRecovered', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("damagedRecovered", e.target.value)
+                      }
                       displayEmpty
                       sx={fieldStyles}
                       MenuProps={menuProps}
                     >
-                      <MenuItem value=""><em>select</em></MenuItem>
-                      <MenuItem value="Yes, from the insurance agency">Yes, from the insurance agency</MenuItem>
-                      <MenuItem value="Yes, from the involved party in the incident">Yes, from the involved party in the incident</MenuItem>
+                      <MenuItem value="">
+                        <em>select</em>
+                      </MenuItem>
+                      <MenuItem value="Yes, from the insurance agency">
+                        Yes, from the insurance agency
+                      </MenuItem>
+                      <MenuItem value="Yes, from the involved party in the incident">
+                        Yes, from the involved party in the incident
+                      </MenuItem>
                       <MenuItem value="Not recovered.">Not recovered.</MenuItem>
                     </MuiSelect>
                   </FormControl>
                 )}
 
-                {incidentData.damageCoveredInsurance === 'true' && (
+                {incidentData.damageCoveredInsurance === "true" && (
                   <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
                     <InputLabel shrink>Insured by</InputLabel>
                     <MuiSelect
                       label="Insured by"
                       value={incidentData.insuredBy}
-                      onChange={e => handleInputChange('insuredBy', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("insuredBy", e.target.value)
+                      }
                       displayEmpty
                       sx={fieldStyles}
                       MenuProps={menuProps}
                     >
-                      <MenuItem value=""><em>select</em></MenuItem>
-                      <MenuItem value="Building insurance">Building insurance</MenuItem>
-                      <MenuItem value="Private/ individual insurance">Private/ individual insurance</MenuItem>
+                      <MenuItem value="">
+                        <em>select</em>
+                      </MenuItem>
+                      <MenuItem value="Building insurance">
+                        Building insurance
+                      </MenuItem>
+                      <MenuItem value="Private/ individual insurance">
+                        Private/ individual insurance
+                      </MenuItem>
                       <MenuItem value="Others">Others</MenuItem>
                     </MuiSelect>
                   </FormControl>
@@ -2296,7 +2699,7 @@ export const AddIncidentPage = () => {
               <InputLabel shrink>RCA</InputLabel>
               <TextField
                 value={incidentData.rca}
-                onChange={e => handleInputChange('rca', e.target.value)}
+                onChange={(e) => handleInputChange("rca", e.target.value)}
                 fullWidth
                 variant="outlined"
                 sx={{ mt: 1 }}
@@ -2308,14 +2711,20 @@ export const AddIncidentPage = () => {
               <MuiSelect
                 label="Primary root cause category"
                 value={incidentData.rcaCategoryId}
-                onChange={e => handleInputChange('rcaCategoryId', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("rcaCategoryId", e.target.value)
+                }
                 displayEmpty
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value=""><em>Select</em></MenuItem>
-                {rcaCategories.map(cat => (
-                  <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                <MenuItem value="">
+                  <em>Select</em>
+                </MenuItem>
+                {rcaCategories.map((cat) => (
+                  <MenuItem key={cat.id} value={String(cat.id)}>
+                    {cat.name}
+                  </MenuItem>
                 ))}
               </MuiSelect>
             </FormControl>
@@ -2323,7 +2732,9 @@ export const AddIncidentPage = () => {
             <TextField
               label="Corrective action"
               value={incidentData.correctiveAction}
-              onChange={e => handleInputChange('correctiveAction', e.target.value)}
+              onChange={(e) =>
+                handleInputChange("correctiveAction", e.target.value)
+              }
               fullWidth
               variant="outlined"
               sx={{ mt: 1 }}
@@ -2332,7 +2743,9 @@ export const AddIncidentPage = () => {
             <TextField
               label="Preventive action"
               value={incidentData.preventiveAction}
-              onChange={e => handleInputChange('preventiveAction', e.target.value)}
+              onChange={(e) =>
+                handleInputChange("preventiveAction", e.target.value)
+              }
               fullWidth
               variant="outlined"
               sx={{ mt: 1 }}
@@ -2342,15 +2755,19 @@ export const AddIncidentPage = () => {
           {/* Description */}
           <div className="mt-6">
             <TextField
-              label={<>Description<span style={{ color: '#C72030' }}>*</span></>}
+              label={
+                <>
+                  Description<span style={{ color: "#C72030" }}>*</span>
+                </>
+              }
               value={incidentData.description}
-              onChange={e => handleInputChange('description', e.target.value)}
+              onChange={(e) => handleInputChange("description", e.target.value)}
               fullWidth
               variant="outlined"
               multiline
               rows={4}
               InputLabelProps={{
-                shrink: true
+                shrink: true,
               }}
               sx={{
                 "& .MuiOutlinedInput-root": {
@@ -2382,7 +2799,10 @@ export const AddIncidentPage = () => {
       <Card className="mb-6 bg-white rounded-lg border border-gray-200 overflow-hidden">
         <CardHeader className="px-6 py-3 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900 flex items-center">
-            <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+              style={{ backgroundColor: "#E5E0D3" }}
+            >
               <ShieldCheck size={16} color="#C72030" />
             </span>
             SUPPORT & DISCLAIMER
@@ -2396,11 +2816,13 @@ export const AddIncidentPage = () => {
                 control={
                   <Checkbox
                     checked={incidentData.supportRequired}
-                    onChange={(e) => handleCheckboxChange('supportRequired', e.target.checked)}
+                    onChange={(e) =>
+                      handleCheckboxChange("supportRequired", e.target.checked)
+                    }
                     sx={{
-                      color: '#DA7756',
-                      '&.Mui-checked': {
-                        color: '#DA7756',
+                      color: "#DA7756",
+                      "&.Mui-checked": {
+                        color: "#DA7756",
                       },
                     }}
                   />
@@ -2410,21 +2832,30 @@ export const AddIncidentPage = () => {
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-3">Disclaimer <span style={{ color: '#DA7756' }}>*</span></h3>
+              <h3 className="text-lg font-medium mb-3">
+                Disclaimer <span style={{ color: "#DA7756" }}>*</span>
+              </h3>
               <FormControlLabel
                 control={
                   <Checkbox
                     checked={incidentData.factsCorrect}
-                    onChange={(e) => handleCheckboxChange('factsCorrect', e.target.checked)}
+                    onChange={(e) =>
+                      handleCheckboxChange("factsCorrect", e.target.checked)
+                    }
                     sx={{
-                      color: '#DA7756',
-                      '&.Mui-checked': {
-                        color: '#DA7756',
+                      color: "#DA7756",
+                      "&.Mui-checked": {
+                        color: "#DA7756",
                       },
                     }}
                   />
                 }
-                label={<>I have correctly stated all the facts related to the incident. </>}
+                label={
+                  <>
+                    I have correctly stated all the facts related to the
+                    incident.{" "}
+                  </>
+                }
               />
             </div>
           </div>
@@ -2435,7 +2866,10 @@ export const AddIncidentPage = () => {
       <Card className="mb-6 bg-white rounded-lg border border-gray-200 overflow-hidden">
         <CardHeader className="px-6 py-3 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900 flex items-center">
-            <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+              style={{ backgroundColor: "#E5E0D3" }}
+            >
               <Paperclip size={16} color="#C72030" />
             </span>
             ATTACHMENTS
@@ -2477,7 +2911,11 @@ export const AddIncidentPage = () => {
                     type="button"
                     variant="ghost"
                     className="flex items-center gap-2"
-                    style={{ backgroundColor: '#DA7756', color: 'white', borderColor: '#DA7756' }}
+                    style={{
+                      backgroundColor: "#DA7756",
+                      color: "white",
+                      borderColor: "#DA7756",
+                    }}
                     onClick={() => fileInputRef.current?.click()}
                   >
                     Choose Files
@@ -2486,21 +2924,26 @@ export const AddIncidentPage = () => {
                 <span className="text-sm text-gray-500">
                   {incidentData.attachments.length > 0
                     ? `${incidentData.attachments.length} file(s) selected`
-                    : 'No files chosen'}
+                    : "No files chosen"}
                 </span>
               </div>
 
               {/* Display selected files with preview thumbnails */}
               {incidentData.attachments.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-gray-700">Selected Files:</p>
+                  <p className="text-sm font-medium text-gray-700">
+                    Selected Files:
+                  </p>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {incidentData.attachments.map((file, index) => {
-                      const isImage = file.type.startsWith('image/');
+                      const isImage = file.type.startsWith("image/");
                       const fileUrl = URL.createObjectURL(file);
 
                       return (
-                        <div key={index} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                        <div
+                          key={index}
+                          className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow"
+                        >
                           {/* Preview Area */}
                           <div className="aspect-square bg-gray-100 flex items-center justify-center p-2">
                             {isImage ? (
@@ -2512,11 +2955,21 @@ export const AddIncidentPage = () => {
                               />
                             ) : (
                               <div className="flex flex-col items-center justify-center text-gray-400">
-                                <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                <svg
+                                  className="w-12 h-12 mb-2"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                  />
                                 </svg>
                                 <span className="text-xs font-medium uppercase">
-                                  {file.name.split('.').pop()}
+                                  {file.name.split(".").pop()}
                                 </span>
                               </div>
                             )}
@@ -2524,7 +2977,10 @@ export const AddIncidentPage = () => {
 
                           {/* File Info */}
                           <div className="p-2 bg-white border-t border-gray-100">
-                            <p className="text-xs text-gray-600 truncate" title={file.name}>
+                            <p
+                              className="text-xs text-gray-600 truncate"
+                              title={file.name}
+                            >
                               {file.name}
                             </p>
                             <p className="text-xs text-gray-400">
@@ -2538,8 +2994,18 @@ export const AddIncidentPage = () => {
                             className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                             title="Remove file"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
                             </svg>
                           </button>
                         </div>
@@ -2549,7 +3015,6 @@ export const AddIncidentPage = () => {
                 </div>
               )}
             </div>
-
 
             {/* <div>
               <Button
@@ -2576,6 +3041,6 @@ export const AddIncidentPage = () => {
       </div>
     </div>
   );
-}
+};
 
 export default AddIncidentPage;
