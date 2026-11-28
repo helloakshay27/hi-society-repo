@@ -1,21 +1,14 @@
-// Email addresses and phone numbers are never shown in full on the usage dashboards: the first two and the
-// last two characters stay, everything between is masked. "suyash@example.com" -> "su**************om",
-// "9876543210" -> "98******10". Applied where the data comes in (the API fetchers and the Hi Society account
-// rows), so tables, people lists, searches and CSV downloads only ever hold the masked value.
+// Email addresses and phone numbers are never part of the usage dashboards (28 Nov 2026): not shown, not in
+// any people list, search, CSV or Excel download. The usage API no longer sends them; anything that still
+// carries them (Hi Society's Manage Users answer, or an API not yet updated) has them dropped the moment it
+// arrives, in the fetchers, so they never reach the page, its cache or a download.
 
-/** The value with all but its first 2 and last 2 characters masked; a value of 4 characters or fewer is fully masked. */
-export function maskContact(value: string | null | undefined): string {
-  const v = (value ?? '').trim();
-  if (!v) return '';
-  if (v.length <= 4) return '*'.repeat(v.length);
-  return `${v.slice(0, 2)}${'*'.repeat(v.length - 4)}${v.slice(-2)}`;
-}
+const CONTACT_KEYS = ['email', 'mobile', 'phone', 'mobile_number', 'phone_number', 'alternate_email1', 'alternate_email2'] as const;
 
-/** The same object with its `email` (and `mobile`, when present) masked. */
-export function maskPerson<T extends { email?: string | null; mobile?: string | null }>(p: T): T {
-  if (!p) return p;
-  const out = { ...p };
-  if ('email' in out) out.email = maskContact(out.email) as T['email'];
-  if ('mobile' in out) out.mobile = maskContact(out.mobile) as T['mobile'];
-  return out;
+/** The same object without any email or phone field. */
+export function withoutContact<T extends object>(row: T): T {
+  if (!row || typeof row !== 'object') return row;
+  const out: any = { ...row };
+  for (const k of CONTACT_KEYS) delete out[k];
+  return out as T;
 }

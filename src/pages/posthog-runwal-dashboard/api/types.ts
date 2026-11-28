@@ -273,7 +273,6 @@ export interface RecentActiveUser {
   user_id: string | null;
   /** `first_name last_name`; empty when the app sends no name. */
   user_name: string | null;
-  email: string | null;
   /** `$pathname` on web, `screen` on apps. */
   path: string | null;
   /** This event's name. */
@@ -525,7 +524,6 @@ export interface UserJourneyPerson {
   user_id: string | null;
   first_name: string;
   last_name: string;
-  email: string;
   society_id: string | null;
   /** Post Sales / Post Possession (the person's latest display_view), when the app sends it. */
   phase: string | null;
@@ -594,7 +592,7 @@ export interface UserJourneyStepsResponse {
 
 export interface UserJourneyListParams {
   q?: string;
-  sort?: 'first_name' | 'last_name' | 'email' | 'society_id' | 'sessions' | 'events' | 'last_active';
+  sort?: 'first_name' | 'last_name' | 'society_id' | 'sessions' | 'events' | 'last_active';
   dir?: 'asc' | 'desc';
   page?: number;
   perPage?: number | 'all';
@@ -615,8 +613,6 @@ export interface HiSocietyAccount {
   /** Hi Society's own names: 'Pre Sales' = Post Sales, 'Post Sales' = Post Possession. */
   display_view: string | null;
   full_name: string | null;
-  email: string | null;
-  mobile: string | null;
   block_no: string | null;
   flat_no: string | null;
   /** owner / tenant */

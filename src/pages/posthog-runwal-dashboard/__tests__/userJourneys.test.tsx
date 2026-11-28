@@ -102,7 +102,10 @@ describe("User journeys card", () => {
     expect(calls("user_journeys")[0].pathname).toContain("/residential/runwal/cp/adoption/user_journeys");
     expect(screen.queryByText("Site ID")).toBeNull();
     expect(screen.queryByText("Society")).toBeNull();
-    expect(screen.getByLabelText("Search people").getAttribute("placeholder")).toBe("Search name or email…");
+    expect(screen.getByLabelText("Search people").getAttribute("placeholder")).toBe("Search name…");
+    // No email anywhere, even though this stand-in API still sends one: it is dropped on arrival.
+    expect(screen.queryByText("Email")).toBeNull();
+    expect(document.body.textContent).not.toContain("asha@example.com");
   });
 });
 

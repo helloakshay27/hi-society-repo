@@ -45,7 +45,7 @@ import {
   SocietyAccountsBySociety,
 } from './types';
 import { analyticsAuthHeaders } from './analyticsAuth';
-import { maskContact, maskPerson } from '../data/mask';
+import { withoutContact } from '../data/mask';
 
 // ==========================================
 // 1. PostHog Adoption API Client
@@ -289,17 +289,17 @@ export const fetchWorkflowUsage = (
 // Every request carries the page's filters (dates, platform, Post Sales / Post Possession, society).
 // ==========================================
 
-// Emails come back masked (first 2 and last 2 characters shown): see ../data/mask.
+// No email or phone ever reaches the page: dropped here if an API still sends one (../data/mask).
 export const fetchUserJourneys = (filters: DashboardFilters, p: UserJourneyListParams = {}) =>
   getPosthog<UserJourneysResponse>(
     filters, 'user_journeys',
     buildPosthogQuery(filters, { q: p.q || undefined, sort: p.sort, dir: p.dir, page: p.page, per_page: p.perPage })
-  ).then((r) => (r && Array.isArray(r.people) ? { ...r, people: r.people.map(maskPerson) } : r));
+  ).then((r) => (r && Array.isArray(r.people) ? { ...r, people: r.people.map(withoutContact) } : r));
 
 export const fetchUserJourneySessions = (filters: DashboardFilters, user: string) =>
   getPosthog<UserJourneySessionsResponse>(
     filters, 'user_journey_sessions', buildPosthogQuery(filters, { user })
-  ).then((r) => (r && r.person ? { ...r, person: maskPerson(r.person) } : r));
+  ).then((r) => (r && r.person ? { ...r, person: withoutContact(r.person) } : r));
 
 export const fetchUserJourneySteps = (filters: DashboardFilters, user: string, session: string) =>
   getPosthog<UserJourneyStepsResponse>(
@@ -330,6 +330,23 @@ export function societyAccountsParams(q: SocietyAccountsQuery, page: number, per
   if (q.displayView) params.set('q[display_view_eq]', q.displayView);
   return params;
 }
+
+/** The fields of a Manage Users account the dashboard uses; nothing else is kept (no email or mobile). */
+const accountFields = (a: any): HiSocietyAccount => ({
+  id: a?.id,
+  id_user: a?.id_user ?? null,
+  id_society: a?.id_society ?? null,
+  created_at: a?.created_at ?? null,
+  approve: a?.approve ?? null,
+  display_view: a?.display_view ?? null,
+  full_name: a?.full_name ?? null,
+  block_no: a?.block_no ?? null,
+  flat_no: a?.flat_no ?? null,
+  resident_type: a?.resident_type ?? null,
+  app_downloaded: a?.app_downloaded
+    ? { any_app_downloaded: !!a.app_downloaded.any_app_downloaded, ios: !!a.app_downloaded.ios, android: !!a.app_downloaded.android }
+    : null,
+});
 
 /** Page sizes to fall back to when Hi Society does not answer a page (each divides the one before). */
 const ACCOUNTS_PAGE_SIZES = [ACCOUNTS_PER_PAGE, 500, 250];
@@ -401,7 +418,9 @@ export async function fetchSocietyAccounts(q: SocietyAccountsQuery): Promise<Soc
       }
       throw e;
     }
-    const rows: HiSocietyAccount[] = Array.isArray(data?.user_societies) ? data.user_societies : [];
+    // Only the fields the dashboard uses are kept: Manage Users also sends each person's email, mobile
+    // and a nested user record (with their API key), which must not be kept in the page at all.
+    const rows: HiSocietyAccount[] = (Array.isArray(data?.user_societies) ? data.user_societies : []).map(accountFields);
     if (accounts.length === 0) total = Number(data?.pagination?.total_count) || rows.length;
     accounts.push(...rows);
     const pages = Number(data?.pagination?.total_pages) || 1;
@@ -530,13 +549,11 @@ export const fetchRecentActiveUsers = (filters: DashboardFilters, limit = 10) =>
   getPosthog<RecentActiveUsersResponse>(
     filters, 'recent_active_users',
     buildPosthogQuery(filters, { limit })
-  ).then((r) => (r && Array.isArray(r.users) ? { ...r, users: r.users.map((u) => maskPerson(u as any)) } : r));
+  ).then((r) => (r && Array.isArray(r.users) ? { ...r, users: r.users.map(withoutContact) } : r));
 
-/** What to call a user in an activity row: their name, else their email's local part, else their id. */
-export const activityUserLabel = (u: { user_name?: string | null; email?: string | null; user_id?: string | null }): string =>
-  // An email that is already masked (fetchRecentActiveUsers masks it) is shown as it is.
-  u.user_name || (u.email ? (u.email.includes('@') ? maskContact(u.email.split('@')[0]) : u.email) : '') ||
-  (u.user_id ? `user ${u.user_id}` : 'anonymous');
+/** What to call a user in an activity row: their name, else their user id (never an email). */
+export const activityUserLabel = (u: { user_name?: string | null; user_id?: string | null }): string =>
+  u.user_name || (u.user_id ? `user ${u.user_id}` : 'anonymous');
 
 /**
  * Downloads the `.xlsx` workbook of every event each user did, with the

@@ -251,7 +251,7 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
     setView('timeline');
   };
 
-  const name = (p?: UserJourneyPerson | null) => (p ? `${p.first_name} ${p.last_name}`.trim() || p.email || `User ${p.user_key}` : '');
+  const name = (p?: UserJourneyPerson | null) => (p ? `${p.first_name} ${p.last_name}`.trim() || `User ${p.user_id || p.user_key}` : '');
   const th = (label: string, active: boolean, dirUp: boolean, onClick: () => void, num = false) => (
     // analytics-header: the app's global table styles leave such headers alone.
     <th className={`analytics-header${num ? ' num' : ''}`} onClick={onClick} aria-sort={active ? (dirUp ? 'ascending' : 'descending') : undefined}>
@@ -269,10 +269,10 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
         const all = await fetchUserJourneys(filters, { q: search, sort: sortK, dir: sortDir, perPage: 'all' });
         const people = all.people || [];
         downloadCsv(`user_journey_people_${filters.from}_to_${filters.to}.csv`, showSociety
-          ? toCsv(['First name', 'Last name', 'Email', 'Site ID', 'Society', 'Sessions', 'Last active'],
-                  people.map((r) => [r.first_name, r.last_name, r.email, r.society_id, societyName(r.society_id), r.sessions, ago(r.last_seen)]))
-          : toCsv(['First name', 'Last name', 'Email', 'Sessions', 'Last active'],
-                  people.map((r) => [r.first_name, r.last_name, r.email, r.sessions, ago(r.last_seen)])));
+          ? toCsv(['First name', 'Last name', 'Site ID', 'Society', 'Sessions', 'Last active'],
+                  people.map((r) => [r.first_name, r.last_name, r.society_id, societyName(r.society_id), r.sessions, ago(r.last_seen)]))
+          : toCsv(['First name', 'Last name', 'Sessions', 'Last active'],
+                  people.map((r) => [r.first_name, r.last_name, r.sessions, ago(r.last_seen)])));
       } else if (view === 'sessions' && person) {
         downloadCsv(`sessions_${slug(name(person))}.csv`, toCsv(
           ['Session ID', 'Started', 'Duration (s)', 'Screens', 'Taps', 'First screen', 'How it ended', 'Problems'],
@@ -319,7 +319,7 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
         <div className="uj-bar">
           <input
             type="search"
-            placeholder={showSociety ? 'Search name, email, site ID or society…' : 'Search name or email…'}
+            placeholder={showSociety ? 'Search name, site ID or society…' : 'Search name…'}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             aria-label="Search people"
@@ -345,7 +345,6 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
                   <tr>
                     {th('First name', sortK === 'first_name', sortDir === 'asc', () => sortPeople('first_name'))}
                     {th('Last name', sortK === 'last_name', sortDir === 'asc', () => sortPeople('last_name'))}
-                    {th('Email', sortK === 'email', sortDir === 'asc', () => sortPeople('email'))}
                     {showSociety && th('Site ID', sortK === 'society_id', sortDir === 'asc', () => sortPeople('society_id'))}
                     {showSociety && <th className="analytics-header">Society</th>}
                     {th('Sessions', sortK === 'sessions', sortDir === 'asc', () => sortPeople('sessions'), true)}
@@ -358,7 +357,6 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
                     <tr key={r.user_key} tabIndex={0} onClick={() => openPerson(r)} onKeyDown={(e) => e.key === 'Enter' && openPerson(r)}>
                       <td className="uj-name">{r.first_name || '—'}</td>
                       <td className="uj-name">{r.last_name || '—'}</td>
-                      <td className="uj-mail">{r.email || <span className="uj-nil">—</span>}</td>
                       {showSociety && <td><IdCell v={r.society_id} /></td>}
                       {showSociety && <td>{societyName(r.society_id) || <span className="uj-nil">—</span>}</td>}
                       <td className="num">{fmtN(r.sessions)}</td>
@@ -374,7 +372,7 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
         )}
         <div className="uj-note">
           <b>Live data.</b> Every signed-in person active in {range.toLowerCase().startsWith('last') ? `the ${range.toLowerCase()}` : range} with the
-          filters above ({pageFilters}). A person is their user ID; their name and email are the
+          filters above ({pageFilters}). A person is their user ID; their name is the
           latest the app sent. Sessions are grouped by the app&rsquo;s session ID. Click a person to see their sessions.
         </div>
       </>
@@ -395,7 +393,6 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
               <h3>{name(p)}</h3>
               <div className="ss">
                 {[
-                  p.email || null,
                   p.society_id ? <>Site ID <span className="uj-id">{p.society_id}</span></> : null,
                   soc,
                 ]
@@ -519,7 +516,7 @@ export const UserJourneysCard: React.FC<UserJourneysCardProps> = ({ filters, soc
           <div className="tt">
             <h3>Session on {fmtDT(row?.started_at || data?.session.started_at)}</h3>
             <div className="ss">
-              {name(person)}{person?.email ? <> &nbsp;·&nbsp; {person.email}</> : null} &nbsp;·&nbsp; <span className="uj-id">{sid}</span>
+              {name(person)} &nbsp;·&nbsp; <span className="uj-id">{sid}</span>
             </div>
           </div>
           <div className="uj-nav">
