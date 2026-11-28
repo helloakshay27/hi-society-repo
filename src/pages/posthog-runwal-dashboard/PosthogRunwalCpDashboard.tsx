@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { PageId, DevicePlatform } from "./types";
 import { BM_DEFAULTS } from "./data/constants";
 import { loadView, presetRange, saveView } from "./data/savedView";
-import { maskContact } from "./data/mask";
 import { DashboardProvider } from "./context/DashboardContext";
 import { InfoPopover } from "./components/common/InfoPopover";
 import { TopBar } from "./components/common/TopBar";
@@ -345,7 +344,7 @@ function PosthogRunwalCpDashboardContent() {
     const name = [user.firstname, user.lastname].filter(Boolean).join(" ");
     if (name) return name;
     if (user.name) return user.name;
-    if (user.email) return maskContact(user.email.split("@")[0]);
+    // Never the email (no contact details on the dashboard).
     return "Logged-in User";
   }, [user]);
 
@@ -372,7 +371,7 @@ function PosthogRunwalCpDashboardContent() {
   }, [user]);
 
   const userEmail = useMemo(() => {
-    return maskContact(user?.email || "");
+    return ""; // the profile menu shows no email (no contact details on the dashboard)
   }, [user]);
 
   const orgName = useMemo(() => {
