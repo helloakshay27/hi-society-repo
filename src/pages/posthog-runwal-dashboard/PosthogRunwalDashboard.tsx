@@ -3,12 +3,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { PageId, DevicePlatform } from "./types";
 import { BM_DEFAULTS } from "./data/constants";
 import { loadView, presetRange, saveView } from "./data/savedView";
+import { maskContact } from "./data/mask";
 import { DashboardProvider } from "./context/DashboardContext";
 import { InfoPopover } from "./components/common/InfoPopover";
 import { TopBar } from "./components/common/TopBar";
 import { SideBar } from "./components/common/SideBar";
 import { FilterBar } from "./components/common/FilterBar";
 import { PreviousPeriodNote } from "./components/common/PreviousPeriodNote";
+import { ReportSection, useReportNav } from "./components/common/ReportSection";
+import { RecentActivityButton } from "./components/common/RecentActivityButton";
 import { previousCoverage } from "./data/previousPeriod";
 import { TrafficSessionPage } from "./components/pages/TrafficSessionPage";
 import { AdoptionEngagementPage } from "./components/pages/AdoptionEngagementPage";
@@ -107,7 +110,9 @@ function PosthogRunwalDashboardContent({
     "all" | "pre" | "post"
   >(savedView.segment);
 
-  const [activePage, setActivePage] = useState<PageId>(savedView.page);
+  // One scrollable report: the nav jumps to a section and highlights the one on screen.
+  const report = useReportNav(savedView.page);
+  const activePage: PageId = report.active;
   const [devPlatform, setDevPlatform] = useState<DevicePlatform>(savedView.dev);
   const [showPrev, setShowPrev] = useState<boolean>(true);
   const [rangeDays, setRangeDays] = useState<number>(savedView.range.days);
@@ -284,14 +289,7 @@ function PosthogRunwalDashboardContent({
     }));
   };
 
-  const handleSelectPage = (page: PageId) => {
-    setActivePage(page);
-    // The root itself scrolls now (edge-to-edge with the window), not .main.
-    const rootEl = document.querySelector(".posthog-dashboard-root");
-    if (rootEl) {
-      rootEl.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
+  const handleSelectPage = (page: PageId) => report.goTo(page);
 
   const handleSetRange = (days: number, label: string) => {
     const r = presetRange(days);
@@ -370,7 +368,7 @@ function PosthogRunwalDashboardContent({
     const name = [user.firstname, user.lastname].filter(Boolean).join(" ");
     if (name) return name;
     if (user.name) return user.name;
-    if (user.email) return user.email.split("@")[0];
+    if (user.email) return maskContact(user.email.split("@")[0]);
     return "Logged-in User";
   }, [user]);
 
@@ -397,7 +395,7 @@ function PosthogRunwalDashboardContent({
   }, [user]);
 
   const userEmail = useMemo(() => {
-    return user?.email || "";
+    return maskContact(user?.email || "");
   }, [user]);
 
   const orgName = useMemo(() => {
@@ -418,12 +416,6 @@ function PosthogRunwalDashboardContent({
     return "Runwal Group";
   }, []);
 
-  const PAGE_TITLES: Record<PageId, string> = {
-    pgTraffic: "Traffic & Session",
-    pgAdopt: "Adoption & Engagement",
-    pgFlows: "Workflow Usage",
-  };
-
   return (
     <div
       className={`posthog-dashboard-root ${isNavCollapsed ? "nav-collapsed" : ""}`}
@@ -440,6 +432,7 @@ function PosthogRunwalDashboardContent({
         userEmail={userEmail}
         orgName={orgName}
         isFetching={isTrafficFetching}
+        actions={<RecentActivityButton filters={filters} sitesSettled={sitesSettled} />}
       />
 
       <div className="shell">
@@ -453,7 +446,7 @@ function PosthogRunwalDashboardContent({
 
         <main className="main">
           <div className="page-head">
-            <h2 id="pageTitle">{PAGE_TITLES[activePage]}</h2>
+            <h2 id="pageTitle">Usage report</h2>
           </div>
 
           <FilterBar
@@ -490,7 +483,7 @@ function PosthogRunwalDashboardContent({
 
           <PreviousPeriodNote coverage={previousCoverage(trafficData)} />
 
-          {activePage === "pgTraffic" && (
+          <ReportSection id="pgTraffic" mounted={report.isMounted("pgTraffic")} onSeen={report.markSeen}>
             <TrafficSessionPage
               filters={filters}
               showPrev={showPrev}
@@ -499,9 +492,9 @@ function PosthogRunwalDashboardContent({
               sitesSettled={sitesSettled}
               isRefreshing={isRefreshing}
             />
-          )}
+          </ReportSection>
 
-          {activePage === "pgAdopt" && (
+          <ReportSection id="pgAdopt" mounted={report.isMounted("pgAdopt")} onSeen={report.markSeen}>
             <AdoptionEngagementPage
               filters={filters}
               benchmarks={benchmarks}
@@ -518,9 +511,9 @@ function PosthogRunwalDashboardContent({
                 showPhase: showResidentSegment,
               }}
             />
-          )}
+          </ReportSection>
 
-          {activePage === "pgFlows" && (
+          <ReportSection id="pgFlows" mounted={report.isMounted("pgFlows")} onSeen={report.markSeen}>
             <WorkflowUsagePage
               filters={filters}
               benchmarks={benchmarks}
@@ -531,7 +524,7 @@ function PosthogRunwalDashboardContent({
               societies={societies}
               rangeLabel={rangeLabel}
             />
-          )}
+          </ReportSection>
 
           {/* <div className="footer">
             <b>Live Analytics Integration.</b> Connected directly to Usage

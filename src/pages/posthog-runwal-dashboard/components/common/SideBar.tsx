@@ -1,12 +1,14 @@
 import React from 'react';
 import { PageId } from '../../types';
 import { DashboardFilters } from '../../api/types';
-import { RecentActivitySidebar } from './RecentActivitySidebar';
 
 interface SideBarProps {
+  /** The section on screen (the report scrolls; this one is highlighted). */
   activePage: PageId;
+  /** Jumps to a section of the report. */
   onSelectPage: (page: PageId) => void;
-  filters: DashboardFilters;
+  /** No longer used here: Recent Activity moved to the top bar (RecentActivityButton). */
+  filters?: DashboardFilters;
   sitesSettled?: boolean;
   brandName?: string;
   brandMini?: string;
@@ -16,8 +18,6 @@ interface SideBarProps {
 export const SideBar: React.FC<SideBarProps> = ({
   activePage,
   onSelectPage,
-  filters,
-  sitesSettled,
   brandName = 'Runwal',
   brandMini = 'RW',
   brandSub = 'Runwal Realty · flutter_resident app',
@@ -40,6 +40,7 @@ export const SideBar: React.FC<SideBarProps> = ({
           <button
             type="button"
             className={`nav-item ${activePage === 'pgTraffic' ? 'on' : ''}`}
+            aria-current={activePage === 'pgTraffic' ? 'true' : undefined}
             onClick={() => onSelectPage('pgTraffic')}
             data-tip="Traffic & Session"
           >
@@ -63,6 +64,7 @@ export const SideBar: React.FC<SideBarProps> = ({
           <button
             type="button"
             className={`nav-item ${activePage === 'pgAdopt' ? 'on' : ''}`}
+            aria-current={activePage === 'pgAdopt' ? 'true' : undefined}
             onClick={() => onSelectPage('pgAdopt')}
             data-tip="Adoption & Engagement"
           >
@@ -87,6 +89,7 @@ export const SideBar: React.FC<SideBarProps> = ({
           <button
             type="button"
             className={`nav-item ${activePage === 'pgFlows' ? 'on' : ''}`}
+            aria-current={activePage === 'pgFlows' ? 'true' : undefined}
             onClick={() => onSelectPage('pgFlows')}
             data-tip="Workflow Usage"
           >
@@ -109,8 +112,6 @@ export const SideBar: React.FC<SideBarProps> = ({
           </button>
         </div>
       </nav>
-
-      <RecentActivitySidebar filters={filters} sitesSettled={sitesSettled} />
     </aside>
   );
 };

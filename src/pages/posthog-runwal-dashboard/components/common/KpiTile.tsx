@@ -17,6 +17,7 @@ export const KpiTile: React.FC<KpiTileProps> = ({
   onBenchmarkChange,
   isLoading = false,
   infoKey,
+  onClick,
 }) => {
   const arrowSym = dir === 'up' ? '▲' : dir === 'dn' ? '▼' : '—';
   const resolvedInfoKey = infoKey || id || label;
@@ -77,7 +78,25 @@ export const KpiTile: React.FC<KpiTileProps> = ({
   }
 
   return (
-    <div className="tile" data-raw={raw} data-goodup={goodUp}>
+    <div
+      className={`tile${onClick ? ' drillable' : ''}`}
+      data-raw={raw}
+      data-goodup={goodUp}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? `${label}: ${val}. See the people` : undefined}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+    >
       <div className="tophead">
         <div className="lbl">{label}</div>
         {resolvedInfoKey && <InfoButton infoKey={resolvedInfoKey} />}

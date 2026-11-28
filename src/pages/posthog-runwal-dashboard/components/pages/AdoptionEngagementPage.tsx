@@ -33,6 +33,8 @@ import {
 } from "../../hooks/useDashboardAnalytics";
 import { pct, pct2, fmtDateShort } from "../../data/constants";
 import { deltaText, previousCoverage } from "../../data/previousPeriod";
+import { useActivePeople, addDaysYmd, todayYmd } from "../common/ActivePeople";
+import { LazyMount } from "../common/ReportSection";
 
 interface AdoptionEngagementPageProps {
   filters: DashboardFilters;
@@ -302,6 +304,21 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
     w.week ? fmtDateShort(w.week) : "W"
   );
   const trendSeriesCurrent = weeklyCurrent.map((w) => w.wau || 0);
+  // A week on the trend opens the people active that week (Monday to Sunday, not past today).
+  const people = useActivePeople();
+  const openWeek = (i: number) => {
+    const start = weeklyCurrent[i]?.week;
+    if (!start) return;
+    const weekStart = String(start).slice(0, 10);
+    const end = [addDaysYmd(weekStart, 6), todayYmd()].sort()[0];
+    const dev = filters.devPlatform === "ios" ? " on iOS" : filters.devPlatform === "android" ? " on Android" : "";
+    people.open({
+      title: `Weekly active users · week of ${fmtDateShort(weekStart)}`,
+      sub: `People who used the app ${weekStart} to ${end}${dev}, with the page's filters.`,
+      filters: { ...filters, from: weekStart, to: end },
+      expected: trendSeriesCurrent[i] ?? null,
+    });
+  };
   const trendSeriesPrev = weeklyPrevious.map((w) => w.wau || 0);
 
   // Growth Accounting Series
@@ -458,6 +475,8 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
               showPrev={showPrev && weeklyPrevious.length === weeklyCurrent.length && weeklyPrevious.length > 1}
               curLabel="Current WAU"
               prevLabel="Prior 8W WAU"
+              clickHint="Click a week to see who was active"
+              onPointClick={openWeek}
             />
             <div className="legend">
               <span>
@@ -645,6 +664,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
       </div>
 
       {signups && (
+        <LazyMount minHeight={1400}>
         <SignupsSection
           filters={filters}
           societies={signups.societies}
@@ -656,6 +676,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           showPrev={showPrev}
           enabled={sitesSettled}
         />
+        </LazyMount>
       )}
 
       {/* FM Matrix CRM & Operations Card Section */}
@@ -818,6 +839,7 @@ export const AdoptionEngagementPage: React.FC<AdoptionEngagementPageProps> = ({
           </div>
         )}
       </div> */}
+      {people.drawer}
     </section>
   );
 };

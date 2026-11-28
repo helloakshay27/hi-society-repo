@@ -36,6 +36,8 @@ export interface KpiTileProps {
   onBenchmarkChange?: (id: string, value: number | null) => void;
   isLoading?: boolean;
   infoKey?: string;
+  /** Opens the people behind the number (the tile becomes a button). */
+  onClick?: () => void;
 }
 
 

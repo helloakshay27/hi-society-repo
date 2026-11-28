@@ -20,6 +20,7 @@
  * Phase: Hi Society's display_view, where 'Pre Sales' is Post Sales and 'Post Sales' is Post Possession.
  */
 import type { HiSocietyAccount, SiteLookupItem } from '../../api/types';
+import { maskContact } from '../../data/mask';
 
 export type Phase = 'Post Sales' | 'Post Possession';
 
@@ -81,8 +82,9 @@ export function toRows(accounts: HiSocietyAccount[], societies: SiteLookupItem[]
       key,
       userId: a.id_user != null ? String(a.id_user) : '',
       name: (a.full_name || '').trim() || '—',
-      email: a.email || '',
-      mobile: a.mobile || '',
+      // Never shown in full: first 2 and last 2 characters (../../data/mask).
+      email: maskContact(a.email),
+      mobile: maskContact(a.mobile),
       societyId,
       society: names.get(societyId) || (societyId ? `Society ${societyId}` : '—'),
       flat: [a.block_no, a.flat_no].filter(Boolean).join(' / '),
