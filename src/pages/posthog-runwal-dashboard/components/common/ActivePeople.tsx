@@ -7,7 +7,12 @@
  *   a week on Adoption trend   that week (Monday to Sunday)
  *   a platform bar             the page's dates, people on that platform
  *   Recently Online            people whose last activity is under 30 minutes old
- * Emails come back masked (../../data/mask).
+ * No email or phone is ever part of these lists (../../data/mask).
+ *
+ * The panel's "Check" line compares the list with the number clicked. They are the same count from the same
+ * data, so they match; the one exception is Recently Online, which changes minute by minute: for it the
+ * number is read again at the moment the list is read (and the tile updated to it), so both describe the same
+ * moment.
  */
 import React, { useCallback, useState } from 'react';
 import type { DashboardFilters, UserJourneyPerson } from '../../api/types';
@@ -24,10 +29,14 @@ export interface ActivePeopleRequest {
   filters: DashboardFilters;
   /** What the number on the chart was, for the "Check" line; omit when there is none to compare. */
   expected?: number | null;
-  /** Keep only some of the people (Recently Online: the last 30 minutes). */
-  keep?: (p: UserJourneyPerson) => boolean;
-  /** Ask for the most recently active first and at most this many (Recently Online). */
-  newest?: number;
+  /**
+   * Recently Online: the people whose last activity is at most this many minutes before the server's "now",
+   * read most recent first, page by page, until the rest are older (same rule as the tile:
+   * timestamp >= now() - 30 minutes).
+   */
+  recentMinutes?: number;
+  /** Reads the clicked number again at the same moment as the list (for a number that changes by the minute). */
+  recount?: () => Promise<number | null>;
 }
 
 const fmtN = (n: number) => n.toLocaleString();
@@ -43,7 +52,7 @@ function fmtSeen(iso: string | null | undefined): string {
   return `${MON[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}, ${hh}:${mm}`;
 }
 const personName = (u: UserJourneyPerson) =>
-  `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email || `User ${u.user_id || u.user_key}`;
+  `${u.first_name || ''} ${u.last_name || ''}`.trim() || `User ${u.user_id || u.user_key}`;
 
 /** Opens the people behind a usage number. Render `drawer` once on the page. */
 export function useActivePeople() {
@@ -57,11 +66,11 @@ export function useActivePeople() {
       setLoading(req.title);
       setError(null);
       try {
-        const data = await fetchUserJourneys(
-          req.filters,
-          req.newest ? { perPage: req.newest, page: 1, sort: 'last_active', dir: 'desc' } : { perPage: 'all', sort: 'first_name', dir: 'asc' }
-        );
-        const people = (data?.people || []).filter((p) => (req.keep ? req.keep(p) : true));
+        const [people, recounted] = await Promise.all([
+          req.recentMinutes != null ? recentPeople(req.filters, req.recentMinutes) : fetchUserJourneys(req.filters, { perPage: 'all', sort: 'first_name', dir: 'asc' }).then((d) => d?.people || []),
+          req.recount ? req.recount().catch(() => null) : Promise.resolve(null),
+        ]);
+        const expected = recounted ?? req.expected ?? null;
         const names = new Map(societies.map((s) => [String(s.id), s.name]));
         const columns: DrawerColumn<UserJourneyPerson>[] = [
           { key: 'name', label: 'User', value: personName, render: (u) => <span className="cpn">{personName(u)}</span> },
@@ -69,7 +78,6 @@ export function useActivePeople() {
           { key: 'phase', label: 'Phase', value: (u) => u.phase || '—' },
           { key: 'sessions', label: 'Sessions', num: true, value: (u) => u.sessions },
           { key: 'last_seen', label: 'Last active', num: true, value: (u) => u.last_seen || '', render: (u) => fmtSeen(u.last_seen) },
-          { key: 'email', label: 'Email', value: (u) => u.email || '', csvOnly: true },
           { key: 'user_id', label: 'User ID', value: (u) => u.user_id || '', csvOnly: true },
         ];
         setSpec({
@@ -81,9 +89,14 @@ export function useActivePeople() {
           sortKey: 'last_seen',
           sortDir: -1,
           note:
-            req.expected != null ? (
-              <><b>Check:</b> the number of people listed ({fmtN(people.length)}) equals the number you clicked ({fmtN(req.expected)}).</>
-            ) : undefined,
+            expected == null ? undefined : expected === people.length ? (
+              <><b>Check:</b> the number of people listed ({fmtN(people.length)}) equals the number you clicked ({fmtN(expected)}).</>
+            ) : (
+              <>
+                <b>Note:</b> {fmtN(people.length)} people listed; the number you clicked was {fmtN(expected)}
+                {req.recount ? ' a moment earlier: people come and go every minute.' : '. Refresh the page and try again.'}
+              </>
+            ),
           csvName: `${req.title.replace(/[^\w]+/g, '_').toLowerCase()}.csv`,
         });
       } catch (e) {
@@ -115,6 +128,24 @@ export function useActivePeople() {
   );
 
   return { open, drawer, loading };
+}
+
+/**
+ * The people whose last activity is within `minutes` of the server's time, most recent first: pages of 100
+ * until a page reaches someone older (at most 20 pages).
+ */
+async function recentPeople(filters: DashboardFilters, minutes: number): Promise<UserJourneyPerson[]> {
+  const out: UserJourneyPerson[] = [];
+  for (let page = 1; page <= 20; page++) {
+    const data = await fetchUserJourneys(filters, { perPage: 100, page, sort: 'last_active', dir: 'desc' });
+    const rows = data?.people || [];
+    const now = Date.parse(data?.meta?.generated_at || '') || Date.now();
+    const cutoff = now - minutes * 60_000;
+    const recent = rows.filter((p) => Date.parse(p.last_seen) >= cutoff);
+    out.push(...recent);
+    if (recent.length < rows.length || rows.length < 100) break;
+  }
+  return out;
 }
 
 /** YYYY-MM-DD plus n days. */

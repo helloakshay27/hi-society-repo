@@ -15,6 +15,8 @@ import { deltaText, previousCoverage } from '../../data/previousPeriod';
 import { previousPeriodFor } from '../../api/usageDateRange';
 import { platformRows } from './platformRows';
 import { useActivePeople, todayYmd } from '../common/ActivePeople';
+import { useQueryClient } from '@tanstack/react-query';
+import { fetchTrafficSession } from '../../api/api';
 
 interface TrafficSessionPageProps {
   filters: DashboardFilters;
@@ -160,6 +162,7 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
 
   // Every people number opens the people behind it (../common/ActivePeople).
   const people = useActivePeople();
+  const queryClient = useQueryClient();
   const platformWord = filters.devPlatform === 'ios' ? ' on iOS' : filters.devPlatform === 'android' ? ' on Android' : '';
   const span = (from: string, to: string) => (from === to ? fmtYmdShort(from) : `${fmtYmdShort(from)} – ${fmtYmdShort(to)}`);
   const openActive = () =>
@@ -174,9 +177,14 @@ export const TrafficSessionPage: React.FC<TrafficSessionPageProps> = ({
       title: 'Recently online',
       sub: `People whose last activity was in the last 30 minutes${platformWord}, with the page's filters (any date range).`,
       filters: { ...filters, from: todayYmd(), to: todayYmd() },
-      newest: 100,
-      keep: (p) => p.minutes_ago != null && p.minutes_ago <= 30,
+      recentMinutes: 30,
       expected: tiles?.recently_online ?? null,
+      // Read the count again with the list, and bring the tile up to that moment too.
+      recount: async () => {
+        const fresh = await fetchTrafficSession(filters);
+        queryClient.invalidateQueries({ queryKey: ['fm-adoption', 'traffic_session'] });
+        return fresh?.tiles?.recently_online ?? null;
+      },
     });
   const openDay = (i: number, count?: number) => {
     const day = currentUsageDays[i]?.day;

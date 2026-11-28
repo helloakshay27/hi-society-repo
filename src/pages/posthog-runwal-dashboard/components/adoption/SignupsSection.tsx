@@ -199,8 +199,6 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
     ...(showPhase ? [{ key: 'phase', label: 'Phase', value: (r: AccountRow) => r.phase || '—' }] : []),
     { key: 'platform', label: 'App on', value: (r: AccountRow) => r.platform },
     { key: 'registered', label: 'Registered', num: true, value: (r) => r.registered || '', render: (r) => fmtDayYear(r.registered) },
-    { key: 'email', label: 'Email', value: (r) => r.email, csvOnly: true },
-    { key: 'mobile', label: 'Mobile', value: (r) => r.mobile, csvOnly: true },
     { key: 'approval', label: 'Approval', value: (r) => r.approval, csvOnly: true },
     { key: 'resident', label: 'Owner / Tenant', value: (r) => r.residentType, csvOnly: true },
     { key: 'user_id', label: 'User ID', value: (r) => r.userId, csvOnly: true },
@@ -233,14 +231,13 @@ export const SignupsSection: React.FC<SignupsSectionProps> = ({
     {
       key: 'name',
       label: 'User',
-      value: (u) => `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email || `User ${u.user_id || u.user_key}`,
-      render: (u) => <span className="cpn">{`${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email || `User ${u.user_id || u.user_key}`}</span>,
+      value: (u) => `${u.first_name || ''} ${u.last_name || ''}`.trim() || `User ${u.user_id || u.user_key}`,
+      render: (u) => <span className="cpn">{`${u.first_name || ''} ${u.last_name || ''}`.trim() || `User ${u.user_id || u.user_key}`}</span>,
     },
     { key: 'society', label: 'Project', value: (u) => (u.society_id ? names.get(String(u.society_id)) || `Society ${u.society_id}` : '—') },
     ...(showPhase ? [{ key: 'phase', label: 'Phase', value: (u: UserJourneyPerson) => u.phase || '—' }] : []),
     { key: 'sessions', label: 'Sessions', num: true, value: (u) => u.sessions },
     { key: 'last_seen', label: 'Last active', num: true, value: (u) => u.last_seen || '', render: (u) => fmtDayYear(u.last_seen) },
-    { key: 'email', label: 'Email', value: (u) => u.email || '', csvOnly: true },
     { key: 'user_id', label: 'User ID', value: (u) => u.user_id || '', csvOnly: true },
   ];
   const openActive = async () => {
